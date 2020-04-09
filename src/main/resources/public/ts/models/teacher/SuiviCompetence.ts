@@ -95,6 +95,7 @@ export class SuiviCompetence extends Model {
                     let resDomaines = response[0].data;
                     let resCompetencesNotes = response[1].data;
                     if (resDomaines) {
+                        this.domaines.all.length = 0;
                         for (let i = 0; i < resDomaines.length; i++) {
                             let domaine = new Domaine(resDomaines[i], eleve.id);
                             if (this.bilanFinDeCycles !== undefined && this.bilanFinDeCycles.all.length > 0) {

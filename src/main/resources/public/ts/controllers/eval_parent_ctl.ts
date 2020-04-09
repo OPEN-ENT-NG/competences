@@ -495,7 +495,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let historise = false;
                 if( $scope.searchBilan !== undefined
                     && $scope.searchBilan.periode.id_type > 0
-                    && $scope.searchBilan.periode !== undefined
                     && $scope.searchBilan.periode.id_type !== undefined){
                     // On récupère les devoirs de la période sélectionnée
 

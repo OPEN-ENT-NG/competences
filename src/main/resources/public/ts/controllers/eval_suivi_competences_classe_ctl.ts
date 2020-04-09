@@ -163,9 +163,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 evaluations = _.filter(evaluations, function (competence) {
                     return !competence.formative; // la competence doit être reliée à un devoir ayant un type non "formative"
                 });
-                return _.max(evaluations, function (evaluation) {
-                    return evaluation.evaluation;
-                });
+                return Utils.getNiveauMaxOfListEval(evaluations,$scope.suiviCompetence.tableauConversion);
             }
         };
         /**
@@ -174,9 +172,9 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
          * @returns {String} Nom de la classe
          */
         $scope.getEvaluationResultColor = function (eleveId) {
-            let evaluation = $scope.getMaxEvaluations(eleveId);
-            if (evaluation !== -Infinity) {
-                return $scope.mapCouleurs[evaluation.evaluation];
+            let moyenneMaxMats = $scope.getMaxEvaluations(eleveId);
+            if (moyenneMaxMats !== -Infinity) {
+                return $scope.mapCouleurs[moyenneMaxMats];
             }
         };
 
@@ -185,12 +183,12 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         $scope.FilterColor = function (item) {
-            let evaluation = $scope.getMaxEvaluations(item.id);
-            if (evaluation === undefined) {
+            let moyenneMaxMats = $scope.getMaxEvaluations(item.id);
+            if (moyenneMaxMats === undefined) {
                 return;
             }
-            else if (evaluation !== -Infinity) {
-                return $scope.selected.colors[evaluation.evaluation + 1];
+            else if (moyenneMaxMats !== -Infinity) {
+                return $scope.selected.colors[moyenneMaxMats + 1];
             }
         };
 

@@ -15,17 +15,8 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {Model, Collection, _} from 'entcore';
-import {
-    Domaine,
-    CompetenceNote,
-    Periode,
-    Classe,
-    Utils,
-    Matiere,
-    Structure,
-    SuiviCompetence
-} from './index';
+import {Collection, Model} from 'entcore';
+import {Classe, CompetenceNote, Domaine, Matiere, Periode, Structure, SuiviCompetence, Utils} from './index';
 import {Enseignement} from "../parent_eleve/Enseignement";
 import http from "axios";
 
@@ -35,6 +26,7 @@ export class SuiviCompetenceClasse extends Model {
     competenceNotes : Collection<CompetenceNote>;
     periode : Periode;
     matieres: Collection<Matiere>;
+    tableauConversion: any;
 
     get api() {
         return {
@@ -63,6 +55,7 @@ export class SuiviCompetenceClasse extends Model {
                         let resDomaines = response[0].data;
                         let resCompetencesNotes = response[1].data;
                         let resGetConversionTable = {all: response[2].data};
+                        this.tableauConversion = resGetConversionTable;
 
                         if(resDomaines) {
                             for(let i=0; i<resDomaines.length; i++) {
@@ -84,12 +77,15 @@ export class SuiviCompetenceClasse extends Model {
         this.collection(Enseignement, {
             sync: async () => {
                 return new Promise(async (resolve ) => {
+                    let uriGetConversionTable = SuiviCompetence.api.getCompetenceNoteConverssion + '?idEtab=' + structure.id + '&idClasse=' + classe.id;
                     let response = await Promise.all([
                         Enseignement.getAll(classe.id, classe.id_cycle, this.enseignements),
-                        this.getCompetencesNotesClasse(classe, periode)
+                        this.getCompetencesNotesClasse(classe, periode),
+                        http.get(uriGetConversionTable)
                     ]);
                     this.enseignements.load(response[0].data);
                     let competences = response[1].data;
+                    this.tableauConversion = {all: response[2].data};
                     if(structure.matieres.all !== undefined)this.matieres.load(structure.matieres.all);
                     await Enseignement.loadCompetences(classe.id, competences, classe.id_cycle, this.enseignements);
                     resolve();

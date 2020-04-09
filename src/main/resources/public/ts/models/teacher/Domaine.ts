@@ -73,27 +73,24 @@ export class Domaine extends Model {
         this.collection(Competence);
         this.collection(Domaine);
 
-        if(poDomaine !== undefined) {
-
-            let sousDomaines = poDomaine.domaines;
-            let sousCompetences = poDomaine.competences;
-            if(sousDomaines !== undefined){
-                for (let i=0; i< sousDomaines.length; i++){
-                    sousDomaines[i].id_eleve = poDomaine.id_eleve;
-                    if(sousDomaines[i].dispense_eleve === null){
-                        sousDomaines[i].dispense_eleve = false;
-                    }
+        let sousDomaines = poDomaine.domaines;
+        let sousCompetences = poDomaine.competences;
+        if(sousDomaines !== undefined){
+            for (let i=0; i< sousDomaines.length; i++){
+                sousDomaines[i].id_eleve = poDomaine.id_eleve;
+                if(sousDomaines[i].dispense_eleve === null){
+                    sousDomaines[i].dispense_eleve = false;
                 }
             }
-            this.updateData(poDomaine, false);
+        }
+        this.updateData(poDomaine, false);
 
-            if(sousDomaines !== undefined) {
-                this.domaines.load(sousDomaines);
-            }
+        if(sousDomaines !== undefined) {
+            this.domaines.load(sousDomaines);
+        }
 
-            if(sousCompetences !== undefined) {
-                this.competences.load(sousCompetences);
-            }
+        if(sousCompetences !== undefined) {
+            this.competences.load(sousCompetences);
         }
     }
 

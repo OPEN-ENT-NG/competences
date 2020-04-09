@@ -18,7 +18,7 @@
 /**
  * Created by ledunoiss on 08/08/2016.
  */
-import {model, http, Model, Collection, _, Behaviours} from 'entcore';
+import {model, Model, http as HTTP, Collection, _, Behaviours} from 'entcore';
 import { Classe } from './parent_eleve/Classe';
 import { Devoir } from './parent_eleve/Devoir';
 import { Matiere } from './parent_eleve/Matiere';
@@ -28,6 +28,7 @@ import { Periode } from './parent_eleve/Periode';
 import {Domaine, Structure, SuiviCompetence, Utils} from './teacher';
 import { NiveauCompetence } from './eval_niveau_comp';
 import { Enseignement } from './parent_eleve/Enseignement';
+import http from 'axios';
 
 declare let location: any;
 declare let require: any;
@@ -72,7 +73,7 @@ export class Evaluations extends Model {
             this.collection(Eleve, {
                 sync: async () => {
                     return new Promise((resolve, reject) => {
-                        http().get(Evaluations.api.EVAL_ENFANTS)
+                        HTTP().get(Evaluations.api.EVAL_ENFANTS)
                             .done((enfants) => {
                                 this.eleves.load(enfants);
                                 resolve();
@@ -90,7 +91,7 @@ export class Evaluations extends Model {
                         for (let enseignant in mapEnseignant) {
                             uri += '&idUser=' + enseignant;
                         }
-                        http().get(uri).done((enseignants) => {
+                        HTTP().get(uri).done((enseignants) => {
                             this.enseignants.load(enseignants);
                             resolve();
                         }).bind(this);
@@ -104,7 +105,7 @@ export class Evaluations extends Model {
                         for (let matiere in mapMatiere) {
                             uri = uri + '&idMatiere=' + matiere;
                         }
-                        http().get(uri).done( (matieresResult) => {
+                        HTTP().get(uri).done( (matieresResult) => {
                             this.matieres.load(matieresResult);
                             this.matieres.all.forEach( (matiere) =>{
                                 if (matiere.hasOwnProperty('sous_matieres')) {
@@ -132,7 +133,7 @@ export class Evaluations extends Model {
                             uri = uri + '&historise=' + historise;
                         }
                         uri = uri + '&forStudentReleve=true';
-                        http().getJson(uri).done((devoirs) => {
+                        HTTP().getJson(uri).done((devoirs) => {
 
                             // RECUPERATION DES COMPETENCES
                             let uriCompetences = Evaluations.api.GET_COMPETENCES + userId;
@@ -146,7 +147,7 @@ export class Evaluations extends Model {
                             if (idCycle !== undefined) {
                                 uriCompetences = uriCompetences + '&idCycle=' + idCycle;
                             }
-                            http().getJson(uriCompetences).done((competences) => {
+                            HTTP().getJson(uriCompetences).done((competences) => {
                                 competences.forEach(function (competence) {
                                     let devoir = _.findWhere(devoirs, {id: competence.id_devoir});
                                     if (devoir !== undefined) {
@@ -197,7 +198,7 @@ export class Evaluations extends Model {
                                         uriAnnotations = uriAnnotations + '?idClasse=' + classeId;
                                 }
 
-                                http().getJson(uriAnnotations).done((annotations) => {
+                                HTTP().getJson(uriAnnotations).done((annotations) => {
                                     annotations.forEach(function () {
                                         annotations.forEach(function (annotation) {
                                             let devoir = _.findWhere(devoirs, {id: annotation.id_devoir});
@@ -284,8 +285,8 @@ export class Evaluations extends Model {
                             }
                             let uriGetConversionTable = SuiviCompetence.api.getCompetenceNoteConverssion + '?idEtab=' + model.me.structures[0] + '&idClasse=' + classe.id;
                             let response = await Promise.all([
-                                http().getJson(url),
-                                http().getJson(uriGetConversionTable)
+                                http.get(url),
+                                http.get(uriGetConversionTable)
                             ]);
                             let resDomaines = response[0].data;
                             let resGetConversionTable = {all:response[1].data};

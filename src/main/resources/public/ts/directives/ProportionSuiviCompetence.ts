@@ -117,12 +117,12 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
 
                             if (!elevesMap.hasOwnProperty(competencesEval.id_eleve)) {
                                 elevesMap[competencesEval.id_eleve] = competencesEval;
-                                $scope.proportion[(competencesEval.evaluation) + 1].nb++;
+                                $scope.proportion[(competencesEval.niveauFinaltoShowAllEvaluations) + 1].nb++;
                                 nbEleves++;
-                            } else if (parseInt(elevesMap[competencesEval.id_eleve].evaluation) < parseInt(competencesEval.evaluation)) {
-                                $scope.proportion[(elevesMap[competencesEval.id_eleve].evaluation) + 1].nb--;
+                            } else if (parseInt(elevesMap[competencesEval.id_eleve].niveauFinaltoShowAllEvaluations) < parseInt(competencesEval.niveauFinaltoShowAllEvaluations)) {
+                                $scope.proportion[(elevesMap[competencesEval.id_eleve].niveauFinaltoShowAllEvaluations) + 1].nb--;
                                 elevesMap[competencesEval.id_eleve] = competencesEval;
-                                $scope.proportion[parseInt(competencesEval.evaluation) + 1].nb++;
+                                $scope.proportion[parseInt(competencesEval.niveauFinaltoShowAllEvaluations) + 1].nb++;
                             }
                         }
                     }

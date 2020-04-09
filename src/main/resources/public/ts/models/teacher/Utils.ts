@@ -278,22 +278,39 @@ export class Utils {
      * and niveauFinalToShowMyEvaluations for a competence
      * @param competence
      * @param tableConversion
-     *
+     * @param forClass
      */
 
-     static setMaxCompetenceShow (competence, tableConversion) {
+     static setMaxCompetenceShow (competence, tableConversion, forClass) {
         //all evaluations
+        let i;
         // récupèrer toutes les évaluations de type non "formative"
-        let allEvaluations = _.filter(competence.competencesEvaluations, (evaluation) => {
-            return !evaluation.formative;
-            // la competence doit être reliée à un devoir ayant un type non "formative"
-        });
-        if(allEvaluations !== undefined && allEvaluations.length > 0){
-            let notHistorizedEvals = _.filter(allEvaluations, (evaluation) => {
-                return evaluation.eval_lib_historise === false;
+        let allEvaluations = competence;
+        if(competence.competencesEvaluations)
+            allEvaluations = competence.competencesEvaluations;
+        if(!forClass) {
+            allEvaluations = _.filter(competence.competencesEvaluations, (evaluation) => {
+                return !evaluation.formative;
+                // la competence doit être reliée à un devoir ayant un type non "formative"
             });
+        }
+        if(allEvaluations !== undefined && allEvaluations.length > 0){
+            let notHistorizedEvals = allEvaluations;
+            if(!forClass) {
+                notHistorizedEvals = _.filter(allEvaluations, (evaluation) => {
+                    return evaluation.eval_lib_historise === false;
+                });
+            }
             allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
-            competence.niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion);
+            let niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion);
+            if(competence.competencesEvaluations) {
+                competence.niveauFinaltoShowAllEvaluations = niveauFinaltoShowAllEvaluations;
+            }else{
+                for(i = 0; i<allEvaluations.length; i++){
+                    competence[i].niveauFinaltoShowAllEvaluations = niveauFinaltoShowAllEvaluations;
+                }
+            }
+
         }
 
         // my evaluations
@@ -302,10 +319,24 @@ export class Utils {
         });
         if( myEvaluations !== undefined && myEvaluations.length > 0){
             //set the max of my evaluations on this competence for "niveau atteint"
-            competence.niveauAtteintToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion,true);
+            let niveauAtteintToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion,true);
+            if(competence.competencesEvaluations) {
+                competence.niveauAtteintToShowMyEvaluations = niveauAtteintToShowMyEvaluations;
+            }else{
+                for(i = 0; i<allEvaluations.length; i++){
+                    competence[i].niveauAtteintToShowMyEvaluations = niveauAtteintToShowMyEvaluations;
+                }
+            }
 
             //set the max of my evaluations on this competence for "niveau final"
-            competence.niveauFinalToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion);
+            let niveauFinalToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion);
+            if(competence.competencesEvaluations) {
+                competence.niveauFinalToShowMyEvaluations = niveauFinalToShowMyEvaluations;
+            }else{
+                for(i = 0; i<allEvaluations.length; i++){
+                    competence[i].niveauFinalToShowMyEvaluations = niveauFinalToShowMyEvaluations;
+                }
+            }
         }
     }
 
@@ -355,7 +386,7 @@ export class Utils {
                     });
 
                     if(competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
-                        Utils.setMaxCompetenceShow(competence, tableConversion);
+                        Utils.setMaxCompetenceShow(competence, tableConversion,false);
                     }
                 });
                 if (tabDomaine !== undefined) {
@@ -371,17 +402,17 @@ export class Utils {
                 });
 
                 if(competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
-                        Utils.setMaxCompetenceShow(competence, tableConversion);
+                        Utils.setMaxCompetenceShow(competence, tableConversion,false);
                 }
 
                 if (object.composer.constructor.name === 'SuiviCompetenceClasse') {
                     let mineCompetencesEvaluations = _.filter(competence.competencesEvaluations, {owner : model.me.userId});
 
-                    // Récupère mes évaluations maximales de la compétence pour tous les élèves
-                    competence.mineCompetencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, mineCompetencesEvaluations);
+                    // Récupère les moyennes des maxs dans chaque matières sur mes évaluations de la compétence pour tous les élèves
+                    competence.mineCompetencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, mineCompetencesEvaluations,tableConversion);
 
-                    // Récupère les évaluations maximales de la compétence pour tous les élèves
-                    competence.competencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, competence.competencesEvaluations);
+                    // Récupère les moyennes des maxs dans chaque matières de la compétence pour tous les élèves
+                    competence.competencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, competence.competencesEvaluations,tableConversion);
 
                     for (let i = 0; i < classe.eleves.all.length; i++) {
                         let mine = _.findWhere(competence.mineCompetencesEvaluations, {id_eleve : classe.eleves.all[i].id,
@@ -433,53 +464,18 @@ export class Utils {
      * @param classe
      * @param competence
      * @param competencesEvaluations
+     * @param tableConversion
      * @returns {any}
      */
-    static getCompetenceEvaluations(classe, competence,competencesEvaluations) {
+    static getCompetenceEvaluations(classe, competence,competencesEvaluations, tableConversion) {
         for (let i = 0; i < classe.eleves.all.length; i++) {
-            let currentIdEleve = classe.eleves.all[i].id
-            // MN-175 : On calcule par élève le niveau toutes matières confondues
+            let currentIdEleve = classe.eleves.all[i].id;
             let commpetenceEvaluationsEleve = _.where(competencesEvaluations, {id_eleve: currentIdEleve});
             if (commpetenceEvaluationsEleve !== undefined && commpetenceEvaluationsEleve.length > 0) {
-                // On initialise la competence evaluation finale de l'élève
-                let commpetenceEvaluationEleveFinal = {
-                    id_competence: competence.id,
-                    id_eleve: currentIdEleve,
-                    id_domaine: competence.id_domaine,
-                    evaluation: 0,
-                    owner: commpetenceEvaluationsEleve[0].owner
-                };
-
-                let niveauFinal = 0;
-                for (var j = 0; j < commpetenceEvaluationsEleve.length; j++) {
-                    let tempCommpetenceEvaluationEleve = commpetenceEvaluationsEleve[j];
-                    if (tempCommpetenceEvaluationEleve.id_matiere !== undefined && tempCommpetenceEvaluationEleve.id_matiere !== null && tempCommpetenceEvaluationEleve.id_matiere !== '') {
-                        if (tempCommpetenceEvaluationEleve.niveau_final !== undefined && tempCommpetenceEvaluationEleve.niveau_final !== null) {
-                            // On prend le niveau final  si celui ci est supérieur
-                            if (tempCommpetenceEvaluationEleve.niveau_final > niveauFinal) {
-                                niveauFinal = tempCommpetenceEvaluationEleve.niveau_final;
-                                commpetenceEvaluationEleveFinal.owner = tempCommpetenceEvaluationEleve.owner;
-                            }
-                        } else {
-                            // On prend le max des évaluations si celui ci est supérieur
-                            if (tempCommpetenceEvaluationEleve.evaluation > niveauFinal) {
-                                niveauFinal = tempCommpetenceEvaluationEleve.evaluation;
-                                commpetenceEvaluationEleveFinal.owner = tempCommpetenceEvaluationEleve.owner;
-                            }
-                        }
-                    }
-                }
-                commpetenceEvaluationEleveFinal.evaluation = niveauFinal;
-                // On supprime les évaluations de l'élève
-                let commpetenceEvaluationsFinal = _.filter(competencesEvaluations, function (competencesEvaluation) {
-                    return competencesEvaluation.id_eleve !== currentIdEleve
-                });
-                // On ajoute le niveau calculé
-                commpetenceEvaluationsFinal.push(commpetenceEvaluationEleveFinal)
-                return commpetenceEvaluationsFinal ;
+                Utils.setMaxCompetenceShow(commpetenceEvaluationsEleve, tableConversion,true);
             }
-
         }
+        return competencesEvaluations;
     }
 
 // Filtres
