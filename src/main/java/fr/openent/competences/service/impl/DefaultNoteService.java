@@ -2433,13 +2433,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                     idPeriode, ID_PERIODE);
                                             String positionnement_auto  = "";
                                             if (positionnement != null) {
-                                                if(!annual) {
-                                                    Float moyennePositionnement = positionnement.getFloat(MOYENNE);
-                                                    positionnement_auto = utilsService.convertPositionnement(moyennePositionnement,
-                                                            tableauDeConversionFuture.result(), null,true);
-                                                }else{
-                                                    positionnement_auto = positionnement.getFloat(MOYENNE).toString();
-                                                }
+                                                positionnement_auto = positionnement.getFloat(MOYENNE).toString();
                                             }
                                             if( eleveObject.containsKey(POSITIONNEMENT)){
                                                 eleveObject.getJsonObject(POSITIONNEMENT).put(idMatiere.toString(),positionnement_auto);
@@ -2459,7 +2453,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     //Rajout des positionnements finaux
                                     FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
                                             POSITIONNEMENT, idPeriode, hasEvaluatedHomeWork, idMatieres.getString(i-2));
-                                    getMoyenneMinMaxByMatiere(elevesMapObject,idPeriode,idMatieres.getString(i-2),annual,resultHandler,tableauDeConversionFuture.result());
+                                    getMoyenneMinMaxByMatiere(elevesMapObject,idPeriode,idMatieres.getString(i-2),annual,resultHandler);
                                 }
                                 getMoyenneGeneraleMinMax(elevesMapObject,idPeriode,idMatieres, annual, resultHandler);
                                 resultHandler.put(TABLE_CONVERSION_KEY, tableauDeConversionFuture.result());
@@ -2976,7 +2970,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     }
 
-    private void getMoyenneMinMaxByMatiere(Map<String, JsonObject> eleveMapObject, Long idPeriode, String idMatiere, Boolean annual, JsonObject resulHandler, JsonArray tableauDeConversion) {
+    private void getMoyenneMinMaxByMatiere(Map<String, JsonObject> eleveMapObject, Long idPeriode, String idMatiere, Boolean annual, JsonObject resulHandler) {
         String moyenneLabel = MOYENNE;
         moyenneLabel += (idPeriode!=null)? "Finale" : "sFinales";
         Double moyenne = 0.0;
@@ -2985,15 +2979,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         int nbElevesPositionnement = 0;
         Double moyenneMin = 0.0;
         Double moyenneMax = 0.0;
-        int positionnementMin = 0;
-        int positionnementMax = 0;
+        double positionnementMin = 0.0;
+        double positionnementMax = 0.0;
         boolean initialisationMoyenne = false;
         boolean initialisationPositionnement = false;
 
 
         for (Map.Entry<String, JsonObject> student : eleveMapObject.entrySet()) {
-            if (student.getValue().containsKey(moyenneLabel) && student.getValue().getJsonObject(moyenneLabel).containsKey(idMatiere)){
-                if(student.getValue().getJsonObject(moyenneLabel).getValue(idMatiere) != NN && student.getValue().getJsonObject(moyenneLabel).getValue(idMatiere) != "" && student.getValue().getJsonObject(moyenneLabel).getValue(idMatiere) != null){
+            if (student.getValue().containsKey(moyenneLabel) &&
+                    student.getValue().getJsonObject(moyenneLabel).containsKey(idMatiere)){
+                if(student.getValue().getJsonObject(moyenneLabel).getValue(idMatiere) != NN &&
+                        student.getValue().getJsonObject(moyenneLabel).getValue(idMatiere) != "" &&
+                        student.getValue().getJsonObject(moyenneLabel).getValue(idMatiere) != null){
                     Double number;
                     try {
                         number = Double.valueOf(student.getValue().getJsonObject(moyenneLabel).getString(idMatiere));
@@ -3014,8 +3011,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     }
                 }
             }
-            if (student.getValue().containsKey(POSITIONNEMENT) && student.getValue().getJsonObject(POSITIONNEMENT).containsKey(idMatiere)){
-                if(student.getValue().getJsonObject(POSITIONNEMENT).getValue(idMatiere) != NN && student.getValue().getJsonObject(POSITIONNEMENT).getValue(idMatiere) != "" && student.getValue().getJsonObject(POSITIONNEMENT).getValue(idMatiere) != null){
+            if (student.getValue().containsKey(POSITIONNEMENT) &&
+                    student.getValue().getJsonObject(POSITIONNEMENT).containsKey(idMatiere)){
+                if(student.getValue().getJsonObject(POSITIONNEMENT).getValue(idMatiere) != NN &&
+                        student.getValue().getJsonObject(POSITIONNEMENT).getValue(idMatiere) != "" &&
+                        student.getValue().getJsonObject(POSITIONNEMENT).getValue(idMatiere) != null){
                     Double number;
                     try {
                         number = Double.parseDouble(student.getValue().getJsonObject(POSITIONNEMENT).getString(idMatiere));
@@ -3025,14 +3025,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     moyennePos += number;
                     nbElevesPositionnement++;
                     if(!initialisationPositionnement){
-                        positionnementMin = number.intValue();
-                        positionnementMax = number.intValue();
+                        positionnementMin = number;
+                        positionnementMax = number;
                         initialisationPositionnement = true;
                     }else{
-                        if(positionnementMin >  number.intValue())
-                            positionnementMin =  number.intValue();
-                        if(positionnementMax <  number.intValue())
-                            positionnementMax =  number.intValue();
+                        if(positionnementMin >  number)
+                            positionnementMin =  number;
+                        if(positionnementMax <  number)
+                            positionnementMax =  number;
                     }
                 }
             }
@@ -3051,9 +3051,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             statsToAdd.put("positionnement",minPos);
             statsToAdd.getJsonObject("positionnement").put("maximum", positionnementMax);
             if(!annual) {
-                if (moyennePos.compareTo(new Double(0)) != 0) {
-                    statsToAdd.getJsonObject("positionnement").put("moyenne", Double.valueOf(utilsService.convertPositionnement(Float.valueOf(String.valueOf(moyennePos / nbElevesPositionnement)),
-                            tableauDeConversion, null, false)));
+                if (moyennePos.compareTo((double) 0) != 0) {
+                    statsToAdd.getJsonObject("positionnement").put("moyenne", decimalFormat.format((moyennePos / nbElevesPositionnement)));
                 }else {
                     statsToAdd.getJsonObject("positionnement").put("moyenne", Double.valueOf(0));
                 }
