@@ -91,7 +91,6 @@ export let initChartsEval = async function ($scope) {
         }
 
         for (let i = 0; i < ListEval.length; i++) {
-
             let fontText = $scope.mapLettres[ListEval[i].evaluation];
             if (!fontText) {
                 fontText = " ";
@@ -121,7 +120,9 @@ export let initChartsEval = async function ($scope) {
                     $scope.chartOptionsEval.datasets.labels.push(actualPeriode.label);
                 }
             }
-            $scope.chartOptionsEval.datasets.labels.push($scope.getDateFormated(ListEval[i].evaluation_date));
+            if(!_.contains($scope.chartOptionsEval.datasets.labels, $scope.getDateFormated(ListEval[i].evaluation_date))){
+                $scope.chartOptionsEval.datasets.labels.push($scope.getDateFormated(ListEval[i].evaluation_date));
+            }
             let colorValue;
             if (ListEval[i].evaluation !== -1) {
                 colorValue = $scope.mapCouleurs[ListEval[i].evaluation];

@@ -1426,7 +1426,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.devoir.competencesLastDevoirList = [];
             let idCycle = $scope.getClasseData($scope.devoir.id_groupe, 'id_cycle');
             let evaluationCompetencesDevoirPreferences = [];
-            if(PreferencesUtils.isNotEmpty(evaluationCreationCompetencesDevoir)  ){
+            if(PreferencesUtils.isNotEmpty(evaluationCreationCompetencesDevoir)){
                 evaluationCompetencesDevoirPreferences = PreferencesUtils.getPreferences(evaluationCreationCompetencesDevoir);
                 evaluationCompetencesDevoirPreferences.forEach(ecdp => {
                     if(ecdp.id_cycle == idCycle)
@@ -2094,7 +2094,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.devoir.matiere = $scope.devoir.matieresByClassByTeacher[0];
             }
 
-            $scope.devoir.id_matiere = $scope.devoir.matiere.id;
+            if($scope.devoir.matiere !== undefined) {
+                $scope.devoir.id_matiere = $scope.devoir.matiere.id;
+            }
             if ($scope.devoir.matiere.sousMatieres !== undefined && $scope.devoir.matiere.sousMatieres.all.length > 0) {
                 // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
                 $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;

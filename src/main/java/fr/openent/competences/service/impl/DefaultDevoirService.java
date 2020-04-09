@@ -273,7 +273,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     .put("statement", queryCompLibre.toString())
                     .put("values", paramsCompLibre)
                     .put("action", "prepared"));
-
         }
 
         // Ajoute une relation notes.rel_devoirs_groupes
