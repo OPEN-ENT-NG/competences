@@ -838,12 +838,12 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if ($scope.search.avisClasse.type_avis === 0) {
                 $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan =
                     await $scope.elementBilanPeriodique.avisConseil.createNewOpinion(opinion);
-                await $scope.refreshOpinionList();
+                await $scope.refreshOpinionList(opinion);
                 $scope.elementBilanPeriodique.avisConseil.saveAvisConseil($scope.search.avisClasse.id);
             } else if ($scope.search.avisOrientation.type_avis === 0) {
                 $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan =
                     await $scope.elementBilanPeriodique.avisOrientation.createNewOpinion(opinion);
-                await $scope.refreshOpinionList();
+                await $scope.refreshOpinionList(opinion);
                 $scope.elementBilanPeriodique.avisOrientation.saveAvisOrientation($scope.search.avisOrientation.id);
             }
 
@@ -851,12 +851,18 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await utils.safeApply($scope);
         };
 
-        $scope.refreshOpinionList = async function() {
+        $scope.refreshOpinionList = async function(opinion) {
             await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
             $scope.search.avisClasse = _.find($scope.elementBilanPeriodique.avisConseil.avis,
                 {id: $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan});
+            if(!$scope.search.avisClasse)
+                $scope.search.avisClasse = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                    {libelle: opinion, type_avis:1});
             $scope.search.avisOrientation = _.find($scope.elementBilanPeriodique.avisConseil.avis,
                 {id: $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan});
+            if(!$scope.search.avisOrientation)
+                $scope.search.avisOrientation = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                    {libelle: opinion, type_avis:2});
             $scope.previousClassOpinion = $scope.search.avisClasse;
             $scope.previousOrientationOpinion = $scope.search.avisOrientation;
         };
