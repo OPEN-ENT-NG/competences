@@ -2070,7 +2070,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir.owner = (teacher != undefined) ? teacher.id_enseignant
                         : $scope.devoir.teachersByClass[0].id;
                 }
-                $scope.setEnseignantMatieres(search);
+                $scope.setEnseignantMatieres();
             } else if(($scope.devoir.teachersByClass.length > 0 && $scope.devoir.owner === undefined) ||
                 _.findWhere($scope.devoir.teachersByClass, {id : $scope.devoir.owner}) === undefined) {
                 if($scope.devoir.teachersByClass.length > 0 ){
@@ -2083,7 +2083,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Set les matières en fonction de l'identifiant de l'enseignant choisi
          */
-        $scope.setEnseignantMatieres = function (search?) {
+        $scope.setEnseignantMatieres = function () {
             $scope.devoir.matieresByClassByTeacher = $filter('getMatiereClasse')($scope.structure.matieres.all,
                 $scope.devoir.id_groupe, $scope.classes, $scope.search, $scope.devoir.owner);
 
@@ -2091,12 +2091,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.devoir.matiere = $scope.devoir.matieresByClassByTeacher[0];
             }
 
-            if($scope.devoir.matiere !== undefined) {
+            if($scope.devoir.matiere) {
                 $scope.devoir.id_matiere = $scope.devoir.matiere.id;
-            }
-            if ($scope.devoir.matiere.sousMatieres !== undefined && $scope.devoir.matiere.sousMatieres.all.length > 0) {
-                // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
-                $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
+                if ($scope.devoir.matiere.sousMatieres && $scope.devoir.matiere.sousMatieres.all.length > 0) {
+                    // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
+                    $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
+                }
             }
         };
 
