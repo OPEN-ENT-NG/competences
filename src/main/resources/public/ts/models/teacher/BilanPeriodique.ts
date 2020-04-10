@@ -292,13 +292,10 @@ export class BilanPeriodique extends  Model {
         if(!Object.keys(data).map( element => data[element]).some(array => array.length > 0)) return [];
         let resultHeader:Array<any> = [];
         const dataSynthesis = await this.makerHeaderWithTeachersAndSubjects(data, teacherBysubject);
-        resultHeader =  [
-            {
-                idSubject: undefined,
-                subjectName: lang.translate("student"),
-                teacherName: undefined,
-            },
-            ...dataSynthesis.map(subjectToSynthesis => {
+
+        const dataSynthesisClean = dataSynthesis
+            .filter(subjectToSynthesis => subjectToSynthesis.subjectShortName)
+            .map(subjectToSynthesis => {
                 let lastName, firstName;
                 if( subjectToSynthesis.teacherName){
                     [lastName, firstName ] = subjectToSynthesis.teacherName.split(" ");
@@ -308,7 +305,15 @@ export class BilanPeriodique extends  Model {
                     subjectName: subjectToSynthesis.subjectShortName,
                     teacherName: subjectToSynthesis.teacherName ? Utils.makeShortName(lastName, firstName) : "",
                 }
-            }),
+            });
+
+        resultHeader =  [
+            {
+                idSubject: undefined,
+                subjectName: lang.translate("student"),
+                teacherName: undefined,
+            },
+            ...dataSynthesisClean,
             {
                 idSubject: undefined,
                 subjectName: lang.translate("average"),
@@ -357,12 +362,14 @@ export class BilanPeriodique extends  Model {
         for (let i = 0; i < subjectsFromHeaderTable.length; i++) {
             let hasNoteSubject:Boolean = false;
             for(let idSubject in notes){
-                if(subjectsFromHeaderTable[i].idSubject === idSubject){
+                const subjectFromHeader = subjectsFromHeaderTable[i];
+                if(!subjectFromHeader) break;
+                if(subjectFromHeader.idSubject === idSubject){
                     subjectsNotes.push(notes[idSubject]);
                     hasNoteSubject = true;
                     break;
                 }
-                if(!subjectsFromHeaderTable[i].idSubject) {
+                if(!subjectFromHeader.idSubject) {
                     hasNoteSubject = true;
                     break;
                 }
