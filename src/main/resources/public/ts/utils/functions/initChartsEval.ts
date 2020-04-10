@@ -114,10 +114,10 @@ export let initChartsEval = async function ($scope) {
             let indexData = _.findIndex($scope.chartOptionsEval.datasets.data, {label : data.label, x : data.x});
             if(indexData === -1) {
                 $scope.chartOptionsEval.datasets.data.push(data);
-                $scope.chartOptionsEval.tooltipLabels.push(tooltipLabel);
+                $scope.chartOptionsEval.tooltipLabels.push([tooltipLabel]);
             }
             else {
-                $scope.chartOptionsEval.tooltipLabels[indexData] += " / " + tooltipLabel;
+                $scope.chartOptionsEval.tooltipLabels[indexData].push(tooltipLabel);
             }
 
             if (actualPeriode){
