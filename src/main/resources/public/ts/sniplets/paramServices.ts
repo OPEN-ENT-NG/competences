@@ -360,6 +360,7 @@ export const paramServices = {
             paramServices.that.setServices();
         },
         updateServices: async function(){
+            console.log("plop")
             let oldService = paramServices.that.oldService;
             let serviceToUpdate = paramServices.that.serviceToUpdate;
 
