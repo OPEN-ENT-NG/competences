@@ -389,7 +389,7 @@ export const paramServices = {
         getClasses: function () {
             try {
                 return http.get(`/viescolaire/classes?idEtablissement=${
-                    paramServices.that.idStructure}&forAdmin=true&classOnly=true`)
+                    paramServices.that.idStructure}&forAdmin=true`)
             } catch (e) {
                 toasts.warning('evaluations.service.error.classe');
             }
