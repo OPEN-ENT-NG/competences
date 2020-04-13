@@ -5,7 +5,7 @@ import * as utils from "../../utils/teacher";
 
 
 export let selectCycleForView = function ($scope, $location, id_cycle?) {
-    let idCycle = id_cycle;
+    let idCycle = parseInt(id_cycle);
 
     if ($scope.currentDevoir && $location.path() === `/devoir/${$scope.currentDevoir.id}`) {
         idCycle = $scope.classes.findWhere({id: $scope.currentDevoir.id_groupe}).id_cycle;
@@ -16,20 +16,23 @@ export let selectCycleForView = function ($scope, $location, id_cycle?) {
         && $scope.search.classe !== '*') {
         idCycle = $scope.search.classe.id_cycle;
     }
+
     evaluations.structure.cycle = _.findWhere(evaluations.structure.cycles, {
         id_cycle: idCycle
     });
+
     if (evaluations.structure.cycle === undefined) {
         evaluations.structure.cycle = evaluations.structure.cycles[0];
     }
+
     $scope.structure.cycle = evaluations.structure.cycle;
     return evaluations.structure.cycle.niveauCompetencesArray;
 };
 
 
-export let updateColorAndLetterForSkills = function ($scope, $location) {
+export let updateColorAndLetterForSkills = function ($scope, $location, cycle?) {
     $scope.niveauCompetences = [];
-    let niveauCompetence = selectCycleForView($scope, $location , $scope.search.classe.id_cycle);
+    let niveauCompetence = selectCycleForView($scope, $location, cycle ? cycle : $scope.search.classe.id_cycle);
     $scope.mapCouleurs = {"-1": Defaultcolors.unevaluated};
     $scope.mapLettres = {"-1": " "};
     $scope.selected.colors = {

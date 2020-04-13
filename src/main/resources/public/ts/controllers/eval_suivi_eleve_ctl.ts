@@ -329,7 +329,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         };
 
         $scope.updateColorAndLetterForSkills = async function () {
-            updateColorAndLetterForSkills($scope, $location);
+            updateColorAndLetterForSkills($scope, $location, $scope.selectedCycleRadio ?
+                $scope.selectedCycleRadio.id_cycle : null);
             await $scope.initChartsEval();
             if(template.contains('suivi-competence-content',
                 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle')){
@@ -697,9 +698,12 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         };
 
         $scope.hideArrow = function (num) {
-            let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
-            return !(index !== -1 && index + parseInt(num) >= 0
-                && index + parseInt(num) < $scope.filteredEleves.all.length);
+            if($scope.filteredEleves){
+                let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
+                return !(index !== -1 && index + parseInt(num) >= 0
+                    && index + parseInt(num) < $scope.filteredEleves.all.length);
+            }
+            return true;
         };
 
         $scope.initDataEleve = async function(classeHasChange){
@@ -749,9 +753,11 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 if (_.isEmpty($scope.search.classe.eleves.all)) {
                     await $scope.search.classe.eleves.sync();
                 }
-                let periode = new TypePeriode({id:$scope.search.periode.id_type,ordre:$scope.search.periode.ordre,type:$scope.search.periode.type});
+                let periode = new TypePeriode({id:$scope.search.periode.id_type,
+                    ordre:$scope.search.periode.ordre, type:$scope.search.periode.type});
                 $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
                 $scope.loadingTab = true;
+                await $scope.updateColorAndLetterForSkills();
                 switch ($scope.displayFollowEleve) {
                     case ('followItems'):
                         if (template.containers['suivi-competence-content'] !== undefined) {
