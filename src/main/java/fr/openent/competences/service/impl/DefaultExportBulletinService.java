@@ -439,19 +439,25 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             JsonArray niveauCompetences = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
             JsonArray footerArray = new JsonArray();
-            for (int i = niveauCompetences.size() - 1; i >= 0; i--) { //reverse Array
-                footerArray.add(niveauCompetences.getJsonObject(i));
+            if(niveauCompetences != null && !niveauCompetences.isEmpty()){
+                for (int i = niveauCompetences.size() - 1; i >= 0; i--) { //reverse Array
+                    footerArray.add(niveauCompetences.getJsonObject(i));
+                }
             }
+
 
             String footer = "";
-            for (int i = 0; i < footerArray.size(); i++) {
-                JsonObject niv = footerArray.getJsonObject(i);
+            if(!footerArray.isEmpty()){
+                for (int i = 0; i < footerArray.size(); i++) {
+                    JsonObject niv = footerArray.getJsonObject(i);
 
-                String lib = niv.getString(LIBELLE);
-                String id_niv = Integer.toString(niv.getInteger("id_niveau"));
-                footer += id_niv + " : " + lib + " - ";
+                    String lib = niv.getString(LIBELLE);
+                    String id_niv = Integer.toString(niv.getInteger("id_niveau"));
+                    footer += id_niv + " : " + lib + " - ";
+                }
+                footer = footer.substring(0, footer.length() - 2);
             }
-            footer = footer.substring(0, footer.length() - 2);
+
             eleve.put(NIVEAU_COMPETENCE, niveauCompetences).put("footer", "* " + footer);
 
             if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)){
