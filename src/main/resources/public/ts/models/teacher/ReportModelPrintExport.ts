@@ -245,6 +245,7 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
         preferencesConstants: { string: string } | any
     ):{} {
         const preferencesClean: T | {} = {};
+        if(!preferencesDirty) return preferencesClean;
         for (let keyPreferenceConst in preferencesConstants) {
             const preferenceConst = preferencesConstants[keyPreferenceConst];
             preferencesClean[preferenceConst] = preferencesDirty[preferenceConst];
