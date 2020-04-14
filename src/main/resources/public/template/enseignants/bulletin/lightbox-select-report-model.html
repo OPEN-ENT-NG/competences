@@ -28,6 +28,7 @@
                        ng-if="reportModel.iAmUpdated"
                        ng-blur="saveTitleEdit(reportModel)"
                        type="text"
+                       ng-change="permanentControlTitle(reportModel.title)"
                        ng-model="reportModel.title"
                        autofocus
                 />
@@ -55,6 +56,7 @@
                     competences.report.model.name</i18n>
                 <input class="cell four"
                        type="text"
+                       ng-change="permanentControlTitle(newReportModel.title)"
                        ng-model="newReportModel.title"
                        ng-blur="saveTitleEdit(newReportModel)"/>
             </li>
