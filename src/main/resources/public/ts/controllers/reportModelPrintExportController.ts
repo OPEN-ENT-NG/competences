@@ -9,6 +9,8 @@ import {
 
 const {
     DELETED,
+    KEY_TITLE,
+    KEY_SELECTED,
 } = ReportModelPrintExportConstant;
 
 const reportModelPrintExportController = ng.controller(
@@ -29,10 +31,6 @@ const reportModelPrintExportController = ng.controller(
             $scope.enableSubmit = $scope.infoProblemInTitle = false;
             $scope.newReportModel = new ReportModelPrintExport(undefined);
             $scope.newReportModel.setSelected(false);
-
-            if ($scope.$parent.preferencesPrint) {
-                $scope.newReportModel.setPreferencesWithClean($scope.$parent.preferencesPrint);
-            }
 
             //functions share
             $scope.selectReportModel = function (reportModel: ReportModelPrintExportType): void {
@@ -138,6 +136,21 @@ const reportModelPrintExportController = ng.controller(
             }
 
             async function sendNew() {
+                if ($scope.$parent) {
+                    let scope: any = $scope.$parent;
+                    let print: any = {};
+                    if (scope.print) {
+                        print = scope.print;
+                        if (scope.mentionClass) {
+                            print.mentionClass = scope.mentionClass
+                        }
+                        if (scope.orientationOpinion) {
+                            print.mentionClass = scope.orientationOpinion
+                        }
+                        $scope.newReportModel.setPreferencesCheckboxWithClean(print);
+                        $scope.newReportModel.setPreferencesTextWithClean(print);
+                    }
+                }
                 await $scope.newReportModel.post();
             }
 
@@ -151,7 +164,7 @@ const reportModelPrintExportController = ng.controller(
                     cleanReportModelNoEdit();
                     cleanTitleEmptyBeforePut();
                     for (const reportModel of allReportModelPrintExportChecked()) {
-                        reportModel.put();
+                        reportModel.put([KEY_TITLE, KEY_SELECTED]);
                     }
                 }
 

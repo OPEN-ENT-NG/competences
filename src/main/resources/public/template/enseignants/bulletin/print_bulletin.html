@@ -524,37 +524,51 @@
                 <fieldset class="eleven">
                     <div class="twelve inputContainer">
                         <input class="eleven"
-                               type="text"
                                ng-model="mentionClass"
                                ng-show="updateMentionClass"
-                               ng-blur="closeEditLabel('updateMentionClass')"/>
+                               type="text"/>
                         <span ng-show="!updateMentionClass">
                                             [[mentionClass]]
                                         </span>
-                        <i class="right-magnet"
-                           ng-class="!updateMentionClass ? 'edit' : 'ok'"
-                           ng-click="openEditLabel('updateMentionClass')">
+                        <i class="right-magnet edit"
+                           ng-click="openEditLabel('updateMentionClass')"
+                           ng-if="!updateMentionClass">
                         </i>
+                        <div ng-if="updateMentionClass">
+                            <i class="ok"
+                               ng-click="closeEditLabel('updateMentionClass')">
+                            </i>
+                            <i class="right-magnet refresh"
+                               ng-click="reinitializeLabel('mentionClass')">
+                            </i>
+                        </div>
                     </div>
                     <div class="twelve inputContainer">
                         <input class="eleven"
-                               type="text"
                                ng-model="orientationOpinion"
                                ng-show="updateOrientationOpinion"
-                               ng-blur="closeEditLabel('updateOrientationOpinion')"/>
+                               type="text"/>
                         <span ng-show="!updateOrientationOpinion">
                                             [[orientationOpinion]]
                                         </span>
-                        <i class="right-magnet"
-                           ng-class="!updateOrientationOpinion ? 'edit' : 'ok'"
-                           ng-click="openEditLabel('updateOrientationOpinion')" >
+                        <i class="right-magnet edit"
+                           ng-click="openEditLabel('updateOrientationOpinion')"
+                           ng-if="!updateOrientationOpinion">
                         </i>
+                        <div ng-if="updateOrientationOpinion">
+                            <i class="ok"
+                               ng-click="closeEditLabel('updateOrientationOpinion')">
+                            </i>
+                            <i class="right-magnet refresh"
+                               ng-click="reinitializeLabel('orientationOpinion')">
+                            </i>
+                        </div>
                     </div>
                 </fieldset>
 
                 <div class="twelve">
-                    <button class ="right right-magnet" style="margin-top: 10px; margin-right : 6%"
-                            ng-click="generateBulletin(print);">
+                    <button class="right right-magnet" ng-click="generateBulletin(print);"
+                            style="margin-top: 10px; margin-right : 6%">
                         <i18n>evaluation.lsu.export.button</i18n>
                     </button>
                 </div>

@@ -4,7 +4,8 @@ export enum ReportModelPrintExportConstant {
     KEY_USER_ID = "userId",
     KEY_TITLE = "title",
     KEY_SELECTED = "selected",
-    KEY_PREFERENCES = "preferences",
+    KEY_PREFERENCES_CHECKBOX = "preferencesCheckbox",
+    KEY_PREFERENCES_TEXT = "preferencesText",
     STATUS = "status",
     URL_API_POST = "/competences/report-model-print-export",
     URL_API_GET_ALL = "/competences/reports-models-print-export",
@@ -16,7 +17,7 @@ export enum ReportModelPrintExportConstant {
     POSTED = "posted",
 }
 
-export enum ReportsModelsPrintExportTypeConst {
+export enum ReportsModelsPrintExportPreferencesCheckboxConst {
     CLASS_AVERAGE  = "moyenneClasse",
     GENERAL_AVEREGE = "moyenneGenerale",
     GET_PROGRAM_ELEMENTS = "getProgramElements",
@@ -37,5 +38,21 @@ export enum ReportsModelsPrintExportTypeConst {
     AGRICULTURE_LOGO = "agricultureLogo",
     STUDENT_AVERAGE_UNDER_SUBJECT = "moyenneEleveSousMat",
     POSITIONING_UNDER_SUBJECT = "positionnementSousMat",
+    ADD_OTHER_TEACHER = "addOtherTeacher",
+    HIDE_HEAD_TEACHER = "hideHeadTeacher",
     SIMPLE = "simple",
+    NEUTRAL = "neutre",
+}
+
+export enum ReportsModelsPrintExportPreferencesTextConst {
+    MENTION_OPINION = "mentionOpinion",
+    ORIENTATION_OPINION = "orientationOpinion",
+    NAME_CE = "nameCE",
+    IMG_STRUCTURE = "imgStructure",
+    IMG_SIGNATURE = "imgSignature",
+    OTHER_TEACHER_ID = "otherTeacherId",
+    OTHER_TEACHER_NAME = "otherTeacherName",
+    FUNCTION_OTHER_TEACHER = "functionOtherTeacher",
+    ID_MODEL = "idModel",
+    MENTION_CLASS = "mentionClass",
 }

@@ -9,13 +9,17 @@
     "selected": {
       "type": "boolean"
     },
-    "preferences": {
+    "preferencesCheckbox": {
+      "type": "object"
+    },
+    "preferencesText": {
       "type": "object"
     }
   },
   "required": [
     "title",
     "selected",
-    "preferences"
+    "preferencesCheckbox",
+    "preferencesText"
   ]
 }

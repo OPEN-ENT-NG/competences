@@ -3,16 +3,19 @@ export interface ReportModelPrintExportType {
     getId(): mongoId;
     getTitle(): String;
     getSelected(): Boolean;
-    getPreferences(): PreferencesReportModel;
+    getPreferencesCheckbox(): PreferencesCheckboxReportModel;
+    getPreferencesText(): PreferencesTextReportModel;
     getState(): String;
+
     //setters
     setTitle(title:String);
     setSelected(selected:Boolean);
-    setPreferences(preferences:PreferencesReportModel | {});
-    setPreferencesWithInit(preferences:PreferencesReportModel);
+    setPreferencesCheckbox(preferences:PreferencesCheckboxReportModel | {});
+    setPreferencesText(preferences:PreferencesTextReportModel | {});
+    setPreferencesCheckboxWithInit(preferences:PreferencesCheckboxReportModel);
     setState(state:String);
+
     //Methods
-    toJSON():toJson;
     isPost():Boolean;
     isPut():Boolean;
     isDelete():Boolean;
@@ -20,16 +23,18 @@ export interface ReportModelPrintExportType {
     haveTitle():Boolean;
     isEqual(reportModel:ReportModelPrintExportType):Boolean;
     //API
-    post: () => Promise<any>;
-    put: () => Promise<any>;
-    delete: () => Promise<any>;
+    post: () => Promise<void>;
+    put: (listKeys?:Array<string>) => Promise<void>;
+    delete: () => Promise<void>;
 }
 
 export interface toJson {
     title: String;
     selected: Boolean;
-    preferences: PreferencesReportModel;
+    preferencesCheckbox: PreferencesCheckboxReportModel;
+    preferencesText: PreferencesTextReportModel;
 }
 
-export type PreferencesReportModel = {string:boolean} | {}
+export type PreferencesCheckboxReportModel = {string:boolean} | {}
+export type PreferencesTextReportModel = {string:String} | {}
 export type mongoId = String;

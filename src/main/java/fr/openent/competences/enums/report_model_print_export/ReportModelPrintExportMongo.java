@@ -6,16 +6,17 @@ public enum ReportModelPrintExportMongo {
     KEY_USER_ID("userId"),
     KEY_TITLE("title"),
     KEY_SELECTED("selected"),
-    KEY_PREFERENCES("preferences"),
+    KEY_PREFERENCES_CHECKBOX("preferencesCheckbox"),
+    KEY_PREFERENCES_TEXT("preferencesText"),
     STATUS("status");
 
-    private String elementMongo ;
+    private String elementMongo;
 
     ReportModelPrintExportMongo(String element) {
-        this.elementMongo = element ;
+        this.elementMongo = element;
     }
 
     public String getString() {
-        return  this.elementMongo ;
+        return this.elementMongo;
     }
 }

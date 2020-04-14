@@ -9,38 +9,35 @@ import fr.openent.competences.service.impl.DefaultReportModelPrintExportService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserUtils;
+
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class ReportModelPrintExportController extends ControllerHelper {
 
     private final ReportModelPrintExportService reportModelService;
 
-    public ReportModelPrintExportController(){
+    public ReportModelPrintExportController() {
         reportModelService = new DefaultReportModelPrintExportService(ReportModelPrintExportMongo.COLLECTION_REPORT_MODEL.getString());
     }
 
     @Post("/report-model-print-export")
     @ApiDoc("Post report model")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void postReportModel(final HttpServerRequest request){
+    public void postReportModel(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "reportModelPrintExport", bodyRequest -> {
             UserUtils.getUserInfos(eb, request, user -> {
                 if (!ManageError.haveUser(request, user)) {
                     return;
                 }
                 try {
-                    String title = bodyRequest.getString("title");
-                    Boolean selected =  bodyRequest.getBoolean("selected");
-                    JsonObject preferences = bodyRequest.getJsonObject("preferences");
-
-                    ReportModelPrintExport newReportModel = new ReportModelPrintExport(null, user.getUserId(), title, selected, preferences);
-                    reportModelService.addReportModel(newReportModel, defaultResponseHandler(request));
+                    ReportModelPrintExport newReportModel = createReportModelWithBodyRequest(bodyRequest);
+                    newReportModel.setUserId(user.getUserId());
+                    reportModelService.addReportModel(newReportModel, defaultResponseHandler(request, 201));
                 } catch (Exception errorInPost) {
                     ManageError.requestFailError(request,
                             Common.ERROR.getString(), "Error during the POST report model. ",
@@ -53,13 +50,14 @@ public class ReportModelPrintExportController extends ControllerHelper {
     @Get("/reports-models-print-export")
     @ApiDoc("Get all report model by user")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getReportModel(final HttpServerRequest request){
+    public void getReportModel(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (!ManageError.haveUser(request, user)) {
                 return;
             }
-            try{
-                ReportModelPrintExport newReportModel = new ReportModelPrintExport(null, user.getUserId(), null, null, null);
+            try {
+                ReportModelPrintExport newReportModel = new ReportModelPrintExport();
+                newReportModel.setUserId(user.getUserId());
                 reportModelService.getReportModel(newReportModel, defaultResponseHandler(request));
             } catch (Exception errorUpdate) {
                 ManageError.requestFailError(request,
@@ -72,19 +70,16 @@ public class ReportModelPrintExportController extends ControllerHelper {
     @Put("/report-model-print-export/:idReportModel")
     @ApiDoc("Update report model")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void putReportModel(final HttpServerRequest request){
+    public void putReportModel(final HttpServerRequest request) {
         String idReportModel = request.getParam("idReportModel");
-        RequestUtils.bodyToJson(request,  bodyRequest -> {
+        RequestUtils.bodyToJson(request, bodyRequest -> {
             if (idReportModel == null) {
                 ManageError.requestFail(request, Common.INFO.getString(), "Id Report model is null.");
                 return;
             }
             try {
-                String title = bodyRequest.getString("title");
-                Boolean selected = bodyRequest.getBoolean("selected");
-                JsonObject preferences = bodyRequest.getJsonObject("preferences");
-
-                ReportModelPrintExport newReportModel = new ReportModelPrintExport(idReportModel,null, title, selected, preferences);
+                ReportModelPrintExport newReportModel = createReportModelWithBodyRequest(bodyRequest);
+                newReportModel.setId(idReportModel);
                 reportModelService.putReportModel(newReportModel, defaultResponseHandler(request));
             } catch (Exception errorUpdate) {
                 ManageError.requestFailError(request,
@@ -94,17 +89,17 @@ public class ReportModelPrintExportController extends ControllerHelper {
         });
     }
 
-
     @Get("/reports-models-print-export/selected")
     @ApiDoc("Get report model by user selected")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getReportModelsSelected(final HttpServerRequest request){
+    public void getReportModelsSelected(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (!ManageError.haveUser(request, user)) {
                 return;
             }
-            try{
-                ReportModelPrintExport newReportModel = new ReportModelPrintExport(null, user.getUserId(), null, null, null);
+            try {
+                ReportModelPrintExport newReportModel = new ReportModelPrintExport();
+                newReportModel.setUserId(user.getUserId());
                 reportModelService.getReportModelSelected(newReportModel, defaultResponseHandler(request));
             } catch (Exception errorUpdate) {
                 ManageError.requestFailError(request,
@@ -117,20 +112,34 @@ public class ReportModelPrintExportController extends ControllerHelper {
     @Delete("/report-model-print-export/:idReportModel")
     @ApiDoc("Delete report model")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void deleteReportModel(final HttpServerRequest request){
+    public void deleteReportModel(final HttpServerRequest request) {
         String idReportModel = request.getParam("idReportModel");
-        if(idReportModel.isEmpty()){
+        if (idReportModel.isEmpty()) {
             ManageError.requestFail(request, Common.INFO.getString(), "Id report model is empty.");
             return;
         }
-        try{
-            ReportModelPrintExport newReportModel = new ReportModelPrintExport(idReportModel, null, null, null, null);
-            reportModelService.deleteReportModel(newReportModel,  defaultResponseHandler(request));
+        try {
+            ReportModelPrintExport newReportModel = new ReportModelPrintExport();
+            newReportModel.setId(idReportModel);
+            reportModelService.deleteReportModel(newReportModel, defaultResponseHandler(request));
         } catch (Exception errorUpdate) {
             ManageError.requestFailError(request,
                     Common.ERROR.getString(), "Error during the DELETE report model. ",
                     errorUpdate.toString());
         }
+    }
+
+    private ReportModelPrintExport createReportModelWithBodyRequest( JsonObject bodyRequest){
+        String title = bodyRequest.getString("title");
+        Boolean selected = bodyRequest.getBoolean("selected");
+        JsonObject preferencesCheckbox = bodyRequest.getJsonObject("preferencesCheckbox");
+        JsonObject preferencesText = bodyRequest.getJsonObject("preferencesText");
+
+        return new ReportModelPrintExport(
+                title,
+                selected,
+                preferencesCheckbox,
+                preferencesText);
     }
 }
 
