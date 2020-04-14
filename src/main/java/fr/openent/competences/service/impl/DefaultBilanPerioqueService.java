@@ -183,14 +183,14 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                     }
                                     eitherHandler.handle(new Either.Right<>(result));
                                 }
-                });
-            } else {
-                String message = " " + eventPeriodes.left().getValue();
-                log.error("[getRetardsAndAbsences-Periodes] : " + idEleve + " " + message);
-                eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-Periodes] Failed"));
+                            });
+                } else {
+                    String message = " " + eventPeriodes.left().getValue();
+                    log.error("[getRetardsAndAbsences-Periodes] : " + idEleve + " " + message);
+                    eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-Periodes] Failed"));
+                }
             }
-        }
-    });
+        });
 
     }
 

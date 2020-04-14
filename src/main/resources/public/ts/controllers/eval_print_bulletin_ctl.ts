@@ -4,8 +4,8 @@ import * as utils from '../utils/teacher';
 import {evaluations, Utils} from "../models/teacher";
 import http from "axios";
 import {ReportModelPrintExport} from "../models/teacher/ReportModelPrintExport";
-import {PreferencesReportModel, ReportModelPrintExportType} from "../models/type";
 import {ReportModelPrintExportServiceType} from "../services/type";
+import {ReportModelPrintExportConstant} from "../constants";
 
 
 declare let $ : any;
@@ -16,9 +16,9 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
     '$scope', 'ReportModelPrintExportService',
     function ($scope, ReportModelPrintExportService:ReportModelPrintExportServiceType) {
 
-        $scope.mentionClass = lang.translate("conseil.avis.mention");
-        $scope.orientationOpinion = lang.translate("orientation.avis.FirstSecondTrimester");
-        $scope.updateMentionClass = $scope.updateOrientationOpinion = false;
+
+        $scope.updateMentionClass = false;
+        $scope.updateOrientationOpinion = false;
 
         let runMessageLoader = async function () {
             await Utils.runMessageLoader($scope);
@@ -62,11 +62,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
 
             // Récupération du logo de l'établissement, de la signature et du nom du CE
             try {
-                let infosStructure = await ExportBulletins.getInfosStructure($scope.structure.id);
 
-                $scope.print.imgStructure = infosStructure.data.imgStructure.path;
-                $scope.print.nameCE = infosStructure.data.nameAndBrad.name;
-                $scope.print.imgSignature = infosStructure.data.nameAndBrad.path;
                 let models = await http.get(`/competences/matieres/models/${$scope.structure.id}`);
                 $scope.models = {
                     all: models.data
@@ -109,10 +105,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 delete Me.preferences.competences.printBulletin.students;
                 await Me.savePreference('competences');
             }
-            if (userReportModel){
-                userReportModel.setPreferencesWithClean($scope.print);
-                userReportModel.put();
-            }
+            saveReportModel(userReportModel);
             let selectedClasses = _.where($scope.printClasses.all, {selected : true});
 
             if (_.isEmpty(selectedClasses)) {
@@ -229,17 +222,61 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             await utils.safeApply($scope);
         };
 
-        $scope.resetOpinions = () => {
-            if($scope.selected.periode.id_type === 5 || $scope.selected.periode.id_type === 2) {
-                $scope.orientationOpinion = lang.translate("orientation.avis.LastTrimester");
-            }
-            else {
-                $scope.orientationOpinion = lang.translate("orientation.avis.FirstSecondTrimester");
-            }
-            $scope.mentionClass = lang.translate("conseil.avis.mention");
+        $scope.isLightBoxReportModelOpen = false;
+        $scope.openLightBoxSelectModelReport = async function () {
+            $scope.isLightBoxReportModelOpen = true;
         };
 
-        async function getPreferences():Promise<void>{
+        $scope.closeLightBoxSelectModelReport = async function (reportModel = undefined) {
+            if (reportModel) syncPreferences(reportModel);
+            userReportModel = reportModel;
+            $scope.isLightBoxReportModelOpen = false;
+        };
+
+        let defaultValueMentionClass: String, defaultValueOrientationOpinion: String;
+        $scope.openEditLabel = function (label: string): void {
+            $scope[label] = !$scope[label];
+            defaultValueMentionClass = $scope.mentionClass;
+            defaultValueOrientationOpinion = $scope.orientationOpinion;
+        };
+
+        $scope.closeEditLabel = function (label: string): void {
+            $scope[label] = false;
+            if ($scope.mentionClass === "") $scope.mentionClass = defaultValueMentionClass;
+            if ($scope.orientationOpinion === "") $scope.orientationOpinion = defaultValueOrientationOpinion;
+        };
+
+        $scope.resetOpinions = () => {
+            if (!$scope.print.orientationOpinion) {
+                if ($scope.selected.periode) {
+                    if ($scope.selected.periode.id_type === 5 || $scope.selected.periode.id_type === 2) {
+                        $scope.orientationOpinion = lang.translate("orientation.avis.LastTrimester");
+                    } else {
+                        $scope.orientationOpinion = lang.translate("orientation.avis.FirstSecondTrimester");
+                    }
+                }
+            } else {
+                $scope.orientationOpinion = $scope.print.orientationOpinion;
+            }
+            $scope.mentionClass = $scope.print.mentionClass
+                ? $scope.print.mentionClass
+                : lang.translate("conseil.avis.mention");
+        };
+
+        $scope.reinitializeLabel = function (model: string): void {
+            if (model === "mentionClass") $scope.mentionClass = lang.translate("conseil.avis.mention");
+            if (model === "orientationOpinion") {
+                if ($scope.selected.periode) {
+                    if ($scope.selected.periode.id_type === 5 || $scope.selected.periode.id_type === 2) {
+                        $scope.orientationOpinion = lang.translate("orientation.avis.LastTrimester");
+                        return
+                    }
+                }
+                $scope.orientationOpinion = lang.translate("orientation.avis.FirstSecondTrimester");
+            }
+        };
+
+        async function getPreferences(): Promise<void> {
             const competences = await Me.preference('competences');
             const optionsPrintBulletin = (Utils.isNull(competences) ? undefined : competences.printBulletin);
             $scope.print = (Utils.isNull(optionsPrintBulletin)) ? {} : optionsPrintBulletin;
@@ -247,43 +284,42 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             utils.safeApply($scope);
         }
 
-        let userReportModel:ReportModelPrintExport;
-        async function getReportModelAllSelected():Promise<void>{
+        let userReportModel: ReportModelPrintExport;
+
+        async function getReportModelAllSelected(): Promise<void> {
             userReportModel = await ReportModelPrintExportService.getFirstSelected();
-            syncPreferences(userReportModel.getPreferences());
+            await syncPreferences(userReportModel);
         }
 
-        function syncPreferences(preferences:PreferencesReportModel){
+        async function syncPreferencesText(): Promise<void> {
+            $scope.resetOpinions();
+            let infosStructure = await ExportBulletins.getInfosStructure($scope.structure.id);
+            $scope.print.imgStructure || infosStructure.data.imgStructure.path;
+            $scope.print.nameCE || infosStructure.data.nameAndBrad.name;
+            $scope.print.imgSignature || infosStructure.data.nameAndBrad.path;
+        }
+
+        async function syncPreferences(reportModel: ReportModelPrintExport) {
             $scope.print = {
                 ...$scope.print,
-                ...preferences
+                ...reportModel.getPreferencesText(),
+                ...reportModel.getPreferencesCheckbox()
             };
+            await syncPreferencesText();
+            utils.safeApply($scope);
         }
 
-        $scope.isLightBoxReportModelOpen = false;
-        $scope.openLightBoxSelectModelReport = async function(){
-            $scope.preferencesPrint = $scope.print;
-            $scope.isLightBoxReportModelOpen = true;
-        };
-
-        $scope.closeLightBoxSelectModelReport = async function(reportModel = undefined){
-            if(reportModel) syncPreferences(reportModel.getPreferences());
-            userReportModel = reportModel;
-            $scope.isLightBoxReportModelOpen = false;
-        };
-
-        let defaultValueMentionClass:String, defaultValueOrientationOpinion:String;
-        $scope.openEditLabel = function(label:string):void{
-            $scope[label] = !$scope[label];
-            defaultValueMentionClass = $scope.mentionClass;
-            defaultValueOrientationOpinion = $scope.orientationOpinion;
-        };
-
-        $scope.closeEditLabel = function (label:string):void {
-            $scope[label] = false;
-            if($scope.mentionClass === "")$scope.mentionClass = defaultValueMentionClass;
-            if($scope.orientationOpinion === "") $scope.orientationOpinion = defaultValueOrientationOpinion;
+        const {
+            KEY_PREFERENCES_CHECKBOX,
+            KEY_PREFERENCES_TEXT,
+        } = ReportModelPrintExportConstant;
+        function saveReportModel(reportModel: ReportModelPrintExport): void {
+            if (!reportModel) return;
+            $scope.print.mentionClass = $scope.mentionClass;
+            $scope.print.orientationOpinion = $scope.orientationOpinion;
+            reportModel.setPreferencesCheckboxWithClean($scope.print);
+            reportModel.setPreferencesTextWithClean($scope.print);
+            reportModel.put([KEY_PREFERENCES_CHECKBOX, KEY_PREFERENCES_TEXT]);
         }
-
     }
 ]);

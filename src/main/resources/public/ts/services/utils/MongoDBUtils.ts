@@ -4,7 +4,7 @@ export class MongoDBUtils {
 
     public static controlDataAndGetId(response:AxiosResponse):String{
         const { status, data } = response;
-        if(status === 200){
+        if(status === 200 || status === 201){
             return data._id;
         }
         return undefined;
