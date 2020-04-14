@@ -1046,7 +1046,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return " null AS moyenne_finale,  null AS id_classe_moyfinale, null AS id_periode_moyenne_finale, ";
     }
 
-    private void getMoyenneFinale(String idEleve, String idMatiere, Long idPeriode,
+    private void getMoyenneFinale(String idEleve, String idMatiere, Long idPeriode, JsonArray idsGroups,
                                   Handler<Either<String, JsonArray>> handler){
         String query = "SELECT moyenne_finale.moyenne AS moyenne_finale, " +
                 " moyenne_finale.id_classe AS id_classe_moyfinale, moyenne_finale.id_periode " +
@@ -1058,12 +1058,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 " WHERE " +
                 ((idPeriode!=null)?"( moyenne_finale.id_periode = ?) AND ": "") +
                 "    (moyenne_finale.id_eleve = ?) " +
-                "     AND ( moyenne_finale.id_matiere = ?)";
+                "     AND ( moyenne_finale.id_matiere = ?) " +
+                "AND id_classe IN " + Sql.listPrepared(idsGroups.getList());
         JsonArray params = new JsonArray();
         if(idPeriode!=null){
             params.add(idPeriode);
         }
         params.add(idEleve).add(idMatiere);
+        for(Object idGroup : idsGroups){
+            params.add(idGroup);
+        }
         Sql.getInstance().prepared( query, params,Competences.DELIVERY_OPTIONS, validResultHandler(handler));
 
     }
@@ -1072,7 +1076,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return " null AS appreciation_matiere_periode,  null AS id_classe_appreciation, " +
                 " null AS id_periode_appreciation, " ;
     }
-    private void getAppreciationMatierePeriode(String idEleve, String idMatiere, Long idPeriode,
+    private void getAppreciationMatierePeriode(String idEleve, String idMatiere, Long idPeriode, JsonArray idGroups,
                                                Handler<Either<String, JsonArray>> handler){
         String query = "SELECT appreciation_matiere_periode.appreciation_matiere_periode, " +
                 " appreciation_matiere_periode.id_classe AS id_classe_appreciation, " +
@@ -1082,13 +1086,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 " WHERE " +
                 ((idPeriode!=null)?"(appreciation_matiere_periode.id_periode = ? ) AND ": "") +
                 "    (appreciation_matiere_periode.id_eleve = ?) " +
-                "     AND (appreciation_matiere_periode.id_matiere = ?) ";
+                "     AND (appreciation_matiere_periode.id_matiere = ?) " +
+                "AND id_classe IN "+ Sql.listPrepared(idGroups.getList());
 
         JsonArray params = new JsonArray();
         if(idPeriode!=null){
             params.add(idPeriode);
         }
         params.add(idEleve).add(idMatiere);
+        for(Object idGroup : idGroups){
+            params.add(idGroup);
+        }
+
         Sql.getInstance().prepared( query, params,Competences.DELIVERY_OPTIONS, validResultHandler(handler));
     }
     private JsonObject leftJoin(JsonObject left, JsonObject right){
@@ -1150,17 +1159,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     @Override
-    public void getAppreciationMoyFinalePositionnement(String idEleve, String idMatiere, Long idPeriode,
+    public void getAppreciationMoyFinalePositionnement(String idEleve, String idMatiere, Long idPeriode, JsonArray idGroups,
                                                        Handler<Either<String, JsonArray>> handler) {
 
 
         Future<JsonArray> appreciationFuture = Future.future();
-        getAppreciationMatierePeriode(idEleve, idMatiere, idPeriode, event-> {
+        getAppreciationMatierePeriode(idEleve, idMatiere, idPeriode, idGroups, event-> {
             formate(appreciationFuture, event);
         });
 
         Future<JsonArray> moyenneFinaleFuture = Future.future();
-        getMoyenneFinale(idEleve, idMatiere, idPeriode, event -> {
+        getMoyenneFinale(idEleve, idMatiere, idPeriode, idGroups, event -> {
             formate(moyenneFinaleFuture, event);
         });
 

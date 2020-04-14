@@ -327,6 +327,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         }
 
                         classe.put("idClasse", idClasse);
+                        classe.put("classeName", params.getString("classeName"));
 
                         Boolean showBilanPerDomaines = params.getBoolean("showBilanPerDomaines");
                         buildDataForStudent(answered, eleves, elevesMap, idPeriode, params, classe,
@@ -2458,7 +2459,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         JsonObject images = params.getJsonObject("images");
         Long typePeriode = params.getLong(TYPE_PERIODE);
-        String idClasseExporte = classe.getString(ID_CLASSE_KEY);
+       // String idClasseExporte = classe.getString(ID_CLASSE_KEY);
         for (int i = 0; i < eleves.size(); i++) {
             JsonObject eleve = eleves.getJsonObject(i);
             eleve.put(TYPE_PERIODE, typePeriode);
@@ -2468,7 +2469,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             setBirthDate(eleve);
 
             // Classe à afficher
-            setStudentClasseToPrint(eleve, idClasseExporte);
+            setStudentClasseToPrint(eleve, classe);
 
             // Rajout de l'image du graphe par domaine
             if (showBilanPerDomaines) {
@@ -2920,14 +2921,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    private void setStudentClasseToPrint(JsonObject student, String idClasseExporte){
-        if(!student.getString("idClasse").equals(idClasseExporte) &&
+    private void setStudentClasseToPrint(JsonObject student, JsonObject classe){
+        student.put(CLASSE_NAME_TO_SHOW, classe.getString("classeName"));
+      /*  if(!student.getString("idClasse").equals(idClasseExporte) &&
                 student.getJsonObject("oldClasses") != null &&
                 student.getJsonObject("oldClasses").getString(idClasseExporte) != null) {
             student.put(CLASSE_NAME_TO_SHOW, student.getJsonObject("oldClasses").getString(idClasseExporte));
         } else {
             student.put(CLASSE_NAME_TO_SHOW, student.getString("classeName"));
-        }
+        }*/
     }
 
 
