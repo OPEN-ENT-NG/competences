@@ -1031,22 +1031,10 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                     if (value === 1) {
                                         return "Compétence non évaluée";
                                     }
-                                    else if (value === 2) {
-                                        return "Maîtrise insuffisante";
+                                    else if (_.findWhere($scope.niveauCompetences, {ordre  : value - 1})) {
+                                        return _.findWhere($scope.niveauCompetences, {ordre : value - 1}).libelle;
                                     }
-                                    else if (value === 3) {
-                                        return "Maîtrise fragile";
-                                    }
-                                    else if (value === 4) {
-                                        return "Maîtrise satisfaisante";
-                                    }
-                                    else if (value === 5) {
-                                        return "Très bonne maîtrise";
-                                    }
-                                    else {
-                                        return " ";
-                                    }
-                                    // return parseFloat(value).toFixed(2) + '%';
+                                    return " ";
                                 }
                             },
                         }],

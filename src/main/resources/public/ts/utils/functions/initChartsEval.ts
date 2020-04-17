@@ -145,7 +145,6 @@ export let initChartsEval = async function ($scope) {
             }
 
             let colorValue;
-            console.log(ListEval[i].evaluation);
             if (ListEval[i].evaluation !== -1) {
                 colorValue = $scope.mapCouleurs[ListEval[i].evaluation];
             } else {
