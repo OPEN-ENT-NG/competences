@@ -698,7 +698,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         };
 
         $scope.hideArrow = function (num) {
-            if($scope.filteredEleves){
+            if($scope.filteredEleves && $scope.search.eleve){
                 let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
                 return !(index !== -1 && index + parseInt(num) >= 0
                     && index + parseInt(num) < $scope.filteredEleves.all.length);
