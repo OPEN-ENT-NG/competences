@@ -2300,193 +2300,209 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     public void getTotaleDatasReleve(final JsonObject params, final Long idPeriode, final boolean annual,
                                      final Handler<Either<String, JsonObject>> handler){
-        final String idEtablissement = params.getString(Competences.ID_ETABLISSEMENT_KEY);
-        final String idClasse = params.getString(Competences.ID_CLASSE_KEY);
-        final JsonArray idMatieres = params.getJsonArray("idMatieres");
-        final Integer typeClasse = params.getInteger(Competences.TYPE_CLASSE_KEY);
-        final JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
-        final JsonObject resultHandler = new JsonObject();
-        final JsonArray idGroups = ((params.getJsonArray("idGroups").size() == 0)? null : params.getJsonArray("idGroups"));
-        Map<String, JsonObject> elevesMapObject = new HashMap<>();
-        // Récupération des élèves de la classe
-        Future<JsonArray> studentsClassFuture =  Future.future();
-        getStudentClassForExportReleve(idClasse, idPeriode, idEleves, typeClasse,
-                elevesMapObject, studentsClassFuture);
-        // Récupération du tableau de conversion
-        Future<JsonArray> tableauDeConversionFuture = Future.future();
-        // On récupère le tableau de conversion des compétences notes pour Lire le positionnement
-        new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE)
-                .getConversionNoteCompetence(idEtablissement, idClasse,
-                        tableauEvent -> {
-                            formate(tableauDeConversionFuture, tableauEvent);
-                        });
-        List<Future> listFuturesFirst = new ArrayList<>(
-                Arrays.asList(studentsClassFuture,tableauDeConversionFuture));
-        for (Object idMatiere : idMatieres){
-            // Récupération du  nombre de devoirs avec évaluation numérique
-            Future<JsonObject> nbEvaluatedHomeWork = Future.future();
-            getNbEvaluatedHomeWork(idClasse, idMatiere.toString(), idPeriode, idGroups, event -> {
-                formate(nbEvaluatedHomeWork, event);
-            });
-            listFuturesFirst.add(nbEvaluatedHomeWork);
-        }
-        // Avec les ids des élèves de la classe, récupération des moyennes Finales , des Notes, des Competences Notes
-        // et des Appreciations et des Positionnements finaux
-        CompositeFuture.all(listFuturesFirst)
-                .setHandler( idElevesEvent -> {
-                    if(idElevesEvent.succeeded()) {
+        log.info("Start getTotaleDatasReleve in " + idPeriode);
+        try{
+            final String idEtablissement = params.getString(Competences.ID_ETABLISSEMENT_KEY);
+            final String idClasse = params.getString(Competences.ID_CLASSE_KEY);
+            final JsonArray idMatieres = params.getJsonArray("idMatieres");
+            final Integer typeClasse = params.getInteger(Competences.TYPE_CLASSE_KEY);
+            final JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
+            final JsonObject resultHandler = new JsonObject();
+            final JsonArray idGroups = ((params.getJsonArray("idGroups").size() == 0)? null : params.getJsonArray("idGroups"));
+            Map<String, JsonObject> elevesMapObject = new HashMap<>();
+            // Récupération des élèves de la classe
+            Future<JsonArray> studentsClassFuture =  Future.future();
+            getStudentClassForExportReleve(idClasse, idPeriode, idEleves, typeClasse,
+                    elevesMapObject, studentsClassFuture);
+            // Récupération du tableau de conversion
+            Future<JsonArray> tableauDeConversionFuture = Future.future();
+            // On récupère le tableau de conversion des compétences notes pour Lire le positionnement
+            new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE)
+                    .getConversionNoteCompetence(idEtablissement, idClasse,
+                            tableauEvent -> {
+                                formate(tableauDeConversionFuture, tableauEvent);
+                            });
+            List<Future> listFuturesFirst = new ArrayList<>(
+                    Arrays.asList(studentsClassFuture,tableauDeConversionFuture));
+            for (Object idMatiere : idMatieres){
+                // Récupération du  nombre de devoirs avec évaluation numérique
+                Future<JsonObject> nbEvaluatedHomeWork = Future.future();
+                getNbEvaluatedHomeWork(idClasse, idMatiere.toString(), idPeriode, idGroups, event -> {
+                    formate(nbEvaluatedHomeWork, event);
+                });
+                listFuturesFirst.add(nbEvaluatedHomeWork);
+            }
+            // Avec les ids des élèves de la classe, récupération des moyennes Finales , des Notes, des Competences Notes
+            // et des Appreciations et des Positionnements finaux
+            CompositeFuture.all(listFuturesFirst)
+                    .setHandler( idElevesEvent -> {
+                        try{
+                            if(idElevesEvent.succeeded()) {
 
-                        // Récupération des moyennes, positionnement Finales, appréciations, avis conseil de classe et orientation
-                        Future<JsonArray> bigRequestFuture = Future.future();
-                        getColonneReleveTotale(idEleves, idPeriode, idMatieres, new JsonArray().add(idClasse), idEtablissement,
-                                event -> formate(bigRequestFuture, event));
+                                // Récupération des moyennes, positionnement Finales, appréciations, avis conseil de classe et orientation
+                                Future<JsonArray> bigRequestFuture = Future.future();
+                                getColonneReleveTotale(idEleves, idPeriode, idMatieres, new JsonArray().add(idClasse), idEtablissement,
+                                        event -> formate(bigRequestFuture, event));
 
-                        // Récupération des Notes du Relevé
-                        Future<JsonArray> notesFuture = Future.future();
-                        getNotesReleveEleves(idEleves, idEtablissement, idClasse, null, idPeriode,
-                                false, idGroups, idMatieres,
-                                notesEvent -> formate(notesFuture, notesEvent));
+                                // Récupération des Notes du Relevé
+                                Future<JsonArray> notesFuture = Future.future();
+                                getNotesReleveEleves(idEleves, idEtablissement, idClasse, null, idPeriode,
+                                        false, idGroups, idMatieres,
+                                        notesEvent -> formate(notesFuture, notesEvent));
 
-                        // Récupération des Compétences-Notes du Relevé
-                        Future<JsonArray> compNotesFuture = Future.future();
-                        getCompetencesNotesReleveEleves(idEleves, idEtablissement, idClasse, idGroups, null,
-                                idMatieres, idPeriode, null, true, compNotesEvent -> {
-                                    formate(compNotesFuture, compNotesEvent);
-                                });
+                                // Récupération des Compétences-Notes du Relevé
+                                Future<JsonArray> compNotesFuture = Future.future();
+                                getCompetencesNotesReleveEleves(idEleves, idEtablissement, idClasse, idGroups, null,
+                                        idMatieres, idPeriode, null, true, compNotesEvent -> {
+                                            formate(compNotesFuture, compNotesEvent);
+                                        });
 
-                        List<Future> listFutures = new ArrayList<>(
-                                Arrays.asList(bigRequestFuture, compNotesFuture,notesFuture)
-                        );
-                        CompositeFuture.all(listFutures).setHandler( event -> {
-                            if(event.succeeded()) {
-                                // Rajout des moyennes finales
-                                for (int i=2; i<idMatieres.size()+2;i++){
-                                    // Récupération du  nombre de devoirs avec évaluation numérique
-                                    Boolean hasEvaluatedHomeWork = (((JsonObject)listFuturesFirst.get(i).result())
-                                            .getLong("nb") > 0);
+                                List<Future> listFutures = new ArrayList<>(
+                                        Arrays.asList(bigRequestFuture, compNotesFuture,notesFuture)
+                                );
+                                CompositeFuture.all(listFutures).setHandler( event -> {
+                                    try{
+                                        if(event.succeeded()) {
+                                            // Rajout des moyennes finales
+                                            for (int i=2; i<idMatieres.size()+2;i++){
+                                                // Récupération du  nombre de devoirs avec évaluation numérique
+                                                Boolean hasEvaluatedHomeWork = (((JsonObject)listFuturesFirst.get(i).result())
+                                                        .getLong("nb") > 0);
 
-                                    JsonArray notesMatiere = new JsonArray();
+                                                JsonArray notesMatiere = new JsonArray();
 
-                                    for(Object note : notesFuture.result()){
-                                        if(((JsonObject)note).getString("id_matiere").equals(idMatieres.getString(i-2))){
-                                            notesMatiere.add(note);
-                                        }
-                                    }
-
-                                    if(resultHandler.containsKey(NOTES)){
-                                        resultHandler.getJsonObject(NOTES).put(idMatieres.getString(i-2),notesMatiere);
-                                    }else{
-                                        JsonObject jsonNotesToAdd = new JsonObject();
-                                        jsonNotesToAdd.put(idMatieres.getString(i-2),notesMatiere);
-                                        resultHandler.put(NOTES, jsonNotesToAdd);
-                                    }
-
-                                    JsonObject resultNotes = new JsonObject();
-
-                                    calculMoyennesNotesFOrReleve(notesMatiere, resultNotes, idPeriode,
-                                            elevesMapObject, hasEvaluatedHomeWork,false, annual, idMatieres.getString(i-2));
-                                    if( resultHandler.containsKey(MOYENNE)){
-                                        resultHandler.getJsonObject(MOYENNE).put(idMatieres.getString(i-2),resultNotes);
-                                    }else{
-                                        JsonObject jsonToAdd = new JsonObject();
-                                        jsonToAdd.put(idMatieres.getString(i-2),resultNotes);
-                                        resultHandler.put(MOYENNE, jsonToAdd);
-                                    }
-
-                                }
-                                for (Object idMatiere : idMatieres){
-                                    JsonArray notesMatiere = new JsonArray();
-
-                                    for(Object note : compNotesFuture.result()){
-                                        if(((JsonObject)note).getString("id_matiere").equals(idMatiere.toString())){
-                                            notesMatiere.add(note);
-                                        }
-                                    }
-                                    if( resultHandler.containsKey(COMPETENCES_NOTES_KEY)){
-                                        resultHandler.getJsonObject(COMPETENCES_NOTES_KEY).put(idMatiere.toString(),notesMatiere);
-                                    }else{
-                                        JsonObject jsonToAdd = new JsonObject();
-                                        jsonToAdd.put(idMatiere.toString(),notesMatiere);
-                                        resultHandler.put(COMPETENCES_NOTES_KEY, jsonToAdd);
-                                    }
-
-                                    Map<String, JsonArray> notesByEleve = groupeNotesByStudent(notesMatiere);
-
-                                    for (Map.Entry<String, JsonArray> entry : notesByEleve.entrySet()) {
-                                        String idEleve = entry.getKey();
-                                        JsonArray compNotesEleve = entry.getValue();
-
-                                        if(elevesMapObject.containsKey(idEleve) && idEleve != null) {
-                                            JsonObject eleveObject = elevesMapObject.get(idEleve);
-                                            if( eleveObject.containsKey(COMPETENCES_NOTES_KEY)){
-                                                if (eleveObject.getJsonObject(COMPETENCES_NOTES_KEY).getJsonObject(idMatiere.toString()) == null) {
-                                                    eleveObject.getJsonObject(COMPETENCES_NOTES_KEY).put(idMatiere.toString(), compNotesEleve);
+                                                for(Object note : notesFuture.result()){
+                                                    if(((JsonObject)note).getString("id_matiere").equals(idMatieres.getString(i-2))){
+                                                        notesMatiere.add(note);
+                                                    }
                                                 }
-                                            }else{
-                                                JsonObject jsonToAdd = new JsonObject();
-                                                jsonToAdd.put(idMatiere.toString(),compNotesEleve);
-                                                eleveObject.put(COMPETENCES_NOTES_KEY, jsonToAdd);
+
+                                                if(resultHandler.containsKey(NOTES)){
+                                                    resultHandler.getJsonObject(NOTES).put(idMatieres.getString(i-2),notesMatiere);
+                                                }else{
+                                                    JsonObject jsonNotesToAdd = new JsonObject();
+                                                    jsonNotesToAdd.put(idMatieres.getString(i-2),notesMatiere);
+                                                    resultHandler.put(NOTES, jsonNotesToAdd);
+                                                }
+
+                                                JsonObject resultNotes = new JsonObject();
+
+                                                calculMoyennesNotesFOrReleve(notesMatiere, resultNotes, idPeriode,
+                                                        elevesMapObject, hasEvaluatedHomeWork,false, annual, idMatieres.getString(i-2));
+                                                if( resultHandler.containsKey(MOYENNE)){
+                                                    resultHandler.getJsonObject(MOYENNE).put(idMatieres.getString(i-2),resultNotes);
+                                                }else{
+                                                    JsonObject jsonToAdd = new JsonObject();
+                                                    jsonToAdd.put(idMatieres.getString(i-2),resultNotes);
+                                                    resultHandler.put(MOYENNE, jsonToAdd);
+                                                }
+
                                             }
-                                            JsonObject resultNotes = new JsonObject();
-                                            calculPositionnementAutoByEleveByMatiere(compNotesEleve, resultNotes,annual, tableauDeConversionFuture.result());
-                                            if( eleveObject.containsKey(POSITIONNEMENT_AUTO)){
-                                                eleveObject.getJsonObject(POSITIONNEMENT_AUTO).put(idMatiere.toString(),
-                                                        resultNotes.getJsonArray(POSITIONNEMENTS_AUTO));
-                                            }else{
-                                                JsonObject jsonToAdd = new JsonObject();
-                                                jsonToAdd.put(idMatiere.toString(),resultNotes.getJsonArray(POSITIONNEMENTS_AUTO));
-                                                eleveObject.put(POSITIONNEMENT_AUTO, jsonToAdd);
+                                            for (Object idMatiere : idMatieres){
+                                                JsonArray notesMatiere = new JsonArray();
+
+                                                for(Object note : compNotesFuture.result()){
+                                                    if(((JsonObject)note).getString("id_matiere").equals(idMatiere.toString())){
+                                                        notesMatiere.add(note);
+                                                    }
+                                                }
+                                                if( resultHandler.containsKey(COMPETENCES_NOTES_KEY)){
+                                                    resultHandler.getJsonObject(COMPETENCES_NOTES_KEY).put(idMatiere.toString(),notesMatiere);
+                                                }else{
+                                                    JsonObject jsonToAdd = new JsonObject();
+                                                    jsonToAdd.put(idMatiere.toString(),notesMatiere);
+                                                    resultHandler.put(COMPETENCES_NOTES_KEY, jsonToAdd);
+                                                }
+
+                                                Map<String, JsonArray> notesByEleve = groupeNotesByStudent(notesMatiere);
+
+                                                for (Map.Entry<String, JsonArray> entry : notesByEleve.entrySet()) {
+                                                    String idEleve = entry.getKey();
+                                                    JsonArray compNotesEleve = entry.getValue();
+
+                                                    if(elevesMapObject.containsKey(idEleve) && idEleve != null) {
+                                                        JsonObject eleveObject = elevesMapObject.get(idEleve);
+                                                        if( eleveObject.containsKey(COMPETENCES_NOTES_KEY)){
+                                                            if (eleveObject.getJsonObject(COMPETENCES_NOTES_KEY).getJsonObject(idMatiere.toString()) == null) {
+                                                                eleveObject.getJsonObject(COMPETENCES_NOTES_KEY).put(idMatiere.toString(), compNotesEleve);
+                                                            }
+                                                        }else{
+                                                            JsonObject jsonToAdd = new JsonObject();
+                                                            jsonToAdd.put(idMatiere.toString(),compNotesEleve);
+                                                            eleveObject.put(COMPETENCES_NOTES_KEY, jsonToAdd);
+                                                        }
+                                                        JsonObject resultNotes = new JsonObject();
+                                                        calculPositionnementAutoByEleveByMatiere(compNotesEleve, resultNotes,annual, tableauDeConversionFuture.result());
+                                                        if( eleveObject.containsKey(POSITIONNEMENT_AUTO)){
+                                                            eleveObject.getJsonObject(POSITIONNEMENT_AUTO).put(idMatiere.toString(),
+                                                                    resultNotes.getJsonArray(POSITIONNEMENTS_AUTO));
+                                                        }else{
+                                                            JsonObject jsonToAdd = new JsonObject();
+                                                            jsonToAdd.put(idMatiere.toString(),resultNotes.getJsonArray(POSITIONNEMENTS_AUTO));
+                                                            eleveObject.put(POSITIONNEMENT_AUTO, jsonToAdd);
+                                                        }
+                                                        JsonObject positionnement = utilsService.getObjectForPeriode(
+                                                                eleveObject.getJsonObject(POSITIONNEMENT_AUTO).getJsonArray(idMatiere.toString()),
+                                                                idPeriode, ID_PERIODE);
+                                                        String positionnement_auto  = "";
+                                                        if (positionnement != null) {
+                                                            positionnement_auto = positionnement.getFloat(MOYENNE).toString();
+                                                        }
+                                                        if( eleveObject.containsKey(POSITIONNEMENT)){
+                                                            eleveObject.getJsonObject(POSITIONNEMENT).put(idMatiere.toString(),positionnement_auto);
+                                                        }else{
+                                                            JsonObject jsonToAdd = new JsonObject();
+                                                            jsonToAdd.put(idMatiere.toString(),positionnement_auto);
+                                                            eleveObject.put(POSITIONNEMENT, jsonToAdd);
+                                                        }
+                                                    }
+                                                }
                                             }
-                                            JsonObject positionnement = utilsService.getObjectForPeriode(
-                                                    eleveObject.getJsonObject(POSITIONNEMENT_AUTO).getJsonArray(idMatiere.toString()),
-                                                    idPeriode, ID_PERIODE);
-                                            String positionnement_auto  = "";
-                                            if (positionnement != null) {
-                                                positionnement_auto = positionnement.getFloat(MOYENNE).toString();
+                                            for (int i=2; i<idMatieres.size()+2;i++){
+                                                // Récupération du  nombre de devoirs avec évaluation numérique
+                                                Boolean hasEvaluatedHomeWork = (((JsonObject)listFuturesFirst.get(i).result()).getLong("nb") > 0);
+                                                FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject, MOYENNE, idPeriode, hasEvaluatedHomeWork, idMatieres.getString(i-2));
+                                                //Rajout des notes par devoir et Calcul des moyennes auto
+                                                //Rajout des positionnements finaux
+                                                FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
+                                                        POSITIONNEMENT, idPeriode, hasEvaluatedHomeWork, idMatieres.getString(i-2));
+                                                getMoyenneMinMaxByMatiere(elevesMapObject,idPeriode,idMatieres.getString(i-2),annual,resultHandler);
                                             }
-                                            if( eleveObject.containsKey(POSITIONNEMENT)){
-                                                eleveObject.getJsonObject(POSITIONNEMENT).put(idMatiere.toString(),positionnement_auto);
-                                            }else{
-                                                JsonObject jsonToAdd = new JsonObject();
-                                                jsonToAdd.put(idMatiere.toString(),positionnement_auto);
-                                                eleveObject.put(POSITIONNEMENT, jsonToAdd);
+                                            getMoyenneGeneraleMinMax(elevesMapObject,idPeriode,idMatieres, annual, resultHandler);
+                                            resultHandler.put(TABLE_CONVERSION_KEY, tableauDeConversionFuture.result());
+                                            //Rajout des appreciations par élèves
+                                            FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
+                                                    SYNTHESE_BILAN_PERIODIQUE, idPeriode, false, "");
+                                            FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
+                                                    AVIS_CONSEIL_DE_CLASSE, idPeriode, false, "");
+                                            FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
+                                                    AVIS_CONSEIL_ORIENTATION, idPeriode, false, "");
+
+                                            log.info("End getTotaleDatasReleve in " + idPeriode);
+                                            handler.handle(new Either.Right<>(resultHandler.put(ELEVES, new DefaultExportBulletinService(eb, null)
+                                                    .sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
+                                        } else {
+                                            handler.handle(new Either.Left<>(event.cause().getMessage()));
+                                            if(idElevesEvent.failed()) {
+                                                log.error("getTotaleDatasReleve (idElevesEvent.failed()): " +
+                                                        idElevesEvent.cause());
                                             }
                                         }
+                                    } catch (Exception error) {
+                                        log.error("listFuturesFirst: " + error);
                                     }
-                                }
-                                for (int i=2; i<idMatieres.size()+2;i++){
-                                    // Récupération du  nombre de devoirs avec évaluation numérique
-                                    Boolean hasEvaluatedHomeWork = (((JsonObject)listFuturesFirst.get(i).result()).getLong("nb") > 0);
-                                    FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject, MOYENNE, idPeriode, hasEvaluatedHomeWork, idMatieres.getString(i-2));
-                                    //Rajout des notes par devoir et Calcul des moyennes auto
-                                    //Rajout des positionnements finaux
-                                    FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
-                                            POSITIONNEMENT, idPeriode, hasEvaluatedHomeWork, idMatieres.getString(i-2));
-                                    getMoyenneMinMaxByMatiere(elevesMapObject,idPeriode,idMatieres.getString(i-2),annual,resultHandler);
-                                }
-                                getMoyenneGeneraleMinMax(elevesMapObject,idPeriode,idMatieres, annual, resultHandler);
-                                resultHandler.put(TABLE_CONVERSION_KEY, tableauDeConversionFuture.result());
-                                //Rajout des appreciations par élèves
-                                FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
-                                        SYNTHESE_BILAN_PERIODIQUE, idPeriode, false, "");
-                                FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
-                                        AVIS_CONSEIL_DE_CLASSE, idPeriode, false, "");
-                                FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
-                                        AVIS_CONSEIL_ORIENTATION, idPeriode, false, "");
-
-                                handler.handle(new Either.Right<>(resultHandler.put(ELEVES, new DefaultExportBulletinService(eb, null)
-                                        .sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
+                                });
                             }
                             else {
-                                handler.handle(new Either.Left<>(event.cause().getMessage()));
+                                handler.handle(new Either.Left<>(idElevesEvent.cause().getMessage()));
                             }
-                        });
-                    }
-                    else {
-                        handler.handle(new Either.Left<>(idElevesEvent.cause().getMessage()));
-                    }
-                });
-
+                        } catch (Exception error) {
+                            log.error("getTotaleDatasReleve (prepare data): " + error);
+                        }
+                    });
+        } catch (Exception error) {
+            log.error("getTotaleDatasReleve (prepare data): " + error);
+        }
     }
 
     private <T> void calculMoyennesNotesFOrReleve (JsonArray listNotes, JsonObject result, Long idPeriode,
