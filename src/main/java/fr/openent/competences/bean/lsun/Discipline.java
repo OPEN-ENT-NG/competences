@@ -190,6 +190,9 @@ public class Discipline {
      *     
      */
     public void setLibelle(String value) {
+        if(value.length()-1 > 40){
+            value = value.substring(0, 39);
+        }
         this.libelle = value;
     }
 
