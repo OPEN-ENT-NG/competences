@@ -757,7 +757,6 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     ordre:$scope.search.periode.ordre, type:$scope.search.periode.type});
                 $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
                 $scope.loadingTab = true;
-                await $scope.updateColorAndLetterForSkills();
                 switch ($scope.displayFollowEleve) {
                     case ('followItems'):
                         if (template.containers['suivi-competence-content'] !== undefined) {
@@ -797,6 +796,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                             await $scope.loadBulletin();
                         break;
                 }
+                await $scope.updateColorAndLetterForSkills();
                 $scope.loadingTab = false;
                 await utils.safeApply($scope);
                 resolve();
