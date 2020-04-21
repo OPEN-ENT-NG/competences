@@ -897,7 +897,6 @@ public class NoteController extends ControllerHelper {
                                 isUpdatable -> {
                                     //verif date fin de saisie
                                     if (isUpdatable) {
-
                                         if (resource.getBoolean("delete")) {
                                             notesService.deleteColonneReleve(idEleve, idPeriode, idMatiere,
                                                     idClasse, table, arrayResponseHandler(request));

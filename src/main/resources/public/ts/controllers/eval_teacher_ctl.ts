@@ -4150,7 +4150,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.saveAppreciationMatierePeriodeEleve = (eleve,updateHistorique) => {
+        $scope.saveAppreciationMatierePeriodeEleve = (eleve, updateHistorique) => {
             if (eleve.appreciation_matiere_periode !== undefined) {
                 if (eleve.appreciation_matiere_periode.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
                     $scope.releveNote.saveAppreciationMatierePeriodeEleve(eleve).then(()=> {

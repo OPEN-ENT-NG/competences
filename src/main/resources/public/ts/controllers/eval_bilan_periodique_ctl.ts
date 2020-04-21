@@ -717,8 +717,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
             $scope.filteredPeriode = $filter('customClassPeriodeFilters')
             ($scope.structure.typePeriodes.all, $scope.search);
-            $scope.filteredPeriode = $filter('customClassPeriodeFilters')
-            ($scope.structure.typePeriodes.all, $scope.search);
             if ($scope.selected.bfc === true) {
                 let cycle = _.findWhere($scope.filteredPeriode, {isCycle: true});
                 let year = _.findWhere($scope.filteredPeriode, {isCycle: false});
