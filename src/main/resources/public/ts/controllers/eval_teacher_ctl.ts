@@ -687,7 +687,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     selectedPeriode = _.findWhere(classe.periodes.all,
                         {id_type: $scope.search.periode.id_type});
                 }
-                if ($scope.search.eleve !== undefined && $scope.search.eleve.deleteDate !== undefined && $scope.search.eleve.deleteDate !== null ) {
+                if ($scope.search.eleve !== undefined && $scope.search.eleve.deleteDate !== undefined) {
                     // On choisit la periode annee ou la période présélectionnée
                     $scope.search.periode = (selectedPeriode !== undefined)? selectedPeriode : year;
                 }else  if ($scope.displayFromClass === true || $scope.displayFromEleve === true){

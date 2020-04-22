@@ -711,7 +711,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         };
 
 
-        $scope.syncPeriodesBilanPeriodique = async function (classe) {
+        $scope.syncPeriodesBilanPeriodique = async function () {
             if ($scope.search.classe.periodes.all.length === 0) {
                 await $scope.search.classe.periodes.sync();
             }
@@ -731,24 +731,23 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 }
             }
 
-            $scope.getCurrentPeriodeBP = function (classe, res) {
-                if ($location.path() === '/conseil/de/classe') {
-                    let selectedPeriode = undefined;
-                    if ($scope.search.periode !== undefined) {
-                        selectedPeriode = _.findWhere(classe.periodes.all,
-                            {id_type: $scope.search.periode.id_type});
-                    }
-                    if ($scope.search !== undefined && $scope.search.eleve !== undefined) {
-                        // On choisit la période présélectionnée
-                        $scope.search.periode = selectedPeriode;
-                    } else if ($scope.displayFromClass === true || $scope.displayFromEleve === true) {
-                        $scope.search.periode = selectedPeriode;
-                    }
-                    else {
-                        $scope.search.periode = res;
-                    }
+            $scope.getCurrentPeriode($scope.search.classe).then((res) => {
+                let selectedPeriode = undefined;
+
+                if ($scope.search.periode !== undefined && $scope.search.periode !== "*") {
+                    selectedPeriode = _.findWhere($scope.filteredPeriode,
+                        {id_type: $scope.search.periode.id_type});
                 }
-            };
+                if ($scope.search.eleve !== undefined && $scope.search.eleve.deleteDate !== undefined) {
+                    // On choisit la periode annee ou la période présélectionnée
+                    $scope.search.periode = (selectedPeriode !== undefined) ? selectedPeriode : "*";
+                } else if ($scope.displayFromClass === true || $scope.displayFromEleve === true) {
+                    $scope.search.periode = (selectedPeriode !== undefined) ? selectedPeriode : "*";
+                } else {
+                    $scope.search.periode = _.findWhere($scope.filteredPeriode,
+                        {id_type: res.id_type});
+                }
+            });
             utils.safeApply($scope);
         };
 
