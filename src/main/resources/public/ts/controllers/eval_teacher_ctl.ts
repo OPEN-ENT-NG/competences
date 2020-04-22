@@ -4150,14 +4150,27 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
+        $scope.previousAppreciationMatiere = "";
+
+        $scope.setPreviousAppreciationMatiere = (eleve) => {
+            $scope.previousAppreciationMatiere = eleve.appreciation_matiere_periode;
+            utils.safeApply($scope);
+        };
+
         $scope.saveAppreciationMatierePeriodeEleve = (eleve, updateHistorique) => {
             if (eleve.appreciation_matiere_periode !== undefined) {
                 if (eleve.appreciation_matiere_periode.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
-                    $scope.releveNote.saveAppreciationMatierePeriodeEleve(eleve).then(()=> {
-                        if(updateHistorique){
-                            $scope.updateHistorique(eleve,'appreciation');
-                        }
-                    });
+                    if(eleve.appreciation_matiere_periode.length > 0) {
+                        $scope.releveNote.saveAppreciationMatierePeriodeEleve(eleve).then(()=> {
+                            if(updateHistorique){
+                                $scope.updateHistorique(eleve,'appreciation');
+                            }
+                        });
+                    }
+                    else if($scope.previousAppreciationMatiere !== undefined) {
+                        eleve.appreciation_matiere_periode = $scope.previousAppreciationMatiere;
+                    }
+
                 }
                 else {
                     notify.error(lang.translate("error.char.outbound") +
