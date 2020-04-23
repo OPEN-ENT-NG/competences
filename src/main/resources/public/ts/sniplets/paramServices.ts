@@ -123,8 +123,10 @@ export const paramServices = {
                 if(service.competencesParams && service.competencesParams.length !== 0)
                     service.competencesParams.forEach(param => {
                         let group =  _.findWhere(paramServices.that.columns.classe.data, {id: param.id_groupe});
-                        groups.push(group);
-                        param.nom_groupe = group.name;
+                        if(group !== undefined){
+                            groups.push(group);
+                            param.nom_groupe = group.name;
+                        }
                     });
                 groups.sort((group1, group2) => {
                     if (group1.name > group2.name) {
