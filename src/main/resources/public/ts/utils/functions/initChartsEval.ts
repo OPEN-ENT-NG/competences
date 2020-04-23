@@ -111,10 +111,18 @@ export let initChartsEval = async function ($scope) {
             let ownerName = ListEval[i].owner_name;
             let tooltipLabel = (ownerName !== undefined) ? `${libelle} : ${ownerName}` : libelle;
 
+            let colorValue;
+            if (ListEval[i].evaluation !== -1) {
+                colorValue = $scope.mapCouleurs[ListEval[i].evaluation];
+            } else {
+                colorValue = Defaultcolors.unevaluated;
+            }
+
             let indexData = _.findIndex($scope.chartOptionsEval.datasets.data, {x : data.x, y : data.y});
             if(indexData === -1) {
                 $scope.chartOptionsEval.datasets.data.push(data);
                 $scope.chartOptionsEval.tooltipLabels.push([tooltipLabel]);
+                $scope.chartOptionsEval.colors.push(colorValue);
             }
             else {
                 $scope.chartOptionsEval.tooltipLabels[indexData].push(tooltipLabel);
@@ -142,17 +150,6 @@ export let initChartsEval = async function ($scope) {
 
             if(!_.contains($scope.chartOptionsEval.datasets.labels, $scope.getDateFormated(ListEval[i].evaluation_date))) {
                 $scope.chartOptionsEval.datasets.labels.push($scope.getDateFormated(ListEval[i].evaluation_date));
-            }
-
-            let colorValue;
-            if (ListEval[i].evaluation !== -1) {
-                colorValue = $scope.mapCouleurs[ListEval[i].evaluation];
-            } else {
-                colorValue = Defaultcolors.unevaluated;
-            }
-
-            if(!_.contains($scope.chartOptionsEval.colors, colorValue)) {
-                $scope.chartOptionsEval.colors.push(colorValue);
             }
         }
 
@@ -195,10 +192,18 @@ export let initChartsEvalParents = async function ($scope) {
             let ownerName = ListEval[i].owner_name;
             let tooltipLabel = (ownerName !== undefined) ? `${libelle} : ${ownerName}` : libelle;
 
+            let colorValue;
+            if (ListEval[i].evaluation !== -1) {
+                colorValue = $scope.mapCouleurs[ListEval[i].evaluation];
+            } else {
+                colorValue = Defaultcolors.unevaluated;
+            }
+
             let indexData = _.findIndex($scope.chartOptionsEval.datasets.data, {x : data.x, y : data.y});
             if(indexData === -1) {
                 $scope.chartOptionsEval.datasets.data.push(data);
                 $scope.chartOptionsEval.tooltipLabels.push([tooltipLabel]);
+                $scope.chartOptionsEval.colors.push(colorValue);
             }
             else {
                 $scope.chartOptionsEval.tooltipLabels[indexData].push(tooltipLabel);
@@ -206,15 +211,6 @@ export let initChartsEvalParents = async function ($scope) {
 
             if(!_.contains($scope.chartOptionsEval.datasets.labels, $scope.getDateFormated(ListEval[i].date))) {
                 $scope.chartOptionsEval.datasets.labels.push($scope.getDateFormated(ListEval[i].date));
-            }
-            let colorValue;
-            if (ListEval[i].evaluation !== -1) {
-                colorValue = $scope.mapCouleurs[ListEval[i].evaluation];
-            } else {
-                colorValue = Defaultcolors.unevaluated;
-            }
-            if(!_.contains($scope.chartOptionsEval.colors, colorValue)) {
-                $scope.chartOptionsEval.colors.push(colorValue);
             }
         }
 
