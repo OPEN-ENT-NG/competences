@@ -338,14 +338,30 @@ public class DefaultLSUService implements LSUService {
                                         List<JsonObject> studentIgnoredInfo = ignoredInfos
                                                 .get(student.getString(ID_ELEVE_KEY));
                                         for(int i = 0; i<studentIgnoredInfo.size(); i++){
-                                            if(studentIgnoredInfo.get(i).getString("id_classe").equals(idClasse)){
+                                            String idClaasStudentIgnored = studentIgnoredInfo.get(i).getString("id_classe");
+                                            JsonObject studentIgnored = new JsonObject();
+                                            if(idClaasStudentIgnored.equals(idClasse)){
+                                                studentIgnored = student;
                                                 studentIgnoredInfos.add(studentIgnoredInfo.get(i));
+                                            }else {//ignored Student was in old class and idClaasStudentIgnored = id of old Class
+                                                //oldClasses ={ idClasseOld1 : nameOldClasse1, ...}
+                                                String oldClasse = student.getJsonObject("oldClasses").getString(idClaasStudentIgnored);
+                                               if(oldClasse != null){
+
+                                                   studentIgnored.put("idEleve",student.getString("idClasse"));
+                                                   studentIgnored.put("firstName",student.getString("firstName"));
+                                                   studentIgnored.put("lastName",student.getString("lastName"));
+                                                   studentIgnored.put("idClasse",studentIgnoredInfo.get(i).getString("id_classe"));
+                                                   studentIgnored.put("classeName", student.getJsonObject("oldClasses").getString(idClaasStudentIgnored));
+                                                   studentIgnoredInfos.add(studentIgnoredInfo.get(i));
+                                               }
+                                            }
+                                            if(!studentIgnoredInfos.isEmpty()) {
+                                                studentIgnored.put("ignoredInfos", studentIgnoredInfos);
+                                                results.add(studentIgnored);
                                             }
                                         }
-                                        if(!studentIgnoredInfos.isEmpty()) {
-                                            student.put("ignoredInfos", studentIgnoredInfos);
-                                            results.add(student);
-                                        }
+
                                     });
                                     handler.handle(new Either.Right<>(results));
                                 }
