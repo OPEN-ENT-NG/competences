@@ -1214,6 +1214,15 @@ public class Donnees {
             return this.epi;
         }
 
+        public boolean contains(Epi newEpi){
+
+            boolean b = false;
+            for(Epi epiItem : this.getEpi()){
+                if( newEpi != null && epiItem.getId().equals(newEpi.getId())) b = true;
+            }
+
+            return b;
+        }
     }
 
 

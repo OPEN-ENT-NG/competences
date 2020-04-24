@@ -2145,8 +2145,8 @@ public class LSUController extends ControllerHelper {
                                 if(donnees.getEpisGroupes() == null ){
                                     donnees.setEpisGroupes(objectFactory.createDonneesEpisGroupes());
                                 }
+                                if(donnees.getEpis() != null  && !donnees.getEpis().contains(epi)) donnees.getEpis().getEpi().add(epi);
 
-                                donnees.getEpis().getEpi().add(epi);
                                 donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
                                 futureEltBilanPeriodique.complete();
 
