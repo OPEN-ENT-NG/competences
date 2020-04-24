@@ -832,7 +832,7 @@ public class LSUController extends ControllerHelper {
                 }
                 //cas élève non supprimé qui est dans la classe (Neo4j) => élève qui n'a pas changé de classe
                 //or student being deleted
-                if (!deletedStudentPostgres.containsKey(idEleve) || idsClass.size() == 1 && idsClass.contains(student.getString("idClass"))){
+                if (idsClass.size() == 1 && idsClass.contains(student.getString("idClass")) || !deletedStudentPostgres.containsKey(idEleve)  ){
                     String biggestPeriode = Utils.getPeriode(periodesByClass.get(idClasse), false);
                     Date biggestPeriodeDate = UtilsConvert.convertStringToDate(biggestPeriode, "yyyy-MM-dd");
                     if (createdDate != null && createdDate.before(biggestPeriodeDate) || createdDate == null) {
