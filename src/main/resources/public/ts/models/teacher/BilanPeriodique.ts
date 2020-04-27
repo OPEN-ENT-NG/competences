@@ -268,13 +268,15 @@ export class BilanPeriodique extends  Model {
         const statistics:any = data.synthesis.statistiques;
         const subjects = data.subjects;
         for (let subjectId in statistics) {
+            const statistic = statistics[subjectId];
             for (let k = 0; k < homeworks.length ; k++) {
                 if(homeworks[k].id_matiere === subjectId
-                    && !_.contains(matchingDataApi.map(subject => subject.idSubject), subjectId)) {
+                    && !_.contains(matchingDataApi.map(subject => subject.idSubject), subjectId)
+                    && !(_.values(statistic.moyenne).every(note => note === "NN"))){  //clean column with that "NN"
                     const subject = _.values(subjects).find(subject => subject.id === homeworks[k].id_matiere);
                     matchingDataApi.push({
                         idSubject: subjectId,
-                        average: statistics[subjectId].moyenne,
+                        average: statistic.moyenne,
                         teacherName: teacherBySubject && teacherBySubject[subjectId] && teacherBySubject[subjectId].displayName ?
                             teacherBySubject[subjectId].displayName : undefined,
                         subjectName: subject? subject.name : undefined,
