@@ -104,7 +104,7 @@ export const paramServices = {
                 let isInSearched = true;
                 if(paramServices.that.searchToFilter.length !=0){
                     paramServices.that.searchToFilter.forEach(search =>{
-                        if( !(service.nom_groupe.toUpperCase().includes(search.toUpperCase())
+                        if( !(service.groups_name.toUpperCase().includes(search.toUpperCase())
                             || service.nom_enseignant.toUpperCase().includes(search.toUpperCase())
                             || service.topicName.toUpperCase().includes(search.toUpperCase()))){
                             isInSearched = false;
@@ -123,8 +123,10 @@ export const paramServices = {
                 if(service.competencesParams && service.competencesParams.length !== 0)
                     service.competencesParams.forEach(param => {
                         let group =  _.findWhere(paramServices.that.columns.classe.data, {id: param.id_groupe});
-                        groups.push(group);
-                        param.nom_groupe = group.name;
+                        if(group !== undefined){
+                            groups.push(group);
+                            param.nom_groupe = group.name;
+                        }
                     });
                 groups.sort((group1, group2) => {
                     if (group1.name > group2.name) {
@@ -360,6 +362,7 @@ export const paramServices = {
             paramServices.that.setServices();
         },
         updateServices: async function(){
+            console.log("plop")
             let oldService = paramServices.that.oldService;
             let serviceToUpdate = paramServices.that.serviceToUpdate;
 
@@ -389,7 +392,7 @@ export const paramServices = {
         getClasses: function () {
             try {
                 return http.get(`/viescolaire/classes?idEtablissement=${
-                    paramServices.that.idStructure}&forAdmin=true&classOnly=true`)
+                    paramServices.that.idStructure}&forAdmin=true`)
             } catch (e) {
                 toasts.warning('evaluations.service.error.classe');
             }

@@ -1,7 +1,7 @@
 import {_, ng} from "entcore";
 import {ReportModelPrintExportServiceType} from "../services/type";
 import * as utilsTeacher from '../utils/teacher';
-import { ReportModelPrintExportType} from "../models/type";
+import {ReportModelPrintExportType} from "../models/type";
 import {ReportModelPrintExport} from "../models/teacher/ReportModelPrintExport";
 import {
     ReportModelPrintExportConstant,
@@ -9,14 +9,16 @@ import {
 
 const {
     DELETED,
+    KEY_TITLE,
+    KEY_SELECTED,
 } = ReportModelPrintExportConstant;
 
 const reportModelPrintExportController = ng.controller(
     'reportModelPrintExportController', [
         '$scope',
         'ReportModelPrintExportService',
-        async function($scope,
-                       ReportModelPrintExportService:ReportModelPrintExportServiceType) {
+        async function ($scope,
+                        ReportModelPrintExportService: ReportModelPrintExportServiceType) {
 
             const initDataReportModel = await Promise.all([
                 ReportModelPrintExportService.getAll(),
@@ -30,17 +32,17 @@ const reportModelPrintExportController = ng.controller(
             $scope.newReportModel = new ReportModelPrintExport(undefined);
             $scope.newReportModel.setSelected(false);
 
-            if ($scope.$parent.preferencesPrint) {
-                $scope.newReportModel.setPreferencesWithClean($scope.$parent.preferencesPrint);
-            }
-
             //functions share
             $scope.selectReportModel = function (reportModel: ReportModelPrintExportType): void {
                 if (!reportModel.getId()) return;
                 deSelectedAll();
-                if ($scope.newReportModel.getSelected()) $scope.newReportModel.setSelected(false);
-                reportModel.setSelected(true);
                 problemInTitle(reportModel);
+                if ($scope.newReportModel.getSelected()) $scope.newReportModel.setSelected(false);
+                if (reportModel["errorSameTitle"]) {
+                    $scope.newReportModel.setSelected(true);
+                    return;
+                }
+                reportModel.setSelected(true);
             };
 
             $scope.makeNewReportModel = (): void => {
@@ -57,7 +59,7 @@ const reportModelPrintExportController = ng.controller(
                 if (reportModel["iAmUpdated"]) delete reportModel["iAmUpdated"];
                 problemInTitle(reportModel);
             };
-            const reportsModelsPrepareToDelete:Array<ReportModelPrintExportType> = [];
+            const reportsModelsPrepareToDelete: Array<ReportModelPrintExportType> = [];
             $scope.remove = async function (reportModel: ReportModelPrintExportType): Promise<void> {
                 reportModel.setState(DELETED);
                 reportsModelsPrepareToDelete.push(reportModel);
@@ -69,8 +71,8 @@ const reportModelPrintExportController = ng.controller(
                 utilsTeacher.safeApply($scope);
             };
 
-            $scope.submit = (): void => {
-                if(!$scope.enableSubmit) {
+            $scope.submit = function (): void {
+                if (!$scope.enableSubmit) {
                     return;
                 }
                 $scope.enableSubmit = false;
@@ -81,18 +83,23 @@ const reportModelPrintExportController = ng.controller(
                     $scope.$parent.closeLightBoxSelectModelReport($scope.newReportModel);
                     return;
                 }
-                if(!($scope.allReportModelPrintExport.length > 0)){
+                if (!($scope.allReportModelPrintExport.length > 0)) {
                     $scope.$parent.closeLightBoxSelectModelReport();
                 } else {
-                    const reportModelSelected:ReportModelPrintExportType = $scope.allReportModelPrintExport
+                    const reportModelSelected: ReportModelPrintExportType = $scope.allReportModelPrintExport
                         .find((findReportModel: ReportModelPrintExportType) => findReportModel.getSelected());
                     $scope.$parent.closeLightBoxSelectModelReport(reportModelSelected);
                 }
             };
 
-            function deleteReportsModels():void{
+            $scope.permanentControlTitle = function (title: String): void {
+                $scope.enableSubmit = !allReportModelPrintExportChecked()
+                    .some((reportModel: ReportModelPrintExport) => reportModel.getTitle() === title);
+            };
+
+            function deleteReportsModels(): void {
                 reportsModelsPrepareToDelete.forEach((forReportModel: ReportModelPrintExportType): void => {
-                    if(forReportModel.isDelete())forReportModel.delete();
+                    if (forReportModel.isDelete()) forReportModel.delete();
                 });
             }
 
@@ -106,14 +113,14 @@ const reportModelPrintExportController = ng.controller(
                 if (!checkSameTitle() && reportModel.getTitle()) {
                     if (reportModel["backupLastTitle"]) delete reportModel["backupLastTitle"];
                     if (reportModel["errorSameTitle"]) delete reportModel["errorSameTitle"];
-                    $scope.enableSubmit = true;
                     $scope.infoProblemInTitle = false;
                 } else {
                     $scope.enableSubmit = false;
                     $scope.infoProblemInTitle = true;
                     reportModel["errorSameTitle"] = true;
-                    if(reportModel.getTitle()) reportModel.setTitle(reportModel["backupLastTitle"])
+                    if (reportModel["backupLastTitle"]) reportModel.setTitle(reportModel["backupLastTitle"])
                 }
+                if (!reportModel["errorSameTitle"]) $scope.enableSubmit = true;
             }
 
             function cleanTitleEmptyBeforePut(): void {
@@ -134,24 +141,40 @@ const reportModelPrintExportController = ng.controller(
             function checkSameTitle(): Boolean {
                 const titlesAllReportsModels = allReportModelPrintExportChecked()
                     .map((mapReportModel: ReportModelPrintExportType): String => mapReportModel.getTitle());
+                titlesAllReportsModels.push($scope.newReportModel.getTitle());
                 return (new Set(titlesAllReportsModels)).size !== titlesAllReportsModels.length;
             }
 
             async function sendNew() {
+                if ($scope.$parent) {
+                    let scope: any = $scope.$parent;
+                    let print: any = {};
+                    if (scope.print) {
+                        print = scope.print;
+                        if (scope.mentionClass) {
+                            $scope.$parent.mentionClass = print.mentionClass = scope.mentionClass
+                        }
+                        if (scope.orientationOpinion) {
+                            $scope.$parent.orientationOpinion = print.orientationOpinion = scope.orientationOpinion
+                        }
+                        $scope.newReportModel.setPreferencesCheckboxWithClean(print);
+                        $scope.newReportModel.setPreferencesTextWithClean(print);
+                    }
+                }
                 await $scope.newReportModel.post();
             }
 
-            function allReportModelPrintExportChecked():Array<ReportModelPrintExportType>{
-                if(!($scope.allReportModelPrintExport.length > 0)) return [];
+            function allReportModelPrintExportChecked(): Array<ReportModelPrintExportType> {
+                if (!($scope.allReportModelPrintExport.length > 0)) return [];
                 return $scope.allReportModelPrintExport;
             }
 
-            function putReportsModels():void {
+            function putReportsModels(): void {
                 if (!_.isEqual(allReportModelPrintExportChecked(), reportsModelForCheckSubmit)) {
                     cleanReportModelNoEdit();
                     cleanTitleEmptyBeforePut();
                     for (const reportModel of allReportModelPrintExportChecked()) {
-                        reportModel.put();
+                        reportModel.put([KEY_TITLE, KEY_SELECTED]);
                     }
                 }
 

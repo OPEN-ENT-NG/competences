@@ -711,12 +711,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         };
 
 
-        $scope.syncPeriodesBilanPeriodique = async function (classe) {
+        $scope.syncPeriodesBilanPeriodique = async function () {
             if ($scope.search.classe.periodes.all.length === 0) {
                 await $scope.search.classe.periodes.sync();
             }
-            $scope.filteredPeriode = $filter('customClassPeriodeFilters')
-            ($scope.structure.typePeriodes.all, $scope.search);
             $scope.filteredPeriode = $filter('customClassPeriodeFilters')
             ($scope.structure.typePeriodes.all, $scope.search);
             if ($scope.selected.bfc === true) {
@@ -733,24 +731,23 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 }
             }
 
-            $scope.getCurrentPeriodeBP = function (classe, res) {
-                if ($location.path() === '/conseil/de/classe') {
-                    let selectedPeriode = undefined;
-                    if ($scope.search.periode !== undefined) {
-                        selectedPeriode = _.findWhere(classe.periodes.all,
-                            {id_type: $scope.search.periode.id_type});
-                    }
-                    if ($scope.search !== undefined && $scope.search.eleve !== undefined) {
-                        // On choisit la période présélectionnée
-                        $scope.search.periode = selectedPeriode;
-                    } else if ($scope.displayFromClass === true || $scope.displayFromEleve === true) {
-                        $scope.search.periode = selectedPeriode;
-                    }
-                    else {
-                        $scope.search.periode = res;
-                    }
+            $scope.getCurrentPeriode($scope.search.classe).then((res) => {
+                let selectedPeriode = undefined;
+
+                if ($scope.search.periode !== undefined && $scope.search.periode !== "*") {
+                    selectedPeriode = _.findWhere($scope.filteredPeriode,
+                        {id_type: $scope.search.periode.id_type});
                 }
-            };
+                if ($scope.search.eleve !== undefined && $scope.search.eleve.deleteDate !== undefined) {
+                    // On choisit la periode annee ou la période présélectionnée
+                    $scope.search.periode = (selectedPeriode !== undefined) ? selectedPeriode : "*";
+                } else if ($scope.displayFromClass === true || $scope.displayFromEleve === true) {
+                    $scope.search.periode = (selectedPeriode !== undefined) ? selectedPeriode : "*";
+                } else {
+                    $scope.search.periode = _.findWhere($scope.filteredPeriode,
+                        {id_type: res.id_type});
+                }
+            });
             utils.safeApply($scope);
         };
 
@@ -838,12 +835,12 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if ($scope.search.avisClasse.type_avis === 0) {
                 $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan =
                     await $scope.elementBilanPeriodique.avisConseil.createNewOpinion(opinion);
-                await $scope.refreshOpinionList();
+                await $scope.refreshOpinionList(opinion);
                 $scope.elementBilanPeriodique.avisConseil.saveAvisConseil($scope.search.avisClasse.id);
             } else if ($scope.search.avisOrientation.type_avis === 0) {
                 $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan =
                     await $scope.elementBilanPeriodique.avisOrientation.createNewOpinion(opinion);
-                await $scope.refreshOpinionList();
+                await $scope.refreshOpinionList(opinion);
                 $scope.elementBilanPeriodique.avisOrientation.saveAvisOrientation($scope.search.avisOrientation.id);
             }
 
@@ -851,12 +848,18 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await utils.safeApply($scope);
         };
 
-        $scope.refreshOpinionList = async function() {
+        $scope.refreshOpinionList = async function(opinion) {
             await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
             $scope.search.avisClasse = _.find($scope.elementBilanPeriodique.avisConseil.avis,
                 {id: $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan});
+            if(!$scope.search.avisClasse)
+                $scope.search.avisClasse = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                    {libelle: opinion, type_avis:1});
             $scope.search.avisOrientation = _.find($scope.elementBilanPeriodique.avisConseil.avis,
                 {id: $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan});
+            if(!$scope.search.avisOrientation)
+                $scope.search.avisOrientation = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                    {libelle: opinion, type_avis:2});
             $scope.previousClassOpinion = $scope.search.avisClasse;
             $scope.previousOrientationOpinion = $scope.search.avisOrientation;
         };

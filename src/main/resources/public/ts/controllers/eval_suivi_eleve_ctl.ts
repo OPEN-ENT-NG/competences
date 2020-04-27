@@ -329,7 +329,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         };
 
         $scope.updateColorAndLetterForSkills = async function () {
-            updateColorAndLetterForSkills($scope, $location);
+            updateColorAndLetterForSkills($scope, $location, $scope.selectedCycleRadio ?
+                $scope.selectedCycleRadio.id_cycle : null);
             await $scope.initChartsEval();
             if(template.contains('suivi-competence-content',
                 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle')){
@@ -697,9 +698,12 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         };
 
         $scope.hideArrow = function (num) {
-            let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
-            return !(index !== -1 && index + parseInt(num) >= 0
-                && index + parseInt(num) < $scope.filteredEleves.all.length);
+            if($scope.filteredEleves && $scope.search.eleve){
+                let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
+                return !(index !== -1 && index + parseInt(num) >= 0
+                    && index + parseInt(num) < $scope.filteredEleves.all.length);
+            }
+            return true;
         };
 
         $scope.initDataEleve = async function(classeHasChange){
@@ -749,7 +753,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 if (_.isEmpty($scope.search.classe.eleves.all)) {
                     await $scope.search.classe.eleves.sync();
                 }
-                let periode = new TypePeriode({id:$scope.search.periode.id_type,ordre:$scope.search.periode.ordre,type:$scope.search.periode.type});
+                let periode = new TypePeriode({id:$scope.search.periode.id_type,
+                    ordre:$scope.search.periode.ordre, type:$scope.search.periode.type});
                 $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
                 $scope.loadingTab = true;
                 switch ($scope.displayFollowEleve) {
@@ -791,6 +796,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                             await $scope.loadBulletin();
                         break;
                 }
+                await $scope.updateColorAndLetterForSkills();
                 $scope.loadingTab = false;
                 await utils.safeApply($scope);
                 resolve();
@@ -1025,22 +1031,10 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                     if (value === 1) {
                                         return "Compétence non évaluée";
                                     }
-                                    else if (value === 2) {
-                                        return "Maîtrise insuffisante";
+                                    else if (_.findWhere($scope.niveauCompetences, {ordre  : value - 1})) {
+                                        return _.findWhere($scope.niveauCompetences, {ordre : value - 1}).libelle;
                                     }
-                                    else if (value === 3) {
-                                        return "Maîtrise fragile";
-                                    }
-                                    else if (value === 4) {
-                                        return "Maîtrise satisfaisante";
-                                    }
-                                    else if (value === 5) {
-                                        return "Très bonne maîtrise";
-                                    }
-                                    else {
-                                        return " ";
-                                    }
-                                    // return parseFloat(value).toFixed(2) + '%';
+                                    return " ";
                                 }
                             },
                         }],

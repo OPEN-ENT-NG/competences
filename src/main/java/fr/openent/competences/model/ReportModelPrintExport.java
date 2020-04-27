@@ -1,49 +1,109 @@
+/*
+For add new preference checkbox or preference text,
+just you must add key in reportModelPrintExportConstants frontend and backend
+ */
+
 package fr.openent.competences.model;
 
+import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportModelPreferencesText;
 import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportMongo;
-import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportPreferences;
+import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportPreferencesCheckbox;
 import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReportModelPrintExport extends Model implements Cloneable{
+public class ReportModelPrintExport extends Model implements Cloneable {
 
     private String id;
     private String userId;
     private String title;
     private Boolean selected;
-    private List<String> preferences;
-    private ArrayList<String> allKeyPreferences = new ArrayList();
+    private List<String> preferencesCheckbox;
+    private JsonObject preferencesText;
+    private ArrayList<String> allKeyPreferencesCheckbox = new ArrayList();
+    private ArrayList<String> allKeyPreferencesText = new ArrayList();
 
     // Constructor new report model
-    public ReportModelPrintExport(String id, String userId, String title, Boolean selected, JsonObject preferences) {
+    public ReportModelPrintExport() {
         super();
-        this.initListPreferences();
-        this.id = id;
-        this.userId = userId;
+    }
+
+    public ReportModelPrintExport(
+            String title,
+            Boolean selected,
+            JsonObject preferencesCheckbox,
+            JsonObject preferencesText) {
+        super();
+        this.initListPreferencesCheckbox();
+        this.initListPreferencesText();
         this.title = title;
         this.selected = selected;
-        if(preferences != null) this.setPreferences(preferences);
+        if (preferencesCheckbox != null) this.setPreferencesCheckbox(preferencesCheckbox);
+        if (preferencesText != null) this.setPreferencesText(preferencesText);
     }
 
     //Getters
-    public String getId(){ return this.id;}
-    public String getUserId(){ return this.userId;}
-    public String getTitle(){ return this.title;}
-    public Boolean getSelected(){ return this.selected;}
-    public List<String> getPreferences(){ return this.preferences;}
+    public String getId() {
+        return this.id;
+    }
+
+    public String getUserId() {
+        return this.userId;
+    }
+
+    public String getTitle() {
+        return this.title;
+    }
+
+    public Boolean getSelected() {
+        return this.selected;
+    }
+
+    public List<String> getPreferencesCheckbox() {
+        return this.preferencesCheckbox;
+    }
+
+    public JsonObject getPreferencesText() {
+        return this.preferencesText;
+    }
 
     //Setters
-    public void setPreferences (JsonObject dirtyPreferences){
-        if(dirtyPreferences != null){
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    private void setPreferencesCheckbox(JsonObject dirtyPreferences) {
+        if (dirtyPreferences != null) {
             List<String> cleanPreferences = new ArrayList<String>();
-            for(String preferenceKey:  this.allKeyPreferences){
-                if(dirtyPreferences.containsKey(preferenceKey)
-                        && dirtyPreferences.getValue(preferenceKey) != null){
-                    if(dirtyPreferences.getBoolean(preferenceKey)) cleanPreferences.add(preferenceKey);
+            for (String preferenceKey : this.allKeyPreferencesCheckbox) {
+                if (dirtyPreferences.containsKey(preferenceKey)
+                        && dirtyPreferences.getValue(preferenceKey) != null) {
+                    if (dirtyPreferences.getBoolean(preferenceKey)) cleanPreferences.add(preferenceKey);
                 }
             }
-            this.preferences = cleanPreferences;
+            this.preferencesCheckbox = cleanPreferences;
+        }
+    }
+
+    private void setPreferencesText(JsonObject dirtyPreferences) {
+        if (dirtyPreferences != null) {
+            JsonObject cleanPreferences = new JsonObject();
+            for (String preferenceKey : this.allKeyPreferencesText) {
+                if (dirtyPreferences.containsKey(preferenceKey)
+                        && dirtyPreferences.getValue(preferenceKey) != null) {
+                    if(dirtyPreferences.getValue(preferenceKey).getClass().equals(String.class) ){
+                        cleanPreferences.put(preferenceKey, dirtyPreferences.getString(preferenceKey));
+                    }
+                    if(dirtyPreferences.getValue(preferenceKey).getClass().equals(Integer.class) ){
+                        cleanPreferences.put(preferenceKey, dirtyPreferences.getInteger(preferenceKey));
+                    }
+                }
+            }
+            this.preferencesText = cleanPreferences;
         }
     }
 
@@ -51,16 +111,20 @@ public class ReportModelPrintExport extends Model implements Cloneable{
     @Override
     public JsonObject toJsonObject() {
         JsonObject json = new JsonObject();
-        if(this.id != null) json.put(ReportModelPrintExportMongo.KEY_ID.getString(), this.getId());
-        if(this.userId != null) json.put(ReportModelPrintExportMongo.KEY_USER_ID.getString(), this.getUserId());
-        if(this.title != null) json.put(ReportModelPrintExportMongo.KEY_TITLE.getString(), this.getTitle());
-        if(this.selected != null) json.put(ReportModelPrintExportMongo.KEY_SELECTED.getString(), this.getSelected());
-        if(this.preferences != null) json.put(ReportModelPrintExportMongo.KEY_PREFERENCES.getString(), this.getPreferences());
+        if (this.getId() != null) json.put(ReportModelPrintExportMongo.KEY_ID.getString(), this.getId());
+        if (this.getUserId() != null) json.put(ReportModelPrintExportMongo.KEY_USER_ID.getString(), this.getUserId());
+        if (this.getTitle() != null) json.put(ReportModelPrintExportMongo.KEY_TITLE.getString(), this.getTitle());
+        if (this.getSelected() != null)
+            json.put(ReportModelPrintExportMongo.KEY_SELECTED.getString(), this.getSelected());
+        if (this.getPreferencesCheckbox() != null)
+            json.put(ReportModelPrintExportMongo.KEY_PREFERENCES_CHECKBOX.getString(), this.getPreferencesCheckbox());
+        if (this.getPreferencesText() != null)
+            json.put(ReportModelPrintExportMongo.KEY_PREFERENCES_TEXT.getString(), this.getPreferencesText());
         return json;
     }
 
     @Override
-    public ReportModelPrintExport clone(){
+    public ReportModelPrintExport clone() {
         try {
             return (ReportModelPrintExport) super.clone();
         } catch (CloneNotSupportedException e) {
@@ -68,9 +132,15 @@ public class ReportModelPrintExport extends Model implements Cloneable{
         }
     }
 
-    private void initListPreferences(){
-        for(ReportModelPrintExportPreferences preference : ReportModelPrintExportPreferences.values()) {
-            this.allKeyPreferences.add(preference.getString());
+    private void initListPreferencesCheckbox() {
+        for (ReportModelPrintExportPreferencesCheckbox preference : ReportModelPrintExportPreferencesCheckbox.values()) {
+            this.allKeyPreferencesCheckbox.add(preference.getString());
+        }
+    }
+
+    private void initListPreferencesText() {
+        for (ReportModelPrintExportModelPreferencesText preference : ReportModelPrintExportModelPreferencesText.values()) {
+            this.allKeyPreferencesText.add(preference.getString());
         }
     }
 }

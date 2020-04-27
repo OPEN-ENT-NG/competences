@@ -687,7 +687,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     selectedPeriode = _.findWhere(classe.periodes.all,
                         {id_type: $scope.search.periode.id_type});
                 }
-                if ($scope.search.eleve !== undefined && $scope.search.eleve.deleteDate !== undefined && $scope.search.eleve.deleteDate !== null ) {
+                if ($scope.search.eleve !== undefined && $scope.search.eleve.deleteDate !== undefined) {
                     // On choisit la periode annee ou la période présélectionnée
                     $scope.search.periode = (selectedPeriode !== undefined)? selectedPeriode : year;
                 }else  if ($scope.displayFromClass === true || $scope.displayFromEleve === true){
@@ -2070,7 +2070,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir.owner = (teacher != undefined) ? teacher.id_enseignant
                         : $scope.devoir.teachersByClass[0].id;
                 }
-                $scope.setEnseignantMatieres(search);
+                $scope.setEnseignantMatieres();
             } else if(($scope.devoir.teachersByClass.length > 0 && $scope.devoir.owner === undefined) ||
                 _.findWhere($scope.devoir.teachersByClass, {id : $scope.devoir.owner}) === undefined) {
                 if($scope.devoir.teachersByClass.length > 0 ){
@@ -2083,7 +2083,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Set les matières en fonction de l'identifiant de l'enseignant choisi
          */
-        $scope.setEnseignantMatieres = function (search?) {
+        $scope.setEnseignantMatieres = function () {
             $scope.devoir.matieresByClassByTeacher = $filter('getMatiereClasse')($scope.structure.matieres.all,
                 $scope.devoir.id_groupe, $scope.classes, $scope.search, $scope.devoir.owner);
 
@@ -2091,12 +2091,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.devoir.matiere = $scope.devoir.matieresByClassByTeacher[0];
             }
 
-            if($scope.devoir.matiere !== undefined) {
+            if($scope.devoir.matiere) {
                 $scope.devoir.id_matiere = $scope.devoir.matiere.id;
-            }
-            if ($scope.devoir.matiere.sousMatieres !== undefined && $scope.devoir.matiere.sousMatieres.all.length > 0) {
-                // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
-                $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
+                if ($scope.devoir.matiere.sousMatieres && $scope.devoir.matiere.sousMatieres.all.length > 0) {
+                    // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
+                    $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
+                }
             }
         };
 
@@ -4150,14 +4150,27 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.saveAppreciationMatierePeriodeEleve = (eleve,updateHistorique) => {
+        $scope.previousAppreciationMatiere = "";
+
+        $scope.setPreviousAppreciationMatiere = (eleve) => {
+            $scope.previousAppreciationMatiere = eleve.appreciation_matiere_periode;
+            utils.safeApply($scope);
+        };
+
+        $scope.saveAppreciationMatierePeriodeEleve = (eleve, updateHistorique) => {
             if (eleve.appreciation_matiere_periode !== undefined) {
                 if (eleve.appreciation_matiere_periode.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
-                    $scope.releveNote.saveAppreciationMatierePeriodeEleve(eleve).then(()=> {
-                        if(updateHistorique){
-                            $scope.updateHistorique(eleve,'appreciation');
-                        }
-                    });
+                    if(eleve.appreciation_matiere_periode.length > 0) {
+                        $scope.releveNote.saveAppreciationMatierePeriodeEleve(eleve).then(()=> {
+                            if(updateHistorique){
+                                $scope.updateHistorique(eleve,'appreciation');
+                            }
+                        });
+                    }
+                    else if($scope.previousAppreciationMatiere !== undefined) {
+                        eleve.appreciation_matiere_periode = $scope.previousAppreciationMatiere;
+                    }
+
                 }
                 else {
                     notify.error(lang.translate("error.char.outbound") +

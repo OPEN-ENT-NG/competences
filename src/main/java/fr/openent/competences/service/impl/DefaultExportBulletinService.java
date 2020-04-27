@@ -327,6 +327,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         }
 
                         classe.put("idClasse", idClasse);
+                        classe.put("classeName", params.getString("classeName"));
 
                         Boolean showBilanPerDomaines = params.getBoolean("showBilanPerDomaines");
                         buildDataForStudent(answered, eleves, elevesMap, idPeriode, params, classe,
@@ -439,19 +440,25 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             JsonArray niveauCompetences = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
             JsonArray footerArray = new JsonArray();
-            for (int i = niveauCompetences.size() - 1; i >= 0; i--) { //reverse Array
-                footerArray.add(niveauCompetences.getJsonObject(i));
+            if(niveauCompetences != null && !niveauCompetences.isEmpty()){
+                for (int i = niveauCompetences.size() - 1; i >= 0; i--) { //reverse Array
+                    footerArray.add(niveauCompetences.getJsonObject(i));
+                }
             }
+
 
             String footer = "";
-            for (int i = 0; i < footerArray.size(); i++) {
-                JsonObject niv = footerArray.getJsonObject(i);
+            if(!footerArray.isEmpty()){
+                for (int i = 0; i < footerArray.size(); i++) {
+                    JsonObject niv = footerArray.getJsonObject(i);
 
-                String lib = niv.getString(LIBELLE);
-                String id_niv = Integer.toString(niv.getInteger("id_niveau"));
-                footer += id_niv + " : " + lib + " - ";
+                    String lib = niv.getString(LIBELLE);
+                    String id_niv = Integer.toString(niv.getInteger("id_niveau"));
+                    footer += id_niv + " : " + lib + " - ";
+                }
+                footer = footer.substring(0, footer.length() - 2);
             }
-            footer = footer.substring(0, footer.length() - 2);
+
             eleve.put(NIVEAU_COMPETENCE, niveauCompetences).put("footer", "* " + footer);
 
             if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)){
@@ -2452,7 +2459,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         JsonObject images = params.getJsonObject("images");
         Long typePeriode = params.getLong(TYPE_PERIODE);
-        String idClasseExporte = classe.getString(ID_CLASSE_KEY);
+       // String idClasseExporte = classe.getString(ID_CLASSE_KEY);
         for (int i = 0; i < eleves.size(); i++) {
             JsonObject eleve = eleves.getJsonObject(i);
             eleve.put(TYPE_PERIODE, typePeriode);
@@ -2462,7 +2469,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             setBirthDate(eleve);
 
             // Classe à afficher
-            setStudentClasseToPrint(eleve, idClasseExporte);
+            setStudentClasseToPrint(eleve, classe);
 
             // Rajout de l'image du graphe par domaine
             if (showBilanPerDomaines) {
@@ -2914,14 +2921,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    private void setStudentClasseToPrint(JsonObject student, String idClasseExporte){
-        if(!student.getString("idClasse").equals(idClasseExporte) &&
+    private void setStudentClasseToPrint(JsonObject student, JsonObject classe){
+        student.put(CLASSE_NAME_TO_SHOW, classe.getString("classeName"));
+      /*  if(!student.getString("idClasse").equals(idClasseExporte) &&
                 student.getJsonObject("oldClasses") != null &&
                 student.getJsonObject("oldClasses").getString(idClasseExporte) != null) {
             student.put(CLASSE_NAME_TO_SHOW, student.getJsonObject("oldClasses").getString(idClasseExporte));
         } else {
             student.put(CLASSE_NAME_TO_SHOW, student.getString("classeName"));
-        }
+        }*/
     }
 
 

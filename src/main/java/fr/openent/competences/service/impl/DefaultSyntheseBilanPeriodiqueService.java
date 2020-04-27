@@ -14,7 +14,8 @@ import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 
 public class DefaultSyntheseBilanPeriodiqueService {
 
-    public void createOrUpdateSyntheseBilanPeriodique (Long idTypePeriode, String idEleve, String idStructure,  String synthese, Handler<Either<String, JsonObject>> handler){
+    public void createOrUpdateSyntheseBilanPeriodique (Long idTypePeriode, String idEleve, String idStructure,
+                                                       String synthese, Handler<Either<String, JsonObject>> handler){
         if(synthese.length() == 0){
             deleteSynthese(idTypePeriode, idEleve, idStructure, handler);
         }

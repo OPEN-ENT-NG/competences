@@ -533,9 +533,8 @@ export class ReleveNote extends  Model implements IModel {
                 idEleve: eleve.id,
                 appreciation_matiere_periode: eleve.appreciation_matiere_periode,
                 colonne: 'appreciation_matiere_periode',
-                delete: eleve.appreciation_matiere_periode === ""
+                delete: false
             });
-
             http().postJson(this.api.POST_DATA_RELEVE_PERIODIQUE, _data)
                 .done((res) => {
                     resolve(res);

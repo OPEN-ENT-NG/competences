@@ -106,11 +106,14 @@ export class Service {
             notify.error('evaluation.service.error.update');
         }
     }
-    async updateServices() {
+    async updateServices(isModalite?,isCoefficient?){
         try {
-
             let {status} = await http.put('/viescolaire/services',{"services" :this.competencesParams.map(service =>
                     {
+                        if(isModalite)
+                            service.modalite = this.modalite;
+                        if(isCoefficient)
+                            service.coefficient = this.coefficient;
                         return service.toJson()
                     }
                 )});
@@ -187,7 +190,7 @@ export class Service {
                 console.log(this.id_groups)
                 url = "/competences/devoirs/service" +
                     `?id_matiere=${this.id_matiere}`+
-                        `&id_groupe=${this.id_groups.join(",")}`;
+                    `&id_groupe=${this.id_groups.join(",")}`;
 
                 url += `&id_enseignant=${this.id_enseignant}`;
                 console.log(url)

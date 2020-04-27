@@ -111,19 +111,27 @@ export let initChartsEval = async function ($scope) {
             let ownerName = ListEval[i].owner_name;
             let tooltipLabel = (ownerName !== undefined) ? `${libelle} : ${ownerName}` : libelle;
 
-            let indexData = _.findIndex($scope.chartOptionsEval.datasets.data, {label : data.label, x : data.x});
+            let colorValue;
+            if (ListEval[i].evaluation !== -1) {
+                colorValue = $scope.mapCouleurs[ListEval[i].evaluation];
+            } else {
+                colorValue = Defaultcolors.unevaluated;
+            }
+
+            let indexData = _.findIndex($scope.chartOptionsEval.datasets.data, {x : data.x, y : data.y});
             if(indexData === -1) {
                 $scope.chartOptionsEval.datasets.data.push(data);
-                $scope.chartOptionsEval.tooltipLabels.push(tooltipLabel);
+                $scope.chartOptionsEval.tooltipLabels.push([tooltipLabel]);
+                $scope.chartOptionsEval.colors.push(colorValue);
             }
             else {
-                $scope.chartOptionsEval.tooltipLabels[indexData] += " / " + tooltipLabel;
+                $scope.chartOptionsEval.tooltipLabels[indexData].push(tooltipLabel);
             }
 
             if (actualPeriode){
                 let j = 1;
                 while ((moment(ListEval[i].evaluation_date).isBefore(beginningYear) ||
-                moment(ListEval[i].evaluation_date).isAfter(endYear)) &&
+                    moment(ListEval[i].evaluation_date).isAfter(endYear)) &&
                 !(moment(ListEval[i].evaluation_date).isSame(endYear, 'day')) &&
                 !(moment(ListEval[i].evaluation_date).isSame(beginningYear, 'day'))) {
                     actualPeriode = $scope.periodesChart[j];
@@ -139,17 +147,10 @@ export let initChartsEval = async function ($scope) {
                     $scope.chartOptionsEval.datasets.labels.push(actualPeriode.label);
                 }
             }
-            if(!_.contains($scope.chartOptionsEval.datasets.labels, $scope.getDateFormated(ListEval[i].evaluation_date))){
+
+            if(!_.contains($scope.chartOptionsEval.datasets.labels, $scope.getDateFormated(ListEval[i].evaluation_date))) {
                 $scope.chartOptionsEval.datasets.labels.push($scope.getDateFormated(ListEval[i].evaluation_date));
             }
-            let colorValue;
-            if (ListEval[i].evaluation !== -1) {
-                colorValue = $scope.mapCouleurs[ListEval[i].evaluation];
-            }
-            else {
-                colorValue = Defaultcolors.unevaluated;
-            }
-            $scope.chartOptionsEval.colors.push(colorValue);
         }
 
         initLastColumn($scope.chartOptionsEval);
@@ -171,34 +172,46 @@ export let initChartsEvalParents = async function ($scope) {
         });
 
         for (let i = 0; i < ListEval.length; i++) {
-
             let fontText = $scope.mapLettres[ListEval[i].evaluation];
             if (!fontText) {
                 fontText = " ";
             }
-            $scope.chartOptionsEval.datasets.data.push({
+
+            let data = {
                 y: ListEval[i].evaluation + 2,
                 x: $scope.getDateFormated(ListEval[i].date),
                 r: 10,
                 label: fontText
-            });
-            $scope.chartOptionsEval.datasets.labels.push($scope.getDateFormated(ListEval[i].date));
-            let colorValue;
-            if (ListEval[i].evaluation !== -1) {
-                colorValue = $scope.mapCouleurs[ListEval[i].evaluation];
-            }
-            else {
-                colorValue = Defaultcolors.unevaluated;
-            }
-            $scope.chartOptionsEval.colors.push(colorValue);
+            };
 
-            let libelle = (ListEval[i].evaluation_libelle !== undefined)? ListEval[i].evaluation_libelle : ListEval[i].name ;
+            let libelle = (ListEval[i].evaluation_libelle !== undefined)
+                ? ListEval[i].evaluation_libelle : ListEval[i].name;
             if (ListEval[i].formative) {
                 libelle += " (F)"
             }
             let ownerName = ListEval[i].owner_name;
-            let tooltipLabel = (ownerName !== undefined)? `${libelle} : ${ownerName}` : libelle;
-            $scope.chartOptionsEval.tooltipLabels.push(tooltipLabel);
+            let tooltipLabel = (ownerName !== undefined) ? `${libelle} : ${ownerName}` : libelle;
+
+            let colorValue;
+            if (ListEval[i].evaluation !== -1) {
+                colorValue = $scope.mapCouleurs[ListEval[i].evaluation];
+            } else {
+                colorValue = Defaultcolors.unevaluated;
+            }
+
+            let indexData = _.findIndex($scope.chartOptionsEval.datasets.data, {x : data.x, y : data.y});
+            if(indexData === -1) {
+                $scope.chartOptionsEval.datasets.data.push(data);
+                $scope.chartOptionsEval.tooltipLabels.push([tooltipLabel]);
+                $scope.chartOptionsEval.colors.push(colorValue);
+            }
+            else {
+                $scope.chartOptionsEval.tooltipLabels[indexData].push(tooltipLabel);
+            }
+
+            if(!_.contains($scope.chartOptionsEval.datasets.labels, $scope.getDateFormated(ListEval[i].date))) {
+                $scope.chartOptionsEval.datasets.labels.push($scope.getDateFormated(ListEval[i].date));
+            }
         }
 
         initLastColumn($scope.chartOptionsEval);

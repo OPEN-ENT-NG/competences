@@ -95,14 +95,14 @@
                         </div>
                         <div class="[[columns.coefficient.size]] ellipsis  cellTab cellTab-center">
                             <input  type="number" class="eleven cellTab three-mobile cellTab-center"
-                                    ng-blur="service.updateServices()"
+                                    ng-blur="service.updateServices(false,true)"
                                     placeholder="[[service.coefficientPlaceHolder]]"
                                     ng-click="$event.stopPropagation()"
                                     ng-model="service.coefficient" min="0"></div>
                         <div class="cellTab cellTab-left  select [[columns.modalite.size]] ">
                             <select ng-model="service.modalite"
                                     ng-click="$event.stopPropagation()"
-                                    ng-change="service.updateServices()">
+                                    ng-change="service.updateServices(true,false)">
                                 <option   ng-repeat="modalite in columns.modalite.data"
                                           ng-disabled="modalite ===  lang.translate('multiples')" >[[modalite]]</option>
                             </select>

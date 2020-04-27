@@ -831,7 +831,8 @@ public class LSUController extends ControllerHelper {
                     continue;
                 }
                 //cas élève non supprimé qui est dans la classe (Neo4j) => élève qui n'a pas changé de classe
-                if (!deletedStudentPostgres.containsKey(idEleve)){
+                //or student being deleted
+                if (idsClass.size() == 1 && idsClass.contains(student.getString("idClass")) || !deletedStudentPostgres.containsKey(idEleve)  ){
                     String biggestPeriode = Utils.getPeriode(periodesByClass.get(idClasse), false);
                     Date biggestPeriodeDate = UtilsConvert.convertStringToDate(biggestPeriode, "yyyy-MM-dd");
                     if (createdDate != null && createdDate.before(biggestPeriodeDate) || createdDate == null) {
@@ -841,13 +842,14 @@ public class LSUController extends ControllerHelper {
                         continue;
                     }
 
-                }else{//cas de l'élève qui a été dans les classes demandées => élève qui a changé de classe
+                }else{//cas de l'élève qui a été dans la ou les classes demandées => élève qui a changé de classe
 
                     JsonObject studentPostgres = deletedStudentPostgres.get(student.getString("idEleve"));
                     JsonArray oldClasses = new JsonArray(studentPostgres.getString("delete_date_id_class"));
                     //élève qui a changé de classe et dont la nouvelle classe n'est pas demandée pour l'export
-                    //dans la rep de la requête Neo on aura id de la nouvelle classe et non de l'ancienne si on demande l'export de l'ancienne et de la nouvelle
-                    if(!idsClass.contains(student.getString("idClass"))) {
+                    //dans la rep de la requête Neo on aura id de la nouvelle classe et non de l'ancienne
+                    // si on demande l'export de l'ancienne et/ou de la nouvelle
+                    if( !idsClass.contains(student.getString("idClass"))) { //cas élève supprimé ds une autre classe
 
                         if (oldClasses.size() == 1) {
                             String deleteDateString = oldClasses.getJsonObject(0).getString("deleteDate");
@@ -867,8 +869,7 @@ public class LSUController extends ControllerHelper {
                             addErrorClass(studentPostgres,oldClasses,student);
 
                         }
-
-                    }else{//cas où l'export est demandé sur plusieurs classes et que l'élève appartient et a appartenu à celles-ci
+                    }else {//cas où l'export est demandé sur plusieurs classes et que l'élève appartient et a appartenu à celles-ci
                         addErrorClass(studentPostgres,oldClasses,student);
 
                     }
@@ -2144,8 +2145,8 @@ public class LSUController extends ControllerHelper {
                                 if(donnees.getEpisGroupes() == null ){
                                     donnees.setEpisGroupes(objectFactory.createDonneesEpisGroupes());
                                 }
+                                if(donnees.getEpis() != null  && !donnees.getEpis().contains(epi)) donnees.getEpis().getEpi().add(epi);
 
-                                donnees.getEpis().getEpi().add(epi);
                                 donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
                                 futureEltBilanPeriodique.complete();
 
@@ -2229,7 +2230,7 @@ public class LSUController extends ControllerHelper {
             }
             lsuService.addIdsEvaluatedDiscipline(currentSubj.getId().replaceAll(DISCIPLINE_KEY, ""));
         } else {
-            log.info("addEnseignantDiscipline no completed");
+            log.info("addEnseignantDiscipline no completed " + currentIntervenantMatiere.getJsonObject("intervenant").getString("displayName"));
             resp1FutureComposite.complete();
         }
     }

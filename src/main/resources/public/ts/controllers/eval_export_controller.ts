@@ -78,7 +78,8 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                     periode_type.libelle = $scope.getI18nPeriode(periode_type.periode);
                 }
             } else {
-                $scope.params.periodes_type = _.without($scope.params.periodes_type, periode_type);
+                $scope.params.periodes_type = _.without($scope.params.periodes_type,
+                    _.findWhere($scope.params.periodes_type, {id_type : _.propertyOf(periode_type)('id_type')})) ;
             }
 
         };

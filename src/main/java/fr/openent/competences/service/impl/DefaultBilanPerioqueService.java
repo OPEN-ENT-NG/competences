@@ -183,14 +183,14 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                     }
                                     eitherHandler.handle(new Either.Right<>(result));
                                 }
-                });
-            } else {
-                String message = " " + eventPeriodes.left().getValue();
-                log.error("[getRetardsAndAbsences-Periodes] : " + idEleve + " " + message);
-                eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-Periodes] Failed"));
+                            });
+                } else {
+                    String message = " " + eventPeriodes.left().getValue();
+                    log.error("[getRetardsAndAbsences-Periodes] : " + idEleve + " " + message);
+                    eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-Periodes] Failed"));
+                }
             }
-        }
-    });
+        });
 
     }
 
@@ -302,10 +302,9 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
         // Récupération des groupes de l'élève
         Future<JsonArray> idsGroupsFuture = Future.future();
-        Utils.getGroupsEleve(eb, idEleve,idEtablissement, event -> {
+        Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), event -> {
             formate(idsGroupsFuture, event);
         });
-
 
         CompositeFuture.all(subjectFuture, idsGroupsFuture).setHandler( event -> {
             if(event.succeeded()){
@@ -313,11 +312,19 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 JsonArray idsMatieres = new fr.wseduc.webutils.collections.JsonArray();
                 JsonArray idsTeachers = new fr.wseduc.webutils.collections.JsonArray();
                 JsonArray responseArray = subjectFuture.result();
-                JsonArray idClasseGroups = idsGroupsFuture.result();
+                JsonArray idGroups = idsGroupsFuture.result();
+
+                JsonArray idClasseGroups = new JsonArray();
+                if (!(idGroups != null && !idGroups.isEmpty())) {
+                    idClasseGroups.add(idClasse);
+                } else {
+                    idClasseGroups.add(idClasse);
+                    idClasseGroups.addAll(idGroups.getJsonObject(0).getJsonArray("id_groupes"));
+                }
+
                 if(responseArray == null || responseArray.isEmpty()) {
                     handler.handle(new Either.Right<>(new JsonArray()));
-                }
-                else {
+                }else {
                     List<String> matieresMissingTeachers = buildSubjectForSuivi(idsMatieresIdsTeachers, idsMatieres,
                             idsTeachers, responseArray,idPeriode);
 
@@ -481,7 +488,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
             // Récupération des appreciation Moyenne Finale et positionnement Finale
             Future<JsonArray> appreciationMoyFinalePosFuture = Future.future();
-            noteService.getAppreciationMoyFinalePositionnement(idEleve, idMatiere, null,
+            noteService.getAppreciationMoyFinalePositionnement(idEleve, idMatiere, null, idsGroups,
                     event -> formate(appreciationMoyFinalePosFuture, event));
 
             // Récupération des notes
