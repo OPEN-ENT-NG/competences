@@ -747,8 +747,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     $scope.search.periode = _.findWhere($scope.filteredPeriode,
                         {id_type: res.id_type});
                 }
+                utils.safeApply($scope);
             });
-            utils.safeApply($scope);
         };
 
         $scope.savePositionnementEleve = async (suiviDesAcquis, positionnement) => {
