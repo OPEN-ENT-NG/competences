@@ -213,8 +213,7 @@ export class BilanPeriodique extends  Model {
     }
 
     private async getSubjects(subjectsSent:Array<Matiere>):Promise<any | Error>{
-        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent
-            .map((subject:Matiere):Boolean=>subject.id).join(",")}`);
+        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent.join(",")}`);
         if(status === 200) return data;
         throw new Error("getAppraisals");
     }
@@ -228,7 +227,7 @@ export class BilanPeriodique extends  Model {
         notify.error(lang.translate("competance.error.results.class"));
     }
 
-    private async callsDataSynthesisAndAppraisals (initResultPeriodic:any, subjects:Array<Matiere>, scope:any):Promise<any> {
+    private async callsDataSynthesisAndAppraisals (initResultPeriodic:any, scope:any):Promise<any> {
         try {
             const noteTotal: ReleveNoteTotale = new ReleveNoteTotale(initResultPeriodic);
             const parameter: any = {
@@ -248,7 +247,7 @@ export class BilanPeriodique extends  Model {
             return await Promise.all([
                 this.getHomework(parameter),
                 this.getSynthesis(parameter),
-                this.getSubjects(subjects),
+                this.getSubjects(initResultPeriodic.idMatieres),
             ])
                 .then((dataResponse: any): any => dataResponse)
                 .catch((error: String): void => {
@@ -428,8 +427,8 @@ export class BilanPeriodique extends  Model {
         }
     }
 
-    public async synthesisAndAppraisals (initResultPeriodic:any, scope:any, subjects:Array<Matiere>):Promise<any>{
-        const result = await this.callsDataSynthesisAndAppraisals(initResultPeriodic, subjects, scope);
+    public async synthesisAndAppraisals (initResultPeriodic:any, scope:any):Promise<any>{
+        const result = await this.callsDataSynthesisAndAppraisals(initResultPeriodic, scope);
         if(result){
             if(result.length === 3){
                 return {
