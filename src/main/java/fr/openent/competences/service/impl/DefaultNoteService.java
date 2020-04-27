@@ -1280,7 +1280,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         moyFinales.put(periode, new HashMap<>());
                     }
                     moyFinales.get(periode).put(moyFinale.getString("id_eleve"),
-                            Double.parseDouble(moyFinale.getString("moyenne")));
+                            Double.parseDouble(moyFinale.getString("moyenne").replace(",",".")));
                 }else if(isNull(moyFinale.getValue("moyenne")) && isNotNull(moyFinale.getValue("id_periode"))) {
                     Long periode = moyFinale.getLong("id_periode");
                     if (!moyFinalesNN.containsKey(periode)) {
@@ -1375,7 +1375,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                        String idEleveMF = mf.getString("id_eleve");
                        if (idPeriode == periodeMF && idEleve.equals(idEleveMF)) {
                            allMoyennesFinales.put(mf.getString("id_eleve"),
-                                   Double.parseDouble(mf.getString("moyenne")));
+                                   Double.parseDouble(mf.getString("moyenne").replace(",",".")));
                        }
                    } else if (isNotNull(mf) && isNotNull(mf.getValue("id_periode")) && isNotNull(mf.getValue("id_eleve"))
                            && isNull(mf.getValue("moyenne"))){
@@ -2300,7 +2300,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     public void getTotaleDatasReleve(final JsonObject params, final Long idPeriode, final boolean annual,
                                      final Handler<Either<String, JsonObject>> handler){
-        log.info("Start getTotaleDatasReleve in " + idPeriode);
         try{
             final String idEtablissement = params.getString(Competences.ID_ETABLISSEMENT_KEY);
             final String idClasse = params.getString(Competences.ID_CLASSE_KEY);
@@ -2478,7 +2477,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                             FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
                                                     AVIS_CONSEIL_ORIENTATION, idPeriode, false, "");
 
-                                            log.info("End getTotaleDatasReleve in " + idPeriode);
                                             handler.handle(new Either.Right<>(resultHandler.put(ELEVES, new DefaultExportBulletinService(eb, null)
                                                     .sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
                                         } else {
@@ -2489,19 +2487,24 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                             }
                                         }
                                     } catch (Exception error) {
-                                        log.error("listFuturesFirst: " + error);
+                                        log.error("listFuturesFirst failed : " + error);
+                                        handler.handle(new Either.Left<>("listFuturesFirst failed : " + error));
                                     }
                                 });
                             }
                             else {
                                 handler.handle(new Either.Left<>(idElevesEvent.cause().getMessage()));
+                                log.error("getTotaleDatasReleve (idElevesEvent.failed()): " +
+                                        idElevesEvent.cause());
                             }
                         } catch (Exception error) {
-                            log.error("getTotaleDatasReleve (prepare data): " + error);
+                            log.error("getTotaleDatasReleve (prepare data) failed: " + error);
+                            handler.handle(new Either.Left<>("getTotaleDatasReleve (prepare data) failed : " + error));
                         }
                     });
         } catch (Exception error) {
-            log.error("getTotaleDatasReleve (prepare data): " + error);
+            log.error("getTotaleDatasReleve (prepare data) failed: " + error);
+            handler.handle(new Either.Left<>("getTotaleDatasReleve (prepare data) failed : " + error));
         }
     }
 
@@ -3043,7 +3046,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         student.getValue().getJsonObject(POSITIONNEMENT).getValue(idMatiere) != null){
                     Double number;
                     try {
-                        number = Double.parseDouble(student.getValue().getJsonObject(POSITIONNEMENT).getString(idMatiere));
+                        number = Double.parseDouble(student.getValue().getJsonObject(POSITIONNEMENT).getString(idMatiere).replace(",","."));
                     } catch (ClassCastException c) {
                         number = student.getValue().getJsonObject(POSITIONNEMENT).getDouble(idMatiere);
                     }
@@ -3213,7 +3216,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 if (student.getValue().containsKey(moyenneLabel) && student.getValue().getJsonObject(moyenneLabel).containsKey(idMat)) {
                     if (student.getValue().getJsonObject(moyenneLabel).getValue(idMat) != NN && student.getValue().getJsonObject(moyenneLabel).getValue(idMat) != "" && student.getValue().getJsonObject(moyenneLabel).getValue(idMat) != null) {
                         try {
-                            moyenne += Double.parseDouble(student.getValue().getJsonObject(moyenneLabel).getString(idMat));
+                            moyenne += Double.parseDouble(student.getValue().getJsonObject(moyenneLabel).getString(idMat).replace(",","."));
                         } catch (ClassCastException c) {
                             moyenne += student.getValue().getJsonObject(moyenneLabel).getDouble(idMat);
                         }
