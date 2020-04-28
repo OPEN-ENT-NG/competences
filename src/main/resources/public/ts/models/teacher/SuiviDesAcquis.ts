@@ -33,6 +33,7 @@ export class SuiviDesAcquis  {
     idClasse: string;
     idEtablissement: string;
     idPeriode : number;
+    previousAppreciationMatiere : string;
 
     constructor(o?:any ) {
     }
@@ -55,26 +56,34 @@ export class SuiviDesAcquis  {
         };
     }
 
+    setPreviousAppreciationMatiere = () => {
+        this.previousAppreciationMatiere = this.appreciationByClasse.appreciation;
+    };
+
     async saveAppreciationMatierePeriodeEleve() {
             if(this.appreciationByClasse !== undefined){
-                let _data = _.extend(this.toJson(),{
-                    idClasse: this.appreciationByClasse.idClasse,
-                    idClasseSuivi : this.idClasse,
-                    appreciation_matiere_periode: this.appreciationByClasse.appreciation,
-                    colonne: 'appreciation_matiere_periode',
-                    delete: this.appreciationByClasse.appreciation === "",
-                    isBilanPeriodique: true
-                });
+                if(this.appreciationByClasse.appreciation.length > 0) {
+                    let _data = _.extend(this.toJson(),{
+                        idClasse: this.appreciationByClasse.idClasse,
+                        idClasseSuivi : this.idClasse,
+                        appreciation_matiere_periode: this.appreciationByClasse.appreciation,
+                        colonne: 'appreciation_matiere_periode',
+                        delete: false,
+                        isBilanPeriodique: true
+                    });
 
-                try{
-                     return await http.post(this.api.POST_DATA_RELEVE_PERIODIQUE, _data);
-                }catch (e){
-                    notify.error('evaluations.releve.appreciation.classe.save.error');
-                    console.error(e);
+                    try{
+                        return await http.post(this.api.POST_DATA_RELEVE_PERIODIQUE, _data);
+                    }catch (e){
+                        notify.error('evaluations.releve.appreciation.classe.save.error');
+                        console.error(e);
+                    }
+                }
+                else if(this.previousAppreciationMatiere !== undefined) {
+                    this.appreciationByClasse.appreciation = this.previousAppreciationMatiere;
                 }
             }else{
                 notify.error('evaluations.releve.appreciation.classe.max.length');
-
             }
     }
 
