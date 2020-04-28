@@ -7,6 +7,7 @@ import fr.openent.competences.bean.lsun.Discipline;
 import fr.openent.competences.bean.lsun.Donnees;
 import fr.openent.competences.service.LSUService;
 import fr.openent.competences.service.UtilsService;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import fr.wseduc.webutils.Either;
@@ -27,9 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static fr.openent.competences.Competences.ID_ELEVE;
-import static fr.openent.competences.Competences.ID_ELEVE_KEY;
-import static fr.openent.competences.Competences.ID_PERIODE;
+import static fr.openent.competences.Competences.*;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
@@ -245,7 +244,7 @@ public class DefaultLSUService implements LSUService {
     }
 
     private void prepareStatements( SqlStatementsBuilder statements, JsonArray idsStudents, Long idPeriode,
-                                   String idClasse, String query){
+                                    String idClasse, String query){
         for (Object idStudent: idsStudents) {
             JsonArray values = new JsonArray().add((String) idStudent).add(idClasse);
             if(idPeriode != null){
@@ -262,7 +261,7 @@ public class DefaultLSUService implements LSUService {
                 + " VALUES (?, ?, " + ((idPeriode != null) ? " ?,": "-1," ) + " NOW()) "
                 + " ON CONFLICT (id_eleve, id_classe,id_periode) DO UPDATE SET created = NOW() ";
 
-       prepareStatements(statements, idsStudents, idPeriode, idClasse, query);
+        prepareStatements(statements, idsStudents, idPeriode, idClasse, query);
 
         Sql.getInstance().transaction(statements.build(), validResultHandler(handler));
     }
@@ -300,6 +299,7 @@ public class DefaultLSUService implements LSUService {
         Sql.getInstance().prepared(query.toString(), values, Competences.DELIVERY_OPTIONS,
                 SqlResult.validResultHandler(handler));
     }
+
     public void getUnheededStudents(JsonArray idPeriodes, JsonArray idClasses, String idStructure,
                                     final Handler<Either<String, JsonArray>> handler){
 
@@ -316,61 +316,98 @@ public class DefaultLSUService implements LSUService {
                     Map<String, List<JsonObject>> ignoredInfos =  ((List<JsonObject>)unheededStudents.getList())
                             .stream().collect(Collectors.groupingBy(  o ->  o.getString("id_eleve")));
 
+                    List<Future> futures = new ArrayList<>();
+
+                    // Récupération des infos sur les élèves ignorés
+                    Future<JsonArray> infosElevesIgnores = Future.future();
                     JsonObject action = new JsonObject()
                             .put("action", "eleve.getInfoEleve")
                             .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
                             .put("idEleves", new JsonArray(Arrays.asList(ignoredInfos.keySet().toArray())));
 
                     eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                            handlerToAsyncHandler( studentsInfo ->  {
+                            handlerToAsyncHandler( studentsInfo -> {
                                 JsonObject body = studentsInfo.body();
                                 if (!"ok".equals(body.getString("status"))) {
                                     handler.handle(new Either.Left<>(body.getString(MESSAGE)));
-                                }
-                                else {
-                                    JsonArray students = body.getJsonArray("results");
-                                    JsonArray results = new JsonArray();
-                                    // On ne récupère que les élèves des classes où ils  sont ignorés
-                                    students.getList().forEach( s -> {
-                                        JsonObject student = (JsonObject)s;
-                                        String idClasse = student.getString("idClasse");
-                                        JsonArray studentIgnoredInfos = new JsonArray();
-                                        List<JsonObject> studentIgnoredInfo = ignoredInfos
-                                                .get(student.getString(ID_ELEVE_KEY));
-                                        for(int i = 0; i<studentIgnoredInfo.size(); i++){
-                                            String idClaasStudentIgnored = studentIgnoredInfo.get(i).getString("id_classe");
-                                            JsonObject studentIgnored = new JsonObject();
-                                            if(idClaasStudentIgnored.equals(idClasse)){
-                                                studentIgnored = student;
-                                                studentIgnoredInfos.add(studentIgnoredInfo.get(i));
-                                            }else {//ignored Student was in old class and idClaasStudentIgnored = id of old Class
-                                                //oldClasses ={ idClasseOld1 : nameOldClasse1, ...}
-                                                String oldClasse = student.getJsonObject("oldClasses").getString(idClaasStudentIgnored);
-                                               if(oldClasse != null){
-
-                                                   studentIgnored.put("idEleve",student.getString("idClasse"));
-                                                   studentIgnored.put("firstName",student.getString("firstName"));
-                                                   studentIgnored.put("lastName",student.getString("lastName"));
-                                                   studentIgnored.put("idClasse",studentIgnoredInfo.get(i).getString("id_classe"));
-                                                   studentIgnored.put("classeName", student.getJsonObject("oldClasses").getString(idClaasStudentIgnored));
-                                                   studentIgnoredInfos.add(studentIgnoredInfo.get(i));
-                                               }
-                                            }
-                                            if(!studentIgnoredInfos.isEmpty()) {
-                                                studentIgnored.put("ignoredInfos", studentIgnoredInfos);
-                                                results.add(studentIgnored);
-                                            }
-                                        }
-
-                                    });
-                                    handler.handle(new Either.Right<>(results));
+                                } else {
+                                    infosElevesIgnores.complete(body.getJsonArray("results"));
                                 }
                             }));
+                    futures.add(infosElevesIgnores);
 
+                    // Récupération des infos sur les classes
+                    Future<JsonArray> infosClasses = Future.future();
+                    action = new JsonObject()
+                            .put(ACTION, "classe.getClassesInfo")
+                            .put("idClasses", idClasses);
+                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+                        JsonObject body = message.body();
+                        if (OK.equals(body.getString(STATUS))) {
+                            infosClasses.complete(body.getJsonArray("results"));
+                        } else {
+                            handler.handle(new Either.Left<>(body.getString("message")));
+                            log.error("getInfosGroupes : " + body.getString("message"));
+                        }
+                    }));
+                    futures.add(infosClasses);
+
+                    CompositeFuture.all(futures).setHandler(getStudentIgnoredInfos(handler, ignoredInfos, infosElevesIgnores, infosClasses));
                 }
             }
         });
 
+    }
+
+    private Handler<AsyncResult<CompositeFuture>> getStudentIgnoredInfos(Handler<Either<String, JsonArray>> handler, Map<String,
+            List<JsonObject>> ignoredInfos, Future<JsonArray> infosElevesIgnores, Future<JsonArray> infosClasses) {
+        return event -> {
+            if(event.succeeded()) {
+                JsonArray students = infosElevesIgnores.result();
+                JsonArray results = new JsonArray();
+                Map<String, String> classNames = new HashMap<>();
+                if (infosClasses.result() != null) {
+                    classNames = infosClasses.result().stream()
+                            .collect(Collectors.toMap(val -> ((JsonObject) val).getString("id"), val -> ((JsonObject) val).getString("name")));
+                }
+                // On ne récupère que les élèves des classes où ils  sont ignorés
+                Map<String, String> finalClassNames = classNames;
+                students.getList().forEach(s -> {
+                    JsonObject student = (JsonObject)s;
+                    String idClasse = student.getString("idClasse");
+                    JsonArray studentIgnoredInfos = new JsonArray();
+                    List<JsonObject> studentIgnoredInfo = ignoredInfos
+                            .get(student.getString(ID_ELEVE_KEY));
+                    for (JsonObject entries : studentIgnoredInfo) {
+                        String idClaasStudentIgnored = entries.getString("id_classe");
+                        JsonObject studentIgnored = new JsonObject();
+                        if (idClaasStudentIgnored.equals(idClasse)) {
+                            studentIgnored = student;
+                            studentIgnoredInfos.add(entries);
+                        } else if (!finalClassNames.isEmpty()) {//ignored Student was in old class and idClaasStudentIgnored = id of old Class
+                            //oldClasses ={ idClasseOld1 : nameOldClasse1, ...}
+                            String oldClasse = finalClassNames.get(idClaasStudentIgnored);
+                            if (oldClasse != null) {
+                                studentIgnored.put("idEleve", student.getString("idEleve"));
+                                studentIgnored.put("firstName", student.getString("firstName"));
+                                studentIgnored.put("lastName", student.getString("lastName"));
+                                studentIgnored.put("idClasse", idClaasStudentIgnored);
+                                studentIgnored.put("classeName", oldClasse);
+                                studentIgnoredInfos.add(entries);
+                            }
+                        }
+                        if (!studentIgnoredInfos.isEmpty()) {
+                            studentIgnored.put("ignoredInfos", studentIgnoredInfos);
+                            results.add(studentIgnored);
+                        }
+                    }
+
+                });
+                handler.handle(new Either.Right<>(results));
+            } else{
+                handler.handle(new Either.Left<>("One of the Future failed - getUnheededStudents : " + event.cause()));
+            }
+        };
     }
 
     public void getStudents(final List<String> classids, Future<Message<JsonObject>> studentsFuture,
@@ -413,7 +450,7 @@ public class DefaultLSUService implements LSUService {
     @Override
     public void getDeletedStudentsPostgres(final Map<String, JsonArray> periodesByClass,
                                            Map<String, JsonObject> mapDeleteStudent,
-                                          Handler<Either<String, Map<String, JsonObject>>> handler) {
+                                           Handler<Either<String, Map<String, JsonObject>>> handler) {
 
         if(periodesByClass != null && periodesByClass.size()>0){
 
@@ -541,7 +578,7 @@ public class DefaultLSUService implements LSUService {
         }));
     }
     public int nbIgnoredTimes(String idEleve, String idClasse, Map<String,JsonArray> periodesByClass,
-                          Map<Long, JsonObject> periodeUnheededStudents){
+                              Map<Long, JsonObject> periodeUnheededStudents){
         AtomicInteger nbIgnoredTimes = new AtomicInteger(0);
         if(periodesByClass.containsKey(idClasse)) {
             JsonArray periodes = periodesByClass.get(idClasse);
