@@ -610,7 +610,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     avisConseil: $scope.suiviClasse.withAvisConseil,
                     avisOrientation: $scope.suiviClasse.withAvisOrientation
                 },
-                idMatieres: $scope.matieres.all.filter((subject:Matiere):Boolean => subject.id).map((subject:Matiere):Boolean => subject.id),
+                idMatieres: $scope.allMatieresSorted.filter((subject:Matiere):Boolean => subject.id).map((subject:Matiere):Boolean => subject.id),
                 allMatieres: $scope.allMatieresSorted
             }
         };
@@ -619,8 +619,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             const teacherBySubject = utils.getTeacherBySubject($scope.classes.all,
                 $scope.search.classe.id,
                 $scope.structure.enseignants.all);
-            const dataSynthesisAndAppraisals:Array<any> = await bilanPeriodic.synthesisAndAppraisals( initResultPeriodic(), $scope, $scope.matieres.all);
-            $scope.averagesClasses = await bilanPeriodic.getAverage(dataSynthesisAndAppraisals, teacherBySubject);
+            const dataSynthesisAndAppraisals:Array<any> = await bilanPeriodic.synthesisAndAppraisals( initResultPeriodic(), $scope);
+            $scope.averagesClasses = await bilanPeriodic.getAverage(dataSynthesisAndAppraisals, teacherBySubject );
         };
 
         const cleanScopeTabs = () => {

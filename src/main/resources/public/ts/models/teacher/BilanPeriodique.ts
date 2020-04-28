@@ -213,8 +213,7 @@ export class BilanPeriodique extends  Model {
     }
 
     private async getSubjects(subjectsSent:Array<Matiere>):Promise<any | Error>{
-        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent
-            .map((subject:Matiere):Boolean=>subject.id).join(",")}`);
+        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent.join(",")}`);
         if(status === 200) return data;
         throw new Error("getAppraisals");
     }
@@ -228,7 +227,7 @@ export class BilanPeriodique extends  Model {
         notify.error(lang.translate("competance.error.results.class"));
     }
 
-    private async callsDataSynthesisAndAppraisals (initResultPeriodic:any, subjects:Array<Matiere>, scope:any):Promise<any> {
+    private async callsDataSynthesisAndAppraisals (initResultPeriodic:any, scope:any):Promise<any> {
         try {
             const noteTotal: ReleveNoteTotale = new ReleveNoteTotale(initResultPeriodic);
             const parameter: any = {
@@ -248,7 +247,7 @@ export class BilanPeriodique extends  Model {
             return await Promise.all([
                 this.getHomework(parameter),
                 this.getSynthesis(parameter),
-                this.getSubjects(subjects),
+                this.getSubjects(initResultPeriodic.idMatieres),
             ])
                 .then((dataResponse: any): any => dataResponse)
                 .catch((error: String): void => {
@@ -269,13 +268,15 @@ export class BilanPeriodique extends  Model {
         const statistics:any = data.synthesis.statistiques;
         const subjects = data.subjects;
         for (let subjectId in statistics) {
+            const statistic = statistics[subjectId];
             for (let k = 0; k < homeworks.length ; k++) {
                 if(homeworks[k].id_matiere === subjectId
-                    && !_.contains(matchingDataApi.map(subject => subject.idSubject), subjectId)) {
+                    && !_.contains(matchingDataApi.map(subject => subject.idSubject), subjectId)
+                    && !(_.values(statistic.moyenne).every(note => note === "NN"))){  //clean column with that "NN"
                     const subject = _.values(subjects).find(subject => subject.id === homeworks[k].id_matiere);
                     matchingDataApi.push({
                         idSubject: subjectId,
-                        average: statistics[subjectId].moyenne,
+                        average: statistic.moyenne,
                         teacherName: teacherBySubject && teacherBySubject[subjectId] && teacherBySubject[subjectId].displayName ?
                             teacherBySubject[subjectId].displayName : undefined,
                         subjectName: subject? subject.name : undefined,
@@ -292,13 +293,10 @@ export class BilanPeriodique extends  Model {
         if(!Object.keys(data).map( element => data[element]).some(array => array.length > 0)) return [];
         let resultHeader:Array<any> = [];
         const dataSynthesis = await this.makerHeaderWithTeachersAndSubjects(data, teacherBysubject);
-        resultHeader =  [
-            {
-                idSubject: undefined,
-                subjectName: lang.translate("student"),
-                teacherName: undefined,
-            },
-            ...dataSynthesis.map(subjectToSynthesis => {
+
+        const dataSynthesisClean = dataSynthesis
+            .filter(subjectToSynthesis => subjectToSynthesis.subjectShortName)
+            .map(subjectToSynthesis => {
                 let lastName, firstName;
                 if( subjectToSynthesis.teacherName){
                     [lastName, firstName ] = subjectToSynthesis.teacherName.split(" ");
@@ -308,7 +306,15 @@ export class BilanPeriodique extends  Model {
                     subjectName: subjectToSynthesis.subjectShortName,
                     teacherName: subjectToSynthesis.teacherName ? Utils.makeShortName(lastName, firstName) : "",
                 }
-            }),
+            });
+
+        resultHeader =  [
+            {
+                idSubject: undefined,
+                subjectName: lang.translate("student"),
+                teacherName: undefined,
+            },
+            ...dataSynthesisClean,
             {
                 idSubject: undefined,
                 subjectName: lang.translate("average"),
@@ -357,12 +363,14 @@ export class BilanPeriodique extends  Model {
         for (let i = 0; i < subjectsFromHeaderTable.length; i++) {
             let hasNoteSubject:Boolean = false;
             for(let idSubject in notes){
-                if(subjectsFromHeaderTable[i].idSubject === idSubject){
+                const subjectFromHeader = subjectsFromHeaderTable[i];
+                if(!subjectFromHeader) break;
+                if(subjectFromHeader.idSubject === idSubject){
                     subjectsNotes.push(notes[idSubject]);
                     hasNoteSubject = true;
                     break;
                 }
-                if(!subjectsFromHeaderTable[i].idSubject) {
+                if(!subjectFromHeader.idSubject) {
                     hasNoteSubject = true;
                     break;
                 }
@@ -421,8 +429,8 @@ export class BilanPeriodique extends  Model {
         }
     }
 
-    public async synthesisAndAppraisals (initResultPeriodic:any, scope:any, subjects:Array<Matiere>):Promise<any>{
-        const result = await this.callsDataSynthesisAndAppraisals(initResultPeriodic, subjects, scope);
+    public async synthesisAndAppraisals (initResultPeriodic:any, scope:any):Promise<any>{
+        const result = await this.callsDataSynthesisAndAppraisals(initResultPeriodic, scope);
         if(result){
             if(result.length === 3){
                 return {
