@@ -1118,7 +1118,7 @@ public class NoteController extends ControllerHelper {
                     JsonArray idGroups = responseQuerry.right().getValue();
                     //idGroups null si l'eleve n'est pas dans un groupe
                     notesService.getDataGraph(idEleve, idGroups, idEtablissement, idClasse, typeClasse,
-                            idPeriodeString, arrayResponseHandler(request));
+                            idPeriodeString, isNull(idPeriodeString),  arrayResponseHandler(request));
                 }
             }
         });
@@ -1154,7 +1154,7 @@ public class NoteController extends ControllerHelper {
         final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
         final String idPeriodeString = request.params().get("idPeriode");
         notesService.getDataGraph(idEleve, null, idEtablissement, idClasse, typeClasse, idPeriodeString,
-                arrayResponseHandler(request));
+                isNull(idPeriodeString),arrayResponseHandler(request));
     }
 
     /**
@@ -1173,7 +1173,7 @@ public class NoteController extends ControllerHelper {
         final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
         final String idPeriodeString = request.params().get("idPeriode");
         notesService.getDataGraphDomaine(idEleve, null, idEtablissement, idClasse, typeClasse, idPeriodeString,
-                arrayResponseHandler(request));
+                isNull(idPeriodeString),arrayResponseHandler(request));
     }
 
 }

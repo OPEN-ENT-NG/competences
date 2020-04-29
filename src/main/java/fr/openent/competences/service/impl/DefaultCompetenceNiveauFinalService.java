@@ -44,11 +44,10 @@ public class DefaultCompetenceNiveauFinalService extends SqlCrudService implemen
     }
 
     @Override
-        public void setNiveauFinal(JsonObject niveauFinal,  Handler<Either<String, JsonObject>> handler) {
+    public void setNiveauFinal(JsonObject niveauFinal,  Handler<Either<String, JsonObject>> handler) {
 
         SqlStatementsBuilder sqlBuilder =new SqlStatementsBuilder();
-        JsonArray idsMatieres = new fr.wseduc.webutils.collections.JsonArray();
-                idsMatieres = niveauFinal.getJsonArray("ids_matieres");
+        JsonArray idsMatieres = niveauFinal.getJsonArray("ids_matieres");
 
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL
                 + "(id_periode, id_eleve, niveau_final, id_competence, id_matiere) VALUES(?, ?, ?, ?, ?) "
@@ -59,6 +58,30 @@ public class DefaultCompetenceNiveauFinalService extends SqlCrudService implemen
             JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
             values.add(niveauFinal.getInteger("id_periode"))
                     .add(niveauFinal.getString("id_eleve"))
+                    .add(niveauFinal.getInteger("niveau_final"))
+                    .add(niveauFinal.getInteger("id_competence"))
+                    .add(idsMatieres.getString(i))
+                    .add(niveauFinal.getInteger("niveau_final"));
+            sqlBuilder.prepared(query,values);
+
+        }
+        Sql.getInstance().transaction(sqlBuilder.build(), SqlResult.validRowsResultHandler(handler));
+    }
+
+    @Override
+    public void setNiveauFinalAnnuel(JsonObject niveauFinal,  Handler<Either<String, JsonObject>> handler) {
+
+        SqlStatementsBuilder sqlBuilder =new SqlStatementsBuilder();
+        JsonArray idsMatieres = niveauFinal.getJsonArray("ids_matieres");
+
+        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL
+                + "(id_eleve, niveau_final, id_competence, id_matiere) VALUES( ?, ?, ?, ?) "
+                + "ON CONFLICT (id_eleve, id_competence, id_matiere) "
+                + "DO UPDATE SET niveau_final = ?";
+
+        for ( int i = 0; i < idsMatieres.size(); i++ ) {
+            JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+              values.add(niveauFinal.getString("id_eleve"))
                     .add(niveauFinal.getInteger("niveau_final"))
                     .add(niveauFinal.getInteger("id_competence"))
                     .add(idsMatieres.getString(i))

@@ -117,13 +117,13 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                                     classesWithPeriode(idStructureATraiter, new Handler<Either<String, JsonArray>>() {
                                                         @Override
                                                         public void handle(Either<String, JsonArray> event) {
-                                                           if(event.isRight()){
-                                                               JsonArray idClassWithPeriodeja = event.right().getValue();
-                                                               for(int i=0 ; i < idClassWithPeriodeja.size(); i++){
-                                                                   listIdClassWithPeriode.add(idClassWithPeriodeja
-                                                                           .getJsonObject(i).getString("id_classe"));
-                                                               }
-                                                           }
+                                                            if(event.isRight()){
+                                                                JsonArray idClassWithPeriodeja = event.right().getValue();
+                                                                for(int i=0 ; i < idClassWithPeriodeja.size(); i++){
+                                                                    listIdClassWithPeriode.add(idClassWithPeriodeja
+                                                                            .getJsonObject(i).getString("id_classe"));
+                                                                }
+                                                            }
 
                                                             JsonArray vJsonArrayClass = structure.getJsonArray("classes");
                                                             // On récupère la liste des classes à traiter si elles ont une période d'initialisée
@@ -474,7 +474,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 Competences.ELEMENT_PROGRAMME_TABLE,Competences.ID_PERIODE);
 
         // Suppresssion : moyenne_finale
-                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA,Competences.ID_CLASSE,
+        supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA,Competences.ID_CLASSE,
                 vListIdsGroupesATraiter, statements, valuesForDeletion ,
                 Competences.MOYENNE_FINALE_TABLE, Competences.ID_PERIODE);
 
@@ -511,6 +511,10 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
                         idsEleve,statements,valuesForSuppressionIdEleve,
                         Competences.COMPETENCE_NIVEAU_FINAL, Competences.ID_PERIODE);
+
+                suppressionTransitionParamIdEleve(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
+                        idsEleve,statements,valuesForSuppressionIdEleve,
+                        Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL);
 
                 supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
                         idsEleve, statements, valuesForSuppressionIdEleve,
@@ -662,35 +666,61 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "MAX(competences_notes.evaluation) AS max_comp, competences_notes.id_eleve, devoirs.id_periode "+
                         "FROM notes.competences_notes " +
                         "INNER JOIN notes.devoirs ON devoirs.id = competences_notes.id_devoir " +
+
                         "LEFT JOIN notes.competence_niveau_final " +
                         "ON devoirs.id_periode = competence_niveau_final.id_periode " +
                         "AND competences_notes.id_competence = competence_niveau_final.id_competence " +
                         "AND competences_notes.id_eleve = competence_niveau_final.id_eleve " +
+
+                        "LEFT JOIN notes.competence_niveau_final_annuel " +
+                        "ON competences_notes.id_competence = competence_niveau_final_annuel.id_competence " +
+                        "AND competences_notes.id_eleve = competence_niveau_final_annuel.id_eleve " +
+
                         "WHERE competences_notes.owner != '" + _id_user_transition_annee +
                         "' AND competences_notes.id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
                         " AND competence_niveau_final.id_eleve IS NULL " +
+                        " AND competence_niveau_final_annuel.id_eleve IS NULL " +
                         "GROUP BY competences_notes.id_competence, competences_notes.id_eleve, devoirs.id_periode)";
 
                 String queryMaxNiveauFinalByPeriode = "(SELECT competence_niveau_final.id_competence,  " +
                         "MAX(competence_niveau_final.niveau_final) AS max_comp ,competence_niveau_final.id_eleve, " +
                         "competence_niveau_final.id_periode FROM notes.competences_notes " +
                         "INNER JOIN notes.devoirs ON devoirs.id = competences_notes.id_devoir " +
+
                         "INNER JOIN notes.competence_niveau_final " +
                         "ON devoirs.id_periode = competence_niveau_final.id_periode " +
                         "AND competences_notes.id_competence = competence_niveau_final.id_competence "+
                         "AND competences_notes.id_eleve = competence_niveau_final.id_eleve " +
+
+                        "LEFT JOIN notes.competence_niveau_final_annuel " +
+                        "ON competences_notes.id_competence = competence_niveau_final_annuel.id_competence " +
+                        "AND competences_notes.id_eleve = competence_niveau_final_annuel.id_eleve " +
+
                         "WHERE competences_notes.owner != '" + _id_user_transition_annee +
                         "' AND competences_notes.id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
+                        " AND competence_niveau_final_annuel.id_eleve IS NULL " +
                         " GROUP BY competence_niveau_final.id_competence, competence_niveau_final.id_eleve, competence_niveau_final.id_periode)";
+
+                String queryMaxNiveauFinalAnnuel = "(SELECT competence_niveau_final_annuel.id_competence,  " +
+                        "MAX(competence_niveau_final_annuel.niveau_final) AS max_comp ,competence_niveau_final_annuel.id_eleve " +
+                        "FROM notes.competences_notes " +
+                        "INNER JOIN notes.devoirs ON devoirs.id = competences_notes.id_devoir " +
+                        "INNER JOIN notes.competence_niveau_final_annuel " +
+                        "ON competences_notes.id_competence = competence_niveau_final_annuel.id_competence "+
+                        "AND competences_notes.id_eleve = competence_niveau_final_annuel.id_eleve " +
+                        "WHERE competences_notes.owner != '" + _id_user_transition_annee +
+                        "' AND competences_notes.id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
+                        " GROUP BY competence_niveau_final_annuel.id_competence, competence_niveau_final_annuel.id_eleve)";
 
                 // Ajout du max des compétences ou du niveau final pour chaque élève
                 String queryInsertMaxCompetenceNoteG = "" +
                         "INSERT INTO notes.competences_notes(id, id_devoir, id_competence, evaluation, owner, id_eleve) " +
                         "(" +
-                       "SELECT nextval('notes.competences_notes_id_seq'), " + vMapGroupesIdsDevoirATraiter.get(idClasse) +
+                        "SELECT nextval('notes.competences_notes_id_seq'), " + vMapGroupesIdsDevoirATraiter.get(idClasse) +
                         ", id_competence, MAX(max_comp), '" + _id_user_transition_annee + "',id_eleve " +
                         "FROM (" + queryMaxCompNoteByPeriode +
                         " UNION ALL" + queryMaxNiveauFinalByPeriode +
+                        " UNION ALL" + queryMaxNiveauFinalAnnuel +
                         ") AS tmax GROUP BY id_competence, id_eleve )";
 
                 statements.add(new JsonObject()
@@ -705,7 +735,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "  FROM notes.dispense_domaine_eleve" +
                         "  WHERE " +
                         "   id_eleve IN " + Sql.listPrepared(vListEleves.toArray());
-               JsonArray valuesDeleteDispenseEleve = new fr.wseduc.webutils.collections.JsonArray();
+                JsonArray valuesDeleteDispenseEleve = new fr.wseduc.webutils.collections.JsonArray();
                 for (String idEleve : vListEleves) {
                     valuesDeleteDispenseEleve.add(idEleve);
                 }
@@ -752,11 +782,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     private void supressionTransitionCheckPeriode(String schema, String idGroupOrIdClassOrIdEleve, List<String> idGroupOrIdELeve, JsonArray statements,
                                                   JsonArray values, String table, String idPeriode) {
         String query =
-                " DELETE  " +
-                        " FROM "+ schema +"." + table +
-                        " WHERE  " +
-                        idGroupOrIdClassOrIdEleve + " IN " + Sql.listPrepared(idGroupOrIdELeve.toArray()) +
-                        "  AND EXISTS " +
+                " DELETE FROM "+ schema +"." + table +
+                        " WHERE  " + idGroupOrIdClassOrIdEleve + " IN " + Sql.listPrepared(idGroupOrIdELeve.toArray()) +
+                        " AND EXISTS " +
                         "   ( " +
                         "     SELECT 1 " +
                         "     FROM viesco.periode " +
@@ -771,9 +799,19 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put("action", "prepared"));
     }
 
+    private void suppressionTransitionParamIdEleve(String schema, String idGroupOrIdClassOrIdEleve, List<String> idGroupOrIdELeve,
+                                                   JsonArray statements, JsonArray values, String table) {
+        String query = " DELETE FROM " + schema + "." + table +
+                " WHERE  " + idGroupOrIdClassOrIdEleve + " IN " + Sql.listPrepared(idGroupOrIdELeve.toArray());
+
+        statements.add(new JsonObject()
+                .put("statement", query)
+                .put("values", values)
+                .put("action", "prepared"));
+    }
+
     private void suppressionTransitionParamIdStructure( JsonArray statements, JsonArray values, String table, String schema){
-        String query = "DELETE FROM " + schema + "." + table +
-                " WHERE id_etablissement = ?";
+        String query = "DELETE FROM " + schema + "." + table + " WHERE id_etablissement = ?";
         statements.add(new JsonObject()
                 .put("statement", query).put("values",values)
                 .put("action", "prepared"));

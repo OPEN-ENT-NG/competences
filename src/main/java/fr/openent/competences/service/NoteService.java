@@ -125,10 +125,11 @@ public interface NoteService extends CrudService {
      * @param eleveId identifiant de l'élève
      * @param typeClasse le type de la classe
      * @param withDomaineInfo renvoit les competences-notes par domaines
+     * @param isYear récupère les niveaux finaux annuels ou non
      * @param handler handler portant le résultat de la requête
      */
     void getCompetencesNotesReleve(String etablissementId, String classeId, JsonArray groupIds, String matiereId, Long periodeId,
-                                   String eleveId, Integer typeClasse, Boolean withDomaineInfo,
+                                   String eleveId, Integer typeClasse, Boolean withDomaineInfo, Boolean isYear,
                                    Handler<Either<String, JsonArray>> handler);
 
     /**
@@ -310,11 +311,12 @@ public interface NoteService extends CrudService {
      * @param idClasse
      * @param typeClasse
      * @param idPeriodeString
+     * @param isYear
      * @param handler
      */
     void getDataGraphDomaine(final String idEleve, JsonArray groupIds, final String idEtablissement ,
-                             final String idClasse,final Integer typeClasse, final String idPeriodeString,
-                             final Handler<Either<String, JsonArray>> handler);
+                             final String idClasse, final Integer typeClasse, final String idPeriodeString,
+                             final Boolean isYear, final Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère les donnée pour un graph par matière
@@ -324,11 +326,12 @@ public interface NoteService extends CrudService {
      * @param idClasse
      * @param typeClasse
      * @param idPeriodeString
+     * @param isYear
      * @param handler
      */
     void getDataGraph(final String idEleve, JsonArray groupIds, final String idEtablissement ,
                              final String idClasse,final Integer typeClasse, final String idPeriodeString,
-                             final Handler<Either<String, JsonArray>> handler);
+                             final Boolean isYear, final Handler<Either<String, JsonArray>> handler);
 
     /**
      *

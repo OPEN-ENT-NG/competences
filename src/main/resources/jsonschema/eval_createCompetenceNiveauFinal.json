@@ -20,7 +20,6 @@
     }
   },
   "required": [
-    "id_periode",
     "id_eleve",
     "niveau_final",
     "id_competence",

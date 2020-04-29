@@ -1132,18 +1132,15 @@ public class DefaultUtilsService  implements UtilsService {
         return value;
     }
 
-    public String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean printMatiere, Boolean translation) {
+    public String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean translation) {
         String val = "";
-        Float moyenneToSend;
+        float moyenneToSend;
         if (moyenne != null && moyenne != -1 && tableauDeconversion != null) {
             moyenneToSend = (translation) ? moyenne + 1 : moyenne;
 
             int posConverti = getPositionnementValue(moyenneToSend, tableauDeconversion);
             if (posConverti != -1) {
                 val = String.valueOf(posConverti);
-            }
-            if(printMatiere != null) {
-                printMatiere = true;
             }
         }
         return val;

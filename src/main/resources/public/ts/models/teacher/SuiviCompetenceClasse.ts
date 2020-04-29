@@ -61,7 +61,8 @@ export class SuiviCompetenceClasse extends Model {
                             for(let i=0; i<resDomaines.length; i++) {
                                 let domaine = new Domaine(resDomaines[i]);
                                 this.domaines.all.push(domaine);
-                                Utils.setCompetenceNotes(domaine, resCompetencesNotes, resGetConversionTable, this.domaines, classe);
+                                Utils.setCompetenceNotes(domaine, resCompetencesNotes, resGetConversionTable, this.domaines,
+                                    classe,undefined,undefined,periode);
                             }
                         }
                         if (resolve && typeof (resolve) === 'function') {

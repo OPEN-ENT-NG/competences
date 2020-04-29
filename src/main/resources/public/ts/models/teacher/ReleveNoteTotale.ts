@@ -85,10 +85,10 @@ export class ReleveNoteTotale extends  Model implements IModel {
         };
     }
 
-    async export  (teacherBySubject?:Array<any>) {
+    async export  (teacherBySubject:Array<any>, classes, teachers) {
         return new Promise(async (resolve, reject) => {
             try {
-                await this.formateHeaderAndColumn(teacherBySubject);
+                await this.formateHeaderAndColumn(teacherBySubject,classes, teachers);
                 let columnCsv = [];
                 let blob;
                 let addingAllStudents = false;
@@ -314,7 +314,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
         });
     }
 
-    async formateHeaderAndColumn (teacherBySubject?:Array<any>) {
+    async formateHeaderAndColumn (teacherBySubject:Array<any>, classes, teachers) {
         return new Promise(async (resolve, reject) => {
             try {
                 let header = `${lang.translate('evaluations.classe.groupe')} : ${this.classe.name}\r\n${lang.translate('viescolaire.utils.periode')} : ${this.periodeName}\r\n`;
@@ -333,8 +333,11 @@ export class ReleveNoteTotale extends  Model implements IModel {
                             this.matieresId.push(matiere.id);
                             this.dataByMatiere[matiere.id] = _devoirs;
                             _devoirs.forEach(devoir => {
-                                if(devoir.id_groupe != this.idClasse)
+                                if(devoir.id_groupe != this.idClasse && !this.idGroups.includes(devoir.id_groupe)) {
                                     this.idGroups.push(devoir.id_groupe);
+                                    teacherBySubject = {...teacherBySubject, ...utils.getTeacherBySubject(classes,
+                                            devoir.id_groupe, teachers) };
+                                }
                             });
                         }
                     });

@@ -350,7 +350,7 @@ export class Structure extends Model {
                     if (!Utils.isChefEtab()) {
                         _.map(res, (classe) => {
                             let services = _.where(allPromise[1].data,
-                                {id_enseignant: model.me.userId, id_groupe : classe.id});
+                                {id_groupe : classe.id});
                             classe.services = (!_.isEmpty(services))? services : null;
                         });
                         this.classes.addRange(castClasses(res));
@@ -430,9 +430,7 @@ export class Structure extends Model {
             this.niveauCompetences.sync().then(isSynced);
             this.syncDevoirs(25).then(isSynced);
             this.getDetailsOfUser().then(isSynced);
-            if (Utils.isChefEtab()) {
-                this.syncEnseignants().then(isSynced);
-            }
+            this.syncEnseignants().then(isSynced);
 
             this.typePeriodes.sync().then(isSynced);
             if (Utils.canCreateElementBilanPeriodique() || Utils.canSaisieProjet()) {
