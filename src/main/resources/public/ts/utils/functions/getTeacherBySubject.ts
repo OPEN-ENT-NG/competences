@@ -15,7 +15,7 @@ export const getTeacherBySubject:Function = (schoolClasses:Array<any>,
         .findWhere({id: schoolClassId})
         .value();
     const teacherBySubject:{} = {};
-    if(currentClass.services){
+    if(currentClass && currentClass.services){
         currentClass.services.forEach(item => {
             if(item && item.id_matiere && item.id_enseignant){
                 teacherBySubject[item.id_matiere] = _.findWhere(teachers, {id:item.id_enseignant});

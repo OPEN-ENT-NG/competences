@@ -153,8 +153,8 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                         if (!$scope.addToToolTip)
                             $scope.addToToolTip = "";
                         else
-                            $scope.addToToolTip = " " + $scope.addToToolTip;
-                        $scope.proportion[i].tooltip = print + "<br> " + proportion.percent.toFixed(0).toString() +
+                            $scope.addToToolTip = "<br>" + $scope.addToToolTip;
+                        $scope.proportion[i].tooltip = print + "<br>" + proportion.percent.toFixed(0).toString() +
                             " " + $scope.translate('%') + $scope.addToToolTip;
                     }
                 }

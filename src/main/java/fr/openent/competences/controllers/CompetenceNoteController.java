@@ -508,7 +508,12 @@ public class CompetenceNoteController extends ControllerHelper {
                             new Handler<JsonObject>() {
                                 @Override
                                 public void handle(JsonObject competenceNiveauFinal) {
-                                    competenceNiveauFinalService.setNiveauFinal(competenceNiveauFinal, defaultResponseHandler(request) );
+                                    if(competenceNiveauFinal.getInteger("id_periode") != null)
+                                        competenceNiveauFinalService.setNiveauFinal(competenceNiveauFinal,
+                                                defaultResponseHandler(request) );
+                                    else
+                                        competenceNiveauFinalService.setNiveauFinalAnnuel(competenceNiveauFinal,
+                                                defaultResponseHandler(request) );
                                 }
                             });
                 }else{

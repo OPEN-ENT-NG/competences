@@ -37,6 +37,14 @@ public interface CompetenceNiveauFinalService extends CrudService {
     void setNiveauFinal(JsonObject niveauFinal, Handler<Either<String,JsonObject>> handler);
 
     /**
+     * create and update a competence_niveau_final set for the year
+     * @param niveauFinal niveauFinal to create or to update (with id_periode, id_eleve, id_competence, id_matiere and
+     *                    id_classe)
+     * @param handler Function returning data
+     */
+    void setNiveauFinalAnnuel(JsonObject niveauFinal, Handler<Either<String,JsonObject>> handler);
+
+    /**
      * delete niveaufinal
      * @param niveauFinal niveauFinal to delete (with id_periode, id_eleve, id_competence, id_matiere and id_classe)
      * @param handler Function returning data

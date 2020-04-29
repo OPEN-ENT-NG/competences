@@ -2674,14 +2674,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (positionnementCalcule === utils.getNN()) {
                     return "";
                 } else {
-                    return +(positionnementCalcule + 1).toFixed(2);
+                    return +(positionnementCalcule).toFixed(2);
                 }
             }else {
                 if (positionnementCalcule === utils.getNN()) {
                     return lang.translate('evaluations.no.positionnement.calculee');
                 } else {
                     return lang.translate("evaluations.positionnement.calculee")
-                        + " : " + (Utils.isNull(positionnementCalcule) ? 0 : positionnementCalcule + 1);
+                        + " : " + +(positionnementCalcule).toFixed(2);
                 }
             }
         };
@@ -4355,7 +4355,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             let pos_sous_mat = eleve.details._positionnements_auto[idPeriode];
                             pos_sous_mat = (pos_sous_mat !== undefined) ? pos_sous_mat[idSousMatiere] : undefined;
                             let pos_converti = (pos_sous_mat !== undefined) ? (utils.getMoyenneForBFC(
-                                pos_sous_mat.moyenne + 1, $scope.releveNote.tableConversions.all)) : -1;
+                                pos_sous_mat.moyenne, $scope.releveNote.tableConversions.all)) : -1;
                             pos_sous_matieres[idSousMatiere] = (pos_converti !== -1) ? pos_converti : utils.getNN();
                             let isNN = (pos_sous_matieres[idSousMatiere] === utils.getNN());
                             if(posSousMatiereAnnee[idSousMatiere] === ''){
@@ -4382,7 +4382,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let positionnement = -1;
                     if(Utils.isNotNull(details_pos_auto) && details_pos_auto.hasNote) {
                         let moyenne_convertie = (details_pos_auto !== undefined) ? (utils.getMoyenneForBFC(
-                            details_pos_auto.moyenne + 1, $scope.releveNote.tableConversions.all)) : -1;
+                            details_pos_auto.moyenne, $scope.releveNote.tableConversions.all)) : -1;
                         positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : -1;
                     }
 
@@ -4758,7 +4758,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 const teacherBySubject = utils.getTeacherBySubject($scope.classes.all,
                     $scope.search.classe.id,
                     $scope.structure.enseignants.all);
-                await $scope.releveNoteTotale.export(teacherBySubject);
+                await $scope.releveNoteTotale.export(teacherBySubject,$scope.classes.all,$scope.structure.enseignants.all);
                 await stopLoading();
                 notify.success('evaluations.export.bulletin.success');
             }

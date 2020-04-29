@@ -2031,7 +2031,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     Float pos = getMoyenneForSousMat(posSous, idPeriode, idSousMat);
                     String val = NN;
                     if(isNotNull(pos)){
-                        val = utilsService.convertPositionnement(pos, tableauDeConversion,true,true);
+                        val = utilsService.convertPositionnement(pos, tableauDeConversion,false);
                     }
                     sousMat.put(POSITIONNEMENT, val);
 
@@ -2142,7 +2142,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 String val = NN;
                 if(isNotNull(hasCompNote) && hasCompNote){
                     printMatiere = true;
-                    val = utilsService.convertPositionnement(pos, tableauDeconversion, printMatiere, true);
+                    val = utilsService.convertPositionnement(pos, tableauDeconversion, false);
                 }
 
                 matiere.put(POSITIONNEMENT, val);

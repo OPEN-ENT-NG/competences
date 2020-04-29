@@ -269,11 +269,10 @@ public interface UtilsService {
      * Renvoit la valeur correspondant au positionnement à partir de la moyenne calculée
      * @param moyenne
      * @param tableauDeconversion
-     * @param printMatiere
      * @param translation
      * @return
      */
-    String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean printMatiere, Boolean translation);
+    String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean translation);
 
     /**
      * get actives structures

@@ -108,7 +108,7 @@ export class SuiviCompetence extends Model {
                             domaine.id_etablissement = structure.id;
                             this.domaines.all.push(domaine);
                             Utils.setCompetenceNotes(domaine, resCompetencesNotes, this.tableConversions, this.domaines, null,
-                               undefined , this.isCycle);
+                               undefined , this.isCycle, periode);
                         }
                     }
                     if (resolve && typeof (resolve) === 'function') {

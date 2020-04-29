@@ -274,6 +274,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
             public void handle (Either <String, JsonArray> event){
                 if (event.isRight()) {
                     Map<String, Map<Long, Long>> notesCompetencesEleve = new HashMap<>();
+                    List<Long> pastYear = new ArrayList<Long>();
 
                     JsonArray notesResultArray = event.right().getValue();
                     for (int i = 0; i < notesResultArray.size(); i++) {
@@ -288,26 +289,38 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                         }
                         //si la competence n'est pas dans la map
                         if(!notesCompetencesEleve.get(id_eleve).containsKey(_o.getLong("id_competence"))) {
-                            //on set la competence avec la note ou le niveau final s'il existe
-                            if(_o.getLong("niveau_final")!= null) {
-                                notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("niveau_final"));
+                            //on set la competence avec la note ou le niveau final annuel ou périodique s'il existe
+                            if(_o.getLong("niveau_final_annuel")!= null) {
+                                notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("niveau_final_annuel"));
                             }else {
-                                notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("evaluation"));
-                            }
-                        }else{
-                            //sinon on récupère la valeur de la competence déjà enregistrée
-                            Long niveauOfThisCompetence = notesCompetencesEleve.get(id_eleve).get(_o.getLong("id_competence"));
-                            // on la compare soit au niveau_final s'il existe soit à la note de l'élève
-                            if(_o.getLong("niveau_final")!= null){
-                                if(niveauOfThisCompetence < _o.getLong("niveau_final")){
+                                if(_o.getLong("niveau_final")!= null) {
                                     notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("niveau_final"));
-                                }
-                            }else{
-                                if(niveauOfThisCompetence < _o.getLong("evaluation")){
+                                }else {
                                     notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("evaluation"));
                                 }
                             }
-
+                            if(_o.getString("owner").equals("id-user-transition-annee"))
+                                pastYear.add(_o.getLong("id_competence"));
+                        }else if(!_o.getString("owner").equals("id-user-transition-annee")){
+                            //si il s'agit d'une compétence noté sur la même année, sinon on ne prends pas en compte les années passées
+                            if(pastYear.contains(_o.getLong("id_competence"))){
+                                notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("evaluation"));
+                                pastYear.remove(_o.getLong("id_competence"));
+                            }
+                            //sinon on récupère la valeur de la competence déjà enregistrée
+                            Long niveauOfThisCompetence = notesCompetencesEleve.get(id_eleve).get(_o.getLong("id_competence"));
+                            // on met le niveau_final annuel ou périodique s'il existe ou on le compare à la note de l'élève
+                            if(_o.getLong("niveau_final_annuel")!= null){
+                                notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("niveau_final_annuel"));
+                            }else{
+                                if(_o.getLong("niveau_final")!= null){
+                                    notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("niveau_final"));
+                                }else{
+                                    if(niveauOfThisCompetence < _o.getLong("evaluation")){
+                                        notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("evaluation"));
+                                    }
+                                }
+                            }
                         }
                     }
                     handler.handle(new Either.Right<String, Map<String, Map<Long, Long>>>(notesCompetencesEleve));
@@ -445,16 +458,15 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     }
 
     private Double calculMoyenne(Domaine d, Map<String, Map<Long, Long>> notesCompetencesEleves, String eleve){
-        Long total = (long) 0;
-        Long diviseur = (long) 0;
+        long total = 0;
+        long diviseur = 0;
         for (Long idCompetence : d.getCompetences()) {
             if (notesCompetencesEleves.get(eleve) != null && notesCompetencesEleves.get(eleve).containsKey(idCompetence)) {
                 total += notesCompetencesEleves.get(eleve).get(idCompetence) + 1;
                 diviseur++;
             }
         }
-        Double moy = (diviseur != 0 ? ((double) total / diviseur) : null);
-        return moy;
+        return (diviseur != 0 ? ((double) total / diviseur) : null);
     }
 
     @Override
@@ -1113,8 +1125,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         Future<JsonObject> buildBfcFuture = Future.future();
         final Boolean recapEvalForBfc = false;
-        buildBFC(recapEvalForBfc, idEleves.toArray(new String[0]), classe.getKey(), idStructure, idPeriode, idCycle, false,
-                buildBfcEvent -> formate(buildBfcFuture, buildBfcEvent));
+        buildBFC(recapEvalForBfc, idEleves.toArray(new String[0]), classe.getKey(), idStructure, idPeriode, idCycle,
+                false, buildBfcEvent -> formate(buildBfcFuture, buildBfcEvent));
 
         Future<JsonArray> listCplByEleveFuture = Future.future();
         eleveEnseignementComplementService.listNiveauCplByEleves(idEleves.toArray(new String[1]),

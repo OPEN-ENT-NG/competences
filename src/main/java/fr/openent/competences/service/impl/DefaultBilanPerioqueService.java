@@ -499,7 +499,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             // Récupération des compétences-notes
             Future<JsonArray> compNotesFuture =  Future.future();
             noteService.getCompetencesNotesReleve(idEtablissement, null, null, idMatiere,
-                    null, idEleve, null, false,
+                    null, idEleve, null, false, false,
                     compNotesEvent -> formate(compNotesFuture, compNotesEvent));
 
             // Récupération de la moyenne finale
@@ -718,7 +718,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 //idGroups null si l'eleve n'est pas dans un groupe
                 new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb)
                         .getDataGraphDomaine(idEleve, idGroups, idEtablissement, idClasse,
-                                typeClasse, idPeriodeString, handler);
+                                typeClasse, idPeriodeString, isNull(idPeriodeString), handler);
             }
         });
     }

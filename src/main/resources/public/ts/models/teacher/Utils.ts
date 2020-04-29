@@ -278,10 +278,11 @@ export class Utils {
      * and niveauFinalToShowMyEvaluations for a competence
      * @param competence
      * @param tableConversion
+     * @param isYear
      * @param forClass
      */
 
-     static setMaxCompetenceShow (competence, tableConversion, forClass) {
+     static setMaxCompetenceShow (competence, tableConversion, isYear, forClass) {
         //all evaluations
         let i;
         // récupèrer toutes les évaluations de type non "formative"
@@ -302,7 +303,7 @@ export class Utils {
                 });
             }
             allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
-            let niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion);
+            let niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion,false,isYear);
             if(competence.competencesEvaluations) {
                 competence.niveauFinaltoShowAllEvaluations = niveauFinaltoShowAllEvaluations;
             }else{
@@ -319,7 +320,7 @@ export class Utils {
         });
         if( myEvaluations !== undefined && myEvaluations.length > 0){
             //set the max of my evaluations on this competence for "niveau atteint"
-            let niveauAtteintToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion,true);
+            let niveauAtteintToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion,true,false);
             if(competence.competencesEvaluations) {
                 competence.niveauAtteintToShowMyEvaluations = niveauAtteintToShowMyEvaluations;
             }else{
@@ -329,7 +330,7 @@ export class Utils {
             }
 
             //set the max of my evaluations on this competence for "niveau final"
-            let niveauFinalToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion);
+            let niveauFinalToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion,false,isYear);
             if(competence.competencesEvaluations) {
                 competence.niveauFinalToShowMyEvaluations = niveauFinalToShowMyEvaluations;
             }else{
@@ -345,8 +346,13 @@ export class Utils {
      * @param listEval
      * @param tableConversion
      * @param onlyNote
+     * @param isYear
      */
-    static getNiveauMaxOfListEval (listEval, tableConversion, onlyNote?){
+    static getNiveauMaxOfListEval (listEval, tableConversion, onlyNote?, isYear?){
+        //enlever les compétences non notés
+        listEval = _.filter(listEval, (e) => {
+            return e.evaluation>-1;
+        });
         //tableau des max des Evals pour chaque matière
         if(onlyNote !== undefined && onlyNote){
             return  _.max(listEval, (e) => {
@@ -358,9 +364,10 @@ export class Utils {
             let listEvalsByMatiere = _.groupBy(listEval, (e) => {
                 return e.id_matiere;
             });
-            _.mapObject(listEvalsByMatiere, (tabEvals, idMat) => {
-
-                if (_.first(tabEvals).niveau_final !== null) {
+            _.mapObject(listEvalsByMatiere, (tabEvals) => {
+                if(isYear && _.first(tabEvals).niveau_final_annuel !== null){
+                    allmaxMats.push(_.first(tabEvals).niveau_final_annuel);
+                }else if (_.first(tabEvals).niveau_final !== null) {
                     allmaxMats.push(_.first(tabEvals).niveau_final);
                 } else {
                     allmaxMats.push(_.max(tabEvals, (e) => {
@@ -375,8 +382,8 @@ export class Utils {
             return utils.getMoyenneForBFC((sum/allmaxMats.length)+1,tableConversion.all)-1;
         }
     }
-
-    static setCompetenceNotes(poDomaine, poCompetencesNotes, tableConversion, object?, classe?, tabDomaine?, isCycle?) {
+    static setCompetenceNotes(poDomaine, poCompetencesNotes, tableConversion, object?, classe?, tabDomaine?, isCycle?, periode?) {
+        let isYear = isCycle || (periode && !periode.id);
         if (object === undefined && classe === undefined) {
             if (poDomaine.competences) {
                 _.map(poDomaine.competences.all, function (competence) {
@@ -384,10 +391,7 @@ export class Utils {
                         id_competence: competence.id,
                         id_domaine: competence.id_domaine
                     });
-
-                    if(competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
-                        Utils.setMaxCompetenceShow(competence, tableConversion,false);
-                    }
+                     Utils.setMaxCompetenceShow(competence, tableConversion,false,false);
                 });
                 if (tabDomaine !== undefined) {
                     tabDomaine.push(poDomaine);
@@ -401,18 +405,16 @@ export class Utils {
                     id_domaine: competence.id_domaine
                 });
 
-                if(competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
-                        Utils.setMaxCompetenceShow(competence, tableConversion,false);
-                }
+                Utils.setMaxCompetenceShow(competence, tableConversion,isYear,false);
 
                 if (object.composer.constructor.name === 'SuiviCompetenceClasse') {
                     let mineCompetencesEvaluations = _.filter(competence.competencesEvaluations, {owner : model.me.userId});
 
                     // Récupère les moyennes des maxs dans chaque matières sur mes évaluations de la compétence pour tous les élèves
-                    competence.mineCompetencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, mineCompetencesEvaluations,tableConversion);
+                    competence.mineCompetencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, mineCompetencesEvaluations,tableConversion,isYear);
 
                     // Récupère les moyennes des maxs dans chaque matières de la compétence pour tous les élèves
-                    competence.competencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, competence.competencesEvaluations,tableConversion);
+                    competence.competencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, competence.competencesEvaluations,tableConversion,isYear);
 
                     for (let i = 0; i < classe.eleves.all.length; i++) {
                         let mine = _.findWhere(competence.mineCompetencesEvaluations, {id_eleve : classe.eleves.all[i].id,
@@ -428,6 +430,7 @@ export class Utils {
 
                             competence.mineCompetencesEvaluations.push(new CompetenceNote({
                                 evaluation: -1,
+                                niveauFinaltoShowAllEvaluations : -1,
                                 id_competence: competence.id,
                                 id_eleve: classe.eleves.all[i].id,
                                 owner: model.me.userId
@@ -442,6 +445,7 @@ export class Utils {
 
                             competence.competencesEvaluations.push(new CompetenceNote({
                                 evaluation: -1,
+                                niveauFinaltoShowAllEvaluations : -1,
                                 id_competence: competence.id,
                                 id_eleve: classe.eleves.all[i].id
                             }));
@@ -454,7 +458,7 @@ export class Utils {
         if(poDomaine.domaines) {
             for (var i = 0; i < poDomaine.domaines.all.length; i++) {
                 this.setCompetenceNotes(poDomaine.domaines.all[i], poCompetencesNotes, tableConversion, object, classe,
-                    tabDomaine, isCycle);
+                    tabDomaine, isCycle, periode);
             }
         }
     }
@@ -465,14 +469,15 @@ export class Utils {
      * @param competence
      * @param competencesEvaluations
      * @param tableConversion
+     * @param isYear
      * @returns {any}
      */
-    static getCompetenceEvaluations(classe, competence,competencesEvaluations, tableConversion) {
+    static getCompetenceEvaluations(classe, competence,competencesEvaluations, tableConversion,isYear?) {
         for (let i = 0; i < classe.eleves.all.length; i++) {
             let currentIdEleve = classe.eleves.all[i].id;
             let commpetenceEvaluationsEleve = _.where(competencesEvaluations, {id_eleve: currentIdEleve});
             if (commpetenceEvaluationsEleve !== undefined && commpetenceEvaluationsEleve.length > 0) {
-                Utils.setMaxCompetenceShow(commpetenceEvaluationsEleve, tableConversion,true);
+                Utils.setMaxCompetenceShow(commpetenceEvaluationsEleve, tableConversion, isYear, true);
             }
         }
         return competencesEvaluations;

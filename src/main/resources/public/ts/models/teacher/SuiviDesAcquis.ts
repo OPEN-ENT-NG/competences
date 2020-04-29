@@ -240,7 +240,7 @@ export class SuivisDesAcquis extends Model{
                     if( suiviDesAcquis.positionnements_auto !== null && suiviDesAcquis.positionnements_auto !== undefined
                         && _.find(suiviDesAcquis.positionnements_auto, {id_periode: suiviDesAcquis.idPeriode}) !== undefined) {
                         let positionnementCalcule = _.find(suiviDesAcquis.positionnements_auto, {id_periode: suiviDesAcquis.idPeriode}).moyenne;
-                        let positionnementConverti = utils.getMoyenneForBFC(positionnementCalcule + 1,
+                        let positionnementConverti = utils.getMoyenneForBFC(positionnementCalcule,
                             this.tableConversions.all);
                         suiviDesAcquis.positionnement_auto =
                             (positionnementConverti !== -1) ? positionnementConverti : 0;

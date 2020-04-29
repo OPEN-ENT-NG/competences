@@ -280,13 +280,23 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     ids_matieres: _.unique(_.pluck(myEvaluations, 'id_matiere'))
                 });
 
-                _.each(competence.competencesEvaluations, (evaluation) => {
-                    if (_.contains(competenceNiveauFinal.ids_matieres, evaluation.id_matiere)) {
-                        evaluation.niveau_final = competence.niveauFinalToShowMyEvaluations;
-                    }
-                });
+                let isYear = false;
+                if($scope.search.periode.id_type != null) {
+                    _.each(competence.competencesEvaluations, (evaluation) => {
+                        if (_.contains(competenceNiveauFinal.ids_matieres, evaluation.id_matiere)) {
+                            evaluation.niveau_final = competence.niveauFinalToShowMyEvaluations;
+                        }
+                    });
+                }else{
+                    isYear = true;
+                    _.each(competence.competencesEvaluations, (evaluation) => {
+                        if (_.contains(competenceNiveauFinal.ids_matieres, evaluation.id_matiere)) {
+                            evaluation.niveau_final_annuel = competence.niveauFinalToShowMyEvaluations;
+                        }
+                    });
+                }
                 await competenceNiveauFinal.saveNiveaufinal();
-                Utils.setMaxCompetenceShow(competence, $scope.suiviCompetence.tableConversions,false);
+                Utils.setMaxCompetenceShow(competence, $scope.suiviCompetence.tableConversions, isYear,false);
             }
         };
 
@@ -560,7 +570,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         $scope.initSuivi = async () => {
             return new Promise( async (resolve, reject) => {
                 try {
-                    Utils.initFilterMine($scope);
+                    if ($scope.search.periode.libelle != "cycle")
+                        Utils.initFilterMine($scope);
                     $scope.opened.detailCompetenceSuivi = false;
                     $scope.pOFilterEval = {
                         limitTo: 2

@@ -15,7 +15,7 @@
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
 <div
- ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve')"
+        ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve')"
         class="cell ng-scope twelve vertical-spacing">
     <label class="cell six">
         <div class="cell cell-check expandable-content two-mobile">
@@ -50,15 +50,22 @@
 
 <script type="text/ng-template"  id="tree_item_renderer.html">
     <h4 workflow="competences.saveCompetenceNiveauFinal" class="two align-center inline-block marginNiveau"
-        ng-if="isMyEvaluations(suiviFilter) && domaine.niveau === 1 && $first && search.periode.id !== null">
+        ng-if="isMyEvaluations(suiviFilter) && domaine.niveau === 1 && $first
+        && (search.periode.id !== null || (!search.periode.id && !search.periode.libelle))">
         <i18n>evaluation.suivi.niveau</i18n>
     </h4>
     <h4 ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }"
-            class="six margin-top-1em cell " ng-if="domaine.niveau === 1" ng-click="domaine.OpenDom = !domaine.OpenDom"
-            ng-init="domaine.OpenDom = false">[[domaine.codification]] - [[domaine.libelle]]</h4>
-    <div workflow="competences.saveCompetenceNiveauFinal" ng-if="isMyEvaluations(suiviFilter)&& domaine.niveau === 1 && $first && search.periode.id !== null">
-        <h4 class="margin-top-1em one align-center inline-block " ><i18n>evaluation.suivi.niveau.atteint</i18n></h4>
-        <h4 class="margin-top-1em one align-center inline-block" ><i18n>evaluation.suivi.niveau.final</i18n></h4>
+        class="six margin-top-1em cell " ng-if="domaine.niveau === 1" ng-click="domaine.OpenDom = !domaine.OpenDom"
+        ng-init="domaine.OpenDom = false">[[domaine.codification]] - [[domaine.libelle]]</h4>
+    <div workflow="competences.saveCompetenceNiveauFinal"
+         ng-if="isMyEvaluations(suiviFilter)&& domaine.niveau === 1 && $first
+         && (search.periode.id !== null || (!search.periode.id && !search.periode.libelle))">
+        <h4 class="margin-top-1em one align-center inline-block " >
+            <i18n>evaluation.suivi.niveau.atteint</i18n>
+        </h4>
+        <h4 class="margin-top-1em one align-center inline-block" >
+            <i18n>evaluation.suivi.niveau.final</i18n>
+        </h4>
     </div>
     <div ng-class="{'openedSectionDom' : domaine.OpenDom}" ng-if="domaine.competences.all.length > 0" class="twelve cell" style='height: auto;'>
         <h3 ng-class="{'openedDom' : domaine.OpenSousDom}" class="margin-top-1em Domaine"
@@ -86,12 +93,19 @@
                     </span>
                 </div>
                 <div ng-if="isMyEvaluations(suiviFilter) " class="two inline-block align-top">
-                    <div  ng-class="{twelve : search.periode.id === null || !canSaveCompetenceNiveauFinal(),
-                    six : search.periode.id !== null}" class=" inline-block align-center "
+                    <div  ng-class="{twelve : (!search.periode.id && search.periode.libelle) || !canSaveCompetenceNiveauFinal(),
+                    six : search.periode.id !== null || (!search.periode.id && !search.periode.libelle)}"
+                          class=" inline-block align-center "
                           ng-click="openDetailCompetence(competence)">
-                        <span ng-if="competence.niveauAtteintToShowMyEvaluations !== undefined">
+                        <span ng-if="competence.niveauAtteintToShowMyEvaluations !== undefined && !displayCycle">
                             <c-skills-bubble text="(mapLettres[competence.niveauAtteintToShowMyEvaluations])"
                                              color="(mapCouleurs[competence.niveauAtteintToShowMyEvaluations])"
+                                             classes="'competence-eval alignVertical'">
+                            </c-skills-bubble>
+                        </span>
+                        <span ng-if="competence.niveauAtteintToShowMyEvaluations !== undefined && displayCycle">
+                            <c-skills-bubble text="(mapLettres[competence.niveauFinalToShowMyEvaluations])"
+                                             color="(mapCouleurs[competence.niveauFinalToShowMyEvaluations])"
                                              classes="'competence-eval alignVertical'">
                             </c-skills-bubble>
                         </span>
@@ -99,8 +113,11 @@
                          notEvalutationOwner(competence.competencesEvaluations) || !hasMaxNotFormative(competence)">
                         </span>
                     </div>
-                    <div workflow="competences.saveCompetenceNiveauFinal" ng-if="search.periode.id !== null" class="six inline-block align-center" >
-                        <span ng-if="competence.niveauFinalToShowMyEvaluations !== undefined" ng-disabled = "isEndSaisieNivFinal">
+                    <div workflow="competences.saveCompetenceNiveauFinal"
+                         ng-if="search.periode.id !== null || (!search.periode.id && !search.periode.libelle)"
+                         class="six inline-block align-center" >
+                        <span ng-if="competence.niveauFinalToShowMyEvaluations !== undefined"
+                              ng-disabled = "isEndSaisieNivFinal">
                         <c-skills-bubble text="(mapLettres[competence.niveauFinalToShowMyEvaluations])"
                                          color="(mapCouleurs[competence.niveauFinalToShowMyEvaluations])"
                                          classes="'competence-eval alignVertical'"
@@ -132,7 +149,7 @@
     </div>
 </script>
 <div ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve') && searchBilan.parDomaine === 'true'"
-        ng-repeat="domaine in suiviCompetence.domaines.all" ng-include="'tree_item_renderer.html'">
+     ng-repeat="domaine in suiviCompetence.domaines.all" ng-include="'tree_item_renderer.html'">
 </div>
 <div ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve') && searchBilan.parDomaine === 'false'" >
     <div ng-repeat="enseignement in filteredEnseignements = (suiviCompetence.enseignements.all | filter:FilterNotEvaluatedEnseignement)">
@@ -170,5 +187,5 @@
     </div>
 </div>
 <div ng-if="template.contains('main', 'enseignants/releve_notes/display_releve')"
-        ng-repeat="domaine in informations.domaines.all" ng-include="'tree_item_renderer.html'">
+     ng-repeat="domaine in informations.domaines.all" ng-include="'tree_item_renderer.html'">
 </div>

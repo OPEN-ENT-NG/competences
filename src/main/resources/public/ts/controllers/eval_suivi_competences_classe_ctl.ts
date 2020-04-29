@@ -163,7 +163,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 evaluations = _.filter(evaluations, function (competence) {
                     return !competence.formative; // la competence doit être reliée à un devoir ayant un type non "formative"
                 });
-                return Utils.getNiveauMaxOfListEval(evaluations,$scope.suiviCompetence.tableauConversion);
+                return Utils.getNiveauMaxOfListEval(evaluations,$scope.suiviCompetence.tableauConversion,false,
+                    $scope.search.periode.id === null);
             }
         };
         /**
