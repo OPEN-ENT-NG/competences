@@ -38,7 +38,7 @@ export class BilanPeriodique extends  Model {
             GET_APPRECIATIONS: '/competences/elementsAppreciations',
             CREATE_APPRECIATIONS_SAISIE_PROJETS: '/competences/elementsAppreciationsSaisieProjet',
             CREATE_APPRECIATIONS_BILAN_PERIODIQUE: '/competences/elementsAppreciationBilanPeriodique',
-            GET_SYNTHESIS: '/competences/results/class/synthesis',
+            GET_SYNTHESIS: '/competences/releve/exportTotale',
             GET_HOMEWORK:"/competences/releve/export/checkDevoirs?idEtablissement=",
             GET_APPRAISALS:"/competences/recapAppreciations/print/",
             GET_SUBJECTS: "/competences/subjects/short-label/subjects?ids="
@@ -198,9 +198,12 @@ export class BilanPeriodique extends  Model {
         throw new Error("getHomework");
     }
 
-    private async getSynthesis (parameter:any):Promise<any | Error>{
-        const { data, status }:AxiosResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}`, parameter);
-        if(status === 200) return data;
+    private async getSynthesis(parameter: any, isAnnual: Boolean): Promise<any | Error> {
+        const {data, status}: AxiosResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}`, parameter);
+        if (status === 200) {
+            if (isAnnual) return data.annual;
+            return data;
+        }
         throw new Error("getSynthesis");
     }
 
@@ -227,27 +230,11 @@ export class BilanPeriodique extends  Model {
         notify.error(lang.translate("competance.error.results.class"));
     }
 
-    private async callsDataSynthesisAndAppraisals (initResultPeriodic:any, scope:any):Promise<any> {
+    private async callsDataSynthesisAndAppraisals(parameter: any, scope: any): Promise<any> {
         try {
-            const noteTotal: ReleveNoteTotale = new ReleveNoteTotale(initResultPeriodic);
-            const parameter: any = {
-                idMatieres: initResultPeriodic.idMatieres,
-                idClasse: noteTotal.idClasse,
-                idEtablissement: noteTotal.idEtablissement,
-                idPeriode: noteTotal.idPeriode,
-                idPeriodes: _.pluck(noteTotal.periodes, 'idPeriode'),
-                typeClasse: noteTotal.classe.type_groupe,
-                idGroups: [],
-            };
-            if (!parameter.idPeriode) {
-                Utils.stopMessageLoader(scope);
-                return;
-            }
-            ;
             return await Promise.all([
                 this.getHomework(parameter),
-                this.getSynthesis(parameter),
-                this.getSubjects(initResultPeriodic.idMatieres),
+                this.getSubjects(parameter.idMatieres),
             ])
                 .then((dataResponse: any): any => dataResponse)
                 .catch((error: String): void => {
@@ -255,7 +242,7 @@ export class BilanPeriodique extends  Model {
                     console.error(error);
                     notify.error(lang.translate("competance.error.results.class"))
                 });
-        } catch(errorReturn){
+        } catch (errorReturn) {
             Utils.stopMessageLoader(scope);
             notify.error(lang.translate("competance.error.results.class" + errorReturn));
             return undefined;
@@ -429,23 +416,52 @@ export class BilanPeriodique extends  Model {
         }
     }
 
-    public async synthesisAndAppraisals (initResultPeriodic:any, scope:any):Promise<any>{
-        const result = await this.callsDataSynthesisAndAppraisals(initResultPeriodic, scope);
-        if(result){
-            if(result.length === 3){
+    public async synthesisAndAppraisals(initResultPeriodic: any, scope: any): Promise<any> {
+        const noteTotal: ReleveNoteTotale = new ReleveNoteTotale(initResultPeriodic);
+        const isAnnual: Boolean = initResultPeriodic.idPeriode === undefined;
+        const parameter: any = {
+            isAnnual: isAnnual,
+            idMatieres: initResultPeriodic.idMatieres,
+            idClasse: noteTotal.idClasse,
+            idEtablissement: noteTotal.idEtablissement,
+            idPeriode: initResultPeriodic.idPeriode,
+            idPeriodes: isAnnual ? initResultPeriodic.periodes : [],
+            typeClasse: noteTotal.classe.type_groupe,
+            idGroups: [],
+        };
+        const result = await this.callsDataSynthesisAndAppraisals(parameter, scope);
+        if (result) {
+            parameter.idGroups = this.getGroupsId(initResultPeriodic.allMatieres, result[0]);
+            const synthesis = await this.getSynthesis(parameter, isAnnual)
+
+            if (result.length === 2) {
                 return {
                     homeworks: result[0],
-                    synthesis: result[1],
-                    students : result[1].eleves,
-                    subjects : result[2].subjects,
+                    synthesis: synthesis,
+                    students: synthesis.eleves,
+                    subjects: result[1].subjects,
                 }
             }
         }
         return {
             homeworks: [],
             synthesis: [],
-            students : [],
+            students: [],
             subjects: [],
         }
+    }
+
+    private getGroupsId(allSubject, dirtyHomework): Array<String> {
+        let result = new Set();
+        if (dirtyHomework.length === 0 || dirtyHomework.length === 0) return [];
+        allSubject.forEach(subject => {
+            let cleanHomework = dirtyHomework.filter(homeworkFiltred => homeworkFiltred.id_matiere == subject.id);
+            if (cleanHomework.length > 0) {
+                cleanHomework.forEach(homeworkEach => {
+                    result.add(homeworkEach.id_groupe);
+                });
+            }
+        });
+        return Array.from(result);
     }
 }

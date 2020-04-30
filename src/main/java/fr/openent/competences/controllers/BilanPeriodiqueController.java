@@ -536,20 +536,6 @@ public class BilanPeriodiqueController extends ControllerHelper{
             }
         });
     }
-
-    @Post("/results/class/synthesis")
-    @ApiDoc("renvoit bilan d'une classe sur une période donnée")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getSynthesis(final HttpServerRequest request) {
-        try{
-            RequestUtils.bodyToJson(request, param -> {
-                final long typePeriod = param.getLong("idPeriode");
-                notesService.getTotaleDatasReleve(param, typePeriod, false,  notEmptyResponseHandler(request));
-            });
-        } catch (Exception error){
-            badRequest(request, "Error:" + error);
-        }
-    }
 }
 
 
