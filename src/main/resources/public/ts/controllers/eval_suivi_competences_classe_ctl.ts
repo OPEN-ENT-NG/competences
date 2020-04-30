@@ -601,7 +601,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 idClasse: $scope.search.classe.id,
                 idPeriode: $scope.search.periode.id_type,
                 periodeName: null,
-                periodes:[],
+                periodes: $scope.periodes.all.filter((period):Boolean => period.id_type).map((period):Number => period.id_type),
                 exportOptions: {
                     appreciation:$scope.suiviClasse.withAppreciations,
                     averageFinal: $scope.suiviClasse.withMoyGeneraleByEleve,
