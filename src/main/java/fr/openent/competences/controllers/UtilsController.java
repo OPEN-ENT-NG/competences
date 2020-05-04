@@ -270,6 +270,8 @@ public class UtilsController extends ControllerHelper {
                 String colonne = ressource.getString("colonne");
                 Long idPeriode = ressource.getLong("idPeriode");
                 Long value = ressource.getLong("value");
+                if(value < 0)
+                    value = 0L;
 
                 utilsService.insertEvenement(idEleve, colonne, idPeriode, value, arrayResponseHandler(request));
             }
