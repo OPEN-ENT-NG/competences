@@ -142,7 +142,7 @@
             <div class="row">
                 <button class="cell"
                         ng-if="checkSelectedElements(elements).length === 1"
-                        ng-click="openElementLigthbox(selectedElements[0])">
+                        ng-click="openElementLigthbox(selectedElements[0]);">
                     <span><i18n>item.modify</i18n></span>
                 </button>
                 <button class="cell"
@@ -155,7 +155,7 @@
 
     <!--    ---     Lightbox de création d'un élément du bilan périodique       ----    -->
 
-    <lightbox show="opened.lightboxCreatePE" on-close="!opened.lightboxCreatePE">
+    <lightbox show="opened.lightboxCreatePE" on-close="!opened.lightboxCreatePE" class="visible-overflow">
 
         <div class="header">
             <h2 ng-show="selected.EPI" ng-if="!modifElem">
@@ -342,40 +342,70 @@
                 </div>
             </div>
 
-            <div class="twelve cell twelve-mobile">
+            <div class="twelve cell twelve-mobile" ng-if="opened.lightboxCreatePE">
                 <h4 class="twelve cell marginBottomZero custom-h4">
                     <i18n>viescolaire.competences.classe.groupe</i18n>
                     <i class="asterisk obligatoire"></i>
                 </h4>
-                <div class="five cell twelve-mobile">
-                    <label class="select">
-                        <select ng-model="search.classe"
-                                ng-change="pushData(search.classe,dataELem.classes)"
-                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
-                            <option class="header-opt" disabled value="">[[translate('viescolaire.utils.class.groupe')]]
-                            </option>
-                        </select>
-                    </label>
-                    <div class="row">
-                        <label ng-repeat="classe in dataELem.classes" class="chip multiselect all"
-                               ng-click="tryDeleteClasse(classe)">
-                            <span><i18n>[[classe.name]]</i18n></span>
-                            <input type="checkbox" ng-model="classe.selected"/>
-                        </label>
+                <div class="twelve cell twelve-mobile" ng-if="!modifElem">
+                    <div class="select-blocks line-heigth-23">
+                        <div ng-repeat="classe in epiAp.classesSelected"
+                             ng-click="dropComboModel(classe, epiAp.classesSelected)">
+                            [[classe.name]]
+                        </div>
                     </div>
+                    <multi-combo
+                            class="twelve"
+                            title="[[translate('viescolaire.utils.class.groupe')]]"
+                            combo-model="classes.all"
+                            search-on="name"
+                            order-by="name"
+                            filtered-model="epiAp.classesSelected"
+                            labels="comboLabels"
+                            selection-event="setClassesSelected(epiAp.classesSelected)"
+                            deselection-event="setClassesSelected(epiAp.classesSelected)"
+                    ></multi-combo>
+                </div>
+                <div class="twelve cell twelve-mobile" ng-if="modifElem">
+                    <div class="select-blocks line-heigth-23">
+                        <div ng-repeat="classe in dataELem.classes"
+                             ng-click="tryDeleteClasse(classe)">
+                            [[classe.name]]
+                        </div>
+                    </div>
+                    <h4 class="twelve cell marginBottomZero custom-h4">
+                        <i18n>add</i18n> <i18n>viescolaire.competences.classe.groupe</i18n>
+                    </h4>
+                    <div class="select-blocks line-heigth-23">
+                        <div ng-repeat="classe in epiAp.classesSelected"
+                             ng-click="dropComboModel(classe, epiAp.classesSelected)">
+                            [[classe.name]]
+                        </div>
+                    </div>
+                    <multi-combo
+                            class="twelve"
+                            title="[[translate('viescolaire.utils.class.groupe')]]"
+                            combo-model="classes.all"
+                            search-on="name"
+                            order-by="name"
+                            filtered-model="epiAp.classesSelected"
+                            labels="comboLabels"
+                            selection-event="setClassesSelected(epiAp.classesSelected)"
+                            deselection-event="setClassesSelected(epiAp.classesSelected)"
+                    ></multi-combo>
                 </div>
             </div>
 
             <div class="twelve cell twelve-mobile" ng-if="modifElem">
                 <button class="right-magnet"
-                        ng-click="updateElement(dataELem)"
+                        ng-click="updateElement(dataELem);"
                         ng-disabled="requiredElement()">
                     <i18n>item.modify</i18n>
                 </button>
             </div>
             <div class="twelve cell twelve-mobile" ng-if="!modifElem">
                 <button class="right-magnet"
-                        ng-click="createElementBilanPeriodique(dataELem, thematique);"
+                        ng-click="createElementBilanPeriodique(dataELem);"
                         ng-disabled="requiredElement()">
                     <i18n>evaluations.add</i18n>
                 </button>

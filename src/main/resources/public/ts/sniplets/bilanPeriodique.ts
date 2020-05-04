@@ -63,6 +63,9 @@ export const bilanPeriodique = {
             bilanPeriodique.that.themeListe = {
                 open:false
             };
+            bilanPeriodique.that.epiAp = {
+                classesSelected:[]
+            };
             await utils.safeApply(this);
         },
 
@@ -72,6 +75,7 @@ export const bilanPeriodique = {
             bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
             bilanPeriodique.that.modifElem = param;
             bilanPeriodique.that.openedLightbox = true;
+            bilanPeriodique.that.epiAp.classesSelected = [];
             if (param) {
                 bilanPeriodique.that.dataELem = {
                     id: bilanPeriodique.that.selectedElements[0].id,
@@ -188,7 +192,7 @@ export const bilanPeriodique = {
                 await bilanPeriodique.that.deleteThematique(theme);
                 bilanPeriodique.that.supprTheme = true;
             }
-            utils.safeApply(bilanPeriodique.that);
+            await utils.safeApply(bilanPeriodique.that);
         },
 
         deleteThematique: async function (thematique) {
@@ -197,21 +201,19 @@ export const bilanPeriodique = {
                     delete bilanPeriodique.that.dataELem.theme;
                 }
                 await http.delete(`/competences/thematique?idThematique=${thematique.id}`);
-                bilanPeriodique.that.getThematique(bilanPeriodique.that.getTypeElement());
+                await bilanPeriodique.that.getThematique(bilanPeriodique.that.getTypeElement());
                 bilanPeriodique.that.showAddtheme = false;
             }
             catch (e) {
                 notify.error('evaluations.thematique.delete.error');
             }
-            utils.safeApply(this);
+            await utils.safeApply(bilanPeriodique.that);
         },
-
 
         addTheme: function (theme) {
             bilanPeriodique.that.dataELem.theme = theme;
             bilanPeriodique.that.themeListe.open = false;
         },
-
 
         /////       Création d'un EPI/AP/Parcours      /////
 
@@ -219,6 +221,7 @@ export const bilanPeriodique = {
             try {
                 if (bilanPeriodique.that.dataELem !== undefined && bilanPeriodique.that.dataELem !== null) {
                     bilanPeriodique.that.dataELem.type = bilanPeriodique.that.getTypeElement();
+                    bilanPeriodique.that.dataELem.classes = bilanPeriodique.that.epiAp.classesSelected;
                     if (bilanPeriodique.that.dataELem.theme !== undefined
                         && bilanPeriodique.that.dataELem.theme.id !== undefined) {
                         bilanPeriodique.that.dataELem.id_theme = bilanPeriodique.that.dataELem.theme.id;
@@ -458,15 +461,22 @@ export const bilanPeriodique = {
 
         updateElement: async function (dataELem) {
             try {
-                if (bilanPeriodique.that.dataELem !== undefined && bilanPeriodique.that.dataELem !== null
+                if (bilanPeriodique.that.dataELem
                     && bilanPeriodique.that.dataELem.theme !== undefined
                     && bilanPeriodique.that.dataELem.theme.id !== undefined) {
                     bilanPeriodique.that.dataELem.id_theme = bilanPeriodique.that.dataELem.theme.id;
                 }
 
-                if (bilanPeriodique.that.dataELem.description === null
+                if (bilanPeriodique.that.dataELem && bilanPeriodique.that.dataELem.description === null
                     || bilanPeriodique.that.dataELem.description === '') {
                     delete(bilanPeriodique.that.dataELem.description);
+                }
+
+                if (!_.isEmpty(bilanPeriodique.that.epiAp.classesSelected)) {
+                    _.map(bilanPeriodique.that.epiAp.classesSelected, (classe) => {
+                       if(!bilanPeriodique.that.dataELem.classes.includes(classe))
+                           bilanPeriodique.that.dataELem.classes.push(classe);
+                    });
                 }
 
                 if (bilanPeriodique.that.dataELem.theme !== undefined
@@ -541,7 +551,7 @@ export const bilanPeriodique = {
                         || bilanPeriodique.that.dataELem.libelle === undefined
                         || bilanPeriodique.that.dataELem.libelle === ""
                         || bilanPeriodique.that.dataELem.ens_mat.length < 2
-                        || bilanPeriodique.that.dataELem.classes.length === 0
+                        || (bilanPeriodique.that.dataELem.classes.length === 0 && bilanPeriodique.that.epiAp.classesSelected.length === 0)
                         || distinctSubject.size < 2 || distinctSubject.hasTwoTimesSubject);
                 }
                 else if (bilanPeriodique.that.getTypeElement() === 2) {
@@ -550,12 +560,13 @@ export const bilanPeriodique = {
                         || bilanPeriodique.that.dataELem.libelle === undefined
                         || bilanPeriodique.that.dataELem.libelle === ""
                         || bilanPeriodique.that.dataELem.ens_mat.length < 1
-                        || bilanPeriodique.that.dataELem.classes.length === 0
+                        || (bilanPeriodique.that.dataELem.classes.length === 0 && bilanPeriodique.that.epiAp.classesSelected.length === 0)
                         || distinctSubject.hasTwoTimesSubject);
                 }
                 else {
                     return (bilanPeriodique.that.dataELem.theme === null
-                        || bilanPeriodique.that.dataELem.classes.length === 0);
+                        || (bilanPeriodique.that.dataELem.classes.length === 0 && bilanPeriodique.that.epiAp.classesSelected.length === 0)
+                    );
                 }
             }
         },
@@ -626,7 +637,7 @@ export const bilanPeriodique = {
 
         /////       Suppression des chips enseignants / matières et classe   /////
 
-        delete: function () {
+        delete: async function () {
             if (bilanPeriodique.that.supprElemAppr || bilanPeriodique.that.supprElemAppr
                 || bilanPeriodique.that.supprElem || bilanPeriodique.that.supprElem) {
                 bilanPeriodique.that.deleteElements(bilanPeriodique.that.selectedElements);
@@ -640,7 +651,7 @@ export const bilanPeriodique = {
                 || bilanPeriodique.that.modifElemSupprClasse
                 || bilanPeriodique.that.supprClasse || bilanPeriodique.that.modifElemSupprClasse) {
                 bilanPeriodique.that.openedLightbox = true;
-                bilanPeriodique.that.deleteClasse();
+                await bilanPeriodique.that.deleteClasse();
             }
             else {
                 bilanPeriodique.that.openedLightbox = true;
@@ -673,32 +684,25 @@ export const bilanPeriodique = {
 
 
         tryDeleteClasse: async function (classe) {
-            if (bilanPeriodique.that.modifElem) {
-                let appreciations = await bilanPeriodique.that.getAppreciationsOnClasse(classe.id,
-                    bilanPeriodique.that.dataELem.id);
-                if (appreciations) {
-                    if (appreciations.length > 0) {
-                        bilanPeriodique.that.opened.lightboxConfirmDelete = true;
-                        classe.selected = true;
-                        bilanPeriodique.that.modifElemSupprClasse = true;
-                    } else {
-                        classe.selected = true;
-                        bilanPeriodique.that.opened.lightboxConfirmDelete = true;
-                        bilanPeriodique.that.opened.lightboxCreatePE = false;
-                        bilanPeriodique.that.supprClasse = true;
-                    }
+            let appreciations = await bilanPeriodique.that.getAppreciationsOnClasse(classe.id,
+                bilanPeriodique.that.dataELem.id);
+            if (appreciations) {
+                if (appreciations.length > 0) {
+                    bilanPeriodique.that.opened.lightboxConfirmDelete = true;
+                    classe.selected = true;
+                    bilanPeriodique.that.modifElemSupprClasse = true;
+                } else {
+                    classe.selected = true;
+                    bilanPeriodique.that.opened.lightboxConfirmDelete = true;
+                    bilanPeriodique.that.opened.lightboxCreatePE = false;
+                    bilanPeriodique.that.supprClasse = true;
                 }
-                await utils.safeApply(this);
-            } else {
-                classe.selected = true;
-                bilanPeriodique.that.opened.lightboxConfirmDelete = true;
-                bilanPeriodique.that.opened.lightboxCreatePE = false;
-                bilanPeriodique.that.supprClasse = true;
             }
+            await utils.safeApply(bilanPeriodique.that);
         },
 
 
-        deleteClasse: function () {
+        deleteClasse: async function () {
             for (let i = 0; i < bilanPeriodique.that.dataELem.classes.length; i++) {
                 if (bilanPeriodique.that.dataELem.classes[i].selected) {
                     bilanPeriodique.that.dataELem.classes = _.without(bilanPeriodique.that.dataELem.classes,
@@ -707,8 +711,19 @@ export const bilanPeriodique = {
             }
             bilanPeriodique.that.search.classe = null;
             bilanPeriodique.that.opened.lightboxConfirmDelete = false;
+            await utils.safeApply(bilanPeriodique.that);
         },
 
+        dropComboModel: async function (el: any, table: any) {
+            table.splice(table.indexOf(el), 1);
+            bilanPeriodique.that.epiAp.classesSelected = table;
+            await utils.safeApply(bilanPeriodique.that);
+        },
+
+        setClassesSelected: async function (classes) {
+            bilanPeriodique.that.epiAp.classesSelected = classes;
+            await utils.safeApply(bilanPeriodique.that);
+        },
 
         /////       Réinitialise la lightbox       /////
 
