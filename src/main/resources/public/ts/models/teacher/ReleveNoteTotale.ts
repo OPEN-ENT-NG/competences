@@ -117,8 +117,8 @@ export class ReleveNoteTotale extends  Model implements IModel {
                                 }
                             }
                             if(this.exportOptions.positionnementFinal) {
-                                if (line.positionnement && line.positionnement[matiere.id] != undefined) {
-                                    line[matiere.name + 'Positionnement'] = Number(line.positionnement[matiere.id].replace(",","."));
+                                if (line.positionnement && line.positionnement[matiere.id]) {
+                                    line[matiere.name + 'Positionnement'] = Number(line.positionnement[matiere.id].toString().replace(",","."));
                                 } else {
                                     line[matiere.name + 'Positionnement'] = "";
                                 }
@@ -257,8 +257,8 @@ export class ReleveNoteTotale extends  Model implements IModel {
                                 }
                             }
                             if(this.exportOptions.positionnementFinal) {
-                                if (line.positionnement != undefined && line.positionnement[matiere.id] != undefined) {
-                                    columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Positionnement'] = Number(line.positionnement[matiere.id].replace(",","."));
+                                if (line.positionnement != undefined && line.positionnement[matiere.id]) {
+                                    columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Positionnement'] = Number(line.positionnement[matiere.id].toString().replace(",","."));
                                 } else {
                                     columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Positionnement'] = "";
                                 }
