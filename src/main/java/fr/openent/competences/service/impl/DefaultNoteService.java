@@ -1658,7 +1658,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         String query = "SELECT * FROM "+
                 "(SELECT notes.id_eleve AS id_eleve_notes, devoirs.id, devoirs.id_periode, devoirs.id_matiere, devoirs.owner, rel_devoirs_groupes.id_groupe, "+
-                "rel_devoirs_groupes.type_groupe, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, notes.valeur " +
+                "rel_devoirs_groupes.type_groupe, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, devoirs.is_evaluated, notes.valeur " +
                 "FROM notes.devoirs LEFT JOIN notes.notes ON (devoirs.id = notes.id_devoir AND "+
                 "notes.id_eleve IN  "+Sql.listPrepared(idsEleve)+" ) " +
                 "INNER JOIN notes.rel_devoirs_groupes ON (devoirs.id = rel_devoirs_groupes.id_devoir AND "+
@@ -1779,7 +1779,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                                                         }
 
                                                                                     } else if(!(respNoteMoyFinale.getString("moyenne_finale") != null && respNoteMoyFinale.getString("moyenne_finale").equals("-100"))) {//pas de moyFinale => set mapIdEleveIdMatListNotes
-                                                                                        if (respNoteMoyFinale.getString("coefficient") == null){
+                                                                                        if (respNoteMoyFinale.getString("coefficient") == null || !respNoteMoyFinale.getBoolean("is_evaluated")){
                                                                                             continue;
                                                                                         }
                                                                                         if(respNoteMoyFinale.getString("id_eleve_notes")!= null){
