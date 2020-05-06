@@ -2070,14 +2070,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir.owner = (teacher != undefined) ? teacher.id_enseignant
                         : $scope.devoir.teachersByClass[0].id;
                 }
-                $scope.setEnseignantMatieres();
             } else if(($scope.devoir.teachersByClass.length > 0 && $scope.devoir.owner === undefined) ||
                 _.findWhere($scope.devoir.teachersByClass, {id : $scope.devoir.owner}) === undefined) {
                 if($scope.devoir.teachersByClass.length > 0 ){
                     $scope.devoir.owner = $scope.devoir.teachersByClass[0].id;
                 }
-                $scope.setEnseignantMatieres();
             }
+            $scope.setEnseignantMatieres();
         };
 
         /**
@@ -2087,7 +2086,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.devoir.matieresByClassByTeacher = $filter('getMatiereClasse')($scope.structure.matieres.all,
                 $scope.devoir.id_groupe, $scope.classes, $scope.search, $scope.devoir.owner);
 
-            if(_.findWhere($scope.devoir.matieresByClassByTeacher, {id : $scope.devoir.matiere}) === undefined) {
+            if(!$scope.devoir.matiere) {
+                $scope.devoir.matiere = $scope.devoir.matieresByClassByTeacher[0];
+            }else if(_.findWhere($scope.devoir.matieresByClassByTeacher, {id : $scope.devoir.matiere.id}) === undefined) {
                 $scope.devoir.matiere = $scope.devoir.matieresByClassByTeacher[0];
             }
 
