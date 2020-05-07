@@ -379,7 +379,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         /**
          * Créer un suivi de compétence
          */
-        $scope.selectSuivi = async function () {
+        $scope.selectSuivi = async function (forReleve?) {
             return new Promise(async (resolve) => {
                 if (Utils.isNotNull($scope.informations.eleve)  && $scope.search.eleve !== "") {
 
@@ -457,10 +457,11 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                         }
 
                         $scope.informations.eleve.suiviCompetences.push($scope.suiviCompetence);
-
-                        $scope.template.close('suivi-competence-content');
-                        await utils.safeApply($scope);
-                        $scope.template.open('suivi-competence-content', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_suivi_eleve');
+                        if(!forReleve) {
+                            $scope.template.close('suivi-competence-content');
+                            await utils.safeApply($scope);
+                            $scope.template.open('suivi-competence-content', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_suivi_eleve');
+                        }
                         if ($scope.displayFromClass) delete $scope.displayFromClass;
                         await utils.safeApply($scope);
                         resolve();
@@ -1337,7 +1338,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         // Initialisation des variables du relevé
         $scope.initReleve = async function () {
             $scope.translate = lang.translate;
-            await $scope.chooseChild();
+            let allPromise = [$scope.chooseChild(), $scope.selectSuivi(true)];
+            // On lance les synchronisation en paralelle
+            await Promise.all(allPromise);
             await utils.safeApply($scope);
         };
 
