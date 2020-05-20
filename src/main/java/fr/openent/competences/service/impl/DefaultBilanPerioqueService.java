@@ -258,7 +258,9 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     message.body().getJsonArray("results").stream().forEach(service -> {
                         JsonObject serviceObj = (JsonObject) service;
                         String idServiceMatiere = serviceObj.getString("id_matiere");
-                        if (idServiceMatiere.equals(idMatiere)) {
+                        String idServiceGroup = serviceObj.getString("id_groupe");
+                        if (idServiceMatiere.equals(idMatiere) && idClasseGroups.contains(idServiceGroup)
+                                && serviceObj.getBoolean("evaluable")) {
                             String owner = serviceObj.getString("id_enseignant");
                             Long coefficient = serviceObj.getLong(COEFFICIENT);
                             coefficient = isNull(coefficient)? 1L : coefficient;
@@ -266,7 +268,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                             JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
                             JsonArray teachers = matiere.getJsonArray("teachers");
 
-                            if (isNotNull(owner) && !teachers.contains(owner) && teachers.isEmpty()) {
+                           // if (isNotNull(owner) && !teachers.contains(owner) && teachers.isEmpty()) {
+                            if (isNotNull(owner) && !teachers.contains(owner)) {
                                 teachers.add(owner);
                                 if (!idsTeachers.contains(owner))
                                     idsTeachers.add(owner);

@@ -371,6 +371,7 @@ export const paramServices = {
                 console.log(servicesToCheck);
                 let service = new Service(serviceToUpdate);
                 service.competencesParams = servicesToCheck;
+                service.id_groups = _.pluck(servicesToCheck, 'id_groupe');
                 await paramServices.that.checkDevoirsService(service, () => {
                     this.validForm(serviceToUpdate);
                 })
