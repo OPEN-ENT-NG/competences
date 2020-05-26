@@ -50,8 +50,7 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
                 if (matieresClasse.length > 0) {
                      return matieresClasse;
                 }
-                let matieresList = (hasService)? matieresClasse : matieres;
-                return matieresList;
+                return (hasService) ? matieresClasse : matieres;
             }
         }
     }

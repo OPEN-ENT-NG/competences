@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {model, notify,Me, idiom as lang, ng, template, moment, _, angular, http, skin} from 'entcore';
+import {model, notify, Me, idiom as lang, ng, template, moment, _, angular, http, skin, Behaviours} from 'entcore';
 import {
     Devoir,
     Evaluation,
@@ -2058,23 +2058,28 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Set les enseignants en fonction de l'identifiant de la classe
          */
         $scope.setClasseEnseignants = function (search ?) {
-            $scope.devoir.teachersByClass = $filter('getEnseignantClasse')($scope.structure.enseignants.all,
-                $scope.devoir.id_groupe, $scope.classes, $scope.search);
-            if($scope.devoir.owner === undefined && search !== undefined && search.matiere !== undefined
-                && search.matiere !== "*"  && $scope.search.classe != '*') {
-                if (search.enseignant != undefined && search.enseignant !== "*") {
-                    $scope.devoir.owner = search.enseignant.id;
-                } else {
-                    let teacher = _.findWhere(search.classe.services,
-                        {id_groupe: search.classe.id, id_matiere: search.matiere.id});
-                    $scope.devoir.owner = (teacher != undefined) ? teacher.id_enseignant
-                        : $scope.devoir.teachersByClass[0].id;
+            //si c'est un chef étab on va chercher les enseignants
+            if(Utils.isChefEtab()) {
+                $scope.devoir.teachersByClass = $filter('getEnseignantClasse')($scope.structure.enseignants.all,
+                    $scope.devoir.id_groupe, $scope.classes, $scope.search);
+                if ($scope.devoir.owner === undefined && search !== undefined && search.matiere !== undefined
+                    && search.matiere !== "*" && $scope.search.classe != '*') {
+                    if (search.enseignant != undefined && search.enseignant !== "*") {
+                        $scope.devoir.owner = search.enseignant.id;
+                    } else {
+                        let teacher = _.findWhere(search.classe.services,
+                            {id_groupe: search.classe.id, id_matiere: search.matiere.id});
+                        $scope.devoir.owner = (teacher != undefined) ? teacher.id_enseignant
+                            : $scope.devoir.teachersByClass[0].id;
+                    }
+                } else if (($scope.devoir.teachersByClass.length > 0 && $scope.devoir.owner === undefined) ||
+                    _.findWhere($scope.devoir.teachersByClass, {id: $scope.devoir.owner}) === undefined) {
+                    if ($scope.devoir.teachersByClass.length > 0) {
+                        $scope.devoir.owner = $scope.devoir.teachersByClass[0].id;
+                    }
                 }
-            } else if(($scope.devoir.teachersByClass.length > 0 && $scope.devoir.owner === undefined) ||
-                _.findWhere($scope.devoir.teachersByClass, {id : $scope.devoir.owner}) === undefined) {
-                if($scope.devoir.teachersByClass.length > 0 ){
-                    $scope.devoir.owner = $scope.devoir.teachersByClass[0].id;
-                }
+            }else{ //Sinon c'est le professeur connecté qui est le créateur du devoir
+                $scope.devoir.owner = model.me.userId;
             }
             $scope.setEnseignantMatieres();
         };
@@ -3193,8 +3198,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($scope.classes !== undefined) {
                 let matiereClasse = $filter('getMatiereClasse')($scope.structure.matieres.all,
                     idClasse, $scope.classes, $scope.search);
-                return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
-                    && !_.isEmpty(matiereClasse);
+                let classe = _.findWhere($scope.classes.all,{id: idClasse});
+
+                if(Utils.isChefEtab()){
+                    return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
+                        && !_.isEmpty(matiereClasse);
+                }else{
+                    let matieresByClassByTeacher = $filter('getMatiereClasse')($scope.structure.matieres.all,
+                        idClasse, $scope.classes, $scope.search, model.me.userId);
+                    return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
+                        && !_.isEmpty(matiereClasse) && matieresByClassByTeacher.length > 0;
+                }
             }
         };
 
