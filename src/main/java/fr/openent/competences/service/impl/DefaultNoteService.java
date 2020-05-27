@@ -17,9 +17,76 @@
 
 package fr.openent.competences.service.impl;
 
+import static fr.openent.competences.Competences.APPRECIATIONS;
+import static fr.openent.competences.Competences.APPRECIATION_CLASSE;
+import static fr.openent.competences.Competences.CLASSE_NAME_KEY;
+import static fr.openent.competences.Competences.COMPETENCES_NOTES_TABLE;
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
+import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
+import static fr.openent.competences.Competences.DISPLAY_NAME_KEY;
+import static fr.openent.competences.Competences.ELEMENT_PROGRAMME_KEY;
+import static fr.openent.competences.Competences.ELEVES;
+import static fr.openent.competences.Competences.FIRST_NAME_KEY;
+import static fr.openent.competences.Competences.HAS_NOTE;
+import static fr.openent.competences.Competences.ID_ELEVE;
+import static fr.openent.competences.Competences.ID_ELEVE_KEY;
+import static fr.openent.competences.Competences.ID_ETABLISSEMENT_KEY;
+import static fr.openent.competences.Competences.ID_MATIERE;
+import static fr.openent.competences.Competences.ID_PERIODE;
+import static fr.openent.competences.Competences.ID_PERIODE_KEY;
+import static fr.openent.competences.Competences.LAST_NAME_KEY;
+import static fr.openent.competences.Competences.LEVEL;
+import static fr.openent.competences.Competences.LIBELLE;
+import static fr.openent.competences.Competences.MATIERE_TABLE;
+import static fr.openent.competences.Competences.MESSAGE;
+import static fr.openent.competences.Competences.MOYENNE;
+import static fr.openent.competences.Competences.NAME;
+import static fr.openent.competences.Competences.NN;
+import static fr.openent.competences.Competences.NOTES;
+import static fr.openent.competences.Competences.OK;
+import static fr.openent.competences.Competences.POSITIONNEMENT;
+import static fr.openent.competences.Competences.POSITIONNEMENTS_AUTO;
+import static fr.openent.competences.Competences.POSITIONNEMENT_AUTO;
+import static fr.openent.competences.Competences.REL_ANNOTATIONS_DEVOIRS_TABLE;
+import static fr.openent.competences.Competences.RESULTS;
+import static fr.openent.competences.Competences.STATUS;
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
+import static fr.openent.competences.Utils.getLibellePeriode;
+import static fr.openent.competences.Utils.isNotNull;
+import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.badRequest;
+import static org.entcore.common.sql.SqlResult.validResultHandler;
+import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.stream.Collectors;
+
+import org.entcore.common.service.impl.SqlCrudService;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
+import org.entcore.common.user.UserInfos;
+
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
-import fr.openent.competences.bean.*;
+import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.bean.Eleves;
+import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.bean.StatClass;
+import fr.openent.competences.bean.StatMat;
 import fr.openent.competences.service.AnnotationService;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
@@ -29,35 +96,15 @@ import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import org.entcore.common.service.impl.SqlCrudService;
-import org.entcore.common.sql.Sql;
-import org.entcore.common.sql.SqlResult;
-import org.entcore.common.user.UserInfos;
-import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-
-import java.text.DecimalFormat;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Utils.getLibellePeriode;
-import static fr.openent.competences.Utils.isNotNull;
-import static fr.openent.competences.Utils.isNull;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static fr.wseduc.webutils.http.Renders.badRequest;
-import static org.entcore.common.http.response.DefaultResponseHandler.notEmptyResponseHandler;
-import static org.entcore.common.sql.SqlResult.validResultHandler;
-import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 
 /**
@@ -869,7 +916,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonObject note = listNotes.getJsonObject(i);
 
             if (note.getString("valeur") == null
-                    || !note.getBoolean("is_evaluated") || note.getString("coefficient") == null) {
+                    || !note.getBoolean("is_evaluated") || note.getString("coefficient") == null
+            || "0".equals(note.getString("coefficient"))) {
                 continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
                 // elle n'est pas prise en compte dans le calcul de la moyenne
             } else {
@@ -919,7 +967,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonObject note = listNotes.getJsonObject(i);
 
             if (note.getString("valeur") == null
-                    || !note.getBoolean("is_evaluated") || note.getString("coefficient") == null) {
+                    || !note.getBoolean("is_evaluated") || note.getString("coefficient") == null
+                    || "0".equals(note.getString("coefficient"))) {
                 continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
                 // elle n'est pas prise en compte dans le calcul de la moyenne
             }
@@ -2575,8 +2624,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             for (int i = 0; i < listNotes.size(); i++) {
                 JsonObject note = listNotes.getJsonObject(i);
                 if (note.getString(VALEUR) == null || note.getString(COEFFICIENT) == null ||
-                        !note.getBoolean(IS_EVALUATED)) {
-                    continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
+                        !note.getBoolean(IS_EVALUATED) || "0".equals(note.getString(COEFFICIENT))) {
+                    continue;
+                    //Si la note fait partie d'un devoir qui n'est pas évalué,
                     // elle n'est pas prise en compte dans le calcul de la moyenne
                 }
 
@@ -2648,6 +2698,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             int nbMoyenneClasse = 0;
             Double min = null;
             Double max = null;
+          //  Double globalCoefficientState = new Double(0);
 
             Map<Long, Double>  mapSumMoyClasse = new HashMap<>();
             Map<Long, Integer> mapNbMoyenneClasse = new HashMap<>();
@@ -2736,7 +2787,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         }
                     } else {
                         el.put(MOYENNE, moy).put(HAS_NOTE, moyenne.getBoolean(HAS_NOTE));
-
                         if (isExport && !el.containsKey(MOYENNEFINALE)) {
                             el.put(MOYENNEFINALE, moy);
                         }
@@ -2757,7 +2807,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             sumMoyClasse += moyEl;
                         }
                     }
-                    if(isNotNull(moyEl)) {
+                    if(isNotNull(moyEl)){
                         if (isNull(min) || isNull(max)) {
                             min = moyEl;
                             max = moyEl;
@@ -2797,10 +2847,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             result.put("_moyenne_classe", new JsonObject());
             JsonObject moyClasseObj = new JsonObject().put("min", min).put("max", max).put(MOYENNE, moyClasse);
             result.getJsonObject("_moyenne_classe").put("nullFinal", moyClasseObj);
-            for(Map.Entry<Long, Double> sousMatMoyClasse : mapSumMoyClasse.entrySet()){
+            for (Map.Entry<Long, Double> sousMatMoyClasse : mapSumMoyClasse.entrySet()) {
                 Double moySousMat = sousMatMoyClasse.getValue();
                 Long idSousMat = sousMatMoyClasse.getKey();
-                String key = (isNull(idSousMat)? "null" : idSousMat.toString());
+                String key = (isNull(idSousMat) ? "null" : idSousMat.toString());
                 int nbSousMoyClass = mapNbMoyenneClasse.get(idSousMat);
                 Object moySous = (nbSousMoyClass > 0) ? (moySousMat / nbSousMoyClass) : " ";
                 JsonObject moySousMatCl = new JsonObject().put("min", mapMin.get(idSousMat))
@@ -2889,6 +2939,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
         }
     }
+
 
     private <T> void calculMoyennesCompetencesNotesForReleve (JsonArray listCompNotes, JsonObject result, Long idPeriode,
                                                               JsonArray tableauDeconversion,
