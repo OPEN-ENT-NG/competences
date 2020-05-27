@@ -444,7 +444,7 @@ export class ReleveNote extends  Model implements IModel {
                 if (this.hasEvaluatedDevoirs && sumCoeff > 0) {
                     _.each(this.classe.eleves.all, (eleve) => {
                         let e = _.findWhere(_eleves, {id: eleve.id});
-                        if (e !== undefined) {
+                        if (e !== undefined && e.moyenne != null) {
                             eleve.moyenne = e.moyenne;
                         }
                         else {

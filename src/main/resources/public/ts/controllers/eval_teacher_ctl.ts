@@ -2841,7 +2841,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($location.$$path === '/releve')
                 idHTMLofInput = getHTMLiD($event);
             if(isWorkingProgress) return;
-            const isValueChanged:Boolean = (evaluation.valeur !== evaluation.oldValeur);
+            let isValueChanged:Boolean = (evaluation.valeur !== evaluation.oldValeur);
             const reg = /^[0-9]+(\.[0-9]{1,2})?$/;
             cleanShortTermCaseValue(evaluation);
             if ((isValueChanged || evaluation.oldAppreciation !== evaluation.appreciation)) {
@@ -2904,7 +2904,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                                 evaluation.data.id = res.id;
                                             }
 
-                                            if ($location.$$path === '/releve' && isValueChanged) {
+                                            if ($location.$$path === '/releve' ) {
                                                 await $scope.releveNote.sync();
                                             } else {
                                                 $scope.calculStatsDevoir();
