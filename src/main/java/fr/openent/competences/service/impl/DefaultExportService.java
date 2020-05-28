@@ -1473,7 +1473,7 @@ public class DefaultExportService implements ExportService {
 
                     final JsonObject userJSON;
                     final String classeEleve;
-                    Boolean isBackup = false;
+                    boolean isBackup = false;
 
                     if(!infoEleve.result().isEmpty()){
                         userJSON = infoEleve.result();
@@ -1500,7 +1500,6 @@ public class DefaultExportService implements ExportService {
                     }
                     // récupération de l'ensemble des matières de l'élève
 
-                    final ArrayList<String> classesFieldOfStudy = new ArrayList<String>();
                     JsonArray matieres = new JsonArray();
 
                     for (int i = 0; i < subjectF.result().size(); i++) {
@@ -1509,7 +1508,6 @@ public class DefaultExportService implements ExportService {
                         if (idMatieres.contains(idMatiere)) {
                             matieres.add(o);
                             String key = classeEleve + "$" + o.getString("externalId");
-                            classesFieldOfStudy.add(key);
                         }
                     }
 
@@ -1518,18 +1516,16 @@ public class DefaultExportService implements ExportService {
                     final JsonObject periodeJSON = new JsonObject();
 
                     if (null != params.get("idTypePeriode") && null != params.get("ordrePeriode")) {
-                        final Long idTypePeriode = Long.parseLong(params.get("idTypePeriode"));
-                        final Long ordrePeriode = Long.parseLong(params.get("ordrePeriode"));
-                        StringBuilder keyI18nPeriodeType = new StringBuilder()
-                                .append("viescolaire.periode.").append(idTypePeriode);
-                        String libellePeriode = getLibelle(keyI18nPeriodeType.toString());
+                        final long idTypePeriode = Long.parseLong(params.get("idTypePeriode"));
+                        final long ordrePeriode = Long.parseLong(params.get("ordrePeriode"));
+                        String libellePeriode = getLibelle("viescolaire.periode." + idTypePeriode);
                         libellePeriode += (" " + ordrePeriode);
                         periodeJSON.put("libelle", libellePeriode);
                     } else {
                         // Construction de la période année
                         periodeJSON.put("libelle", "Ann\u00E9e");
                     }
-                    getEnseignantsMatieres(matieres, classeEleve, idEnseignants, devoirsJSON,
+                    getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON,
                             periodeJSON, userJSON, etabJSON, isBackup, moyennesFinales, handler);
                 });
     }
@@ -1540,7 +1536,6 @@ public class DefaultExportService implements ExportService {
      * formant le relevé de notes de l'élève.
      *
      * @param matieres    la liste des matières de l'élève.
-     * @param classe
      * @param idUsers
      * @param devoirsJson la liste des devoirs et notes de l'élève.
      * @param periodeJson la periode
@@ -1548,8 +1543,7 @@ public class DefaultExportService implements ExportService {
      * @param etabJson    l'établissement
      * @param handler
      */
-    public void getEnseignantsMatieres(final JsonArray matieres,
-                                       final String classe, JsonArray idUsers, final JsonArray devoirsJson,
+    public void getEnseignantsMatieres(final JsonArray matieres, JsonArray idUsers, final JsonArray devoirsJson,
                                        final JsonObject periodeJson, final JsonObject userJson,
                                        final JsonObject etabJson, final boolean isBackup, final JsonArray moyennesFinales,
                                        Handler<Either<String, JsonObject>> handler) {
@@ -1562,7 +1556,7 @@ public class DefaultExportService implements ExportService {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray r = body.getJsonArray(RESULTS);
-                Boolean printSousMatiere = false;
+                boolean printSousMatiere = false;
 
                 for (int i = 0; i < devoirsJson.size(); i++) {
                     JsonObject devoir = devoirsJson.getJsonObject(i);
@@ -1663,10 +1657,10 @@ public class DefaultExportService implements ExportService {
         // parcours des devoirs
         for (int i = 0; i < devoirsJson.size(); i++) {
             JsonObject devoirJson = devoirsJson.getJsonObject(i);
-            Boolean hasCoeff = devoirJson.getString(COEFFICIENT) != null;
+            boolean hasCoeff = devoirJson.getString(COEFFICIENT) != null;
             Double coefficient = null;
             if(hasCoeff){
-                hasCoeff = !Double.valueOf(devoirJson.getString(COEFFICIENT)).equals(new Double(1));
+                hasCoeff = !Double.valueOf(devoirJson.getString(COEFFICIENT)).equals(1d);
                 coefficient = Double.valueOf(devoirJson.getString(COEFFICIENT));
             }
             // boolean permettant de savoir s'il y a un coefficient différent de 1 sur la note
@@ -1682,9 +1676,9 @@ public class DefaultExportService implements ExportService {
                 NoteDevoir noteDevoir = new NoteDevoir(note, diviseur, ramenerSur, coefficient);
                 Long idSousMatiere = devoirJson.getLong("id_sousmatiere");
                 Long nbrEleves = devoirJson.getLong("nbr_eleves");
-                Double sumNotes;
+                double sumNotes;
                 try {
-                    sumNotes = Double.valueOf(devoirJson.getString("sum_notes"));
+                    sumNotes = Double.parseDouble(devoirJson.getString("sum_notes"));
                 } catch (ClassCastException exc) {
                     log.error("[ getDevoirsByMatiere ] : sum_notes of devoirJson cannot be transform to double");
                     sumNotes = 0.0;
@@ -1729,9 +1723,10 @@ public class DefaultExportService implements ExportService {
                     matiereInter.put(MOYENNE, moyenneFinale.getValue("moyenne").toString());
                 else
                     matiereInter.put(MOYENNE, "NN");
-            }else if( moyenneMatiere.getLong(MOYENNE) != null){
-                matiereInter.put(MOYENNE, moyenneMatiere.getLong(MOYENNE).toString());
+            }else if( moyenneMatiere.getValue(MOYENNE) != null){
+                matiereInter.put(MOYENNE, moyenneMatiere.getValue(MOYENNE).toString());
             }
+            matiereInter.put(MOYENNE_NON_NOTE, matiereInter.getValue(MOYENNE).equals("NN"));
             String keySousMatiere = "sous_matieres";
             JsonArray sousMatieres = matiereInter.getJsonArray(keySousMatiere);
             matiereInter.put("hasSousMatiere", sousMatieres.size()>0);
@@ -1743,9 +1738,12 @@ public class DefaultExportService implements ExportService {
                 String moy =  "NN";
                 if(isNotNull(notesSousMat)) {
                     JsonObject moySousMatiere = utilsService.calculMoyenne(notesSousMat, withStat, diviseur, annual);
-                    moy = moySousMatiere.getLong(MOYENNE).toString() + "/20";
+                    moy = moySousMatiere.getValue(MOYENNE).toString();
+                    if(!moy.equals("NN"))
+                        moy += "/20";
                 }
                 sousMatiere.put(MOYENNE, moy).put("isLast", i == sousMatieres.size()-1);
+                sousMatiere.put(MOYENNE_NON_NOTE, sousMatiere.getValue(MOYENNE).equals("NN"));
                 JsonArray devoirsSousMatieres = new JsonArray();
                 if(isNotNull(devoirsSousMat.get(idMatiere))){
                     if(isNotNull(devoirsSousMat.get(idMatiere).get(idSousMatiere))){

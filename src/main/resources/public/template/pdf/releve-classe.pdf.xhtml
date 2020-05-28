@@ -180,7 +180,7 @@
           </span>
             {{/devoirs}}
         </td>
-        <td  class="right-bottom"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+        <td  class="right-bottom"><span class="note">{{moyenne}}</span>{{^moyenne_non_note}}<span class="diviseur">/20</span>{{/moyenne_non_note}}</td>
 
     </tr>
     {{/matieres}}
@@ -226,7 +226,7 @@
         {{/isLast}}
         {{/first_sous_matieres}}
 
-        <td rowspan="{{rowspan}}"  class="right-bottom"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+        <td rowspan="{{rowspan}}"  class="right-bottom"><span class="note">{{moyenne}}</span>{{^moyenne_non_note}}<span class="diviseur">/20</span>{{/moyenne_non_note}}</td>
         {{/hasSousMatiere}}
 
         {{^hasSousMatiere}}
@@ -246,7 +246,7 @@
           </span>
             {{/devoirs}}
         </td>
-        <td class="right-bottom" colspan="2"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+        <td class="right-bottom" colspan="2"><span class="note">{{moyenne}}</span>{{^moyenne_non_note}}<span class="diviseur">/20</span>{{/moyenne_non_note}}</td>
         {{/hasSousMatiere}}
 
     </tr>

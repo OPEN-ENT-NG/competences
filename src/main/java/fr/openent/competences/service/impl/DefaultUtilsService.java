@@ -221,19 +221,18 @@ public class DefaultUtilsService  implements UtilsService {
         if (diviseurM == null) {
             diviseurM = 20;
         }
-        Double noteMax = new Double(0);
-        Double noteMin = new Double(diviseurM);
-        Double notes = new Double(0);
-        Double diviseur = new Double(0);
+        double noteMax = 0;
+        double noteMin = diviseurM;
 
         // (SUM ( ni *m *ci /di)  + SUM ( nj *cj)  ) / (S ( ci)  + SUM ( cj  *dj /m)  )
         // avec d : diviseurs, n : note, c : coefficient, m = 20 : si ramené sur
         // avec i les notes ramenées sur m, et j les notes non ramenées sur m
 
-        Double sumCI = new Double(0);
-        Double sumCJDJParM = new Double(0);
-        Double sumCJDJ = new Double(0);
-        Double sumNIMCIParD = new Double(0);
+        double sumCI = 0;
+        double sumCJDJParM = 0;
+        double sumCJDJ = 0;
+        double sumNIMCIParD = 0;
+        double sumCoefficient = 0;
 
         for (NoteDevoir noteDevoir : listeNoteDevoirs) {
             Double currNote = noteDevoir.getNote();
@@ -243,12 +242,14 @@ public class DefaultUtilsService  implements UtilsService {
             if (!noteDevoir.getRamenerSur()) {
                 sumCJDJParM += (currCoefficient * currDiviseur / diviseurM);
                 sumCJDJ += (currNote * currCoefficient);
-            } else if (currCoefficient.doubleValue() == 0) {
+            } else if (currCoefficient == 0) {
                 continue;
             } else {
                 sumNIMCIParD += ((currNote * diviseurM * currCoefficient) / currDiviseur);
                 sumCI += currCoefficient;
             }
+
+            sumCoefficient += currCoefficient;
 
             // Calcul de la note min et max
             if (statistiques) {
@@ -274,18 +275,18 @@ public class DefaultUtilsService  implements UtilsService {
             } else {
                 if(!annual)
                     moyenne = Double.valueOf(df.format(moyenne));
-                else
-                    moyenne = Double.valueOf(moyenne);
-
             }
 
         } catch (NumberFormatException e) {
-            log.error("Moyenne : " + String.valueOf(moyenne), e);
+            log.error("Moyenne : " + moyenne, e);
         }
         if (null == moyenne) moyenne = 0.0;
 
         JsonObject r = new JsonObject().put("moyenne", moyenne)
                 .put("hasNote", listeNoteDevoirs.size() > 0);
+
+        if(sumCoefficient == 0)
+            r.put("moyenne","NN");
 
         if( statistiques){
             r.put("noteMax", noteMax).put("noteMin", noteMin);
@@ -303,9 +304,9 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public JsonObject calculMoyenneParDiviseur(List<NoteDevoir> listeNoteDevoirs, Boolean statistiques) {
 
-        Double noteMax = new Double(0);
+        Double noteMax = (double) 0;
         Double noteMin = null;
-        Double notes = new Double(0);
+        Double notes = (double) 0;
         //Double diviseur = new Double(0);
 
         for (NoteDevoir noteDevoir : listeNoteDevoirs) {
@@ -314,7 +315,7 @@ public class DefaultUtilsService  implements UtilsService {
             // Calcul de la note min et max
             if (statistiques) {
                 if (null == noteMin) {
-                    noteMin = new Double(noteDevoir.getDiviseur());
+                    noteMin = noteDevoir.getDiviseur();
                 }
                 if (currNote > noteMax) {
                     noteMax = currNote;

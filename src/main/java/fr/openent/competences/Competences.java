@@ -212,6 +212,7 @@ public class Competences extends BaseServer {
     public static final String POSITIONNEMENT_AUTO = "positionnement_auto";
     public static final String POSITIONNEMENTS_AUTO = "positionnements_auto";
     public static final String MOYENNE = "moyenne";
+    public static final String MOYENNE_NON_NOTE = "moyenne_non_note";
     public static final String MOYENNES = "moyennes";
     public static final String ELEVES = "eleves";
     public static final String APPRECIATION_CLASSE = "appreciation_classe";
