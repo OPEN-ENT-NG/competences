@@ -592,23 +592,21 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
 
     private void setElementProgramme(final JsonObject result, final JsonArray eltsProg) {
-        String elementsProg = new String();
-        if (eltsProg != null && eltsProg.size() > 0) {
+        String elementsProg = "";
+        if (isNotNull(eltsProg) && eltsProg.size() > 0) {
             for (int i = 0; i < eltsProg.size(); i++) {
-                if (elementsProg.isEmpty()) {
-                    elementsProg = eltsProg
-                            .getJsonObject(i)
-                            .getString("texte");
-                } else {
-                    elementsProg += " "
-                            + eltsProg
-                            .getJsonObject(i)
-                            .getString("texte");
+                JsonObject element;
+                element = eltsProg.getJsonObject(i);
+                if (isNull(element.getString("texte"))) {
+                    element.put("texte", "");
                 }
-
+                if (elementsProg.isEmpty()) {
+                    elementsProg = element.getString("texte");
+                } else {
+                    elementsProg += " " + element.getString("texte");
+                }
             }
         }
-
         result.put("elementsProgramme", elementsProg);
     }
 
