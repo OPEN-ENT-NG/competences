@@ -45,6 +45,7 @@ function   getMoyenne (devoirs) {
 
         let hasNote = false;
 
+        let coefficientTotalHomework = 0;
         devoirs.forEach(devoir => {
             if(devoir.note && devoir.coefficient && devoir.diviseur) {
                 hasNote = true;
@@ -59,10 +60,10 @@ function   getMoyenne (devoirs) {
                     sumNIMCIParD += ((currNote * diviseurM * currCoefficient) / currDiviseur);
                     sumCI += currCoefficient;
                 }
+                coefficientTotalHomework += currCoefficient;
             }
         });
-        if(hasNote) {
-
+        if(hasNote && coefficientTotalHomework !== 0) {
             let moyenne = ((sumNIMCIParD + sumCJDJ) / (sumCI + sumCJDJParM));
 
             if (null == moyenne) moyenne = 0.0;
