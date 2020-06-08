@@ -29,174 +29,88 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
+import org.entcore.common.sql.SqlStatementsBuilder;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static fr.openent.competences.Competences.TRANSITION_CONFIG;
-import static fr.openent.competences.Competences.VSCO_SCHEMA;
+import static fr.openent.competences.Competences.*;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultTransitionService extends SqlCrudService implements TransitionService{
     protected static final Logger log = LoggerFactory.getLogger(DefaultTransitionService.class);
-
+    private final Neo4j neo4j = Neo4j.getInstance();
     public DefaultTransitionService() {
         super(Competences.COMPETENCES_SCHEMA, Competences.TRANSITION_TABLE);
     }
 
-    private int compteurStructureTraitee ;
-    public void initiateCounter() {
-        this.compteurStructureTraitee = 0;
-    }
-    public void incrementCounter() {
-        this.compteurStructureTraitee ++;
-    }
-    public int getCounter() {
-        return this.compteurStructureTraitee;
-    }
-
     @Override
-    public void transitionAnneeStructure(EventBus eb, final JsonObject structure, final Handler<Either<String, JsonArray>> finalHandler) {
+    public void transitionAnneeStructure(EventBus eb, final JsonObject structure,
+                                         final Handler<Either<String, JsonArray>> finalHandler) {
         String idStructureATraiter =  structure.getString("id");
-        List<String> idStructures= new ArrayList<String>();
-        idStructures.add (idStructureATraiter);
-        int nbStructureATraiter = 1;
         log.info("DEBUT : transition année : isStructure : " + idStructureATraiter);
         JsonObject action = new JsonObject()
                 .put("action", "structure.getStructuresActives")
-                .put("module","notes");
+                .put("module",Competences.COMPETENCES_SCHEMA);
+
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
-                getInteger("timeout-transaction") * 1000L), handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-                if ("ok".equals(body.getString("status"))) {
-                    List<String> vListIdEtabActifs = new ArrayList<>();
-                    final JsonArray listIdsEtablisement = body.getJsonArray("results");
-                    if (listIdsEtablisement.size() > 0) {
-                        for (int i = 0; i < listIdsEtablisement.size(); i++) {
-                            vListIdEtabActifs.add(listIdsEtablisement.getJsonObject(i).getString("id_etablissement"));
-                        }
-                    }
-                    if (vListIdEtabActifs.size() > 0 && null != idStructures && idStructures.size() > 0) {
-                        // Si l'établissement à traiter est actif on comme la transition d'année pour cet établissement
-                        if(vListIdEtabActifs.contains(idStructureATraiter)){
-                            conditionsToDoTransition(idStructureATraiter, new Handler<Either<String, JsonObject>>() {
-                                @Override
-                                public void handle(Either<String, JsonObject> event) {
-                                    if(event.isLeft()){
-                                        log.error(event.left().getValue());
-                                        endTransition(nbStructureATraiter, finalHandler, idStructures);
-                                    }else {
-                                        log.info(event.right().getValue());
-                                        Boolean hasDevoir = event.right().getValue().getBoolean("has_devoir");
-                                        Boolean hasPeriode = event.right().getValue().getBoolean("has_periode");
-                                        Boolean hasTransition = event.right().getValue().getBoolean("has_transition");
-
-                                        if (hasTransition) {
-                                            log.warn("transition année : établissement déjà effectuée : " +
-                                                    "id Etablissement : " + idStructureATraiter);
-                                            endTransition(nbStructureATraiter, finalHandler, idStructures);
-                                        } else {
-                                            if (!hasDevoir || !hasPeriode) {
-                                                if (!hasDevoir)
-                                                    log.warn("transition année : établissement n'a pas de devoir :" +
-                                                            " id Etablissement : " + idStructureATraiter);
-                                                if (!hasPeriode)
-                                                    log.warn("transition année : établissement n'a pas de periode " +
-                                                            "paramétrée : id Etablissement : " + idStructureATraiter);
-                                                endTransition(nbStructureATraiter, finalHandler, idStructures);
-                                            } else {
-                                                Map<String, List<String>> classeIdsEleves = new HashMap<String, List<String>>();
-                                                List<String> vListIdsGroupesATraiter = new ArrayList<>();
-                                                Map<String, String> vMapGroupesATraiter = new HashMap<String, String>();
-                                                if (structure.containsKey("classes")) {
-                                                    List<String> listIdClassWithPeriode = new ArrayList<>();
-                                                    classesWithPeriode(idStructureATraiter, new Handler<Either<String, JsonArray>>() {
-                                                        @Override
-                                                        public void handle(Either<String, JsonArray> event) {
-                                                            if(event.isRight()){
-                                                                JsonArray idClassWithPeriodeja = event.right().getValue();
-                                                                for(int i=0 ; i < idClassWithPeriodeja.size(); i++){
-                                                                    listIdClassWithPeriode.add(idClassWithPeriodeja
-                                                                            .getJsonObject(i).getString("id_classe"));
-                                                                }
-                                                            }
-
-                                                            JsonArray vJsonArrayClass = structure.getJsonArray("classes");
-                                                            // On récupère la liste des classes à traiter si elles ont une période d'initialisée
-                                                            for (int i = 0; i < vJsonArrayClass.size(); i++) {
-                                                                JsonObject vJsonObjectClasse = vJsonArrayClass.getJsonObject(i);
-                                                                if (vJsonObjectClasse.containsKey("classId")) {
-                                                                    String classId = vJsonObjectClasse.getString("classId");
-                                                                    if(listIdClassWithPeriode.contains(classId)) {
-                                                                        vListIdsGroupesATraiter.add(classId);
-                                                                        vMapGroupesATraiter.put(classId, vJsonObjectClasse.getString("className"));
-                                                                        // On récupère la liste des élèves de chaque classe
-                                                                        if (vJsonObjectClasse.containsKey("users")) {
-                                                                            JsonArray vJsonArrayIdUsersClasse = vJsonObjectClasse.getJsonArray("users");
-                                                                            List<String> vListIdUsersClasse = new ArrayList<String>();
-                                                                            if (vJsonArrayIdUsersClasse.size() > 0) {
-                                                                                for (int j = 0; j < vJsonArrayIdUsersClasse.size(); j++) {
-                                                                                    vListIdUsersClasse.add(vJsonArrayIdUsersClasse.getString(j));
-                                                                                }
-                                                                            }
-                                                                            classeIdsEleves.put(classId, vListIdUsersClasse);
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                            executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter, vMapGroupesATraiter, idStructureATraiter, 1, finalHandler, idStructures);
-                                                        }
-                                                    });
-                                                } else {
-                                                    log.warn("transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter);
-                                                    endTransition(nbStructureATraiter, finalHandler, idStructures);
-                                                }
-
-
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        } else {
-                            log.warn("transition année : établissement inactif : id Etablissement : " + idStructureATraiter);
-                        }
-                    } else {
-                        log.warn("transition année : Aucun établissement actif ou à traiter");
-                        log.info("FIN : transition année ");
-                        finalHandler.handle(new Either.Left<String,JsonArray>("Transition d'année arrêtée : Aucun établissement actif"));
-                    }
-                } else {
-                    log.error("transition année : Impossible de récupérer les établissements actifs");
-                    log.info("FIN : transition année ");
-                    finalHandler.handle(new Either.Left<String,JsonArray>(body.getString("message")));
-                }
-            }}));
+                getInteger("timeout-transaction") * 1000L), handlerToAsyncHandler(handlerBusGetStrucuresActives(structure,
+                finalHandler, idStructureATraiter)
+        ));
 
     }
 
-    @Override
-    public void conditionsToDoTransition(String idStructureATraiter, Handler<Either<String, JsonObject>> handler) {
+    private Handler<Message<JsonObject>> handlerBusGetStrucuresActives(JsonObject structure, Handler<Either<String, JsonArray>> finalHandler,
+                                                                       String idStructureATraiter) {
+        return message -> {
+            JsonObject body = message.body();
+            if ("ok".equals(body.getString("status"))) {
+                List<String> vListIdEtabActifs = new ArrayList<>();
+                final JsonArray listIdsEtablisement = body.getJsonArray("results");
+                if (listIdsEtablisement.size() > 0) {
+                    for (int i = 0; i < listIdsEtablisement.size(); i++) {
+                        vListIdEtabActifs.add(listIdsEtablisement.getJsonObject(i).getString("id_etablissement"));
+                    }
+                }
+                if (vListIdEtabActifs.size() > 0 && null != idStructureATraiter) {
+                    // Si l'établissement à traiter est actif on comme la transition d'année pour cet établissement
+                    if(vListIdEtabActifs.contains(idStructureATraiter)){
+                        conditionsToDoTransition(idStructureATraiter, handlerCheckTransitionCondition(finalHandler,
+                                idStructureATraiter, structure));
+                    } else {
+                        log.warn("transition année : établissement inactif : id Etablissement : " + idStructureATraiter);
+                    }
+                } else {
+                    log.warn("transition année : Aucun établissement actif ou à traiter");
+                    log.info("FIN : transition année ");
+                    finalHandler.handle(new Either.Left<>("Transition d'année arrêtée : Aucun établissement actif"));
+                }
+            } else {
+                log.error("transition année : Impossible de récupérer les établissements actifs");
+                log.info("FIN : transition année ");
+                finalHandler.handle(new Either.Left<>(body.getString("message")));
+            }
+        };
+    }
+
+    private void conditionsToDoTransition(String idStructureATraiter, Handler<Either<String, JsonObject>> handler) {
         JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
 
-        String queryNbDevoir = "(SELECT count(*) as nb_devoir FROM notes.devoirs d " +
-                "WHERE id_etablissement= ? AND d.owner !='id-user-transition-annee' )";
+        String queryDevoir = "SELECT id FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs WHERE id_etablissement= ? AND owner !='id-user-transition-annee' ";
 
-        String queryNbPeriode = "SELECT count(*) as nb_periode FROM viesco.periode p " +
-                "WHERE id_etablissement = ? ";
+        String queryPeriode = "SELECT id FROM " + Competences.VSCO_SCHEMA + ".periode WHERE id_etablissement = ? ";
 
-        String queryNbTransition = "SELECT count(*) as nb_transition FROM notes.transition WHERE id_etablissement = ? ";
+        String queryTransition = "SELECT id_etablissement FROM " + Competences.COMPETENCES_SCHEMA + ".transition WHERE id_etablissement = ? ";
 
-        String query = " SELECT CASE nb_devoir WHEN 0 THEN FALSE ELSE TRUE END as has_devoir, " +
-                "CASE nb_periode WHEN 0 THEN FALSE ELSE TRUE END as has_periode, " +
-                "CASE nb_transition WHEN 0 THEN FALSE ELSE TRUE END as has_transition FROM ( " + queryNbDevoir +" ) as t_nbdevoir , "+
-                "( " + queryNbPeriode + ") as t_nbperiode, ( " + queryNbTransition + ") as t_nbtransition " +
-                "WHERE nb_devoir = 0 OR nb_periode = 0 OR nb_transition = 0 OR nb_devoir > 0";
-
+        String query = " SELECT EXISTS(" + queryDevoir + ") as has_devoir, "+
+                "EXISTS(" + queryPeriode + ") as has_periode, " +
+                "EXISTS(" + queryTransition + ") as has_transition";
 
         valuesCount.add(idStructureATraiter).add(idStructureATraiter).add(idStructureATraiter);
 
@@ -204,227 +118,139 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 getInteger("timeout-transaction") * 1000L), SqlResult.validUniqueResultHandler(handler));
     }
 
-    @Override
-    public void classesWithPeriode(String id_etablissement, Handler<Either<String, JsonArray>> handler) {
+    private Handler<Either<String, JsonObject>> handlerCheckTransitionCondition(Handler<Either<String, JsonArray>> finalHandler,
+                                                                                String idStructureATraiter, JsonObject structure) {
+        return event -> {
+            if(event.isLeft()){
+                log.error(event.left().getValue());
+                finalHandler.handle(new Either.Left<>(
+                        "transition année : l'établissement a une erreur dans la récupération des valeurs des conditions : " + idStructureATraiter));
+            }else {
+                log.info(event.right().getValue());
+                Boolean hasDevoir = event.right().getValue().getBoolean("has_devoir");
+                Boolean hasPeriode = event.right().getValue().getBoolean("has_periode");
+                Boolean hasTransition = event.right().getValue().getBoolean("has_transition");
+
+                if (hasTransition) {
+                    log.warn("transition année : établissement déjà effectuée : " +
+                            "id Etablissement : " + idStructureATraiter);
+                    finalHandler.handle(new Either.Left<>(
+                            "transition année : l'établissement a déjà effectué sa transition d'année : " + idStructureATraiter));
+                } else {
+                    if (!hasDevoir || !hasPeriode) {
+                        if (!hasDevoir)
+                            log.warn("transition année : établissement n'a pas de devoir :" +
+                                    " id Etablissement : " + idStructureATraiter);
+                        if (!hasPeriode)
+                            log.warn("transition année : établissement n'a pas de periode " +
+                                    "paramétrée : id Etablissement : " + idStructureATraiter);
+                        finalHandler.handle(new Either.Left<>(
+                                "transition année : établissement n'a pas de devoir ou de periodes : id Etablissement : " + idStructureATraiter));
+                    } else {
+                        Map<String, List<String>> classeIdsEleves = new HashMap<>();
+                        List<String> vListIdsGroupesATraiter = new ArrayList<>();
+                        Map<String, String> vMapGroupesATraiter = new TreeMap<>();
+                        if (structure.containsKey("classes")) {
+                            List<String> listIdClassWithPeriode = new ArrayList<>();
+                            classesWithPeriode(idStructureATraiter, handlerGetInfosClasses(classeIdsEleves, vListIdsGroupesATraiter,
+                                    vMapGroupesATraiter, listIdClassWithPeriode, structure, idStructureATraiter, finalHandler)
+                            );
+                        } else {
+                            log.warn("transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter);
+                            finalHandler.handle(new Either.Left<>(
+                                    "transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter));
+                        }
+
+
+                    }
+                }
+            }
+        };
+    }
+
+    private void classesWithPeriode(String id_etablissement, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT DISTINCT id_classe FROM "+ Competences.VSCO_SCHEMA +".periode WHERE id_etablissement = ?";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(id_etablissement);
         Sql.getInstance().prepared(query, values,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
                 getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
     }
 
-    @Override
-    public void transitionAnnee(EventBus eb, final List<String> idStructures, final Handler<Either<String, JsonArray>> finalHandler) {
-        log.info("DEBUT : transition année ");
-        JsonObject action = new JsonObject()
-                .put("action", "structure.getStructuresActives")
-                .put("module","notes");
-        // On récupère tout d'abord la liste des établissements actifs
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-                if ("ok".equals(body.getString("status"))) {
-
-                    List <String> vListIdEtabActifs = new ArrayList<>();
-                    final JsonArray listIdsEtablisement = body.getJsonArray("results");
-                    if(listIdsEtablisement.size() > 0){
-                        for (int i = 0; i < listIdsEtablisement.size(); i++) {
-                            vListIdEtabActifs.add(listIdsEtablisement.getJsonObject(i).getString("id_etablissement"));
-                        }
-                    }
-                    if (vListIdEtabActifs.size() > 0 &&  null != idStructures && idStructures.size() > 0){
-                        initiateCounter();
-                        final int nbStructureATraiter = idStructures.size();
-                        for (int i = 0; i < idStructures.size(); i++) {
-                            String idStructureATraiter = idStructures.get(i);
-                            // Si l'établissement à traiter est actif on comme la transition d'année pour cet établissement
-                            if(vListIdEtabActifs.contains(idStructureATraiter)){
-                                JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
-                                valuesCount.add(idStructureATraiter);
-                                String isTransitionCount = "SELECT COUNT(*) FROM notes.transition WHERE id_etablissement = ? ";
-                                Sql.getInstance().prepared(isTransitionCount, valuesCount, new Handler<Message<JsonObject>>() {
-                                    @Override
-                                    public void handle(Message<JsonObject> sqlResultCount) {
-                                        Long nbTransition = SqlResult.countResult(sqlResultCount);
-                                        if(nbTransition > 0){
-                                            log.warn("transition année : établissement déjà effectuée : id Etablissement : " + idStructureATraiter);
-                                            endTransition(nbStructureATraiter, finalHandler, idStructures);
-                                        } else {
-                                            JsonObject action = new JsonObject()
-                                                    .put("action", "classe.listClasses")
-                                                    .put("idStructure", idStructureATraiter);
-                                            // On récupère la liste des classes à traiter
-                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                                @Override
-                                                public void handle(Message<JsonObject> message) {
-                                                    log.info("DEBUT : transition année id Etablissement : " + idStructureATraiter);
-                                                    JsonObject body = message.body();
-                                                    if ("ok".equals(body.getString("status"))) {
-                                                        JsonArray listGroupes = body.getJsonArray("results");
-                                                        if(listGroupes.size() > 0){
-                                                            JsonArray jsonArryIdGroupe = new fr.wseduc.webutils.collections.JsonArray();
-                                                            for (int i = 0; i < listGroupes.size(); i++) {
-                                                                JsonObject vGroupe = listGroupes.getJsonObject(i).getJsonObject("m").getJsonObject("data");
-                                                                jsonArryIdGroupe.add(vGroupe.getString("id"));
-                                                            }
-                                                            JsonObject action = new JsonObject()
-                                                                    .put("action", "classe.getElevesClasses")
-                                                                    .put("idClasses", jsonArryIdGroupe);
-                                                            // On récupère la liste des élèves de chaque classe
-                                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                                                @Override
-                                                                public void handle(Message<JsonObject> message) {
-                                                                    JsonObject body = message.body();
-
-                                                                    if ("ok".equals(body.getString("status"))) {
-
-
-                                                                        Map<String,List<String>> classeIdsEleves = new HashMap<String,List<String>> ();
-                                                                        JsonArray queryResult = body.getJsonArray("results");
-                                                                        for (int i = 0; i < queryResult.size(); i++) {
-                                                                            JsonObject tempJsonObjectResult = queryResult.getJsonObject(i);
-                                                                            String idClasse = tempJsonObjectResult.getString("idClasse");
-                                                                            String idEleve = tempJsonObjectResult.getString("idEleve");
-                                                                            List<String> vListIdEleves ;
-                                                                            if(classeIdsEleves.containsKey(idClasse)){
-                                                                                vListIdEleves = classeIdsEleves.get(idClasse);
-                                                                            } else {
-                                                                                vListIdEleves = new ArrayList<String>();
-                                                                            }
-                                                                            vListIdEleves.add(idEleve);
-                                                                            classeIdsEleves.put(idClasse,vListIdEleves);
-                                                                        }
-                                                                        List<String> vListIdsGroupesATraiter = new ArrayList<>();
-                                                                        Map<String,String> vMapGroupesATraiter = new HashMap<String,String>();
-
-                                                                        for (int i = 0; i < listGroupes.size(); i++) {
-                                                                            JsonObject vGroupe = listGroupes.getJsonObject(i).getJsonObject("m").getJsonObject("data");
-                                                                            vListIdsGroupesATraiter.add(vGroupe.getString("id"));
-                                                                            vMapGroupesATraiter.put(vGroupe.getString("id"),vGroupe.getString("name"));
-                                                                        }
-                                                                        executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter,vMapGroupesATraiter,
-                                                                                idStructureATraiter, nbStructureATraiter, finalHandler, idStructures);
-                                                                    }
-                                                                }
-                                                            }));
-
-                                                        } else {
-                                                            log.warn("transition année :  aucune classe : id Etablissement : " + idStructureATraiter);
-                                                            endTransition(nbStructureATraiter, finalHandler, idStructures);
-                                                        }
-                                                    } else {
-                                                        log.warn("transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter);
-                                                        endTransition(nbStructureATraiter, finalHandler, idStructures);
-                                                    }
-
-                                                }
-                                            }));
-                                        }
-                                    };
-                                });
-                            } else {
-                                log.warn("transition année : établissement inactif : id Etablissement : " + idStructureATraiter);
+    private Handler<Either<String, JsonArray>> handlerGetInfosClasses(Map<String, List<String>> classeIdsEleves, List<String> vListIdsGroupesATraiter,
+                                                                      Map<String, String> vMapGroupesATraiter, List<String> listIdClassWithPeriode,
+                                                                      JsonObject structure, String idStructureATraiter,
+                                                                      Handler<Either<String, JsonArray>> finalHandler) {
+        return event -> {
+            if(event.isRight()) {
+                JsonArray idClassWithPeriodeja = event.right().getValue();
+                for (int i = 0; i < idClassWithPeriodeja.size(); i++) {
+                    listIdClassWithPeriode.add(idClassWithPeriodeja
+                            .getJsonObject(i).getString("id_classe"));
+                }
+                JsonArray vJsonArrayClass = structure.getJsonArray("classes");
+                // On récupère la liste des classes à traiter si elles ont une période d'initialisée
+                // INFO : Les periodes ne sont plus utiles cette année à prioris, => handle le cas où pas de période au cas où
+                for (int i = 0; i < vJsonArrayClass.size(); i++) {
+                    JsonObject vJsonObjectClasse = vJsonArrayClass.getJsonObject(i);
+                    if (vJsonObjectClasse.containsKey("classId")) {
+                        String classId = vJsonObjectClasse.getString("classId");
+                        if (listIdClassWithPeriode.contains(classId)) {
+                            vListIdsGroupesATraiter.add(classId);
+                            vMapGroupesATraiter.put(classId, vJsonObjectClasse.getString("className"));
+                            // On récupère la liste des élèves de chaque classe
+                            if (vJsonObjectClasse.containsKey("users")) {
+                                JsonArray vJsonArrayIdUsersClasse = vJsonObjectClasse.getJsonArray("users");
+                                List<String> vListIdUsersClasse = new ArrayList<>();
+                                if (vJsonArrayIdUsersClasse.size() > 0) {
+                                    for (int j = 0; j < vJsonArrayIdUsersClasse.size(); j++) {
+                                        vListIdUsersClasse.add(vJsonArrayIdUsersClasse.getString(j));
+                                    }
+                                }
+                                classeIdsEleves.put(classId, vListIdUsersClasse);
                             }
                         }
-                    } else {
-                        log.warn("transition année : Aucun établissement actif ou à traiter");
-                        log.info("FIN : transition année ");
-                        finalHandler.handle(new Either.Left<String,JsonArray>("Transition d'année arrêtée : Aucun établissement actif"));
                     }
-
-                } else {
-                    log.error("transition année : Impossible de récupérer les établissements actifs");
-                    log.info("FIN : transition année ");
-                    finalHandler.handle(new Either.Left<String,JsonArray>(body.getString("message")));
                 }
+                vListIdsGroupesATraiter.sort(Comparator.naturalOrder());
+                executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter, vMapGroupesATraiter,
+                        idStructureATraiter, finalHandler);
+            }else{
+                log.warn("transition année :  erreur lors de la récupération des classes dans la table " + Competences.VSCO_SCHEMA + ".periode :" +
+                        " id Etablissement : " + idStructureATraiter);
+                finalHandler.handle(new Either.Left<>(
+                        "transition année :  erreur lors de la récupération des classes dans la table " + Competences.VSCO_SCHEMA + ".periode :" +
+                                " id Etablissement : " + idStructureATraiter));
+            }
+        };
+    }
+
+    private void executeTransitionForStructure(Map<String, List<String>> classeIdsEleves, List<String> pListIdsGroupesATraiter,
+                                               Map<String, String> vMapGroupesATraiter, String idStructureATraiter,
+                                               Handler<Either<String, JsonArray>> finalHandler) {
+        // On récupère les ids des prochains devoirs pour créer la liste des identifiants de devoir nécessaires à la crétaion de devoir
+        int nbrDevoirsToCreate = pListIdsGroupesATraiter.size();
+        String queryNextVal = "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".devoirs_id_seq') AS id FROM generate_series(1," + nbrDevoirsToCreate + ")";
+        sql.raw(queryNextVal, SqlResult.validResultHandler(result -> {
+            if (result.isRight()) {
+                // On ajoute l'id du cours aux cours à créer.
+                Map<String,Long> vMapGroupesIdsDevoirATraiter = new HashMap<>();
+                JsonArray listIds = result.right().getValue();
+                for (int i = 0; i < nbrDevoirsToCreate; i++) {
+                    vMapGroupesIdsDevoirATraiter.put(pListIdsGroupesATraiter.get(i), listIds.getJsonObject(i).getLong("id"));
+                }
+                transitionAnneeStructure(classeIdsEleves,pListIdsGroupesATraiter,vMapGroupesATraiter,vMapGroupesIdsDevoirATraiter,
+                        idStructureATraiter, event -> {
+                            if (event.isRight()) {
+                                log.info("FIN : transition année id Etablissement : " + idStructureATraiter);
+                                finalHandler.handle(new Either.Right<>(new JsonArray().add(idStructureATraiter)));
+                            } else if (event.isLeft()){
+                                log.error("FIN : transition année id Etablissement ERREUR : " + idStructureATraiter +
+                                        " Erreur  : " + event.left().getValue());
+                                finalHandler.handle(new Either.Left<>(
+                                        "FIN : transition année id Etablissement ERREUR : " + idStructureATraiter));
+                            }
+                        });
             }
         }));
-    }
-
-    private void executeTransitionForStructure(Map<String, List<String>> classeIdsEleves, List<String> pListIdsGroupesATraiter, Map<String,String> vMapGroupesATraiter, String idStructureATraiter, int nbStructureATraiter, Handler<Either<String, JsonArray>> finalHandler, List<String> idStructures) {
-        // On récupère la liste des identifiants de devoir nécessaires à la crétaion de devoir
-
-        String queryNextVal = createQueryNextValDevoirs(pListIdsGroupesATraiter);
-        if(queryNextVal != null && !queryNextVal.isEmpty()){
-            sql.raw(queryNextVal.toString(), SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
-                @Override
-                public void handle(Either<String, JsonObject> result) {
-                    if (result.isRight()) {
-                        // On ajoute l'id du cours aux cours à créer.
-                        List<Long> listIdDevoirsToCreate = new ArrayList<>();
-                        for (Object value : result.right().getValue().getMap().values()) {
-                            listIdDevoirsToCreate.add((Long) value);
-                        }
-                        Map<String,Long> vMapGroupesIdsDevoirATraiter = new HashMap<String,Long>();
-                        for (int i = 0; i < pListIdsGroupesATraiter.size(); i++) {
-                            vMapGroupesIdsDevoirATraiter.put(pListIdsGroupesATraiter.get(i), listIdDevoirsToCreate.get(i));
-                        }
-                        transitionAnneeStructure(classeIdsEleves,pListIdsGroupesATraiter,vMapGroupesATraiter,vMapGroupesIdsDevoirATraiter, idStructureATraiter,new Handler<Either<String, JsonArray>>() {
-                            @Override
-                            public void handle(Either<String, JsonArray> event) {
-                                if (event.isRight()) {
-                                    log.info("FIN : transition année id Etablissement : " + idStructureATraiter);
-                                    endTransition(nbStructureATraiter, finalHandler, idStructures);
-                                } else if (event.isLeft()){
-                                    log.error("FIN : transition année id Etablissement ERREUR : " + idStructureATraiter + " Erreur  : " + event.left().getValue());
-                                    endTransition(nbStructureATraiter, finalHandler, idStructures);
-                                }
-                            }});
-                    }
-                }
-            }));
-        } else {
-            log.warn("transition année :  queryNextVal vide : id Etablissement : " + idStructureATraiter);
-            endTransition(nbStructureATraiter, finalHandler, idStructures);
-        }
-    }
-
-    /**
-     * Détermine si le traitement est fini
-     * @param nbStructureATraiter
-     * @param finalHandler
-     * @param listIdsEtablisement
-     */
-    private void endTransition(int nbStructureATraiter, Handler<Either<String, JsonArray>> finalHandler, List<String> listIdsEtablisement) {
-        incrementCounter();
-        if(getCounter() == nbStructureATraiter ) {
-            JsonArray vJsonArrayEtabTraites = new JsonArray();
-            for (int i = 0; i < listIdsEtablisement.size(); i++) {
-                vJsonArrayEtabTraites.add(listIdsEtablisement.get(i));
-            }
-
-            if (listIdsEtablisement.size() > 0){
-                log.info("FIN : transition année listIdsEtablisement : " + listIdsEtablisement.toString());
-            }
-            finalHandler.handle(new Either.Right<String,JsonArray>(vJsonArrayEtabTraites));
-        }
-    }
-
-    /**
-     * Retourne la requête qui récupère la liste des ids de devoirs à créer
-     * @param pListIdsGroupesATraiter
-     * @return
-     */
-    private String createQueryNextValDevoirs(List pListIdsGroupesATraiter) {
-        int nbrDevoirsToCreate = pListIdsGroupesATraiter.size();
-        StringBuilder queryNextVal = new StringBuilder();
-        if (nbrDevoirsToCreate > 0) {
-            queryNextVal.append("WITH ");
-            for (int i = 0; i < nbrDevoirsToCreate; i++) {
-                queryNextVal.append("r" + i + " AS ( SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".devoirs_id_seq') as id" + i + ") ");
-                if (i != nbrDevoirsToCreate - 1) {
-                    queryNextVal.append(",");
-                }
-            }
-            queryNextVal.append("SELECT * FROM ");
-            for (int i = 0; i < nbrDevoirsToCreate; i++) {
-                queryNextVal.append("r" + i);
-                if (i != nbrDevoirsToCreate - 1) {
-                    queryNextVal.append(",");
-                }
-            }
-        }
-        return queryNextVal.toString();
     }
 
     private static final String _id_user_transition_annee = "id-user-transition-annee";
@@ -440,288 +266,165 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
      * @param idStructureATraiter : id Structure en cours de traitement
      * @param handler
      */
-    private void transitionAnneeStructure(Map<String,List<String>> classeIdsEleves,  List<String> vListIdsGroupesATraiter,Map<String,String> vMapGroupesATraiter, Map<String,Long> vMapGroupesIdsDevoirATraiter ,String idStructureATraiter, Handler<Either<String, JsonArray>> handler) {
+    private void transitionAnneeStructure(Map<String,List<String>> classeIdsEleves,  List<String> vListIdsGroupesATraiter,
+                                          Map<String,String> vMapGroupesATraiter, Map<String,Long> vMapGroupesIdsDevoirATraiter,
+                                          String idStructureATraiter, Handler<Either<String, JsonArray>> handler) {
 
         log.info("DEBUT : transactions pour la transition année id Etablissement : " + idStructureATraiter);
         if (vListIdsGroupesATraiter != null && vListIdsGroupesATraiter.size()>0) {
-            log.info("INFO : transactions pour la transition année vListIdsGroupesATraiter  : " + vListIdsGroupesATraiter.toString());
+            //BCP de logs, illisible
+            //log.info("INFO : transactions pour la transition année vListIdsGroupesATraiter  : " + vListIdsGroupesATraiter.toString());
         } else {
             log.warn("WARN : transactions pour la transition année vListIdsGroupesATraiter : Aucun groupe ");
         }
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
-
+        // normalement inutile car changement de pré transition
         // Sauvegarde BDD : Si le schéma n'existe pas : sera fait à part
         //        String queryCloneNotes ="SELECT notes.clone_schema('notes','notes_2017_2018')";
         //        statements.add(new JsonObject().put("statement", queryCloneNotes).put("values", values).put("action", "prepared"));
         //        String queryCloneVieSCo ="SELECT notes.clone_schema('viesco','viesco_2017_2018')";
         //        statements.add(new JsonObject().put("statement", queryCloneVieSCo).put("values", values).put("action", "prepared"));
 
-        JsonArray valuesForDeletion = new fr.wseduc.webutils.collections.JsonArray();
-        for (String idGroupe:vListIdsGroupesATraiter) {
-            valuesForDeletion.add(idGroupe);
-        }
-        valuesForDeletion.add(idStructureATraiter);
-
-        // Suppresssion : appreciation_matiere_periode
-        supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_CLASSE,
-                vListIdsGroupesATraiter, statements, valuesForDeletion ,
-                Competences.APPRECIATION_MATIERE_PERIODE_TABLE, Competences.ID_PERIODE);
-
-        // Suppresssion : element_programme
-        supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_CLASSE,
-                vListIdsGroupesATraiter, statements, valuesForDeletion ,
-                Competences.ELEMENT_PROGRAMME_TABLE,Competences.ID_PERIODE);
-
-        // Suppresssion : moyenne_finale
-        supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA,Competences.ID_CLASSE,
-                vListIdsGroupesATraiter, statements, valuesForDeletion ,
-                Competences.MOYENNE_FINALE_TABLE, Competences.ID_PERIODE);
-
-        // Suppresssion : appreciation_classe
-        supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA,Competences.ID_CLASSE,
-                vListIdsGroupesATraiter, statements, valuesForDeletion ,
-                Competences.APPRECIATION_CLASSE_TABLE,Competences.ID_PERIODE);
-
         // Suppresssion : Conservation des  compétences max par l'élève, suppresion des devoirs
-        manageDevoirsAndCompetences(idStructureATraiter, vListIdsGroupesATraiter, vMapGroupesATraiter, vMapGroupesIdsDevoirATraiter, classeIdsEleves, statements);
+        manageDevoirsAndCompetences(idStructureATraiter, vMapGroupesATraiter, vMapGroupesIdsDevoirATraiter,
+                classeIdsEleves, statements);
 
-        //Suppresion des tables avec id_eleve
-        for(Map.Entry<String,List<String>> idClassIdsEleve : classeIdsEleves.entrySet()){
-            List<String> idsEleve = idClassIdsEleve.getValue();
-            if(!idsEleve.isEmpty()){
-                JsonArray valuesForSuppressionIdEleve = new fr.wseduc.webutils.collections.JsonArray();
-                for(String idEleve: idsEleve){
-                    valuesForSuppressionIdEleve.add(idEleve);
-                }
-                valuesForSuppressionIdEleve.add(idStructureATraiter);
-
-                supressionTransitionCheckPeriode(Competences.VSCO_SCHEMA, Competences.ID_ELEVE,
-                        idsEleve,statements,valuesForSuppressionIdEleve,
-                        Competences.VSCO_ABSENCES_ET_RETARDS, Competences.ID_PERIODE);
-
-                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
-                        idsEleve,statements, valuesForSuppressionIdEleve,
-                        Competences.APPRECIATION_CPE_BILAN_PERIODIQUE, Competences.ID_PERIODE);
-
-                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
-                        idsEleve,statements,valuesForSuppressionIdEleve,
-                        Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE, Competences.ID_PERIODE);
-
-                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
-                        idsEleve,statements,valuesForSuppressionIdEleve,
-                        Competences.COMPETENCE_NIVEAU_FINAL, Competences.ID_PERIODE);
-
-                suppressionTransitionParamIdEleve(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
-                        idsEleve,statements,valuesForSuppressionIdEleve,
-                        Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL);
-
-                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
-                        idsEleve, statements, valuesForSuppressionIdEleve,
-                        Competences.POSITIONNEMENT, Competences.ID_PERIODE);
-
-                //Suppression rel_groupe_appreciation_elt_eleve
-                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE ,
-                        idsEleve, statements, valuesForSuppressionIdEleve ,
-                        Competences.ELEVES_IGNORES_LSU_TABLE, Competences.ID_PERIODE);
-
-                //Suppression élèves ignorés LSU
-                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
-                        idsEleve,statements,valuesForSuppressionIdEleve,
-                        Competences.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE, Competences.ID_PERIODE);
-
-            }
-        }
-
-        JsonArray valuesIdEtab = new fr.wseduc.webutils.collections.JsonArray();
-        valuesIdEtab.add(idStructureATraiter);
-        suppressionTransitionParamIdStructure(statements,valuesIdEtab,
-                Competences.THEMATIQUE_BILAN_PERIODIQUE_TABLE, Competences.COMPETENCES_SCHEMA);
-        //suppression elt_bilan_periodique after appreciation_elt_bilan_periodique_classe et eleve
-        suppressionTransitionParamIdStructure(statements,valuesIdEtab,
-                Competences.ELT_BILAN_PERIODIQUE_TABLE, Competences.COMPETENCES_SCHEMA);
-
-        suppressionTransitionParamIdStructure(statements, valuesIdEtab,
-                Competences.SYNTHESE_BILAN_PERIODIQUE_TABLE,Competences.COMPETENCES_SCHEMA);
-
-        suppressionTransitionParamIdStructure(statements, valuesIdEtab,
-                Competences.AVIS_CONSEIL_DE_CLASSE_TABLE, Competences.COMPETENCES_SCHEMA);
-
-        suppressionTransitionParamIdStructure(statements, valuesIdEtab,
-                Competences.AVIS_CONSEIL_ORIENTATION_TABLE, Competences.COMPETENCES_SCHEMA);
-
-        // Suppresion des remplacants, notes.users, notes.members, notes.groups, rel_group_cycle, périodes
-        deleteUsersGroups(idStructureATraiter, statements);
+        // Suppresion des notes.users, rel_group_cycle
+        deleteUsersGroups(statements);
 
         // Transition pour l'établissement effectué
         JsonArray valuesTransition = new fr.wseduc.webutils.collections.JsonArray();
         valuesTransition.add(idStructureATraiter);
-        String queryInsertTransition ="INSERT INTO notes.transition(id_etablissement) VALUES (?)";
+        String queryInsertTransition ="INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".transition(id_etablissement) VALUES (?)";
         statements.add(new JsonObject().put("statement", queryInsertTransition).put("values", valuesTransition).put("action", "prepared"));
 
-        Sql.getInstance().transaction(statements,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
+        Sql.getInstance().transaction(statements,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                SqlResult.validResultHandler(handler));
 
         log.info("FIN : transactions pour la transition année id Etablissement : " + idStructureATraiter);
     }
 
     /**
-     * Suppressions : remplacants, members, groups et relations groupes d'enseignement - cycle, périodes
-     * @param idStructureATraiter
+     * Suppressions : users et relations groupes d'enseignement - cycle
      * @param statements
      */
-    private void deleteUsersGroups(String idStructureATraiter, JsonArray statements) {
-        JsonArray values;
+    private void deleteUsersGroups(JsonArray statements) {
+        JsonArray values = new JsonArray();
 
-        // Suppresion des remplacants
-        values = new fr.wseduc.webutils.collections.JsonArray();
-        values.add(idStructureATraiter);
-        suppressionTransitionParamIdStructure(statements,values, "rel_professeurs_remplacants",
-                Competences.COMPETENCES_SCHEMA);
-
-        // Suppresion des members, groups et relations groupes d'enseignement - cycle
-        values = new fr.wseduc.webutils.collections.JsonArray();
-        String queryMembers = "DELETE FROM notes.members";
-        statements.add(new JsonObject().put("statement", queryMembers).put("values", values).put("action", "prepared"));
-
-        String queryGroups = "DELETE FROM notes.groups";
-        statements.add(new JsonObject().put("statement", queryGroups).put("values", values).put("action", "prepared"));
-
-        String queryRelGroupeType= "DELETE FROM notes.rel_groupe_cycle WHERE type_groupe > 0";
+        // Suppresion des relations groupes d'enseignement - cycle
+        String queryRelGroupeType= "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle WHERE type_groupe > 0";
         statements.add(new JsonObject().put("statement", queryRelGroupeType).put("values", values).put("action", "prepared"));
 
-        // Suppresion des members, groups et relations groupes d'enseignement - cycle
+        // Suppresion des users
         values = new fr.wseduc.webutils.collections.JsonArray();
         String queryUsers = "" +
-                "DELETE FROM notes.users " +
+                "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".users " +
                 "WHERE" +
                 " NOT EXISTS ( " +
                 "    SELECT 1 " +
-                "    FROM notes.devoirs " +
+                "    FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
                 "    WHERE " +
                 "     devoirs.owner = users.id " +
                 " )";
         statements.add(new JsonObject().put("statement", queryUsers).put("values", values).put("action", "prepared"));
 
-        // Suppresion des remplacants
-        values = new fr.wseduc.webutils.collections.JsonArray();
-        values.add(idStructureATraiter);
-        suppressionTransitionParamIdStructure(statements, values,"periode", Competences.VSCO_SCHEMA);
     }
 
     /**
      * Conservation des  compétences max par l'élève, suppresion des devoirs, dispenses domaines
      * @param idStructureATraiter
-     * @param vListIdsGroupesATraiter
      * @param vMapGroupesATraiter
      * @param vMapGroupesIdsDevoirATraiter
      * @param classeIdsEleves
      * @param statements
      */
-    private void manageDevoirsAndCompetences( String idStructureATraiter, List<String> vListIdsGroupesATraiter, Map<String, String> vMapGroupesATraiter, Map<String, Long> vMapGroupesIdsDevoirATraiter, Map<String, List<String>> classeIdsEleves, JsonArray statements) {
+    private void manageDevoirsAndCompetences( String idStructureATraiter, Map<String,String> vMapGroupesATraiter,
+                                              Map<String, Long> vMapGroupesIdsDevoirATraiter, Map<String,List<String>> classeIdsEleves,
+                                              JsonArray statements) {
         JsonArray values;// Ajout de l'utilisateur pour la transition année
-        String username = I18n.getInstance().translate(key_username_user_transition_annee.toString(),I18n.DEFAULT_DOMAIN, Locale.FRANCE);
-        String classname = I18n.getInstance().translate(key_libelle_classe_transition_annee.toString(),I18n.DEFAULT_DOMAIN, Locale.FRANCE);
+        String username = I18n.getInstance().translate(key_username_user_transition_annee,I18n.DEFAULT_DOMAIN, Locale.FRANCE);
+        String classname = I18n.getInstance().translate(key_libelle_classe_transition_annee,I18n.DEFAULT_DOMAIN, Locale.FRANCE);
         values = new fr.wseduc.webutils.collections.JsonArray();
         values.add(_id_user_transition_annee).add(username).add(username);
-        String query = "INSERT INTO notes.users(id, username) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET username = ?";
+        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".users(id, username) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET username = ?";
         statements.add(new JsonObject().put("statement", query).put("values", values).put("action", "prepared"));
 
-        for (Map.Entry<String, String> entry : vMapGroupesATraiter.entrySet()){
-            String idClasse = entry.getKey();
+        if(vMapGroupesATraiter.size() > 0) {
             // Création des évaluations libre par classe de l'établissement
             values = new fr.wseduc.webutils.collections.JsonArray();
-            values.add(true).add(idStructureATraiter).add(idStructureATraiter).add(idClasse);
-            String queryInsertDevoir = "INSERT INTO " +
-                    "  notes.devoirs(id,owner, name, id_type, id_etablissement, diviseur, ramener_sur, date_publication," +
-                    " is_evaluated, id_etat, percent, apprec_visible, eval_lib_historise,id_periode, date) " +
-                    "  (" +
-                    "   SELECT " + vMapGroupesIdsDevoirATraiter.get(idClasse) + ",'" + _id_user_transition_annee + "','" +
-                    classname + entry.getValue() + "', type.id,periode.id_etablissement, 20, false, current_date, false, 1, 0, false, true , MAX(periode.id_type),MAX(periode.date_fin_saisie) " +
-                    "   FROM notes.type , viesco.periode " +
-                    "    WHERE " +
-                    "     type.default_type = ? " +
-                    "     AND type.id_etablissement = ? " +
-                    "     AND periode.id_etablissement = ? " +
-                    "     AND periode.id_classe = ? " +
-                    "    GROUP BY periode.id_etablissement,type.id" +
-                    "  )";
+            values.add(true).add(idStructureATraiter).add(idStructureATraiter);
+            String queryInsertDevoir = "WITH temp_periode AS ( " +
+                    "SELECT type.id as id_type, MAX(periode.id_type) as max_periode_id_type, MAX(periode.date_fin_saisie) as max_periode_date_fin_saisie," +
+                    "periode.id_classe as periode_id_classe " +
+                    "FROM " + Competences.COMPETENCES_SCHEMA + ".type , " + Competences.VSCO_SCHEMA + ".periode WHERE type.default_type = ? AND type.id_etablissement = ? AND periode.id_etablissement = ? " +
+                    "GROUP BY periode.id_etablissement,type.id, periode.id_classe ) " +
+                    "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".devoirs(id,owner, name, id_type, id_etablissement, diviseur, ramener_sur, date_publication," +
+                    " is_evaluated, id_etat, percent, apprec_visible, eval_lib_historise,id_periode, date) ";
+
+            for (Map.Entry<String, String> entry : vMapGroupesATraiter.entrySet()) {
+                String idClasse = entry.getKey();
+                values.add(idClasse);
+                queryInsertDevoir += "  (" +
+                        "   SELECT " + vMapGroupesIdsDevoirATraiter.get(idClasse) + ",'" + _id_user_transition_annee + "','" +
+                        classname + entry.getValue() + "', temp_periode.id_type,'" + idStructureATraiter + "', 20, false, current_date, " +
+                        "false, 1, 0, false, true , temp_periode.max_periode_id_type,temp_periode.max_periode_date_fin_saisie FROM temp_periode " +
+                        "WHERE temp_periode.periode_id_classe = ? ) UNION ALL";
+            }
+
+            queryInsertDevoir = queryInsertDevoir.substring(0,queryInsertDevoir.length()-10);
 
             statements.add(new JsonObject()
                     .put("statement", queryInsertDevoir)
                     .put("values", values)
                     .put("action", "prepared"));
+        }
 
-
+        for (Map.Entry<String, String> entry : vMapGroupesATraiter.entrySet()) {
+            String idClasse = entry.getKey();
             List<String> vListEleves = classeIdsEleves.get(idClasse);
             if(null != vListEleves && vListEleves.size() > 0) {
                 JsonArray valuesMaxCompetence = new fr.wseduc.webutils.collections.JsonArray();
                 for (String idEleve : vListEleves) {
                     valuesMaxCompetence.add(idEleve);
                 }
-                for (String idEleve : vListEleves) {
-                    valuesMaxCompetence.add(idEleve);
-                }
 
-                String queryMaxCompNoteByPeriode = "(SELECT competences_notes.id_competence, " +
-                        "MAX(competences_notes.evaluation) AS max_comp, competences_notes.id_eleve, devoirs.id_periode "+
-                        "FROM notes.competences_notes " +
-                        "INNER JOIN notes.devoirs ON devoirs.id = competences_notes.id_devoir " +
+                String queryMaxCompNoteNiveauFinalByPeriode = "(SELECT competences_notes.id_competence, " +
+                        "competences_notes.id_eleve, devoirs.id_periode, CASE " +
 
-                        "LEFT JOIN notes.competence_niveau_final " +
+                        "WHEN competence_niveau_final.id_eleve IS NULL AND competence_niveau_final_annuel.id_eleve IS NULL" +
+                        "   THEN MAX(competences_notes.evaluation) " +
+
+                        "WHEN competence_niveau_final.id_eleve IS NOT NULL AND competence_niveau_final_annuel.id_eleve IS NULL" +
+                        "   THEN MAX(competence_niveau_final.niveau_final) " +
+
+                        "ELSE MAX(competence_niveau_final_annuel.niveau_final) " +
+
+                        "END AS max_comp "+
+                        "FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
+                        "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = competences_notes.id_devoir " +
+
+                        "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".competence_niveau_final " +
                         "ON devoirs.id_periode = competence_niveau_final.id_periode " +
                         "AND competences_notes.id_competence = competence_niveau_final.id_competence " +
                         "AND competences_notes.id_eleve = competence_niveau_final.id_eleve " +
 
-                        "LEFT JOIN notes.competence_niveau_final_annuel " +
+                        "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".competence_niveau_final_annuel " +
                         "ON competences_notes.id_competence = competence_niveau_final_annuel.id_competence " +
                         "AND competences_notes.id_eleve = competence_niveau_final_annuel.id_eleve " +
 
                         "WHERE competences_notes.owner != '" + _id_user_transition_annee +
                         "' AND competences_notes.id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
-                        " AND competence_niveau_final.id_eleve IS NULL " +
-                        " AND competence_niveau_final_annuel.id_eleve IS NULL " +
-                        "GROUP BY competences_notes.id_competence, competences_notes.id_eleve, devoirs.id_periode)";
-
-                String queryMaxNiveauFinalByPeriode = "(SELECT competence_niveau_final.id_competence,  " +
-                        "MAX(competence_niveau_final.niveau_final) AS max_comp ,competence_niveau_final.id_eleve, " +
-                        "competence_niveau_final.id_periode FROM notes.competences_notes " +
-                        "INNER JOIN notes.devoirs ON devoirs.id = competences_notes.id_devoir " +
-
-                        "INNER JOIN notes.competence_niveau_final " +
-                        "ON devoirs.id_periode = competence_niveau_final.id_periode " +
-                        "AND competences_notes.id_competence = competence_niveau_final.id_competence "+
-                        "AND competences_notes.id_eleve = competence_niveau_final.id_eleve " +
-
-                        "LEFT JOIN notes.competence_niveau_final_annuel " +
-                        "ON competences_notes.id_competence = competence_niveau_final_annuel.id_competence " +
-                        "AND competences_notes.id_eleve = competence_niveau_final_annuel.id_eleve " +
-
-                        "WHERE competences_notes.owner != '" + _id_user_transition_annee +
-                        "' AND competences_notes.id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
-                        " AND competence_niveau_final_annuel.id_eleve IS NULL " +
-                        " GROUP BY competence_niveau_final.id_competence, competence_niveau_final.id_eleve, competence_niveau_final.id_periode)";
-
-                String queryMaxNiveauFinalAnnuel = "(SELECT competence_niveau_final_annuel.id_competence,  " +
-                        "MAX(competence_niveau_final_annuel.niveau_final) AS max_comp ,competence_niveau_final_annuel.id_eleve " +
-                        "FROM notes.competences_notes " +
-                        "INNER JOIN notes.devoirs ON devoirs.id = competences_notes.id_devoir " +
-                        "INNER JOIN notes.competence_niveau_final_annuel " +
-                        "ON competences_notes.id_competence = competence_niveau_final_annuel.id_competence "+
-                        "AND competences_notes.id_eleve = competence_niveau_final_annuel.id_eleve " +
-                        "WHERE competences_notes.owner != '" + _id_user_transition_annee +
-                        "' AND competences_notes.id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
-                        " GROUP BY competence_niveau_final_annuel.id_competence, competence_niveau_final_annuel.id_eleve)";
+                        "GROUP BY competences_notes.id_competence, competences_notes.id_eleve, competence_niveau_final.id_eleve," +
+                        "competence_niveau_final_annuel.id_eleve, devoirs.id_periode)";
 
                 // Ajout du max des compétences ou du niveau final pour chaque élève
+                //Cette requête fait peur
                 String queryInsertMaxCompetenceNoteG = "" +
-                        "INSERT INTO notes.competences_notes(id, id_devoir, id_competence, evaluation, owner, id_eleve) " +
-                        "(" +
-                        "SELECT nextval('notes.competences_notes_id_seq'), " + vMapGroupesIdsDevoirATraiter.get(idClasse) +
-                        ", id_competence, MAX(max_comp), '" + _id_user_transition_annee + "',id_eleve " +
-                        "FROM (" + queryMaxCompNoteByPeriode +
-                        " UNION ALL" + queryMaxNiveauFinalByPeriode +
-                        " UNION ALL" + queryMaxNiveauFinalAnnuel +
-                        ") AS tmax GROUP BY id_competence, id_eleve )";
+                        "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".competences_notes(id_devoir, id_competence, evaluation, owner, id_eleve) " +
+                        "( SELECT " + vMapGroupesIdsDevoirATraiter.get(idClasse) +
+                        ", id_competence, MAX(max_comp), '" + _id_user_transition_annee + "', id_eleve " +
+                        "FROM "+queryMaxCompNoteNiveauFinalByPeriode+" AS tmax GROUP BY id_competence, id_eleve )";
 
                 statements.add(new JsonObject()
                         .put("statement", queryInsertMaxCompetenceNoteG)
@@ -732,7 +435,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 String querySuppressionDispenseDomaine = "" +
 
                         "  DELETE " +
-                        "  FROM notes.dispense_domaine_eleve" +
+                        "  FROM " + Competences.COMPETENCES_SCHEMA + ".dispense_domaine_eleve" +
                         "  WHERE " +
                         "   id_eleve IN " + Sql.listPrepared(vListEleves.toArray());
                 JsonArray valuesDeleteDispenseEleve = new fr.wseduc.webutils.collections.JsonArray();
@@ -749,12 +452,11 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         // Création des compétences par devoir (historisé)
         values = new fr.wseduc.webutils.collections.JsonArray();
         values.add(idStructureATraiter);
-        String queryInsertCompetenceDevoir = "" +
-                "INSERT INTO notes.competences_devoirs (id, id_devoir, id_competence, index) " +
+        String queryInsertCompetenceDevoir = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".competences_devoirs (id_devoir, id_competence, index) " +
                 "( " +
-                "    SELECT  nextval('notes.competences_devoirs_id_seq'),competences_notes.id_devoir,competences_notes.id_competence,0" +
-                "    FROM notes.competences_notes " +
-                "           INNER JOIN notes.devoirs ON competences_notes.id_devoir = devoirs.id" +
+                "    SELECT competences_notes.id_devoir,competences_notes.id_competence,0" +
+                "    FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
+                "           INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON competences_notes.id_devoir = devoirs.id" +
                 "    WHERE " +
                 "           devoirs.eval_lib_historise = true" +
                 "           AND id_etablissement = ? " +
@@ -768,7 +470,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         // Suppression devoir non historisé
         String queryDeleteDevoirNonHistorise = "" +
-                "DELETE FROM notes.devoirs  " +
+                "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs  " +
                 "WHERE " +
                 " eval_lib_historise = false " +
                 " AND id_etablissement = ? ";
@@ -779,42 +481,331 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put("action", "prepared"));
     }
 
-    private void supressionTransitionCheckPeriode(String schema, String idGroupOrIdClassOrIdEleve, List<String> idGroupOrIdELeve, JsonArray statements,
-                                                  JsonArray values, String table, String idPeriode) {
-        String query =
-                " DELETE FROM "+ schema +"." + table +
-                        " WHERE  " + idGroupOrIdClassOrIdEleve + " IN " + Sql.listPrepared(idGroupOrIdELeve.toArray()) +
-                        " AND EXISTS " +
-                        "   ( " +
-                        "     SELECT 1 " +
-                        "     FROM viesco.periode " +
-                        "     WHERE  " +
-                        "      periode.id_type = " + table +"." + idPeriode +
-                        "      AND periode.id_etablissement = ? " +
-                        "   )";
+    @Override
+    public void clearTablePostTransition(Handler<Either<String, JsonArray>> handler) {
+        String query = "TRUNCATE TABLE " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATIONS_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CLASSE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CPE_BILAN_PERIODIQUE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_MATIERE_PERIODE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_DE_CLASSE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_ORIENTATION_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.BULLETIN_PARAMETERS_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.ELEMENT_PROGRAMME_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.ELEVES_IGNORES_LSU_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.ELT_BILAN_PERIODIQUE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.MOYENNE_FINALE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.POSITIONNEMENT + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.THEMATIQUE_BILAN_PERIODIQUE_TABLE + ", " +
+                Competences.VSCO_SCHEMA + "." + Competences.VSCO_ABSENCES_ET_RETARDS + ", " +
+                Competences.VSCO_SCHEMA + "." + Competences.VSCO_PERIODE + ", " +
+                Competences.VSCO_SCHEMA + "." + Competences.VSCO_SERVICES_TABLE;
+        Sql.getInstance().prepared(query, new JsonArray(),new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
+                getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void cloneSchemas(final String currentYear, final Handler<Either<String, JsonObject>> handler) {
+        JsonArray statements = createStatements(currentYear);
+
+        Sql.getInstance().transaction(statements, new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
+                getInteger("timeout-transaction") * 1000L), event -> {
+            JsonObject result = event.body();
+            if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
+                handler.handle(new Either.Right<>(result));
+            } else {
+                handler.handle(new Either.Left<>(result.getString("message")));
+            }
+        });
+    }
+
+    public void cleanTableSql(Handler<Either<String, JsonArray>> handler) {
+        JsonArray emptyParams = new JsonArray();
+        SqlStatementsBuilder statements = new SqlStatementsBuilder();
+
+        statements.prepared(statementDeleteViescoRelationStructuresPersonne(), emptyParams)
+                .prepared(statementDeleteViescoRelationGroupPersonne(), emptyParams)
+                .prepared(statementDeleteViescoPersonne(), emptyParams)
+                .prepared(statementDeleteMatchClassIdTransition(), emptyParams)
+                .prepared(statementDeleteNoteTransition(), emptyParams);
+
+        Sql.getInstance().transaction(statements.build(),
+                SqlResult.validResultHandler(handler)
+        );
+    }
+
+    private String statementDeleteViescoRelationStructuresPersonne() {
+        return prepareDelete(VSCO_SCHEMA + ".rel_structures_personne_supp");
+    }
+
+    private String statementDeleteViescoRelationGroupPersonne() {
+        return prepareDelete(VSCO_SCHEMA + ".rel_groupes_personne_supp");
+    }
+
+    private String statementDeleteViescoPersonne() {
+        return prepareDelete(VSCO_SCHEMA + ".personnes_supp");
+    }
+
+    private String statementDeleteNoteTransition() {
+        return prepareDelete(COMPETENCES_SCHEMA + ".transition");
+    }
+
+    private String statementDeleteMatchClassIdTransition() {
+        return prepareDelete(COMPETENCES_SCHEMA + ".match_class_id_transition");
+    }
+
+    private String prepareDelete(String schemaAndTable) {
+        return "DELETE FROM " + schemaAndTable + ";";
+    }
+
+    @Override
+    public JsonArray createStatements(final String currentYear){
+        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
         statements.add(new JsonObject()
-                .put("statement", query)
+                .put("statement", "ALTER SCHEMA " + Competences.COMPETENCES_SCHEMA + " RENAME TO " + Competences.COMPETENCES_SCHEMA + "_" + currentYear)
+                .put("values", new fr.wseduc.webutils.collections.JsonArray())
+                .put("action", "prepared"));
+
+
+        StringBuilder queryForClone = new StringBuilder()
+                .append("SELECT clone_schema_with_sequences(?::text, ?::text, TRUE)");
+
+        JsonArray valuesForCloneNotes = new fr.wseduc.webutils.collections.JsonArray()
+                .add(Competences.COMPETENCES_SCHEMA + "_" + currentYear).add(Competences.COMPETENCES_SCHEMA);
+
+        statements.add(new JsonObject()
+                .put("statement", queryForClone.toString())
+                .put("values", valuesForCloneNotes)
+                .put("action", "prepared"));
+
+        statements.add(new JsonObject()
+                .put("statement", "ALTER SCHEMA " + Competences.VSCO_SCHEMA + " RENAME TO " + Competences.VSCO_SCHEMA + "_" + currentYear)
+                .put("values", new fr.wseduc.webutils.collections.JsonArray())
+                .put("action", "prepared"));
+
+
+        JsonArray valuesForCloneVieSco = new fr.wseduc.webutils.collections.JsonArray()
+                .add(Competences.VSCO_SCHEMA + "_" + currentYear).add(Competences.VSCO_SCHEMA);
+
+        statements.add(new JsonObject()
+                .put("statement", queryForClone.toString())
+                .put("values", valuesForCloneVieSco)
+                .put("action", "prepared"));
+
+        return statements;
+    }
+
+    public void updateSqlMatchClassIdTransition( Handler<Either<String, JsonArray>> handler){
+        getIdGroupInSql(eventIdGroups -> {
+            if (eventIdGroups.isLeft()) {
+                handler.handle(new Either.Left<>("Error in getIdGroupInSql function: " + eventIdGroups.left().getValue()));
+                return;
+            }
+            List<String> idClasses = eventIdGroups.right().getValue();
+            getExternalIdInNeo4j(idClasses, eventIdClassesAndExternals -> {
+                if (eventIdClassesAndExternals.isLeft()) {
+                    handler.handle(new Either.Left<>("Error in getExternalIdInNeo4j function: " + eventIdGroups.left().getValue()));
+                    return;
+                }
+                JsonArray idClassesAndExternals = eventIdClassesAndExternals.right().getValue();
+                insertSqlMatchClassIdTransition(idClassesAndExternals, eventIdClassAndExternal -> {
+                    if (eventIdClassAndExternal.isLeft()) {
+                        handler.handle(new Either.Left<>("Error in insertSqlMatchClassIdTransition function: " + eventIdGroups.left().getValue()));
+                        return;
+                    }
+                    handler.handle(new Either.Right<>(eventIdClassAndExternal.right().getValue()));
+                });
+            });
+        });
+    }
+
+    private void getIdGroupInSql(Handler<Either<String, List<String>>> handler) {
+        StringBuilder query = new StringBuilder()
+                .append("SELECT ")
+                .append("rgc.id_groupe AS id_group ")
+                .append("FROM ")
+                .append(COMPETENCES_SCHEMA).append(".rel_groupe_cycle AS rgc ")
+                .append("WHERE ")
+                .append("rgc.type_groupe = 0;");
+
+        Sql.getInstance()
+                .prepared(query.toString(), new JsonArray(), validResultHandler(eventIdGroups -> {
+                    if (eventIdGroups.isLeft()) {
+                        handler.handle(new Either.Left<>("Error in getIdGroupInSql function " + eventIdGroups.left().getValue()));
+                    }
+                    try {
+                        JsonArray idGroupsDirty = eventIdGroups.right().getValue();
+                        List<String> idGroups = idGroupsDirty.stream()
+                                .map(t -> ((JsonObject) t).getString("id_group"))
+                                .collect(Collectors.toList());
+                        handler.handle(new Either.Right<>(idGroups));
+                    } catch (Exception errorMapping) {
+                        handler.handle(new Either.Left<>("Error in getIdGroupInSql function, errorMapping: " + errorMapping.toString()));
+                    }
+                }));
+    }
+
+    private void getExternalIdInNeo4j(List<String> idClasses, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder()
+                .append("MATCH (class:Class) ")
+                .append("WHERE class.id IN {idClasses} ")
+                .append("RETURN class.id AS idClass, class.externalId AS externalId");
+
+        neo4j.execute(
+                query.toString(),
+                new JsonObject().put("idClasses",
+                        idClasses),
+                Neo4jResult.validResultHandler(handler));
+    }
+
+    private void insertSqlMatchClassIdTransition(
+            JsonArray idClassesAndExternals,
+            Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray();
+        StringBuilder preparedQueryInsert = new StringBuilder();
+
+        for (int i = 0; i < idClassesAndExternals.size(); i++) {
+            JsonObject idClassAndExternal = idClassesAndExternals.getJsonObject(i);
+
+            preparedQueryInsert.append("(?, ?)");
+            if (i < idClassesAndExternals.size() - 1) preparedQueryInsert.append(", ");
+
+            params.add(idClassAndExternal.getString("idClass")) // First id class
+                    .add(idClassAndExternal.getString("externalId")); // Second external id
+        }
+
+        StringBuilder query = new StringBuilder()
+                .append("INSERT INTO ")
+                .append(COMPETENCES_SCHEMA).append(".match_class_id_transition ")
+                .append("(old_class_id, external_id) ") // First id class and second external id
+                .append("VALUES ")
+                .append(preparedQueryInsert)
+                .append(";");
+
+        Sql.getInstance()
+                .prepared(query.toString(), params, validResultHandler(handler));
+    }
+
+    public void getOldIdClassTransition(final Handler<Either<String,JsonArray>> handler) {
+        String query = "SELECT external_id FROM " + Competences.COMPETENCES_SCHEMA + ".match_class_id_transition";
+
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        sql.prepared(query, values, validResultHandler(handler));
+    }
+
+    public void matchExternalId(JsonArray externalIdsClasses, final Handler<Either<String,JsonArray>> handler) {
+        String query = "MATCH (c:Class) WHERE c.externalId IN {idsClasses} return c.id as id, c.externalId as externalId";
+
+        JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
+        for (int i = 0; i < externalIdsClasses.size(); i++) {
+            JsonObject o = externalIdsClasses.getJsonObject(i);
+            if (o.containsKey("external_id")) ids.add(o.getString("external_id"));
+        }
+
+        neo4j.execute(query, new JsonObject().put("idsClasses", ids), event -> {
+            JsonObject body = event.body();
+
+            if(body.getString("status").equals("ok")) {
+                JsonArray classesGetFromNeo = body.getJsonArray("result");
+                handler.handle(new Either.Right<String, JsonArray>(classesGetFromNeo));
+            } else {
+                String message = body.getString("message") + " -> PB while getting classes from Neo";
+                log.error(message);
+                handler.handle(new Either.Left<String, JsonArray>(message));
+            }
+        });
+    }
+
+    public void getSubjectsNeo(final Handler<Either<String,JsonArray>> handler) {
+        String query = "MATCH (s:Subject) RETURN s.id as id";
+
+        neo4j.execute(query, new JsonObject(), event -> {
+            JsonObject body = event.body();
+            if(body.getString("status").equals("ok")) {
+                JsonArray subjectsGetFromNeo = body.getJsonArray("result");
+                handler.handle(new Either.Right<String, JsonArray>(subjectsGetFromNeo));
+            } else {
+                String message = body.getString("message") + " -> PB while getting subjects from Neo";
+                log.error(message);
+                handler.handle(new Either.Left<String, JsonArray>(message));
+            }
+        });
+    }
+
+    public void supprimerSousMatiereNonRattaches(JsonArray matieres, final Handler<Either<String,JsonArray>> handler) {
+        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+
+        StringBuilder query = new StringBuilder();
+
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        for (int i = 0; i < matieres.size(); i++) {
+            String id = matieres.getJsonObject(i).getString("id");
+            if(id != null)
+                values.add(id);
+        }
+
+        query.append("DELETE FROM ").append(Competences.VSCO_SCHEMA).append(".").append(Competences.VSCO_SOUS_MATIERE_TABLE)
+                .append(" WHERE id_matiere NOT IN ").append(Sql.listPrepared(matieres.getList()));
+
+        statements.add(new JsonObject()
+                .put("statement", query.toString())
+                .put("values", values)
+                .put("action", "prepared"));
+
+        Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
+    }
+
+
+    private void updateNewIdClassTransition(JsonArray statements, JsonArray classesFromNeo) {
+        StringBuilder query = new StringBuilder();
+
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        for (int i = 0; i < classesFromNeo.size(); i++) {
+            JsonObject o = classesFromNeo.getJsonObject(i);
+            String id = o.getString("id");
+            String externalId = o.getString("externalId");
+
+            if(id != null && externalId != null) {
+                query.append("UPDATE " + Competences.COMPETENCES_SCHEMA + ".match_class_id_transition " +
+                        "SET new_class_id = ? WHERE external_id = ?;");
+                values.add(id).add(externalId);
+            }
+        }
+        statements.add(new JsonObject()
+                .put("statement", query.toString())
                 .put("values", values)
                 .put("action", "prepared"));
     }
 
-    private void suppressionTransitionParamIdEleve(String schema, String idGroupOrIdClassOrIdEleve, List<String> idGroupOrIdELeve,
-                                                   JsonArray statements, JsonArray values, String table) {
-        String query = " DELETE FROM " + schema + "." + table +
-                " WHERE  " + idGroupOrIdClassOrIdEleve + " IN " + Sql.listPrepared(idGroupOrIdELeve.toArray());
+    private void updateRelationGroupeCycle(JsonArray statements) {
+        String query = "UPDATE " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle r " +
+                "SET id_groupe = m.new_class_id " +
+                "FROM " + Competences.COMPETENCES_SCHEMA + ".match_class_id_transition m " +
+                "WHERE m.old_class_id = r.id_groupe;";
 
         statements.add(new JsonObject()
                 .put("statement", query)
-                .put("values", values)
+                .put("values", new fr.wseduc.webutils.collections.JsonArray())
                 .put("action", "prepared"));
     }
 
-    private void suppressionTransitionParamIdStructure( JsonArray statements, JsonArray values, String table, String schema){
-        String query = "DELETE FROM " + schema + "." + table + " WHERE id_etablissement = ?";
-        statements.add(new JsonObject()
-                .put("statement", query).put("values",values)
-                .put("action", "prepared"));
+    public void updateTablesTransition(JsonArray classesFromNeo, final Handler<Either<String,JsonArray>> handler) {
+        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
+        updateNewIdClassTransition(statements, classesFromNeo);
+        updateRelationGroupeCycle(statements);
+
+        Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
     }
 }

@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 
+import fr.openent.competences.Competences;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -60,21 +61,31 @@ public class CompetenceRepositoryEvents implements RepositoryEvents {
         log.info("[CompetenceRepositoryEvents] : delete users event is not implemented");
     }
 
+    //Vrai transition
+
+    /**
+     * vertx.eventBus().publish(Feeder.USER_REPOSITORY, new JsonObject()
+     * 				.put("action", "transition")
+     * 				.put("structure", structure));
+     * @param structure
+     */
     @Override
     public void transition(JsonObject structure) {
-        String idStructure = structure.getString("id");
-        if(null == idStructure
-                || !structure.containsKey("id")){
-            log.error("[CompetenceRepositoryEvents] : An error occured when managing transition annee, cannot find id structure");
-        } else {
-            transitionService.transitionAnneeStructure(this.eb,structure, new Handler<Either<String, JsonArray>>() {
-                @Override
-                public void handle(Either<String, JsonArray> event) {
-                    if (event.isLeft()) {
-                        log.error("[CompetenceRepositoryEvents] : An error occured when managing transition annee id structure idStructure");
-                    }
-                }
-            });
-        }
+        Competences.launchTransitionWorker(eb,new JsonObject().put("structure",structure).put("isHTTP",false),false);
+
+//        String idStructure = structure.getString("id");
+//        if(null == idStructure
+//                || !structure.containsKey("id")){
+//            log.error("[CompetenceRepositoryEvents] : An error occured when managing transition annee, cannot find id structure");
+//        } else {
+//            transitionService.transitionAnneeStructure(this.eb,structure, new Handler<Either<String, JsonArray>>() {
+//                @Override
+//                public void handle(Either<String, JsonArray> event) {
+//                    if (event.isLeft()) {
+//                        log.error("[CompetenceRepositoryEvents] : An error occured when managing transition annee id structure idStructure");
+//                    }
+//                }
+//            });
+//        }
     }
 }
