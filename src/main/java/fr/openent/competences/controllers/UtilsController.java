@@ -18,9 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
-import fr.openent.competences.service.TransitionService;
 import fr.openent.competences.service.UtilsService;
-import fr.openent.competences.service.impl.DefaultTransitionService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -32,8 +30,6 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.controller.ControllerHelper;
-import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -54,12 +50,10 @@ import java.util.List;
 public class UtilsController extends ControllerHelper {
 
     private final UtilsService utilsService;
-    private final TransitionService transitionService;
     private final Storage storage;
 
     public UtilsController( Storage storage, EventBus eb) {
         utilsService = new DefaultUtilsService(eb);
-        transitionService = new DefaultTransitionService();
         this.storage = storage;
     }
 
@@ -199,15 +193,6 @@ public class UtilsController extends ControllerHelper {
                 }
             }
         });
-    }
-
-    @Get("/transition/annee")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(SuperAdminFilter.class)
-    @ApiDoc("Met à jour le pourcentage réalisé pour chaque devoir")
-    public void transition(final HttpServerRequest request) {
-        final List<String> structureIds = request.params().getAll("structureId");
-        transitionService.transitionAnnee(eb, structureIds, arrayResponseHandler(request));
     }
 
     @Put("/link/groupes/cycles")

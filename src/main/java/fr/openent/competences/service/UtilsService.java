@@ -311,4 +311,6 @@ public interface UtilsService {
      * @param handler response
      */
     void activeDeactiveSyncStatePresences(String idStructure, Boolean state, Handler<Either<String, JsonObject>> handler);
+
+    void lauchTransition(List<String> structureIds);
 }

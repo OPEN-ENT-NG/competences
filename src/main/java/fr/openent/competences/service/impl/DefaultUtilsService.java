@@ -1270,6 +1270,21 @@ public class DefaultUtilsService  implements UtilsService {
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(eitherHandler));
     }
 
+    @Override
+    public void lauchTransition(List<String> structureIds) {
+        for(int i = 0;  i<structureIds.size();i++){
+            getStructure(structureIds.get(i), new Handler<Either<String, JsonObject>>() {
+                @Override
+                public void handle(Either<String, JsonObject> event) {
+                    JsonObject structure = event.right().getValue().getJsonObject("s").getJsonObject("data");
+                    Competences.launchTransitionWorker(eb,new JsonObject().put("structure",structure).put("isHTTP",false),false);
+
+                }
+            });
+        }
+
+    }
+
     private void isStructureActivatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler){
         JsonArray params = new JsonArray().add(idStructure);
 

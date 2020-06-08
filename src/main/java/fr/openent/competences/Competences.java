@@ -20,6 +20,7 @@ package fr.openent.competences;
 import fr.openent.competences.controllers.*;
 import fr.openent.competences.service.impl.ArchiveWorker;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
+import fr.openent.competences.service.impl.CompetencesTransitionWorker;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.DeploymentOptions;
@@ -33,6 +34,8 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.share.impl.SqlShareService;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
+
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class Competences extends BaseServer {
 
@@ -57,6 +60,8 @@ public class Competences extends BaseServer {
 
     public static final String BFC_SYNTHESE_TABLE = "bfc_synthese";
     public static final String BFC_TABLE = "bilan_fin_cycle";
+
+    public static final String BULLETIN_PARAMETERS_TABLE ="bulletin_parameters";
 
     public static final String COMPETENCE_NIVEAU_FINAL = "competence_niveau_final";
     public static final String COMPETENCE_NIVEAU_FINAL_ANNUEL = "competence_niveau_final_annuel";
@@ -97,6 +102,8 @@ public class Competences extends BaseServer {
     public static final String REL_COMPETENCES_ENSEIGNEMENTS_TABLE = "rel_competences_enseignements";
     public static final String REL_DEVOIRS_GROUPES = "rel_devoirs_groupes";
     public static final String REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE = "rel_groupe_appreciation_elt_eleve";
+    public static final String REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE = "rel_elt_bilan_periodique_groupe";
+    public static final String REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE = "rel_elt_bilan_periodique_intervenant_matiere";
     public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
 
     public static final String STSFILE_TABLE = "sts_file";
@@ -108,9 +115,12 @@ public class Competences extends BaseServer {
     public static final String USE_PERSO_NIVEAU_COMPETENCES_TABLE = "use_perso";
 
     public static final String VSCO_ABSENCES_ET_RETARDS = "absences_et_retards";
+    public static final String VSCO_PERIODE = "periode";
     public final static String VSCO_MATIERE_LIBELLE_TABLE = "subject_libelle";
     public final static String VSCO_MODEL_MATIERE_LIBELLE_TABLE = "model_subject_libelle";
     public final static String VSCO_MATIERE_TABLE = "matiere";
+    public final static String VSCO_SOUS_MATIERE_TABLE = "sousmatiere";
+    public final static String VSCO_SERVICES_TABLE = "services";
 
     public static final String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";
     public static final String SCHEMA_APPRECIATIONS_CREATE = "eval_createAppreciation";
@@ -282,6 +292,7 @@ public class Competences extends BaseServer {
         addController(new MatiereController(eb));
         addController(new ElementBilanPeriodiqueController(eb));
         addController(new ReportModelPrintExportController());
+        addController(new YearTransitionController());
         // Devoir Controller
         DevoirController devoirController = new DevoirController(eb);
         SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,
@@ -305,6 +316,19 @@ public class Competences extends BaseServer {
         // Worker
         log.info("WORKER : "+ ArchiveWorker.class.getSimpleName());
         vertx.deployVerticle(ArchiveWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+        log.info("WORKER : "+ CompetencesTransitionWorker.class.getSimpleName());
+        vertx.deployVerticle(CompetencesTransitionWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+
+    }
+
+    public static void launchTransitionWorker(EventBus eb, JsonObject params, boolean isHTTP) {
+
+        eb.send(CompetencesTransitionWorker.class.getSimpleName(),params.put("isHTTP",isHTTP), new DeliveryOptions().setSendTimeout(1000 * 1000L), handlerToAsyncHandler(eventExport ->{
+                    if(!eventExport.body().getString("status").equals("ok"))
+                        launchTransitionWorker(eb, params,isHTTP);
+                    log.info("Ok calling worker " + eventExport.body().toString());
+                }
+        ));
     }
 
 }

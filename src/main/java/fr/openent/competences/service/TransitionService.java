@@ -24,16 +24,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.service.CrudService;
 
-import java.util.List;
-
 public interface TransitionService  extends CrudService {
-    /**
-     * Effectue la transition d'année pour une liste de structure
-     * @param idsStructures
-     * @param handler
-     */
-    public void transitionAnnee(EventBus eb, final List<String> idsStructures,
-                                final Handler<Either<String, JsonArray>> handler);
 
     /**
      * Effectue la transition d'année pour une structure
@@ -41,23 +32,68 @@ public interface TransitionService  extends CrudService {
      * @param structure
      * @param finalHandler
      */
-    public void transitionAnneeStructure(EventBus eb, final JsonObject structure,
+    void transitionAnneeStructure(EventBus eb, final JsonObject structure,
                                          final Handler<Either<String, JsonArray>> finalHandler);
+    /**
+     * - Delete tables SQL of  viesco.rel_structures_personne_supp, viesco.rel_groupes_personne_supp, notes.match_class_id_transition and viesco.personnes_supp notes.transition
+     *  @param handler response success
+     */
+    void cleanTableSql( Handler<Either<String, JsonArray>> handler);
 
     /**
-     * get conditions to do transition : get nb devoir > 0 has_devoir = true else false,
-     * nb periode > 0 has_periode = true else false
-     * and nb transition > 0 has_transition = true else false
-     * @param idStructureATraiter id structure
-     * @param handler response
+     * Clonage des schémas viesco et notes
+     * @param currentYear année utilisé pour renommer le schéma avant le clonage
+     * @param handler
      */
-    public void conditionsToDoTransition( String idStructureATraiter, final Handler<Either<String, JsonObject>> handler);
+    void cloneSchemas(final String currentYear, final Handler<Either<String, JsonObject>> handler);
 
     /**
-     * get ids_classe with periode
-     * @param id_etablissement ids_etablissement
-     * @param handler response
+     * Créer les statements pour le clonage
+     * @param currentYear
+     * @return
      */
-    public void classesWithPeriode(String id_etablissement, final Handler<Either<String,JsonArray>> handler);
+    JsonArray createStatements(final String currentYear);
 
+    /**
+     * Effectue la purge des tables durant l'étape de post-transition
+     * @param finalHandler
+     */
+
+    void clearTablePostTransition(final Handler<Either<String, JsonArray>> finalHandler);
+    /**
+     * get externalId class with idClass in rel_group_cycle where type=0 and put on table match_class_id_transition
+     * @param handler response success
+     */
+    void updateSqlMatchClassIdTransition(Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Récupération des external id depuis la table match_transition
+     * @param handler
+     */
+    void getOldIdClassTransition(final Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Récupération des nouvelles id depuis le Néo
+     * @param handler
+     */
+    void matchExternalId(JsonArray externalIdsClasses, final Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Récupération des ids des matières depuis le Néo
+     * @param handler
+     */
+    void getSubjectsNeo(final Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Supprimer les sous-matières plus rattacher à une matière
+     * @param handler
+     */
+    void supprimerSousMatiereNonRattaches(JsonArray matieres, final Handler<Either<String,JsonArray>> handler);
+
+    /**
+     *Mets à jour les nouvelles id de la table match_transition et mets à jour la table rel_groupe_cycle
+     * @param classesFromNeo
+     * @param handler
+     */
+    void updateTablesTransition(JsonArray classesFromNeo, final Handler<Either<String, JsonArray>> handler);
 }
