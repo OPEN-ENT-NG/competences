@@ -27,9 +27,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -38,7 +36,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
-import org.entcore.common.neo4j.Neo4jResult;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
@@ -54,6 +51,8 @@ public class Utils {
     protected static final Logger log = LoggerFactory.getLogger(Utils.class);
     protected static UtilsService utilsService = new DefaultUtilsService();
     protected static MatiereService matiereService = new DefaultMatiereService();
+    private static String domain;
+    private static String locale;
 
     /**
      * Recupere l'identifiant de la structure a laquelle appartiennent les classes dont l'identifiant est passe en
@@ -828,7 +827,15 @@ public class Utils {
 
     public static String getLibelle(String key) {
         return I18n.getInstance().translate(key,
-                I18n.DEFAULT_DOMAIN, Locale.FRANCE);
+                domain, locale);
+    }
+
+    public static void setLocale(String locale) {
+        Utils.locale = locale;
+    }
+
+    public static void setDomain(String domain) {
+        Utils.domain = domain;
     }
 
     public static String getPeriode(JsonArray periodesByClass, Boolean wantedBegenningPeriode) {

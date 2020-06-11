@@ -17,8 +17,10 @@
 
 package fr.openent.competences.controllers;
 
+import fr.openent.competences.Utils;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.I18n;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -38,9 +40,10 @@ public class CompetencesController extends ControllerHelper {
 	@SecuredAction("competences.access")
 	public void view(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-
             @Override
             public void handle(UserInfos user) {
+                Utils.setLocale(I18n.acceptLanguage(request));
+                Utils.setDomain(getHost(request));
                 if(user.getType().equals("Teacher") || user.getType().equals("Personnel")) {
                     renderView(request, null, "eval_teacher.html", null);
                 }else if(user.getType().equals("Student") || user.getType().equals("Relative")){
