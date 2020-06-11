@@ -17,76 +17,9 @@
 
 package fr.openent.competences.service.impl;
 
-import static fr.openent.competences.Competences.APPRECIATIONS;
-import static fr.openent.competences.Competences.APPRECIATION_CLASSE;
-import static fr.openent.competences.Competences.CLASSE_NAME_KEY;
-import static fr.openent.competences.Competences.COMPETENCES_NOTES_TABLE;
-import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
-import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
-import static fr.openent.competences.Competences.DISPLAY_NAME_KEY;
-import static fr.openent.competences.Competences.ELEMENT_PROGRAMME_KEY;
-import static fr.openent.competences.Competences.ELEVES;
-import static fr.openent.competences.Competences.FIRST_NAME_KEY;
-import static fr.openent.competences.Competences.HAS_NOTE;
-import static fr.openent.competences.Competences.ID_ELEVE;
-import static fr.openent.competences.Competences.ID_ELEVE_KEY;
-import static fr.openent.competences.Competences.ID_ETABLISSEMENT_KEY;
-import static fr.openent.competences.Competences.ID_MATIERE;
-import static fr.openent.competences.Competences.ID_PERIODE;
-import static fr.openent.competences.Competences.ID_PERIODE_KEY;
-import static fr.openent.competences.Competences.LAST_NAME_KEY;
-import static fr.openent.competences.Competences.LEVEL;
-import static fr.openent.competences.Competences.LIBELLE;
-import static fr.openent.competences.Competences.MATIERE_TABLE;
-import static fr.openent.competences.Competences.MESSAGE;
-import static fr.openent.competences.Competences.MOYENNE;
-import static fr.openent.competences.Competences.NAME;
-import static fr.openent.competences.Competences.NN;
-import static fr.openent.competences.Competences.NOTES;
-import static fr.openent.competences.Competences.OK;
-import static fr.openent.competences.Competences.POSITIONNEMENT;
-import static fr.openent.competences.Competences.POSITIONNEMENTS_AUTO;
-import static fr.openent.competences.Competences.POSITIONNEMENT_AUTO;
-import static fr.openent.competences.Competences.REL_ANNOTATIONS_DEVOIRS_TABLE;
-import static fr.openent.competences.Competences.RESULTS;
-import static fr.openent.competences.Competences.STATUS;
-import static fr.openent.competences.Competences.TRANSITION_CONFIG;
-import static fr.openent.competences.Utils.getLibellePeriode;
-import static fr.openent.competences.Utils.isNotNull;
-import static fr.openent.competences.Utils.isNull;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static fr.wseduc.webutils.http.Renders.badRequest;
-import static org.entcore.common.sql.SqlResult.validResultHandler;
-import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
-
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.stream.Collectors;
-
-import org.entcore.common.service.impl.SqlCrudService;
-import org.entcore.common.sql.Sql;
-import org.entcore.common.sql.SqlResult;
-import org.entcore.common.user.UserInfos;
-
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
-import fr.openent.competences.bean.Eleve;
-import fr.openent.competences.bean.Eleves;
-import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.bean.StatClass;
-import fr.openent.competences.bean.StatMat;
+import fr.openent.competences.bean.*;
 import fr.openent.competences.service.AnnotationService;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
@@ -105,6 +38,23 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.service.impl.SqlCrudService;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
+import org.entcore.common.user.UserInfos;
+
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.*;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.badRequest;
+import static org.entcore.common.sql.SqlResult.validResultHandler;
+import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 
 /**
@@ -1902,14 +1852,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                                                     for (Map.Entry<String, List<NoteDevoir>> stringListEntry : stringMapEntry.getValue().entrySet()) {
 
                                                                                         List<NoteDevoir> noteDevoirList = stringListEntry.getValue();
-                                                                                        Double moy = utilsService.calculMoyenne(noteDevoirList, false, 20,false).getDouble("moyenne");
-                                                                                        if (mapIdEleveIdMatMoy.containsKey(stringMapEntry.getKey())) {
-                                                                                            mapIdEleveIdMatMoy.get(stringMapEntry.getKey())
-                                                                                                    .put(stringListEntry.getKey(), moy);
-                                                                                        } else {
-                                                                                            Map<String, Double> mapIdMatMoy = new HashMap<>();
-                                                                                            mapIdMatMoy.put(stringListEntry.getKey(), moy);
-                                                                                            mapIdEleveIdMatMoy.put(stringMapEntry.getKey(), mapIdMatMoy);
+                                                                                        if (!"NN".equals(utilsService.calculMoyenne(noteDevoirList, false, 20, false).getValue("moyenne"))) {
+                                                                                            Double moy = utilsService.calculMoyenne(noteDevoirList, false, 20, false).getDouble("moyenne");
+                                                                                            if (mapIdEleveIdMatMoy.containsKey(stringMapEntry.getKey())) {
+                                                                                                mapIdEleveIdMatMoy.get(stringMapEntry.getKey())
+                                                                                                        .put(stringListEntry.getKey(), moy);
+                                                                                            } else {
+                                                                                                Map<String, Double> mapIdMatMoy = new HashMap<>();
+                                                                                                mapIdMatMoy.put(stringListEntry.getKey(), moy);
+                                                                                                mapIdEleveIdMatMoy.put(stringMapEntry.getKey(), mapIdMatMoy);
+                                                                                            }
                                                                                         }
                                                                                     }
                                                                                 }
