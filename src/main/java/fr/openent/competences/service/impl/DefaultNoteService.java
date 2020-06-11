@@ -1299,14 +1299,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             String idEleve = notesPeriodeByEleve.getKey();
             //si l'éleve en cours a une moyenne finale sur la période l'ajouter à sumMoyClasse
             //sinon calculer la moyenne de l'eleve et l'ajouter à sumMoyClasse
-            Double moyEleve;
+            Double moyEleve = 0.0;
             if(moyFinalesPeriode != null && moyFinalesPeriode.containsKey(idEleve)){
                 moyEleve = moyFinalesPeriode.get(idEleve);
             } else {
-                moyEleve = utilsService.calculMoyenne(notesPeriodeByEleve.getValue(),
-                        false, 20,false).getDouble("moyenne");
+                if("NN".equals(utilsService.calculMoyenne(notesPeriodeByEleve.getValue(), false, 20,false).getValue("moyenne"))){
+                    nbEleve--;
+                }  else {
+                    moyEleve = utilsService.calculMoyenne(notesPeriodeByEleve.getValue(),
+                            false, 20,false).getDouble("moyenne");
+                    sumMoyClasse = sumMoyClasse + moyEleve;
+                }
             }
-            sumMoyClasse = sumMoyClasse + moyEleve;
             result.getJsonObject(NOTES_BY_PERIODE_BY_STUDENT).getJsonObject(periodeKey).put(idEleve, moyEleve);
         }
         return (double) Math.round((sumMoyClasse/nbEleve) * 100) / 100;
@@ -1455,6 +1459,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 allNotesByEleve.forEach((key, value) -> {
                     if(!allMoyennesFinalesNN.contains(key)) {
                         JsonObject moyenne = utilsService.calculMoyenne(value, false, 20, false);
+                        if( !moyenne.getValue("moyenne").equals("NN")){
                         Double moyenneTmp = moyenne.getDouble("moyenne");
 
                         //manage min value
@@ -1470,6 +1475,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             moyenneTmp = allMoyennesFinales.get(key);
                         }
                         allMoyennes.put(key, moyenneTmp);
+                        }
                     }
                 });
 
