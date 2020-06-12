@@ -2684,7 +2684,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 mapNbMoyenneClasse.put(idSousMat, 0);
                                 mapSumMoyClasse.put(idSousMat, 0.0);
                             }
-                            Double moySousMat = moyenSousMat.getDouble(MOYENNE);
+                            Double moySousMat = 0.0;
+                            if (!"NN".equals(moyenSousMat.getValue(MOYENNE))) {
+                                moySousMat = moyenSousMat.getDouble(MOYENNE);
+                            }
                             int nbSousMoyClass = mapNbMoyenneClasse.get(idSousMat);
                             Double sumMoySous = mapSumMoyClasse.get(idSousMat);
                             mapNbMoyenneClasse.put(idSousMat, nbSousMoyClass + 1);
