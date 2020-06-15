@@ -99,17 +99,19 @@ public class YearTransitionController extends ControllerHelper {
                                 future.complete(updateTableTransitionEvent.right().getValue());
                                 log.info("SUCCESS updateClassId ...");
                             } else {
-                                future.fail("Problem in afterTransition in purge tables");
+                                future.fail("Problem in afterTransition in updateClassId function where " +
+                                        "updating the id of the class");
                                 log.error("Problem afterTransition");
                             }
                         });
                     } else {
-                        future.fail("Problem in afterTransition in purge tables");
+                        future.fail("Problem in afterTransition in updateClassId function where getting " +
+                                "classes informations in NEO");
                         log.error("Problem afterTransition");
                     }
                 });
             } else {
-                future.fail("Problem in afterTransition in purge tables");
+                future.fail("Problem in afterTransition in updateClassId function where getting oldIdClassTransition");
                 log.error("Problem afterTransition");
             }
         });
@@ -125,12 +127,12 @@ public class YearTransitionController extends ControllerHelper {
                         future.complete(eventDelete.right().getValue());
                         log.info("SUCCESS supprimerSousMatieresNonManuelles ...");
                     } else {
-                        future.fail("Problem in afterTransition in purge tables");
+                        future.fail("Problem in afterTransition supprimerSousMatieresNonManuelles");
                         log.error("Problem afterTransition");
                     }
                 });
             } else {
-                future.fail("Problem in afterTransition in purge tables");
+                future.fail("Problem in afterTransition in supprimerSousMatieresNonManuelles");
                 log.error("Problem afterTransition");
             }
         });

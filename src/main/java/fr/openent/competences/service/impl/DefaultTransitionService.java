@@ -530,40 +530,17 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     public void cleanTableSql(Handler<Either<String, JsonArray>> handler) {
         JsonArray emptyParams = new JsonArray();
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
+        String truncateQuery = "TRUNCATE " + VSCO_SCHEMA + ".rel_structures_personne_supp," +
+                VSCO_SCHEMA + ".rel_groupes_personne_supp," +
+                VSCO_SCHEMA + ".personnes_supp," +
+                COMPETENCES_SCHEMA + ".transition," +
+                COMPETENCES_SCHEMA + ".match_class_id_transition CASCADE";
 
-        statements.prepared(statementDeleteViescoRelationStructuresPersonne(), emptyParams)
-                .prepared(statementDeleteViescoRelationGroupPersonne(), emptyParams)
-                .prepared(statementDeleteViescoPersonne(), emptyParams)
-                .prepared(statementDeleteMatchClassIdTransition(), emptyParams)
-                .prepared(statementDeleteNoteTransition(), emptyParams);
+        statements.prepared(truncateQuery, emptyParams);
 
         Sql.getInstance().transaction(statements.build(),
                 SqlResult.validResultHandler(handler)
         );
-    }
-
-    private String statementDeleteViescoRelationStructuresPersonne() {
-        return prepareDelete(VSCO_SCHEMA + ".rel_structures_personne_supp");
-    }
-
-    private String statementDeleteViescoRelationGroupPersonne() {
-        return prepareDelete(VSCO_SCHEMA + ".rel_groupes_personne_supp");
-    }
-
-    private String statementDeleteViescoPersonne() {
-        return prepareDelete(VSCO_SCHEMA + ".personnes_supp");
-    }
-
-    private String statementDeleteNoteTransition() {
-        return prepareDelete(COMPETENCES_SCHEMA + ".transition");
-    }
-
-    private String statementDeleteMatchClassIdTransition() {
-        return prepareDelete(COMPETENCES_SCHEMA + ".match_class_id_transition");
-    }
-
-    private String prepareDelete(String schemaAndTable) {
-        return "DELETE FROM " + schemaAndTable + ";";
     }
 
     @Override
