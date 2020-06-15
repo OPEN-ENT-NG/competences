@@ -2703,7 +2703,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 }
                 if (eleveMapObject.containsKey(idEleve)) {
-                    Double moy = moyenne.getDouble(MOYENNE);
+                    Double moy = 0.0;
+                    if (!NN.equals(moyenne.getValue(MOYENNE))) {
+                        moy = moyenne.getDouble(MOYENNE);
+                    }
                     JsonObject el = eleveMapObject.get(idEleve);
                     Double moyEl = null;
                     if (idMatiere != null) {
@@ -2711,7 +2714,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         if (!el.containsKey(MOYENNE)) {
                             el.put(MOYENNE, new JsonObject());
                         }
-                        el.getJsonObject(MOYENNE).put(idMatiere, moy);
+                        el.getJsonObject(MOYENNE).put(idMatiere, NN.equals(moyenne.getValue(MOYENNE))? NN : moy);
 
                         if (el.containsKey(HAS_NOTE)) {
                             el.getJsonObject(HAS_NOTE).put(idMatiere, moyenne.getBoolean(HAS_NOTE));
@@ -2723,10 +2726,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         if (!el.containsKey(MOYENNEFINALE)) {
                             JsonObject moyMat = new JsonObject();
-                            moyMat.put(idMatiere, moy);
+                            moyMat.put(idMatiere, NN.equals(moyenne.getValue(MOYENNE))? NN : moy);
                             el.put(MOYENNEFINALE, moyMat);
                         } else if (!el.getJsonObject(MOYENNEFINALE).containsKey(idMatiere)) {
-                            el.getJsonObject(MOYENNEFINALE).put(idMatiere, moy);
+                            el.getJsonObject(MOYENNEFINALE).put(idMatiere, NN.equals(moyenne.getValue(MOYENNE))? NN : moy);
                         }
 
                         if (el.getJsonObject(MOYENNEFINALE).containsKey(idMatiere)) {
@@ -2734,10 +2737,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 try {
                                     moyEl = Double.valueOf(el.getJsonObject(MOYENNEFINALE).getString(idMatiere));
                                     sumMoyClasse += moyEl;
-
                                 } catch (ClassCastException c) {
                                     moyEl = el.getJsonObject(MOYENNEFINALE).getDouble(idMatiere);
                                     sumMoyClasse += moyEl;
+                                } catch (Exception error) {
+                                    log.info("NN in average note" + error);
                                 }
                             }else{
                                 el.put("hasMoyenneFinaleNN",true);
