@@ -644,20 +644,28 @@ public class ExportPDFController extends ControllerHelper {
                             matGrpNotes.add(moyennesFinales.get(matGrp).get(idEleve));
                         } else if (notes.containsKey(matGrp) && notes.get(matGrp).containsKey(idEleve) &&
                                 !(moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() == null)) {
-                            matGrpNotes.add(new NoteDevoir(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null,false).getDouble(MOYENNE), false, new Double(1)));
+                            if(!"NN".equals(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null,false).getValue(MOYENNE))) {
+                                matGrpNotes.add(new NoteDevoir(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null, false).getDouble(MOYENNE), false, new Double(1)));
+                            }
                         }
                     });
 
                     JsonObject resultCalc = utilsService.calculMoyenne(matGrpNotes, true, null,false);
-                    if (resultCalc.getDouble("noteMin") > resultCalc.getDouble(MOYENNE)) {
+                    if( !resultCalc.getBoolean(HAS_NOTE)){
                         moyObject.put("min", "");
                         moyObject.put("max", "");
-                        moyObject.put("moy", "");
+                        moyObject.put("moy", "NN");
+                    }else if (resultCalc.getDouble("noteMin") > resultCalc.getDouble(MOYENNE)){
+
+                            moyObject.put("min", "");
+                            moyObject.put("max", "");
+                            moyObject.put("moy", "");
                     } else {
                         moyObject.put("min", resultCalc.getDouble("noteMin"));
                         moyObject.put("max", resultCalc.getDouble("noteMax"));
                         moyObject.put("moy", resultCalc.getDouble(MOYENNE));
                     }
+
                     moyObject.put("appr", appr.get(matGrp));
 
                     moyObjects.put(matGrp, moyObject);
