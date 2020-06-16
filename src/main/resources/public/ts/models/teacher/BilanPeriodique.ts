@@ -20,6 +20,8 @@ import http, {AxiosResponse} from 'axios';
 import {Classe, ElementBilanPeriodique, evaluations, Matiere, Periode, ReleveNoteTotale, Structure} from './index';
 import {AppreciationElement} from "./AppreciationElement";
 import {Utils} from "./Utils";
+import {getNN} from "../../utils/functions/utilsNN";
+
 
 export class BilanPeriodique extends  Model {
     synchronized: any;
@@ -362,7 +364,7 @@ export class BilanPeriodique extends  Model {
                     break;
                 }
             }
-            if(!hasNoteSubject) subjectsNotes.push('');
+            if(!hasNoteSubject) subjectsNotes.push(getNN());
         }
         return subjectsNotes;
     }
