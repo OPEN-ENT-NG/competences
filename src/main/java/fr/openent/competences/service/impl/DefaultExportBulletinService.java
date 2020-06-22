@@ -208,6 +208,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 Competences.COMPETENCES_NOTES_TABLE);
         this.storage = storage;
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         this.httpClient =  createHttpClient(vertx);
     }
 
@@ -438,7 +439,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(OTHER_TEACHER_NAME,params.getString(OTHER_TEACHER_NAME,""))
                     .put(AGRICULTURE_LOGO,params.getBoolean(AGRICULTURE_LOGO,false));
 
-            JsonArray niveauCompetences = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
+            JsonArray niveauCompetences;
+            try{
+                niveauCompetences   = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
+
+            }catch (java.lang.ClassCastException e){
+                niveauCompetences = new JsonArray(params.getString(NIVEAU_COMPETENCE));
+            }
             JsonArray footerArray = new JsonArray();
             if(niveauCompetences != null && !niveauCompetences.isEmpty()){
                 for (int i = niveauCompetences.size() - 1; i >= 0; i--) { //reverse Array
@@ -2014,7 +2021,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 .put(GET_MOYENNE_ELEVE, params.getBoolean(MOYENNE_ELEVE))
                 .put(GET_POSITIONNEMENT, params.getBoolean(POSITIONNEMENT));
 
-        int rowSpan = (isNull(sousMatiere) || !params.getBoolean(PRINT_SOUS_MATIERES))? 1 : sousMatiere.size()+1;
+
+        //TODO modifcation a été nécessaire à check
+        int rowSpan;
+        try {
+            rowSpan = (isNull(sousMatiere) || !params.getBoolean(PRINT_SOUS_MATIERES)) ? 1 : sousMatiere.size() + 1;
+        }catch (NullPointerException e){
+            rowSpan = 1;
+        }
+
+
         String backgroundColor = matiere.getString(BACKGROUND_COLOR);
         matiere.put("rowSpan", rowSpan)
                 .put("hasSousMatiere", isNull(sousMatiere)? false : sousMatiere.size()>0);
@@ -2518,6 +2534,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         niveauCompetences = niveauCompetences.substring(0, niveauCompetences.length()-1);
         niveauCompetences += "]";
 
+        //PARAMS PAR DEFAUT
+        //TODO CHECK SI PARAMS ATTENDUS PAR PO
         JsonObject res = new JsonObject()
                 .put(GET_PROGRAM_ELEMENT, true)
                 .put(GET_RESPONSABLE,true)
@@ -2528,8 +2546,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 .put(ID_STRUCTURE_KEY,idEtablissement)
                 .put(ID_ETABLISSEMENT_KEY,idEtablissement)
                 .put(POSITIONNEMENT_AUTO,true)
-                .put(SHOW_BILAN_PER_DOMAINE,false)
-                .put(SHOW_FAMILY,true)
+                .put(SHOW_BILAN_PER_DOMAINE,true)
+                .put(SHOW_FAMILY,false)
                 .put(SHOW_PROJECTS,true)
                 .put("threeLevel",false)
                 .put("threeMoyenneClasse",false)
@@ -2537,8 +2555,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 .put("threePage",false)
                 .put(TYPE_PERIODE,idPeriode)
                 .put(NIVEAU_COMPETENCE, niveauCompetences)
+                .put(COEFFICIENT,false)
                 .put(GET_DATA_FOR_GRAPH_DOMAINE_METHOD, true)
                 .put(USE_MODEL_KEY, false);
+        //HDF
+        if(idEtablissement.equals("faca3c3b-d29f-4ac1-a37b-e8e5da664f48")||idEtablissement.equals("26124cd3-f53d-45c9-a1a3-d81a0c401e4a")){
+            res.put(MOYENNE_GENERALE,true);
+            if(idEtablissement.equals("faca3c3b-d29f-4ac1-a37b-e8e5da664f48")){
+                res.put(AGRICULTURE_LOGO,true);
+            }
+        }
         try {
             if (isNotNull(imgsStructureObj)) {
                 res.put(HAS_IMG_SIGNATURE, imgsStructureObj.getValue(HAS_IMG_SIGNATURE))
@@ -2748,27 +2774,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void getStructureActiveForArchive (Handler<Either<String, JsonArray>> handler) {
-        JsonObject action = new JsonObject()
-                .put(ACTION, "structure.getStructuresActives")
-                .put("module","notes");
-        // On récupère tout d'abord la liste des établissements actifs
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler(etabActifEvent -> {
-                    JsonObject body = etabActifEvent.body();
-
-                    if(!body.getString(STATUS).equals(OK)){
-                        String message = body.getString(MESSAGE);
-                        log.error("[getStructuresActives] :: " + message);
-                        handler.handle(new Either.Left<>(message));
-                    }
-                    else {
-                        JsonArray structures = body.getJsonArray(RESULTS);
-                        log.info(" --- ETABLISSEMENT ACTIF GETS --- : " + structures.size());
-
-                        handler.handle(new Either.Right<>(structures));
-                    }
-                }));
-
+        //UTILISER LE UTILS
+        utilsService.getActivesStructure(eb, new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle(Either<String, JsonArray> event) {
+                if(event.isRight()){
+                    handler.handle(new Either.Right<>(event.right().getValue()));
+                }
+            }
+        });
     }
 
     private void getArchiveComplet(Handler<Either<String, JsonArray>> handler){

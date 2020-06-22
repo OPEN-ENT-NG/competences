@@ -1152,21 +1152,21 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public void getActivesStructure(EventBus event, Handler<Either<String, JsonArray>>handler) {
 
-        JsonObject action = new JsonObject()
-                .put(ACTION, "structure.getStructuresActives")
-                .put("module","notes");
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler( message -> {
-                    JsonObject body = message.body();
-                    if (OK.equals(body.getString(STATUS))) {
-                        JsonArray idsStructure = body.getJsonArray(RESULTS);
-                        handler.handle(new Either.Right<>( idsStructure));
-                    } else {
-                        log.error("GetActivesStructures : can not get actives Structures ");
-                        handler.handle(new Either.Left<>(body.getString(MESSAGE)));
-                    }
-                }));
+     String query = "SELECT DISTINCT id_etablissement from " + VSCO_SCHEMA +".periode ;";
+        Sql.getInstance().prepared(query.toString(), new JsonArray(), new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonArray structures = new JsonArray();
+                for (Object ja:message.body().getJsonArray("results")) {
+                    structures.add(new JsonObject().put("id_etablissement",((JsonArray)ja).getString(0)));
+                }
+                log.info(structures.size());
+                handler.handle(new Either.Right<>(structures));
+            }
+        });
     }
+
+
 
     public void studentAvailableForPeriode(final String idClasse, final Long idPeriode, final Integer typeClasse,
                                            Handler<Message<JsonObject>> handler) {

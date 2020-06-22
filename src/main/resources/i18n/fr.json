@@ -457,7 +457,8 @@
   "evaluation.search.read.only": "(consultative)",
   "evaluation.by.subject": "Par matière",
   "evaluation.by.domaine": "Par domaine",
-  "evaluations.exportLSU":"Export LSU",
+  "evaluations.exports":"Exports",
+  "evaluations.export.lsu":"Export LSU",
   "evaluation.lsu.unheeded":"Ignorer",
   "evaluation.lsu.unheeded.students":"Attention, les élèves suivants vont être ignorés pendant l'export",
   "evaluation.lsu.unheeded.student": " Élève ignoré",
@@ -480,6 +481,8 @@
   "evaluation.lsu.error.sts.file.create" : "Le fichier STS n'a pas été enregistré.",
   "evaluation.lsu.confirm.save.sts.file" : "Le fichier a bien été enregistré.",
   "evaluation.lsu.error.sts.files.get" : "Problème dans la récupération des fichiers STS de l'établissement",
+  "evaluations.choice.export" : "Choix de l'export",
+  "evaluations.data.to.export": "Données à exporter",
   "evaluations.devoir.updateDevoir.firstConfirmSupp.change.classe":"Suite au changement de classe, les évaluations, annotations et appréciations ne seront pas conservées.",
   "viescolaire.utils.enseignements":"Enseignements",
   "viescolaire.utils.langues.culture.regionale.choix" : "Choix langue",
@@ -547,7 +550,7 @@
   "ariane.competences.displaySuiviCompetencesClasse" : "Suivi classe",
   "ariane.competences.displayBilanDeCompetence" :"Bilan de compétences",
   "ariane.competences.listRemplacements":"Remplacements",
-  "ariane.competences.export":"Export LSU",
+  "ariane.competences.export":"Exports",
   "ariane.competences.bulletin":"Bulletins",
   "viescolaire.bulletin.lycee": "Bulletin de notes",
   "viescolaire.bulletin.neutre": "Bulletin neutre",
@@ -726,25 +729,21 @@
   "competences.report-model.api.error.update": "Erreur lors de la modification de la préference pour le bulletin",
   "competences.report-model.api.error.create": "Erreur lors de la création de la préference pour le bulletin",
 
-  "viescolaire.conference.opinions.service.not.empty": "Vous ne pouvez pas saisir d'avis vide",
-  "viescolaire.conference.opinions.service.delete.error": "Un problème a eu lieu durant la suppression de l'avis",
-  "viescolaire.conference.opinions.service.save.error": "Un problème a eu lieu durant l'enregistrement de l'avis",
-
   "viescolaire.program.add": "Ajouter un élément à ce sous-domaine",
 
   "evaluation.service.lightboxes.update": "Coefficients et Modalités",
   "error.get.homework.on.update": "Erreur lors de la récupération des devoirs pour la mise à jour du service",
   "service.homework.update.topic": "Les devoirs ont bien été mis à jour",
   "multiples": "Multiples",
-  "competences.reportModel.info.problem.title" : "Problème de doublon ou de titre vides, ils ne seront pas enregistés",
-  "competences.report-model.api.error.getFirstSelected": "Erreur lors de la récupération des préferences pour le bulletin",
-  "competences.report-model.api.error.getSelected": "Erreur lors de la récupération des préferences pour le bulletin",
-  "competences.report-model.api.error.getAll": "Erreur lors de la récupération des préferences pour le bulletin",
-  "competences.report-model.api.error.update": "Erreur lors de la modification de la préference pour le bulletin",
-  "competences.report-model.api.error.create": "Erreur lors de la création de la préference pour le bulletin",
 
   "viescolaire.conference.opinions.service.not.empty": "Vous ne pouvez pas saisir d'avis vide",
   "viescolaire.conference.opinions.service.delete.error": "Un problème a eu lieu durant la suppression de l'avis",
-  "viescolaire.conference.opinions.service.save.error": "Un problème a eu lieu durant l'enregistrement de l'avis"
+  "viescolaire.conference.opinions.service.save.error": "Un problème a eu lieu durant l'enregistrement de l'avis",
 
+  "evaluations.title.archivesBulletinsBFC": "Export des archives Bulletins ou BFC",
+  "evaluation.archives.generation.error" : "Une erreur est survenue lors de la génération de l'archive. ",
+  "evaluations.archives.choice.type": "Choix du type d'archive",
+  "evaluations.archives.button": "Générer l'archive",
+  "evaluations.choice.structure": "Choix de la structure",
+  "no.data.to.export": "Pas de données à exporter"
 }

@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {model, notify, Me, idiom as lang, ng, template, moment, _, angular, http, skin, Behaviours} from 'entcore';
+import {model, notify, idiom as lang, ng, template, moment, _, angular, http, skin} from 'entcore';
 import {
     Devoir,
     Evaluation,
@@ -23,12 +23,11 @@ import {
     ReleveNote,
     ReleveNoteTotale,
     GestionRemplacement,
-    Classe,
-    Eleve
+    Classe
 } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
-import {Utils} from "../models/teacher/Utils";
+import {Utils} from "../models/teacher";
 import {selectCycleForView, updateNiveau} from "../models/common/Personnalisation";
 import httpAxios from "axios";
 import {AppreciationCPE} from "../models/teacher/AppreciationCPE";
@@ -520,7 +519,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
 
             export: async function () {
-                template.open('main', 'export/lsun');
+                template.open('main', 'export/exports');
                 await utils.safeApply($scope);
             },
             disabled: async () => {
@@ -627,6 +626,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.isChefEtab = (classe?) => {
             return Utils.isChefEtab(classe);
         };
+
+        $scope.canExport = () => {
+            return Utils.isChefEtab() || Utils.canExportLSU();
+        }
 
         $scope.evaluations = evaluations;
         $scope.competencesSearchKeyWord = "";

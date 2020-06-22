@@ -26,9 +26,12 @@ import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
 import fr.openent.competences.helpers.MustachHelper;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -54,8 +57,10 @@ import static fr.openent.competences.service.impl.DefaultExportBulletinService.*
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.getScheme;
 import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
-
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.getHost;
 /**
  * Created by vogelmt on 29/03/2017.
  */
@@ -978,6 +983,19 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 formate(exportResult, exportResultEvent));
     }
 
+    @Override
+    public void generateArchiveBFC(EventBus eb, HttpServerRequest request) {
+        JsonObject action = new JsonObject()
+                .put(ACTION, ArchiveWorker.ARCHIVE_BFC)
+                .put(HOST, getHost(request))
+                .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
+                .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
+                .put(SCHEME, getScheme(request))
+                .put(PATH, request.path());
+        eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+        Renders.ok(request);
+    }
+
     /**
      * Recupere les parametres manquant afin de pouvoir generer le BFC dans le cas ou seul des identifiants d'eleves
      * sont fournis.
@@ -1202,57 +1220,58 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
                     JsonArray eleves = formatBFC(classe.getValue());
                     final JsonArray classeResult = Utils.sortElevesByDisplayName(eleves);
-                    final String idClasse = classe.getValue().get(0).getIdClasse();
-                    if (classeResult != null) {
-                        List<Future> listeFutures = new ArrayList<>();
-                        for(int i=0; i < classeResult.size(); i++ ){
-                            JsonObject eleveJson = classeResult.getJsonObject(i);
-                            eleveJson.put(ID_ETABLISSEMENT_KEY, idStructure);
-                            // formatEleve se charge de lancer la récupération des informations manquants et rajoute
-                            // les appels dans la listeFutures
-                            Future formatEleveFuture = Future.future();
-                            listeFutures.add(formatEleveFuture);
-                            formatEleve(eleveJson, idClasse, formatEleveFuture);
-                        }
-
-                        // Récupération du logo de l'établissment
-                        Future<JsonObject> imageStructureFuture = Future.future();
-                        utilsService.getParametersForExport(idStructure, img ->
-                                formate(imageStructureFuture, img));
-                        listeFutures.add(imageStructureFuture);
-
-                        // Une fois la récupération des informations de tous les élèves
-                        CompositeFuture.all(listeFutures).setHandler(listeEvent -> {
-                            if(listeEvent.failed()){
-                                String error = "Une erreur est survenue lors de la recuperation des adresses et de " +
-                                        "l'image de l'établissement : " + classe.getValue().get(0).getNomClasse()
-                                        + ";\n" + event.toString();
-                                collectBFCEleve(classe.getKey(), new JsonObject().put(ERROR, error), result, handler);
-                                log.error("getBFC: buildBFC (Array of idEleves, " + classe.getKey() + ", "
-                                        + idStructure + ") : " + event.toString());
-                            } else {
-                                for(Object eleve : classeResult){
-                                    JsonObject eleveJson = ((JsonObject)eleve);
-                                    JsonObject imgStructure =  imageStructureFuture.result();
-                                    if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
-                                        eleveJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
-                                                .getValue(PATH));
-                                        eleveJson.put("hasImgStructure", true);
-                                    }
-                                    if (imgStructure != null && imgStructure.containsKey("nameAndBrad")) {
-                                        eleveJson.put("nameCE", imgStructure.getJsonObject("nameAndBrad")
-                                                .getValue(NAME));
-                                        eleveJson.put("signatureCE", imgStructure.getJsonObject("nameAndBrad")
-                                                .getValue(PATH));
-                                        eleveJson.put("hasNameAndBrad", true);
-                                    }
-                                }
-                                collectBFCEleve(classe.getKey(), new JsonObject().put(ELEVES, classeResult), result,
-                                        handler);
+                    if(classe.getValue().size() != 0) {
+                        final String idClasse = classe.getValue().get(0).getIdClasse();
+                        if (classeResult != null) {
+                            List<Future> listeFutures = new ArrayList<>();
+                            for (int i = 0; i < classeResult.size(); i++) {
+                                JsonObject eleveJson = classeResult.getJsonObject(i);
+                                eleveJson.put(ID_ETABLISSEMENT_KEY, idStructure);
+                                // formatEleve se charge de lancer la récupération des informations manquants et rajoute
+                                // les appels dans la listeFutures
+                                Future formatEleveFuture = Future.future();
+                                listeFutures.add(formatEleveFuture);
+                                formatEleve(eleveJson, idClasse, formatEleveFuture);
                             }
-                        });
-                    }
 
+                            // Récupération du logo de l'établissment
+                            Future<JsonObject> imageStructureFuture = Future.future();
+                            utilsService.getParametersForExport(idStructure, img ->
+                                    formate(imageStructureFuture, img));
+                            listeFutures.add(imageStructureFuture);
+
+                            // Une fois la récupération des informations de tous les élèves
+                            CompositeFuture.all(listeFutures).setHandler(listeEvent -> {
+                                if (listeEvent.failed()) {
+                                    String error = "Une erreur est survenue lors de la recuperation des adresses et de " +
+                                            "l'image de l'établissement : " + classe.getValue().get(0).getNomClasse()
+                                            + ";\n" + event.toString();
+                                    collectBFCEleve(classe.getKey(), new JsonObject().put(ERROR, error), result, handler);
+                                    log.error("getBFC: buildBFC (Array of idEleves, " + classe.getKey() + ", "
+                                            + idStructure + ") : " + event.toString());
+                                } else {
+                                    for (Object eleve : classeResult) {
+                                        JsonObject eleveJson = ((JsonObject) eleve);
+                                        JsonObject imgStructure = imageStructureFuture.result();
+                                        if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
+                                            eleveJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
+                                                    .getValue(PATH));
+                                            eleveJson.put("hasImgStructure", true);
+                                        }
+                                        if (imgStructure != null && imgStructure.containsKey("nameAndBrad")) {
+                                            eleveJson.put("nameCE", imgStructure.getJsonObject("nameAndBrad")
+                                                    .getValue(NAME));
+                                            eleveJson.put("signatureCE", imgStructure.getJsonObject("nameAndBrad")
+                                                    .getValue(PATH));
+                                            eleveJson.put("hasNameAndBrad", true);
+                                        }
+                                    }
+                                    collectBFCEleve(classe.getKey(), new JsonObject().put(ELEVES, classeResult), result,
+                                            handler);
+                                }
+                            });
+                        }
+                    }
                 }
         );
 
@@ -1713,11 +1732,11 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 log.error(structuresEvent.left().getValue());
                 return;
             }
-            JsonArray strucutres = structuresEvent.right().getValue();
-            AtomicInteger nbStructure = new AtomicInteger(strucutres.size());
+            JsonArray structures = structuresEvent.right().getValue();
+            AtomicInteger nbStructure = new AtomicInteger(structures.size());
             Future structuresFuture = Future.future();
             //  On lance  l'archivage des bulletins etab par etab
-            runArchiveForStructure(strucutres, nbStructure, path,  host, acceptLanguage,
+            runArchiveForStructure(structures, nbStructure, path,  host, acceptLanguage,
                     forwardedFor, vertx, config, scheme, structuresFuture);
 
             // Lorsque le traitement est terminé, pour tous les etabs, on log la fin de l'archivage

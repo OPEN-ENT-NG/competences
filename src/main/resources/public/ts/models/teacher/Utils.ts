@@ -69,6 +69,9 @@ export class Utils {
     static canSaveCompetenceNiveauFinal () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.saveCompetenceNiveauFinal);
     }
+    static canExportLSU () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.exportLSU);
+    }
 
     /**
      * Méthode récursive de l'affichage des sous domaines d'un domaine

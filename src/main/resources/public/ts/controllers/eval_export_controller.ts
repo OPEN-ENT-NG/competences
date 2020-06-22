@@ -22,27 +22,35 @@ import {Classe, LSU, Utils} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {LSU_TYPE_EXPORT} from "../models/common/LSU";
 import {STSFile, STSFiles} from "../models/common/STSFile";
+import {Archives} from "../models/common/Archives";
 
 export let exportControleur = ng.controller('ExportController', ['$scope',
     async function ($scope) {
 
-        async function initparams(type, stsFile?, errorResponse?) {
+        async function initparams(typeLSU, typeArchive?, stsFile?, errorResponse?) {
             $scope.lsu = new LSU($scope.structure.id,
                 $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE}),
                 $scope.structure.responsables.all);
+            $scope.archive = new Archives($scope.structure.id);
             $scope.allClasses = $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE});
             $scope.errorResponse = (errorResponse !== undefined) ? errorResponse : null;
             $scope.inProgress = false;
             $scope.filteredPeriodes = [];
 
-            $scope.params = {
-                type: type,
+            $scope.paramsLSU = {
+                type: typeLSU,
                 idStructure: $scope.structure.id,
                 classes: [],
                 responsables: [],
                 periodes_type: [],
                 stsFile: (stsFile !== undefined) ? stsFile : null
             };
+            if(typeArchive !== undefined) {
+                $scope.paramsArchive = {
+                    type: typeArchive,
+                    idStructure: $scope.structure.id
+                };
+            }
             await utils.safeApply($scope);
         }
 
@@ -50,7 +58,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             $scope.selectStsFiles = new STSFiles();
             await $scope.selectStsFiles.sync($scope.structure.id);
             if ( $scope.selectStsFiles.selected != null ) {
-                $scope.params.stsFile = $scope.selectStsFiles.selected.content;
+                $scope.paramsLSU.stsFile = $scope.selectStsFiles.selected.content;
             }
             await utils.safeApply( $scope );
        };
@@ -66,20 +74,20 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
 
         $scope.toggleperiode = async function toggleperiode(periode_type) {
             if (periode_type.selected) {
-                let idx = $scope.params.periodes_type.indexOf(periode_type);
+                let idx = $scope.paramsLSU.periodes_type.indexOf(periode_type);
                 if (idx > -1) {
-                    $scope.params.periodes_type.splice(idx, 1);
+                    $scope.paramsLSU.periodes_type.splice(idx, 1);
                     await utils.safeApply($scope);
                 } else {
-                    $scope.params.periodes_type.push(periode_type);
+                    $scope.paramsLSU.periodes_type.push(periode_type);
                     await utils.safeApply($scope);
                 }
                 if (periode_type.libelle === undefined) {
                     periode_type.libelle = $scope.getI18nPeriode(periode_type.periode);
                 }
             } else {
-                $scope.params.periodes_type = _.without($scope.params.periodes_type,
-                    _.findWhere($scope.params.periodes_type, {id_type : _.propertyOf(periode_type)('id_type')})) ;
+                $scope.paramsLSU.periodes_type = _.without($scope.paramsLSU.periodes_type,
+                    _.findWhere($scope.paramsLSU.periodes_type, {id_type : _.propertyOf(periode_type)('id_type')})) ;
             }
 
         };
@@ -91,7 +99,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             });
         };
         $scope.setParamsContentFile = () => {
-            $scope.params.stsFile = $scope.selectStsFiles.selected.content;
+            $scope.paramsLSU.stsFile = $scope.selectStsFiles.selected.content;
             utils.safeApply($scope);
         };
 
@@ -101,15 +109,15 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         $scope.controleExportLSU = function () {
 
             $scope.inProgress = !(
-                ($scope.params.type == LSU_TYPE_EXPORT.BFC
-                    && $scope.params.classes.length > 0
-                    && $scope.params.responsables.length > 0
-                    && $scope.params.stsFile !== null)
-                || ($scope.params.type == LSU_TYPE_EXPORT.BILAN_PERIODIQUE
-                    && $scope.params.contentStsFile !== null
-                    && $scope.params.periodes_type.length > 0
-                    && $scope.params.classes.length > 0
-                    && $scope.params.responsables.length > 0)
+                ($scope.paramsLSU.type == LSU_TYPE_EXPORT.BFC
+                    && $scope.paramsLSU.classes.length > 0
+                    && $scope.paramsLSU.responsables.length > 0
+                    && $scope.paramsLSU.stsFile !== null)
+                || ($scope.paramsLSU.type == LSU_TYPE_EXPORT.BILAN_PERIODIQUE
+                    && $scope.paramsLSU.contentStsFile !== null
+                    && $scope.paramsLSU.periodes_type.length > 0
+                    && $scope.paramsLSU.classes.length > 0
+                    && $scope.paramsLSU.responsables.length > 0)
             );
             utils.safeApply($scope);
             return $scope.inProgress;
@@ -134,7 +142,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                         $scope.selectStsFiles.all.unshift($scope.stsFile);
                         $scope.selectStsFiles.selected = $scope.selectStsFiles.all[0];
                     }
-                    $scope.params.stsFile = contentStsFile;
+                    $scope.paramsLSU.stsFile = contentStsFile;
                 }
                 $scope.inProgress = $scope.controleExportLSU();
                 await utils.safeApply($scope);
@@ -145,9 +153,9 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         $scope.exportLSU = async function (getUnheededStudents) {
             await Utils.runMessageLoader($scope);
             $scope.inProgress = true;
-            $scope.params.type = "" + $scope.params.type;
+            $scope.paramsLSU.type = "" + $scope.paramsLSU.type;
             $scope.noStudent = false;
-            $scope.lsu.export($scope.params, getUnheededStudents)
+            $scope.lsu.export($scope.paramsLSU, getUnheededStudents)
                 .then(async function (res) {
                     if (!$scope.lsu.hasUnheededStudents) {
                         let blob = new Blob([res.data]);
@@ -194,7 +202,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                 for (let i = 0; i < students.length; i++) {
                     let student = students[i];
                     if (student.hasOwnProperty("choose")) {
-                        if ($scope.params.type === LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
+                        if ($scope.paramsLSU.type === LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
                             for (let index = 0; index < periodes.length; index++) {
                                 let currentPeriode = periodes[index];
                                 if (currentPeriode.selected === true && student.choose[index] !== true) {
@@ -202,7 +210,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                                     break;
                                 }
                             }
-                        } else if ($scope.params.type === LSU_TYPE_EXPORT.BFC) {
+                        } else if ($scope.paramsLSU.type === LSU_TYPE_EXPORT.BFC) {
                             if (student.choose[0] !== true) {
                                 allStudentChoose = true;
                                 break;
@@ -222,9 +230,9 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                     all: classes
                 };
                 await utils.updateFilters($scope, false);
-                if (!_.isEmpty($scope.params.periodes_type) && !_.isEmpty($scope.filteredPeriodes)) {
+                if (!_.isEmpty($scope.paramsLSU.periodes_type) && !_.isEmpty($scope.filteredPeriodes)) {
                     _.forEach($scope.filteredPeriodes, (filteredPeriode) => {
-                        let periodeToSelected = _.findWhere($scope.params.periodes_type, {id_type: filteredPeriode.id_type});
+                        let periodeToSelected = _.findWhere($scope.paramsLSU.periodes_type, {id_type: filteredPeriode.id_type});
                         if (periodeToSelected !== undefined) {
                             if (periodeToSelected.selected !== undefined) {
                                 filteredPeriode.selected = periodeToSelected.selected;
@@ -240,8 +248,8 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                 }
                 await utils.safeApply($scope);
             } else {
-                if (!_.isEmpty($scope.params.periodes_type)) {
-                    _.each($scope.params.periodes_type, (periode_type) => {
+                if (!_.isEmpty($scope.paramsLSU.periodes_type)) {
+                    _.each($scope.paramsLSU.periodes_type, (periode_type) => {
                         periode_type.classes = [];
                     });
                 }
@@ -289,7 +297,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                                     allPromise.push($scope.changeUnheededStudents(student));
                                 }
                             } else {
-                                if ($scope.params.type === LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
+                                if ($scope.paramsLSU.type === LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
                                     for (let index = 0; index < periode.length; index++) {
                                         let currentPeriode = periode[index];
                                         if (currentPeriode.selected === true && student.choose[index] !== changeTo) {
@@ -298,7 +306,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                                                 currentPeriode, index));
                                         }
                                     }
-                                } else if ($scope.params.type === LSU_TYPE_EXPORT.BFC) {
+                                } else if ($scope.paramsLSU.type === LSU_TYPE_EXPORT.BFC) {
                                     if (student.choose[0] !== changeTo) {
                                         student.choose[0] = changeTo;
                                         allPromise.push($scope.changeUnheededStudents(student, undefined, null, 0));
@@ -317,11 +325,32 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             }
         };
 
+        $scope.generateArchives = async function () {
+            await Utils.runMessageLoader($scope);
+            $scope.inProgress = true;
+            $scope.archive.export($scope.paramsArchive)
+                .then(async function (res) {
+                    let blob = new Blob([res.data]);
+                    let link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = res.headers['content-disposition'].split('filename=')[1];
+                    link.download = link.download.split("\"").join("");
+                    console.log(link.download);
+                    document.body.appendChild(link);
+                    link.click();
+                    await Utils.stopMessageLoader($scope);
+                })
+                .catch(async (error) => {
+                    console.error(error);
+                    await Utils.stopMessageLoader($scope);
+                });
+        };
+
 
         /*********************************************************************************************
          * Séquence exécuté au chargement du controleur
          *********************************************************************************************/
-        await initparams("1");
+        await initparams("1","bfc");
         $scope.getResponsables();
         $scope.initSelectStsFiles();
     }

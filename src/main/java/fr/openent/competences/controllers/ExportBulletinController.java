@@ -1,6 +1,5 @@
 package fr.openent.competences.controllers;
 
-import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessExportBulletinFilter;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
@@ -10,25 +9,17 @@ import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.storage.Storage;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Competences.ACTION;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
 import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
+import static fr.openent.competences.utils.ArchiveUtils.generateArchiveBulletin;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class ExportBulletinController extends ControllerHelper {
@@ -103,14 +94,15 @@ public class ExportBulletinController extends ControllerHelper {
     @Get("/generate/archive/bulletin")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void archiveBulletin(final HttpServerRequest request){
-        JsonObject action = new JsonObject()
-                .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
-                .put(HOST, getHost(request))
-                .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
-                .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
-                .put(PATH, request.path());
-        eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
-        Renders.ok(request);
+        ArchiveUtils.generateArchiveBulletin(eb,request);
+//        JsonObject action = new JsonObject()
+//                .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
+//                .put(HOST, getHost(request))
+//                .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
+//                .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
+//                .put(PATH, request.path());
+//        eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+//        Renders.ok(request);
     }
 
     @Get("/archive/bulletin/:idEleve/:idPeriode/:idClasse")
@@ -134,18 +126,29 @@ public class ExportBulletinController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessExportBulletinFilter.class)
     public void ArvhiveBulletinPost(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, body -> {
-            JsonArray idStructures = body.getJsonArray(ID_STRUCTURES_KEY);
-            JsonObject action = new JsonObject()
-                    .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
-                    .put(HOST, getHost(request))
-                    .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
-                    .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
-                    .put(PATH, request.path())
-                    .put(ID_STRUCTURES_KEY, idStructures);
-            eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
-            Renders.ok(request);
-        });
+        generateArchiveBulletin(eb,request);
+//        RequestUtils.bodyToJson(request, body -> {
+//            JsonArray idStructures = body.getJsonArray(ID_STRUCTURES_KEY);
+//            JsonObject action = new JsonObject()
+//                    .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
+//                    .put(HOST, getHost(request))
+//                    .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
+//                    .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
+//                    .put(PATH, request.path())
+//                    .put(ID_STRUCTURES_KEY, idStructures);
+//            eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+//            Renders.ok(request);
+//        });
+    }
+
+    @Get("/archive/bulletin/:idStructure")
+    @ApiDoc("télécharge l archive d'un étab")
+    @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
+    public  void getArchiveBulletin(final  HttpServerRequest request){
+        String idStructure = request.params().get("idStructure");
+        ArchiveUtils.getArchiveBulletinZip(idStructure,request,eb,storage, vertx);
+//        request.response().setStatusCode(201).end();
+
     }
 
 }

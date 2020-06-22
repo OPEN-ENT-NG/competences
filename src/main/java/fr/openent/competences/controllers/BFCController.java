@@ -589,15 +589,7 @@ public class BFCController extends ControllerHelper {
     @Get("/generate/archive/bfc")
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
     public void archiveBFC(final HttpServerRequest request){
-        JsonObject action = new JsonObject()
-                .put(ACTION, ArchiveWorker.ARCHIVE_BFC)
-                .put(HOST, getHost(request))
-                .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
-                .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
-                .put(SCHEME, getScheme(request))
-                .put(PATH, request.path());
-        eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
-        Renders.ok(request);
+        bfcService.generateArchiveBFC(eb,request);
     }
 
     @Get("/archive/bfc/:idEleve/:idCycle/:idClasse")
@@ -616,4 +608,13 @@ public class BFCController extends ControllerHelper {
         ArchiveUtils.deleteAll(ARCHIVE_BFC_TABLE, storage,  response -> Renders.renderJson(request, response));
     }
 
+    @Get("/archive/bfc/:idStructure")
+    @ApiDoc("télécharge l archive d'un étab")
+    @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
+    public  void getArchiveBulletin(final  HttpServerRequest request){
+        String idStructure = request.params().get("idStructure");
+        ArchiveUtils.getArchiveBFCZip(idStructure,request,eb,storage, vertx);
+//        request.response().setStatusCode(201).end();
+
+    }
 }

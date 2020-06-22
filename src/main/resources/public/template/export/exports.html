@@ -1,0 +1,169 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département de la Seine-et-Marne, CGI, 2016.
+  ~     This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~   This program is free software; you can redistribute it and/or modify
+  ~   it under the terms of the GNU Affero General Public License as
+  ~   published by the Free Software Foundation (version 3 of the License).
+  ~   For the sake of explanation, any module that communicate over native
+  ~   Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~   license and could be license under its own terms. This is merely considered
+  ~   normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~   This program is distributed in the hope that it will be useful,
+  ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+
+<div ng-controller="ExportController" class="ng-scope">
+    <div ng-include="'/competences/public/template/export/lightBox_errorsLSU.html'"></div>
+    <div ng-include="'/competences/public/template/export/lightBox_unheededStudentLSU.html'"></div>
+    <article class="row lsu backgroundExportImage">
+        <div class="twelve">
+            <div workflow="competences.exportLSU" class="row">
+                <h3><i18n>evaluations.export.lsu</i18n></h3>
+                <div class="row">
+                    <h4><i18n>evaluations.choice.export</i18n></h4>
+                    <div ng-if="evaluations.structures.all.length > 1" class="three cell horizontal-spacing">
+                        <div class="row display-inline-block">
+                            <label class="ten small"><i18n>evaluations.choice.structure</i18n>
+                                <select ng-model="lsu.idStructure"
+                                        ng-options="structure.id as structure.libelle for structure in evaluations.structures.all"
+                                        ng-change="getResponsables()">
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="three cell horizontal-spacing">
+                        <label>
+                            <input type="radio" ng-model="paramsLSU.type" ng-value="1">
+                            <i18n>evaluations.bilan.fin.cycle.title</i18n>
+                        </label><br/>
+                        <label>
+                            <input type="radio" ng-model="paramsLSU.type" value="2">
+                            <i18n>evaluations.bilan.periodique</i18n>
+                        </label>
+                    </div>
+                </div>
+                <div class="row">
+
+                    <h4><i18n>evaluations.data.to.export</i18n></h4>
+
+                </div>
+                <div class="row">
+                    <div class=" cell horizontal-spacing">
+                        <div class="row display-inline-block">
+                            <label class="ten small"> Fichier Sts: </label>
+                            <select ng-if = "selectStsFiles.all.length > 0"
+                                    ng-model = "selectStsFiles.selected"
+                                    ng-options = "stsFile as stsFile.name_file + ' du '+ stsFile.creation_date for stsFile in selectStsFiles.all"
+                                    ng-change = "setParamsContentFile()">
+                            </select>
+                            <input type="file"
+                                   ng-model="paramsLSU.stsFile"
+                                   onchange="angular.element(this).scope().uploadFile(this.files);
+                               angular.element(this).scope().controleExportLSU()">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="row vertical-spacing">
+                    <div class="three cell horizontal-spacing">
+                        <div class="row display-inline-block">
+                            <multi-combo
+                                    class="twelve"
+                                    title="Selection de classe(s)"
+                                    id="classes-list"
+                                    combo-model="lsu.classes"
+                                    search-on="name"
+                                    order-by="name"
+                                    filtered-model="paramsLSU.classes"
+                                    labels="comboLabels"
+                                    selection-event="updateFilters(paramsLSU.classes)"
+                                    deselection-event="updateFilters(paramsLSU.classes)"
+                            ></multi-combo>
+                            <div class="select-blocks">
+                                <div ng-repeat="classe in paramsLSU.classes"
+                                     ng-click="dropComboModel(classe, paramsLSU.classes)">
+                                    [[classe.name]]
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="one cell">
+                    </div>
+                    <div class="four cell horizontal-spacing">
+                        <div class="row display-inline-block">
+                            <multi-combo
+                                    class="twelve"
+                                    title="Selection de responsable(s)"
+                                    id="responsables-list"
+                                    combo-model="lsu.responsables"
+                                    search-on="displayName"
+                                    order-by="displayName"
+                                    filtered-model="paramsLSU.responsables"
+                                    labels="comboLabels"
+                            ></multi-combo>
+                            <div class="select-blocks">
+                                <div ng-repeat="responsable in paramsLSU.responsables"
+                                     ng-click="dropComboModel(responsable, paramsLSU.responsables)">
+                                    [[responsable.displayName]]
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-show="paramsLSU.type == 2">
+                    <div class="five cell horizontal-spacing">
+                        <div class="row display-inline-block">
+                            <label class="checkbox ten"
+                                   ng-repeat="periode in filteredPeriodes | orderBy:'id_type'">
+                                <input type="checkbox"
+                                       ng-model="periode.selected"
+                                       ng-click="toggleperiode(periode)"
+                                ><span>
+                        [[getI18nPeriode(periode.periode)]]</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <p class="error twelve" ng-show="errorResponse">
+                    <i class="close-2x" data-ng-click="errorResponse=null"></i>
+                    <i18n>evaluation.lsu.export.error</i18n>
+                    <i18n ng-if="noStudent">evaluation.lsu.error.getEleves.no.student</i18n>
+                </p>
+                <button type="button" ng-click="exportLSU(true)" ng-disabled="controleExportLSU()">
+                    <i18n>evaluation.lsu.export.button</i18n>
+                </button>
+            </div>
+            <div ng-if="isChefEtab()" class="row vertical-spacing">
+                <h3><i18n>evaluations.title.archivesBulletinsBFC</i18n></h3>
+                <h4><i18n>evaluations.archives.choice.type</i18n></h4>
+                <div ng-if="evaluations.structures.all.length > 1" class="three cell horizontal-spacing">
+                    <div class="row display-inline-block">
+                        <label class="ten small" ><i18n>evaluations.choice.structure</i18n>
+                            <select ng-model="paramsArchive.idStructure"
+                                    ng-options="structure.id as structure.libelle for structure in evaluations.structures.all">
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <div class="twelve cell horizontal-spacing">
+                    <label>
+                        <input type="radio" ng-model="paramsArchive.type" value="bfc">
+                        <i18n>evaluations.bilan.fin.cycle.title</i18n>
+                    </label><br/>
+                    <label>
+                        <input type="radio" ng-model="paramsArchive.type" value="bulletin">
+                        <i18n>evaluations.bulletin</i18n>
+                    </label>
+                </div>
+                <!-- Archives pas encore générer par le superUser-->
+                <button type="button" ng-click="generateArchives()" class="vertical-spacing">
+                    <i18n>evaluations.archives.button</i18n>
+                </button>
+            </div>
+        </div>
+    </article>
+</div>
+

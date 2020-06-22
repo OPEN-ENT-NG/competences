@@ -3387,6 +3387,16 @@ body.evaluations {
   .button-margin{
     margin: 16px;
   }
+
+  @media screen and (min-device-width:1300px) {
+    .backgroundExportImage{
+      background-image: url(/competences/public/img/export_image.svg);
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-origin: content-box;
+      background-position: 95%;
+    }
+  }
 }
 
 

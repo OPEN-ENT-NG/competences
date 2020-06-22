@@ -36,7 +36,9 @@ public class NodePdfGeneratorClientHelper extends ControllerHelper{
             ProxyOptions proxyOptions = new ProxyOptions()
                     .setHost(System.getProperty("httpclient.proxyHost"))
                     .setPort(Integer.parseInt(System.getProperty("httpclient.proxyPort")));
+            //COMMENT THIS IF NO PORXY LOCAL
             options.setProxyOptions(proxyOptions);
+            
         }
         return  vertx.createHttpClient(options);
     }
