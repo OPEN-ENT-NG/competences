@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.getLibelle;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
@@ -343,8 +344,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                               Map<String, Long> vMapGroupesIdsDevoirATraiter, Map<String,List<String>> classeIdsEleves,
                                               JsonArray statements) {
         JsonArray values;// Ajout de l'utilisateur pour la transition année
-        String username = I18n.getInstance().translate(key_username_user_transition_annee,I18n.DEFAULT_DOMAIN, Locale.FRANCE);
-        String classname = I18n.getInstance().translate(key_libelle_classe_transition_annee,I18n.DEFAULT_DOMAIN, Locale.FRANCE);
+        String username = "NC";
+        String classname = "Bilan Année classe : ";
         values = new fr.wseduc.webutils.collections.JsonArray();
         values.add(_id_user_transition_annee).add(username).add(username);
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".users(id, username) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET username = ?";
