@@ -299,13 +299,13 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
         Future<JsonArray> subjectFuture = Future.future();
         // Récupération des matières et des professeurs
-        devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, idEtablissement, idClasse, event -> {
+        devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, idEtablissement, event -> {
             formate(subjectFuture,event);
         });
 
         // Récupération des groupes de l'élève
         Future<JsonArray> idsGroupsFuture = Future.future();
-        Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), event -> {
+        Utils.getGroupesEleve(eb, idEleve, event -> {
             formate(idsGroupsFuture, event);
         });
 
@@ -322,7 +322,9 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     idClasseGroups.add(idClasse);
                 } else {
                     idClasseGroups.add(idClasse);
-                    idClasseGroups.addAll(idGroups.getJsonObject(0).getJsonArray("id_groupes"));
+                    for(Object group : idGroups){
+                        idClasseGroups.add(((JsonObject)group).getString("id_groupe"));
+                    }
                 }
 
                 if(responseArray == null || responseArray.isEmpty()) {
@@ -559,32 +561,35 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         for (int i = 0; i < responseArray.size(); i++) {
             JsonObject responseObject = responseArray.getJsonObject(i);
             String idMatiere = responseObject.getString(ID_MATIERE);
-            String owner = responseObject.getString("owner");
-            Long id_periode = responseObject.getLong("id_periode");
+            String owner = responseObject.getString(OWNER);
+            Long id_periode = responseObject.getLong(ID_PERIODE);
             Long coefficient = responseObject.getLong(COEFFICIENT);
             coefficient = isNull(coefficient)? 1L : coefficient;
+            if(idPeriode.equals(id_periode)){
 
-            if (!idsMatieresIdsTeachers.containsKey(idMatiere)) {
-                idsMatieres.add(idMatiere);
-                idsMatieresIdsTeachers.put(idMatiere, new JsonObject()
-                        .put("teachers", new JsonArray()).put("_" + COEFFICIENT, new JsonObject()));
+                if (!idsMatieresIdsTeachers.containsKey(idMatiere)) {
+                    idsMatieres.add(idMatiere);
+                    idsMatieresIdsTeachers.put(idMatiere, new JsonObject()
+                            .put("teachers", new JsonArray()).put("_" + COEFFICIENT, new JsonObject()));
+                }
+                JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
+                JsonArray teachers = matiere.getJsonArray("teachers");
+                if (isNotNull(owner)) teachers.add(owner);
+
+                if (!idsTeachers.contains(owner) && isNotNull(owner)) idsTeachers.add(owner);
+
+                JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
+                if (!coeffObject.containsKey(coefficient.toString())) {
+                    coeffObject.put(coefficient.toString(), new JsonArray());
+                }
+                if (isNotNull(owner) && !coeffObject.getJsonArray(coefficient.toString()).contains(owner))
+                    coeffObject.getJsonArray(coefficient.toString()).add(owner);
+
+                if (isNull(owner) && !matieresMissingTeachers.contains(idMatiere) && teachers.isEmpty())
+                    matieresMissingTeachers.add(idMatiere);
+                else if (!teachers.isEmpty())
+                    matieresMissingTeachers.remove(idMatiere);
             }
-            JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
-            JsonArray teachers = matiere.getJsonArray("teachers");
-            if (idPeriode.equals(id_periode) && isNotNull(owner)) teachers.add(owner);
-
-            if(!idsTeachers.contains(owner) && isNotNull(owner)) idsTeachers.add(owner);
-
-            JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
-            if(!coeffObject.containsKey(coefficient.toString())){
-                coeffObject.put(coefficient.toString(), new JsonArray());
-            }
-            if(isNotNull(owner) && !coeffObject.getJsonArray(coefficient.toString()).contains(owner))
-                coeffObject.getJsonArray(coefficient.toString()).add(owner);
-            if(isNull(owner) && !matieresMissingTeachers.contains(idMatiere) && teachers.isEmpty())
-                matieresMissingTeachers.add(idMatiere);
-            else if(!teachers.isEmpty())
-                matieresMissingTeachers.remove(idMatiere);
         }
         return matieresMissingTeachers;
 

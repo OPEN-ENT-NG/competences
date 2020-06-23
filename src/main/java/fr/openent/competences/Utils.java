@@ -124,6 +124,34 @@ public class Utils {
                 }));
     }
 
+    /**
+     * retourne les groupes de l'élève
+     *
+     * @param eb         eventbus
+     * @param idEleve string id de l'élève
+     * @param handler    response les groupes de l'élève
+     */
+    public static void getGroupesEleve(EventBus eb, final String idEleve, final Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put(ACTION, "eleve.getGroups")
+                .put("idEleve", idEleve);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        if (OK.equals(body.getString(STATUS))) {
+                            JsonArray queryResult = body.getJsonArray(RESULTS);
+                            handler.handle(new Either.Right<String, JsonArray>(queryResult));
+                        } else {
+                            handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                            log.error("getGroupesEleve : " + body.getString("message"));
+                        }
+                    }
+                }));
+    }
+
+
     public static void getInfosGroupes(EventBus eb, final JsonArray idsClasses, final Handler<Either<String, Map<String, String>>> handler) {
         JsonObject action = new JsonObject()
                 .put(ACTION, "classe.getClassesInfo")
