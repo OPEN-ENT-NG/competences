@@ -207,6 +207,7 @@ public class Competences extends BaseServer {
     public static final String FORMATIVE = "formative";
     public static final String ID_PERIODE = "id_periode";
     public static final String ID_MATIERE = "id_matiere";
+    public static final String OWNER = "owner";
     public static final String ACTION = "action";
     public static final String POSITIONNEMENT = "positionnement";
     public static final String POSITIONNEMENT_AUTO = "positionnement_auto";

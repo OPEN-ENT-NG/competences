@@ -1322,7 +1322,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, String id_classe, Handler<Either<String, JsonArray>> handler) {
+    public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         String headQuery = " SELECT DISTINCT devoirs.id_matiere, devoirs.owner, services.coefficient, devoirs.id_periode " +
@@ -1363,13 +1363,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
                 " UNION SELECT DISTINCT appreciation.id_matiere, null as owner, null ::integer as coefficient, appreciation.id_periode" +
                 " FROM "+ Competences.COMPETENCES_SCHEMA + ".appreciation_matiere_periode as appreciation" +
-                " WHERE appreciation.id_eleve = ? AND appreciation.id_classe = ? " +
+                " WHERE appreciation.id_eleve = ? " +
 
                 " ) AS res " +
                 " ORDER BY res.id_periode,res.id_matiere ";
 
         values.add(id_eleve).add(idEtablissement).add(id_eleve).add(idEtablissement).add(id_eleve)
-                .add(idEtablissement).add(id_eleve).add(idEtablissement).add(id_eleve).add(id_classe);
+                .add(idEtablissement).add(id_eleve).add(idEtablissement).add(id_eleve);
 
         sql.prepared(query,values,Competences.DELIVERY_OPTIONS,SqlResult.validResultHandler(handler));
     }
