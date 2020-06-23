@@ -230,9 +230,6 @@ export const paramServices = {
                 } else {
                     paramServices.that.service = service;
                     paramServices.that.devoirs = data;
-                    console.log("true form  ");
-                    console.log(paramServices.that.devoirs);
-
                     paramServices.that.callback = callback;
                     paramServices.that.error = paramServices.that.translate("evaluations.service.devoir.error").replace("[nbDevoir]", paramServices.that.devoirs.length);
                     paramServices.that.lightboxes.switchEval = true;
@@ -356,19 +353,16 @@ export const paramServices = {
             paramServices.that.lightboxes.update = true;
 
         },
-        validForm: function (serviceToUpdate) {
+        validForm: async function (serviceToUpdate) {
             paramServices.that.lightboxes.update = false;
-            serviceToUpdate.updateServices()
-            paramServices.that.setServices();
+            await serviceToUpdate.updateServices();
+            await paramServices.that.setServices();
         },
         updateServices: async function(){
-            console.log("plop")
             let oldService = paramServices.that.oldService;
             let serviceToUpdate = paramServices.that.serviceToUpdate;
-
             if(!serviceToUpdate.hasSameEvaluableSubServices(oldService)){
                 let servicesToCheck = serviceToUpdate.getDifferentEvaluableSubServices(oldService)
-                console.log(servicesToCheck);
                 let service = new Service(serviceToUpdate);
                 service.competencesParams = servicesToCheck;
                 service.id_groups = _.pluck(servicesToCheck, 'id_groupe');
