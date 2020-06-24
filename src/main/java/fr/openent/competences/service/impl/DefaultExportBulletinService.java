@@ -453,7 +453,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonObject niv = footerArray.getJsonObject(i);
 
                     String lib = niv.getString(LIBELLE);
-                    String id_niv = Integer.toString(niv.getInteger("id_niveau"));
+                    String id_niv = Integer.toString(niv.getInteger("ordre"));
                     footer += id_niv + " : " + lib + " - ";
                 }
                 footer = footer.substring(0, footer.length() - 2);
@@ -2131,7 +2131,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         JsonArray tableauDeconversion = classe.getJsonArray("tableauDeConversion");
         if (positionnementFinal != null) {
             printMatiere = true;
-            matiere.put(POSITIONNEMENT, positionnementFinal.getInteger("positionnementFinal"));
+            int posFinal = positionnementFinal.getInteger("positionnementFinal");
+            if(posFinal == 0)
+                matiere.put(POSITIONNEMENT, NN);
+            else
+                matiere.put(POSITIONNEMENT,posFinal);
         }
         else {
             // On récupère la moyenne des positionements et on la convertie
