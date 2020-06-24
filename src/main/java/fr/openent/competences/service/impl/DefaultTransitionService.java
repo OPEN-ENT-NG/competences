@@ -86,6 +86,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                 idStructureATraiter, structure));
                     } else {
                         log.warn("transition année : établissement inactif : id Etablissement : " + idStructureATraiter);
+                        log.info("FIN : transition année ");
+                        finalHandler.handle(new Either.Left<>("transition année : établissement inactif : id Etablissement : " + idStructureATraiter));
                     }
                 } else {
                     log.warn("transition année : Aucun établissement actif ou à traiter");
