@@ -76,7 +76,7 @@
                         ng-options="avis.libelle for avis in elementBilanPeriodique.avisConseil.avis
                         | filter:filterAvis([0, 1])"
                         ng-change="changeClassOpinion()">
-                    <option class="header-opt" disabled value="">[[translate('evaluations.evaluation.avis.conseil')]]</option>
+                    <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.conseil')]]</option>
                 </select>
             </label>
         </section>
@@ -86,7 +86,7 @@
                         ng-options="avis.libelle for avis in elementBilanPeriodique.avisConseil.avis
                         | filter:filterAvis([0, 2])"
                         ng-change="changeOrientationOpinion()">
-                    <option class="header-opt" disabled value="">[[translate('evaluations.evaluation.avis.orientation')]]</option>
+                    <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.orientation')]]</option>
                 </select>
             </label>
         </section>

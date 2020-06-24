@@ -812,22 +812,28 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.showNewOpinion = false;
 
         $scope.changeClassOpinion = function() {
-            if($scope.search.avisClasse.type_avis !== 0){
-                $scope.previousClassOpinion = $scope.search.avisClasse;
-                $scope.elementBilanPeriodique.avisConseil.saveAvisConseil($scope.search.avisClasse.id);
+            if($scope.search.avisClasse && $scope.search.avisClasse.type_avis === 0){
+                $scope.showNewOpinion = true;
             }
             else {
-                $scope.showNewOpinion = true;
+                $scope.previousClassOpinion = $scope.search.avisClasse;
+                if($scope.search.avisClasse)
+                    $scope.elementBilanPeriodique.avisConseil.saveAvisConseil($scope.search.avisClasse.id);
+                else
+                    $scope.elementBilanPeriodique.avisConseil.saveAvisConseil(null);
             }
         };
 
         $scope.changeOrientationOpinion = function() {
-            if($scope.search.avisOrientation.type_avis !== 0){
-                $scope.previousOrientationOpinion = $scope.search.avisOrientation;
-                $scope.elementBilanPeriodique.avisOrientation.saveAvisOrientation($scope.search.avisOrientation.id);
+            if($scope.search.avisOrientation && $scope.search.avisOrientation.type_avis === 0){
+                $scope.showNewOpinion = true;
             }
             else {
-                $scope.showNewOpinion = true;
+                $scope.previousOrientationOpinion = $scope.search.avisOrientation;
+                if($scope.search.avisOrientation)
+                    $scope.elementBilanPeriodique.avisOrientation.saveAvisOrientation($scope.search.avisOrientation.id);
+                else
+                    $scope.elementBilanPeriodique.avisOrientation.saveAvisOrientation(null);
             }
         };
 
