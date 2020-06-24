@@ -166,10 +166,8 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                     options.idStructure = $scope.structure.id;
                     if (val !== undefined && val.length > 0) {
                         options.idClasse = val[0].idClasse;
-                        if (options.showBilanPerDomaines === true) {
+                        if (options.showBilanPerDomaines === true || !$scope.niveauCompetences) {
                             selectPersonnalisation(val[0].id_cycle);
-                        }else if(options.niveauCompetences){
-                            delete options.niveauCompetences;
                         }
                     }
                     options.students = _.filter(val, function (student) {

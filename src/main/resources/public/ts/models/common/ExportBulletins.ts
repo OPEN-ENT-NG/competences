@@ -136,8 +136,8 @@ export class ExportBulletins {
             if (options.showBilanPerDomaines === true && options.simple !== true) {
                 // Si on choisit de déssiner les graphes
                 await this.createCanvas(options, $scope);
-                options.niveauCompetences = $scope.niveauCompetences;
             }
+            options.niveauCompetences = $scope.niveauCompetences;
 
             // lancement de l'export et récupération du fichier généré
             let data = await http.post(`/competences/export/bulletins`, new ExportBulletins().toJSON(options),

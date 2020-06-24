@@ -77,6 +77,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibelle;
+import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.bean.lsun.TypeEnseignant.fromValue;
 import static fr.openent.competences.service.impl.DefaultLSUService.DISCIPLINE_KEY;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
@@ -2727,7 +2728,7 @@ public class LSUController extends ControllerHelper {
                                     JsonObject positionnementFinal = utilsService.getObjectForPeriode(positionnementsFinaux,
                                             (long) currentPeriode.getTypePeriode(), "id_periode");
 
-                                    Integer valuePositionnementFinal = new Integer(0);
+                                    Integer valuePositionnementFinal = null;
                                     if (positionnementFinal != null)
                                         valuePositionnementFinal = positionnementFinal.getInteger("positionnementFinal");
 
@@ -2736,12 +2737,12 @@ public class LSUController extends ControllerHelper {
                                     if (positionnementAuto != null && positionnementAuto.containsKey("hasNote") && positionnementAuto.getBoolean("hasNote") ) {
                                         // BigInteger positionnementToSet;
                                         String valuePositionnementAuto = utilsService.convertPositionnement(
-                                                positionnementAuto.getFloat("moyenne"), tableConversion,false);
+                                                positionnementAuto.getFloat("moyenne"), tableConversion,false );
 
-                                        positionnementToSet = (valuePositionnementFinal.intValue() != 0) ? BigInteger.valueOf(valuePositionnementFinal) :
+                                        positionnementToSet = (isNotNull(valuePositionnementFinal)) ? BigInteger.valueOf(valuePositionnementFinal) :
                                                 new BigInteger(valuePositionnementAuto);
 
-                                    } else if (valuePositionnementFinal.intValue() != 0) {
+                                    } else if (isNotNull(valuePositionnementFinal)) {
 
                                         positionnementToSet = BigInteger.valueOf(valuePositionnementFinal);
 
