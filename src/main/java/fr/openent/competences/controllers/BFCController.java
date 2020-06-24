@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.security.AccessBFCFilter;
 import fr.openent.competences.security.AccessControleContinuFilter;
 import fr.openent.competences.security.CanUpdateBFCSyntheseRight;
@@ -589,6 +590,8 @@ public class BFCController extends ControllerHelper {
     @Get("/generate/archive/bfc")
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
     public void archiveBFC(final HttpServerRequest request){
+        Utils.setLocale(I18n.acceptLanguage(request));
+        Utils.setDomain(getHost(request));
         bfcService.generateArchiveBFC(eb,request);
     }
 

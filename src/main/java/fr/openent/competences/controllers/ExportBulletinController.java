@@ -1,5 +1,6 @@
 package fr.openent.competences.controllers;
 
+import fr.openent.competences.Utils;
 import fr.openent.competences.security.AccessExportBulletinFilter;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
@@ -9,6 +10,7 @@ import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.eventbus.EventBus;
@@ -94,6 +96,8 @@ public class ExportBulletinController extends ControllerHelper {
     @Get("/generate/archive/bulletin")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void archiveBulletin(final HttpServerRequest request){
+        Utils.setLocale(I18n.acceptLanguage(request));
+        Utils.setDomain(getHost(request));
         ArchiveUtils.generateArchiveBulletin(eb,request);
 //        JsonObject action = new JsonObject()
 //                .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
@@ -126,6 +130,8 @@ public class ExportBulletinController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessExportBulletinFilter.class)
     public void ArvhiveBulletinPost(final HttpServerRequest request) {
+        Utils.setLocale(I18n.acceptLanguage(request));
+        Utils.setDomain(getHost(request));
         generateArchiveBulletin(eb,request);
 //        RequestUtils.bodyToJson(request, body -> {
 //            JsonArray idStructures = body.getJsonArray(ID_STRUCTURES_KEY);
