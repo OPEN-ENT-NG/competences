@@ -20,11 +20,8 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.I18n;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -40,8 +37,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Utils.getLibelle;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultTransitionService extends SqlCrudService implements TransitionService{
@@ -52,52 +47,44 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     }
 
     @Override
-    public void transitionAnneeStructure(EventBus eb, final JsonObject structure,
+    public void transitionAnneeStructure(final JsonObject structure,
                                          final Handler<Either<String, JsonArray>> finalHandler) {
         String idStructureATraiter =  structure.getString("id");
         log.info("DEBUT : transition année : isStructure : " + idStructureATraiter);
-        JsonObject action = new JsonObject()
-                .put("action", "structure.getStructuresActives")
-                .put("module",Competences.COMPETENCES_SCHEMA);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
-                getInteger("timeout-transaction") * 1000L), handlerToAsyncHandler(handlerBusGetStrucuresActives(structure,
-                finalHandler, idStructureATraiter)
-        ));
+        checkIfEtabActif(idStructureATraiter, handlerBusGetStrucuresActives(structure,finalHandler, idStructureATraiter));
 
     }
 
-    private Handler<Message<JsonObject>> handlerBusGetStrucuresActives(JsonObject structure, Handler<Either<String, JsonArray>> finalHandler,
-                                                                       String idStructureATraiter) {
-        return message -> {
-            JsonObject body = message.body();
-            if ("ok".equals(body.getString("status"))) {
-                List<String> vListIdEtabActifs = new ArrayList<>();
-                final JsonArray listIdsEtablisement = body.getJsonArray("results");
-                if (listIdsEtablisement.size() > 0) {
-                    for (int i = 0; i < listIdsEtablisement.size(); i++) {
-                        vListIdEtabActifs.add(listIdsEtablisement.getJsonObject(i).getString("id_etablissement"));
-                    }
-                }
-                if (vListIdEtabActifs.size() > 0 && null != idStructureATraiter) {
-                    // Si l'établissement à traiter est actif on comme la transition d'année pour cet établissement
-                    if(vListIdEtabActifs.contains(idStructureATraiter)){
-                        conditionsToDoTransition(idStructureATraiter, handlerCheckTransitionCondition(finalHandler,
-                                idStructureATraiter, structure));
-                    } else {
-                        log.warn("transition année : établissement inactif : id Etablissement : " + idStructureATraiter);
-                        log.info("FIN : transition année ");
-                        finalHandler.handle(new Either.Left<>("transition année : établissement inactif : id Etablissement : " + idStructureATraiter));
-                    }
+    private void checkIfEtabActif(String idStructureATraiter, Handler<Either<String, JsonObject>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        String query = "SELECT EXISTS(SELECT id_etablissement FROM "+ Competences.COMPETENCES_SCHEMA + ".etablissements_actifs " +
+                "WHERE actif = TRUE AND id_etablissement = ? ) as etab_actif";
+
+        values.add(idStructureATraiter);
+
+        Sql.getInstance().prepared(query, values, new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
+                getInteger("timeout-transaction") * 1000L), SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private Handler<Either<String, JsonObject>> handlerBusGetStrucuresActives(JsonObject structure, Handler<Either<String, JsonArray>> finalHandler,
+                                                                              String idStructureATraiter) {
+        return event -> {
+            if (event.isRight()) {
+                Boolean etab_actif = event.right().getValue().getBoolean("etab_actif");
+                if(etab_actif){
+                    conditionsToDoTransition(idStructureATraiter, handlerCheckTransitionCondition(finalHandler,
+                            idStructureATraiter, structure));
                 } else {
-                    log.warn("transition année : Aucun établissement actif ou à traiter");
+                    log.warn("transition année : établissement inactif : id Etablissement : " + idStructureATraiter);
                     log.info("FIN : transition année ");
-                    finalHandler.handle(new Either.Left<>("Transition d'année arrêtée : Aucun établissement actif"));
+                    finalHandler.handle(new Either.Left<>("transition année : établissement inactif : id Etablissement : " + idStructureATraiter));
                 }
             } else {
-                log.error("transition année : Impossible de récupérer les établissements actifs");
+                log.error("transition année : problème dans la requête chechant si l'établissement est actif");
                 log.info("FIN : transition année ");
-                finalHandler.handle(new Either.Left<>(body.getString("message")));
+                finalHandler.handle(new Either.Left<>("transition année : problème dans la requête chechant si l'établissement est actif"));
             }
         };
     }

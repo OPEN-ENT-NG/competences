@@ -28,12 +28,11 @@ public interface TransitionService  extends CrudService {
 
     /**
      * Effectue la transition d'année pour une structure
-     * @param eb
      * @param structure
      * @param finalHandler
      */
-    void transitionAnneeStructure(EventBus eb, final JsonObject structure,
-                                         final Handler<Either<String, JsonArray>> finalHandler);
+    void transitionAnneeStructure(final JsonObject structure,
+                                  final Handler<Either<String, JsonArray>> finalHandler);
     /**
      * - Delete tables SQL of  viesco.rel_structures_personne_supp, viesco.rel_groupes_personne_supp, notes.match_class_id_transition and viesco.personnes_supp notes.transition
      *  @param handler response success

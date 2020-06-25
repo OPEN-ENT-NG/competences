@@ -8,30 +8,21 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.entcore.common.storage.Storage;
-import org.entcore.common.storage.StorageFactory;
 import org.vertx.java.busmods.BusModBase;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CompetencesTransitionWorker extends BusModBase  implements Handler<Message<JsonObject>> {
-    private Storage storage;
-    public static final String ARCHIVE_BULLETIN = "archiveBulletin";
-    public static final String ARCHIVE_BFC = "archiveBfc";
     private static final Logger log = LoggerFactory.getLogger(ArchiveWorker.class);
     private boolean isWorking = false;
     List<JsonObject> structures = new ArrayList<>();
     private TransitionService transitionService;
-    List<String> idsStacked = new ArrayList<>();
-    private int nbThread =  0 ;
     @Override
     public void start() {
         super.start();
-        this.storage = new StorageFactory(vertx).getStorage();
         this.transitionService = new DefaultTransitionService();
         vertx.eventBus().localConsumer(CompetencesTransitionWorker.class.getSimpleName(), this);
-
     }
 
     @Override
@@ -72,8 +63,7 @@ public class CompetencesTransitionWorker extends BusModBase  implements Handler<
         JsonObject structureToHandle = HandleStackJSonObject();
         if (structureToHandle == null) return;
         log.info("start Work  ");
-
-        transitionService.transitionAnneeStructure(eb, structureToHandle, new Handler<Either<String, JsonArray>>() {
+        transitionService.transitionAnneeStructure(structureToHandle, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
                 log.info("fin struct ");
