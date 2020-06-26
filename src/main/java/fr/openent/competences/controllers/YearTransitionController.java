@@ -47,26 +47,33 @@ public class YearTransitionController extends ControllerHelper {
         transitionService.cloneSchemas(currentYear, getHandlerCloneSchema(request, currentYear));
     }
 
-    @Post("/transition/after")
+    @Post("/transition/after/beforeUpdate")
     @ApiDoc("processing after transition")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SuperAdminFilter.class)
-    public void afterTransition(final HttpServerRequest request){
-        log.info("Start transition after ...");
-        List<Future> futures = new ArrayList<>();
-        Future<JsonArray> future1 = Future.future();
+    public void afterTransitionBeforeUpdate(final HttpServerRequest request){
+        log.info("Start transition after (before the update) ...");
         log.info("START clearTablePostTransition ...");
         transitionService.clearTablePostTransition(event ->{
             if(event.isRight()){
-                future1.complete(event.right().getValue());
                 log.info("SUCCESS clearTablePostTransition ...");
+                log.info("SUCCESS END transition after (before the update) ...");
+                Renders.ok(request);
             }else{
                 log.error("Problem in afterTransition in purge tables");
                 log.error(event.left());
-                future1.fail("Problem in afterTransition in purge tables");
+                badRequest(request, "Problem in afterTransition (before the update)");
             }
         });
-        futures.add(future1);
+    }
+
+    @Post("/transition/after/afterUpdate")
+    @ApiDoc("processing after transition")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SuperAdminFilter.class)
+    public void afterTransitionAfterUpdate(final HttpServerRequest request){
+        log.info("Start transition after (after the update) ...");
+        List<Future> futures = new ArrayList<>();
 
         Future<JsonArray> future2 = Future.future();
         updateClassId(future2);
@@ -79,9 +86,11 @@ public class YearTransitionController extends ControllerHelper {
         CompositeFuture.all(futures).setHandler(
                 eventFutur -> {
                     if (eventFutur.succeeded()) {
+                        log.info("SUCCESS END transition after (after the update) ...");
                         Renders.ok(request);
                     } else {
-                        badRequest(request, eventFutur.cause().getMessage() + " -> Problem in afterTransition in purge tables");
+                        log.error("Problem in afterTransition  (after the update)");
+                        badRequest(request, eventFutur.cause().getMessage() + " -> Problem in afterTransition (after the update)");
                     }
                 });
     }

@@ -112,6 +112,8 @@ public class Competences extends BaseServer {
     public static final String THEMATIQUE_BILAN_PERIODIQUE_TABLE = "thematique_bilan_periodique";
     public static final String TRANSITION_TABLE = "transition";
 
+    public static final String USERS = "users";
+
     public static final String USE_PERSO_NIVEAU_COMPETENCES_TABLE = "use_perso";
 
     public static final String VSCO_ABSENCES_ET_RETARDS = "absences_et_retards";

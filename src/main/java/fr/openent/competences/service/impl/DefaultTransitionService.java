@@ -216,7 +216,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     private void executeTransitionForStructure(Map<String, List<String>> classeIdsEleves, List<String> pListIdsGroupesATraiter,
                                                Map<String, String> vMapGroupesATraiter, String idStructureATraiter,
                                                Handler<Either<String, JsonArray>> finalHandler) {
-        // On récupère les ids des prochains devoirs pour créer la liste des identifiants de devoir nécessaires à la crétaion de devoir
+        // On récupère les ids des prochains devoirs pour créer la liste des identifiants de devoir nécessaires à la création de devoir
         int nbrDevoirsToCreate = pListIdsGroupesATraiter.size();
         String queryNextVal = "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".devoirs_id_seq') AS id FROM generate_series(1," + nbrDevoirsToCreate + ")";
         sql.raw(queryNextVal, SqlResult.validResultHandler(result -> {
@@ -269,19 +269,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         }
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
-        // normalement inutile car changement de pré transition
-        // Sauvegarde BDD : Si le schéma n'existe pas : sera fait à part
-        //        String queryCloneNotes ="SELECT notes.clone_schema('notes','notes_2017_2018')";
-        //        statements.add(new JsonObject().put("statement", queryCloneNotes).put("values", values).put("action", "prepared"));
-        //        String queryCloneVieSCo ="SELECT notes.clone_schema('viesco','viesco_2017_2018')";
-        //        statements.add(new JsonObject().put("statement", queryCloneVieSCo).put("values", values).put("action", "prepared"));
-
-        // Suppresssion : Conservation des  compétences max par l'élève, suppresion des devoirs
+        // Conservation des  compétences max par l'élève
         manageDevoirsAndCompetences(idStructureATraiter, vMapGroupesATraiter, vMapGroupesIdsDevoirATraiter,
                 classeIdsEleves, statements);
-
-        // Suppresion des notes.users, rel_group_cycle
-        deleteUsersGroups(statements);
 
         // Transition pour l'établissement effectué
         JsonArray valuesTransition = new fr.wseduc.webutils.collections.JsonArray();
@@ -296,33 +286,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     }
 
     /**
-     * Suppressions : users et relations groupes d'enseignement - cycle
-     * @param statements
-     */
-    private void deleteUsersGroups(JsonArray statements) {
-        JsonArray values = new JsonArray();
-
-        // Suppresion des relations groupes d'enseignement - cycle
-        String queryRelGroupeType= "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle WHERE type_groupe > 0";
-        statements.add(new JsonObject().put("statement", queryRelGroupeType).put("values", values).put("action", "prepared"));
-
-        // Suppresion des users
-        values = new fr.wseduc.webutils.collections.JsonArray();
-        String queryUsers = "" +
-                "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".users " +
-                "WHERE" +
-                " NOT EXISTS ( " +
-                "    SELECT 1 " +
-                "    FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
-                "    WHERE " +
-                "     devoirs.owner = users.id " +
-                " )";
-        statements.add(new JsonObject().put("statement", queryUsers).put("values", values).put("action", "prepared"));
-
-    }
-
-    /**
-     * Conservation des  compétences max par l'élève, suppresion des devoirs, dispenses domaines
+     * Conservation des  compétences max par l'élève
      * @param idStructureATraiter
      * @param vMapGroupesATraiter
      * @param vMapGroupesIdsDevoirATraiter
@@ -420,22 +384,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         .put("statement", queryInsertMaxCompetenceNoteG)
                         .put("values", valuesMaxCompetence)
                         .put("action", "prepared"));
-
-                // Suppression Dispenses domaine
-                String querySuppressionDispenseDomaine = "" +
-
-                        "  DELETE " +
-                        "  FROM " + Competences.COMPETENCES_SCHEMA + ".dispense_domaine_eleve" +
-                        "  WHERE " +
-                        "   id_eleve IN " + Sql.listPrepared(vListEleves.toArray());
-                JsonArray valuesDeleteDispenseEleve = new fr.wseduc.webutils.collections.JsonArray();
-                for (String idEleve : vListEleves) {
-                    valuesDeleteDispenseEleve.add(idEleve);
-                }
-                statements.add(new JsonObject()
-                        .put("statement", querySuppressionDispenseDomaine)
-                        .put("values", valuesDeleteDispenseEleve)
-                        .put("action", "prepared"));
             }
         }
 
@@ -457,23 +405,31 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put("statement", queryInsertCompetenceDevoir)
                 .put("values", values)
                 .put("action", "prepared"));
-
-        // Suppression devoir non historisé
-        String queryDeleteDevoirNonHistorise = "" +
-                "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs  " +
-                "WHERE " +
-                " eval_lib_historise = false " +
-                " AND id_etablissement = ? ";
-
-        statements.add(new JsonObject()
-                .put("statement", queryDeleteDevoirNonHistorise)
-                .put("values", values)
-                .put("action", "prepared"));
     }
 
     @Override
     public void clearTablePostTransition(Handler<Either<String, JsonArray>> handler) {
-        String query = "TRUNCATE TABLE " +
+        JsonArray params = new JsonArray();
+        SqlStatementsBuilder statements = new SqlStatementsBuilder();
+
+        // Suppression devoir non historisé
+        String queryDeleteDevoirNonHistorise = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs  " +
+                "WHERE eval_lib_historise = false ";
+
+        statements.prepared(queryDeleteDevoirNonHistorise, params);
+
+        String queryUsers = "" +
+                "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".users " +
+                "WHERE" +
+                " NOT EXISTS ( " +
+                "    SELECT 1 " +
+                "    FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
+                "    WHERE " +
+                "     devoirs.owner = users.id " +
+                " )";
+        statements.prepared(queryUsers, params);
+
+        String queryTruncate = "TRUNCATE TABLE " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATIONS_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CLASSE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CPE_BILAN_PERIODIQUE + ", " +
@@ -485,6 +441,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 Competences.COMPETENCES_SCHEMA + "." + Competences.BULLETIN_PARAMETERS_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.DISPENSE_DOMAINE_ELEVE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.ELEMENT_PROGRAMME_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.ELEVES_IGNORES_LSU_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.ELT_BILAN_PERIODIQUE_TABLE + ", " +
@@ -498,8 +455,16 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_ABSENCES_ET_RETARDS + ", " +
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_PERIODE + ", " +
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_SERVICES_TABLE;
-        Sql.getInstance().prepared(query, new JsonArray(),new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
-                getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
+
+        statements.prepared(queryTruncate, params);
+
+        // Suppresion des relations groupes d'enseignement - cycle
+        String queryRelGroupeType= "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle WHERE type_groupe > 0";
+        statements.prepared(queryRelGroupeType, params);
+
+        Sql.getInstance().transaction(statements.build() ,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
+                        getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler)
+        );
     }
 
     @Override
