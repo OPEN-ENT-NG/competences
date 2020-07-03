@@ -35,7 +35,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
     devoirs: Collection<Devoir>;
     tableConversions: Collection<TableConversion>;
     structure: Structure;
-    ennseignantsNames;
+    enseignantsNames;
     idClasse: string;
     idPeriode: number;
     periodeName: string;
@@ -321,6 +321,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                 header += `${lang.translate('matieres')}`;
                 let column = ['displayName'];
                 let enseignants = [];
+                let teachersBySubjectDevoirs = {};
                 let uri = this.api.GET_DEVOIRS
                     + this.idEtablissement + '&idClasse=' + this.idClasse;
                 if(this.idPeriode)
@@ -332,13 +333,17 @@ export class ReleveNoteTotale extends  Model implements IModel {
                             this.matiereWithDevoirs.push(matiere);
                             this.matieresId.push(matiere.id);
                             this.dataByMatiere[matiere.id] = _devoirs;
+                            let enseignantsMatiere = "";
                             _devoirs.forEach(devoir => {
+                                if(!enseignantsMatiere.includes(devoir.teacher))
+                                    enseignantsMatiere += devoir.teacher + "  "
                                 if(devoir.id_groupe != this.idClasse && !this.idGroups.includes(devoir.id_groupe)) {
                                     this.idGroups.push(devoir.id_groupe);
                                     teacherBySubject = {...teacherBySubject, ...utils.getTeacherBySubject(classes,
                                             devoir.id_groupe, teachers) };
                                 }
                             });
+                            teachersBySubjectDevoirs[matiere.id] = enseignantsMatiere;
                         }
                     });
                 });
@@ -358,12 +363,16 @@ export class ReleveNoteTotale extends  Model implements IModel {
                         column.push(matiere.name + 'Positionnement');
                     }
                     this.devoirs.load(_devoirs, null, false);
-                    this.ennseignantsNames = "; ";
-                    teacher = teacherBySubject[matiere.id]? teacherBySubject[matiere.id].displayName || " " : " ";
-                    if (!utils.containsIgnoreCase(this.ennseignantsNames, teacher)) {
-                        this.ennseignantsNames += teacher + " "
+                    this.enseignantsNames = ";";
+                    if(teachersBySubjectDevoirs[matiere.id]){
+                        teacher = teachersBySubjectDevoirs[matiere.id];
+                    }else{
+                        teacher = teacherBySubject[matiere.id]? teacherBySubject[matiere.id].displayName || " " : " ";
                     }
-                    enseignants.push(this.ennseignantsNames);
+                    if (!utils.containsIgnoreCase(this.enseignantsNames, teacher)) {
+                        this.enseignantsNames += teacher;
+                    }
+                    enseignants.push(this.enseignantsNames);
                 }
 
                 if (this.exportOptions.averageFinal) {

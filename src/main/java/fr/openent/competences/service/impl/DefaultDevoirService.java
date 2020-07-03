@@ -856,6 +856,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             params.add(idEleve);
         }
 
+        if(idGroupes.length != 0) {
+            query.append(" rel.id_groupe IN " + Sql.listPrepared(idGroupes) + " AND");
+            for(String idGroupe : idGroupes) {
+                params.add(idGroupe);
+            }
+        }
+
         if (idDevoirs.length != 0) {
             query.append(" devoirs.id IN " + Sql.listPrepared(idDevoirs) + " AND");
             for (Long idDevoir : idDevoirs) {
