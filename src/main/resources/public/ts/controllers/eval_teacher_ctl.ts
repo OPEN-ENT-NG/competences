@@ -2851,7 +2851,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             const reg = /^[0-9]+(\.[0-9]{1,2})?$/;
             cleanShortTermCaseValue(evaluation);
             if ((isValueChanged || evaluation.oldAppreciation !== evaluation.appreciation)) {
-
                 giveShortTermToValue(evaluation);
                 cleanComma(evaluation);
                 updateValueToNN(evaluation, isAnnotaion);
@@ -2910,7 +2909,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                                 evaluation.data.id = res.id;
                                             }
 
-                                            if ($location.$$path === '/releve' ) {
+                                            if ($location.$$path === '/releve') {
                                                 await $scope.releveNote.sync();
                                             } else {
                                                 $scope.calculStatsDevoir();
@@ -2951,7 +2950,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                                 evaluation.data.id = undefined;
                                             }
                                             $scope.calculStatsDevoir();
-
                                         }
                                         await utils.safeApply($scope);
                                         isWorkingProgress = false;
@@ -4119,7 +4117,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         || eleve.moyenneFinale !== "") {
 
                         if(eleve.oldMoyenneFinale != parseFloat(eleve.moyenneFinale) || eleve.oldMoyenneFinale !== eleve.moyenneFinale) {
-                            $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
+                            $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(async () => {
                                 eleve.moyenneFinaleIsSet = true;
                                 eleve.oldMoyenneFinale = eleve.moyenneFinale ;
                                 if (updateHistorique) {
@@ -4129,6 +4127,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                     eleve.moyenneFinaleIsSet = false;
                                     eleve.moyenneFinale = eleve.moyenne;
                                     eleve.oldMoyenneFinale = eleve.moyenneFinale;
+                                }
+                                if ($location.$$path === '/releve') {
+                                    await $scope.releveNote.sync();
                                 }
                                 utils.safeApply($scope);
                             });
