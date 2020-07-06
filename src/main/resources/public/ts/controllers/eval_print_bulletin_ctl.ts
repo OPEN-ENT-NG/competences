@@ -122,8 +122,8 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 return ;
             }
 
-            options.mentionOpinion = $scope.mentionClass + " : ";
-            options.orientationOpinion = $scope.orientationOpinion + " : ";
+            options.mentionOpinion = $scope.mentionClass;
+            options.orientationOpinion = $scope.orientationOpinion;
 
             options.idPeriode = $scope.selected.periode.id_type;
             options.type = $scope.selected.periode.type;
@@ -303,6 +303,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 ...reportModel.getPreferencesText(),
                 ...reportModel.getPreferencesCheckbox()
             };
+
             await syncPreferencesText();
             utils.safeApply($scope);
         }

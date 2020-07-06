@@ -498,11 +498,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         finalHandler);
                 getAppreciationCPE(idEleve, elevesMap, idPeriode, finalHandler);
 
-                String beforeAvisConseil = params.getString("mentionOpinion");
+                String beforeAvisConseil = params.getString("mentionOpinion") + " : ";
                 getAvisConseil(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
                         finalHandler, beforeAvisConseil);
 
-                String beforeAvisOrientation = params.getString("orientationOpinion");
+                String beforeAvisOrientation = params.getString("orientationOpinion") + " : ";
                 getAvisOrientation(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
                         finalHandler, beforeAvisOrientation);
 
