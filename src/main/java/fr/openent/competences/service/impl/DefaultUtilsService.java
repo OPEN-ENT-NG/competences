@@ -1153,7 +1153,7 @@ public class DefaultUtilsService  implements UtilsService {
     public void getActivesStructure(EventBus event, Handler<Either<String, JsonArray>>handler) {
 
      String query = "SELECT DISTINCT id_etablissement from " + VSCO_SCHEMA +".periode ;";
-        Sql.getInstance().prepared(query.toString(), new JsonArray(), new Handler<Message<JsonObject>>() {
+        Sql.getInstance().prepared(query, new JsonArray(), new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonArray structures = new JsonArray();

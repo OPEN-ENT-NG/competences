@@ -6,6 +6,7 @@ import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.model.PdfFile;
 import fr.openent.competences.model.Folder;
 import fr.openent.competences.service.impl.ArchiveWorker;
+import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
@@ -200,26 +201,23 @@ public class ArchiveUtils {
     }
 
     public static void generateArchiveBulletin(EventBus eb, HttpServerRequest request) {
-        final JsonObject action = new JsonObject()
-                .put("action", "structure.getStructuresActives")
-                .put("module","notes");
-        eb.send(VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>(){
-            @Override
-            public void handle(Message<JsonObject> event) {
-                JsonArray idStructures = event.body().getJsonArray("results");
-                JsonObject action = new JsonObject()
-                        .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
-                        .put(HOST, getHost(request))
-                        .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
-                        .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
-                        .put(ID_STRUCTURES_KEY,idStructures)
-                        .put(PATH, request.path());
-
-                eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
-                Renders.ok(request);
-//                request.response().setStatusMessage("ok").setStatusCode(201).end();
+        new DefaultUtilsService(eb).getActivesStructure(eb, structuresEvent -> {
+            if(structuresEvent.isLeft()){
+                log.error(structuresEvent.left().getValue());
+                return;
             }
-        }));
+            JsonArray idStructures = structuresEvent.right().getValue();
+            JsonObject action = new JsonObject()
+                    .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
+                    .put(HOST, getHost(request))
+                    .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
+                    .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
+                    .put(ID_STRUCTURES_KEY,idStructures)
+                    .put(PATH, request.path());
+
+            eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+            Renders.ok(request);
+        });
     }
 
     public static void getArchiveBFCZip(String idStructure, HttpServerRequest request, EventBus eb, Storage storage, Vertx vertx) {
