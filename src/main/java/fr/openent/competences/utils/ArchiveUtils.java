@@ -181,8 +181,12 @@ public class ArchiveUtils {
 
         String classeName = student.getString(CLASSE_NAME_TO_SHOW);
         if(isNull(classeName)){
-            classeName =  student.getString("nomClasse");
+            if(student.containsKey("classeName"))
+                classeName = student.getString("classeName");
+            log.info("[Competences@ArchiveUTILS] getArchiveBulletin + isnull +" + classeName) ;
+
         }
+
         String periode = student.getString(PERIODE);
 
         if(isNull(periode)){

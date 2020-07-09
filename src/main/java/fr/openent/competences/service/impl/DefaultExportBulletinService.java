@@ -15,6 +15,7 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -444,6 +445,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 niveauCompetences   = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
 
             }catch (java.lang.ClassCastException e){
+                log.info("CASTING string to JsonArray : " + params.getString(NIVEAU_COMPETENCE));
                 niveauCompetences = new JsonArray(params.getString(NIVEAU_COMPETENCE));
                 log.info("params : " + params + " idEleve : " + idEleve);
             }
@@ -2480,7 +2482,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         JsonObject images = params.getJsonObject("images");
         Long typePeriode = params.getLong(TYPE_PERIODE);
-       // String idClasseExporte = classe.getString(ID_CLASSE_KEY);
+        // String idClasseExporte = classe.getString(ID_CLASSE_KEY);
         for (int i = 0; i < eleves.size(); i++) {
             JsonObject eleve = eleves.getJsonObject(i);
             eleve.put(TYPE_PERIODE, typePeriode);
@@ -2532,7 +2534,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         for(int i =0; i< niveauDeMatrise.size(); i++){
             niveauCompetences += niveauDeMatrise.getJsonObject(i).encode() + ",";
         }
-        niveauCompetences = niveauCompetences.substring(0, niveauCompetences.length()-1);
+
+        if(niveauDeMatrise.size()>0)
+            niveauCompetences = niveauCompetences.substring(0, niveauCompetences.length()-1);
+        else
+            log.info("niveauMaitrise is equal to 0 ");
         niveauCompetences += "]";
 
         //PARAMS PAR DEFAUT
