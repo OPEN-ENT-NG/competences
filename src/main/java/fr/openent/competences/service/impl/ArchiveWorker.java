@@ -42,8 +42,7 @@ public class ArchiveWorker extends BusModBase {
                  switch (action) {
 
                      case ARCHIVE_BULLETIN:
-                         //final JsonArray idStructures = body.getJsonArray(ID_STRUCTURES_KEY);
-                         final JsonArray idStructures = new JsonArray().add(new JsonObject().put("id_etablissement", "7cf6808a-11cf-462a-80c8-b4518b3032e6"));
+                         final JsonArray idStructures = body.getJsonArray(ID_STRUCTURES_KEY);
                          new DefaultExportBulletinService(eb, storage, vertx).archiveBulletin(idStructures, vertx,
                                  config, path, host, acceptLanguage, forwardedFor);
                          break;
