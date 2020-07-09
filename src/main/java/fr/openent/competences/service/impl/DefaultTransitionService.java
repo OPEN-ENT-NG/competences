@@ -731,13 +731,22 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put("values", new fr.wseduc.webutils.collections.JsonArray())
                 .put("action", "prepared"));
     }
+    private void deleteRelationGroupCycleWhitoutNewIdClass(JsonArray statements){
+        String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_groupe_cycle r WHERE r.id_groupe = " +
+                "(SELECT old_class_id FROM "+ Competences.COMPETENCES_SCHEMA +".match_class_id_transition m " +
+                "WHERE m.old_class_id = r.id_groupe AND m.new_class_id IS NULL);";
+        statements.add(new JsonObject()
+                .put("statement", query)
+                .put("values", new fr.wseduc.webutils.collections.JsonArray())
+                .put("action", "prepared"));
+    };
 
     public void updateTablesTransition(JsonArray classesFromNeo, final Handler<Either<String,JsonArray>> handler) {
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
         updateNewIdClassTransition(statements, classesFromNeo);
         updateRelationGroupeCycle(statements);
-
+        deleteRelationGroupCycleWhitoutNewIdClass(statements);
         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
     }
 }
