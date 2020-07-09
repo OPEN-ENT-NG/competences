@@ -445,6 +445,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             }catch (java.lang.ClassCastException e){
                 niveauCompetences = new JsonArray(params.getString(NIVEAU_COMPETENCE));
+                log.info("params : " + params + " idEleve : " + idEleve);
             }
             JsonArray footerArray = new JsonArray();
             if(niveauCompetences != null && !niveauCompetences.isEmpty()){

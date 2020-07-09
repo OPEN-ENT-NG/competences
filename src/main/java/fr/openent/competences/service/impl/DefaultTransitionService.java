@@ -724,7 +724,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         String query = "UPDATE " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle r " +
                 "SET id_groupe = m.new_class_id " +
                 "FROM " + Competences.COMPETENCES_SCHEMA + ".match_class_id_transition m " +
-                "WHERE m.old_class_id = r.id_groupe AND new_class_id != null;";
+                "WHERE m.old_class_id = r.id_groupe AND new_class_id IS NOT NULL;";
 
         statements.add(new JsonObject()
                 .put("statement", query)
