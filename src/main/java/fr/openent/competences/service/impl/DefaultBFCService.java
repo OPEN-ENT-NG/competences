@@ -1789,8 +1789,6 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     }
 
                     JsonArray students = result.getJsonArray(CLASSES).getJsonObject(0).getJsonArray(ELEVES);
-                    log.info(">>>> " + indexClasseStart.incrementAndGet() + " BEGIN ARCHIVE GENERATOR (Classe: "
-                            + idClasse + "), " + "(Cycle: " + idCycle + ") WITH  " + students.size() + " eleves ");
 
 
                     if (isNull(students) || students.isEmpty()) {
@@ -1799,6 +1797,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                         classeFuture.complete();
                         return;
                     }
+                    log.info(">>>> " + indexClasseStart.incrementAndGet() + " BEGIN ARCHIVE GENERATOR (Classe: "
+                            + idClasse + "), " + "(Cycle: " + idCycle + ") WITH  " + students.size() + " eleves ");
                     List<Future> futureList = new ArrayList<>();
                     for (int i = 0; i < students.size(); i++) {
                         Future futureStudent = Future.future();
