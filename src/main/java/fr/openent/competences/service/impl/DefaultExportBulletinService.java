@@ -328,12 +328,31 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             classe.put("models", models);
                         }
 
-                        classe.put("idClasse", idClasse);
-                        classe.put("classeName", params.getString("classeName"));
-
                         Boolean showBilanPerDomaines = params.getBoolean("showBilanPerDomaines");
-                        buildDataForStudent(answered, eleves, elevesMap, idPeriode, params, classe,
-                                showBilanPerDomaines, host, acceptLanguage, finalHandler);
+
+                        classe.put("idClasse", idClasse);
+                        if(params.containsKey("classeName")){
+                            classe.put("classeName", params.getString("classeName"));
+                            buildDataForStudent(answered, eleves, elevesMap, idPeriode, params, classe,
+                                    showBilanPerDomaines, host, acceptLanguage, finalHandler);
+                        }else{
+                            JsonArray finalEleves = eleves;
+                            getClasseInfo(idClasse, new Handler<Either<String, String>>() {
+                                @Override
+                                public void handle(Either<String, String> event) {
+                                    if(event.isRight()){
+                                        log.info(event.right().getValue());
+                                        classe.put("classeName", event.right().getValue());
+
+                                        buildDataForStudent(answered, finalEleves, elevesMap, idPeriode, params, classe,
+                                                showBilanPerDomaines, host, acceptLanguage, finalHandler);
+                                    }
+                                }
+                            });
+
+                        }
+
+
                     } else {
                         // S'il y a un problème lors d'une récupération , on stoppe tout
                         String error = "[runExportBulletin] : " + event.cause().getMessage();
@@ -341,6 +360,21 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     }
                 }
                 ));
+    }
+
+    private void  getClasseInfo(String idClasse, Handler<Either<String,String>> handler) {
+        JsonObject action = new JsonObject()
+                .put(ACTION, "classe.getClasseInfo")
+                .put(ID_CLASSE_KEY, idClasse);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,  DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                String classe = body.getJsonObject(RESULT).getJsonObject("c").getJsonObject("data").getString(NAME);
+
+                handler.handle(new Either.Right<>(classe));
+            }
+
+        }));
     }
 
     public void saveParameters(JsonArray idStudents, Long idPeriode,
@@ -2970,7 +3004,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         final String templateName = "archiveBulletin.xhtml";
         JsonObject student =  students.getJsonObject(index);
         StringReader reader = new StringReader(fileResult.result().toString("UTF-8"));
-
+        student.put(NIVEAU_COMPETENCE, student.getValue(NIVEAU_COMPETENCE).toString());
         // On génère le template avec MUSTACHE
         mustachHelper.processTemplate(student, templateName, reader, path, host, acceptLanguage, forwardedFor,
                 writer -> {
