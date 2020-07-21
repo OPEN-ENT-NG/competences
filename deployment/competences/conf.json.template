@@ -5,7 +5,7 @@
         "port" : 8129,
         "app-name" : "Competences",
     	"app-address" : "/competences",
-    	"app-icon" : "competences",
+    	"app-icon" : "${host}/competences/public/img/uni-competences.svg",
         "host": "${host}",
         "ssl" : $ssl,
         "auto-redeploy": false,
