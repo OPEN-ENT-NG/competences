@@ -750,7 +750,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 datas = datas.substring(0, datas.length()-1);
                                 datas += "]";
                                 eleveObject.put("_data", datas);
-                                // log.info(datas);
+                                log.info( "data put on jsobjectEleve " +datas );
                                 serviceResponseOK(answer, finalHandler, count, idEleve,
                                         GET_DATA_FOR_GRAPH_DOMAINE_METHOD);
                             }
@@ -2296,11 +2296,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         JsonObject responsable = setResponsablesLibelle(JsonObject.mapFrom(o),
                                 responsables.getJsonObject(i));
                         Boolean isDifferentAddress = false;
+                        if(sortedJsonArray.isEmpty()) continue;
                         for (int j = sortedJsonArray.size() - 1; j > (sortedJsonArray.size() - 1 - i); j--) {
                             JsonObject responsableToCheck = sortedJsonArray.getJsonObject(j);
-                            java.lang.String addressResponsaleToCheck =
+                            String addressResponsaleToCheck =
                                     responsableToCheck.getString(ADDRESSE_POSTALE);
-                            java.lang.String addressResponsale =
+                            String addressResponsale =
                                     responsable.getString(ADDRESSE_POSTALE);
                             String lastNameResponsableToCheck = responsableToCheck.getString("responsableLastName",
                                     "");
