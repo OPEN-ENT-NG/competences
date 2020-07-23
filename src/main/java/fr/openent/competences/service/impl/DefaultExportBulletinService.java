@@ -747,7 +747,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 for(int i=0; i< domainsDatas.size(); i++){
                                     datas += domainsDatas.getJsonObject(i).encode() + ",";
                                 }
-                                datas = datas.substring(0, datas.length()-1);
+                                if(datas.length() > 1 ) datas = datas.substring(0, datas.length()-1);
                                 datas += "]";
                                 eleveObject.put("_data", datas);
                                 log.info( "data put on jsobjectEleve " +datas );
@@ -2297,63 +2297,67 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 responsables.getJsonObject(i));
                         Boolean isDifferentAddress = false;
                         if(sortedJsonArray.isEmpty()) continue;
-                        for (int j = sortedJsonArray.size() - 1; j > (sortedJsonArray.size() - 1 - i); j--) {
-                            JsonObject responsableToCheck = sortedJsonArray.getJsonObject(j);
-                            String addressResponsaleToCheck =
-                                    responsableToCheck.getString(ADDRESSE_POSTALE);
-                            String addressResponsale =
-                                    responsable.getString(ADDRESSE_POSTALE);
-                            String lastNameResponsableToCheck = responsableToCheck.getString("responsableLastName",
-                                    "");
-                            String lastNameResponsable = responsable.getString("responsableLastName",
-                                    "");
-                            String civiliteResponsableToCheck = responsableToCheck.getString("civilite");
-                            String civiliteResponsable = responsable.getString("civilite");
-                            String newLastNameResponsableToCheck = new String();
+                        try {
+                            for (int j = sortedJsonArray.size() - 1; j > (sortedJsonArray.size() - 1 - i); j--) {
+                                JsonObject responsableToCheck = sortedJsonArray.getJsonObject(j);
+                                String addressResponsaleToCheck =
+                                        responsableToCheck.getString(ADDRESSE_POSTALE);
+                                String addressResponsale =
+                                        responsable.getString(ADDRESSE_POSTALE);
+                                String lastNameResponsableToCheck = responsableToCheck.getString("responsableLastName",
+                                        "");
+                                String lastNameResponsable = responsable.getString("responsableLastName",
+                                        "");
+                                String civiliteResponsableToCheck = responsableToCheck.getString("civilite");
+                                String civiliteResponsable = responsable.getString("civilite");
+                                String newLastNameResponsableToCheck = new String();
 
-                            if (!addressResponsale.equals(addressResponsaleToCheck)) {
-                                isDifferentAddress = true;
-                            }else { //if same adress
-                                //with same lastName
-                                JsonArray responsableNewLibelle = new fr.wseduc.webutils.collections.JsonArray();
-                                JsonArray responsableOldLibelle = responsableToCheck.getJsonArray("responsableLibelle");
-                                if (lastNameResponsable.equals(lastNameResponsableToCheck)) {
+                                if (!addressResponsale.equals(addressResponsaleToCheck)) {
+                                    isDifferentAddress = true;
+                                } else { //if same adress
+                                    //with same lastName
+                                    JsonArray responsableNewLibelle = new fr.wseduc.webutils.collections.JsonArray();
+                                    JsonArray responsableOldLibelle = responsableToCheck.getJsonArray("responsableLibelle");
+                                    if (lastNameResponsable.equals(lastNameResponsableToCheck)) {
 
-                                    if ("M.".equals(civiliteResponsableToCheck)) {
-                                        newLastNameResponsableToCheck = civiliteResponsableToCheck + " et Mme " +
-                                                lastNameResponsableToCheck + " " +
-                                                responsableToCheck.getString("responsableFirstName","");
-                                    } else {
-                                        newLastNameResponsableToCheck = civiliteResponsable + " et Mme " +
-                                                lastNameResponsable + " " +
-                                                responsable.getString("responsableFirstName","");
+                                        if ("M.".equals(civiliteResponsableToCheck)) {
+                                            newLastNameResponsableToCheck = civiliteResponsableToCheck + " et Mme " +
+                                                    lastNameResponsableToCheck + " " +
+                                                    responsableToCheck.getString("responsableFirstName", "");
+                                        } else {
+                                            newLastNameResponsableToCheck = civiliteResponsable + " et Mme " +
+                                                    lastNameResponsable + " " +
+                                                    responsable.getString("responsableFirstName", "");
+                                        }
+
+                                        responsableNewLibelle.add(newLastNameResponsableToCheck);
+                                        responsableNewLibelle.add(responsableOldLibelle.getValue(1))
+                                                .add(responsableOldLibelle.getValue(2));
+
+
+                                    } else {//if same adress with different lastName
+                                        JsonObject responsableWithDifferentName = new JsonObject();
+                                        if ("M.".equals(civiliteResponsableToCheck)) {
+                                            responsableWithDifferentName.put("firstLastName", civiliteResponsableToCheck + " " + lastNameResponsableToCheck + " et")
+                                                    .put("secondLastName", civiliteResponsable + " " + lastNameResponsable)
+                                                    .put("adresseResponsable", responsableOldLibelle.getValue(1))
+                                                    .put("codePostalRelative", responsableOldLibelle.getValue(2));
+                                        } else {
+                                            responsableWithDifferentName.put("firstLastName", civiliteResponsable + " " + lastNameResponsable + " et")
+                                                    .put("secondLastName", civiliteResponsableToCheck + " " + lastNameResponsableToCheck)
+                                                    .put("adresseResponsable", responsableOldLibelle.getValue(1))
+                                                    .put("codePostalRelative", responsableOldLibelle.getValue(2));
+                                        }
+
+
+                                        responsableNewLibelle.add(responsableWithDifferentName);
+                                        responsableToCheck.put("relativesHaveTwoNames", true);
                                     }
-
-                                    responsableNewLibelle.add(newLastNameResponsableToCheck);
-                                    responsableNewLibelle.add(responsableOldLibelle.getValue(1))
-                                            .add(responsableOldLibelle.getValue(2));
-
-
-                                } else {//if same adress with different lastName
-                                    JsonObject responsableWithDifferentName = new JsonObject();
-                                    if( "M.".equals(civiliteResponsableToCheck)) {
-                                        responsableWithDifferentName.put("firstLastName",civiliteResponsableToCheck+" "+ lastNameResponsableToCheck +" et")
-                                                .put("secondLastName", civiliteResponsable+" "+lastNameResponsable)
-                                                .put("adresseResponsable",responsableOldLibelle.getValue(1))
-                                                .put("codePostalRelative",responsableOldLibelle.getValue(2));
-                                    }else{
-                                        responsableWithDifferentName.put("firstLastName",civiliteResponsable+" "+ lastNameResponsable +" et")
-                                                .put("secondLastName", civiliteResponsableToCheck+" "+lastNameResponsableToCheck)
-                                                .put("adresseResponsable",responsableOldLibelle.getValue(1))
-                                                .put("codePostalRelative",responsableOldLibelle.getValue(2));
-                                    }
-
-
-                                    responsableNewLibelle.add(responsableWithDifferentName);
-                                    responsableToCheck.put("relativesHaveTwoNames",true);
+                                    responsableToCheck.put("responsableLibelle", responsableNewLibelle);
                                 }
-                                responsableToCheck.put("responsableLibelle", responsableNewLibelle);
                             }
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            continue;
                         }
                         if (isDifferentAddress) {
                             sortedJsonArray.add(responsable);
