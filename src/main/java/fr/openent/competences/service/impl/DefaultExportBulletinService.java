@@ -479,9 +479,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 niveauCompetences   = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
 
             }catch (java.lang.ClassCastException e){
-                log.info("CASTING string to JsonArray : " + params.getString(NIVEAU_COMPETENCE));
+                //log.info("CASTING string to JsonArray : " + params.getString(NIVEAU_COMPETENCE));
                 niveauCompetences = new JsonArray(params.getString(NIVEAU_COMPETENCE));
-                log.info("params : " + params + " idEleve : " + idEleve);
+                //log.info("params : " + params + " idEleve : " + idEleve);
             }
             JsonArray footerArray = new JsonArray();
             if(niveauCompetences != null && !niveauCompetences.isEmpty()){
@@ -2742,7 +2742,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             .setHandler(eventClasse -> {
                                 if(eventClasse.failed()){
                                     String errorClasses = event.cause().getMessage();
-                                    log.error(" FAIL TO GET CLASSES " + errorClasses);
+                                    log.error(" FAIL TO GET CL<ASSES " + errorClasses);
                                 }
                                 // Lorsque toutes les classes sont archivées, on marque la structure courante comme
                                 // terminée et on passe à la structure suivante
@@ -3234,8 +3234,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             if(isNotNull(idEleve) && isNotNull(idClasse) && isNotNull(idEtablissement) && isNotNull(idPeriode)) {
                 Handler<Either<String, JsonObject>> saveHandler = savaEvent -> {
                     if (savaEvent.isRight()) {
-                        log.info("file stored: (eleve: " + idEleve + ", classe: " + idClasse + ", periode: "
-                                +idPeriode + ") ");
+                        //log.info("file stored: (eleve: " + idEleve + ", classe: " + idClasse + ", periode: " + idPeriode + ") ");
                     }
                     else{
                         log.error(noFileStored);
