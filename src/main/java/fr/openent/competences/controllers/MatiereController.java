@@ -1,13 +1,13 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Utils;
+import fr.openent.competences.enums.Common;
+import fr.openent.competences.helper.ManageError;
+import fr.openent.competences.model.Subject;
 import fr.openent.competences.security.AdministratorRight;
 import fr.openent.competences.service.MatiereService;
 import fr.openent.competences.service.impl.DefaultMatiereService;
-import fr.wseduc.rs.ApiDoc;
-import fr.wseduc.rs.Delete;
-import fr.wseduc.rs.Get;
-import fr.wseduc.rs.Post;
+import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.Renders;
@@ -21,10 +21,12 @@ import org.entcore.common.http.filter.ResourceFilter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
+import static fr.openent.competences.enums.subjects.SubjectOther.*;
+import static fr.openent.competences.enums.subjects.SubjectKey.*;
+import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 public class MatiereController extends ControllerHelper {
 
@@ -125,4 +127,81 @@ public class MatiereController extends ControllerHelper {
 
     }
 
+    @Delete("/subjects/:idStructure/id-structure/initialization-rank")
+    @ApiDoc("Initialization rank all subjects with id structure")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void initializationRank(final HttpServerRequest request) {
+        String idStructure;
+        try {
+        idStructure = request.params().get("idStructure");
+        } catch (Exception errorWhenGetBody) {
+            ManageError.requestFailError(request,
+                    Common.ERROR.getString(),
+                    "Error during recovery of the params",
+                    errorWhenGetBody.toString());
+            return;
+        }
+
+        if(idStructure.isEmpty()) badRequest(request);
+
+        Subject subject = new Subject();
+        subject.setIdStructure(idStructure);
+
+        matiereService.removeRankOnSubject(subject,  notEmptyResponseHandler(request));
+    }
+
+    @Put("/subjects/reshuffle-rank")
+    @ApiDoc("Reshuffle the order of subject after drag it one")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void organisationOrderSubject(final HttpServerRequest request) {
+
+        RequestUtils.bodyToJson(request, subjectBody -> {
+            String idStructure;
+            String idSubject;
+            int indexStart;
+            int indexEnd;
+
+            try {
+                idStructure = subjectBody.getString(ID_STRUCTURE.getString());
+                idSubject = subjectBody.getString(ID.getString());
+                indexStart = subjectBody.getInteger(INDEX_START.getString());
+                indexEnd =  subjectBody.getInteger(INDEX_END.getString());
+            } catch (Exception errorWhenGetBody) {
+                ManageError.requestFailError(request,
+                        Common.ERROR.getString(),
+                        "Error during recovery of the body",
+                        errorWhenGetBody.toString());
+                return;
+            }
+            String direction = indexEnd == -1 ? DRAG_UP.getString() : DRAG_DOWN.getString();
+            Boolean isUp = direction.equals(DRAG_UP.getString());
+                Subject.getListSubject(eb, idStructure, subjectsEvent -> {
+                    if (subjectsEvent.isLeft()) {
+                        ManageError.requestFailError(request,
+                                Common.ERROR.getString(),
+                                "Error during recovery of the listSubject",
+                                subjectsEvent.left().getValue());
+                        return;
+                    }
+                    Subject subject = new Subject(
+                            idSubject,
+                            idStructure,
+                            (isUp ? indexStart : indexEnd)
+                    );
+
+                    List<Subject> subjects = subjectsEvent.right().getValue();
+
+                    subjects = subjects.stream()
+                            .filter(subjectFiltered -> !(subjectFiltered).getId().equals(idSubject))
+                            .collect(Collectors.toList());
+
+                    for (int i = indexStart; i < (isUp ? subjects.size() : indexEnd); i++) {
+                        subjects.get(i).setRank(isUp ? i + 1 : i);
+                    }
+
+                    subjects.add(subject);
+                    matiereService.updateListRank(subjects, notEmptyResponseHandler(request));
+                });
+            });
+        }
 }

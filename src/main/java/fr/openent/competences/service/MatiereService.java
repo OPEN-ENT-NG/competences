@@ -1,5 +1,6 @@
 package fr.openent.competences.service;
 
+import fr.openent.competences.model.Subject;
 import fr.wseduc.webutils.Either;
 
 import io.vertx.core.json.JsonArray;
@@ -8,6 +9,7 @@ import org.entcore.common.service.CrudService;
 
 import io.vertx.core.Handler;
 
+import java.util.List;
 import java.util.Map;
 
 public interface MatiereService extends CrudService {
@@ -59,4 +61,18 @@ public interface MatiereService extends CrudService {
       * @param handler
       */
      void updateDevoirs(JsonArray idsMatieres, Handler<Either<String, JsonArray>> handler);
+
+     /**
+      * Reverse rank between both subjects in neo4j
+      * @param subject fist subject update
+      * @param handler return id of subjects
+      */
+     void removeRankOnSubject(Subject subject, Handler<Either<String, JsonObject>> handler);
+
+     /**
+      * Update rank subjects in neo4j
+      * @param subjects fist subject update
+      * @param handler return id of subject
+      */
+     void updateListRank(List<Subject> subjects, Handler<Either<String, JsonObject>> handler);
 }

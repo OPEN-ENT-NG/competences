@@ -1,0 +1,85 @@
+.orderShowSubject {
+
+  @mixin dropZone() {
+    transition-duration: 0.3s;
+    cursor: grabbing;
+  }
+  @mixin loader() {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    width: 30px;
+    margin: 0 45%;
+    height: 30px;
+    animation: spin 2s linear infinite;
+    margin: 20% 50%;
+  }
+  $default-margin-between: 15px;
+
+  i.move-row {
+    &::after {
+      content: "\e847";
+    }
+  }
+
+  .container-arrow {
+    display: flex;
+    justify-content: space-around;
+
+    .rotateDown {
+      transform: rotate(-90deg);
+      cursor: pointer;
+    }
+
+    .rotateUp {
+      transform: rotate(90deg);
+    }
+
+    i.arrow-simple:before {
+      content: "\e87b";
+    }
+  }
+
+  .loaderList {
+    @include loader;
+  }
+
+  ul {
+    list-style: none;
+    height: auto;
+    padding: 0px 15%;
+
+    .hidden {
+      visibility: hidden;
+    }
+
+    .row-shadow-effect {
+      background: white;
+      border-radius: 5px;
+      padding: 10px;
+      box-shadow: -2px 5px 5px #bfbfbf;
+      z-index: 0;
+      cursor: grab;
+    }
+
+    .row-dragged {
+      z-index: 1;
+      margin-bottom: 0;
+    }
+
+    .first-drop-zone:hover,
+    li:hover > div.drop-zone {
+      height: 60px;
+      @include dropZone;
+    }
+
+    .drop-zone,
+    .first-drop-zone {
+      height: $default-margin-between;
+    }
+
+    .no-drop-zone {
+      height: $default-margin-between;
+    }
+  }
+}

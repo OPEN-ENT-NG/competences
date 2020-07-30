@@ -431,17 +431,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.showRechercheBar = false;
                         if (!Utils.isChefEtab()) {
                             http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
-                                $scope.allMatieresSorted = _.sortBy(res, 'name');
+                                $scope.allMatieresSorted = _.sortBy(res, 'rank');
                                 utils.safeApply($scope);
                             });
                         } else {
-                            $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'name');
+                            $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
                         }
 
                         if ($scope.informations.eleve === undefined) {
                             $scope.informations.eleve = null;
                         }
-                        $scope.sortType = 'title'; // set the default sort type
+                        $scope.sortType = 'rank'; // set the default sort type
                         $scope.sortReverse = false;  // set the default sort order
                         $scope.usePerso = evaluations.structure.usePerso;
                         $scope.updateColorAndLetterForSkills();
@@ -499,11 +499,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if (!Utils.isChefEtab()) {
                         http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,)
                             .done(async function (res) {
-                                $scope.allMatieresSorted = _.sortBy(res, 'name');
+                                $scope.allMatieresSorted = _.sortBy(res, 'rank');
                                 await utils.safeApply($scope);
                             });
                     } else {
-                        $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'name');
+                        $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
                     }
                     if (params.idClasse != undefined) {
                         let classe: Classe = evaluations.classes.findWhere({id: params.idClasse});
@@ -3300,11 +3300,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.showRechercheBar = false;
                 if (!Utils.isChefEtab()) {
                     http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
-                        $scope.allMatieresSorted = _.sortBy(res, 'name');
+                        $scope.allMatieresSorted = _.sortBy(res, 'rank');
                         utils.safeApply($scope);
                     });
                 } else {
-                    $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'name');
+                    $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
                 }
 
                 if ($scope.informations.eleve === undefined) {

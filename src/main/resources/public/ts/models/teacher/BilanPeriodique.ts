@@ -274,19 +274,19 @@ export class BilanPeriodique extends  Model {
                         ensIsVisible : teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].ensIsVisible : true,
                         subjectName: subject? subject.name : undefined,
                         subjectShortName:  subject? subject.libelle_court : undefined,
+                        subjectRank:  subject? subject.rank : 0,
                     });
                     break;
                 }
             }
         }
-        return matchingDataApi;
+        return matchingDataApi.sort((subjectOne, subjectTwo) => subjectOne.subjectRank - subjectTwo.subjectRank);
     }
 
     private async createHeaderTable (data, teacherBysubject) {
         if(!Object.keys(data).map(element => data[element]).some(array => array.length > 0)) return [];
         let resultHeader : Array<any> = [];
         const dataSynthesis = await this.makerHeaderWithTeachersAndSubjects(data, teacherBysubject);
-
         const dataSynthesisClean = dataSynthesis
             .filter(subjectToSynthesis => subjectToSynthesis.subjectShortName)
             .map(subjectToSynthesis => {

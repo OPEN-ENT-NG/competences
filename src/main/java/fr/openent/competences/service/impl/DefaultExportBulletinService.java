@@ -754,7 +754,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 if(datas.length() > 1 ) datas = datas.substring(0, datas.length()-1);
                                 datas += "]";
                                 eleveObject.put("_data", datas);
-                                //log.info( "data put on jsobjectEleve " +datas );
+                                log.info( "data put on jsobjectEleve " +datas );
                                 serviceResponseOK(answer, finalHandler, count, idEleve,
                                         GET_DATA_FOR_GRAPH_DOMAINE_METHOD);
                             }

@@ -749,5 +749,7 @@
   "evaluations.archives.choice.type": "Choix du type d'archive",
   "evaluations.archives.button": "Générer l'archive",
   "evaluations.choice.structure": "Choix de la structure",
-  "no.data.to.export": "Pas de données à exporter"
+  "no.data.to.export": "Pas de données à exporter",
+  "evaluation.orderShowSubject.title": "Organiser les matières",
+  "evaluation.orderShowSubject.description": "Cet écran permet d'organiser l'ordre dans lequel sont affichées les matières sur les différents écrans et exports de l'application Compétences. Par défaut, les matières sont organisées par ordre alphabétique."
 }

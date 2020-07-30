@@ -1000,4 +1000,29 @@ public class Utils {
         return maitrises;
     }
 
+    public static JsonArray sortJsonArrayIntValue(final String KEY_NAME, final JsonArray arrayNoSort) {
+        final List<JsonObject> listOfJsonObjects = new ArrayList<>();
+        for (int i = 0; i < arrayNoSort.size(); i++) {
+            final JsonObject objectNoSorted = arrayNoSort.getJsonObject(i);
+            listOfJsonObjects.add(objectNoSorted);
+        }
+        Collections.sort(listOfJsonObjects, (firstObject, secondeObject) -> {
+            int firstValue = 0;
+            int secondValue = 0;
+            try {
+                firstValue = firstObject.getInteger(KEY_NAME);
+                secondValue = secondeObject.getInteger(KEY_NAME);
+            } catch (final Exception error) {
+                log.error("Sort fail when he get integers values key -> " + KEY_NAME + error);
+            }
+            return Integer.compare(firstValue, secondValue);
+        });
+
+        final JsonArray sortedJsonArray = new JsonArray();
+        for (final JsonObject objectSorted : listOfJsonObjects) {
+            sortedJsonArray.add(objectSorted);
+        }
+        return sortedJsonArray;
+    }
+
 }

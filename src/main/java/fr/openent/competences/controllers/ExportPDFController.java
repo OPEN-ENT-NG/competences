@@ -498,7 +498,7 @@ public class ExportPDFController extends ControllerHelper {
         Future<Map<JsonObject, Map<String, List<NoteDevoir>>>> notesFuture = Future.future();
         Future<Map<JsonObject, Map<String, NoteDevoir>>> moyennesFinalFuture = Future.future();
 
-        Future<Map<String, String>> libMatFuture = Future.future();
+        Future<Map<String, JsonObject>> libMatFuture = Future.future();
         Future<Map<String, String>> libGrpFuture = Future.future();
         Future<Map<String, String>> libTeachFuture = Future.future();
 
@@ -734,7 +734,7 @@ public class ExportPDFController extends ControllerHelper {
                 } else {
                     Utils.getLibelleMatiere(eb, new JsonArray(MatGrp.stream().map(matGrp -> matGrp.getString("id_matiere")).collect(Collectors.toList())), libMatEvent -> {
                         if (libMatEvent.isRight()) {
-                            libMatFuture.complete(libMatEvent.right().getValue().entrySet().stream().collect(Collectors.toMap(val -> val.getKey(), val -> val.getValue().getString("name"))));
+                            libMatFuture.complete(libMatEvent.right().getValue());
                         } else {
                             log.error(libMatEvent.left().getValue());
                             libMatFuture.fail(new Throwable(libMatEvent.left().getValue()));
@@ -790,13 +790,14 @@ public class ExportPDFController extends ControllerHelper {
                 String libelleClasse = allData.result().resultAt(1);
                 Map<String, String> libTeachers = allData.result().resultAt(2);
                 Map<String, String> libGrp = allData.result().resultAt(3);
-                Map<String, String> libMatieres = allData.result().resultAt(4);
+                Map<String, JsonObject> libMatieres = allData.result().resultAt(4);
                 Map<JsonObject, JsonObject> moyObject = allData.result().resultAt(5);
 
                 JsonArray data = new JsonArray(
                         moyObject.entrySet().stream().map(entry -> {
                             JsonObject newMoy = new JsonObject();
-                            newMoy.put("mat", libMatieres.get(entry.getKey().getString("id_matiere")));
+                            newMoy.put("mat", libMatieres.get(entry.getKey().getString("id_matiere")).getString("name"));
+                            newMoy.put("rank", libMatieres.get(entry.getKey().getString("id_matiere")).getInteger("rank"));
                             newMoy.put("prof", libTeachers.get(teachers.get(entry.getKey())));
                             newMoy.put("grp", libGrp.get(entry.getKey().getString("id_groupe")));
 
@@ -815,7 +816,7 @@ public class ExportPDFController extends ControllerHelper {
                             return newMoy;
                         }).collect(Collectors.toList()));
 
-                result.put("data", data);
+                result.put("data", Utils.sortJsonArrayIntValue("rank", data));
                 result.put("periode", libellePeriode);
                 result.put("classe", libelleClasse);
 

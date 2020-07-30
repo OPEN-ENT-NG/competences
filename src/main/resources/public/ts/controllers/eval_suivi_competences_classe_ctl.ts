@@ -20,14 +20,13 @@
  * Created by ledunoiss on 27/10/2016.
  */
 
-import {ng, template, model, http, notify, idiom as lang, $} from 'entcore';
+import {$, http, idiom as lang, model, ng, notify, template} from 'entcore';
 import httpAxios from "axios";
-import {SuiviCompetenceClasse, evaluations, Matiere} from '../models/teacher';
+import {evaluations, Matiere, SuiviCompetenceClasse} from '../models/teacher';
 import * as utils from '../utils/teacher';
-import { Defaultcolors } from "../models/eval_niveau_comp";
+import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/";
-import { FilterNotEvaluated, FilterNotEvaluatedEnseignement
-} from "../utils/filters/filterNotEvaluatedEnseignement";
+import {FilterNotEvaluated, FilterNotEvaluatedEnseignement} from "../utils/filters/filterNotEvaluatedEnseignement";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
 import {getTitulairesForRemplacantsCoEnseignant, translate} from "../utils/teacher";
@@ -779,6 +778,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     await Utils.stopMessageLoader($scope);
                 }
             } catch (error) {
+                console.error(error);
                 isExportFinish = false;
             } finally {
                 defaultFinallyDownload(isExportFinish);

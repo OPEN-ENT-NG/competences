@@ -26,6 +26,7 @@ import {renameSubject} from "./sniplets/renameSubject";
 import {opinionConference} from "./sniplets/opinionConference";
 import {paramImportCSV} from "./sniplets/param_import_csv";
 import {programElements} from "./sniplets/programsElement";
+import {orderShowSubject} from "./sniplets/orderShowSubject";
 
 Behaviours.register('competences', {
     rights: {
@@ -48,6 +49,7 @@ Behaviours.register('competences', {
             canSaisiAppreciationCPE: "fr.openent.competences.controllers.BilanPeriodiqueController|createOrUpdateAppreciationCPE",
             canSaveAppMatierePosiBilanPeriodique: "fr.openent.competences.controllers.NoteController|saveAppreciationMatiereAndPositionnement",
             paramServices: "fr.openent.competences.controllers.ServicesController|createService",
+            orderShowSubject: "fr.openent.competences.controllers.OrderShowSubjectController|updateDevoirs",
             canCreateDevoir: "fr.openent.competences.controllers.DevoirController|createDevoir"
         },
         resource: {}
@@ -63,6 +65,7 @@ Behaviours.register('competences', {
         renameSubject: renameSubject,
         param_import_csv: paramImportCSV,
         opinionConference: opinionConference,
-        programElements: programElements
+        programElements: programElements,
+        orderShowSubject: orderShowSubject
     }
 });

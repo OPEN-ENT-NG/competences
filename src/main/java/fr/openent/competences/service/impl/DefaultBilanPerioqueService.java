@@ -422,7 +422,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         if (idsMatLibelle != null && !idsMatLibelle.isEmpty() && idsMatLibelle.containsKey(idMatiere)) {
             result.put("id_matiere", idMatiere)
                     .put("libelleMatiere", idsMatLibelle.get(idMatiere).getString(NAME))
-                    .put(SOUS_MATIERES, idsMatLibelle.get(idMatiere).getJsonArray("sous_matieres"));
+                    .put(SOUS_MATIERES, idsMatLibelle.get(idMatiere).getJsonArray("sous_matieres"))
+                    .put("rank", idsMatLibelle.get(idMatiere).getInteger("rank"));
         } else {
             result.put("id_matiere", idMatiere)
                     .put("libelleMatiere", "no libelle");
@@ -550,11 +551,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
         CompositeFuture.all(subjectsFuture).setHandler(event -> {
             if (event.succeeded()) {
-                String [] sortedField = new  String[1];
-                sortedField[0] = "libelleMatiere";
                 handler.handle(new Either.Right<>(
-                        new DefaultUtilsService().sortArray(results,
-                                sortedField)));
+                        Utils.sortJsonArrayIntValue("rank", results)));
 
             } else {
                 String error = event.cause().getMessage();

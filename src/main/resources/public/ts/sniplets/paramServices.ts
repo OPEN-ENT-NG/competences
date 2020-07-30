@@ -1,4 +1,4 @@
-import {notify, idiom as lang, _, toasts} from 'entcore';
+import {notify, idiom as lang, _, toasts, $} from 'entcore';
 import http from "axios";
 import * as utils from '../utils/teacher';
 import {Classe, TypeSousMatieres} from "../models/teacher";
@@ -120,7 +120,6 @@ export const paramServices = {
                 return isInSearched;
             }
         },
-
         setServicesWithGroups: async function (data) {
             function getGroupsName(service, groups) {
                 if(service.competencesParams && service.competencesParams.length !== 0){
