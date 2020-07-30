@@ -22,11 +22,12 @@ import http from "axios";
 export class TypeSubTopic  implements Selectable{
     id: number;
     libelle: string;
-    selected:boolean;
+    selected: boolean;
+    id_structure: string;
 
     async create(){
         try{
-            let {status,data} = await http.post(`/viescolaire/types/sousmatiere`,this.toJson());
+            let {status, data} = await http.post(`/viescolaire/types/sousmatiere`, this.toJson());
             this.id = data.id;
             return status === 200;
         }catch (e){
@@ -36,7 +37,7 @@ export class TypeSubTopic  implements Selectable{
 
     async update(){
         try{
-            let {status,data} = await http.put(`/viescolaire/types/sousmatiere/${this.id}`,this.toJson());
+            let {status, data} = await http.put(`/viescolaire/types/sousmatiere/${this.id}`, this.toJson());
             this.id = data.id;
             return status === 200;
         }catch (e){
@@ -46,8 +47,8 @@ export class TypeSubTopic  implements Selectable{
 
     async save() {
         if(this.id){
-            return  await  this.update();
-        }else{
+            return await this.update();
+        } else {
             return await this.create();
         }
     }
@@ -56,27 +57,25 @@ export class TypeSubTopic  implements Selectable{
         return {
             ...(this.id && {id: this.id}),
             ...(this.libelle && {libelle: this.libelle}),
+            ...(this.id_structure && {id_structure: this.id_structure}),
         }
     }
 }
+
 export class TypeSubTopics extends Selection<TypeSubTopic>{
     id: number;
     libelle: string;
+    id_structure: string;
 
-    async get(){
-        let {data} = await http.get(`/viescolaire/types/sousmatieres`);
+    async get(idStructure){
+        let {data} = await http.get(`/viescolaire/types/sousmatieres?idStructure=` + idStructure);
         this.all = Mix.castArrayAs(TypeSubTopic, data);
-
     }
 
     async saveTopicSubTopicRelation(topics){
         let topicsToSend = [];
         let subTopicsToSend = [];
 
-        let jsonToSend = {
-            topics:[],
-            subTopics:[]
-        };
         topics.forEach(topic =>{
             if (topic.selected){
                 topic.sous_matieres = this.selected;
@@ -87,8 +86,12 @@ export class TypeSubTopics extends Selection<TypeSubTopic>{
         this.selected.forEach(subTopic => {
             subTopicsToSend.push(subTopic.id);
         });
-        jsonToSend.topics = topicsToSend;
-        jsonToSend.subTopics = subTopicsToSend;
+
+        let jsonToSend = {
+            topics:topicsToSend,
+            subTopics:subTopicsToSend
+        };
+
         let {status} = await http.post(`/viescolaire/types/sousmatieres/relations`,jsonToSend);
         return status === 200 || status === 204;
     }

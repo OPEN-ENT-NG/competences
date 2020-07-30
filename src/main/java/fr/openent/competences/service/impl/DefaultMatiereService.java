@@ -359,14 +359,13 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
 
     }
 
-    public void getSousMatieres(String idMatiere, Handler<Either<String, JsonArray>> handler){
+    public void getSousMatieres(String idMatiere, String idStructure, Handler<Either<String, JsonArray>> handler){
         String query = " SELECT id_type_sousmatiere as id_sousmatiere, id_matiere , libelle " +
                 " FROM " +  underSubjectTable + "  INNER JOIN " + typeUnderSubjectTable +
                 " ON id_type_sousmatiere = type_sousmatiere.id " +
-                " WHERE id_matiere = ? ; ";
+                " WHERE id_matiere = ? AND id_structure = ?";
 
-        JsonArray params = new JsonArray();
-        params.add(idMatiere);
+        JsonArray params = new JsonArray().add(idMatiere).add(idStructure);
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
@@ -401,10 +400,10 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
     private void getSubJectInfos(JsonArray idsMatieres, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id_type_sousmatiere as id_sousmatiere, id_matiere , libelle\n" +
-                " FROM " + VSCO_SCHEMA + ".sousmatiere\n" +
+        String query = "SELECT id_type_sousmatiere as id_sousmatiere, id_matiere, libelle, id_structure " +
+                " FROM " + VSCO_SCHEMA + ".sousmatiere " +
                 " INNER JOIN "  + VSCO_SCHEMA + ".type_sousmatiere " +
-                "       ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id AND " +
+                " ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id AND " +
                 (isNull(idsMatieres)? "true" : listPrepared(idsMatieres.getList()));
 
         JsonArray params = new JsonArray();

@@ -17,15 +17,17 @@
 
 import { Periode } from "./Periode";
 import { DefaultClasse } from "../common/DefaultClasse";
-import { Collection, http } from 'entcore';
+import {_, Collection, http} from 'entcore';
 import { translate } from "../../utils/functions/translate";
 import {TypePeriode} from "../common/TypePeriode";
+import { Service } from "../common/ServiceSnipplet";
 
 export class Classe extends DefaultClasse {
     id: string;
     periodes: Collection<Periode>;
     typePeriodes: Collection<TypePeriode>;
     id_cycle: number;
+    services: Collection<Service>;
 
 
     get api() {
@@ -33,6 +35,7 @@ export class Classe extends DefaultClasse {
             getCycle: '/viescolaire/cycle/eleve/' + this.id,
             syncGroupe: '/viescolaire/groupe/enseignement/users/' + this.id + '?type=Student',
             syncPeriode: '/viescolaire/periodes?idGroupe=' + this.id,
+            syncServices: `/viescolaire/services?idEtablissement=`,
 
             TYPEPERIODES: {
                 synchronisation: '/viescolaire/periodes/types'
@@ -70,14 +73,27 @@ export class Classe extends DefaultClasse {
                 sync: async (): Promise<any> => {
                     return await http().getJson(this.api.TYPEPERIODES.synchronisation).done((res) => {
                         this.typePeriodes.load(res);
-                    })
-                    .error(function () {
+                    }).error(function () {
                         if (reject && typeof reject === 'function') {
                             reject();
                         }
                     });
                 }
             });
+            this.collection(Service, {
+                sync: async (idEtablissement): Promise<any> => {
+                    return await http().getJson(this.api.syncServices + idEtablissement).done((res) => {
+                        let services = _.where(res,
+                            {id_groupe : this.id});
+                        this.services = (!_.isEmpty(services)) ? services : null;
+                        resolve();
+                    }).error(function() {
+                        if (reject && typeof reject === 'function') {
+                            reject();
+                        }
+                    })
+                }
+            })
             await this.periodes.sync();
             await this.typePeriodes.sync();
             resolve();

@@ -45,7 +45,7 @@
                     <div class="five inline-block align-center" ng-if="suiviFilter.mine === 'true'">
                         <proportion-suivi-competence
                                 evaluations="competence.mineCompetencesEvaluations"
-                                is-classe="true" filter="suiviFilter" user="me"
+                                is-classe="true" filter="suiviFilter" list-teacher="listTeacher"
                                 map-lettres="mapLettres"
                                 map-couleurs="mapCouleurs"
                         ></proportion-suivi-competence>
@@ -53,7 +53,7 @@
                     <div class="five inline-block align-center" ng-if="suiviFilter.mine === 'false'">
                         <proportion-suivi-competence
                                 evaluations="competence.competencesEvaluations"
-                                is-classe="true" filter="suiviFilter" user="me"
+                                is-classe="true" filter="suiviFilter" list-teacher="listTeacher"
                                 map-lettres="mapLettres"
                                 map-couleurs="mapCouleurs"
                         ></proportion-suivi-competence>
@@ -79,7 +79,7 @@
             ng-click="enseignement.OpenDom = !enseignement.OpenDom" ng-init="enseignement.OpenDom = false">[[enseignement.nom]]</h4>
         <div ng-class="{'openedSectionDom' : enseignement.OpenDom}" class="twelve cell" style='height: auto;'>
             <teachings-skills ng-if="enseignement.matieres.all.length === 0" data ="enseignement"
-                              suivi-filter="suiviFilter" me="me" map-lettres="mapLettres" map-couleurs="mapCouleurs"
+                              suivi-filter="suiviFilter" list-teacher="listTeacher" map-lettres="mapLettres" map-couleurs="mapCouleurs"
                               function-filter-not-evaluated="FilterNotEvaluated"
                               function-open-detail-competence="openDetailCompetence">
             </teachings-skills>
@@ -87,7 +87,7 @@
                 <h2 class="changedAverage" ng-class="{'openedDom' : matiere.OpenMat}" ng-click =" matiere.OpenMat = !matiere.OpenMat" ng-init= "matiere.OpenMat = false">[[matiere.name]]</h2>
                 <div ng-class="{'openedSectionDom' : matiere.OpenMat}" style='height: auto;'>
                     <teachings-skills data="matiere"
-                                      suivi-filter="suiviFilter" me="me" map-lettres="mapLettres" map-couleurs="mapCouleurs"
+                                      suivi-filter="suiviFilter" list-teacher="listTeacher" map-lettres="mapLettres" map-couleurs="mapCouleurs"
                                       function-open-detail-competence="openDetailCompetence"
                                       function-filter-not-evaluated="FilterNotEvaluated">
                     </teachings-skills>

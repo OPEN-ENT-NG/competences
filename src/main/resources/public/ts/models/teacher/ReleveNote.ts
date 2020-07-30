@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {Model, IModel, _, moment, Collection, http, idiom as lang, notify} from 'entcore';
+import {Model, IModel, _, moment, Collection, http, idiom as lang, notify, model} from 'entcore';
 import httpAxios from 'axios';
 import {
     AppreciationClasse,
@@ -31,6 +31,7 @@ import {getNN} from "../../utils/functions/utilsNN";
 import * as utils from "../../utils/teacher";
 import {Graph} from "../common/Graph";
 import {SousMatiere} from "./SousMatiere";
+import {getTitulairesForRemplacantsCoEnseignant} from "../../utils/teacher";
 
 
 export class ReleveNote extends  Model implements IModel {
@@ -579,12 +580,13 @@ export class ReleveNote extends  Model implements IModel {
             http().getJson(uri)
                 .done((res) => {
                     if (res) {
+                        let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId, eleve.classe)
                         for (let i = 0; i < res.length; i++) {
                             let domaine = new Domaine(res[i], eleve.id);
                             eleve.domaines.all.push(domaine);
                             eleve.tabDomaine = [];
                             Utils.setCompetenceNotes(domaine, eleve.competencesNotes, this.tableConversions,
-                                undefined, undefined, eleve.tabDomaine);
+                                undefined, undefined, eleve.tabDomaine,listTeacher);
                         }
                     }
                     resolve();

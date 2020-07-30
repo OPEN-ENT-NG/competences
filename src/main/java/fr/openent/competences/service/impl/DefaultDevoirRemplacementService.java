@@ -18,7 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
-import fr.openent.competences.service.RemplacementService;
+import fr.openent.competences.service.DevoirRemplacementService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
@@ -26,7 +26,6 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.sql.SqlStatementsBuilder;
-import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -36,12 +35,14 @@ import java.util.List;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
-public class DefaultRemplacementService extends SqlCrudService implements RemplacementService {
+@Deprecated
+public class DefaultDevoirRemplacementService extends SqlCrudService implements DevoirRemplacementService {
 
-    public DefaultRemplacementService(String schema, String table) {
+    public DefaultDevoirRemplacementService(String schema, String table) {
         super(schema, table);
     }
 
+    @Deprecated
     @Override
     public void listRemplacements(List<String> poListIdEtab, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
@@ -53,7 +54,7 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
                 .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".users users_titulaires ON users_titulaires.id = rel_professeurs_remplacants.id_titulaire  ")
                 .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".users users_remplacants ON users_remplacants.id = rel_professeurs_remplacants.id_remplacant  ")
                 .append("WHERE id_etablissement IN " + Sql.listPrepared(oListIdEtabArray) + " ")
-                /*.append("AND current_date <= date_fin")*/; // TODO a décomenter
+        /*.append("AND current_date <= date_fin")*/; // TODO a décomenter
 
         for (Object idEab: oListIdEtabArray) {
             values.add(idEab.toString());
@@ -61,7 +62,7 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
-
+    @Deprecated
     @Override
     public void createRemplacement(JsonObject poRemplacement, Handler<Either<String, JsonObject>> handler) {
         SqlStatementsBuilder s = new SqlStatementsBuilder();
@@ -78,17 +79,17 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
         // Ajout du remplacement
         String remplacementQuery = "INSERT INTO "+ Competences.COMPETENCES_SCHEMA+ ".rel_professeurs_remplacants (id_titulaire, id_remplacant, date_debut, date_fin, id_etablissement) VALUES (?, ?, to_timestamp(?,'YYYY-MM-DD'), to_timestamp(?,'YYYY-MM-DD'), ?);";
         s.prepared(remplacementQuery, new fr.wseduc.webutils.collections.JsonArray().add(poRemplacement.getString("id_titulaire"))
-                                                        .add(poRemplacement.getString("id_remplacant"))
-                                                        .add(poRemplacement.getString("date_debut"))
-                                                        .add(poRemplacement.getString("date_fin"))
-                                                        .add(poRemplacement.getString("id_etablissement"))
+                .add(poRemplacement.getString("id_remplacant"))
+                .add(poRemplacement.getString("date_debut"))
+                .add(poRemplacement.getString("date_fin"))
+                .add(poRemplacement.getString("id_etablissement"))
         );
 
 
         Sql.getInstance().transaction(s.build(), validUniqueResultHandler(1, handler));
     }
 
-
+    @Deprecated
     @Override
     public void deleteRemplacement(String id_titulaire, String id_remplacant, String date_debut, String date_fin, String id_etablissement, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
@@ -111,7 +112,32 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
     }
 
     @Override
-    public void getRemplacementClasse(JsonArray classes, UserInfos user, String idStructure, Handler<Either<String, JsonArray>> handler) {
+    public void getClassesIdsDevoir(String userId, String structureId, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT distinct(rel_devoirs_groupes.id_groupe) " +
+                "FROM notes.devoirs " +
+                "inner join notes.rel_devoirs_groupes ON (rel_devoirs_groupes.id_devoir = devoirs.id) " +
+                "AND (devoirs.id_etablissement = ? ) " +
+                "AND (devoirs.owner = ? " +
+                "OR devoirs.owner IN (SELECT DISTINCT id_titulaire " +
+                "FROM notes.rel_professeurs_remplacants " +
+                "INNER JOIN notes.devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement " +
+                "WHERE id_remplacant = ? " +
+                "AND rel_professeurs_remplacants.id_etablissement = ?) " +
+                "OR ? IN (SELECT member_id " +
+                "FROM notes.devoirs_shares " +
+                "WHERE resource_id = devoirs.id " +
+                "AND action = '"+ Competences.DEVOIR_ACTION_UPDATE +"'))";
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(structureId)
+                .add(userId)
+                .add(userId)
+                .add(structureId)
+                .add(userId);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    private void getNeoInfo(JsonArray classes, String userId, String idStructure, Handler<Either<String, JsonArray>> handler){
         JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
         for (int i = 0; i < classes.size(); i++) {
             JsonObject o = classes.getJsonObject(i);
@@ -131,8 +157,33 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
 
         JsonObject params = new JsonObject()
                 .put("ids", ids)
-                .put("userId", user.getUserId());
+                .put("userId", userId);
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+    }
+    @Override
+    public void getRemplacementClasse(String userId, String idStructure, Handler<Either<String, JsonArray>> handler) {
+        getClassesIdsDevoir(userId, idStructure, new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle(Either<String, JsonArray> event) {
+                if (event.isRight()) {
+
+                    final JsonArray classeIds = event.right().getValue();
+                    getNeoInfo(classeIds, userId, idStructure, new Handler<Either<String, JsonArray>>() {
+                        @Override
+                        public void handle(Either<String, JsonArray> event) {
+                            if (event.isRight()) {
+                                JsonArray values = event.right().getValue();
+                                handler.handle(new Either.Right<>(values));
+                            } else {
+                                handler.handle(new Either.Left<>("Error when getting remplacments classes from neo"));
+                            }
+                        }
+                    });
+                } else {
+                    handler.handle(new Either.Left<>("Error when getting homeworks classes from sql"));
+                }
+            }
+        });
     }
 }

@@ -30,7 +30,7 @@ import { FilterNotEvaluated, FilterNotEvaluatedEnseignement
 } from "../utils/filters/filterNotEvaluatedEnseignement";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
-import {translate} from "../utils/teacher";
+import {getTitulairesForRemplacantsCoEnseignant, translate} from "../utils/teacher";
 
 declare let _: any;
 
@@ -110,6 +110,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             await Utils.runMessageLoader($scope);
             if (classeHasChange === true) {
                 await $scope.syncPeriode($scope.search.classe.id);
+                $scope.listTeacher = getTitulairesForRemplacantsCoEnseignant($scope.me.userId, $scope.search.classe);
             }
             if ($scope.search.classe.id_cycle === null) {
                 await Utils.stopMessageLoader($scope);
@@ -155,9 +156,12 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 return;
             }
             if ($scope.suiviFilter === undefined) $scope.initFilterMine();
-            let evaluations = $scope.suiviFilter.mine == 'true'
-                ? _.where($scope.detailCompetence.competencesEvaluations, {id_eleve: idEleve, owner: model.me.userId})
-                : _.where($scope.detailCompetence.competencesEvaluations, {id_eleve: idEleve});
+            let evaluations = _.where($scope.detailCompetence.competencesEvaluations, {id_eleve: idEleve});
+            if($scope.suiviFilter.mine == 'true') {
+                evaluations = _.filter(evaluations,evaluation => {
+                    return _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
+                });
+            }
             if (evaluations.length > 0) {
                 // filtre sur les competences prises dans le calcul
                 evaluations = _.filter(evaluations, function (competence) {
@@ -231,7 +235,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             if ($scope.suiviFilter.mine === 'false' || $scope.suiviFilter.mine === false) {
                 return true;
             }
-            return evaluation.owner === $scope.me.userId;
+            return _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
         };
 
         /**
@@ -378,6 +382,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     let url = "/competences/suiviClasse/tableau/moyenne/" + $scope.search.classe.id;
                     url += "/export?withMoyGeneraleByEleve=" + withMoyGeneraleByEleve;
                     url += "&withMoyMinMaxByMat=" + withMoyMinMaxByMat + "&text=" + !textMod;
+                    url += "&idEtablissement=" + $scope.structure.id;
                     if (idPeriode) {
                         url += "&idPeriode=" + idPeriode;
                     }
@@ -460,7 +465,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 if ($scope.suiviFilter === undefined) $scope.initFilterMine();
                 if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
                     _t = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {
-                        if (evaluation.owner !== undefined && evaluation.owner === $scope.me.userId)
+                        if (evaluation.owner !== undefined &&
+                            _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere}))
                             return evaluation;
                     });
                 }
@@ -619,9 +625,10 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         const getSubjectsNotesAppraisals = async ():Promise<void> => {
             const teacherBySubject = utils.getTeacherBySubject($scope.classes.all,
                 $scope.search.classe.id,
-                $scope.structure.enseignants.all);
-            const dataSynthesisAndAppraisals:Array<any> = await bilanPeriodic.synthesisAndAppraisals( initResultPeriodic(), $scope);
-            $scope.averagesClasses = await bilanPeriodic.getAverage(dataSynthesisAndAppraisals, teacherBySubject );
+                $scope.structure.enseignants.all,
+                $scope.search.periode);
+            const dataSynthesisAndAppraisals : Array<any> = await bilanPeriodic.synthesisAndAppraisals(initResultPeriodic(), $scope);
+            $scope.averagesClasses = await bilanPeriodic.getAverage(dataSynthesisAndAppraisals, teacherBySubject);
         };
 
         const cleanScopeTabs = () => {
@@ -663,7 +670,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     break;
                 case ('teacherAppraisals'):
                     if(!$scope.teacherNotesAndAppraisals) $scope.teacherNotesAndAppraisals = await bilanPeriodic
-                    .getAppraisalsAndNotesByClassAndPeriod($scope.search.classe.id, $scope.search.periode.id_type, evaluations.structure.id);
+                        .getAppraisalsAndNotesByClassAndPeriod($scope.search.classe.id, $scope.search.periode.id_type, evaluations.structure.id);
                     isManualCsvFromAngular = true;
                     fileDownloadName.pdf = 'printRecapAppreciations';
                     fileDownloadName.csv = `teacher_appraisals${infoNameFileEnd}`;
@@ -677,11 +684,9 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             $scope.loadingTab = false;
             await utils.safeApply($scope);
             if($scope.displayFollowCompetencesClass == 'positioning')
-                if(!dataBodyCsv)
-                    await positioningCsvData($scope.search.periode.id_type, $scope.search.classe.id);
+                await positioningCsvData($scope.search.periode.id_type, $scope.search.classe.id);
             else if ($scope.displayFollowCompetencesClass == 'teacherAppraisals')
-                    if(!dataBodyCsv)
-                        dataBodyCsv = prepareBodyAppraisalsForCsv($scope.dataHeaderAppraisals, $scope.teacherNotesAndAppraisals);
+                dataBodyCsv = prepareBodyAppraisalsForCsv($scope.dataHeaderAppraisals, $scope.teacherNotesAndAppraisals);
         };
 
         const positioningCsvData = async (idPeriod:number, idClass:string):Promise<boolean> => {
@@ -802,7 +807,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 `${lang.translate('viescolaire.periode.3')}:`,
                 (`${lang.translate('viescolaire.utils.periode')}&nbsp;
                 ${$scope.search.periode
-                    ? $scope.search.periode.ordre || lang.translate("viescolaire.utils.annee") 
+                    ? $scope.search.periode.ordre || lang.translate("viescolaire.utils.annee")
                     : ""}`)
             ]]
         };
@@ -815,9 +820,10 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             for (let rowIndex = 0; rowIndex < dataBody.length; rowIndex++) {
                 let row:Array<string | number> = emptyRow();
                 let rowBody = dataBody[rowIndex];
-                let appraisal = rowBody.appraisal? rowBody.appraisal.content_text.replace(/\r?\n|\r/," ") : undefined;
+                let appraisal = rowBody.appraisal ? rowBody.appraisal.content_text.replace(/\r?\n|\r/," ") : undefined;
+                let coTeachersContent = ", " + rowBody.coTeachers.join(', ');
                 row.push(
-                    `${rowBody.subjectName || emptyValue} - ${ rowBody.teacherName || emptyValue}`,
+                    `${rowBody.subjectName || emptyValue} - ${ rowBody.teacherName || emptyValue}${coTeachersContent || emptyValue}`,
                     appraisal || emptyValue,
                     rowBody.average.moyenne || emptyValue,
                     rowBody.average.minimum || emptyValue,

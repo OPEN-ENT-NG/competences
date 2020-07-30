@@ -25,11 +25,12 @@ import { ng, moment, _ } from 'entcore';
 import {CompetenceNote} from "../models/teacher";
 
 export let fitlerCompetenceSuivi = ng.filter('fitlerCompetenceSuivi', function(){
-    return function(competences, mine, user){
+    return function(competences, mine, listTeacher){
         var _t = competences;
         if (mine === 'true' || mine === true) {
             _t = _.filter(competences, function (competence) {
-                return competence.owner === undefined || competence.owner === user.userId;
+                return competence.owner === undefined ||
+                    _.findWhere(listTeacher,{id_enseignant : competence.owner, id_matiere : competence.id_matiere});
             });
         }
         var output = [];

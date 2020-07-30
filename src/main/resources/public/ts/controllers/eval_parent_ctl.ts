@@ -29,6 +29,7 @@ import {
     FilterNotEvaluatedEnseignement
 } from "../utils/filters/filterNotEvaluatedEnseignement";
 import {Utils} from "../models/teacher";
+import httpAxios from "axios";
 
 declare let _: any;
 declare let location: any;
@@ -207,6 +208,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.selectedEleve = $scope.eleve;
                     eleve.classe = new Classe({id: eleve.idClasse});
                     await eleve.classe.sync();
+                    await eleve.classe.services.sync(eleve.idStructure);
                     await $scope.setCurrentPeriode();
                     if (withSyncDevoir === true && $location.path() !== "/releve") {
                         await evaluations.devoirs.sync(eleve.idStructure, eleve.id, undefined);
@@ -371,11 +373,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.getTeacherDisplayName = function (owner) {
             if (owner === undefined || owner === null || owner === "") return "";
-            let ensenseignant = _.findWhere(evaluations.enseignants.all, {id: owner});
-            if (ensenseignant !== undefined && ensenseignant.hasOwnProperty('name')) {
-                return ensenseignant.firstName[0] + '.' + ensenseignant.name;
-            } else {
-                return '';
+            let enseignant = _.findWhere(evaluations.enseignants.all, {id: owner});
+            if (enseignant !== undefined && enseignant.hasOwnProperty('name')) {
+                if(enseignant.hasOwnProperty('displayName'))
+                    return enseignant.displayName
+                else if(enseignant.hasOwnProperty('lastName') && enseignant.hasOwnProperty('firstName'))
+                    return enseignant.firstName[0] + '.' + enseignant.lastName;
+            }
+            return "";
+        };
+
+        $scope.getTeacherFromEvaluations = function (owner) {
+            let enseignant = _.findWhere(evaluations.enseignants.all, {id: owner});
+            if (enseignant !== undefined) {
+                return enseignant;
             }
         };
 

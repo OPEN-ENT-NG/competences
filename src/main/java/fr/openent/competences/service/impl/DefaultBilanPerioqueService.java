@@ -76,7 +76,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                         JsonObject activationState = activationFuture.result();
                         JsonObject syncState = syncFuture.result();
                         if(activationState.getBoolean("installed") && activationState.getBoolean("activate") &&
-                        syncState.containsKey("presences_sync") && syncState.getBoolean("presences_sync")){
+                                syncState.containsKey("presences_sync") && syncState.getBoolean("presences_sync")){
                             getRetardsAndAbsencesFromPresences(structureId, idClasse, idEleve, eitherHandler);
                         }else{
                             getRetardsAndAbsencesFromCompetences(idEleve, eitherHandler);
@@ -244,8 +244,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     }
     private void getServicesAndAddMissingTeachers(final String idEtablissement, final JsonArray idsMatieres, final JsonArray idClasseGroups,
-                             final List<String> matieresMissingTeachers, final  Map<String,JsonObject> idsMatieresIdsTeachers,
-                             final JsonArray idsTeachers, Future<JsonArray> servicesFuture) {
+                                                  final List<String> matieresMissingTeachers, final Map<String,JsonObject> idsMatieresIdsTeachers,
+                                                  final JsonArray idsTeachers, Future<JsonArray> servicesFuture) {
         JsonObject action = new JsonObject()
                 .put("action", "service.getDefaultServices")
                 .put("idEtablissement", idEtablissement)
@@ -263,13 +263,13 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                 && serviceObj.getBoolean("evaluable")) {
                             String owner = serviceObj.getString("id_enseignant");
                             Long coefficient = serviceObj.getLong(COEFFICIENT);
-                            coefficient = isNull(coefficient)? 1L : coefficient;
+                            Boolean isVisible = serviceObj.getBoolean("is_visible");
+                            coefficient = isNull(coefficient) ? 1L : coefficient;
 
                             JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
                             JsonArray teachers = matiere.getJsonArray("teachers");
 
-                           // if (isNotNull(owner) && !teachers.contains(owner) && teachers.isEmpty()) {
-                            if (isNotNull(owner) && !teachers.contains(owner)) {
+                            if (isNotNull(owner) && !teachers.contains(owner) && teachers.isEmpty() && isVisible) {
                                 teachers.add(owner);
                                 if (!idsTeachers.contains(owner))
                                     idsTeachers.add(owner);
@@ -295,43 +295,54 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     public void getSuiviAcquis(final String idEtablissement, final Long idPeriode, final String idEleve,
-                               final String idClasse , Handler<Either<String, JsonArray>> handler) {
+                               final String idClasse, Handler<Either<String, JsonArray>> handler) {
 
         Future<JsonArray> subjectFuture = Future.future();
         // Récupération des matières et des professeurs
-        devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, idEtablissement, event -> {
+        devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, idEtablissement, idClasse, event -> {
             formate(subjectFuture,event);
         });
 
         // Récupération des groupes de l'élève
         Future<JsonArray> idsGroupsFuture = Future.future();
-        Utils.getGroupesEleve(eb, idEleve, event -> {
+        Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), event -> {
             formate(idsGroupsFuture, event);
         });
 
-        CompositeFuture.all(subjectFuture, idsGroupsFuture).setHandler( event -> {
+        Future<JsonArray> multiTeachersFuture = Future.future();
+        utilsService.getMultiTeachersByClass(idEtablissement, idClasse, idPeriode != null ? idPeriode.intValue() : null,
+                event -> {
+            formate(multiTeachersFuture, event);
+        });
+
+        Future<JsonArray> getServicesFuture = Future.future();
+        utilsService.getServices(idEtablissement, new JsonArray().add(idClasse), event -> {
+            formate(getServicesFuture, event);
+        });
+
+        CompositeFuture.all(subjectFuture, idsGroupsFuture, multiTeachersFuture, getServicesFuture).setHandler( event -> {
             if(event.succeeded()){
                 Map<String,JsonObject> idsMatieresIdsTeachers = new HashMap<>();
                 JsonArray idsMatieres = new fr.wseduc.webutils.collections.JsonArray();
                 JsonArray idsTeachers = new fr.wseduc.webutils.collections.JsonArray();
                 JsonArray responseArray = subjectFuture.result();
                 JsonArray idGroups = idsGroupsFuture.result();
+                JsonArray multiTeachersArray = multiTeachersFuture.result();
+                JsonArray services = getServicesFuture.result();
 
                 JsonArray idClasseGroups = new JsonArray();
                 if (!(idGroups != null && !idGroups.isEmpty())) {
                     idClasseGroups.add(idClasse);
                 } else {
                     idClasseGroups.add(idClasse);
-                    for(Object group : idGroups){
-                        idClasseGroups.add(((JsonObject)group).getString("id_groupe"));
-                    }
+                    idClasseGroups.addAll(idGroups.getJsonObject(0).getJsonArray("id_groupes"));
                 }
 
                 if(responseArray == null || responseArray.isEmpty()) {
                     handler.handle(new Either.Right<>(new JsonArray()));
-                }else {
+                } else {
                     List<String> matieresMissingTeachers = buildSubjectForSuivi(idsMatieresIdsTeachers, idsMatieres,
-                            idsTeachers, responseArray,idPeriode);
+                            idsTeachers, responseArray, idPeriode, multiTeachersArray, services);
 
                     List<Future> futures = new ArrayList<>();
 
@@ -343,10 +354,10 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     if(!matieresMissingTeachers.isEmpty()){
                         // Récupération des services afin de récupérer les idTeachers manquants
                         Future<JsonArray> servicesFuture = Future.future();
-                        getServicesAndAddMissingTeachers(idEtablissement,idsMatieres,idClasseGroups, matieresMissingTeachers,
+                        getServicesAndAddMissingTeachers(idEtablissement, idsMatieres, idClasseGroups, matieresMissingTeachers,
                                 idsMatieresIdsTeachers, idsTeachers, servicesFuture);
                         futures.add(servicesFuture);
-                    }else{
+                    } else {
                         // Récupération des noms et prénoms des professeurs
                         Future<Map<String,JsonObject>> lastNameAndFirstNameFuture = Future.future();
                         Utils.getLastNameFirstNameUser(eb, idsTeachers, lastNameAndFirstNameEvent -> {
@@ -554,45 +565,82 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private List<String> buildSubjectForSuivi(Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray idsMatieres,
-                                      JsonArray idsTeachers, JsonArray responseArray, final Long idPeriode){
-
+                                              JsonArray idsTeachers, JsonArray responseArray, final Long idPeriode,
+                                              JsonArray multiTeachers, JsonArray services){
         List<String> matieresMissingTeachers = new ArrayList<>();
 
         for (int i = 0; i < responseArray.size(); i++) {
             JsonObject responseObject = responseArray.getJsonObject(i);
             String idMatiere = responseObject.getString(ID_MATIERE);
-            String owner = responseObject.getString(OWNER);
-            Long id_periode = responseObject.getLong(ID_PERIODE);
+            String owner = responseObject.getString("owner");
+            Long id_periode = responseObject.getLong("id_periode");
             Long coefficient = responseObject.getLong(COEFFICIENT);
-            coefficient = isNull(coefficient)? 1L : coefficient;
-            if(idPeriode.equals(id_periode)){
+            coefficient = isNull(coefficient) ? 1L : coefficient;
+            Boolean isVisibleFromService = responseObject.getBoolean("is_visible");
 
-                if (!idsMatieresIdsTeachers.containsKey(idMatiere)) {
-                    idsMatieres.add(idMatiere);
-                    idsMatieresIdsTeachers.put(idMatiere, new JsonObject()
-                            .put("teachers", new JsonArray()).put("_" + COEFFICIENT, new JsonObject()));
-                }
-                JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
-                JsonArray teachers = matiere.getJsonArray("teachers");
-                if (isNotNull(owner)) teachers.add(owner);
-
-                if (!idsTeachers.contains(owner) && isNotNull(owner)) idsTeachers.add(owner);
-
-                JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
-                if (!coeffObject.containsKey(coefficient.toString())) {
-                    coeffObject.put(coefficient.toString(), new JsonArray());
-                }
-                if (isNotNull(owner) && !coeffObject.getJsonArray(coefficient.toString()).contains(owner))
-                    coeffObject.getJsonArray(coefficient.toString()).add(owner);
-
-                if (isNull(owner) && !matieresMissingTeachers.contains(idMatiere) && teachers.isEmpty())
-                    matieresMissingTeachers.add(idMatiere);
-                else if (!teachers.isEmpty())
-                    matieresMissingTeachers.remove(idMatiere);
+            if (!idsMatieresIdsTeachers.containsKey(idMatiere)) {
+                idsMatieres.add(idMatiere);
+                idsMatieresIdsTeachers.put(idMatiere, new JsonObject()
+                        .put("teachers", new JsonArray()).put("_" + COEFFICIENT, new JsonObject()));
             }
+            JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
+            JsonArray teachers = matiere.getJsonArray("teachers");
+
+            if (idPeriode.equals(id_periode) && isNotNull(owner)){
+                Boolean isVisible = true;
+                for(int j = 0; j < services.size(); j++){
+                    JsonObject service = (JsonObject) services.getJsonObject(j);
+
+                    String serviceIdMatiere = service.getString("id_matiere");
+                    if(serviceIdMatiere.equals(idMatiere)) {
+                        isVisible = service.getBoolean("is_visible");
+                        break;
+                    }
+                }
+                if(isVisible
+                        && !teachers.contains(owner)
+                        && isNotNull(owner)
+                        && !Boolean.FALSE.equals(isVisibleFromService)){
+                    teachers.add(owner);
+                }
+
+                multiTeachers.forEach(item -> {
+                    JsonObject teacher = (JsonObject) item;
+
+                    String subjectId = teacher.getString("subject_id");
+                    String mainTeacherId = teacher.getString("main_teacher_id");
+                    String coTeacherId = teacher.getString("second_teacher_id");
+
+                    if (subjectId.equals(idMatiere) && mainTeacherId.equals(owner)) {
+                        if (!teachers.contains(coTeacherId) && isNotNull(coTeacherId))
+                            teachers.add(coTeacherId);
+                        if (!idsTeachers.contains(coTeacherId) && isNotNull(coTeacherId))
+                            idsTeachers.add(coTeacherId);
+                    }
+                });
+            }
+
+            if(!idsTeachers.contains(owner)
+                    && isNotNull(owner)
+                    && !Boolean.FALSE.equals(isVisibleFromService)) {
+                idsTeachers.add(owner);
+            }
+            JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
+            if(!coeffObject.containsKey(coefficient.toString())){
+                coeffObject.put(coefficient.toString(), new JsonArray());
+            }
+            if(isNotNull(owner)
+                    && !coeffObject.getJsonArray(coefficient.toString()).contains(owner)
+                    && !Boolean.FALSE.equals(isVisibleFromService)){
+                coeffObject.getJsonArray(coefficient.toString()).add(owner);
+            }
+
+            if(isNull(owner) && !matieresMissingTeachers.contains(idMatiere) && teachers.isEmpty())
+                matieresMissingTeachers.add(idMatiere);
+            else if(!teachers.isEmpty())
+                matieresMissingTeachers.remove(idMatiere);
         }
         return matieresMissingTeachers;
-
     }
 
 

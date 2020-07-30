@@ -29,6 +29,8 @@ import {Domaine, Structure, SuiviCompetence, Utils} from './teacher';
 import { NiveauCompetence } from './eval_niveau_comp';
 import { Enseignement } from './parent_eleve/Enseignement';
 import http from 'axios';
+import {getTitulairesForRemplacantsCoEnseignant} from "../utils/functions/getTitulairesForRemplacantsCoEnseignant";
+import httpAxios from "axios";
 
 declare let location: any;
 declare let require: any;
@@ -55,7 +57,7 @@ export class Evaluations extends Model {
             EVAL_ENFANTS: `/competences/enfants?userId=${model.me.userId}`,
             GET_EVALUATIONS : '/competences/devoirs?idEtablissement=',
             GET_MATIERES : '/viescolaire/matieres/infos?',
-            GET_ENSEIGNANTS : '/viescolaire/enseignants?',
+            GET_ENSEIGNANTS : '/competences/user/list?profile=Teacher&structureId=',
             GET_COMPETENCES : '/viescolaire/competences/eleve/',
             GET_ANNOTATION : '/viescolaire/annotations/eleve/',
             GET_ARBRE_DOMAINE : '/competences/domaines?idClasse=',
@@ -85,12 +87,9 @@ export class Evaluations extends Model {
                 }
             });
             this.collection(Enseignant, {
-                sync: async (mapEnseignant) => {
+                sync: async (idEtablissement) => {
                     return new Promise((resolve) => {
-                        let uri = Evaluations.api.GET_ENSEIGNANTS;
-                        for (let enseignant in mapEnseignant) {
-                            uri += '&idUser=' + enseignant;
-                        }
+                        let uri = Evaluations.api.GET_ENSEIGNANTS + idEtablissement;
                         HTTP().get(uri).done((enseignants) => {
                             this.enseignants.load(enseignants);
                             resolve();
@@ -101,7 +100,7 @@ export class Evaluations extends Model {
             this.collection(Matiere, {
                 sync: async (mapMatiere) => {
                     return new Promise((resolve) => {
-                        let uri = Evaluations.api.GET_MATIERES;
+                        let uri = Evaluations.api.GET_MATIERES + 'idStructure = ' + model.me.structures[0];
                         for (let matiere in mapMatiere) {
                             uri = uri + '&idMatiere=' + matiere;
                         }
@@ -242,32 +241,26 @@ export class Evaluations extends Model {
 
                                     this.devoirs.load(devoirs);
                                     let matieresDevoirs = _.omit(_.groupBy(devoirs, 'id_matiere'),null);
-                                    let enseignants = _.omit(_.groupBy(devoirs, 'owner'), "id-user-transition-annee");
-                                    if(!_.isEmpty(enseignants)) {
-
-                                        this.enseignants.sync(enseignants).then(() => {
-                                            if (!_.isEmpty(matieresDevoirs)) {
-                                                this.matieres.sync(matieresDevoirs).then(() => {
-                                                    for (let o in matieresDevoirs) {
-                                                        matieresDevoirs[o].forEach(function (element) {
-                                                            let devoir = element;
-                                                            let _matiere = that.matieres.findWhere({id: devoir.id_matiere});
-                                                            let enseignant = that.enseignants.findWhere({id: devoir.owner});
-                                                            if (enseignant !== undefined && _matiere !== undefined
-                                                                && _.filter(_matiere.ens, {id: enseignant.id}).length === 0) {
-                                                                _matiere.ens.push(enseignant);
-                                                            }
-                                                        });
-                                                    }
-                                                    resolve();
-                                                });
-                                            } else {
+                                    this.enseignants.sync(structureId).then(() => {
+                                        if (!_.isEmpty(matieresDevoirs)) {
+                                            this.matieres.sync(matieresDevoirs).then(() => {
+                                                for (let o in matieresDevoirs) {
+                                                    matieresDevoirs[o].forEach(function (element) {
+                                                        let devoir = element;
+                                                        let _matiere = that.matieres.findWhere({id: devoir.id_matiere});
+                                                        let enseignant = that.enseignants.findWhere({id: devoir.owner});
+                                                        if (enseignant !== undefined && _matiere !== undefined
+                                                            && _.filter(_matiere.ens, {id: enseignant.id}).length === 0) {
+                                                            _matiere.ens.push(enseignant);
+                                                        }
+                                                    });
+                                                }
                                                 resolve();
-                                            }
-                                        });
-                                    }else{
-                                        resolve();
-                                    }
+                                            });
+                                        } else {
+                                            resolve();
+                                        }
+                                    });
                                 }).bind(this);
                             }).bind(this);
                         }).bind(this);
@@ -324,7 +317,7 @@ export class Evaluations extends Model {
                 this.synchronised = true;
                 resolve ();
             }
-            // Synchronisation des matières, enseignants, devoirs et de l'élève.
+            // Synchronisation des matières, enseignants, devoirs de l'élève.
             else if(model.me.classNames && model.me.classNames.length>0 && model.me.classes && model.me.structures) {
                 this.eleve = new Eleve({
                     id: model.me.userId,
@@ -336,7 +329,9 @@ export class Evaluations extends Model {
                     classe: new Classe({id: model.me.classes[0], name: model.me.classNames[0].split('$')[1]})
                 });
 
-                await Promise.all([this.eleve.classe.sync(), this.updateUsePerso()]);
+                await Promise.all([this.eleve.classe.sync(),
+                    this.updateUsePerso()]);
+
                 // await this.devoirs.sync(this.eleve.idStructure, this.eleve.id, null);
                 this.synchronised = true;
                 resolve();
@@ -363,7 +358,9 @@ export class Evaluations extends Model {
         location.replace(uri);
     }
      setCompetenceNotes(poDomaine, poCompetencesNotes, tableauConversion) {
-        Utils.setCompetenceNotes(poDomaine, poCompetencesNotes,tableauConversion);
+         let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId,this.eleve.classe);
+        Utils.setCompetenceNotes(poDomaine, poCompetencesNotes,tableauConversion, undefined,undefined,
+            undefined,undefined,listTeacher);
     }
 
     async updateUsePerso () {

@@ -30,9 +30,7 @@ import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Pers
 import http from "axios";
 import { evaluations as evaluationsParentFormat } from '../models/eval_parent_mdl';
 import {ExportBulletins} from "../models/common/ExportBulletins";
-
-
-
+import {getTitulairesForRemplacantsCoEnseignant} from "../utils/teacher";
 declare let _: any;
 declare let Chart: any;
 declare let location: any;
@@ -270,7 +268,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     competence.niveauFinalToShowMyEvaluations = niveauCompetenceMin;
                 }
                 let myEvaluations = _.filter(competence.competencesEvaluations, function (evaluation) {
-                    return evaluation.owner !== undefined && evaluation.owner === model.me.userId && !evaluation.formative;
+                    return evaluation.owner !== undefined &&
+                        _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere})
+                        && !evaluation.formative;
                 });
                 let competenceNiveauFinal = new CompetenceNote({
                     id_periode: $scope.search.periode.id_type,
@@ -296,7 +296,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     });
                 }
                 await competenceNiveauFinal.saveNiveaufinal();
-                Utils.setMaxCompetenceShow(competence, $scope.suiviCompetence.tableConversions, isYear,false);
+                Utils.setMaxCompetenceShow(competence, $scope.suiviCompetence.tableConversions, isYear,false,$scope.listTeacher);
             }
         };
 
@@ -382,7 +382,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         $scope.selectSuivi = async function (forReleve?) {
             return new Promise(async (resolve) => {
                 if (Utils.isNotNull($scope.informations.eleve)  && $scope.search.eleve !== "") {
-
+                    $scope.listTeacher = getTitulairesForRemplacantsCoEnseignant($scope.me.userId, $scope.search.classe);
                     // Récupérer le suivi de l'élève
                     await $scope.getEleveInfo($scope.search.eleve);
                     let eleveIsEvaluable = $scope.search.eleve.isEvaluable($scope.search.periode);
@@ -676,12 +676,12 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             if ($scope.suiviFilter.mine === 'false' || $scope.suiviFilter.mine === false) {
                 return true;
             }
-            return evaluation.owner === $scope.me.userId;
+            return _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
         };
 
         $scope.EvaluationExiste = function (list) {
             let ListOfOwner = _.map(list, function (item) {
-                if (item.owner === $scope.me.userId)
+                if (_.findWhere($scope.listTeacher,{id_enseignant : item.owner, id_matiere : item.id_matiere}))
                     return item;
             });
             if (ListOfOwner.length === 0) {
@@ -1367,6 +1367,13 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 {id_matiere: sousMat.id_matiere, id_sousmatiere: sousMat.id_type_sousmatiere, is_evaluated: true});
         };
 
+        $scope.getTeacherFromStructure = function (owner) {
+            let enseignant = _.findWhere($scope.structure.enseignants.all, {id: owner});
+            if (enseignant !== undefined) {
+                return enseignant;
+            }
+        };
+
         // Fonction de sélection d'un enfant par le parent
         $scope.chooseChild = async function(eleve) {
             return new Promise( async (resolve, reject) => {
@@ -1377,6 +1384,36 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                         devoirs: evaluationsParentFormat.devoirs
                     };
                     $scope.matieresReleve = evaluationsParentFormat.matieres;
+                    $scope.matieresReleve.forEach(matiere => {
+                        let teachers = [];
+                        let visible = true;
+                        $scope.search.classe.services.forEach(s => {
+                            if(s.id_matiere === matiere.id){
+                                s.coTeachers.forEach(coTeacher => {
+                                    let teacher = $scope.getTeacherFromStructure(coTeacher.second_teacher_id);
+                                    if(coTeacher.is_visible && !_.contains(teachers, teacher)) {
+                                        matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id})
+                                        teachers.push(teacher);
+                                    }
+                                });
+                                s.substituteTeachers.forEach(substituteTeacher => {
+                                    let teacher = $scope.getTeacherFromStructure(substituteTeacher.second_teacher_id);
+
+                                    let conditionForDate = $scope.search.periode.id != null ?
+                                        moment(substituteTeacher.start_date).isBetween(moment($scope.search.periode.timestamp_dt), moment($scope.search.periode.timestamp_fn))
+                                        || moment(substituteTeacher.end_date).isBetween(moment($scope.search.periode.timestamp_dt), moment($scope.search.periode.timestamp_fn)) : true;
+                                    if(substituteTeacher.is_visible && !_.contains(teachers, teacher) && conditionForDate){
+                                        matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id})
+                                        teachers.push(teacher);
+                                    }
+                                });
+
+                                visible = s.is_visible;
+                            }
+                        });
+                        matiere.ens_is_visible = visible;
+                        matiere.coTeachers = teachers;
+                    });
                     await $scope.calculMoyenneMatieres();
                     await utils.safeApply($scope);
                     await Utils.stopMessageLoader($scope);

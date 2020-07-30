@@ -22,7 +22,7 @@ export let inputTextList = ng.directive('inputTextList', function() {
         restrict : 'E',
         scope : {
             items : '=',                        // Liste de choix
-            model : '=',                        // Valeur sélectionnée ou saisie dans l'input : model[modelAttribute]
+            model : '=',                        // Valeur sélectionnée ou saisie dans l'input :model[modelAttribute]
             modelAttribute : '@',               // Champ sauvegardée dans le model : model[modelAttribute]
             displayAttributeList : '@',         // Champs utilisé pour le libellé de la liste : item[displayAttributeList]
             displayAttributeInput : '@',        // Champs utilisé pour la valeur à positionner dans l'input : item[$scope.displayAttributeInput]

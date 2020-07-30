@@ -18,7 +18,7 @@
 /**
  * Created by Samuel Jollois on 27/01/2020.
  */
-import {_, ng} from 'entcore';
+import {_, model, ng} from 'entcore';
 
 export let getEnseignantClasseFilter = ng.filter('getEnseignantClasse', function () {
     return function (enseignants, idClasse, classes, search) {
@@ -27,8 +27,24 @@ export let getEnseignantClasseFilter = ng.filter('getEnseignantClasse', function
             let classe = classes.findWhere({id : idClasse});
             if (classe !== undefined) {
                 let enseignantsClasse = enseignants.filter((enseignant) => {
-                        if (classe.hasOwnProperty('services')){
-                            return _.findWhere(classe.services, {evaluable: true, id_enseignant : enseignant.id})
+                        if (classe.services){
+                            let evaluables =  _.findWhere(classe.services, {
+                                id_enseignant: enseignant.id,
+                                evaluable: true
+                            });
+                            if(evaluables == undefined){
+                                evaluables = _.filter(classe.services, service => {
+                                    let substituteTeacher = _.findWhere(service.substituteTeachers, {second_teacher_id : enseignant.id});
+                                    let correctDateSubstituteTeacher = substituteTeacher &&
+                                        substituteTeacher.start_date <= (new Date()).toISOString() &&
+                                        substituteTeacher.entered_end_date >= (new Date()).toISOString();
+                                    let coTeachers = _.findWhere(service.coTeachers, {second_teacher_id : enseignant.id});
+                                    return service.evaluable && (coTeachers || correctDateSubstituteTeacher);
+                                });
+                                if(evaluables.length == 0)
+                                    evaluables = undefined;
+                            }
+                            return evaluables !== undefined;
                         }else if (enseignant.hasOwnProperty('allClasses')) {
                             return (_.pluck(enseignant.allClasses, 'id').indexOf(classe.id) !== -1)
                         } else {

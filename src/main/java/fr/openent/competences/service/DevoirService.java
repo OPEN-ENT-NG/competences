@@ -18,13 +18,15 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.service.CrudService;
+import org.entcore.common.share.ShareService;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -74,13 +76,15 @@ public interface DevoirService extends CrudService {
 
     /**
      * Duplique le devoir passé en paramètre sur la liste de classes passée en paramètre
-     * @param idDevoir identifiant du devoir à dupliquer
      * @param devoir devoir à dupliquer
      * @param classes liste des classes
      * @param user utilisateur courant
-     * @param handler handler portant le résultat de la requête
+     * @param shareService
+     * @param request
+     * @param eb
      */
-    void duplicateDevoir(Long idDevoir, JsonObject devoir, JsonArray classes, UserInfos user, Handler<Either<String, JsonArray>> handler);
+    void duplicateDevoir(JsonObject devoir, JsonArray classes, UserInfos user, ShareService shareService,
+                         HttpServerRequest request, EventBus eb);
 
     /**
      * Met à jour un devoir
@@ -167,14 +171,6 @@ public interface DevoirService extends CrudService {
      */
     void listDevoirsEtab(UserInfos user, Integer limit, Handler<Either<String, JsonArray>> handler);
 
-    /**
-     * Retourne la liste des toutes les classes qui font ou ont fait l'objet d'un devoir par
-     * l'utilisateur.
-     * @param user Utilisateur en cours
-     * @param structureId Identifiant de la structure
-     * @param handler handler portant le résultat de la requête.
-     */
-    void getClassesIdsDevoir(UserInfos user, String structureId, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère les notes du devoirs dans la base et en calcule la moyenne
@@ -202,9 +198,10 @@ public interface DevoirService extends CrudService {
      * les enseignants de chaque matière et les groupes de l'élève pour chaque matière pour une période donnée
      * @param id_eleve
      * @param idEtablissement
+     * @param id_classe
      * @param handler
      */
-    void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, Handler<Either<String,JsonArray>> handler);
+    void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, String id_classe, Handler<Either<String,JsonArray>> handler);
 
     void listDevoirsService(String idEnseignant, String idMatiere, List<String> idGroups, Handler<Either<String, JsonArray>> handler);
 
@@ -258,5 +255,5 @@ public interface DevoirService extends CrudService {
                              Handler<Either<String, JsonObject>> handler);
 
     void getHomeworksFromSubjectAndTeacher(String idSubject, String idTeacher,
-                                           Handler<Either<String, JsonArray>> handler);
+                                           String groupId, Handler<Either<String, JsonArray>> handler);
 }

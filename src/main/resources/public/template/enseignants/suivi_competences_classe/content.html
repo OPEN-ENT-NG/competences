@@ -117,7 +117,7 @@
         <div class="row">
             <div class="twelve cell twelve-mobile">
                 <div class="three cell horizontal-spacing vertical-spacing expandable-content"
-                     ng-repeat="matiere in allMatieresSorted">
+                     ng-repeat="matiere in allMatieresSorted | unique:'name'">
                     <div class="three cell">
                         <label class="checkbox">
                             <input type="checkbox" ng-model="matiere.select" ng-change="selectMatiere(matiere.id)">

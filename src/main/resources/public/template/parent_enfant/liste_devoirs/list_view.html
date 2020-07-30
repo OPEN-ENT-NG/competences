@@ -149,7 +149,7 @@
                     <div ng-if="devoir.competences.length > 0 && devoir.annotation === undefined"
                          class="nine inline-block align-center align-top">
                         <proportion-suivi-competence evaluations="devoir.competences"
-                                                     filter="suiviFilter" user="me"
+                                                     filter="suiviFilter" list-teacher="[me]"
                                                      is-classe="false"
                                                      map-couleurs="mapCouleurs"
                                                      map-lettres="mapLettres">

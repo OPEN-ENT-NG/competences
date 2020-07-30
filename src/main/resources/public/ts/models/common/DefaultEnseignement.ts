@@ -6,7 +6,7 @@
  *   it under the terms of the GNU Affero General Public License as
  *   published by the Free Software Foundation (version 3 of the License).
  *   For the sake of explanation, any module that communicate over native
- *   Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of model
+ *   Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of fr.openent.competences.model
  *   license and could be license under its own terms. This is merely considered
  *   normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
  *

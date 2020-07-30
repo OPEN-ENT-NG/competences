@@ -129,7 +129,7 @@
                 <div class="three inline-block align-center align-top" ng-click="openDetailCompetence(competence)"
                      ng-class="{'space-for-classe': displayCycle || (!search.periode.id && !search.periode.libelle)}">
                     <proportion-suivi-competence evaluations="competence.competencesEvaluations"
-                                                 filter="suiviFilter" user="me"
+                                                 filter="suiviFilter" list-teacher="listTeacher"
                                                  is-classe="false"
                                                  map-couleurs="mapCouleurs"
                                                  map-lettres="mapLettres"
@@ -157,7 +157,7 @@
             ng-click="enseignement.OpenDom = !enseignement.OpenDom" ng-init="enseignement.OpenDom = false">[[enseignement.nom]]</h4>
         <div ng-class="{'openedSectionDom' : enseignement.OpenDom}" class="twelve cell" style='height: auto;'>
             <teachings-skills ng-if="enseignement.matieres.all.length === 0" data ="enseignement"
-                              suivi-filter="suiviFilter" me="me" map-lettres="mapLettres" map-couleurs="mapCouleurs"
+                              suivi-filter="suiviFilter" list-teacher="listTeacher" map-lettres="mapLettres" map-couleurs="mapCouleurs"
                               function-filter-not-evaluated="FilterNotEvaluated"
                               function-open-detail-competence="openDetailCompetence"
                               is-cycle="displayCycle"
@@ -170,7 +170,7 @@
                     ng-init= "matiere.OpenMat = false">[[matiere.name]]</h2>
                 <div ng-class="{'openedSectionDom' : matiere.OpenMat}" style='height: auto;'>
                     <teachings-skills data="matiere"
-                                      suivi-filter="suiviFilter" me="me" map-lettres="mapLettres" map-couleurs="mapCouleurs"
+                                      suivi-filter="suiviFilter" list-teacher="listTeacher" map-lettres="mapLettres" map-couleurs="mapCouleurs"
                                       function-open-detail-competence="openDetailCompetence"
                                       function-filter-not-evaluated="FilterNotEvaluated"
                                       is-cycle="displayCycle"

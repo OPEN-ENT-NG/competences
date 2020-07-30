@@ -315,7 +315,7 @@ public class NoteController extends ControllerHelper {
             if(param.getJsonArray("idPeriodes").size() == 0) {
                 final Long idPeriode = param.getLong(Competences.ID_PERIODE_KEY);
                 notesService.getTotaleDatasReleve(param, idPeriode, annual, notEmptyResponseHandler(request));
-            } else{
+            } else {
                 try{
                     annual = true;
                     final JsonObject resultHandler = new JsonObject();
@@ -324,7 +324,7 @@ public class NoteController extends ControllerHelper {
                         // Récupération du  nombre de devoirs avec évaluation numérique
                         Long periode = ((Integer)idPeriode).longValue();
                         Future<JsonObject> exportPeriode = Future.future();
-                        notesService.getTotaleDatasReleve(param,periode, annual, event -> {
+                        notesService.getTotaleDatasReleve(param, periode, annual, event -> {
                             formate(exportPeriode, event);
                         });
                         listFuturesEachPeriode.add(exportPeriode);

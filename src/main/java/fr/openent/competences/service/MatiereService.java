@@ -43,7 +43,7 @@ public interface MatiereService extends CrudService {
       * @param idMatiere
       * @param handler
       */
-     void getSousMatieres(String idMatiere, Handler<Either<String, JsonArray>> handler);
+     void getSousMatieres(String idMatiere, String idStructure, Handler<Either<String, JsonArray>> handler);
 
      /**
       * Récupération des Matières de l'établissement

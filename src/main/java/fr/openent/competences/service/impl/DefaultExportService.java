@@ -1429,7 +1429,7 @@ public class DefaultExportService implements ExportService {
         }
     }
 
-    public void getDataForExportReleveEleve(String idUser, String idEtablissement, Long idPeriode ,
+    public void getDataForExportReleveEleve(String idUser, String idEtablissement, Long idPeriode,
                                             final MultiMap params, Handler<Either<String, JsonObject>> handler) {
         // TODO verifier que l'utilisateur connecte est bien l'eleve dont essaie d'acceder au releve ou que
         // le parent connecte essaie bien d'acceder au releve d'un de ses enfants
@@ -1460,7 +1460,8 @@ public class DefaultExportService implements ExportService {
         Future<JsonArray> subjectF = Future.future();
         new DefaultMatiereService(eb).getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
 
-        CompositeFuture.all(infoEleve, devoirsFuture, structureFuture, subjectF, infoEleveBackup, moyenneFinaleFuture)
+        CompositeFuture.all(infoEleve, devoirsFuture, structureFuture, subjectF,
+                infoEleveBackup, moyenneFinaleFuture)
                 .setHandler(event -> {
                     if (event.failed()) {
                         Utils.returnFailure("getExportReleveEleve : event failed", event, handler);
@@ -1479,11 +1480,25 @@ public class DefaultExportService implements ExportService {
                         userJSON = infoEleve.result();
                         classeEleve = userJSON.getJsonObject("u").getJsonObject("data")
                                 .getJsonArray("classes").getString(0);
-                    }else{
+                    } else {
                         userJSON = infoEleveBackup.result();
                         classeEleve = userJSON.getString("idClasse");
                         isBackup = true;
                     }
+
+                    Future<JsonArray> multiTeachersFuture = Future.future();
+                    utilsService.getMultiTeachersByClass(idEtablissement,
+                            userJSON.getJsonObject("c").getJsonObject("data").getString("id"), idPeriode != null ? idPeriode.intValue() : null,
+                            multiTeacherEvent -> {
+                                formate(multiTeachersFuture, multiTeacherEvent);
+                            });
+
+                    Future<JsonArray> servicesFuture = Future.future();
+                    utilsService.getServices(idEtablissement,
+                            new JsonArray().add(userJSON.getJsonObject("c").getJsonObject("data").getString("id")),
+                            servicesEvent -> {
+                                formate(servicesFuture, servicesEvent);
+                            });
 
                     // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
                     final JsonArray devoirsJSON = devoirsFuture.result();
@@ -1491,6 +1506,7 @@ public class DefaultExportService implements ExportService {
                     final JsonArray idEnseignants = new fr.wseduc.webutils.collections.JsonArray();
 
                     final JsonArray moyennesFinales = moyenneFinaleFuture.result();
+
 
                     for (int i = 0; i < devoirsJSON.size(); i++) {
                         JsonObject devoir = devoirsJSON.getJsonObject(i);
@@ -1525,8 +1541,19 @@ public class DefaultExportService implements ExportService {
                         // Construction de la période année
                         periodeJSON.put("libelle", "Ann\u00E9e");
                     }
-                    getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON,
-                            periodeJSON, userJSON, etabJSON, isBackup, moyennesFinales, handler);
+                    final Boolean finalBackUp = isBackup;
+                    CompositeFuture.all(multiTeachersFuture, servicesFuture).setHandler(futuresEvent -> {
+                        final JsonArray multiTeachers = multiTeachersFuture.result();
+                        final JsonArray services = servicesFuture.result();
+
+                        for (int i = 0; i < multiTeachers.size(); i++) {
+                            JsonObject multiTeacher = multiTeachers.getJsonObject(i);
+                            idEnseignants.add(multiTeacher.getString("second_teacher_id"));
+                        }
+
+                        getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON, periodeJSON, userJSON, etabJSON,
+                                finalBackUp, moyennesFinales, multiTeachers, services, handler);
+                    });
                 });
     }
 
@@ -1546,24 +1573,25 @@ public class DefaultExportService implements ExportService {
     public void getEnseignantsMatieres(final JsonArray matieres, JsonArray idUsers, final JsonArray devoirsJson,
                                        final JsonObject periodeJson, final JsonObject userJson,
                                        final JsonObject etabJson, final boolean isBackup, final JsonArray moyennesFinales,
+                                       final JsonArray multiTeachers, final JsonArray services,
                                        Handler<Either<String, JsonObject>> handler) {
 
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getUsers")
                 .put("idUsers", idUsers);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler( message -> {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
-                JsonArray r = body.getJsonArray(RESULTS);
+                JsonArray users = body.getJsonArray(RESULTS);
                 boolean printSousMatiere = false;
 
                 for (int i = 0; i < devoirsJson.size(); i++) {
                     JsonObject devoir = devoirsJson.getJsonObject(i);
                     // Récupération de l'enseignant du devoir
                     JsonObject enseignantDevoir = null;
-                    for (int j = 0; j < r.size(); j++) {
-                        enseignantDevoir = r.getJsonObject(j);
+                    for (int j = 0; j < users.size(); j++) {
+                        enseignantDevoir = users.getJsonObject(j);
                         if (enseignantDevoir.getString("id").equals(devoir.getString("owner"))) {
                             break;
                         }
@@ -1578,13 +1606,11 @@ public class DefaultExportService implements ExportService {
                                 printSousMatiere = true;
                             }
                             JsonObject moyenneFinale = new JsonObject();
-                            for(int n = 0; n < moyennesFinales.size(); n++)
-                            {
+                            for(int n = 0; n < moyennesFinales.size(); n++) {
                                 if (moyennesFinales.getJsonObject(n).getString("id_matiere").equals(matiereDevoir.getString("id"))) {
                                     moyenneFinale = moyennesFinales.getJsonObject(n);
                                     break;
                                 }
-
                             }
                             getDevoirsByMatiere(devoirsJson, matiereDevoir, moyenneFinale);
 
@@ -1593,30 +1619,72 @@ public class DefaultExportService implements ExportService {
                                 String displayName = firstNameEnsiegnant.substring(0, 1) + ".";
                                 displayName = displayName + enseignantDevoir.getString("name");
 
-                                if (matiereDevoir.getJsonArray("displayNameEnseignant") == null) {
-                                    matiereDevoir.put("displayNameEnseignant", new JsonArray().add(displayName));
-                                } else {
-                                    JsonArray _enseignantMatiere = matiereDevoir.getJsonArray("displayNameEnseignant");
-                                    if (!_enseignantMatiere.contains(displayName)) {
+                                String idMatiere = matiereDevoir.getString("id");
+                                String idOwner = enseignantDevoir.getString("id");
+
+                                Boolean isVisible = true;
+                                for(int j = 0; j < services.size(); j++){
+                                    JsonObject service = (JsonObject) services.getJsonObject(j);
+
+                                    String serviceIdMatiere = service.getString("id_matiere");
+                                    if(serviceIdMatiere.equals(idMatiere)) {
+                                        isVisible = service.getBoolean("is_visible");
+                                        break;
+                                    }
+                                }
+                                JsonArray _enseignantMatiere = matiereDevoir.getJsonArray("displayNameEnseignant");
+                                if (_enseignantMatiere == null) {
+                                    _enseignantMatiere = new JsonArray();
+                                    if(isVisible){
                                         _enseignantMatiere.add(displayName);
                                         matiereDevoir.put("displayNameEnseignant", _enseignantMatiere);
                                     }
+                                } else {
+                                    if (!_enseignantMatiere.contains(displayName)) {
+                                        if(isVisible){
+                                            _enseignantMatiere.add(displayName);
+                                            matiereDevoir.put("displayNameEnseignant", _enseignantMatiere);
+                                        }
+                                    }
                                 }
+
+                                for(int j = 0; j < multiTeachers.size(); j ++){
+                                    JsonObject multiTeacher = multiTeachers.getJsonObject(j);
+
+                                    String subjectId = multiTeacher.getString("subject_id");
+                                    String mainTeacherId = multiTeacher.getString("main_teacher_id");
+                                    String coTeacherId = multiTeacher.getString("second_teacher_id");
+
+                                    if (subjectId.equals(idMatiere) && mainTeacherId.equals(idOwner)){
+                                        JsonObject coTeacher = null;
+                                        for(int l = 0; l < users.size(); l++){
+                                            JsonObject user = users.getJsonObject(l);
+                                            if(user.getString("id").equals(coTeacherId))
+                                                coTeacher = user;
+                                        }
+                                        if(coTeacher != null){
+                                            String multiTeacherName = coTeacher.getString("firstName").substring(0, 1) + "." + coTeacher.getString("name");
+                                            if(!_enseignantMatiere.contains(multiTeacherName)) {
+                                                _enseignantMatiere.add(multiTeacherName);
+                                            }
+                                        }
+
+                                    }
+                                }
+                                matiereDevoir.put("displayNameEnseignant", _enseignantMatiere);
                             }
                         }
                     }
                 }
-
-
                 final JsonObject templateProps = new JsonObject();
 
                 templateProps.put("matieres", matieres);
                 templateProps.put("periode", periodeJson);
                 String prefixPdfName = "releve-eleve";
-                if(isBackup){
+                if(isBackup) {
                     templateProps.put("user", userJson);
                     prefixPdfName += "-" + userJson.getString("displayName");
-                }else{
+                } else {
                     templateProps.put("user", userJson.getJsonObject("u").getJsonObject("data"));
                     templateProps.put("classe", userJson.getJsonObject("c").getJsonObject("data"));
                     prefixPdfName += "-" + userJson.getJsonObject("u").getJsonObject("data").getString("displayName");
@@ -1631,8 +1699,10 @@ public class DefaultExportService implements ExportService {
                 templateProps.put("prefixPdfName", prefixPdfName);
 
                 handler.handle(new Either.Right<>(templateProps));
-
-            } else {
+            }
+            else {
+                String error = "getUsers : event bus get Users failed ";
+                log.error(error + "\n" + body.encode() + "\n");
                 handler.handle(new Either.Left<>(body.getString("message")));
             }
         }));
@@ -1711,7 +1781,7 @@ public class DefaultExportService implements ExportService {
         matiereInter.put("hasDevoirs", hasDevoirs);
 
         if (hasDevoirs) {
-            // param du calcul des moyennes
+// param du calcul des moyennes
             final Boolean withStat = false;
             final int diviseur = 20;
             final Boolean annual = false;

@@ -19,7 +19,7 @@
  * Created by anabah on 29/11/2017.
  */
 
-import { model, ng, idiom as lang } from 'entcore';
+import {model, ng, idiom as lang, moment} from 'entcore';
 import { evaluations } from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
 import {Utils} from "../models/teacher";
@@ -56,7 +56,8 @@ export let releveController = ng.controller('ReleveController', [
             await Utils.runMessageLoader($scope);
             let eleve = $scope.searchReleve.eleve;
             let idPeriode = undefined;
-            if ($scope.searchReleve.periode !== null && $scope.searchReleve.periode.id_type !== null && $scope.searchReleve.periode.id_type !== -1) {
+            if ($scope.searchReleve.periode !== null && $scope.searchReleve.periode.id_type !== null
+                && $scope.searchReleve.periode.id_type !== -1) {
                 idPeriode = $scope.searchReleve.periode.id_type;
             }
             //let idClasse = (eleve.classe!==undefined)?eleve.classe.id : undefined;
@@ -65,6 +66,35 @@ export let releveController = ng.controller('ReleveController', [
                 devoirs: evaluations.devoirs
             };
             $scope.matieresReleve = evaluations.matieres;
+            $scope.matieresReleve.forEach(matiere => {
+                let teachers = [];
+                let visible = true;
+                $scope.searchReleve.eleve.classe.services.forEach(s => {
+                    if(s.id_matiere === matiere.id){
+                        s.coTeachers.forEach(coTeacher => {
+                            let teacher = $scope.getTeacherFromEvaluations(coTeacher.second_teacher_id);
+                            if(coTeacher.is_visible && !_.contains(teachers, teacher)){
+                                matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id})
+                                teachers.push(teacher);
+                            }
+                        });
+                        s.substituteTeachers.forEach(substituteTeacher => {
+                            let teacher = $scope.getTeacherFromEvaluations(substituteTeacher.second_teacher_id);
+                            let conditionForDate = $scope.search.periode.id != null ?
+                                moment(substituteTeacher.start_date).isBetween(moment($scope.search.periode.timestamp_dt), moment($scope.search.periode.timestamp_fn))
+                                || moment(substituteTeacher.end_date).isBetween(moment($scope.search.periode.timestamp_dt), moment($scope.search.periode.timestamp_fn)) : true;
+                            if(substituteTeacher.is_visible && !_.contains(teachers, teacher) && conditionForDate){
+                                matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id})
+                                teachers.push(teacher);
+                            }
+                        });
+                        visible = s.is_visible;
+                    }
+                });
+                matiere.ens_is_visible = visible;
+                matiere.coTeachers = teachers;
+            });
+
             await $scope.calculMoyenneMatieres();
             await Utils.stopMessageLoader($scope);
         };
@@ -110,6 +140,7 @@ export let releveController = ng.controller('ReleveController', [
                 type: model.me.type
             };
             $scope.matieresReleve = evaluations.matieres;
+
             await $scope.loadReleveNote();
             await Utils.stopMessageLoader($scope);
             await utils.safeApply($scope);

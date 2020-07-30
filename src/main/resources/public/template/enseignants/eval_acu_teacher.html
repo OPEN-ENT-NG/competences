@@ -57,7 +57,7 @@
                             <label class="select right-magnet">
                                 <select ng-model="search.classe"
                                         ng-change="syncPeriode(search.classe.id);"
-                                        ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name'] | customClassFilters:devoirs.all:search">
+                                        ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name'] | customClassFilters:devoirs.all">
                                     <option value="" class="header-opt"><i18n>Classe / Groupe</i18n></option>
                                 </select>
                             </label>
@@ -117,7 +117,7 @@
                             </div>
                         </div>
                         <div class="content-box-accueil--table--content" style="overflow: auto !important;" bottom-scroll="syncAllDevoirs()">
-                            <div ng-repeat="devoir in currentDevoirsNotDone track by $index | orderBy:'date':true |filter:FilterGroupEmpty" class="row">
+                            <div ng-repeat="devoir in devoirsNotDone | filter:filterValidClasse() | orderBy:'date':true" class="row">
                                 <a ng-href="#/devoir/[[devoir.id]]" >
                                     <div class="four cell">
                                         [[getDateFormated(devoir.date)]]

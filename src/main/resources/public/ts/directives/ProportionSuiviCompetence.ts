@@ -33,7 +33,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
         scope : {
             evaluations : '=',
             filter : '=',
-            user : '=',
+            listTeacher : '=',
             isClasse : '=',
             mapCouleurs : '=',
             mapLettres : '=',
@@ -204,7 +204,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
             $scope.init = function () {
                 if ($scope.filter.mine === 'true' || $scope.filter.mine === true) {
                     $scope.evaluationsToSort = _.filter($scope.evaluations, function (evaluation) {
-                        return evaluation.owner === $scope.user.userId;
+                        return _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
                     });
                 }else{
                     $scope.evaluationsToSort = $scope.evaluations;

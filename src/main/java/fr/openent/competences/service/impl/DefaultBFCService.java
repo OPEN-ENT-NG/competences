@@ -1218,63 +1218,60 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     }
                     classe.getValue().removeAll(elevesNonEvalues);
 
-                    if(classe.getValue().size() == 0){
-                        log.info("classe : " + classe.getKey() + " all students have no notes, no enseignmentComplements," +
-                                " no langueCultureRegionale, no syntheseCycle");
-                        collectBFCEleve(classe.getKey(),new JsonObject().put(ELEVES, new JsonArray()), result, handler);
-                       return;
-                    }
                     JsonArray eleves = formatBFC(classe.getValue());
                     final JsonArray classeResult = Utils.sortElevesByDisplayName(eleves);
-                    final String idClasse = classe.getValue().get(0).getIdClasse();
-
-                    List<Future> listeFutures = new ArrayList<>();
-                    for (int i = 0; i < classeResult.size(); i++) {
-                        JsonObject eleveJson = classeResult.getJsonObject(i);
-                        eleveJson.put(ID_ETABLISSEMENT_KEY, idStructure);
-                        // formatEleve se charge de lancer la récupération des informations manquants et rajoute
-                        // les appels dans la listeFutures
-                        Future formatEleveFuture = Future.future();
-                        listeFutures.add(formatEleveFuture);
-                        formatEleve(eleveJson, idClasse, formatEleveFuture);
-                    }
-
-                    // Récupération du logo de l'établissment
-                    Future<JsonObject> imageStructureFuture = Future.future();
-                    utilsService.getParametersForExport(idStructure, img ->
-                            formate(imageStructureFuture, img));
-                    listeFutures.add(imageStructureFuture);
-
-                    // Une fois la récupération des informations de tous les élèves
-                    CompositeFuture.all(listeFutures).setHandler(listeEvent -> {
-                        if (listeEvent.failed()) {
-                            String error = "Une erreur est survenue lors de la recuperation des adresses et de " +
-                                    "l'image de l'établissement : " + classe.getValue().get(0).getNomClasse()
-                                    + ";\n" + event.toString();
-                            collectBFCEleve(classe.getKey(), new JsonObject().put(ERROR, error), result, handler);
-                            log.error("getBFC: buildBFC (Array of idEleves, " + classe.getKey() + ", "
-                                    + idStructure + ") : " + event.toString());
-                        } else {
-                            for (Object eleve : classeResult) {
-                                JsonObject eleveJson = ((JsonObject) eleve);
-                                JsonObject imgStructure = imageStructureFuture.result();
-                                if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
-                                    eleveJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
-                                            .getValue(PATH));
-                                    eleveJson.put("hasImgStructure", true);
-                                }
-                                if (imgStructure != null && imgStructure.containsKey("nameAndBrad")) {
-                                    eleveJson.put("nameCE", imgStructure.getJsonObject("nameAndBrad")
-                                            .getValue(NAME));
-                                    eleveJson.put("signatureCE", imgStructure.getJsonObject("nameAndBrad")
-                                            .getValue(PATH));
-                                    eleveJson.put("hasNameAndBrad", true);
-                                }
+                    if(classe.getValue().size() != 0) {
+                        final String idClasse = classe.getValue().get(0).getIdClasse();
+                        if (classeResult != null) {
+                            List<Future> listeFutures = new ArrayList<>();
+                            for (int i = 0; i < classeResult.size(); i++) {
+                                JsonObject eleveJson = classeResult.getJsonObject(i);
+                                eleveJson.put(ID_ETABLISSEMENT_KEY, idStructure);
+                                // formatEleve se charge de lancer la récupération des informations manquants et rajoute
+                                // les appels dans la listeFutures
+                                Future formatEleveFuture = Future.future();
+                                listeFutures.add(formatEleveFuture);
+                                formatEleve(eleveJson, idClasse, formatEleveFuture);
                             }
-                            collectBFCEleve(classe.getKey(), new JsonObject().put(ELEVES, classeResult), result,
-                                    handler);
+
+                            // Récupération du logo de l'établissment
+                            Future<JsonObject> imageStructureFuture = Future.future();
+                            utilsService.getParametersForExport(idStructure, img ->
+                                    formate(imageStructureFuture, img));
+                            listeFutures.add(imageStructureFuture);
+
+                            // Une fois la récupération des informations de tous les élèves
+                            CompositeFuture.all(listeFutures).setHandler(listeEvent -> {
+                                if (listeEvent.failed()) {
+                                    String error = "Une erreur est survenue lors de la recuperation des adresses et de " +
+                                            "l'image de l'établissement : " + classe.getValue().get(0).getNomClasse()
+                                            + ";\n" + event.toString();
+                                    collectBFCEleve(classe.getKey(), new JsonObject().put(ERROR, error), result, handler);
+                                    log.error("getBFC: buildBFC (Array of idEleves, " + classe.getKey() + ", "
+                                            + idStructure + ") : " + event.toString());
+                                } else {
+                                    for (Object eleve : classeResult) {
+                                        JsonObject eleveJson = ((JsonObject) eleve);
+                                        JsonObject imgStructure = imageStructureFuture.result();
+                                        if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
+                                            eleveJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
+                                                    .getValue(PATH));
+                                            eleveJson.put("hasImgStructure", true);
+                                        }
+                                        if (imgStructure != null && imgStructure.containsKey("nameAndBrad")) {
+                                            eleveJson.put("nameCE", imgStructure.getJsonObject("nameAndBrad")
+                                                    .getValue(NAME));
+                                            eleveJson.put("signatureCE", imgStructure.getJsonObject("nameAndBrad")
+                                                    .getValue(PATH));
+                                            eleveJson.put("hasNameAndBrad", true);
+                                        }
+                                    }
+                                    collectBFCEleve(classe.getKey(), new JsonObject().put(ELEVES, classeResult), result,
+                                            handler);
+                                }
+                            });
                         }
-                    });
+                    }
                 }
         );
 
@@ -1761,68 +1758,68 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         Future<JsonObject> exportResult = Future.future();
         Future<String> periodeNameFuture = Future.future();
-            generateBFCExport(null, null, new JsonArray().add(idClasse), new JsonArray(), idCycle, host,
-                    acceptLanguage, vertx, config, exportResult, periodeNameFuture);
+        generateBFCExport(null, null, new JsonArray().add(idClasse), new JsonArray(), idCycle, host,
+                acceptLanguage, vertx, config, exportResult, periodeNameFuture);
 
-            CompositeFuture.all(exportResult, periodeNameFuture).setHandler(event -> {
-                if (event.failed()) {
-                    String error = event.cause().getMessage();
-                    log.error(error);
-                    if (error.contains(TIME)) {
-                        buildBFCClasse(idCycle, idClasse, idStructure, path, host, scheme, forwardedFor, acceptLanguage,
-                                vertx, config, classeFuture);
-                    } else {
-                        log.info(">>>> " + indexClasseStart.incrementAndGet() + " NO BUILD  (Classe: " + idClasse + "), " +
-                                "(Cycle: " + idCycle + ") ");
-                        classeFuture.complete();
-                    }
+        CompositeFuture.all(exportResult, periodeNameFuture).setHandler(event -> {
+            if (event.failed()) {
+                String error = event.cause().getMessage();
+                log.error(error);
+                if (error.contains(TIME)) {
+                    buildBFCClasse(idCycle, idClasse, idStructure, path, host, scheme, forwardedFor, acceptLanguage,
+                            vertx, config, classeFuture);
+                } else {
+                    log.info(">>>> " + indexClasseStart.incrementAndGet() + " NO BUILD  (Classe: " + idClasse + "), " +
+                            "(Cycle: " + idCycle + ") ");
+                    classeFuture.complete();
+                }
+                return;
+            }
+            JsonObject result = exportResult.result();
+            String templateName = "BFC.pdf.xhtml";
+            vertx.fileSystem().readFile(TEMPLATE_PATH + templateName, template -> {
+
+                if (!template.succeeded()) {
+                    classeFuture.complete();
+                    log.error("Error while reading template : " + TEMPLATE_PATH + templateName);
                     return;
                 }
-                JsonObject result = exportResult.result();
-                String templateName = "BFC.pdf.xhtml";
-                vertx.fileSystem().readFile(TEMPLATE_PATH + templateName, template -> {
 
-                    if (!template.succeeded()) {
-                        classeFuture.complete();
-                        log.error("Error while reading template : " + TEMPLATE_PATH + templateName);
-                        return;
+                JsonArray students = result.getJsonArray(CLASSES).getJsonObject(0).getJsonArray(ELEVES);
+
+
+                if (isNull(students) || students.isEmpty()) {
+                    log.info(">>>> " + indexClasse.incrementAndGet() + " NO ARCHIVE  (Classe: " + idClasse + "), " +
+                            "(Cycle: " + idCycle + ") : NO students ");
+                    classeFuture.complete();
+                    return;
+                }
+                log.info(">>>> " + indexClasseStart.incrementAndGet() + " BEGIN ARCHIVE GENERATOR (Classe: "
+                        + idClasse + "), " + "(Cycle: " + idCycle + ") WITH  " + students.size() + " eleves ");
+                List<Future> futureList = new ArrayList<>();
+                for (int i = 0; i < students.size(); i++) {
+                    Future futureStudent = Future.future();
+                    futureList.add(futureStudent);
+                    JsonObject student = students.getJsonObject(i);
+                    JsonObject studentTemplate = new JsonObject()
+                            .put(CLASSES, new JsonArray().add(new JsonObject().put(ELEVES,
+                                    new JsonArray().add(student))))
+                            .put(NAME, student.getValue(NOM_CLASSE));
+                    generateBfcByStudent(studentTemplate, idClasse, idCycle, idStructure, template, vertx, config, path,
+                            host, scheme, acceptLanguage, forwardedFor, futureStudent, i + 1);
+                }
+
+                CompositeFuture.all(futureList).setHandler(allStudents -> {
+                    if (allStudents.failed()) {
+                        log.error(allStudents.cause().getMessage());
                     }
-
-                    JsonArray students = result.getJsonArray(CLASSES).getJsonObject(0).getJsonArray(ELEVES);
-
-
-                    if (isNull(students) || students.isEmpty()) {
-                        log.info(">>>> " + indexClasse.incrementAndGet() + " NO ARCHIVE  (Classe: " + idClasse + "), " +
-                                "(Cycle: " + idCycle + ") : NO students ");
-                        classeFuture.complete();
-                        return;
-                    }
-                    log.info(">>>> " + indexClasseStart.incrementAndGet() + " BEGIN ARCHIVE GENERATOR (Classe: "
-                            + idClasse + "), " + "(Cycle: " + idCycle + ") WITH  " + students.size() + " eleves ");
-                    List<Future> futureList = new ArrayList<>();
-                    for (int i = 0; i < students.size(); i++) {
-                        Future futureStudent = Future.future();
-                        futureList.add(futureStudent);
-                        JsonObject student = students.getJsonObject(i);
-                        JsonObject studentTemplate = new JsonObject()
-                                .put(CLASSES, new JsonArray().add(new JsonObject().put(ELEVES,
-                                        new JsonArray().add(student))))
-                                .put(NAME, student.getValue(NOM_CLASSE));
-                        generateBfcByStudent(studentTemplate, idClasse, idCycle, idStructure, template, vertx, config, path,
-                                host, scheme, acceptLanguage, forwardedFor, futureStudent, i + 1);
-                    }
-
-                    CompositeFuture.all(futureList).setHandler(allStudents -> {
-                        if (allStudents.failed()) {
-                            log.error(allStudents.cause().getMessage());
-                        }
-                        log.info(">>>> " + indexClasse.incrementAndGet() + " END ARCHIVE  (Classe: " + idClasse + "), " +
-                                "(Cycle: " + idCycle + ")");
-                        classeFuture.complete();
-                    });
+                    log.info(">>>> " + indexClasse.incrementAndGet() + " END ARCHIVE  (Classe: " + idClasse + "), " +
+                            "(Cycle: " + idCycle + ")");
+                    classeFuture.complete();
                 });
-
             });
+
+        });
     }
 
     private Handler<Either<String, JsonObject>> saveHandler(final String idEleve, final String idClasse,

@@ -697,7 +697,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
     }
 
-
     private void updateNewIdClassTransition(JsonArray statements, JsonArray classesFromNeo) {
         StringBuilder query = new StringBuilder();
 
@@ -749,4 +748,5 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         deleteRelationGroupCycleWhitoutNewIdClass(statements);
         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
     }
+
 }

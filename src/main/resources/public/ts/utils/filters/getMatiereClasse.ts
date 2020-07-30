@@ -18,28 +18,67 @@
 /**
  * Created by ledunoiss on 20/09/2016.
  */
-import {_, ng} from 'entcore';
+import {_, model, ng} from 'entcore';
+import {Utils} from "../../models/teacher";
 
 export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
     return function (matieres, idClasse, classes, search, idTeacher?) {
-        let hasService = false;
         if (idClasse === '*' || idClasse === undefined) return matieres;
         if (classes.all.length > 0) {
             let classe = classes.findWhere({id : idClasse});
             if (classe !== undefined) {
-                let matieresClasse = matieres.filter((matiere) => {
+                return matieres.filter((matiere) => {
                     if (classe.hasOwnProperty('services')) {
                         let services = classe.services;
                         let evaluables;
-                        if(idTeacher)
-                            evaluables = _.findWhere(services, {id_matiere: matiere.id, evaluable: true, id_enseignant : idTeacher});
-                        else
-                            evaluables = _.findWhere(services, {id_matiere: matiere.id, evaluable: true});
-                        if (services !== null) {
-                            hasService = true;
+                        if (idTeacher) {
+                            evaluables = _.findWhere(services, {
+                                id_matiere: matiere.id,
+                                id_enseignant: idTeacher,
+                                evaluable: true
+                            });
+                            if (evaluables == undefined) {
+                                evaluables = _.filter(services, service => {
+                                    let substituteTeacher = _.findWhere(service.substituteTeachers,
+                                        {second_teacher_id: idTeacher, subject_id: matiere.id});
+                                    let correctDateSubstituteTeacher = substituteTeacher &&
+                                        substituteTeacher.start_date <= (new Date()).toISOString() &&
+                                        substituteTeacher.entered_end_date >= (new Date()).toISOString();
+                                    let coTeachers = _.findWhere(service.coTeachers,
+                                        {second_teacher_id: idTeacher, subject_id: matiere.id});
+                                    return service.evaluable && (coTeachers || correctDateSubstituteTeacher);
+                                });
+                                if (evaluables.length == 0)
+                                    evaluables = undefined;
+                            }
+                        } else if (!Utils.isChefEtab()) {
+                            evaluables = _.findWhere(services, {
+                                id_matiere: matiere.id,
+                                id_enseignant: model.me.userId,
+                                evaluable: true
+                            });
+                            if (evaluables == undefined) {
+                                evaluables = _.filter(services, service => {
+                                    let substituteTeacher = _.findWhere(service.substituteTeachers,
+                                        {second_teacher_id: model.me.userId, subject_id: matiere.id});
+                                    let correctDateSubstituteTeacher = substituteTeacher &&
+                                        substituteTeacher.start_date <= (new Date()).toISOString() &&
+                                        substituteTeacher.entered_end_date >= (new Date()).toISOString()
+                                    let coTeachers = _.findWhere(service.coTeachers,
+                                        {second_teacher_id: model.me.userId, subject_id: matiere.id});
+                                    return service.evaluable && (coTeachers || correctDateSubstituteTeacher);
+                                });
+                                if (evaluables.length == 0)
+                                    evaluables = undefined;
+                            }
+                        } else {
+                            evaluables = _.findWhere(services, {
+                                id_matiere: matiere.id,
+                                evaluable: true
+                            });
                         }
                         return evaluables !== undefined
-                    }else {
+                    } else {
                         if (matiere.hasOwnProperty('libelleClasses')) {
                             return (matiere.libelleClasses.indexOf(classe.externalId) !== -1)
                         } else {
@@ -47,10 +86,6 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
                         }
                     }
                 });
-                if (matieresClasse.length > 0) {
-                     return matieresClasse;
-                }
-                return (hasService) ? matieresClasse : matieres;
             }
         }
     }

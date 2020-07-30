@@ -3565,20 +3565,6 @@ body.evaluations {
       margin: auto;
     }
 
-    .serviceList {
-      height: 50px;
-      border-top: 0.5px solid lightgrey;
-
-      & > * {
-        vertical-align: middle;
-        display: inline-block;
-      }
-
-      & > label:not(.select) {
-        text-align: center
-      }
-    }
-
     .delete {
       @include fonticon;
       font-size: 15px;

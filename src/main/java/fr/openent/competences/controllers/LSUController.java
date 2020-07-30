@@ -2279,7 +2279,6 @@ public class LSUController extends ControllerHelper {
         final AtomicInteger idElementProgramme = new AtomicInteger();
 
 
-
         Handler getOut = new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> suiviAcquisResponse) {

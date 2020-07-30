@@ -2,6 +2,7 @@ import {Utils} from "../teacher";
 import http from "axios";
 import {notify, idiom as lang, angular, _,toasts} from 'entcore';
 import {Mix} from "entcore-toolkit";
+import {MultiTeaching} from "./MultiTeaching";
 
 export class Service {
     id_etablissement: string;
@@ -19,13 +20,17 @@ export class Service {
     coefficient: number | string;
     filter:string;
     groups_name:string;
+    coTeachers_name : string;
+    substituteTeachers_name : string;
     groups:any;
     subTopics: any;
     competencesParams:any;
     id_groupes: any;
     id_groups:any;
     coefficientPlaceHolder: string;
-
+    coTeachers: MultiTeaching[];
+    substituteTeachers: MultiTeaching[];
+    is_visible: boolean;
 
     constructor(service) {
         _.extend(this, service);
@@ -35,8 +40,14 @@ export class Service {
         this.groups = service.groups;
         this.groups_name = service.groups_name;
         this.subTopics = service.subTopics;
-        if(service.competencesParams && service.competencesParams.length != 0 ){
-            let services= [];
+        this.substituteTeachers = service.substituteTeachers;
+        this.coTeachers = service.coTeachers;
+        this.is_visible = service.is_visible;
+        this.coTeachers_name = service.coTeachers_name;
+        this.substituteTeachers_name = service.substituteTeachers_name;
+
+        if(service.competencesParams && service.competencesParams.length != 0){
+            let services = [];
             service.competencesParams.forEach(param =>{
                 let subService = {};
                 subService["id_enseignant"] = this.id_enseignant;
@@ -99,6 +110,7 @@ export class Service {
             toasts.warning('evaluation.service.error.create');
         }
     }
+
     updateService(){
         try {
             return http.put('/viescolaire/service', this.toJson());
@@ -106,6 +118,7 @@ export class Service {
             notify.error('evaluation.service.error.update');
         }
     }
+
     async updateServices(isModalite?,isCoefficient?){
         try {
             let {status} = await http.put('/viescolaire/services',{"services" :this.competencesParams.map(service =>
@@ -123,9 +136,7 @@ export class Service {
         }
     }
     updateServiceModalite(){
-
         let request = () => this.updateService();
-
 
         if(this.modalite == this.previous_modalite) {
             return;
@@ -157,7 +168,6 @@ export class Service {
                 })
             }
         }
-
     }
 
     getDifferentEvaluableSubServices(service){
@@ -233,12 +243,11 @@ export class Service {
             id_etablissement: this.id_etablissement,
             id_enseignant: this.id_enseignant,
             id_matiere: this.id_matiere,
-            id_groupes: (this.id_groupe) ? [this.id_groupe] : this.id_groupes,
+            id_groupes: (this.id_groups) ? this.id_groups : [this.id_groupe],
             modalite: this.modalite,
             evaluable: this.evaluable,
-            coefficient: this.coefficient
+            coefficient: this.coefficient,
+            is_visible: this.is_visible
         };
     }
-
-
 }

@@ -150,7 +150,6 @@ public class ExportPDFController extends ControllerHelper {
                         String templateName = "releve-eleve.pdf.xhtml";
                         String prefixPdfName = templateProps.getString("prefixPdfName");
                         exportService.genererPdf(request, templateProps, templateName, prefixPdfName, vertx, config);
-
                     });
         });
     }
@@ -474,6 +473,7 @@ public class ExportPDFController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getExportRecapAppreciations(final HttpServerRequest request) {
         final String idClasse = request.params().get("idClasse");
+        final String idEtablissement = request.params().get("idStructure");
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
 
         Integer idPeriode = null;
@@ -492,6 +492,7 @@ public class ExportPDFController extends ControllerHelper {
 
         Set<JsonObject> MatGrp = new HashSet<>();
         Map<JsonObject, String> teachers = new HashMap<>();
+        Map<String, ArrayList<String>> coTeachers = new HashMap<>();
 
         Future<Map<JsonObject, String>> apprFuture = Future.future();
         Future<Map<JsonObject, Map<String, List<NoteDevoir>>>> notesFuture = Future.future();
@@ -523,7 +524,17 @@ public class ExportPDFController extends ControllerHelper {
             }
         });
 
-        CompositeFuture.all(idElevesFuture, idGroupesFuture).setHandler(event -> {
+        Future<JsonArray> multiTeachersFuture = Future.future();
+        utilsService.getMultiTeachersByClass(idEtablissement, idClasse, finalIdPeriode, event -> {
+            formate(multiTeachersFuture, event);
+        });
+
+        Future<JsonArray> servicesFuture = Future.future();
+        utilsService.getServices(idEtablissement, new JsonArray().add(idClasse), event -> {
+            formate(servicesFuture, event);
+        });
+
+        CompositeFuture.all(idElevesFuture, idGroupesFuture, multiTeachersFuture, servicesFuture).setHandler(event -> {
             if(event.succeeded()) {
                 Set<String> idGroups = new HashSet<>(Collections.singleton(idClasse));
                 idGroupesFuture.result().stream().forEach(line -> {
@@ -566,7 +577,19 @@ public class ExportPDFController extends ControllerHelper {
 
                                     MatGrp.add(key);
 
-                                    if (!teachers.containsKey(key)) {
+                                    Boolean isVisible = true;
+                                    JsonArray services = servicesFuture.result();
+                                    for(int i = 0; i < services.size(); i++){
+                                        JsonObject service = (JsonObject) services.getJsonObject(i);
+
+                                        String serviceIdMatiere = service.getString("id_matiere");
+                                        String lineIdMatiere = lineObject.getString("id_matiere");
+                                        if(serviceIdMatiere.equals(lineIdMatiere)) {
+                                            isVisible = service.getBoolean("is_visible");
+                                            break;
+                                        }
+                                    }
+                                    if (!teachers.containsKey(key) && isVisible) {
                                         teachers.put(key, lineObject.getString("owner"));
                                     }
 
@@ -617,6 +640,20 @@ public class ExportPDFController extends ControllerHelper {
                         moyennesFinalFuture.complete(moyFinal);
                     } else {
                         moyennesFinalFuture.fail(stringJsonArrayEither.left().getValue());
+                    }
+                });
+
+                multiTeachersFuture.result().stream().forEach(mulT -> {
+                    JsonObject multiTeacher = (JsonObject) mulT;
+
+                    String key = multiTeacher.getString("subject_id");
+
+                    if(!coTeachers.containsKey(key)){
+                        ArrayList _coTeachers = new ArrayList();
+                        _coTeachers.add(multiTeacher.getString("second_teacher_id"));
+                        coTeachers.put(key, _coTeachers);
+                    } else {
+                        coTeachers.get(key).add(multiTeacher.getString("second_teacher_id"));
                     }
                 });
             } else {
@@ -673,10 +710,14 @@ public class ExportPDFController extends ControllerHelper {
 
                 moyObjectFuture.complete(moyObjects);
 
-                if (teachers.values().size() == 0) {
+                if (teachers.values().size() == 0 && coTeachers.values().size() == 0) {
                     libTeachFuture.complete(new HashMap<>());
                 } else {
-                    Utils.getLastNameFirstNameUser(eb, new JsonArray(new ArrayList(teachers.values())), libTeachersEvent -> {
+                    ArrayList<String> idTeachers = new ArrayList(teachers.values());
+                    coTeachers.values().forEach(item -> {
+                        idTeachers.addAll(item);
+                    });
+                    Utils.getLastNameFirstNameUser(eb, new JsonArray(idTeachers), libTeachersEvent -> {
                         if (libTeachersEvent.isRight()) {
                             libTeachFuture.complete(libTeachersEvent.right().getValue().entrySet()
                                     .stream()
@@ -758,6 +799,17 @@ public class ExportPDFController extends ControllerHelper {
                             newMoy.put("mat", libMatieres.get(entry.getKey().getString("id_matiere")));
                             newMoy.put("prof", libTeachers.get(teachers.get(entry.getKey())));
                             newMoy.put("grp", libGrp.get(entry.getKey().getString("id_groupe")));
+
+                            if(coTeachers.size() > 0 && coTeachers.get(entry.getKey().getString("id_matiere")) != null){
+                                ArrayList _coTeachers = new ArrayList();
+                                coTeachers.get(entry.getKey().getString("id_matiere")).forEach(coTeacher -> {
+                                    if(!_coTeachers.contains(libTeachers.get(coTeacher)))
+                                        _coTeachers.add(libTeachers.get(coTeacher));
+                                });
+                                newMoy.put("coT", _coTeachers);
+                            }
+                            newMoy.put("ensIsVisible", false);
+
                             newMoy.mergeIn(entry.getValue());
 
                             return newMoy;
@@ -1373,6 +1425,7 @@ public class ExportPDFController extends ControllerHelper {
                     unauthorized(request);
                 } else {
                     String idClasse = request.params().get("idClasse");
+                    String idEtablissement = request.params().get("idEtablissement");
 
                     Boolean withMoyGeneraleByEleve = Boolean.valueOf(request.params().get("withMoyGeneraleByEleve"));
                     Boolean withMoyMinMaxByMat = Boolean.valueOf(request.params().get("withMoyMinMaxByMat"));
@@ -1447,8 +1500,8 @@ public class ExportPDFController extends ControllerHelper {
 
                     if(idPeriode != null){
                         //in this case, in mapIdMatListMoyByEleve, this average is the average of the periode
-                        noteService.getMoysEleveByMatByPeriode(idClasse, idPeriode, mapAllidMatAndidTeachers,
-                                mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
+                        noteService.getMoysEleveByMatByPeriode(idClasse, idPeriode, idEtablissement,
+                                mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
                     } else {
                         List<String> listIdClasse = new ArrayList<>();
                         listIdClasse.add(idClasse);
@@ -1461,7 +1514,8 @@ public class ExportPDFController extends ControllerHelper {
                                 } else{
                                     JsonArray periodes = event.right().getValue();
                                     //in this case, in mapIdMatListMoyByEleve, this average is the average of the year
-                                    noteService.getMoysEleveByMatByYear(periodes, mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
+                                    noteService.getMoysEleveByMatByYear(idEtablissement, periodes,
+                                            mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
                                 }
                             }
                         });

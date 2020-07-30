@@ -8,7 +8,7 @@ export let teachingsSkills = ng.directive ('teachingsSkills', function(){
         scope : {
             data : '=',
             suiviFilter : '=',
-            me : '=',
+            listTeacher : '=',
             isClasse : '=',
             mapCouleurs : '=',
             mapLettres : '=',

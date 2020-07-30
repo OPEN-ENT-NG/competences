@@ -479,9 +479,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 niveauCompetences   = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
 
             }catch (java.lang.ClassCastException e){
-                //log.info("CASTING string to JsonArray : " + params.getString(NIVEAU_COMPETENCE));
                 niveauCompetences = new JsonArray(params.getString(NIVEAU_COMPETENCE));
-                //log.info("params : " + params + " idEleve : " + idEleve);
             }
             JsonArray footerArray = new JsonArray();
             if(niveauCompetences != null && !niveauCompetences.isEmpty()){
@@ -497,7 +495,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonObject niv = footerArray.getJsonObject(i);
 
                     String lib = niv.getString(LIBELLE);
-                    String id_niv = Integer.toString(niv.getInteger("ordre"));
+                    String id_niv;
+                    try{
+                         id_niv  = Integer.toString(niv.getInteger("ordre"));
+                    }catch (NullPointerException e){
+                        id_niv = Integer.toString(niv.getInteger("id_cycle"));
+                    }
                     footer += id_niv + " : " + lib + " - ";
                 }
                 footer = footer.substring(0, footer.length() - 2);
@@ -524,10 +527,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         try {
             if (!answered.get()) {
                 putLibelleForExport(idEleve, elevesMap, params, finalHandler);
-                getEvenements(params.getString("idStructure"), classe.getString(ID_CLASSE), idEleve, elevesMap, idPeriode, finalHandler);
+                getEvenements(params.getString("idStructure"), classe.getString(ID_CLASSE),
+                        idEleve, elevesMap, idPeriode, finalHandler);
                 getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, params.getString("idStructure"), finalHandler);
                 getStructure(idEleve, elevesMap.get(idEleve), finalHandler);
-                if(!params.getBoolean(HIDE_HEADTEACHER,false))
+                if(!params.getBoolean(HIDE_HEADTEACHER, false))
                     getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);
                 getLibellePeriode(idEleve, elevesMap, idPeriode, host, acceptLanguage, finalHandler);
                 getAnneeScolaire(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);

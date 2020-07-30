@@ -16,26 +16,15 @@
  */
 
 import {ng} from 'entcore';
+import {isValidClasse} from "../utils/functions/isValidClasse";
 
 declare let _:any;
 
 export let customClassFilters = ng.filter('customClassFilters', function(){
-    return function(classes, devoirs, searchParams){
-        let output = devoirs;
-        let tempTable = [];
-        let result = classes;
-
-        /*if (searchParams.periode !== undefined && searchParams.periode !== '*' && searchParams.periode !== null &&
-            searchParams.periode.id !== null) {
-            if(searchParams.periode.id_type === undefined) {
-                searchParams.periode.id_type = searchParams.periode.id;
-            }
-            tempTable = _.where(output, {id_periode : parseInt(searchParams.periode.id_type )});
-            output = tempTable;
-        }*/
-        result =_.filter(classes, function (classe) { return _.findWhere(output, {id_groupe: classe.id});
+    return function(classes, devoirs){
+        let output = _.filter(devoirs, devoir => {return isValidClasse(devoir.id_groupe, devoir.id_matiere,classes);});
+        return _.filter(classes, function (classe) { return _.findWhere(output, {id_groupe: classe.id});
         });
-        return result;
     };
 });
 
@@ -43,7 +32,6 @@ export let customPeriodeFilters = ng.filter('customPeriodeFilters', function(){
     return function(periodes, devoirs, searchParams){
         let output = devoirs;
         let tempTable = [];
-        let result = [];
         if (searchParams.classe !== '*' && searchParams.classe !== null) {
             tempTable = _.where(output, {id_groupe : searchParams.classe.id});
             output = tempTable;

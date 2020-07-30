@@ -38,6 +38,7 @@ import {
     PreferencesUtils
 } from "../utils/preferences";
 import {ShortTermAnnotation} from "../constants/ShortTermAnnotation";
+import {isValidClasse} from "../utils/functions/isValidClasse";
 
 declare let $: any;
 declare let document: any;
@@ -2545,8 +2546,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @returns {any} la valeur de la clé passée en paramètre
          */
         $scope.getClasseData = (idClasse, key) => {
-            if ($scope.classes === undefined || idClasse === null || idClasse === ''
-                || ($scope.classes === undefined || $scope.evaluations.classes === undefined)
+            if ($scope.classes === undefined || idClasse === null || idClasse === '' || ($scope.evaluations.classes === undefined)
                 || ($scope.classes.all.length === 0 && $scope.evaluations.classes.all.length === 0)) {
                 return '';
             }
@@ -3198,39 +3198,31 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return;
         };
 
-        $scope.isValidClasseMatiere = (idClasse) => {
+        $scope.isValidClasseMatiere = (idClasse, idMatiere) => {
             if ($scope.classes !== undefined) {
                 let matiereClasse = $filter('getMatiereClasse')($scope.structure.matieres.all,
                     idClasse, $scope.classes, $scope.search);
-                let classe = _.findWhere($scope.classes.all,{id: idClasse});
-
-                if(Utils.isChefEtab()){
+                if(idMatiere)
+                    return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
+                        && !_.isEmpty(matiereClasse) && _.findWhere(matiereClasse, {id:idMatiere});
+                else
                     return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
                         && !_.isEmpty(matiereClasse);
-                }else{
-                    let matieresByClassByTeacher = $filter('getMatiereClasse')($scope.structure.matieres.all,
-                        idClasse, $scope.classes, $scope.search, model.me.userId);
-                    return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
-                        && !_.isEmpty(matiereClasse) && matieresByClassByTeacher.length > 0;
-                }
             }
         };
 
         $scope.filterValidClasseMatiere = () => {
             return (item) => {
-                return $scope.isValidClasseMatiere(item.id_groupe || item.id);
+                if($scope.selected && $scope.selected.devoirs && $scope.selected.devoirs.list && $scope.selected.devoirs.list[0])
+                    return $scope.isValidClasseMatiere(item.id_groupe || item.id, $scope.selected.devoirs.list[0].id_matiere);
+                else
+                    return $scope.isValidClasseMatiere(item.id_groupe || item.id,undefined);
             };
-        };
-
-        $scope.isValidClasse = (idClasse) => {
-            if ($scope.classes !== undefined) {
-                return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined;
-            }
         };
 
         $scope.filterValidClasse = () => {
             return (item) => {
-                return $scope.isValidClasse(item.id_groupe || item.id);
+                return isValidClasse(item.id_groupe || item.id, item.id_matiere,$scope.classes.all);
             };
         };
 
@@ -4779,8 +4771,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.releveNoteTotale = new ReleveNoteTotale(p);
                 const teacherBySubject = utils.getTeacherBySubject($scope.classes.all,
                     $scope.search.classe.id,
-                    $scope.structure.enseignants.all);
-                await $scope.releveNoteTotale.export(teacherBySubject,$scope.classes.all,$scope.structure.enseignants.all);
+                    $scope.structure.enseignants.all,
+                    $scope.search.periode);
+                await $scope.releveNoteTotale.export(teacherBySubject, $scope.classes.all, $scope.structure.enseignants.all);
                 await stopLoading();
                 notify.success('evaluations.export.bulletin.success');
             }

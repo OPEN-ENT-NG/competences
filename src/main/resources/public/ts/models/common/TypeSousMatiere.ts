@@ -14,19 +14,20 @@
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
-
-import { Model,toasts } from 'entcore';
+import { Model } from 'entcore';
 import {Mix, Selectable,Selection} from "entcore-toolkit";
+
 import http from "axios";
 
 export class TypeSousMatiere extends Model implements Selectable{
     id: number;
     libelle: string;
-    selected:boolean;
+    selected: boolean;
+    id_structure: string;
 
     async create(){
         try{
-            let {status,data} = await http.post(`/viescolaire/types/sousmatiere`,this.toJson());
+            let {status, data} = await http.post(`/viescolaire/types/sousmatiere`, this.toJson());
             this.id = data.id;
             return status === 200;
         }catch (e){
@@ -36,7 +37,7 @@ export class TypeSousMatiere extends Model implements Selectable{
 
     async update(){
         try{
-            let {status,data} = await http.put(`/viescolaire/types/sousmatiere/${this.id}`,this.toJson());
+            let {status, data} = await http.put(`/viescolaire/types/sousmatiere/${this.id}`, this.toJson());
             this.id = data.id;
             return status === 200;
         }catch (e){
@@ -46,8 +47,8 @@ export class TypeSousMatiere extends Model implements Selectable{
 
     async save() {
         if(this.id){
-            return  await  this.update();
-        }else{
+            return await this.update();
+        } else {
             return await this.create();
         }
     }
@@ -56,27 +57,25 @@ export class TypeSousMatiere extends Model implements Selectable{
         return {
             ...(this.id && {id: this.id}),
             ...(this.libelle && {libelle: this.libelle}),
+            ...(this.id_structure && {id_structure: this.id_structure}),
         }
     }
 }
+
 export class TypeSousMatieres extends Selection<TypeSousMatiere>{
     id: number;
     libelle: string;
+    id_structure: string;
 
-    async get(){
-        let {data} = await http.get(`/viescolaire/types/sousmatieres`);
+    async get(idStructure){
+        let {data} = await http.get(`/viescolaire/types/sousmatieres?idStructure=` + idStructure);
         this.all = Mix.castArrayAs(TypeSousMatiere, data);
-
     }
 
     async saveTopicSubTopicRelation(topics){
         let topicsToSend = [];
         let subTopicsToSend = [];
 
-        let jsonToSend = {
-            topics:[],
-            subTopics:[]
-        };
         topics.forEach(topic =>{
             if (topic.selected){
                 topic.sous_matieres = this.selected;
@@ -87,9 +86,13 @@ export class TypeSousMatieres extends Selection<TypeSousMatiere>{
         this.selected.forEach(subTopic => {
             subTopicsToSend.push(subTopic.id);
         });
-        jsonToSend.topics = topicsToSend;
-        jsonToSend.subTopics = subTopicsToSend;
-        let {status} = await http.post(`/viescolaire/types/sousmatieres/relations`,jsonToSend);
+
+        let jsonToSend = {
+            topics:topicsToSend,
+            subTopics:subTopicsToSend
+        };
+
+        let {status} = await http.post(`/viescolaire/types/sousmatieres/relations`, jsonToSend);
         return status === 200 || status === 204;
     }
 }

@@ -34,5 +34,7 @@ export * from './functions/updateFilters';
 export * from './functions/initChartsEval';
 export * from './functions/setHistoriqueEvenement';
 export * from './functions/pushData';
+export * from './functions/getTitulairesForRemplacantsCoEnseignant';
 export * from './functions/getIframeFromPdfDownload';
 export * from './functions/getTeacherBySubject';
+export * from './functions/isValidClasse'

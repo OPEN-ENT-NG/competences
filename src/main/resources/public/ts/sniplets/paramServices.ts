@@ -1,9 +1,10 @@
-import {notify, idiom as lang, angular, _,toasts} from 'entcore';
+import {notify, idiom as lang, _, toasts} from 'entcore';
 import http from "axios";
 import * as utils from '../utils/teacher';
-import {Classe, TypeSousMatiere, TypeSousMatieres, Utils} from "../models/teacher";
+import {Classe, TypeSousMatieres} from "../models/teacher";
 import {Service} from "../models/common/ServiceSnipplet";
 import {safeApply} from "../utils/teacher";
+import {MultiTeaching} from "../models/common/MultiTeaching";
 
 export const paramServices = {
     title: 'Configuration des services',
@@ -68,7 +69,7 @@ export const paramServices = {
                     paramServices.that.columns.modalite.data = _.pluck(aModalite.data, "id");
                     paramServices.that.columns.modalite.data.unshift(lang.translate('multiples'));
                     // paramServices.that.remplacements = aRemplacement.data;
-                    await  paramServices.that.setServicesWithGroups(aService.data);
+                    await paramServices.that.setServicesWithGroups(aService.data);
 
                     // await paramServices.that.initServices();
                 });
@@ -102,51 +103,56 @@ export const paramServices = {
         filterSearch: function () {
             return (service) => {
                 let isInSearched = true;
-                if(paramServices.that.searchToFilter.length !=0){
-                    paramServices.that.searchToFilter.forEach(search =>{
-                        if( !(service.groups_name.toUpperCase().includes(search.toUpperCase())
+                if(paramServices.that.searchToFilter.length != 0){
+                    paramServices.that.searchToFilter.forEach(search => {
+                        if(!((service.groups_name != null && service.groups_name.toUpperCase().includes(search.toUpperCase()))
+                            || (service.nom_groupe != null && service.nom_groupe.toUpperCase().includes(search.toUpperCase()))
                             || service.nom_enseignant.toUpperCase().includes(search.toUpperCase())
-                            || service.topicName.toUpperCase().includes(search.toUpperCase()))){
+                            || service.topicName.toUpperCase().includes(search.toUpperCase())
+                            || service.coTeachers_name.toUpperCase().includes(search.toUpperCase())
+                            || service.substituteTeachers_name.toUpperCase().includes(search.toUpperCase()))) {
                             isInSearched = false;
                         }
                     });
-                }else{
+                } else {
                     isInSearched = true;
-
                 }
                 return isInSearched;
             }
         },
 
         setServicesWithGroups: async function (data) {
-            function getGroupsName(service, groups, groups_name: string) {
-                if(service.competencesParams && service.competencesParams.length !== 0)
+            function getGroupsName(service, groups) {
+                if(service.competencesParams && service.competencesParams.length !== 0){
                     service.competencesParams.forEach(param => {
                         let group =  _.findWhere(paramServices.that.columns.classe.data, {id: param.id_groupe});
-                        if(group !== undefined){
+                        if(group && !groups.includes(group)){
                             groups.push(group);
                             param.nom_groupe = group.name;
                         }
                     });
-                groups.sort((group1, group2) => {
-                    if (group1.name > group2.name) {
-                        return 1;
-                    }
-                    if (group1.name < group2.name) {
-                        return -1;
-                    }
-                    return 0;
-                });
-                groups_name = groups.join(",")
-                return groups_name;
+                    groups.sort((group1, group2) => {
+                        if (group1.name > group2.name) {
+                            return 1;
+                        }
+                        if (group1.name < group2.name) {
+                            return -1;
+                        }
+                        return 0;
+                    });
+                    return groups.join(", ");
+                }
+                return null;
             }
 
-            await paramServices.that.subTopics.get();
+            await paramServices.that.subTopics.get(paramServices.that.idStructure);
             paramServices.that.services = _.reject(_.map(data, service => {
                 let enseignant = _.findWhere(paramServices.that.columns.enseignant.data, {id: service.id_enseignant});
                 let groupe = _.findWhere(paramServices.that.columns.classe.data, {id: service.id_groupe});
                 let groups = [];
                 let subTopics = [];
+                let coTeachers = service.coTeachers;
+                let substituteTeachers = service.substituteTeachers;
                 let matiere = _.findWhere(paramServices.that.columns.matiere.data, {id: service.id_matiere});
                 if (matiere && matiere.sous_matieres && matiere.sous_matieres.length > 0)
                     matiere.sous_matieres.forEach(sm => {
@@ -156,17 +162,40 @@ export const paramServices = {
                             }
                         });
                     });
-                let groups_name = "";
+                let groups_name = getGroupsName(service, groups);
 
-                groups_name = getGroupsName(service, groups, groups_name);
+                let coTeachers_name = "";
+                let substituteTeachers_name = "";
+
+                if(coTeachers){
+                    _.each(coTeachers , (coTeacher) => {
+                        coTeacher.displayName = (_.findWhere(paramServices.that.columns.enseignant.data,
+                            {id: coTeacher.second_teacher_id}) != undefined)? _.findWhere(paramServices.that.columns.enseignant.data,
+                            {id: coTeacher.second_teacher_id}).displayName : "";
+                        coTeachers_name += coTeacher.displayName + " ";
+                    });
+                }
+                if(substituteTeachers){
+                    _.each(substituteTeachers , (substituteTeacher) => {
+                        substituteTeacher.displayName = (_.findWhere(paramServices.that.columns.enseignant.data,
+                            {id: substituteTeacher.second_teacher_id}) != undefined)? _.findWhere(paramServices.that.columns.enseignant.data,
+                            {id: substituteTeacher.second_teacher_id}).displayName : "";
+                        substituteTeachers_name += substituteTeacher.displayName + " ";
+                    });
+                }
+
                 let missingParams = {
                     id_etablissement: paramServices.that.idStructure,
                     nom_enseignant: enseignant ? enseignant.displayName : null,
                     topicName: matiere ? matiere.name + " (" + matiere.externalId + ")" : null,
                     groups: groups ? groups : null,
-                    groups_name: groups_name ? groups_name : null,
+                    groups_name: groups_name ? groups_name : "",
+                    coTeachers_name : coTeachers_name,
+                    substituteTeachers_name : substituteTeachers_name,
                     nom_groupe: groupe ? groupe.name : null,
-                    subTopics: subTopics ? subTopics : []
+                    subTopics: subTopics ? subTopics : [],
+                    coTeachers: (_.isEmpty(coTeachers)) ? [] : _.map(coTeachers, (coTeacher) => { return new MultiTeaching(coTeacher)}),
+                    substituteTeachers:  (_.isEmpty(substituteTeachers)) ? [] : _.map(substituteTeachers, (substituteTeacher) => { return new MultiTeaching(substituteTeacher)})
                 };
 
                 return new Service(_.defaults(service, missingParams));
@@ -179,7 +208,6 @@ export const paramServices = {
                 await paramServices.that.runMessageLoader();
             }
 
-
             paramServices.that.getServices().then(async ({data}) => {
                 await paramServices.that.setServicesWithGroups(data);
             })
@@ -190,11 +218,10 @@ export const paramServices = {
         },
 
         updateFilter: async (selectedHeader) => {
-
             selectedHeader.isSelected = !selectedHeader.isSelected;
             let filtersArray = _.values(paramServices.that.typeGroupes).concat(_.values(paramServices.that.headers));
             if(filtersArray.length != 0 ){
-                paramServices.that.filter= "";
+                paramServices.that.filter = "";
                 filtersArray.forEach(filter =>{
                     paramServices.that.filter += filter.filterName + "=" + filter.isSelected + "&";
                 })
@@ -202,10 +229,9 @@ export const paramServices = {
             await paramServices.that.setServices();
         },
 
-
         checkIfExistsAndValid: function (service) {
             let exist = false;
-            if(paramServices.that.classesSelected && paramServices.that.classesSelected.length>0 && service.id_matiere != "" && service.id_enseignant != "") {
+            if(paramServices.that.classesSelected && paramServices.that.classesSelected.length > 0 && service.id_matiere != "" && service.id_enseignant != "") {
                 paramServices.that.classesSelected.forEach(classe => {
                     if (_.findWhere(paramServices.that.services, {
                         id_matiere: service.id_matiere, id_enseignant: service.id_enseignant,
@@ -223,7 +249,6 @@ export const paramServices = {
                 service.deploy = !service.deploy;
         },
         checkDevoirsService: async function (service, callback) {
-
             service.getDevoirsService().then(async function ({data}) {
                 if (data.length == 0) {
                     await callback();
@@ -278,7 +303,8 @@ export const paramServices = {
             });
             await newService.createService();
             paramServices.that.services.push(newService);
-        }, handleUpdateDevoirs: function (service, id_devoirs, matiere) {
+        },
+        handleUpdateDevoirs: function (service, id_devoirs, matiere) {
             if(paramServices.that.matiereSelected) {
                 let matiere = paramServices.that.matiereSelected;
                 if(matiere === service.id_matiere){
@@ -305,20 +331,20 @@ export const paramServices = {
             }
         },
         handleDeleteDevoirs: function (service, id_devoirs) {
-            {
-                service.deleteDevoirsService(id_devoirs).then(async () => {
-                    try {
-                        await paramServices.that.callback();
-                        paramServices.that.lightboxes.switchEval = false;
-                        toasts.confirm('evaluation.service.delete');
-                        await paramServices.that.initServices();
-                    } catch (e) {
-                        console.error(e);
-                        toasts.warning('evaluation.service.delete.error');
-                    }
-                });
-            }
-        }, doUpdateOrDelete: function (updateOrDelete, devoirs, service) {
+            service.deleteDevoirsService(id_devoirs).then(async () => {
+                try {
+                    await paramServices.that.callback();
+                    paramServices.that.lightboxes.switchEval = false;
+                    toasts.confirm('evaluation.service.delete');
+                    await paramServices.that.initServices();
+                } catch (e) {
+                    console.error(e);
+                    toasts.warning('evaluation.service.delete.error');
+                }
+            });
+        },
+
+        doUpdateOrDelete: function (updateOrDelete, devoirs, service) {
             let id_devoirs = _.pluck(devoirs, "id");
             switch (updateOrDelete){
                 case "update":
@@ -351,7 +377,6 @@ export const paramServices = {
             paramServices.that.oldService = service;
             paramServices.that.serviceToUpdate = new Service(service);
             paramServices.that.lightboxes.update = true;
-
         },
         validForm: async function (serviceToUpdate) {
             paramServices.that.lightboxes.update = false;
@@ -417,12 +442,45 @@ export const paramServices = {
             }
         },
 
-        getRemplacements: function() {
-            try {
-                return http.get(`/competences/remplacements/list`)
-            } catch (e) {
-                toasts.warning('evaluations.service.error.remplacement');
+        canSwitchServiceVisibility: function(service) {
+            if(!service.is_visible){
+                return false;
             }
-        }
+            else {
+                let multiTeachersVisible = _.where(service.coTeachers, {is_visible : true})
+                    .concat(_.findWhere(service.substituteTeachers, (s) => { return s.is_visible === true
+                        && s.start_date <= (new Date()).toISOString() &&
+                        s.entered_end_date >= (new Date()).toISOString()}));
+                return !(multiTeachersVisible.length > 0);
+            }
+        },
+
+        canSwitchMultiTeacherVisibility: function(service, multiTeacher) {
+            if(!multiTeacher.is_visible){
+                return false;
+            }
+            else {
+                let multiTeachersVisible = _.where(service.coTeachers, {is_visible : true})
+                    .concat(_.findWhere(service.substituteTeachers, (s) => { return s.is_visible === true
+                        && s.start_date <= (new Date()).toISOString() &&
+                        s.entered_end_date >= (new Date()).toISOString()}));
+                multiTeachersVisible = _.reject(multiTeachersVisible, (mulT) => mulT.id == multiTeacher.id);
+                return !(service.is_visible || multiTeachersVisible.length > 0);
+            }
+        },
+
+        switchServiceVisibility: function(service) {
+            if(!this.canSwitchServiceVisibility(service)){
+                service.is_visible = !service.is_visible;
+                service.updateService();
+            }
+        },
+
+        switchMultiTeacherVisibility: function(service, multiTeacher) {
+            if(!this.canSwitchMultiTeacherVisibility(service, multiTeacher)){
+                multiTeacher.is_visible = !multiTeacher.is_visible;
+                new MultiTeaching(multiTeacher).updateMultiTeaching();
+            }
+        },
     }
 }

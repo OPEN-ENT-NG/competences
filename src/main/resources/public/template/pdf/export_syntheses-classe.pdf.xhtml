@@ -93,7 +93,12 @@
 
     {{#data}}
     <tr>
-        <td class="upper align-left bottom left right title"><strong> {{mat}} </strong> <br /> {{prof}} </td>
+        <td class="upper align-left bottom left right title">
+            <strong> {{mat}} </strong> <br /> {{prof}}
+            {{#coT}}
+            <span>{{.}}</span>
+            {{/coT}}
+        </td>
         <td class="bottom right text"> {{grp}} </td>
         <td class="bottom right text"><span class="note"> {{moy}} </span></td>
         <td class="bottom right text"><span> {{min}} </span></td>

@@ -153,7 +153,7 @@
                     <label class="select">
                         <select ng-model="search.classe"
                                 ng-change="getReleve(); syncPeriode(search.classe.id);"
-                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
+                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
                         </select>
                     </label>
@@ -169,11 +169,12 @@
                 </section>
 
             </div>
-            <div class="marginFive fiche left card" ng-if="search.periode.id !== null && search.periode.id !== undefined && showInfosEval">
+            <div class="marginFive fiche left card"
+                 ng-if="search.periode.id !== null && search.periode.id !== undefined && showInfosEval && matieresFiltered.includes(search.matiere)">
                 <container template="leftSide-devoirInfo"></container>
             </div>
 
-            <div ng-if="!template.isEmpty('leftSide-userInfo') && showInfosEleve"
+            <div ng-if="!template.isEmpty('leftSide-userInfo') && showInfosEleve && matieresFiltered.includes(search.matiere)"
                  class="marginFive fiche student-info card left"
                  ng-class="{opened : openedStudentInfo === true}">
                 <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
@@ -181,7 +182,8 @@
             </div>
 
             <div class="criteres card criterion"
-                 ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined && search.periode.type !== 0 && releveNote !== undefined"
+                 ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined
+                 && search.periode.type !== 0 && releveNote !== undefined && matieresFiltered.includes(search.matiere)"
                  ng-class="{openedProgramme : opened.elementProgramme === true}">
                 <span class="plus-input" ng-click="openElementProgramme()"></span>
                 <div class="header" ng-click="openElementProgramme();">
@@ -203,7 +205,8 @@
             </div>
 
             <div class="criteres card criterion"
-                 ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined && search.periode.type !== 0 && releveNote !== undefined"
+                 ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined
+                 && search.periode.type !== 0 && releveNote !== undefined && matieresFiltered.includes(search.matiere)"
                  ng-class="{openedAppreciation : opened.appreciation === true}">
                 <span class="plus-input" ng-click="openAppreciation();"></span>
                 <div class="header" ng-click="openAppreciation();">
@@ -234,7 +237,7 @@
 
         <section class="ten twelve-mobile cell right">
 
-            <div ng-show="releveNote.synchronized.releve == true && releveNote !== undefined">
+            <div ng-show="releveNote.synchronized.releve == true && releveNote !== undefined && matieresFiltered.includes(search.matiere)">
                 <div class="tableReleves">
                     <div class="responsive-table">
                         <table class="list-view twelve tableReleve tableRelevePadding marginTopZero"
@@ -500,10 +503,9 @@
                     </div>
                 </div>
             </div>
-            <div ng-show="search.periode.id !== null && releveNote === undefined">
+            <div ng-show="search.periode.id !== null && (releveNote === undefined || !matieresFiltered.includes(search.matiere))">
                 <article class="card tableReleves">
                     <i18n>evaluations.no.summary.releve</i18n>
-                    .
                 </article>
             </div>
         </section>

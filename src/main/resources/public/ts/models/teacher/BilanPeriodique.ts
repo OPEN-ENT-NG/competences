@@ -266,8 +266,12 @@ export class BilanPeriodique extends  Model {
                     matchingDataApi.push({
                         idSubject: subjectId,
                         average: statistic.moyenne,
+                        teacherId : teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].id : undefined,
                         teacherName: teacherBySubject && teacherBySubject[subjectId] && teacherBySubject[subjectId].displayName ?
                             teacherBySubject[subjectId].displayName : undefined,
+                        coTeachers:  teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].coTeachers : undefined,
+                        substituteTeachers:  teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].substituteTeachers : undefined,
+                        ensIsVisible : teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].ensIsVisible : true,
                         subjectName: subject? subject.name : undefined,
                         subjectShortName:  subject? subject.libelle_court : undefined,
                     });
@@ -278,22 +282,27 @@ export class BilanPeriodique extends  Model {
         return matchingDataApi;
     }
 
-    private async createHeaderTable (data, teacherBysubject){
-        if(!Object.keys(data).map( element => data[element]).some(array => array.length > 0)) return [];
-        let resultHeader:Array<any> = [];
+    private async createHeaderTable (data, teacherBysubject) {
+        if(!Object.keys(data).map(element => data[element]).some(array => array.length > 0)) return [];
+        let resultHeader : Array<any> = [];
         const dataSynthesis = await this.makerHeaderWithTeachersAndSubjects(data, teacherBysubject);
 
         const dataSynthesisClean = dataSynthesis
             .filter(subjectToSynthesis => subjectToSynthesis.subjectShortName)
             .map(subjectToSynthesis => {
                 let lastName, firstName;
-                if( subjectToSynthesis.teacherName){
-                    [lastName, firstName ] = subjectToSynthesis.teacherName.split(" ");
+                let teacherName;
+                if(subjectToSynthesis.teacherName){
+                    [lastName, firstName] = subjectToSynthesis.teacherName.split(" ");
+                    teacherName = Utils.makeShortName(lastName, firstName);
                 }
                 return {
                     idSubject: subjectToSynthesis.idSubject,
                     subjectName: subjectToSynthesis.subjectShortName,
-                    teacherName: subjectToSynthesis.teacherName ? Utils.makeShortName(lastName, firstName) : "",
+                    teacherName: teacherName,
+                    ensIsVisible: subjectToSynthesis.ensIsVisible,
+                    coTeachers: subjectToSynthesis.coTeachers,
+                    substituteTeachers: subjectToSynthesis.substituteTeachers
                 }
             });
 
@@ -382,7 +391,9 @@ export class BilanPeriodique extends  Model {
                     maximum: "",
                     minimum: "",
                     moyenne: "",
-                }
+                },
+                coTeachers: [],
+                ensIsVisible: true
             };
             appraisalReturned.teacherName = appraisal.prof || "";
             appraisalReturned.subjectName = appraisal.mat || "";
@@ -390,12 +401,14 @@ export class BilanPeriodique extends  Model {
             appraisalReturned.average.minimum = appraisal.min || "";
             appraisalReturned.average.moyenne = appraisal.moy || "";
             appraisalReturned.appraisal.content_text = appraisal.appr || "";
+            appraisalReturned.coTeachers = appraisal.coT || [];
+            appraisalReturned.ensIsVisible = appraisal.ensIsVisible || true;
             return appraisalReturned;
         });
         return result;
     }
 
-    public async getAverage (data:any, teacherBysubject):Promise<any>{
+    public async getAverage(data:any, teacherBysubject):Promise<any>{
         const headerTable = await this.createHeaderTable(data, teacherBysubject);
         if(headerTable)
             return {

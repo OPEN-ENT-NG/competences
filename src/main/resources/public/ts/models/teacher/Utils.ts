@@ -21,6 +21,7 @@ import {BilanFinDeCycle, Classe, CompetenceNote} from './index';
 import {evaluations} from "./model";
 import {updateFilters} from "../../utils/functions/updateFilters";
 import http from "axios";
+import {getTitulairesForRemplacantsCoEnseignant} from "../../utils/teacher";
 
 
 export class Utils {
@@ -283,9 +284,10 @@ export class Utils {
      * @param tableConversion
      * @param isYear
      * @param forClass
+     * @param listTeacher
      */
 
-     static setMaxCompetenceShow (competence, tableConversion, isYear, forClass) {
+     static setMaxCompetenceShow (competence, tableConversion, isYear, forClass,listTeacher) {
         //all evaluations
         let i;
         // récupèrer toutes les évaluations de type non "formative"
@@ -319,7 +321,8 @@ export class Utils {
 
         // my evaluations
         let myEvaluations = _.filter(allEvaluations, function (evaluation) {
-            return evaluation.owner !== undefined && evaluation.owner === model.me.userId;
+            return evaluation.owner !== undefined &&
+                _.findWhere(listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
         });
         if( myEvaluations !== undefined && myEvaluations.length > 0){
             //set the max of my evaluations on this competence for "niveau atteint"
@@ -385,8 +388,10 @@ export class Utils {
             return utils.getMoyenneForBFC((sum/allmaxMats.length)+1,tableConversion.all)-1;
         }
     }
-    static setCompetenceNotes(poDomaine, poCompetencesNotes, tableConversion, object?, classe?, tabDomaine?, isCycle?, periode?) {
+    static setCompetenceNotes(poDomaine, poCompetencesNotes, tableConversion, object?, classe?, tabDomaine?, isCycle?, periode?, listTeacher?) {
         let isYear = isCycle || (periode && !periode.id);
+        if(!listTeacher && classe)
+            listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId, classe);
         if (object === undefined && classe === undefined) {
             if (poDomaine.competences) {
                 _.map(poDomaine.competences.all, function (competence) {
@@ -394,7 +399,7 @@ export class Utils {
                         id_competence: competence.id,
                         id_domaine: competence.id_domaine
                     });
-                     Utils.setMaxCompetenceShow(competence, tableConversion,false,false);
+                     Utils.setMaxCompetenceShow(competence, tableConversion,false,false, listTeacher);
                 });
                 if (tabDomaine !== undefined) {
                     tabDomaine.push(poDomaine);
@@ -408,10 +413,12 @@ export class Utils {
                     id_domaine: competence.id_domaine
                 });
 
-                Utils.setMaxCompetenceShow(competence, tableConversion,isYear,false);
+                Utils.setMaxCompetenceShow(competence, tableConversion,isYear,false, listTeacher);
 
                 if (object.composer.constructor.name === 'SuiviCompetenceClasse') {
-                    let mineCompetencesEvaluations = _.filter(competence.competencesEvaluations, {owner : model.me.userId});
+                    let mineCompetencesEvaluations = _.filter(competence.competencesEvaluations, competenceEvaluations =>{
+                        return _.findWhere(listTeacher,{id_enseignant : competenceEvaluations.owner, id_matiere : competenceEvaluations.id_matiere});
+                    });
 
                     // Récupère les moyennes des maxs dans chaque matières sur mes évaluations de la compétence pour tous les élèves
                     competence.mineCompetencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, mineCompetencesEvaluations,tableConversion,isYear);
@@ -420,10 +427,13 @@ export class Utils {
                     competence.competencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, competence.competencesEvaluations,tableConversion,isYear);
 
                     for (let i = 0; i < classe.eleves.all.length; i++) {
-                        let mine = _.findWhere(competence.mineCompetencesEvaluations, {id_eleve : classe.eleves.all[i].id,
-                            owner : model.me.userId});
+                        let mine = _.findWhere(competence.mineCompetencesEvaluations, competenceMine =>{
+                            return competenceMine.id_eleve == classe.eleves.all[i].id &&
+                                _.findWhere(listTeacher,{id_enseignant : competenceMine.owner, id_matiere : competenceMine.id_matiere});
+                        });
                         let others = _.filter(competence.competencesEvaluations, function (evaluation) {
-                            return evaluation.owner !== model.me.userId; });
+                            return _.findWhere(listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere}) === undefined;
+                        });
 
                         if (mine === undefined) {
                             if(competence.mineCompetencesEvaluations === undefined
@@ -461,7 +471,7 @@ export class Utils {
         if(poDomaine.domaines) {
             for (var i = 0; i < poDomaine.domaines.all.length; i++) {
                 this.setCompetenceNotes(poDomaine.domaines.all[i], poCompetencesNotes, tableConversion, object, classe,
-                    tabDomaine, isCycle, periode);
+                    tabDomaine, isCycle, periode, listTeacher);
             }
         }
     }
@@ -476,11 +486,12 @@ export class Utils {
      * @returns {any}
      */
     static getCompetenceEvaluations(classe, competence,competencesEvaluations, tableConversion,isYear?) {
+        let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId,classe);
         for (let i = 0; i < classe.eleves.all.length; i++) {
             let currentIdEleve = classe.eleves.all[i].id;
             let commpetenceEvaluationsEleve = _.where(competencesEvaluations, {id_eleve: currentIdEleve});
             if (commpetenceEvaluationsEleve !== undefined && commpetenceEvaluationsEleve.length > 0) {
-                Utils.setMaxCompetenceShow(commpetenceEvaluationsEleve, tableConversion, isYear, true);
+                Utils.setMaxCompetenceShow(commpetenceEvaluationsEleve, tableConversion,isYear, true, listTeacher);
             }
         }
         return competencesEvaluations;
@@ -490,14 +501,18 @@ export class Utils {
     /**
      * Filtre permettant de retourner l'évaluation maximum en fonction du paramètre de recherche "Mes Evaluations"
      * @param listeEvaluations Tableau d'évaluations de compétences
+     * @param $scope
      * @returns {(evaluation:any)=>(boolean|boolean)} Retourne true si la compétence courante est la plus haute du tableau listeEvaluations
      */
     static isMaxEvaluation = function (listeEvaluations, $scope) {
         return function (evaluation) {
             var _evalFiltered = listeEvaluations;
             if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
+                if(!$scope.listTeacher)
+                    $scope.listTeacher = getTitulairesForRemplacantsCoEnseignant($scope.me.userId, $scope.search.classe);
                 _evalFiltered = _.filter(listeEvaluations, function (competence) {
-                    return competence.owner !== undefined && competence.owner === $scope.me.userId;
+                    return competence.owner !== undefined &&
+                        _.findWhere($scope.listTeacher,{id_enseignant : competence.owner, id_matiere : competence.id_matiere});
                 });
             }
 
@@ -521,10 +536,12 @@ export class Utils {
 
     static hasMaxNotFormative = function (MaCompetence, $scope) {
         let _evalFiltered = MaCompetence.competencesEvaluations;
-
+        if(!$scope.listTeacher)
+            $scope.listTeacher = getTitulairesForRemplacantsCoEnseignant($scope.me.userId, $scope.search.classe);
         if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
             _evalFiltered = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {
-                if (evaluation.owner !== undefined && evaluation.owner === $scope.me.userId)
+                if (evaluation.owner !== undefined &&
+                    _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere}))
                     return evaluation;
             });
         }
@@ -553,27 +570,35 @@ export class Utils {
     /**
      * Retourne si l'utilisateur n'est pas le propriétaire de compétences
      * @param listeEvaluations Tableau d'évaluations de compétences
+     * @param $scope
      * @returns {boolean} Retourne true si l'utilisateur n'est pas le propriétaire
      */
     static notEvalutationOwner = function (listeEvaluations, $scope) {
+        if(!$scope.listTeacher)
+            $scope.listTeacher = getTitulairesForRemplacantsCoEnseignant($scope.me.userId, $scope.search.classe);
         if ($scope.suiviFilter === undefined) Utils.initFilterMine($scope);
         if ($scope.suiviFilter.mine === 'false' || $scope.suiviFilter.mine === false) {
             return false;
         }
         let _t = _.filter(listeEvaluations, function (competence) {
-            return competence.owner === undefined || competence.owner === $scope.me.userId;
+            return competence.owner === undefined ||
+                _.findWhere($scope.listTeacher,{id_enseignant : competence.owner, id_matiere : competence.id_matiere});
         });
         return _t.length === 0;
     };
 
     static FilterNotEvaluated = function (MaCompetence, $scope) {
+        if(!$scope.listTeacher)
+            $scope.listTeacher = getTitulairesForRemplacantsCoEnseignant($scope.me.userId, $scope.search.classe);
+
         if ($scope.suiviFilter === undefined) Utils.initFilterMine($scope);
         if ($scope.selected.grey === true || ($scope.selected.grey === false && MaCompetence.masque)) {
             let _t = MaCompetence.competencesEvaluations;
 
             if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
                 _t = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {
-                    if (evaluation.owner !== undefined && evaluation.owner === $scope.me.userId)
+                    if (evaluation.owner !== undefined &&
+                        _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere}))
                         return evaluation;
                 });
             }
@@ -778,7 +803,7 @@ export class Utils {
         link.click();
     };
 
-    static makeShortName (lastName:String, firstName:String):String {
+    static makeShortName (lastName:String, firstName:String): string {
         if((typeof lastName !== "string" && !lastName) || (typeof firstName !== "string" && !firstName)) return "";
         return lastName + (firstName.length !== 0? ` ${firstName.charAt(0)}.`: "").toLocaleUpperCase();
     };

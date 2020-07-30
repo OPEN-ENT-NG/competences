@@ -11,7 +11,10 @@
         <tr ng-repeat="noteAndAppraisal in teacherNotesAndAppraisals">
             <td>
                 <p>[[noteAndAppraisal.subjectName || '']]</p>
-                <p>[[noteAndAppraisal.teacherName || '']]</p>
+                <p ng-show="noteAndAppraisal.ensIsVisible">[[noteAndAppraisal.teacherName || '']]</p>
+                <div ng-repeat="coTeacher in noteAndAppraisal.coTeachers">
+                    <p>[[coTeacher]]</p>
+                </div>
             </td>
             <td class="testAlignLeft">[[noteAndAppraisal.appraisal.content_text]]</td>
             <td>[[noteAndAppraisal.average.moyenne]]</td>

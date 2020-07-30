@@ -19,6 +19,7 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.model.Devoir;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.utils.HomeworkUtils;
@@ -26,9 +27,11 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.service.impl.SqlCrudService;
+import org.entcore.common.share.ShareService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
@@ -41,11 +44,10 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
 import static fr.openent.competences.Utils.returnFailure;
+import static fr.openent.competences.helpers.DevoirControllerHelper.getDuplicationDevoirHandler;
 import static fr.openent.competences.helpers.FormSaisieHelper.*;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
@@ -294,7 +296,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void duplicateDevoir(Long idDevoir, final JsonObject devoir, final JsonArray classes, final UserInfos user, final Handler<Either<String, JsonArray>> handler) {
+    public void duplicateDevoir(final JsonObject devoir, final JsonArray classes, final UserInfos user,
+                                ShareService shareService, HttpServerRequest request, EventBus eb) {
         final JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
         String queryNewDevoirId;
         final Integer[] counter = {0};
@@ -309,7 +312,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         JsonObject o = event.right().getValue();
                         ids.add(o.getLong("id"));
                         if (counter[0] == classes.size()) {
-                            insertDuplication(ids, devoir, classes, user, errors[0], handler);
+                            insertDuplication(ids, devoir, classes, user, errors[0], getDuplicationDevoirHandler(user,shareService, request,eb));
                         }
                     } else {
                         errors[0]++;
@@ -324,6 +327,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         if (errors == 0 && ids.size() == classes.size()) {
             JsonObject o, g;
             JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+            JsonArray devoirs = new JsonArray();
             for (int i = 0; i < ids.size(); i++) {
                 try {
                     g = classes.getJsonObject(i);
@@ -335,13 +339,25 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     for (int j = 0; j < tempStatements.size(); j++) {
                         statements.add(tempStatements.getValue(j));
                     }
+                    JsonObject devoirtoAdd = new JsonObject().put("id",ids.getLong(i)).put("devoir",o);
+                    devoirs.add(devoirtoAdd);
                 } catch (ClassCastException e) {
                     log.error("Next id devoir must be a long Object.");
                     log.error(e);
                 }
 
             }
-            Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
+            Sql.getInstance().transaction(statements, new Handler<Message<JsonObject>>() {
+                @Override
+                public void handle(Message<JsonObject> event) {
+                    JsonObject result = event.body();
+                    if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
+                        handler.handle(new Either.Right<String, JsonArray>(devoirs));
+                    } else {
+                        handler.handle(new Either.Left<String, JsonArray>(result.getString("status")));
+                    }
+                }
+            });
         } else {
             log.error("An error occured when collecting ids in duplication sequence.");
             handler.handle(new Either.Left<String, JsonArray>("An error occured when collecting ids in duplication sequence."));
@@ -551,11 +567,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("AND (devoirs.id_etablissement = ? ) ")
                 .append("AND (devoirs.eval_lib_historise = false ) ")
                 .append("AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
-                .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ") // ou dont l'un de mes tiulaires le sont (de l'établissement passé en paramètre)
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement  ")
-                .append("WHERE id_remplacant = ? ")
-                .append("AND rel_professeurs_remplacants.id_etablissement = ? ")
+                .append("devoirs.owner IN (SELECT DISTINCT main_teacher_id ") // ou dont l'un de mes titulaires le sont (de l'établissement passé en paramètre)
+                .append("FROM "+ Competences.VSCO_SCHEMA +".multi_teaching ")
+                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = multi_teaching.structure_id  ")
+                .append("WHERE second_teacher_id = ? AND multi_teaching.structure_id = ? AND ")
+                .append("( (start_date <= current_date AND current_date <= entered_end_date AND NOT is_coteaching) OR is_coteaching ) ")
                 .append(") OR ")
                 .append("? IN (SELECT member_id ") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares ")
@@ -572,7 +588,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         values.add(idEtablissement);
         values.add(user.getUserId());
 
-        // Ajout des params pour la récupération des devoirs de mes tiulaires
+        // Ajout des params pour la récupération des devoirs de mes titulaires
         values.add(user.getUserId());
         values.add(idEtablissement);
 
@@ -658,30 +674,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     }
 
-    @Override
-    public void getClassesIdsDevoir(UserInfos user, String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT distinct(rel_devoirs_groupes.id_groupe) " +
-                "FROM notes.devoirs " +
-                "inner join notes.rel_devoirs_groupes ON (rel_devoirs_groupes.id_devoir = devoirs.id) " +
-                "AND (devoirs.id_etablissement = ? ) " +
-                "AND (devoirs.owner = ? " +
-                "OR devoirs.owner IN (SELECT DISTINCT id_titulaire " +
-                "FROM notes.rel_professeurs_remplacants " +
-                "INNER JOIN notes.devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement " +
-                "WHERE id_remplacant = ? " +
-                "AND rel_professeurs_remplacants.id_etablissement = ?) " +
-                "OR ? IN (SELECT member_id " +
-                "FROM notes.devoirs_shares " +
-                "WHERE resource_id = devoirs.id " +
-                "AND action = '"+ Competences.DEVOIR_ACTION_UPDATE +"'))";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(structureId)
-                .add(user.getUserId())
-                .add(user.getUserId())
-                .add(structureId)
-                .add(user.getUserId());
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
-    }
 
     @Override
     public void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long idPeriode,boolean historise, Handler<Either<String, JsonArray>> handler) {
@@ -1329,14 +1321,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, Handler<Either<String, JsonArray>> handler) {
+    public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, String id_classe, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String headQuery = " SELECT DISTINCT devoirs.id_matiere, devoirs.owner, services.coefficient, devoirs.id_periode " +
+        String headQuery = " SELECT DISTINCT devoirs.id_matiere, devoirs.owner, services.is_visible, services.coefficient, devoirs.id_periode " +
                 " FROM "+ Competences.COMPETENCES_SCHEMA + ".devoirs " +
                 " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes " +
                 " ON (devoirs.id = rel_devoirs_groupes.id_devoir) "+
-                " LEFT JOIN "+ Competences.COMPETENCES_SCHEMA + ".services " +
+                " LEFT JOIN "+ Competences.VSCO_SCHEMA + ".services " +
                 " ON (rel_devoirs_groupes.id_groupe = services.id_groupe AND devoirs.owner = services.id_enseignant " +
                 "                           AND devoirs.id_matiere = services.id_matiere) ";
 
@@ -1368,15 +1360,15 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
                 footerQuery +
 
-                " UNION SELECT DISTINCT appreciation.id_matiere, null as owner, null ::integer as coefficient, appreciation.id_periode" +
+                " UNION SELECT DISTINCT appreciation.id_matiere, null as owner, NULL ::boolean AS is_visible, null ::integer as coefficient, appreciation.id_periode" +
                 " FROM "+ Competences.COMPETENCES_SCHEMA + ".appreciation_matiere_periode as appreciation" +
-                " WHERE appreciation.id_eleve = ? " +
+                " WHERE appreciation.id_eleve = ? AND appreciation.id_classe = ? " +
 
                 " ) AS res " +
-                " ORDER BY res.id_periode,res.id_matiere ";
+                " ORDER BY res.id_periode,res.id_matiere, coefficient ";
 
         values.add(id_eleve).add(idEtablissement).add(id_eleve).add(idEtablissement).add(id_eleve)
-                .add(idEtablissement).add(id_eleve).add(idEtablissement).add(id_eleve);
+                .add(idEtablissement).add(id_eleve).add(idEtablissement).add(id_eleve).add(id_classe);
 
         sql.prepared(query,values,Competences.DELIVERY_OPTIONS,SqlResult.validResultHandler(handler));
     }
@@ -1542,12 +1534,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     @Override
     public void getHomeworksFromSubjectAndTeacher(String idSubject, String idTeacher,
-                                    Handler<Either<String, JsonArray>> handler){
-        String query = "SELECT devoirs.*  " +
+                                                  String groupId, Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT distinct devoirs.id  " +
                 " FROM "+Competences.COMPETENCES_SCHEMA + ".devoirs " +
-                " WHERE owner = ? AND id_matiere = ? ";
-        JsonArray params = new JsonArray().add(idTeacher).add(idSubject);
-
+                " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes rdg " +
+                " ON rdg.id_devoir = devoirs.id "+
+                " WHERE owner = ? AND id_matiere = ? AND rdg.id_groupe = ?";
+        JsonArray params = new JsonArray().add(idTeacher).add(idSubject).add(groupId);
         Sql.getInstance().prepared(query,params,SqlResult.validResultHandler(handler));
 
 

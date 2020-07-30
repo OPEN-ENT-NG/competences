@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.helpers.DevoirControllerHelper;
 import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessPeriodeFilter;
 import fr.openent.competences.security.AccessVisibilityAppreciation;
@@ -162,32 +163,9 @@ public class DevoirController extends ControllerHelper {
                         public void handle(final JsonObject resource) {
                             if(null != resource.getLong("type_groupe")
                                     && resource.getLong("type_groupe")>-1){
-                                creationDevoir(request, user, resource);
+                                DevoirControllerHelper.creationDevoir(request, user, resource,pathPrefix,devoirsService,shareService,eb);
                             } else {
-                                JsonObject action = new JsonObject()
-                                        .put("action", "eleve.isEvaluableOnPeriode")
-                                        .put("idEleve", resource.getJsonObject("competenceEvaluee").getString("id_eleve"))
-                                        .put("idPeriode", new Long(resource.getInteger("id_periode")))
-                                        .put(Competences.ID_ETABLISSEMENT_KEY,
-                                                resource.getString("id_etablissement"));
-
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                    @Override
-                                    public void handle(Message<JsonObject> message) {
-                                        JsonObject body = message.body();
-                                        if ("ok".equals(body.getString("status"))) {
-                                            if(body.getJsonArray("results").size() > 0){
-                                                creationDevoir(request, user, resource);
-                                            } else {
-                                                log.debug("Student not evaluable on this period");
-                                                Renders.unauthorized(request);
-                                            }
-                                        } else {
-                                            log.debug("Student not evaluable on this period");
-                                            Renders.unauthorized(request);
-                                        }
-                                    }
-                                }));
+                                checkEleveEvaluable(resource, request, user);
                             }
                         }
                     });
@@ -199,77 +177,31 @@ public class DevoirController extends ControllerHelper {
         });
     }
 
-    private void creationDevoir(HttpServerRequest request, UserInfos user, JsonObject resource) {
+    private void checkEleveEvaluable(JsonObject resource, HttpServerRequest request, UserInfos user) {
+        JsonObject action = new JsonObject()
+                .put("action", "eleve.isEvaluableOnPeriode")
+                .put("idEleve", resource.getJsonObject("competenceEvaluee").getString("id_eleve"))
+                .put("idPeriode", new Long(resource.getInteger("id_periode")))
+                .put(Competences.ID_ETABLISSEMENT_KEY,
+                        resource.getString("id_etablissement"));
 
-        resource.remove("competences");
-        resource.remove("competencesAdd");
-        resource.remove("competencesRem");
-        resource.remove("competenceEvaluee");
-        resource.remove("competencesUpdate");
-        RequestUtils.bodyToJson(request, pathPrefix +
-                Competences.SCHEMA_DEVOIRS_CREATE, new Handler<JsonObject>() {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
-            public void handle(final JsonObject devoir) {
-
-                devoirsService.createDevoir(devoir, user, new Handler<Either<String, JsonObject>>() {
-                    @Override
-                    public void handle(Either<String, JsonObject> event) {
-                        if (event.isRight()) {
-                            final JsonObject devoirWithId = event.right().getValue();
-                            // recuperation des professeurs que l'utilisateur connecté remplacent
-                            utilsService.getTitulaires(user.getUserId(),
-                                    devoir.getString("id_etablissement"), new Handler<Either<String, JsonArray>>() {
-                                        @Override
-                                        public void handle(Either<String, JsonArray> event) {
-                                            if (event.isRight()) {
-                                                // si l'utilisateur connecté remplace bien un professeur
-                                                // on partage à ce professeur (le titulaire) le devoir
-                                                JsonArray values = event.right().getValue();
-
-                                                if(values.size() > 0) {
-
-                                                    // TODO potentielement il peut y avoir plusieurs
-                                                    // titulaires pour un remplaçant sur le même établissement
-                                                    String userIdTitulaire = ((JsonObject)values.getJsonObject(0))
-                                                            .getString("id_titulaire");
-                                                    List<String> actions = new ArrayList<String>();
-                                                    actions.add(Competences.DEVOIR_ACTION_UPDATE);
-
-                                                    // TODO ne partager le devoir seulement si le titulaire
-                                                    // enseigne sur la classe du remplaçant
-                                                    shareService.userShare(user.getUserId(),
-                                                            userIdTitulaire,
-                                                            devoirWithId.getLong("id").toString(),
-                                                            actions, new Handler<Either<String, JsonObject>>() {
-                                                                @Override
-                                                                public void handle(Either<String, JsonObject> event) {
-                                                                    if (event.isRight()) {
-                                                                        renderJson(request, devoirWithId);
-                                                                    } else {
-                                                                        leftToResponse(request, event.left());
-                                                                        log.error("DevoirController creationDevoir : shareService.userShare problème par rapport à la requête");
-                                                                    }
-
-                                                                }
-                                                            });
-                                                } else {
-                                                    // sinon on renvoie la réponse, pas besoin de partage
-                                                    renderJson(request, devoirWithId);
-                                                }
-                                            }else {
-                                                leftToResponse(request, event.left());
-                                                log.error("DevoirController creationDevoir : utilsService.getTitulaires problème par rapport à la requête");
-                                            }
-                                        }
-                                    });
-                        } else {
-                            badRequest(request);
-                        }
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                if ("ok".equals(body.getString("status"))) {
+                    if(body.getJsonArray("results").size() > 0){
+                        DevoirControllerHelper.creationDevoir(request, user, resource,pathPrefix,devoirsService,shareService,eb);
+                    } else {
+                        log.debug("Student not evaluable on this period");
+                        Renders.unauthorized(request);
                     }
-                });
-
+                } else {
+                    log.debug("Student not evaluable on this period");
+                    Renders.unauthorized(request);
+                }
             }
-        });
+        }));
     }
 
     /**
@@ -639,8 +571,8 @@ public class DevoirController extends ControllerHelper {
                         @Override
                         public void handle(final JsonObject body) {
                             try {
-                                final Long idDevoir = Long.parseLong(request.params().get("idDevoir"));
-                                devoirsService.retrieve(idDevoir.toString(), new Handler<Either<String, JsonObject>>() {
+                                final long idDevoir = Long.parseLong(request.params().get("idDevoir"));
+                                devoirsService.retrieve(Long.toString(idDevoir), new Handler<Either<String, JsonObject>>() {
                                     @Override
                                     public void handle(Either<String, JsonObject> result) {
                                         if (result.isRight()) {
@@ -661,7 +593,7 @@ public class DevoirController extends ControllerHelper {
                                                             }
                                                             devoir.put("competences", idCompetences);
                                                         }
-                                                        devoirsService.duplicateDevoir(idDevoir, devoir, body.getJsonArray("classes"), user, arrayResponseHandler(request));
+                                                        devoirsService.duplicateDevoir(devoir, body.getJsonArray("classes"), user, shareService, request, eb);
                                                     } else {
                                                         log.error("An error occured when collecting competences for devoir id " + idDevoir);
                                                         renderError(request);

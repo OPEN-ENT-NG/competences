@@ -36,6 +36,7 @@ import {
 } from './index';
 import {Enseignement} from "../parent_eleve/Enseignement";
 import http from 'axios';
+import {getTitulairesForRemplacantsCoEnseignant} from "../../utils/functions/getTitulairesForRemplacantsCoEnseignant";
 
 export class SuiviCompetence extends Model {
     competenceNotes: Collection<CompetenceNote>;
@@ -94,6 +95,7 @@ export class SuiviCompetence extends Model {
 
                     let resDomaines = response[0].data;
                     let resCompetencesNotes = response[1].data;
+                    let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId,this.classe);
                     if (resDomaines) {
                         this.domaines.all.length = 0;
                         for (let i = 0; i < resDomaines.length; i++) {
@@ -108,7 +110,7 @@ export class SuiviCompetence extends Model {
                             domaine.id_etablissement = structure.id;
                             this.domaines.all.push(domaine);
                             Utils.setCompetenceNotes(domaine, resCompetencesNotes, this.tableConversions, this.domaines, null,
-                               undefined , this.isCycle, periode);
+                               undefined , this.isCycle,periode,listTeacher);
                         }
                     }
                     if (resolve && typeof (resolve) === 'function') {

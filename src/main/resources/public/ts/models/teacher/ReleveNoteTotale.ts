@@ -85,10 +85,10 @@ export class ReleveNoteTotale extends  Model implements IModel {
         };
     }
 
-    async export  (teacherBySubject:Array<any>, classes, teachers) {
+    async export (teacherBySubject:Array<any>, classes, teachers) {
         return new Promise(async (resolve, reject) => {
             try {
-                await this.formateHeaderAndColumn(teacherBySubject,classes, teachers);
+                await this.formateHeaderAndColumn(teacherBySubject, classes, teachers);
                 let columnCsv = [];
                 let blob;
                 let addingAllStudents = false;
@@ -339,8 +339,8 @@ export class ReleveNoteTotale extends  Model implements IModel {
                                     enseignantsMatiere += devoir.teacher + "  "
                                 if(devoir.id_groupe != this.idClasse && !this.idGroups.includes(devoir.id_groupe)) {
                                     this.idGroups.push(devoir.id_groupe);
-                                    teacherBySubject = {...teacherBySubject, ...utils.getTeacherBySubject(classes,
-                                            devoir.id_groupe, teachers) };
+                                    /*teacherBySubject = {...teacherBySubject, ...utils.getTeacherBySubject(classes,
+                                            devoir.id_groupe, teachers) };*/
                                 }
                             });
                             teachersBySubjectDevoirs[matiere.id] = enseignantsMatiere;

@@ -87,9 +87,13 @@ public class EventBusController extends ControllerHelper {
     private void homeworksBusService(String method, Message<JsonObject> message) {
         switch (method) {
             case "setShare": {
-                log.info("vf");
                 JsonArray idsArray = message.body().getJsonArray("ids");
                 competencesShareService.shareHomeworks(idsArray, getJsonArrayBusResultHandler(message),this.shareService);
+                break;
+            }
+            case "removeShare": {
+                JsonArray idsArray = message.body().getJsonArray("ids");
+                competencesShareService.removeShareHomeworks(idsArray, getJsonArrayBusResultHandler(message),this.shareService);
             }
             break;
         }

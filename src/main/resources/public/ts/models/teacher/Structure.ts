@@ -89,7 +89,7 @@ export class Structure extends Model {
             },
             CLASSE: {
                 synchronization: '/viescolaire/classes?idEtablissement=' + this.id,
-                synchronizationRemplacement: '/competences/remplacements/classes?idEtablissement=' + this.id
+                synchronizationRemplacement: '/viescolaire/classes/secondary?idStructure=' + this.id
             },
             ELEVE: {
                 synchronization: '/viescolaire/classe/eleves?idEtablissement=' + this.id
@@ -110,7 +110,7 @@ export class Structure extends Model {
             GET_TEACHER_DETAILS : {
                 synchronisation : `/directory/user/${model.me.userId}?manual-groups=true`
             },
-            GET_TYPE_SOUS_MATIERES: `/viescolaire/types/sousmatieres`,
+            GET_TYPE_SOUS_MATIERES: `/viescolaire/types/sousmatieres?idStructure=` + this.id,
             GET_SERVICES: `/viescolaire/services?idEtablissement=${this.id}`
         };
     }
@@ -346,31 +346,24 @@ export class Structure extends Model {
                     let allPromise = await Promise.all([httpAxios.get(this.api.CLASSE.synchronization),
                         httpAxios.get(this.api.GET_SERVICES)]);
                     let res = allPromise[0].data;
-
-                    if (!Utils.isChefEtab()) {
-                        _.map(res, (classe) => {
-                            let services = _.where(allPromise[1].data,
-                                {id_groupe : classe.id});
+                    _.map(res, (classe) => {
+                            let services = _.filter(allPromise[1].data, service =>{
+                                return service.id_groups ? service.id_groups.includes(classe.id)
+                                    : service.id_groupe === classe.id;
+                            });
                             classe.services = (!_.isEmpty(services))? services : null;
                         });
                         this.classes.addRange(castClasses(res));
                         this.eleves.sync().then(() => {
                             model.trigger('apply');
+                            if (Utils.isChefEtab())
+                                resolve();
                         });
+                    if (!Utils.isChefEtab()) {
                         this.syncRemplacement().then(() => {
                             model.trigger('apply');
                         });
                         resolve();
-                    } else {
-                        _.map(res, (classe) => {
-                            let services = _.where(allPromise[1].data,
-                                {id_groupe : classe.id});
-                            classe.services = (!_.isEmpty(services))? services : null;
-                        });
-                        this.classes.addRange(castClasses(res));
-                        this.eleves.sync().then(() => {
-                            resolve();
-                        });
                     }
                     this.synchronized.classes = true;
                 });

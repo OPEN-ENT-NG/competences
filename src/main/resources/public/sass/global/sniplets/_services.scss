@@ -6,14 +6,12 @@
     height: 100%;
     margin: auto;
   }
-
   .service-list-container{
     .serviceList {
       &.active{
         box-shadow: -0.2em 0 3px rgba(10,10,10,0.2), 0.2em 0 3px rgba(10,10,10,0.2);
       }
       padding-top: 0.6%;
-      height: 50px;
       border-top: 0.5px solid darkgrey;
       & > * {
         vertical-align: middle;
@@ -51,6 +49,11 @@
     }
   }
 
+  i.eye-open-orange::before {
+    content: '\e873';
+    color: #FF8500;
+  }
+
   .delete {
     @include fonticon;
     font-size: 15px;
@@ -70,7 +73,9 @@
     margin-bottom: 0.2em;
     padding-left: 5px;
   }
-
+  .padding-top {
+    padding-top: 5px;
+  }
   .lightboxCreate, .lightboxUpdate {
     margin: 20px;
   }
@@ -240,5 +245,9 @@
     }
   }
 
+  .disabled-eye {
+    opacity: 50%;
+    cursor: default;
+  }
 
 }

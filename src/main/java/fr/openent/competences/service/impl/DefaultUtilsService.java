@@ -112,24 +112,61 @@ public class DefaultUtilsService  implements UtilsService {
      * @param handler handler portant le resultat de la requête : la liste des identifiants neo4j des titulaires
      */
     public void getTitulaires(String psIdRemplacant, String psIdEtablissement, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-//        query.append("SELECT DISTINCT main_teacher_id ")
-//                .append("FROM " + Competences.VSCO_SCHEMA + ".multi_teaching ")
-//                .append("WHERE second_teacher_id = ? ")
-//                .append("AND structure_id = ? ")
-//                .append("AND start_date <= current_date ")
-//                .append("AND current_date <= end_date ");
-        String query = "SELECT DISTINCT id_titulaire " +
-                "FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants " +
-                "WHERE id_remplacant = ? " +
-                "AND id_etablissement = ? " +
-                "AND date_debut <= current_date " +
-                "AND current_date <= date_fin ";
+
+        query.append("SELECT DISTINCT main_teacher_id ")
+                .append("FROM " + Competences.VSCO_SCHEMA + ".multi_teaching ")
+                .append("WHERE second_teacher_id = ? ")
+                .append("AND structure_id = ? ")
+                .append("AND start_date <= current_date ")
+                .append("AND current_date <= end_date ");
+
         values.add(psIdRemplacant);
         values.add(psIdEtablissement);
-        Sql.getInstance().prepared(query, values, validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
+    public void getMultiTeachersByClass(String idEtablissement, String idClasse, Integer idPeriode,
+                                   Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "multiTeaching.getMultiTeachersByClass")
+                .put("structureId", idEtablissement)
+                .put("groupId", idClasse)
+                .put("periodId", idPeriode != null ? idPeriode.toString() : null);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                if (OK.equals(body.getString(STATUS))) {
+                    JsonArray result = body.getJsonArray(RESULT);
+                    handler.handle(new Either.Right<String, JsonArray>(result));
+                } else {
+                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                    log.error("getMultiTeachersByClass : " + body.getString("message"));
+                }
+            }
+        }));
+    }
+
+    public void getServices(final String idEtablissement, final JsonArray idClasse,
+                             Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "service.getDefaultServices")
+                .put("idEtablissement", idEtablissement)
+                .put("idsGroupe", idClasse);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray results = body.getJsonArray(RESULTS);
+                handler.handle(new Either.Right<String, JsonArray>(results));
+            } else {
+                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                log.error("getServices : " + body.getString("message"));
+            }
+        }));
+    }
 
     @Override
     public void listTypesDevoirsParEtablissement(String idEtablissement, Handler<Either<String, JsonArray>> handler) {
@@ -1206,7 +1243,6 @@ public class DefaultUtilsService  implements UtilsService {
             action.put(ID_PERIODE_KEY, idPeriode);
         }
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(handler));
-
     }
 
     public void getClassInfo ( final String idClass, Handler<Either<String,JsonObject>> handler){
