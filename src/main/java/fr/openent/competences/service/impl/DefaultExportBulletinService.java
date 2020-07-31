@@ -497,10 +497,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     String lib = niv.getString(LIBELLE);
                     String id_niv;
                     try{
-                         id_niv  = Integer.toString(niv.getInteger("ordre"));
+                         id_niv  = Integer.toString(niv.getInteger("id_niveau"));
                     }catch (NullPointerException e){
                         id_niv = Integer.toString(niv.getInteger("id_cycle"));
                     }
+
                     footer += id_niv + " : " + lib + " - ";
                 }
                 footer = footer.substring(0, footer.length() - 2);
