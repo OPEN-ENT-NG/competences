@@ -377,25 +377,27 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }));
     }
 
-    public void saveParameters(JsonArray idStudents, Long idPeriode,
+    public void saveParameters(JsonArray idStudents, Long idPeriode, String idStructure,
                                String paramsString, final Handler<Either<String, JsonObject>> finalHandler){
         JsonArray params = new JsonArray();
-        StringBuilder query = new StringBuilder("INSERT INTO " + COMPETENCES_SCHEMA + ".bulletin_parameters (id_student, id_periode, params) " +
-                " VALUES ");
+        StringBuilder query = new StringBuilder("INSERT INTO " + COMPETENCES_SCHEMA + ".bulletin_parameters " +
+                "(id_student, id_periode, params, id_structure) VALUES ");
         for(Object student : idStudents){
-            query.append(" ( ?, ?, ? ) ,");
-            params.add((String)student).add(idPeriode).add(paramsString);
+            query.append(" ( ?, ?, ?, ?) ,");
+            params.add((String)student).add(idPeriode).add(paramsString).add(idStructure);
         }
         query = new StringBuilder(query.substring(0, query.length() - 1));
-        query.append(" ON CONFLICT (id_student, id_periode) DO UPDATE SET params = ?");
+        query.append(" ON CONFLICT (id_student, id_periode, id_structure) DO UPDATE SET params = ?");
         params.add(paramsString);
 
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(finalHandler));
     }
 
-    public void getParameters(String idStudent, Long idPeriode, final Handler<Either<String, JsonObject>> finalHandler){
-        String query = "SELECT params FROM " + COMPETENCES_SCHEMA + ".bulletin_parameters WHERE id_student = ? AND id_periode = ?";
-        JsonArray params = new JsonArray().add(idStudent).add(idPeriode);
+    public void getParameters(String idStudent, Long idPeriode, String idStructure,
+                              final Handler<Either<String, JsonObject>> finalHandler){
+        String query = "SELECT params FROM " + COMPETENCES_SCHEMA + ".bulletin_parameters WHERE id_student = ? " +
+                "AND id_periode = ? AND id_structure = ?";
+        JsonArray params = new JsonArray().add(idStudent).add(idPeriode).add(idStructure);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(finalHandler));
     }
 

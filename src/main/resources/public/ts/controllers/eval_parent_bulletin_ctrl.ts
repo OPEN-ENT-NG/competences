@@ -45,8 +45,9 @@ export let bulletinController = ng.controller('BulletinController', [
         $scope.loadBulletin = async function () {
             await Utils.runMessageLoader($scope);
             try {
-                let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.searchBulletin.eleve.id;
-                url += "&idPeriode=" + $scope.searchBulletin.periode.id_type;
+                let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.searchBulletin.eleve.id
+                    + "&idPeriode=" + $scope.searchBulletin.periode.id_type
+                    + "&idStructure=" + $scope.searchBulletin.periode.id_etablissement;
                 let data = await http.get(url);
                 if(data.status == 204){
                     //empty result, le bulletin n'a pas encore été généré

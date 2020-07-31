@@ -62,6 +62,9 @@ export class ExportBulletins {
         if (Utils.isNotNull(options.idPeriode)){
             _.extend(o, {idPeriode: options.idPeriode});
         }
+        if (Utils.isNotNull(options.idStructure)){
+            _.extend(o, {idStructure: options.idStructure});
+        }
         if (Utils.isNotNull(options.type)){
             _.extend(o, {typePeriode: options.type});
         }else{

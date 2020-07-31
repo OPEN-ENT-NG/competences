@@ -1243,8 +1243,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 if($scope.search.periode.id_type == null){
                     $scope.content = undefined;
                 }else {
-                    let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.search.eleve.id;
-                    url += "&idPeriode=" + $scope.search.periode.id_type;
+                    let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.search.eleve.id
+                        + "&idPeriode=" + $scope.search.periode.id_type
+                        + "&idStructure=" + $scope.search.periode.id_etablissement;
                     let data = await http.get(url);
                     if (data.status == 204) {
                         //empty result, le bulletin n'a pas encore été généré

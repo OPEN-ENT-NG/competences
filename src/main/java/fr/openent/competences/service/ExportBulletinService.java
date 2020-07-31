@@ -275,7 +275,8 @@ public interface ExportBulletinService {
      * @param params
      * @param finalHandler
      */
-    void saveParameters(JsonArray idStudents, Long idPeriode,String params,final Handler<Either<String, JsonObject>> finalHandler);
+    void saveParameters(JsonArray idStudents, Long idPeriode, String idStructure,
+                        String params,final Handler<Either<String, JsonObject>> finalHandler);
 
     /**
      * Récupération des paramètres de génération du bulletin de l'élève sur la période donnée
@@ -283,5 +284,6 @@ public interface ExportBulletinService {
      * @param idPeriode
      * @param finalHandler
      */
-    void getParameters(String idStudent, Long idPeriode,final Handler<Either<String, JsonObject>> finalHandler);
+    void getParameters(String idStudent, Long idPeriode, String idStructure, 
+                       final Handler<Either<String, JsonObject>> finalHandler);
 }

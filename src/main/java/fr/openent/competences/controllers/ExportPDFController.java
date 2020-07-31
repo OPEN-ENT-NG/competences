@@ -694,9 +694,9 @@ public class ExportPDFController extends ControllerHelper {
                         moyObject.put("moy", "NN");
                     }else if (resultCalc.getDouble("noteMin") > resultCalc.getDouble(MOYENNE)){
 
-                            moyObject.put("min", "");
-                            moyObject.put("max", "");
-                            moyObject.put("moy", "");
+                        moyObject.put("min", "");
+                        moyObject.put("max", "");
+                        moyObject.put("moy", "");
                     } else {
                         moyObject.put("min", resultCalc.getDouble("noteMin"));
                         moyObject.put("max", resultCalc.getDouble("noteMax"));
@@ -1352,26 +1352,28 @@ public class ExportPDFController extends ControllerHelper {
     public void getBulletinParameters(final HttpServerRequest request) {
         Long idPeriode = Long.valueOf(request.params().get(ID_PERIODE_KEY));
         String idStudent = request.params().get(ID_ELEVE_KEY);
-        exportBulletinService.getParameters(idStudent, idPeriode, new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                if(event.isLeft()){
-                    leftToResponse(request, event.left());
-                    log.error(event.left().getValue());
-                } else{
-                    JsonObject parameters = event.right().getValue();
-                    if(!parameters.isEmpty()){
-                        JsonObject paramsJson = new JsonObject(parameters.getString("params"));
-                        JsonArray idStudents = new JsonArray().add(idStudent);
-                        paramsJson.put(ID_PERIODE_KEY,idPeriode);
-                        paramsJson.put(ID_STUDENTS_KEY,idStudents);
-                        Renders.renderJson(request, paramsJson);
-                    }else{
-                        noContent(request);
+        String idStructure = request.params().get(ID_STRUCTURE_KEY);
+        exportBulletinService.getParameters(idStudent, idPeriode, idStructure,
+                new Handler<Either<String, JsonObject>>() {
+                    @Override
+                    public void handle(Either<String, JsonObject> event) {
+                        if(event.isLeft()){
+                            leftToResponse(request, event.left());
+                            log.error(event.left().getValue());
+                        } else{
+                            JsonObject parameters = event.right().getValue();
+                            if(!parameters.isEmpty()){
+                                JsonObject paramsJson = new JsonObject(parameters.getString("params"));
+                                JsonArray idStudents = new JsonArray().add(idStudent);
+                                paramsJson.put(ID_PERIODE_KEY,idPeriode);
+                                paramsJson.put(ID_STUDENTS_KEY,idStudents);
+                                Renders.renderJson(request, paramsJson);
+                            }else{
+                                noContent(request);
+                            }
+                        }
                     }
-                }
-            }
-        });
+                });
     }
 
     @Post("/save/bulletin/parameters")
@@ -1389,6 +1391,7 @@ public class ExportPDFController extends ControllerHelper {
                 }
                 RequestUtils.bodyToJson(request, params -> {
                     Long idPeriode = params.getLong(ID_PERIODE_KEY);
+                    String idStructure = params.getString(ID_STRUCTURE_KEY);
                     JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
                     String idClasse = params.getString(ID_CLASSE_KEY);
 
@@ -1405,7 +1408,8 @@ public class ExportPDFController extends ControllerHelper {
                                         isHeadTeacher = event.right().getValue();
                                     }
                                     if (isHeadTeacher || isChefEtab)
-                                        exportBulletinService.saveParameters(idStudents, idPeriode, params.toString(), defaultResponseHandler(request));
+                                        exportBulletinService.saveParameters(idStudents, idPeriode, idStructure,
+                                                params.toString(), defaultResponseHandler(request));
                                     else
                                         unauthorized(request);
                                 }
