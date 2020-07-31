@@ -206,61 +206,55 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      *
      * @see Domaine
      */
-    private void getDomaines(final String idClasse, final Handler<Either<String, Map<Long, Domaine>>> handler) {
-        domaineService.getArbreDomaines(idClasse,null, null, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight()) {
-                    if (event.right().getValue().size() == 0) {
-                        handler.handle(new Either.Left<String, Map<Long, Domaine>>("Erreur lors de la recuperation des domaines : aucun domaine de competences n'a ete trouve."));
-                        log.error("getDomaines (" + idClasse + ") : aucun domaine de competences n'a ete trouve.");
-                    }
-                    final Map<Long, Domaine> domaines = new HashMap<>();
-                    JsonArray domainesResultArray = event.right().getValue();
-
-                    for (int i = 0; i < domainesResultArray.size(); i++) {
-                        JsonObject _o = domainesResultArray.getJsonObject(i);
-                        Domaine _d = new Domaine(_o.getLong(ID_KEY), _o.getBoolean("evaluated"));
-                        if (domaines.containsKey(_o.getLong("id_parent"))) {
-                            Domaine parent = domaines.get(_o.getLong("id_parent"));
-                            parent.addSousDomaine(_d);
-                            _d.addParent(parent);
-                        }
-                        domaines.put(_d.getId(), _d);
-                    }
-                    if(!domaines.isEmpty()) {
-
-                        competenceService.getCompetencesDomaines(idClasse, domaines.keySet().toArray(new Long[0]), new Handler<Either<String, JsonArray>>() {
-                            @Override
-                            public void handle(Either<String, JsonArray> event) {
-                                if (event.isRight()) {
-                                    if (event.right().getValue().size() == 0) {
-                                        handler.handle(new Either.Left<String, Map<Long, Domaine>>("Erreur lors de la recuperation des competences pour les domaines : aucun competence pour les domaines selectionnes."));
-                                        log.error("getDomaines : getCompetencesDomaines : aucun competence pour les domaines selectionnes.");
-                                    }
-                                    JsonArray competencesResultArray = event.right().getValue();
-
-                                    for (int i = 0; i < competencesResultArray.size(); i++) {
-                                        JsonObject _o = competencesResultArray.getJsonObject(i);
-
-                                        domaines.get(_o.getLong("id_domaine")).addCompetence(_o.getLong("id_competence"));
-                                    }
-                                    handler.handle(new Either.Right<String, Map<Long, Domaine>>(domaines));
-                                } else {
-                                    handler.handle(new Either.Left<String, Map<Long, Domaine>>("Erreur lors de la recuperation des competences pour les domaines :\n" + event.left().getValue()));
-                                    log.error("getDomaines : getCompetencesDomaines : " + event.left().getValue());
-                                }
-                            }
-                        });
-                    } else {
-                        handler.handle(new Either.Left<String, Map<Long, Domaine>>("La classe " + idClasse + " n'est rattachee a aucun cycle."));
-                        log.error("La classe " + idClasse + " n'est rattachée a aucun cycle.");
-                    }
-
-                } else {
-                    handler.handle(new Either.Left<String, Map<Long, Domaine>>("Erreur lors de la recuperation des domaines :\n" + event.left().getValue()));
-                    log.error("getDomaines (" + idClasse + ") : " + event.left().getValue());
+    private void getDomaines(final String idClasse, Long idCycle, final Handler<Either<String, Map<Long, Domaine>>> handler) {
+        domaineService.getArbreDomaines(idClasse,null, idCycle, event -> {
+            if (event.isRight()) {
+                if (event.right().getValue().size() == 0) {
+                    handler.handle(new Either.Left<>("Erreur lors de la recuperation des domaines : aucun domaine de competences n'a ete trouve."));
+                    log.error("getDomaines (" + idClasse + ") : aucun domaine de competences n'a ete trouve.");
                 }
+                final Map<Long, Domaine> domaines = new HashMap<>();
+                JsonArray domainesResultArray = event.right().getValue();
+
+                for (int i = 0; i < domainesResultArray.size(); i++) {
+                    JsonObject _o = domainesResultArray.getJsonObject(i);
+                    Domaine _d = new Domaine(_o.getLong(ID_KEY), _o.getBoolean("evaluated"));
+                    if (domaines.containsKey(_o.getLong("id_parent"))) {
+                        Domaine parent = domaines.get(_o.getLong("id_parent"));
+                        parent.addSousDomaine(_d);
+                        _d.addParent(parent);
+                    }
+                    domaines.put(_d.getId(), _d);
+                }
+                if(!domaines.isEmpty()) {
+
+                    competenceService.getCompetencesDomaines(idClasse, domaines.keySet().toArray(new Long[0]), event1 -> {
+                        if (event1.isRight()) {
+                            if (event1.right().getValue().size() == 0) {
+                                handler.handle(new Either.Left<>("Erreur lors de la recuperation des competences pour les domaines : aucun competence pour les domaines selectionnes."));
+                                log.error("getDomaines : getCompetencesDomaines : aucun competence pour les domaines selectionnes.");
+                            }
+                            JsonArray competencesResultArray = event1.right().getValue();
+
+                            for (int i = 0; i < competencesResultArray.size(); i++) {
+                                JsonObject _o = competencesResultArray.getJsonObject(i);
+
+                                domaines.get(_o.getLong("id_domaine")).addCompetence(_o.getLong("id_competence"));
+                            }
+                            handler.handle(new Either.Right<>(domaines));
+                        } else {
+                            handler.handle(new Either.Left<>("Erreur lors de la recuperation des competences pour les domaines :\n" + event1.left().getValue()));
+                            log.error("getDomaines : getCompetencesDomaines : " + event1.left().getValue());
+                        }
+                    });
+                } else {
+                    handler.handle(new Either.Left<>("La classe " + idClasse + " n'est rattachee a aucun cycle."));
+                    log.error("La classe " + idClasse + " n'est rattachée a aucun cycle.");
+                }
+
+            } else {
+                handler.handle(new Either.Left<>("Erreur lors de la recuperation des domaines :\n" + event.left().getValue()));
+                log.error("getDomaines (" + idClasse + ") : " + event.left().getValue());
             }
         });
     }
@@ -273,66 +267,111 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @param idPeriode  Identifiant de la periode au cours de laquelle on souhaite recuperer les evaluations. Peut etre null.
      * @param handler    Handler contenant une map de note par competence, pour chaque eleve.
      */
-    private void getMaxNoteCompetenceEleve(final String[] idEleves, Long idPeriode, Long idCycle, Boolean isYear, final Handler<Either<String, Map<String, Map<Long, Long>>>> handler) {
-        competenceNoteService.getMaxCompetenceNoteEleve(idEleves, idPeriode,idCycle, isYear, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle (Either <String, JsonArray> event){
-                if (event.isRight()) {
-                    Map<String, Map<Long, Long>> notesCompetencesEleve = new HashMap<>();
-                    List<Long> pastYear = new ArrayList<Long>();
+    private void getMaxNoteCompetenceEleve(final String[] idEleves, Long idPeriode, Long idCycle, Boolean isYear, final Handler<Either<String, Map<String, Map<Long, Float>>>> handler) {
+        competenceNoteService.getMaxCompetenceNoteEleve(idEleves, idPeriode,idCycle, isYear, event -> {
+            if (event.isRight()) {
+                Map<String, Map<Long,Map<String, Long>>> notesCompetencesEleve = new HashMap<>();
+                Map<String, Map<Long,Float>> moyMaxMatCompEleve = new HashMap<>();
+                Map<Long,List<String>> pastYear = new HashMap<>();
 
-                    JsonArray notesResultArray = event.right().getValue();
-                    for (int i = 0; i < notesResultArray.size(); i++) {
-                        JsonObject _o = notesResultArray.getJsonObject(i);
-                        String id_eleve = _o.getString("id_eleve");
+                JsonArray notesResultArray = event.right().getValue();
+                for (int i = 0; i < notesResultArray.size(); i++) {
+                    JsonObject _o = notesResultArray.getJsonObject(i);
+                    String id_eleve = _o.getString("id_eleve");
+                    String id_matiere = _o.getString("id_matiere");
+                    Long id_competence = _o.getLong("id_competence");
 
-                        if(_o.getLong("evaluation") < 0) {
-                            continue;
-                        }
-                        if (!notesCompetencesEleve.containsKey(id_eleve)) {
-                            notesCompetencesEleve.put(id_eleve, new HashMap<Long, Long>());
-                        }
-                        //si la competence n'est pas dans la map
-                        if(!notesCompetencesEleve.get(id_eleve).containsKey(_o.getLong("id_competence"))) {
-                            //on set la competence avec la note ou le niveau final annuel ou périodique s'il existe
-                            if(_o.getLong("niveau_final_annuel")!= null) {
-                                notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("niveau_final_annuel"));
+                    if(_o.getLong("evaluation") < 0) {
+                        continue;
+                    }
+                    if (!notesCompetencesEleve.containsKey(id_eleve)) {
+                        notesCompetencesEleve.put(id_eleve, new HashMap<>());
+                        moyMaxMatCompEleve.put(id_eleve, new HashMap<>());
+                    }
+                    if (!notesCompetencesEleve.get(id_eleve).containsKey(id_competence)) {
+                        notesCompetencesEleve.get(id_eleve).put(id_competence, new HashMap<>());
+                    }
+
+                    Map<String,Long> notesCompetencesEleveIdComp = notesCompetencesEleve.get(id_eleve).get(id_competence);
+
+                    //si la competence n'est pas dans la map
+                    if(!notesCompetencesEleveIdComp.containsKey(id_matiere)) {
+                        //on set la competence avec la note ou le niveau final annuel ou périodique s'il existe
+                        if(_o.getLong("niveau_final_annuel")!= null) {
+                            notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final_annuel"));
+                        }else {
+                            if(_o.getLong("niveau_final")!= null) {
+                                notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final"));
                             }else {
-                                if(_o.getLong("niveau_final")!= null) {
-                                    notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("niveau_final"));
-                                }else {
-                                    notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("evaluation"));
-                                }
+                                notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("evaluation"));
                             }
-                            if(_o.getString("owner").equals("id-user-transition-annee"))
-                                pastYear.add(_o.getLong("id_competence"));
-                        }else if(!_o.getString("owner").equals("id-user-transition-annee")){
-                            //si il s'agit d'une compétence noté sur la même année, sinon on ne prends pas en compte les années passées
-                            if(pastYear.contains(_o.getLong("id_competence"))){
-                                notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("evaluation"));
-                                pastYear.remove(_o.getLong("id_competence"));
+                        }
+                        if(_o.getString("owner").equals("id-user-transition-annee"))
+                            if(pastYear.containsKey(id_competence))
+                                pastYear.get(id_competence).add(id_matiere);
+                            else {
+                                pastYear.put(id_competence, new ArrayList<>());
+                                pastYear.get(id_competence).add(id_matiere);
                             }
-                            //sinon on récupère la valeur de la competence déjà enregistrée
-                            Long niveauOfThisCompetence = notesCompetencesEleve.get(id_eleve).get(_o.getLong("id_competence"));
-                            // on met le niveau_final annuel ou périodique s'il existe ou on le compare à la note de l'élève
-                            if(_o.getLong("niveau_final_annuel")!= null){
-                                notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("niveau_final_annuel"));
+                    }else if(!_o.getString("owner").equals("id-user-transition-annee")){
+                        //si il s'agit d'une compétence noté sur la même année, sinon on ne prends pas en compte les années passées
+                        if(pastYear.containsKey(id_competence) && pastYear.get(id_competence).contains(id_matiere)){
+                            notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("evaluation"));
+                            pastYear.get(id_competence).remove(id_matiere);
+                        }
+                        //sinon on récupère la valeur de la competence déjà enregistrée
+                        Long niveauOfThisCompetence = notesCompetencesEleveIdComp.get(id_matiere);
+                        // on met le niveau_final annuel ou périodique s'il existe ou on le compare à la note de l'élève
+                        if(_o.getLong("niveau_final_annuel")!= null && niveauOfThisCompetence < _o.getLong("niveau_final_annuel")){
+                            notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final_annuel"));
+                        }else{
+                            if(_o.getLong("niveau_final")!= null && niveauOfThisCompetence < _o.getLong("niveau_final")
+                                    && _o.getLong("niveau_final_annuel")== null){
+                                notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final"));
                             }else{
-                                if(_o.getLong("niveau_final")!= null){
-                                    notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("niveau_final"));
-                                }else{
-                                    if(niveauOfThisCompetence < _o.getLong("evaluation")){
-                                        notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("evaluation"));
-                                    }
+                                if(niveauOfThisCompetence < _o.getLong("evaluation") && _o.getLong("niveau_final")== null
+                                        && _o.getLong("niveau_final_annuel")== null){
+                                    notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("evaluation"));
                                 }
                             }
                         }
                     }
-                    handler.handle(new Either.Right<String, Map<String, Map<Long, Long>>>(notesCompetencesEleve));
-                } else {
-                    handler.handle(new Either.Left<String, Map<String, Map<Long, Long>>>("Erreur lors de la recuperation des evaluations de competences :\n" + event.left().getValue()));
-                    log.error("getMaxNoteCompetenceEleve : " + event.left().getValue());
                 }
+
+                //on fait la moyenne des maxs dans chaque matière pour une compétence
+                for (Map.Entry<String, Map<Long, Map<String, Long>>> competences : notesCompetencesEleve.entrySet()) {
+                    String id_eleve = competences.getKey();
+                    for (Map.Entry<Long, Map<String, Long>> competenceMaxMat : competences.getValue().entrySet()) {
+                        Long id_competence = competenceMaxMat.getKey();
+                        Map<String, Long> maxMats = competenceMaxMat.getValue();
+                        float sum = 0;
+                        float nbrofMat = 0;
+                        float moyenneToSend = 1f;
+                        for(Map.Entry<String, Long> maxMat : maxMats.entrySet()){
+                            String id_matiere = maxMat.getKey();
+                            Long max = maxMat.getValue();
+                            if(!pastYear.containsKey(id_competence) || !pastYear.get(id_competence).contains(id_matiere)){
+                                sum += max;
+                                nbrofMat++;
+                            }
+                        }
+                        if (nbrofMat == 0){
+                            for(Long max : maxMats.values()){
+                                sum += max;
+                                nbrofMat++;
+                            }
+                        }
+                        if(nbrofMat != 0)
+                            moyenneToSend = sum / nbrofMat;
+                        moyMaxMatCompEleve.get(id_eleve).put(id_competence, moyenneToSend);
+                    }
+                }
+
+                handler.handle(new Either.Right<>(moyMaxMatCompEleve));
+            } else {
+                handler.handle(new Either.Left<>("Erreur lors de la recuperation des evaluations de competences :\n" +
+                        event.left().getValue()));
+                log.error("getMaxNoteCompetenceEleve : " + event.left().getValue());
             }
         });
     }
@@ -360,8 +399,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
                     for (int i = 0; i < conversion.size(); i++) {
                         JsonObject _o = conversion.getJsonObject(i);
-                        bornes.add(_o.getDouble("valmin").doubleValue());
-                        bornes.add(_o.getDouble("valmax").doubleValue());
+                        bornes.add(_o.getDouble("valmin"));
+                        bornes.add(_o.getDouble("valmax"));
                     }
                     handler.handle(new Either.Right<String, SortedSet<Double>>(bornes));
                 } else {
@@ -387,7 +426,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     private void calcMoyBFC(boolean recapEval,
                             String[] idEleves,
                             Map<String, Map<Long, Integer>> bfcEleves,
-                            Map<String, Map<Long, Long>> notesCompetencesEleves,
+                            Map<String, Map<Long, Float>> notesCompetencesEleves,
                             SortedSet<Double> bornes,
                             List<Domaine> domainesRacine,
                             Handler<Either<String, JsonObject>> handler) {
@@ -422,13 +461,13 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                         if(bfcEleves.get(eleve).containsKey(d.getId())){
                             note.put("moyenne", bfcEleves.get(eleve).get(d.getId()));
                         } else {
-                            Double moy = calculMoyenne(d, notesCompetencesEleves, eleve);
+                            Double moy = calculMoyenne(d, notesCompetencesEleves, eleve, bornes);
                             if (moy != null)
                                 note.put("moyenne",Math.round(moy * 100.0) / 100.0);
                         }
                     }
                 } else if (notesCompetencesEleves.containsKey(eleve)) {
-                    Double moy = calculMoyenne(d, notesCompetencesEleves, eleve);
+                    Double moy = calculMoyenne(d, notesCompetencesEleves, eleve, bornes);
                     if (moy != null) {
                         Iterator<Double> bornesIterator = bornes.iterator();
                         int simplifiedMoy = 0;
@@ -462,13 +501,22 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         handler.handle(new Either.Right<>(result));
     }
 
-    private Double calculMoyenne(Domaine d, Map<String, Map<Long, Long>> notesCompetencesEleves, String eleve){
-        long total = 0;
+    private Double calculMoyenne(Domaine d, Map<String, Map<Long, Float>> notesCompetencesEleves, String eleve, SortedSet<Double> bornes){
+        float total = 0;
         long diviseur = 0;
         for (Long idCompetence : d.getCompetences()) {
             if (notesCompetencesEleves.get(eleve) != null && notesCompetencesEleves.get(eleve).containsKey(idCompetence)) {
-                total += notesCompetencesEleves.get(eleve).get(idCompetence) + 1;
-                diviseur++;
+                //convertir les moyennes des maxs dans chaque matière en un chiffre rond
+                float moy = notesCompetencesEleves.get(eleve).get(idCompetence) + 1;
+                Iterator<Double> bornesIterator = bornes.iterator();
+                int simplifiedMoy = 0;
+                while (moy >= bornesIterator.next() && bornesIterator.hasNext()) {
+                    simplifiedMoy++;
+                }
+                if(simplifiedMoy >= bornes.first() && simplifiedMoy <= bornes.last()) {
+                    total += simplifiedMoy;
+                    diviseur++;
+                }
             }
         }
         return (diviseur != 0 ? ((double) total / diviseur) : null);
@@ -480,7 +528,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                          final Long idPeriode, final Long idCycle, final Boolean isYear,
                          final Handler<Either<String, JsonObject>> handler) {
 
-        final Map<String, Map<Long, Long>> notesCompetencesEleve = new HashMap<>();
+        final Map<String, Map<Long, Float>> notesCompetencesEleve = new HashMap<>();
         final Map<String, Map<Long, Integer>> bfcEleve = new HashMap<>();
         final SortedSet<Double> echelleConversion = new TreeSet<>();
         final Map<Long, Domaine> domaines = new HashMap<>();
@@ -546,7 +594,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
             }
         });
 
-        getDomaines(idClasse, event -> {
+        getDomaines(idClasse, idCycle, event -> {
             if (event.isRight()) {
                 Set<Domaine> setDomainesRacine = new LinkedHashSet<>();
 
@@ -696,7 +744,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
                     //On récupère le nb de DomainesRacines
                     Future<JsonArray> domainesRacineFuture = Future.future();
-                    domaineService.getDomainesRacines(idClasse,
+                    domaineService.getDomainesRacines(idClasse, null,
                             event -> formate(domainesRacineFuture, event));
 
                     //On récupère les élèves qui sont dispensés pour un domaine racine
@@ -748,7 +796,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         //On récupère le nb de DomainesRacines
         Future<JsonArray> domainesRacineFuture = Future.future();
-        domaineService.getDomainesRacines(idClasse, event -> formate(domainesRacineFuture, event));
+        domaineService.getDomainesRacines(idClasse, null, event -> formate(domainesRacineFuture, event));
 
         //On récupère les élèves qui sont dispensés pour un domaine racine
         Future<Map<String, Map<Long, Boolean>>> dispDomaineFuture = Future.future();
@@ -1138,7 +1186,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 event -> formate(conversionNoteFuture, event ));
 
         Future domaineRacineFuture = Future.future();
-        getDomainesRacinesByClass(classe, result, libelleEchelle, idEleves,
+        getDomainesRacinesByClass(classe, idEleves, idCycle,
                 event -> formate(domaineRacineFuture, event ));
 
         Future<JsonObject> buildBfcFuture = Future.future();
@@ -1276,12 +1324,12 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         );
 
     }
-    private void getDomainesRacinesByClass( Map.Entry<String, List<Eleve>> classe, final Map<String, JsonObject> result,
-                                            final Map<Integer, String> libelleEchelle, final List<String> idEleves,
-                                            final Handler<Either<String, JsonArray>> handler){
+    private void getDomainesRacinesByClass(Map.Entry<String, List<Eleve>> classe,
+                                           final List<String> idEleves, final Long idCycle,
+                                           final Handler<Either<String, JsonArray>> handler){
 
         Future<JsonArray> domsFuture = Future.future();
-        domaineService.getDomainesRacines(classe.getKey(), event -> formate(domsFuture, event));
+        domaineService.getDomainesRacines(classe.getKey(), idCycle, event -> formate(domsFuture, event));
 
         Future<Map<String, Map<Long, Boolean>>> dispenseDomaineFuture = Future.future();
         dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(idEleves, event ->
@@ -1291,7 +1339,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
             if(event.failed()){
                 String error = event.cause().getMessage();
                 if(error.contains(TIME)){
-                    getDomainesRacinesByClass(classe, result, libelleEchelle, idEleves, handler);
+                    getDomainesRacinesByClass(classe, idEleves, idCycle, handler);
                     return;
                 }
                 handler.handle(new Either.Right<>((new JsonArray())));

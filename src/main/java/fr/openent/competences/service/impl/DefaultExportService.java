@@ -553,7 +553,7 @@ public class DefaultExportService implements ExportService {
                         competenceNoteService.getCompetencesNotes(idDevoirs, idEleve,
                                 true,
                                 getIntermediateHandler(idDevoirs, competencesNotesArray, finalHandler));
-                        domaineService.getDomainesRacines(idGroupes[0],
+                        domaineService.getDomainesRacines(idGroupes[0], null,
                                 getIntermediateHandler(domainesArray, finalHandler));
                         enseignementService.getEnseignementsOrdered(
                                 getIntermediateHandler(enseignementArray, finalHandler));
@@ -570,7 +570,7 @@ public class DefaultExportService implements ExportService {
                         }
                         competenceNoteService.getCompetencesNotes((Long)null, idEleve,true,
                                 getIntermediateHandler((Long)null, competencesNotesArray, finalHandler));
-                        domaineService.getDomainesRacines(idGroupes[0],
+                        domaineService.getDomainesRacines(idGroupes[0], null,
                                 getIntermediateHandler(domainesArray, finalHandler));
                         enseignementService.getEnseignementsOrdered(
                                 getIntermediateHandler(enseignementArray, finalHandler));

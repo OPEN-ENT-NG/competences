@@ -34,9 +34,10 @@ public interface DomainesService extends CrudService {
     /**
      * Récupère les domaines évalués pour le BFC
      * @param idClasse L'identifiant de la classe.
+     * @param idCycle id du cycle
      * @param handler handler portant le résultat de la requête.
      */
-    void getDomainesRacines(String idClasse, Handler<Either<String, JsonArray>> handler);
+    void getDomainesRacines(String idClasse, Long idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère les libellés et codifications des domaines passés en paramètre

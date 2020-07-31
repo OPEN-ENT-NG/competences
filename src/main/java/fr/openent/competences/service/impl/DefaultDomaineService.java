@@ -118,17 +118,22 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
     }
 
     @Override
-    public void getDomainesRacines(String idClasse, Handler<Either<String, JsonArray>> handler) {
+    public void getDomainesRacines(String idClasse, Long idCycle, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         //On extrait d'abord les domaines evalués et dont le cycle correspond à celui de la classe
         query.append("WITH evaluated_domaines AS ")
                 .append("(SELECT id, id_parent, libelle, codification ")
-                .append("FROM notes.domaines ")
-                .append("LEFT JOIN notes.rel_groupe_cycle ON notes.domaines.id_cycle = notes.rel_groupe_cycle.id_cycle")
-                .append(" WHERE domaines.evaluated = TRUE AND rel_groupe_cycle.id_groupe = ?) ");
-        params.add(idClasse);
+                .append("FROM notes.domaines ");
+        if(idCycle == null) {
+            query.append("LEFT JOIN notes.rel_groupe_cycle ON notes.domaines.id_cycle = notes.rel_groupe_cycle.id_cycle")
+                    .append(" WHERE domaines.evaluated = TRUE AND rel_groupe_cycle.id_groupe = ?) ");
+            params.add(idClasse);
+        }else {
+            query.append(" WHERE domaines.evaluated = TRUE AND domaines.id_cycle = ?) ");
+            params.add(idCycle);
+        }
 
         //Puis on sélectionne les domaines dont le parent n'existe pas dans la requête précente,
         // c'est-à-dire un domaine racine (id_parent = 0) ou dont le domaine parent n'est pas évalué
@@ -144,19 +149,17 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
 
     @Override
     public void getDomaines(String idClasse, Handler<Either<String, JsonArray>> handler) {
-        StringBuilder query = new StringBuilder();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
 
-        query.append(" SELECT id, domaines.id_cycle, codification, libelle, type, evaluated, code_domaine ")
-                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".domaines " )
-                .append(" INNER JOIN " +  Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
-                .append(" ON domaines.id_cycle = rel_groupe_cycle.id_cycle ")
-                .append(" WHERE  id_groupe = ? ")
-                .append(" AND evaluated = true ")
-                .append(" ORDER BY codification ");
-
         params.add(idClasse);
-        Sql.getInstance().prepared(query.toString(), params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
+        String query = " SELECT id, domaines.id_cycle, codification, libelle, type, evaluated, code_domaine " +
+                " FROM " + Competences.COMPETENCES_SCHEMA + ".domaines " +
+                " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle " +
+                " ON domaines.id_cycle = rel_groupe_cycle.id_cycle " +
+                " WHERE  id_groupe = ? " +
+                " AND evaluated = true " +
+                " ORDER BY codification ";
+        Sql.getInstance().prepared(query, params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 }
