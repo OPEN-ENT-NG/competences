@@ -61,6 +61,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 
+import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 /**
@@ -899,7 +900,7 @@ public class NoteController extends ControllerHelper {
                                                     idClasse, table, arrayResponseHandler(request));
                                         } else {
                                             notesService.setColonneReleve( idEleve, idPeriode, idMatiere,
-                                                    idClasse, resource, table, arrayResponseHandler(request));
+                                                    idClasse, resource, table, user.getUserId(), arrayResponseHandler(request));
                                         }
                                     } else {
                                         log.error("Not access to API because of end of saisie");

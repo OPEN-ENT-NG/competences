@@ -105,6 +105,8 @@ public class Competences extends BaseServer {
     public static final String REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE = "rel_elt_bilan_periodique_groupe";
     public static final String REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE = "rel_elt_bilan_periodique_intervenant_matiere";
     public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
+    public static final String REL_APPRECIATION_USERS_NEO = "rel_appreciations_users_neo";
+
 
     public static final String STSFILE_TABLE = "sts_file";
     public static final String SYNTHESE_BILAN_PERIODIQUE_TABLE = "synthese_bilan_periodique";
@@ -296,6 +298,7 @@ public class Competences extends BaseServer {
         addController(new ElementBilanPeriodiqueController(eb));
         addController(new ReportModelPrintExportController());
         addController(new YearTransitionController());
+        addController(new AppreciationSubjectPeriodController(eb));
         // Devoir Controller
         DevoirController devoirController = new DevoirController(eb);
         SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,

@@ -102,8 +102,8 @@
                                           ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
                                           maxlength="MAX_CHAR_APPRECIATION_LENGTH"
                                           ng-model="suiviDesAcquis.appreciationByClasse.appreciation"
-                                          ng-blur="suiviDesAcquis.saveAppreciationMatierePeriodeEleve()"
-                                          ng-focus="suiviDesAcquis.setPreviousAppreciationMatiere()"
+                                          ng-blur="appreciationBlurCheck(suiviDesAcquis)"
+                                          ng-focus="setPreviousAppreciationSubject(suiviDesAcquis)"
                                 >
                                 </textarea>
                             <div class ="twelve element" ng-show="!canSaveAppMatierePosiBilanPeriodique"
@@ -239,3 +239,5 @@
 </div>
 
 <div ng-include="'/competences/public/template/enseignants/bilan_periodique/Ligthbox_conflict_coefficient.html'"></div>
+
+<container template="lightboxConfirmCleanAppreciation"></container>

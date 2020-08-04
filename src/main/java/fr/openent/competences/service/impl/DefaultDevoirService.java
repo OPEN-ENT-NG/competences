@@ -1360,8 +1360,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
                 footerQuery +
 
-                " UNION SELECT DISTINCT appreciation.id_matiere, null as owner, NULL ::boolean AS is_visible, null ::integer as coefficient, appreciation.id_periode" +
-                " FROM "+ Competences.COMPETENCES_SCHEMA + ".appreciation_matiere_periode as appreciation" +
+                " UNION SELECT DISTINCT appreciation.id_matiere, raun.user_id_neo as owner, NULL ::boolean AS is_visible, null ::integer as coefficient, appreciation.id_periode" +
+                " FROM "+ Competences.COMPETENCES_SCHEMA + ".appreciation_matiere_periode as appreciation " +
+                "LEFT JOIN notes.rel_appreciations_users_neo AS raun " +
+                "   ON appreciation.id = raun.appreciation_matiere_periode_id " +
                 " WHERE appreciation.id_eleve = ? AND appreciation.id_classe = ? " +
 
                 " ) AS res " +

@@ -1,0 +1,18 @@
+<lightbox class="enLargedLightBox"
+          on-close="closeLightboxConfirmCleanAppreciation(false)"
+          show="opened.lightboxConfirmCleanAppreciation">
+    <h2>
+        <i18n>remove.confirm</i18n>
+    </h2>
+    <textarea readonly>
+        [[appreciationBackUp]]
+    </textarea>
+    <div class="right-magnet">
+        <button ng-click="deleteAppreciationSubjectStudent(appreciationSubjectPeriod);">
+            <i18n>true</i18n>
+        </button>
+        <button ng-click="closeLightboxConfirmCleanAppreciation(false);">
+            <i18n>false</i18n>
+        </button>
+    </div>
+</lightbox>

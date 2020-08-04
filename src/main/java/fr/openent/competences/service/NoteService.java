@@ -152,10 +152,17 @@ public interface NoteService extends CrudService {
      * @param idMatiere identifiant de la matière
      * @param idClasse
      * @param field (moyenne, positionnement)
+     * @param userId
      * @param handler
      */
-    void setColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse, JsonObject field,
-                          String colonne,Handler<Either<String, JsonArray>> handler);
+    void setColonneReleve(String idEleve,
+                          Long idPeriode,
+                          String idMatiere,
+                          String idClasse,
+                          JsonObject field,
+                          String colonne,
+                          String userId,
+                          Handler<Either<String, JsonArray>> handler);
 
     /**
      * Regroupe les notes des matières par coefficient puis effectue le calcul par matière

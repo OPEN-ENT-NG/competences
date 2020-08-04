@@ -39,6 +39,7 @@ import {
 } from "../utils/preferences";
 import {ShortTermAnnotation} from "../constants/ShortTermAnnotation";
 import {isValidClasse} from "../utils/functions/isValidClasse";
+import {AppreciationSubjectPeriodStudent} from "../models/teacher/AppreciationSubjectPeriodStudent";
 
 declare let $: any;
 declare let document: any;
@@ -601,6 +602,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             lightbox: false,
             lightboxEvalLibre: false,
             lightboxReleve: false,
+            lightboxConfirmCleanComment: false,
             recapEval: false,
             coefficientConflict: false,
             lightboxs: {
@@ -2421,6 +2423,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Séquence de récupération d'un relevé de note
          */
+        let oldExternalIdClassSearch:String = undefined;
+        function initSubjectWhenSearchAnotherThing():any{
+            if(oldExternalIdClassSearch === $scope.search.matiere.externalId) $scope.search.matiere = "*";
+            oldExternalIdClassSearch = $scope.search.matiere.externalId;
+        }
+
         $scope.getReleve = async function () {
             if (Utils.isNotNull($scope.releveNote)) {
                 delete $scope.releveNote;
@@ -2436,10 +2444,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.selected.devoirs.list = [];
             }
 
+            initSubjectWhenSearchAnotherThing();
+
             if (Utils.isNotDefault($scope.search.classe) && $scope.search.classe.id !== undefined
                 && Utils.isNotDefault($scope.search.matiere) && $scope.search.matiere.id !== undefined
                 && _.findWhere($scope.evaluations.devoirs.all, {id_groupe: $scope.search.classe.id})
-                && $scope.search.periode !== '*') {
+                && $scope.search.periode !== '*'
+                && $scope.search.matiere !== "*") {
+
+
 
                 let p = {
                     idEtablissement: evaluations.structure.id,
@@ -3138,9 +3151,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Retourne les informations relatives à un élève
          * @param eleve élève
          */
+        $scope.studentTemp = undefined;
         $scope.getEleveInfo = async function (eleve) {
             if(Utils.isNull(eleve)){
                 return;
+            }
+            if(!$scope.opened.lightboxConfirmCleanAppreciation) {
+                $scope.appreciationBackUp = eleve.appreciation_matiere_periode;
+                $scope.studentTemp = eleve;
             }
             $scope.showInfosEleve = true;
             template.close('leftSide-userInfo');
@@ -4170,28 +4188,88 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.saveAppreciationMatierePeriodeEleve = (eleve, updateHistorique) => {
-            if (eleve.appreciation_matiere_periode !== undefined) {
-                if (eleve.appreciation_matiere_periode.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
-                    if(eleve.appreciation_matiere_periode.length > 0) {
-                        $scope.releveNote.saveAppreciationMatierePeriodeEleve(eleve).then(()=> {
-                            if(updateHistorique){
-                                $scope.updateHistorique(eleve,'appreciation');
-                            }
-                        });
-                    }
-                    else if($scope.previousAppreciationMatiere !== undefined) {
-                        eleve.appreciation_matiere_periode = $scope.previousAppreciationMatiere;
-                    }
+        function preparedDataForAppreciation(student):AppreciationSubjectPeriodStudent{
+            const appreciationSubjectPeriodStudentPrepared = {
+                idStudent: student.id,
+                appreciation: student.appreciation_matiere_periode,
+                idStructure: $scope.releveNote.idEtablissement,
+                idSubject: $scope.releveNote.idMatiere,
+                idPeriod: $scope.releveNote.idPeriode,
+                idSchoolClass: $scope.releveNote.idClasse,
+            }
+            return new AppreciationSubjectPeriodStudent(appreciationSubjectPeriodStudentPrepared);
+        }
 
+        function initAppreciation(): void {
+            $scope.studentTemp = undefined;
+            $scope.appreciationBackUp = undefined;
+        }
+        initAppreciation();
+
+        $scope.saveAppreciationMatierePeriodeEleve = async (student, updateHistoric:Boolean):Promise<void> => {
+
+            if (student.appreciation_matiere_periode === undefined
+                && $scope.opened.lightboxConfirmCleanAppreciation) return;
+            $scope.appreciationSubjectPeriod = preparedDataForAppreciation(student);
+            if (student.appreciation_matiere_periode.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
+                if (student.appreciation_matiere_periode.length > 0) {
+                    if($scope.previousAppreciationMatiere) {
+                        await $scope.appreciationSubjectPeriod.put();
+                    } else {
+                        await $scope.appreciationSubjectPeriod.post();
+                    }
+                    if (updateHistoric && !$scope.opened.lightboxConfirmCleanAppreciation) {
+                        $scope.updateHistorique(student, 'appreciation');
+                    }
+                } else if (student.appreciation_matiere_periode.length === 0
+                    && $scope.previousAppreciationMatiere !== student.appreciation_matiere_periode
+                    && $scope.previousAppreciationMatiere) {
+                    template.open('lightboxConfirmCleanAppreciation', '/enseignants/informations/lightbox_confirm_clean_appreciation');
+                    $scope.opened.lightboxConfirmCleanAppreciation = true;
                 }
-                else {
-                    notify.error(lang.translate("error.char.outbound") +
-                        $scope.MAX_CHAR_APPRECIATION_LENGTH);
-                }
+            } else {
+                notify.error(lang.translate("error.char.outbound") + $scope.MAX_CHAR_APPRECIATION_LENGTH);
             }
             utils.safeApply($scope);
         };
+
+        $scope.deleteAppreciationSubjectStudent = async function (appreciationSubjectPeriod:AppreciationSubjectPeriodStudent):Promise<void> {
+            let isDeleted:Boolean = false;
+            try{
+                await appreciationSubjectPeriod.delete();
+                $scope.updateHistorique($scope.studentTemp, 'appreciation');
+                isDeleted = true;
+            } catch(error) {
+                console.error(error);
+                isDeleted = false;
+            } finally {
+                $scope.closeLightboxConfirmCleanAppreciation(isDeleted);
+            }
+        };
+
+        $scope.closeLightboxConfirmCleanAppreciation = function (isDeleted:Boolean):void {
+            if(!isDeleted) goBackAppreciation($scope.appreciationSubjectPeriod.idStudent, $scope.appreciationBackUp);
+            $scope.opened.lightboxConfirmCleanAppreciation = false;
+            template.close('lightboxConfirmCleanAppreciation');
+            initAppreciation();
+        };
+
+        function goBackAppreciation(idStudent:string, appreciation:string):void{
+            let studentReturning:any = {};
+            if(!$scope.releveNote.classe.eleves.all
+                || $scope.releveNote.classe.eleves.all.length === 0
+                || !idStudent
+                || idStudent.length === 0
+                || typeof idStudent !== "string"
+                || !appreciation
+                || appreciation.trim().length === 0) return studentReturning;
+            for(let student of $scope.releveNote.classe.eleves.all){
+                if(student.id === idStudent) {
+                    student.appreciation_matiere_periode = appreciation;
+                    break;
+                }
+            }
+        }
 
         $scope.openElementProgramme = function openElementProgramme() {
             $scope.opened.elementProgramme = !$scope.opened.elementProgramme;

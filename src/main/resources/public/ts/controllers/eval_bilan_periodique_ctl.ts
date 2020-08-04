@@ -10,6 +10,7 @@ import {AvisOrientation} from "../models/teacher/AvisOrientation";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 import {ComparisonGraph} from "../models/common/ComparisonGraph";
 import {conseilGraphiques, conseilColumns, PreferencesUtils} from "../utils/preferences";
+import {AppreciationSubjectPeriodStudent} from "../models/teacher/AppreciationSubjectPeriodStudent";
 
 
 declare let _: any;
@@ -317,6 +318,71 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             datasArray.push($scope.showColumns);
             arrayKeys.push(conseilColumns);
             PreferencesUtils.savePreferences(arrayKeys, datasArray);
+        };
+
+        let subjectTemp;
+
+        function initAppreciation(): void {
+            subjectTemp = undefined;
+            $scope.appreciationBackUp = undefined;
+        }
+        initAppreciation();
+
+        $scope.setPreviousAppreciationSubject = function (subject) {
+            subject.setPreviousAppreciationMatiere();
+        };
+
+        function preparedDataForAppreciation(subject):AppreciationSubjectPeriodStudent{
+            const appreciationSubjectPeriodStudentPrepared = {
+                idStudent: subject.idEleve,
+                appreciation: subject.appreciationByClasse.appreciation,
+                idStructure: subject.idEtablissement,
+                idSubject: subject.id_matiere,
+                idPeriod: subject.idPeriode,
+                idSchoolClass: subject.idClasse,
+            }
+            return new AppreciationSubjectPeriodStudent(appreciationSubjectPeriodStudentPrepared);
+        }
+
+        $scope.appreciationBlurCheck = function (subject): void {
+            if($scope.opened.lightboxConfirmCleanAppreciation) return;
+            $scope.appreciationSubjectPeriod = preparedDataForAppreciation(subject);
+            if ($scope.appreciationSubjectPeriod.appreciation === undefined) return;
+            if (subject.previousAppreciationMatiere === $scope.appreciationSubjectPeriod.appreciation) {
+                return;
+            } else if ($scope.appreciationSubjectPeriod.appreciation.length > 0) {
+                if (subject.previousAppreciationMatiere) {
+                    $scope.appreciationSubjectPeriod.put();
+                } else {
+                    $scope.appreciationSubjectPeriod.post();
+                }
+            } else {
+                $scope.appreciationBackUp = subject.previousAppreciationMatiere;
+                subjectTemp = subject;
+                template.open('lightboxConfirmCleanAppreciation', '/enseignants/informations/lightbox_confirm_clean_appreciation');
+                $scope.opened.lightboxConfirmCleanAppreciation = true;
+            }
+            utils.safeApply($scope);
+        };
+
+        $scope.deleteAppreciationSubjectStudent = async function (appreciationSubjectPeriod:AppreciationSubjectPeriodStudent):Promise<void> {
+            let isDeleted:Boolean = false;
+            try{
+                await appreciationSubjectPeriod.delete();
+                isDeleted = true;
+            } catch(error) {
+                console.error(error);
+                isDeleted = false;
+            } finally {
+                $scope.closeLightboxConfirmCleanAppreciation(isDeleted);
+            }
+        };
+
+        $scope.closeLightboxConfirmCleanAppreciation = async function (isDeleted: Boolean): Promise<void> {
+            if (!isDeleted) subjectTemp.goBackAppreciation();
+            $scope.opened.lightboxConfirmCleanAppreciation = false;
+            template.close('lightboxConfirmCleanAppreciation');
+            initAppreciation();
         };
 
         $scope.unlessOneChecked = function (checkboxClick){

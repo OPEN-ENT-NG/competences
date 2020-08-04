@@ -97,24 +97,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.entcore.common.service.impl.SqlCrudService;
-import org.entcore.common.sql.Sql;
-import org.entcore.common.sql.SqlResult;
-import org.entcore.common.user.UserInfos;
-
-import java.text.DecimalFormat;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Utils.*;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static fr.wseduc.webutils.http.Renders.badRequest;
-import static org.entcore.common.sql.SqlResult.validResultHandler;
-import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
-
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -716,13 +698,19 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // on le recupere donc sans filtre sur la classe
         if (colonne.equals(POSITIONNEMENT)) {
             query.append("SELECT id_periode, id_eleve," + colonne + ", id_matiere ");
+        } else if(colonne.equals("appreciation_matiere_periode")){
+            query.append("SELECT id_periode, id_eleve," + colonne + ", id_classe, id_matiere, appreciation_matiere_periode.id AS id_appreciation_matiere_periode ");
         } else {
             query.append("SELECT id_periode, id_eleve," + colonne + ", id_classe, id_matiere ");
         }
 
-        query.append(" FROM ")
-                .append(COMPETENCES_SCHEMA + "." + colonne + (MOYENNE.equals(colonne) ? "_finale" : " "))
-                .append(" WHERE ");
+        query.append(" FROM ").append(COMPETENCES_SCHEMA + "." + colonne + (MOYENNE.equals(colonne) ? "_finale" : " "));
+
+        if(colonne.equals("appreciation_matiere_periode")){
+            query.append(" LEFT JOIN notes.rel_appreciations_users_neo AS ao ON appreciation_matiere_periode.id = ao.appreciation_matiere_periode_id ");
+        }
+
+        query.append(" WHERE ");
 
         if (null != idMatiere) {
             query.append("id_matiere = ? AND");
@@ -879,39 +867,55 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     @Override
-    public void setColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse, JsonObject field,
-                                 String colonne,Handler<Either<String, JsonArray>> handler){
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+    public void setColonneReleve(String idStudent,
+                                 Long idPeriod,
+                                 String idSubject,
+                                 String idClassSchool,
+                                 JsonObject field,
+                                 String column,
+                                 String idUser,
+                                 Handler<Either<String, JsonArray>> handler) {
 
-        StringBuilder query = new StringBuilder()
-                .append("INSERT INTO "+ COMPETENCES_SCHEMA +"."+ colonne )
-                .append("moyenne".equals(colonne)? "_finale": " ")
-                .append(" (id_periode, id_eleve," + colonne + ", id_classe, id_matiere) VALUES ")
-                .append(" (?, ?, ?, ?, ?) ")
-                .append(" ON CONFLICT (id_periode, id_eleve, id_classe, id_matiere) ")
-                .append(" DO UPDATE SET " + colonne + " = ? ");
+        if (APPRECIATION_MATIERE_PERIODE.equals(column)) {
+            String textError = "Error when update or insert, new API for update, insert appreciation_subject_period";
+            log.error(textError);
+            handler.handle(new Either.Left<>(textError));
+        } else {
+            /*
+                Le positionnement est enregistré pour un élève indépendament de sa classe
+                ou de ses groupes (positionnement global)
+            */
+            JsonArray valuesAverageOrPositioning = new JsonArray();
+            valuesAverageOrPositioning.add(idPeriod)
+                    .add(idStudent);
+            if (POSITIONNEMENT.equals(column)) idClassSchool = "";
 
-        values.add(idPeriode).add(idEleve);
-        if ("moyenne".equals(colonne) || "positionnement".equals(colonne)) {
+            valuesAverageOrPositioning.add(field.getValue(column))
+                    .add(idClassSchool)
+                    .add(idSubject)
+                    .add(field.getValue(column));
 
-            // le positionnement est enregistré pour un élève indépendament de sa classe
-            // ou de ses groupes (positionnement global)
-            if("positionnement".equals(colonne)) {
-                idClasse = "";
-            }
-            if("moyenne".equals(colonne)) {
-                values.add(field.getValue(colonne)).add(idClasse).add(idMatiere)
-                        .add(field.getValue(colonne));
-            }
-            else values.add(field.getLong(colonne)).add(idClasse).add(idMatiere)
-                    .add(field.getLong(colonne));
+            updateOrInsertAverageOrPositioning(column, valuesAverageOrPositioning, handler);
         }
-        else if ("appreciation_matiere_periode".equals(colonne)) {
-            values.add(field.getString(colonne)).add(idClasse).add(idMatiere)
-                    .add(field.getString(colonne));
-        }
+    }
 
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+    /**
+     * @param column
+     * @param values =[field.getValue(column)?, idClassSchool, idSubject, field.getValue(column)? ]
+     * @param handler
+     */
+    private void updateOrInsertAverageOrPositioning(String column, JsonArray values, Handler<Either<String, JsonArray>> handler) {
+        String query;
+        query = "" +
+                "INSERT INTO " + COMPETENCES_SCHEMA + "." + column +
+                ("moyenne".equals(column) ? "_finale" : " ") +
+                " (id_periode, id_eleve," + column + ", id_classe, id_matiere) VALUES " +
+                " ( ? , ? , ? , ? , ? ) " +
+                " ON CONFLICT (id_periode, id_eleve, id_classe, id_matiere) " +
+                " DO UPDATE SET " + column + " = ? ";
+
+
+        Sql.getInstance().prepared(query, values, validResultHandler(handler));
     }
 
     public void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes,

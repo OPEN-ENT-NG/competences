@@ -528,23 +528,28 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
-    saveAppreciationMatierePeriodeEleve(eleve): any {
-        return new Promise((resolve, reject) => {
-            let _data = _.extend(this.toJson(), {
-                idEleve: eleve.id,
-                appreciation_matiere_periode: eleve.appreciation_matiere_periode,
-                colonne: 'appreciation_matiere_periode',
-                delete: false
-            });
-            http().postJson(this.api.POST_DATA_RELEVE_PERIODIQUE, _data)
-                .done((res) => {
-                    resolve(res);
-                })
-                .error((err) => {
-                    reject(err);
-                });
-        });
-    }
+    // todo if no bugs clean it
+    // saveAppreciationMatierePeriodeEleve(eleve): any {
+    //     return new Promise((resolve, reject) => {
+    //         const isDeleted:Boolean = eleve.delete
+    //             ? eleve.delete && eleve.appreciation_matiere_periode.length === 0
+    //             : false;
+    //         let _data = _.extend(this.toJson(), {
+    //             idEleve: eleve.id,
+    //             appreciation_matiere_periode: eleve.appreciation_matiere_periode,
+    //             colonne: 'appreciation_matiere_periode',
+    //             delete: isDeleted,
+    //         });
+    //
+    //         http().postJson("/competences/appreciation-subject-period", _data)
+    //             .done((res) => {
+    //                 resolve(res);
+    //             })
+    //             .error((err) => {
+    //                 reject(err);
+    //             });
+    //     });
+    // }
 
     getConversionTable(data?): Promise<any> {
         this.collection(TableConversion, {

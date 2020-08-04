@@ -56,35 +56,35 @@ export class SuiviDesAcquis  {
         };
     }
 
-    setPreviousAppreciationMatiere = () => {
+    setPreviousAppreciationMatiere () {
         this.previousAppreciationMatiere = this.appreciationByClasse.appreciation;
     };
 
-    async saveAppreciationMatierePeriodeEleve() {
-            if(this.appreciationByClasse !== undefined){
-                if(this.appreciationByClasse.appreciation.length > 0) {
-                    let _data = _.extend(this.toJson(),{
-                        idClasse: this.appreciationByClasse.idClasse,
-                        idClasseSuivi : this.idClasse,
-                        appreciation_matiere_periode: this.appreciationByClasse.appreciation,
-                        colonne: 'appreciation_matiere_periode',
-                        delete: false,
-                        isBilanPeriodique: true
-                    });
+    goBackAppreciation () {
+        this.appreciationByClasse.appreciation = this.previousAppreciationMatiere;
+    }
 
-                    try{
-                        return await http.post(this.api.POST_DATA_RELEVE_PERIODIQUE, _data);
-                    }catch (e){
-                        notify.error('evaluations.releve.appreciation.classe.save.error');
-                        console.error(e);
-                    }
+    async saveAppreciationMatierePeriodeEleve(isDeleted = false) {
+        if (this.appreciationByClasse !== undefined) {
+            if (this.appreciationByClasse.appreciation.length > 0 || isDeleted) {
+                let _data = _.extend(this.toJson(), {
+                    idClasse: this.appreciationByClasse.idClasse,
+                    idClasseSuivi: this.idClasse,
+                    appreciation_matiere_periode: this.appreciationByClasse.appreciation,
+                    colonne: 'appreciation_matiere_periode',
+                    delete: isDeleted,
+                    isBilanPeriodique: true
+                });
+                try {
+                    return await http.post(this.api.POST_DATA_RELEVE_PERIODIQUE, _data);
+                } catch (e) {
+                    notify.error('evaluations.releve.appreciation.classe.save.error');
+                    console.error(e);
                 }
-                else if(this.previousAppreciationMatiere !== undefined) {
-                    this.appreciationByClasse.appreciation = this.previousAppreciationMatiere;
-                }
-            }else{
-                notify.error('evaluations.releve.appreciation.classe.max.length');
             }
+        } else {
+            notify.error('evaluations.releve.appreciation.classe.max.length');
+        }
     }
 
     async saveElementsProgrammeMatierePeriodeEleve() {
