@@ -2175,7 +2175,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         matieresResult.add(matiereJson);
                     }
                     JsonObject resultMatieres = new JsonObject();
-                    resultMatieres.put("matieres", matieresResult);
+                    resultMatieres.put("matieres", Utils.sortJsonArrayIntValue("rank", matieresResult));
                     resultMatieres.put("nbDeMatieres", matieresResult.size());
 
                     handler.handle(new Either.Right<>(resultMatieres));

@@ -14,7 +14,7 @@
     animation: spin 2s linear infinite;
     margin: 20% 50%;
   }
-  $default-margin-between: 15px;
+  $default-margin-between: 20px;
 
   i.move-row {
     &::after {
@@ -66,16 +66,19 @@
       z-index: 1;
       margin-bottom: 0;
     }
-
-    .first-drop-zone:hover,
+    .drop-zone:first-child:hover,
     li:hover > div.drop-zone {
       height: 60px;
       @include dropZone;
     }
 
-    .drop-zone,
-    .first-drop-zone {
+    .drop-zone {
       height: $default-margin-between;
+    }
+
+    .no-drop-zone:first-child,
+    .drop-zone:first-child{
+      height: 40px;
     }
 
     .no-drop-zone {

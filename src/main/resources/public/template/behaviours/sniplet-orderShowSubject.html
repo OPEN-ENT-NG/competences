@@ -15,10 +15,9 @@
     <div class="loaderList"
          ng-if="isLoadingOrderShowSubject">
     </div>
-    <ul class="drawing-zone"
-        ng-if="!isLoadingOrderShowSubject">
+    <ul ng-if="!isLoadingOrderShowSubject">
         <li drop-item="dropped($item)"
-            ng-class="isDragStart? 'first-drop-zone' : 'no-drop-zone'"></li>
+            ng-class="isDragStart? 'drop-zone' : 'no-drop-zone'"></li>
         <li class="row"
             drop-item="dropped($item, $index)"
             ng-repeat="subject in subjects">
