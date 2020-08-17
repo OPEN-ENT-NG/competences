@@ -17,6 +17,7 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.storage.Storage;
 
 import static fr.openent.competences.Competences.*;
@@ -95,6 +96,7 @@ public class ExportBulletinController extends ControllerHelper {
      */
     @Get("/generate/archive/bulletin")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ResourceFilter(SuperAdminFilter.class)
     public void archiveBulletin(final HttpServerRequest request){
         Utils.setLocale(I18n.acceptLanguage(request));
         Utils.setDomain(getHost(request));
@@ -111,6 +113,7 @@ public class ExportBulletinController extends ControllerHelper {
 
     @Get("/archive/bulletin/:idEleve/:idPeriode/:idClasse")
     @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    @ResourceFilter(SuperAdminFilter.class)
     public void getArchive(final HttpServerRequest request){
         String idEleve = request.params().get(ID_ELEVE_KEY);
         String idClasse = request.params().get(ID_CLASSE_KEY);
@@ -121,6 +124,7 @@ public class ExportBulletinController extends ControllerHelper {
 
     @Get("/delete/archive/bulletin")
     @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    @ResourceFilter(SuperAdminFilter.class)
     public void deleteArchive(final HttpServerRequest request){
         ArchiveUtils.deleteAll(ARCHIVE_BULLETIN_TABLE, storage,  response -> Renders.renderJson(request, response));
     }
@@ -150,6 +154,7 @@ public class ExportBulletinController extends ControllerHelper {
     @Get("/archive/bulletin/:idStructure")
     @ApiDoc("télécharge l archive d'un étab")
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
+    @ResourceFilter(SuperAdminFilter.class)
     public  void getArchiveBulletin(final  HttpServerRequest request){
         String idStructure = request.params().get("idStructure");
         ArchiveUtils.getArchiveBulletinZip(idStructure,request,eb,storage, vertx);
