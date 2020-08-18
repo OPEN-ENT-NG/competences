@@ -205,7 +205,7 @@ public class ArchiveUtils {
     }
 
     public static void generateArchiveBulletin(EventBus eb, HttpServerRequest request) {
-        new DefaultUtilsService(eb).getActivesStructure(eb, structuresEvent -> {
+        new DefaultUtilsService(eb).getActivesStructureForArchiveBulletin( structuresEvent -> {
             if(structuresEvent.isLeft()){
                 log.error(structuresEvent.left().getValue());
                 return;

@@ -282,6 +282,12 @@ public interface UtilsService {
      */
     void getActivesStructure(EventBus event, Handler<Either<String, JsonArray>>handler);
 
+    /**
+     *
+     *
+     * @param handler all structure has devoirs, periode and bulletin not saved
+     * */
+    void getActivesStructureForArchiveBulletin( Handler<Either<String, JsonArray>>handler);
 
     /**
      * get class info with eventBus

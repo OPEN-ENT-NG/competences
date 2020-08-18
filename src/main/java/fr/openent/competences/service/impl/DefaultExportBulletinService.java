@@ -2819,38 +2819,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 });
     }
 
-    private void getStructureActiveForArchive (Handler<Either<String, JsonArray>> handler) {
-        //UTILISER LE UTILS
-        utilsService.getActivesStructure(eb, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if(event.isRight()){
-                    handler.handle(new Either.Right<>(event.right().getValue()));
-                }
-            }
-        });
-    }
-
-    private void getArchiveComplet(Handler<Either<String, JsonArray>> handler){
-        String query = " SELECT id_etablissement FROM "+ Competences.EVAL_SCHEMA + ".arhive_bulletins_complet;";
-        Sql.getInstance().prepared(query, new JsonArray(), DELIVERY_OPTIONS,
-                event -> {
-                    JsonObject body = event.body();
-                    if(!body.getString(STATUS).equals(OK)){
-                        String message = body.getString(MESSAGE);
-                        log.error("[getArchiveComplet] :: " + message);
-                        handler.handle(new Either.Left<>(message));
-                    }
-                    else {
-                        JsonArray structures = body.getJsonArray(RESULTS);
-                        log.info(" --- ARCHIVE ETABLISSEMENT COMPLET GETS --- : " + structures.size());
-                        JsonArray res = new JsonArray();
-                        structures.stream().forEach( str -> res.add(((JsonArray)str).getString(0)));
-                        handler.handle(new Either.Right<>(res));
-                    }
-                });
-    }
-
     private void runArchiveBulletin(JsonArray structures, Vertx vertx, JsonObject config, String path, String host,
                                     String acceptLanguage, Boolean forwardedFor ){
 
@@ -2877,58 +2845,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         if(isNotNull(idStructures)) {
             runArchiveBulletin(idStructures, vertx, config, path, host, acceptLanguage, forwardedFor);
         }
-        else{
-            archiveBulletin(vertx, config, path, host, acceptLanguage, forwardedFor);
-        }
-    }
-
-    private JsonArray getActivatedAndNotCompleted(JsonArray activatedStructures, JsonArray completedStructures){
-        JsonArray result = new JsonArray();
-        for(int i =0; i < activatedStructures.size() && isNotNull(completedStructures); i++){
-            JsonObject strucuture = activatedStructures.getJsonObject(i);
-            if(!completedStructures.contains(strucuture.getString(ID_ETABLISSEMENT))){
-                result.add(strucuture);
-            }
-        }
-        return result;
-    }
-    public void archiveBulletin(Vertx vertx, JsonObject config, String path, String host,
-                                String acceptLanguage, Boolean forwardedFor ){
-
-
-        // On récupère tout d'abord la liste des établissements actifs
-        Future<JsonArray> activatedStructuresFuture = Future.future();
-        getStructureActiveForArchive( event -> formate(activatedStructuresFuture, event));
-
-        // On récupère en parallele les etablissement qui ont déjà été archivés
-        Future<JsonArray> completedStructuresFuture = Future.future();
-        getArchiveComplet( event -> formate(completedStructuresFuture, event));
-
-        CompositeFuture.all(activatedStructuresFuture, completedStructuresFuture).setHandler(event -> {
-
-            if(event.failed()){
-                String message = event.cause().getMessage();
-                log.error("[archiveBulletin] :: " + message);
-                return;
-            }
-
-            // On supprime  les établissements dont l'archivage a été complet de la liste des
-            // établissements à passer
-            JsonArray completedStructures = completedStructuresFuture.result();
-            JsonArray activatedStructures = activatedStructuresFuture.result();
-            JsonArray structures = getActivatedAndNotCompleted(activatedStructures, completedStructures);
-
-            if(isNull(structures) || structures.isEmpty()){
+        else if(isNull(idStructures) || idStructures.isEmpty()){
                 log.info("*************** ALL STRUCTURES ARE COMPLETED ***************");
                 return;
-            }
-
-
-
-            log.info(" --- ETABLISSEMENT ACTIF NOT COMPLETE GETS --- : " + structures.size());
-            runArchiveBulletin(structures, vertx, config, path, host, acceptLanguage, forwardedFor);
-        });
+        }
     }
+
 
     private void endWithNOsrcImg(Future srcSignature, JsonObject imgsStructureObj,String hasImg, String imgStr){
         imgsStructureObj.put(imgStr, "");

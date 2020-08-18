@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 import org.vertx.java.busmods.BusModBase;
@@ -23,6 +24,8 @@ public class ArchiveWorker extends BusModBase {
     @Override
     public void start(){
         super.start();
+        String neo4jConfig = (String) vertx.sharedData().getLocalMap("server").get("neo4jConfig");
+        Neo4j.getInstance().init(vertx, new JsonObject(neo4jConfig));
         vertx.eventBus().localConsumer(ArchiveWorker.class.getSimpleName(), archiveHandler());
         this.storage = new StorageFactory(vertx).getStorage();
 
@@ -57,7 +60,7 @@ public class ArchiveWorker extends BusModBase {
                  }
              }
             else{
-
+                log.info(" ARCHIVE WORKER host, accept language and forwardedFor is null ");
              }
         };
     }
