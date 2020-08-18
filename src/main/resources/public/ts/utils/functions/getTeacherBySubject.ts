@@ -42,8 +42,8 @@ export const getTeacherBySubject:Function = (schoolClasses:Array<any>,
                                 {id : substituteTeacher.second_teacher_id}).displayName.split(" ");
                             substituteTeacherName = Utils.makeShortName(substituteTeacherLastName, substituteTeacherFirstName);
                             let conditionForDate = periode.id != null ?
-                                moment(substituteTeacher.start_date).isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn))
-                                || moment(substituteTeacher.end_date).isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn)) : true;
+                                moment(substituteTeacher.start_date).isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]')
+                                || moment(substituteTeacher.end_date).isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]') : true;
                             if(!_.contains(teacherBySubject[item.id_matiere].substituteTeachers, substituteTeacherName) && conditionForDate){
                                 teacherBySubject[item.id_matiere].substituteTeachers.push(substituteTeacherName);
                             }

@@ -81,8 +81,8 @@ export let releveController = ng.controller('ReleveController', [
                         s.substituteTeachers.forEach(substituteTeacher => {
                             let teacher = $scope.getTeacherFromEvaluations(substituteTeacher.second_teacher_id);
                             let conditionForDate = $scope.search.periode.id != null ?
-                                moment(substituteTeacher.start_date).isBetween(moment($scope.search.periode.timestamp_dt), moment($scope.search.periode.timestamp_fn))
-                                || moment(substituteTeacher.end_date).isBetween(moment($scope.search.periode.timestamp_dt), moment($scope.search.periode.timestamp_fn)) : true;
+                                moment(substituteTeacher.start_date).isBetween(moment($scope.search.periode.timestamp_dt), moment($scope.search.periode.timestamp_fn), 'days', '[]')
+                                || moment(substituteTeacher.end_date).isBetween(moment($scope.search.periode.timestamp_dt), moment($scope.search.periode.timestamp_fn), 'days', '[]') : true;
                             if(substituteTeacher.is_visible && !_.contains(teachers, teacher) && conditionForDate){
                                 matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id})
                                 teachers.push(teacher);

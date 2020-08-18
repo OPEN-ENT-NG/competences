@@ -18,7 +18,7 @@
 /**
  * Created by ledunoiss on 20/09/2016.
  */
-import {_, model, ng} from 'entcore';
+import {_, model, moment, ng} from 'entcore';
 import {Utils} from "../../models/teacher";
 
 export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
@@ -42,8 +42,8 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
                                     let substituteTeacher = _.findWhere(service.substituteTeachers,
                                         {second_teacher_id: idTeacher, subject_id: matiere.id});
                                     let correctDateSubstituteTeacher = substituteTeacher &&
-                                        substituteTeacher.start_date <= (new Date()).toISOString() &&
-                                        substituteTeacher.entered_end_date >= (new Date()).toISOString();
+                                        moment(new Date()).isBetween(moment(substituteTeacher.start_date),
+                                            moment(substituteTeacher.entered_end_date), 'days', '[]');
                                     let coTeachers = _.findWhere(service.coTeachers,
                                         {second_teacher_id: idTeacher, subject_id: matiere.id});
                                     return service.evaluable && (coTeachers || correctDateSubstituteTeacher);
@@ -62,8 +62,8 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
                                     let substituteTeacher = _.findWhere(service.substituteTeachers,
                                         {second_teacher_id: model.me.userId, subject_id: matiere.id});
                                     let correctDateSubstituteTeacher = substituteTeacher &&
-                                        substituteTeacher.start_date <= (new Date()).toISOString() &&
-                                        substituteTeacher.entered_end_date >= (new Date()).toISOString()
+                                        moment(new Date()).isBetween(moment(substituteTeacher.start_date),
+                                            moment(substituteTeacher.entered_end_date), 'days', '[]');
                                     let coTeachers = _.findWhere(service.coTeachers,
                                         {second_teacher_id: model.me.userId, subject_id: matiere.id});
                                     return service.evaluable && (coTeachers || correctDateSubstituteTeacher);
@@ -77,7 +77,7 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
                                 evaluable: true
                             });
                         }
-                        return evaluables !== undefined
+                        return evaluables !== undefined;
                     } else {
                         if (matiere.hasOwnProperty('libelleClasses')) {
                             return (matiere.libelleClasses.indexOf(classe.externalId) !== -1)

@@ -942,11 +942,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.getClassesByIdCycle = (type_groupe?: number) => {
             let currentIdGroup = $scope.selected.devoirs.list[0].id_groupe;
             let targetIdCycle = _.find($scope.classes.all, {id: currentIdGroup}).id_cycle;
-            return _.filter($scope.classes.all, function (classe) {
+            let classes = _.filter($scope.classes.all, function (classe) {
                 return type_groupe !== undefined ?
                     (classe.id_cycle === targetIdCycle && classe.id !== currentIdGroup && type_groupe === classe.type_groupe) :
                     (classe.id_cycle === targetIdCycle && classe.id !== currentIdGroup);
             });
+            return classes;
         };
 
         $scope.filterSearchDuplication = () => {
@@ -3606,13 +3607,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.checkEndSaisieSeul = async (devoir) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: devoir.id_groupe});
-            if ( classe.periodes.length() === 0 ) {
+            if (classe.periodes.length() === 0) {
                 await classe.periodes.sync();
                 utils.safeApply($scope);
             }
             let date_fin_saisie = _.findWhere(classe.periodes.all, {id_type: devoir.id_periode}).date_fin_saisie;
-            let isHeadTeacherOfClass =  await  Utils.isHeadTeacher(classe);
-            return moment().isAfter(date_fin_saisie, "days") &&  !isHeadTeacherOfClass;
+            let isHeadTeacherOfClass = await Utils.isHeadTeacher(classe);
+            return moment().isAfter(date_fin_saisie, "days") && !isHeadTeacherOfClass;
         };
 
         $scope.getPeriodeAnnee = () => {
