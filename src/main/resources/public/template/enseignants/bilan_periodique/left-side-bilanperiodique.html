@@ -75,7 +75,8 @@
                 <select ng-model="search.avisClasse"
                         ng-options="avis.libelle for avis in elementBilanPeriodique.avisConseil.avis
                         | filter:filterAvis([0, 1])"
-                        ng-change="changeClassOpinion()">
+                        ng-change="changeClassOpinion()"
+                        ng-disabled="!canUpdateBFCSynthese">
                     <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.conseil')]]</option>
                 </select>
             </label>
@@ -85,16 +86,16 @@
                 <select ng-model="search.avisOrientation"
                         ng-options="avis.libelle for avis in elementBilanPeriodique.avisConseil.avis
                         | filter:filterAvis([0, 2])"
-                        ng-change="changeOrientationOpinion()">
+                        ng-change="changeOrientationOpinion()"
+                        ng-disabled="!canUpdateBFCSynthese">
                     <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.orientation')]]</option>
                 </select>
             </label>
         </section>
-
     </div>
 
-    <div ng-if="selected.bfc && !critereIsEmpty" ng-controller ="EvalSuiviEleveCtl"
-         ng-init = "openTableConversionAndEnsCplt()">
+    <div ng-if="selected.bfc && !critereIsEmpty" ng-controller="EvalSuiviEleveCtl"
+         ng-init="openTableConversionAndEnsCplt()">
         <div class="criteres card criterion" ng-class="{openedAvis : opened.legend === true}">
             <span class="plus-input" ng-click="openLeftMenu('opened.legend', opened.legend);"></span>
             <div class="header" ng-click="openLeftMenu('opened.legend', opened.legend);">

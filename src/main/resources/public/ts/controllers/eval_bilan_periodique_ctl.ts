@@ -53,6 +53,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         if(PreferencesUtils.isNotEmpty(conseilColumns)){
             $scope.showColumns = PreferencesUtils.getPreferences(conseilColumns);
         }
+
+        $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
+            "canUpdateBFCSynthese");
+
         $scope.showPopUpColumn = false;
         $scope.displayBilanPeriodique = () => {
             let isNotEmptyClasse = ($scope.search.classe !== '*' && $scope.search.classe !== null
