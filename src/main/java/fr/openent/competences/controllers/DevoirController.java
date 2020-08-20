@@ -622,22 +622,10 @@ public class DevoirController extends ControllerHelper {
     @ApiDoc("Récupère la liste des devoirs liés à un service")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getDevoirsService(HttpServerRequest request) {
-
-        String idEnseignant = null, idMatiere = null, idGroupe = null;
-        List<String> idGroups = new ArrayList<>();
-        if (request.params().contains("id_groupe")) {
-            idGroupe = request.getParam("id_groupe");
-            idGroups = Arrays.asList(idGroupe.split(","));
-        }
-        if (request.params().contains("id_matiere")) {
-            idMatiere = request.getParam("id_matiere");
-        }
-        if (request.params().contains("id_enseignant")) {
-            idEnseignant = request.getParam("id_enseignant");
-        }
-
-        if(idGroupe != null && idMatiere != null && idEnseignant != null) {
-            devoirsService.listDevoirsService(idEnseignant, idMatiere, idGroups,
+        if(request.params().contains("id_groups") && request.params().contains("id_matiere")
+                && request.params().contains("id_enseignant")) {
+            devoirsService.listDevoirsService(request.params().get("id_enseignant"),
+                    request.params().get("id_matiere"), request.params().getAll("id_groups"),
                     arrayResponseHandler(request));
         } else {
             badRequest(request);

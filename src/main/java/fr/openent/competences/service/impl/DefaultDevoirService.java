@@ -1381,11 +1381,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 " FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs" +
                 " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel_devoirs_groupes" +
                 " ON devoirs.id = rel_devoirs_groupes.id_devoir" +
-                " WHERE owner=? AND id_matiere=? AND id_groupe IN " + Sql.listPrepared(idGroups.toArray()) ;
+                " WHERE owner=? AND id_matiere=? AND id_groupe IN " + Sql.listPrepared(idGroups) ;
 
-        JsonArray values = new JsonArray().add(idEnseignant).add(idMatiere).addAll(new JsonArray(idGroups));
-
-
+        JsonArray values = new JsonArray().add(idEnseignant).add(idMatiere);
+        for(String i : idGroups) {
+            values.add(i);
+        }
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
