@@ -456,8 +456,7 @@ export const paramServices = {
                 let multiTeachersVisible = _.where(service.coTeachers, {is_visible : true})
                     .concat(_.filter(service.substituteTeachers, (substituteTeacher) => {
                         return substituteTeacher.is_visible === true
-                            && moment(new Date()).isBetween(moment(substituteTeacher.start_date),
-                                moment(substituteTeacher.entered_end_date), 'days', '[]');
+                            && this.filterValidDateSubstituteTeacher(substituteTeacher);
                     }));
                 return multiTeachersVisible.length === 0;
             }
@@ -471,9 +470,10 @@ export const paramServices = {
                 let multiTeachersVisible = _.where(service.coTeachers, {is_visible : true})
                     .concat(_.filter(service.substituteTeachers, (substituteTeacher) => {
                         return substituteTeacher.is_visible === true
-                            && moment(new Date()).isBetween(moment(substituteTeacher.start_date),
-                                moment(substituteTeacher.entered_end_date), 'days', '[]')}));
-                multiTeachersVisible = _.reject(multiTeachersVisible, (mulT) => mulT.id == multiTeacher.id);
+                            && this.filterValidDateSubstituteTeacher(substituteTeacher);
+                    }));
+                multiTeachersVisible = _.filter(multiTeachersVisible, (mulT) =>
+                    mulT.second_teacher_id !== multiTeacher.second_teacher_id);
                 return !(service.is_visible || multiTeachersVisible.length > 0);
             }
         },
