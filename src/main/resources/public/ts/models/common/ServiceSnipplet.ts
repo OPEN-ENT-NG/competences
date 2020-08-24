@@ -193,24 +193,22 @@ export class Service {
         }
         return  false;
     }
-    getDevoirsService(){
+    async getDevoirsService(){
         try {
             let url;
             if(this.hasCompetencesParams()) {
-                console.log(this.id_groups)
                 url = "/competences/devoirs/service" +
                     `?id_matiere=${this.id_matiere}`+
                     `&id_groupe=${this.id_groups.join(",")}`;
 
                 url += `&id_enseignant=${this.id_enseignant}`;
-                console.log(url)
             }else{
                 url = "/competences/devoirs/service"+
                     `?id_matiere=${this.id_matiere}`+
                     `&id_groupe=${this.id_groupe}`+
                     `&id_enseignant=${this.id_enseignant}`;
             }
-            return http.get(url);
+            return await http.get(url);
         } catch (e) {
             toasts.warning("evaluations.service.devoir.error");
             return  e;

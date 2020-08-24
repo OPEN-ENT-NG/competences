@@ -248,8 +248,9 @@ export const paramServices = {
                 service.deploy = !service.deploy;
         },
         checkDevoirsService: async function (service, callback) {
-            service.getDevoirsService().then(async function ({data}) {
-                if (data.length == 0) {
+            await service.getDevoirsService()
+                .then(async ({data}) => {
+                if (data.length === 0) {
                     await callback();
                 } else {
                     paramServices.that.service = service;
@@ -260,7 +261,7 @@ export const paramServices = {
                     await utils.safeApply(paramServices.that);
                 }
             })
-
+            safeApply(paramServices.that);
         },
         openSwitchEvaluation:function() {
             paramServices.that.lightboxes.subEducationCreate = false;
@@ -284,7 +285,8 @@ export const paramServices = {
             if(service.hasAllServicesNotEvaluable() || service.hasVariousEvaluable()) {
                 await service.updateServiceEvaluable();
             } else {
-                await paramServices.that.checkDevoirsService(service, () => service.updateServiceEvaluable());
+
+                await paramServices.that.checkDevoirsService(service, async () => await service.updateServiceEvaluable());
             }
         },
         changeSort:function (nameSort)  {
