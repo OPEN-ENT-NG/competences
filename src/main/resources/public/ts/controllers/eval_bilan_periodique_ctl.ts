@@ -54,9 +54,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.showColumns = PreferencesUtils.getPreferences(conseilColumns);
         }
 
-        $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-            "canUpdateBFCSynthese");
-
         $scope.showPopUpColumn = false;
         $scope.displayBilanPeriodique = () => {
             let isNotEmptyClasse = ($scope.search.classe !== '*' && $scope.search.classe !== null
@@ -549,6 +546,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                         $scope.search.periode.id_type, $scope.structure, $scope.filteredPeriode);
                     allPromise.push($scope.openGraphique());
                 }
+
+                $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
+                    "canUpdateBFCSynthese");
 
                 if ($scope.selected.suiviAcquis) {
                     await $scope.openSuiviAcquis();

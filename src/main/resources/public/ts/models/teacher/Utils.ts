@@ -34,22 +34,21 @@ export class Utils {
                 evaluations.structure.detailsUser.headTeacherManual), classe.externalId);
     }
 
-    static isChefEtab  (classe?) {
+    static isChefEtab (classe?) {
         let isAdmin = model.me.hasWorkflow(Behaviours.applicationsBehaviours.viescolaire.rights.workflow.adminChefEtab);
         if(classe === undefined || classe === null || classe === "" || classe === "*") {
             return isAdmin;
         }
         else {
             return isAdmin || this.isHeadTeacher(classe);
-
         }
     }
 
     static async rightsChefEtabHeadTeacherOnBilanPeriodique (classe, nameWorkFlow){
-        return ( model.me.type !== 'ENSEIGNANT' && model.me.
+        return (model.me.type !== 'ENSEIGNANT' && model.me.
             hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow[nameWorkFlow]))
-            || ( model.me.type === 'ENSEIGNANT' && this.isHeadTeacher(classe) &&  model.me.
-            hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow[nameWorkFlow]) && this.isHeadTeacher(classe));
+            || (model.me.type === 'ENSEIGNANT' && this.isHeadTeacher(classe) && model.me.
+            hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow[nameWorkFlow]));
     }
 
     static canSaisieProjet () {
