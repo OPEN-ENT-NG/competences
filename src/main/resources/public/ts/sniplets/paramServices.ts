@@ -1,4 +1,4 @@
-import {notify, idiom as lang, _, toasts, $} from 'entcore';
+import {notify, idiom as lang, _, toasts, $, moment} from 'entcore';
 import http from "axios";
 import * as utils from '../utils/teacher';
 import {Classe, TypeSousMatieres} from "../models/teacher";
@@ -443,16 +443,23 @@ export const paramServices = {
             }
         },
 
+        filterValidDateSubstituteTeacher: function(substituteTeacher) {
+            return moment(new Date()).isBetween(moment(substituteTeacher.start_date),
+                moment(substituteTeacher.entered_end_date), 'days', '[]');
+        },
+
         canSwitchServiceVisibility: function(service) {
             if(!service.is_visible){
                 return false;
             }
             else {
                 let multiTeachersVisible = _.where(service.coTeachers, {is_visible : true})
-                    .concat(_.findWhere(service.substituteTeachers, (s) => { return s.is_visible === true
-                        && s.start_date <= (new Date()).toISOString() &&
-                        s.entered_end_date >= (new Date()).toISOString()}));
-                return !(multiTeachersVisible.length > 0);
+                    .concat(_.filter(service.substituteTeachers, (substituteTeacher) => {
+                        return substituteTeacher.is_visible === true
+                            && moment(new Date()).isBetween(moment(substituteTeacher.start_date),
+                                moment(substituteTeacher.entered_end_date), 'days', '[]');
+                    }));
+                return multiTeachersVisible.length === 0;
             }
         },
 
@@ -462,9 +469,10 @@ export const paramServices = {
             }
             else {
                 let multiTeachersVisible = _.where(service.coTeachers, {is_visible : true})
-                    .concat(_.findWhere(service.substituteTeachers, (s) => { return s.is_visible === true
-                        && s.start_date <= (new Date()).toISOString() &&
-                        s.entered_end_date >= (new Date()).toISOString()}));
+                    .concat(_.filter(service.substituteTeachers, (substituteTeacher) => {
+                        return substituteTeacher.is_visible === true
+                            && moment(new Date()).isBetween(moment(substituteTeacher.start_date),
+                                moment(substituteTeacher.entered_end_date), 'days', '[]')}));
                 multiTeachersVisible = _.reject(multiTeachersVisible, (mulT) => mulT.id == multiTeacher.id);
                 return !(service.is_visible || multiTeachersVisible.length > 0);
             }

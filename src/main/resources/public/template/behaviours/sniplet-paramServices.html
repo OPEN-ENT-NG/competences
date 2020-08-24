@@ -40,39 +40,40 @@
 
             <div class="twelve cell">
                 <div class="row tab-header"  offset="64">
-
-                    <span    class="[[columns.matiere.size]] cell-indent cell service-tab-header-center">
-                       <h4 ng-click="changeSort('topicName')"
-                           class="">[[lang.translate(columns.matiere.name)]]
+                    <span class="[[columns.matiere.size]] cell-indent cell service-tab-header-center">
+                       <h4 ng-click="changeSort('topicName')">[[lang.translate(columns.matiere.name)]]
                            <span ng-show="sortBy === 'topicName'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
                        </h4>
                     </span>
-                    <span    class="[[columns.classe.size]] cell-indent cell service-tab-header-left">
-                    <h4  ng-click="changeSort('nom_groupe')">[[lang.translate(columns.classe.name)]]
-                              <span ng-show="sortBy === 'nom_groupe'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
-                    </h4>
-
+                    <span class="[[columns.classe.size]] cell-indent cell service-tab-header-left">
+                        <h4 ng-click="changeSort('nom_groupe')">[[lang.translate(columns.classe.name)]]
+                            <span ng-show="sortBy === 'nom_groupe'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
+                        </h4>
                     </span>
-                    <span    class="[[columns.enseignant.size]] cell-indent cell service-tab-header-center">
-                    <h4 ng-click="changeSort('nom_enseignant')">[[lang.translate(columns.enseignant.name)]]
-                        <span ng-show="sortBy === 'nom_enseignant'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
-                     </h4>
+                    <span class="[[columns.enseignant.size]] cell-indent cell service-tab-header-center">
+                        <h4 ng-click="changeSort('nom_enseignant')">[[lang.translate(columns.enseignant.name)]]
+                            <span ng-show="sortBy === 'nom_enseignant'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
+                        </h4>
                     </span>
-                    <span    class="[[columns.remplacement.size]] cell-indent cell service-tab-header-center">
-                    <h4 ng-click="changeSort('remplacement')">[[lang.translate(columns.remplacement.name)]]
-                         <span ng-show="sortBy === 'remplacement'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span> </h4>
+                    <span class="[[columns.remplacement.size]] cell-indent cell service-tab-header-center">
+                        <h4 ng-click="changeSort('remplacement')">[[lang.translate(columns.remplacement.name)]]
+                            <span ng-show="sortBy === 'remplacement'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
+                        </h4>
                     </span>
-                    <span    class="[[columns.coefficient.size]] cell-indent cell service-tab-header-center">
-                    <h4 ng-click="changeSort('coefficient')">[[lang.translate(columns.coefficient.name)]]
-                         <span ng-show="sortBy === 'coefficient'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span> </h4>
+                    <span class="[[columns.coefficient.size]] cell-indent cell service-tab-header-center">
+                        <h4 class="fit-font-size" ng-click="changeSort('coefficient')">[[lang.translate(columns.coefficient.name)]]
+                            <span ng-show="sortBy === 'coefficient'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
+                        </h4>
                     </span>
-                    <span    class="[[columns.modalite.size]] cell-indent cell service-tab-header-center">
-                    <h4 ng-click="changeSort('modalite')">[[lang.translate(columns.modalite.name)]]
-                         <span ng-show="sortBy === 'modalite'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span> </h4>
+                    <span class="[[columns.modalite.size]] cell-indent cell service-tab-header-center">
+                        <h4 class="fit-font-size" ng-click="changeSort('modalite')">[[lang.translate(columns.modalite.name)]]
+                            <span ng-show="sortBy === 'modalite'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
+                        </h4>
                     </span>
-                    <span    class="[[columns.evaluable.size]] cell-indent cell service-tab-header-center">
-                    <h4 ng-click="changeSort('evaluable')">[[lang.translate(columns.evaluable.name)]]
-                         <span ng-show="sortBy === 'evaluable'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span> </h4>
+                    <span class="[[columns.evaluable.size]] cell-indent cell service-tab-header-center">
+                        <h4 class="fit-font-size" ng-click="changeSort('evaluable')">[[lang.translate(columns.evaluable.name)]]
+                            <span ng-show="sortBy === 'evaluable'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
+                        </h4>
                     </span>
                 </div>
                 <div class="loaderArray loaderCenter" ng-show="showServicesLoader"></div>
@@ -107,19 +108,21 @@
                         <div class="[[columns.remplacement.size]] cellTab ellipsis cellTab-center">
                             <div ng-if="service.substituteTeachers.length > 0"
                                  ng-repeat="substituteTeacher in service.substituteTeachers">
-                                <span ng-click="switchMultiTeacherVisibility(service, substituteTeacher)"
-                                      ng-class="{'disabled-eye' : canSwitchMultiTeacherVisibility(service, substituteTeacher)}">
+                                <div ng-if="filterValidDateSubstituteTeacher(substituteTeacher)">
+                                    <span ng-click="switchMultiTeacherVisibility(service, substituteTeacher)"
+                                          ng-class="{'disabled-eye' : canSwitchMultiTeacherVisibility(service, substituteTeacher)}">
                                     <i ng-class="{'eye-open-orange': substituteTeacher.is_visible, 'eye-slash': !substituteTeacher.is_visible}"></i>
-                                </span>
-                                <span tooltip="[[getI18n('evaluation.service.columns.remplacement')]]
-                                    [[getI18n('viescolaire.utils.from.date')]]
-                                    [[substituteTeacher.start_date | date:'dd/MM/yyyy']]
-                                    [[getI18n('viescolaire.utils.to.date')]]
-                                    [[substituteTeacher.end_date | date:'dd/MM/yyyy']]<br>
-                                    [[getI18n('viescolaire.utils.datefinsaisie')]]
-                                    [[substituteTeacher.entered_end_date | date:'dd/MM/yyyy']]">
-                                        [[substituteTeacher.displayName]]
-                                </span>
+                                    </span>
+                                        <span tooltip="[[getI18n('evaluation.service.columns.remplacement')]]
+                                        [[getI18n('viescolaire.utils.from.date')]]
+                                        [[substituteTeacher.start_date | date:'dd/MM/yyyy']]
+                                        [[getI18n('viescolaire.utils.to.date')]]
+                                        [[substituteTeacher.end_date | date:'dd/MM/yyyy']]<br>
+                                        [[getI18n('viescolaire.utils.datefinsaisie')]]
+                                        [[substituteTeacher.entered_end_date | date:'dd/MM/yyyy']]">
+                                            [[substituteTeacher.displayName]]
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="[[columns.coefficient.size]] ellipsis  cellTab cellTab-center">
