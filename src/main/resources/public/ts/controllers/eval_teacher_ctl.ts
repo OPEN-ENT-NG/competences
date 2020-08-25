@@ -4207,9 +4207,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         initAppreciation();
 
         $scope.saveAppreciationMatierePeriodeEleve = async (student, updateHistoric:Boolean):Promise<void> => {
-
             if (student.appreciation_matiere_periode === undefined
-                && $scope.opened.lightboxConfirmCleanAppreciation) return;
+                || $scope.opened.lightboxConfirmCleanAppreciation) return;
             $scope.appreciationSubjectPeriod = preparedDataForAppreciation(student);
             if (student.appreciation_matiere_periode.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
                 if (student.appreciation_matiere_periode.length > 0) {
