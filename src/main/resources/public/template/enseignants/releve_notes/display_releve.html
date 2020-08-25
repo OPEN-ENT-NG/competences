@@ -162,7 +162,7 @@
                     <label class="select">
                         <select ng-model="search.matiere" ng-change="getReleve()"
                                 ng-init="initDefaultMatiere()"
-                                ng-options="matiere.name for matiere in matieresFiltered = (matieres.all | getMatiereClasse:search.classe.id:classes:search) | unique:'name'">
+                                ng-options="matiere.name for matiere in matieresFiltered = (matieres.all | filter:filterValidMatiere(search.classe.id, classes)) | unique:'name'">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
                         </select>
                     </label>

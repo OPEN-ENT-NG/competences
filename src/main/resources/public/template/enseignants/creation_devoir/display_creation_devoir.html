@@ -108,7 +108,7 @@
                                                      ng-disabled="matieresByClassByTeacher.length == 0"
                                                      ng-disabled="devoir.idEtablissement === undefined"
                                                      ng-change="selectedMatiere(devoir)"
-                                                     ng-options =" matiere.id as matiere.name for matiere in  devoir.matieresByClassByTeacher |
+                                                     ng-options ="matiere.id as matiere.name for matiere in devoir.matieresByClassByTeacher |
                                                  unique:'name'"
                                                     >
                                              </select>

@@ -22,8 +22,7 @@ import {_, model, moment, ng} from 'entcore';
 import {Utils} from "../../models/teacher";
 
 export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
-    return function (matieres, idClasse, classes, search, idTeacher?) {
-        if (idClasse === '*' || idClasse === undefined) return matieres;
+    return function (matieres, idClasse, classes, idTeacher?) {
         if (classes.all.length > 0) {
             let classe = classes.findWhere({id : idClasse});
             if (classe !== undefined) {

@@ -2096,7 +2096,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.setEnseignantMatieres = function () {
             $scope.devoir.matieresByClassByTeacher = $filter('getMatiereClasse')($scope.structure.matieres.all,
-                $scope.devoir.id_groupe, $scope.classes, $scope.search, $scope.devoir.owner);
+                $scope.devoir.id_groupe, $scope.classes, $scope.devoir.owner);
 
             if(!$scope.devoir.matiere) {
                 $scope.devoir.matiere = $scope.devoir.matieresByClassByTeacher[0];
@@ -2505,7 +2505,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.selectedMatiere = function (devoir) {
             let matieres = $filter('getMatiereClasse')($scope.structure.matieres.all,
-                $scope.devoir.id_groupe, $scope.classes, $scope.search);
+                $scope.devoir.id_groupe, $scope.classes);
             if (matieres.length === 1){
                 $scope.devoir.id_matiere = matieres[0].id;
             }
@@ -3205,7 +3205,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param id identifiant de la compétence
          */
         $scope.highlightCompetence = function (id, bool) {
-
             $scope.currentDevoir.competences.forEach((competence) => {
                 if (competence && competence !== undefined && competence.id_competence === id) {
                     competence.hovered = bool;
@@ -3220,7 +3219,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.isValidClasseMatiere = (idClasse, idMatiere) => {
             if ($scope.classes !== undefined) {
                 let matiereClasse = $filter('getMatiereClasse')($scope.structure.matieres.all,
-                    idClasse, $scope.classes, $scope.search);
+                    idClasse, $scope.classes);
                 if(idMatiere)
                     return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
                         && !_.isEmpty(matiereClasse) && _.findWhere(matiereClasse, {id:idMatiere});
