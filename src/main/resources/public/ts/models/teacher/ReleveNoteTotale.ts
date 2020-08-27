@@ -364,14 +364,17 @@ export class ReleveNoteTotale extends  Model implements IModel {
                     }
                     this.devoirs.load(_devoirs, null, false);
                     this.enseignantsNames = ";";
-                    if(teachersBySubjectDevoirs[matiere.id]){
+                    if(teacherBySubject[matiere.id]){
+                        teacher = teacherBySubject[matiere.id].displayName;
+                        teacher += teacherBySubject[matiere.id].coTeachers.join(", ");
+                        teacher += teacherBySubject[matiere.id].substituteTeachers.join(", ");
+                    }else if(teachersBySubjectDevoirs[matiere.id]){
                         teacher = teachersBySubjectDevoirs[matiere.id];
-                    }else{
-                        teacher = teacherBySubject[matiere.id]? teacherBySubject[matiere.id].displayName || " " : " ";
                     }
                     if (!utils.containsIgnoreCase(this.enseignantsNames, teacher)) {
                         this.enseignantsNames += teacher;
                     }
+                    console.log(this.enseignantsNames);
                     enseignants.push(this.enseignantsNames);
                 }
 

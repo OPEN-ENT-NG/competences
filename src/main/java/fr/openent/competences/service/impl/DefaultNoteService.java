@@ -1931,10 +1931,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                                                                 JsonObject teacher = (JsonObject) item;
 
                                                                                                 String subjectId = teacher.getString("subject_id");
-                                                                                                String mainTeacherId = teacher.getString("main_teacher_id");
                                                                                                 String coTeacherId = teacher.getString("second_teacher_id");
 
-                                                                                                if (subjectId.equals(mat) && mainTeacherId.equals(owner)) {
+                                                                                                if (subjectId.equals(mat)) {
                                                                                                     listIdsTeacher.add(coTeacherId);
                                                                                                 }
                                                                                             });

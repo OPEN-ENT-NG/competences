@@ -609,7 +609,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     String mainTeacherId = teacher.getString("main_teacher_id");
                     String coTeacherId = teacher.getString("second_teacher_id");
 
-                    if (subjectId.equals(idMatiere) && mainTeacherId.equals(owner)) {
+                    if (subjectId.equals(idMatiere)) {
                         if (!teachers.contains(coTeacherId) && isNotNull(coTeacherId))
                             teachers.add(coTeacherId);
                         if (!idsTeachers.contains(coTeacherId) && isNotNull(coTeacherId))
