@@ -650,8 +650,11 @@ public class ExportPDFController extends ControllerHelper {
 
                     if(!coTeachers.containsKey(key)){
                         ArrayList _coTeachers = new ArrayList();
-                        _coTeachers.add(multiTeacher.getString("second_teacher_id"));
-                        coTeachers.put(key, _coTeachers);
+                        String second_teacher_id = multiTeacher.getString("second_teacher_id");
+                        if(!_coTeachers.contains(second_teacher_id)){
+                            _coTeachers.add(second_teacher_id);
+                            coTeachers.put(key, _coTeachers);
+                        }
                     } else {
                         coTeachers.get(key).add(multiTeacher.getString("second_teacher_id"));
                     }
@@ -804,12 +807,12 @@ public class ExportPDFController extends ControllerHelper {
                             if(coTeachers.size() > 0 && coTeachers.get(entry.getKey().getString("id_matiere")) != null){
                                 ArrayList _coTeachers = new ArrayList();
                                 coTeachers.get(entry.getKey().getString("id_matiere")).forEach(coTeacher -> {
-                                    if(!_coTeachers.contains(libTeachers.get(coTeacher)))
+                                    if(!_coTeachers.contains(libTeachers.get(coTeacher))
+                                            && !libTeachers.get(teachers.get(entry.getKey())).equals(libTeachers.get(coTeacher)))
                                         _coTeachers.add(libTeachers.get(coTeacher));
                                 });
                                 newMoy.put("coT", _coTeachers);
                             }
-                            newMoy.put("ensIsVisible", false);
 
                             newMoy.mergeIn(entry.getValue());
 

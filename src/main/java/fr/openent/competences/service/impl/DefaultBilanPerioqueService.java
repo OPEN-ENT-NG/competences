@@ -300,7 +300,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         Future<JsonArray> subjectFuture = Future.future();
         // Récupération des matières et des professeurs
         devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, idEtablissement, idClasse, event -> {
-            formate(subjectFuture,event);
+            formate(subjectFuture, event);
         });
 
         // Récupération des groupes de l'élève

@@ -18,7 +18,7 @@
 /**
  * Created by Samuel Jollois on 27/01/2020.
  */
-import {_, model, ng} from 'entcore';
+import {_, model, moment, ng} from 'entcore';
 
 export let getEnseignantClasseFilter = ng.filter('getEnseignantClasse', function () {
     return function (enseignants, idClasse, classes, search) {
@@ -36,8 +36,8 @@ export let getEnseignantClasseFilter = ng.filter('getEnseignantClasse', function
                                 evaluables = _.filter(classe.services, service => {
                                     let substituteTeacher = _.findWhere(service.substituteTeachers, {second_teacher_id : enseignant.id});
                                     let correctDateSubstituteTeacher = substituteTeacher &&
-                                        substituteTeacher.start_date <= (new Date()).toISOString() &&
-                                        substituteTeacher.entered_end_date >= (new Date()).toISOString();
+                                        moment(new Date()).isBetween(moment(substituteTeacher.start_date),
+                                            moment(substituteTeacher.entered_end_date), 'days', '[]');
                                     let coTeachers = _.findWhere(service.coTeachers, {second_teacher_id : enseignant.id});
                                     return service.evaluable && (coTeachers || correctDateSubstituteTeacher);
                                 });

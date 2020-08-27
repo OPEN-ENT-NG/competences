@@ -821,7 +821,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 let row:Array<string | number> = emptyRow();
                 let rowBody = dataBody[rowIndex];
                 let appraisal = rowBody.appraisal ? rowBody.appraisal.content_text.replace(/\r?\n|\r/," ") : undefined;
-                let coTeachersContent = ", " + rowBody.coTeachers.join(', ');
+                let coTeachersContent = rowBody.coTeachers.length > 0 ? ", " + rowBody.coTeachers.join(', ') : emptyValue;
                 row.push(
                     `${rowBody.subjectName || emptyValue} - ${ rowBody.teacherName || emptyValue}${coTeachersContent || emptyValue}`,
                     appraisal || emptyValue,

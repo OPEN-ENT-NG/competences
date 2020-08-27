@@ -271,7 +271,6 @@ export class BilanPeriodique extends  Model {
                             teacherBySubject[subjectId].displayName : undefined,
                         coTeachers:  teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].coTeachers : undefined,
                         substituteTeachers:  teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].substituteTeachers : undefined,
-                        ensIsVisible : teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].ensIsVisible : true,
                         subjectName: subject? subject.name : undefined,
                         subjectShortName:  subject? subject.libelle_court : undefined,
                         subjectRank:  subject? subject.rank : 0,
@@ -300,7 +299,6 @@ export class BilanPeriodique extends  Model {
                     idSubject: subjectToSynthesis.idSubject,
                     subjectName: subjectToSynthesis.subjectShortName,
                     teacherName: teacherName,
-                    ensIsVisible: subjectToSynthesis.ensIsVisible,
                     coTeachers: subjectToSynthesis.coTeachers,
                     substituteTeachers: subjectToSynthesis.substituteTeachers
                 }
@@ -393,7 +391,6 @@ export class BilanPeriodique extends  Model {
                     moyenne: "",
                 },
                 coTeachers: [],
-                ensIsVisible: true
             };
             appraisalReturned.teacherName = appraisal.prof || "";
             appraisalReturned.subjectName = appraisal.mat || "";
@@ -402,7 +399,6 @@ export class BilanPeriodique extends  Model {
             appraisalReturned.average.moyenne = appraisal.moy || "";
             appraisalReturned.appraisal.content_text = appraisal.appr || "";
             appraisalReturned.coTeachers = appraisal.coT || [];
-            appraisalReturned.ensIsVisible = appraisal.ensIsVisible || true;
             return appraisalReturned;
         });
         return result;

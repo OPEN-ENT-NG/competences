@@ -18,7 +18,7 @@
 /**
  * Created by Samuel Jollois on 15/05/2020.
  */
-import {_, model} from 'entcore';
+import {_, model, moment} from 'entcore';
 import {Utils} from "../../models/teacher";
 
 export function isValidClasse (idClasse, id_matiere,classes) {
@@ -35,8 +35,8 @@ export function isValidClasse (idClasse, id_matiere,classes) {
                 let evaluables = _.filter(classe.services, service => {
                     let substituteTeacher = _.findWhere(service.substituteTeachers, {second_teacher_id : model.me.userId});
                     let correctDateSubstituteTeacher = substituteTeacher &&
-                        substituteTeacher.start_date <= (new Date()).toISOString() &&
-                        substituteTeacher.entered_end_date >= (new Date()).toISOString();
+                        moment(new Date()).isBetween(moment(substituteTeacher.start_date),
+                            moment(substituteTeacher.entered_end_date), 'days', '[]');
                     let coTeachers = _.findWhere(service.coTeachers, {second_teacher_id: model.me.userId});
                     let mainTeacher = service.id_enseignant == model.me.userId
                     if(id_matiere){

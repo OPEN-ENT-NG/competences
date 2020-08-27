@@ -24,7 +24,6 @@ export const getTeacherBySubject:Function = (schoolClasses:Array<any>,
                 if(teacherBySubject[item.id_matiere] != undefined){
                     teacherBySubject[item.id_matiere].coTeachers = [];
                     teacherBySubject[item.id_matiere].substituteTeachers = [];
-                    teacherBySubject[item.id_matiere].ensIsVisible = item.is_visible;
                     item.coTeachers.forEach(coTeacher => {
                         if(coTeacher.is_visible){
                             let coTeacherLastName, coTeacherFirstName, coTeacherName;

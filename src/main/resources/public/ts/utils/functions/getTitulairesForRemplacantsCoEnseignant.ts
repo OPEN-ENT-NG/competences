@@ -18,15 +18,15 @@
 /**
  * Created by Samuel Jollois on 27/01/2020.
  */
-import {_, model} from 'entcore';
+import {_, model, moment} from 'entcore';
 
 export function getTitulairesForRemplacantsCoEnseignant (meUserId, classe, justTitulaires?) {
     let listTeacher = [];
     if(classe && classe.services) {
         classe.services.forEach(service => {
             let substituteTeacher = _.findWhere(service.substituteTeachers, {second_teacher_id : meUserId});
-            if ((substituteTeacher && substituteTeacher.start_date <= (new Date()).toISOString() &&
-                substituteTeacher.entered_end_date >= (new Date()).toISOString())
+            if ((substituteTeacher && moment(new Date()).isBetween(moment(substituteTeacher.start_date),
+                moment(substituteTeacher.entered_end_date), 'days', '[]'))
                 || _.findWhere(service.coTeachers, {second_teacher_id: meUserId})
                 || service.id_enseignant == meUserId) {
 

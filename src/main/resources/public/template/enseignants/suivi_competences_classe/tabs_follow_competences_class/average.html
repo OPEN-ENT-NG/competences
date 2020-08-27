@@ -4,7 +4,7 @@
         <tr>
             <th class="light-font-header" ng-repeat="rowData in averagesClasses.headerTable">
                 <div>[[rowData.subjectName]]</div>
-                <div ng-show="rowData.ensIsVisible">[[rowData.teacherName]]</div>
+                <div>[[rowData.teacherName]]</div>
                 <div ng-repeat="coTeacher in rowData.coTeachers">[[coTeacher]]</div>
                 <div ng-repeat="substituteTeacher in rowData.substituteTeachers">[[substituteTeacher]]</div>
             </th>
