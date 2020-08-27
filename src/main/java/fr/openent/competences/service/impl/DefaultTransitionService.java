@@ -523,7 +523,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.THEMATIQUE_BILAN_PERIODIQUE_TABLE + ", " +
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_ABSENCES_ET_RETARDS + ", " +
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_PERIODE + ", " +
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_SERVICES_TABLE;
