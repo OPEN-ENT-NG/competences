@@ -468,7 +468,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 } else if (!stringBooleanEither.right().getValue()) {
                     String query = "INSERT INTO " + COMPETENCES_PERSO_TABLE + " (id_competence, id_etablissement, nom)" +
                             " VALUES (?, ?, ?)" +
-                            " ON CONFLICT ON CONSTRAINT perso_competences_pk DO UPDATE" +
+                            " ON CONFLICT (id_competence, id_etablissement) DO UPDATE" +
                             " SET nom = EXCLUDED.nom RETURNING *";
                     JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -505,7 +505,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             if(i != index.size()-1){
                 query.append(",");
             }else{
-                query.append(" ON CONFLICT ON CONSTRAINT order_items_etablissement_pk DO UPDATE" +
+                query.append(" ON CONFLICT (id_competence, id_etablissement, id_enseignement) DO UPDATE" +
                         " SET index = EXCLUDED.index RETURNING *");
             }
         }

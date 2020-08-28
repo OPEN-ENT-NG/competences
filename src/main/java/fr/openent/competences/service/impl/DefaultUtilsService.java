@@ -650,7 +650,7 @@ public class DefaultUtilsService  implements UtilsService {
                             if (i != (idClasses.length - 1)) {
                                 queryLink.append(",");
                             } else {
-                                queryLink.append(" ON CONFLICT ON CONSTRAINT unique_id_groupe ")
+                                queryLink.append(" ON CONFLICT (id_groupe)")
                                         .append(" DO UPDATE SET id_cycle = ? ");
                                 values.add(id_cycle);
                             }

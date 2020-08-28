@@ -176,7 +176,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
                     ".rel_elt_bilan_periodique_intervenant_matiere(id_elt_bilan_periodique, id_intervenant, id_matiere) " +
                     "VALUES (?, ?, ?) " +
-                    "ON CONFLICT ON CONSTRAINT elt_bilan_period_interv_mat_unique DO NOTHING;";
+                    "ON CONFLICT (id_elt_bilan_periodique, id_intervenant, id_matiere) DO NOTHING;";
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                     .add(elementId)
                     .add(intervenantMatiere.getJsonObject("intervenant").getString("id"))
@@ -199,7 +199,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
                     ".rel_elt_bilan_periodique_groupe(id_elt_bilan_periodique, id_groupe, externalid_groupe) " +
                     "VALUES (?, ?, ?) " +
-                    "ON CONFLICT ON CONSTRAINT elt_bilan_period_groupe_unique DO NOTHING;";
+                    "ON CONFLICT (id_elt_bilan_periodique, id_groupe) DO NOTHING;";
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                     .add(elementId)
                     .add(group.getString("id"))
@@ -797,12 +797,12 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                                 if(idEleve != null){
                                     query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve" +
                                             "(id, id_eleve, id_elt_bilan_periodique, id_periode, commentaire) VALUES (?, ?, ?, ?, ?)" +
-                                            " ON CONFLICT ON CONSTRAINT appreciation_elt_bilan_period_eleve_unique DO UPDATE SET commentaire = ?";
+                                            " ON CONFLICT (id_elt_bilan_periodique, id_eleve, id_periode) DO UPDATE SET commentaire = ?";
                                     params.add(idEleve);
                                 } else {
                                     query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe" +
                                             "(id, id_groupe, externalid_groupe, id_elt_bilan_periodique, id_periode, commentaire) VALUES (?, ?, ?, ?, ?, ?)" +
-                                            " ON CONFLICT ON CONSTRAINT appreciation_elt_bilan_period_classe_unique DO UPDATE SET commentaire = ?";
+                                            " ON CONFLICT (id_elt_bilan_periodique, id_periode, id_groupe) DO UPDATE SET commentaire = ?";
                                     params.add(idClasse)
                                             .add(externalidClasse);
                                 }
@@ -832,7 +832,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
                     ".rel_groupe_appreciation_elt_eleve(id_groupe, externalid_groupe, id_eleve, id_periode, id_elt_bilan_periodique) " +
                     "VALUES (?, ?, ?, ?, ?) " +
-                    "ON CONFLICT ON CONSTRAINT groupe_appreciation_elt_eleve_unique DO NOTHING;";
+                    "ON CONFLICT (id_elt_bilan_periodique, id_periode, id_groupe) DO NOTHING;";
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                     .add(group.getString("id_groupe"))
                     .add(group.getString("externalid_groupe"))
@@ -848,7 +848,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
                 ".rel_groupe_appreciation_elt_classe(id_groupe, externalid_groupe, id_periode, id_elt_bilan_periodique) " +
                 "VALUES (?, ?, ?, ?) " +
-                "ON CONFLICT ON CONSTRAINT groupe_appreciation_elt_classe_unique DO NOTHING;";
+                "ON CONFLICT (id_elt_bilan_periodique, id_periode, id_groupe) DO NOTHING;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(idClasse)
                 .add(externalidClasse)
