@@ -199,13 +199,13 @@ export class Service {
             if(this.hasCompetencesParams()) {
                 url = "/competences/devoirs/service" +
                     `?id_matiere=${this.id_matiere}`+
-                    `&id_groupe=${this.id_groups.join(",")}`;
+                    `&id_groups=${this.id_groups.join(",")}`;
 
                 url += `&id_enseignant=${this.id_enseignant}`;
             }else{
                 url = "/competences/devoirs/service"+
                     `?id_matiere=${this.id_matiere}`+
-                    `&id_groupe=${this.id_groupe}`+
+                    `&id_groups=${this.id_groupe}`+
                     `&id_enseignant=${this.id_enseignant}`;
             }
             return await http.get(url);
