@@ -832,7 +832,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
                     ".rel_groupe_appreciation_elt_eleve(id_groupe, externalid_groupe, id_eleve, id_periode, id_elt_bilan_periodique) " +
                     "VALUES (?, ?, ?, ?, ?) " +
-                    "ON CONFLICT (id_elt_bilan_periodique, id_periode, id_groupe) DO NOTHING;";
+                    "ON CONFLICT (id_groupe, id_elt_bilan_periodique, id_periode, id_eleve) DO NOTHING;";
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                     .add(group.getString("id_groupe"))
                     .add(group.getString("externalid_groupe"))
