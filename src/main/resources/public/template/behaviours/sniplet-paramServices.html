@@ -17,6 +17,11 @@
                              class="labels-in-line">
                             [[search]]
                         </div>
+                        <div ng-repeat="search in searchForClasse track by $index"
+                             ng-click="dropSearchClass(search)"
+                             class="labels-in-line">
+                            [[search]]
+                        </div>
                     </div>
                 </div>
             </div>

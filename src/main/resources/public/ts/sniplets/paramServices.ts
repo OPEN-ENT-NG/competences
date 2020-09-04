@@ -22,6 +22,7 @@ export const paramServices = {
             this.idStructure = this.source.idStructure;
             this.services = [];
             this.searchToFilter = [];
+            this.searchForClasse = [];
             this.matiereSelected = "";
             this.sortBy = "topicName";
             this.sortByAsc = true;
@@ -83,67 +84,116 @@ export const paramServices = {
             paramServices.that.showServicesLoader = true;
             await utils.safeApply(paramServices.that);
         },
-        stopMessageLoader: async function ( ) {
+        stopMessageLoader: async function () {
             paramServices.that.showServicesLoader = false;
             await utils.safeApply(paramServices.that);
         },
-        saveSearch :function async (event) {
-            if (event && (event.which === 13 || event.keyCode === 13 )) {
-                if (!_.contains(paramServices.that.searchToFilter, event.target.value)
-                    && event.target.value.length > 0
-                    && event.target.value.trim()){
-                    paramServices.that.searchToFilter.push(event.target.value);
+
+        saveSearch: async (event) => {
+            if (event && (event.which === 13 || event.keyCode === 13) && event.target.value.length > 0) {
+                let value = event.target.value.trim().toUpperCase();
+                let searchAdded = false;
+                paramServices.that.services.forEach(service => {
+                    if(!searchAdded) {
+                        if(service.groups_name != null && service.groups_name.toUpperCase().includes(value) ||
+                            service.nom_groupe != null && service.nom_groupe.toUpperCase().includes(value)){
+                            if(!_.contains(paramServices.that.searchForClasse, value)){
+                                paramServices.that.searchForClasse.push(value);
+                                searchAdded = true;
+                            }
+                        }
+                    }
+                });
+                if (!searchAdded && !_.contains(paramServices.that.searchToFilter, value)){
+                    paramServices.that.searchToFilter.push(value);
                 }
+                await paramServices.that.initServices();
                 event.target.value = '';
             }
         },
-        dropSearchFilter: function(search) {
+
+        dropSearchFilter: async (search) => {
             paramServices.that.searchToFilter = _.without(paramServices.that.searchToFilter, search);
+            await paramServices.that.initServices();
         },
-        filterSearch: function () {
+
+        dropSearchClass: async (search) => {
+            paramServices.that.searchForClasse = _.without(paramServices.that.searchForClasse, search);
+            await paramServices.that.initServices();
+        },
+
+        filterSearch: () => {
             return (service) => {
+                let isInClassSearched = false;
                 let isInSearched = true;
-                if(paramServices.that.searchToFilter.length != 0){
-                    paramServices.that.searchToFilter.forEach(search => {
-                        if(!((service.groups_name != null && service.groups_name.toUpperCase().includes(search.toUpperCase()))
-                            || (service.nom_groupe != null && service.nom_groupe.toUpperCase().includes(search.toUpperCase()))
-                            || service.nom_enseignant.toUpperCase().includes(search.toUpperCase())
+                if(paramServices.that.searchToFilter.length > 0) {
+                    for(let search of paramServices.that.searchToFilter) {
+                        isInSearched = (service.nom_enseignant.toUpperCase().includes(search.toUpperCase())
                             || service.topicName.toUpperCase().includes(search.toUpperCase())
                             || service.coTeachers_name.toUpperCase().includes(search.toUpperCase())
-                            || service.substituteTeachers_name.toUpperCase().includes(search.toUpperCase()))) {
-                            isInSearched = false;
-                        }
-                    });
-                } else {
-                    isInSearched = true;
+                            || service.substituteTeachers_name.toUpperCase().includes(search.toUpperCase()));
+                        if(!isInSearched)
+                            break;
+                    }
                 }
-                return isInSearched;
+                if(paramServices.that.searchForClasse.length > 0) {
+                    let classesSearched = [];
+                    for(let search of paramServices.that.searchForClasse) {
+                        service.groups.forEach(group => {
+                            if(group.name.toUpperCase().includes(search.toUpperCase())
+                                && !_.contains(classesSearched, group)){
+                                classesSearched.push(group);
+                                isInClassSearched = true;
+                            }
+                        });
+                    }
+                    if(classesSearched.length > 0) {
+                        service.id_groups = classesSearched.map(classe => classe.id);
+                        service.competencesParams = _.filter(service.competencesParams, param => {
+                            return _.contains(service.id_groups, param.id_groupe);
+                        });
+                        service.groups = [];
+                        service.groups_name = paramServices.that.getGroupsName(service, service.groups);
+                    }
+                }
+                else {
+                    isInClassSearched = true;
+                }
+                return isInClassSearched && isInSearched;
             }
         },
-        setServicesWithGroups: async function (data) {
-            function getGroupsName(service, groups) {
-                if(service.competencesParams && service.competencesParams.length !== 0){
-                    service.competencesParams.forEach(param => {
-                        let group =  _.findWhere(paramServices.that.columns.classe.data, {id: param.id_groupe});
-                        if(group && !groups.includes(group)){
-                            groups.push(group);
-                            param.nom_groupe = group.name;
-                        }
-                    });
-                    groups.sort((group1, group2) => {
-                        if (group1.name > group2.name) {
-                            return 1;
-                        }
-                        if (group1.name < group2.name) {
-                            return -1;
-                        }
-                        return 0;
-                    });
-                    return groups.join(", ");
-                }
-                return null;
-            }
 
+        getGroupsName: function (service, groups) {
+            if(service.competencesParams && service.competencesParams.length > 0){
+                service.competencesParams.forEach(param => {
+                    let group =  _.findWhere(paramServices.that.columns.classe.data, {id: param.id_groupe});
+                    if(group && !groups.includes(group)){
+                        groups.push(group);
+                        param.nom_groupe = group.name;
+                    }
+                });
+                groups.sort((group1, group2) => {
+                    if (group1.name > group2.name) {
+                        return 1;
+                    }
+                    if (group1.name < group2.name) {
+                        return -1;
+                    }
+                    return 0;
+                });
+                return groups.join(", ");
+            }
+            else {
+                let group = _.findWhere(paramServices.that.columns.classe.data, {id: service.id_groupe});
+                if(group && !groups.includes(group)){
+                    groups.push(group);
+                    return group.name;
+                }
+            }
+            return null;
+        },
+
+        setServicesWithGroups: async function (data) {
             await paramServices.that.subTopics.get(paramServices.that.idStructure);
             paramServices.that.services = _.reject(_.map(data, service => {
                 let enseignant = _.findWhere(paramServices.that.columns.enseignant.data, {id: service.id_enseignant});
@@ -161,7 +211,7 @@ export const paramServices = {
                             }
                         });
                     });
-                let groups_name = getGroupsName(service, groups);
+                let groups_name = paramServices.that.getGroupsName(service, groups);
 
                 let coTeachers_name = "";
                 let substituteTeachers_name = "";
@@ -250,17 +300,17 @@ export const paramServices = {
         checkDevoirsService: async function (service, callback) {
             await service.getDevoirsService()
                 .then(async ({data}) => {
-                if (data.length === 0) {
-                    await callback();
-                } else {
-                    paramServices.that.service = service;
-                    paramServices.that.devoirs = data;
-                    paramServices.that.callback = callback;
-                    paramServices.that.error = paramServices.that.translate("evaluations.service.devoir.error").replace("[nbDevoir]", paramServices.that.devoirs.length);
-                    paramServices.that.lightboxes.switchEval = true;
-                    await utils.safeApply(paramServices.that);
-                }
-            })
+                    if (data.length === 0) {
+                        await callback();
+                    } else {
+                        paramServices.that.service = service;
+                        paramServices.that.devoirs = data;
+                        paramServices.that.callback = callback;
+                        paramServices.that.error = paramServices.that.translate("evaluations.service.devoir.error").replace("[nbDevoir]", paramServices.that.devoirs.length);
+                        paramServices.that.lightboxes.switchEval = true;
+                        await utils.safeApply(paramServices.that);
+                    }
+                })
             safeApply(paramServices.that);
         },
         openSwitchEvaluation:function() {
