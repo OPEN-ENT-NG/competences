@@ -113,6 +113,7 @@ export class Utils {
                             poDomaine.lastSliderUpdated =  poDomaine.moyenne;
                         }
                         model.trigger('apply');
+                        suiviCompetence.trigger('refresh-slider');
                     });
                 }
             }else{
@@ -129,7 +130,6 @@ export class Utils {
                         model.trigger('apply');
                     }
                     suiviCompetence.trigger('refresh-slider');
-
                 });
             }
         };
