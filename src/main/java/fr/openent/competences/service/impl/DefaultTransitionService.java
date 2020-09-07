@@ -572,7 +572,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
 
         StringBuilder queryForClone = new StringBuilder()
-                .append("SELECT clone_schema_with_sequences(?::text, ?::text, TRUE)");
+                .append("SELECT function_clone_schema_with_sequences(?::text, ?::text, TRUE)");
 
         JsonArray valuesForCloneNotes = new fr.wseduc.webutils.collections.JsonArray()
                 .add(Competences.COMPETENCES_SCHEMA + "_" + currentYear).add(Competences.COMPETENCES_SCHEMA);
