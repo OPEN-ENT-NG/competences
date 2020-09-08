@@ -624,9 +624,8 @@ public class DevoirController extends ControllerHelper {
     public void getDevoirsService(HttpServerRequest request) {
         if(request.params().contains("id_groups") && request.params().contains("id_matiere")
                 && request.params().contains("id_enseignant")) {
-            devoirsService.listDevoirsService(request.params().get("id_enseignant"),
-                    request.params().get("id_matiere"), request.params().getAll("id_groups"),
-                    arrayResponseHandler(request));
+            devoirsService.listDevoirsService(request.params().get("id_enseignant"), request.params().get("id_matiere"),
+                    Arrays.asList(request.params().get("id_groups").split(",")), arrayResponseHandler(request));
         } else {
             badRequest(request);
         }
@@ -674,7 +673,7 @@ public class DevoirController extends ControllerHelper {
                                             @Override
                                             public void handle(Either<String, JsonObject> event) {
                                                 if (event.isRight()) {
-                                                        updateSQLTablesAfterDelete(devoirsInfosList.getJsonObject(0).getString("id_groupe"),Long.parseLong(devoirsInfosList.getJsonObject(0).getValue("id_periode").toString()),devoirsInfosList.getJsonObject(0).getString("id_matiere"), request);
+                                                    updateSQLTablesAfterDelete(devoirsInfosList.getJsonObject(0).getString("id_groupe"),Long.parseLong(devoirsInfosList.getJsonObject(0).getValue("id_periode").toString()),devoirsInfosList.getJsonObject(0).getString("id_matiere"), request);
                                                 } else {
                                                     badRequest(request);
                                                 }

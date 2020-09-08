@@ -58,7 +58,7 @@ export class Service {
                 subService["evaluable"] = param.evaluable;
                 subService["coefficient"] = param.coefficient;
                 subService["nom_groupe"] = param.nom_groupe;
-                services.push(Mix.castAs(Service,subService));
+                services.push(Mix.castAs(Service, subService));
                 if(this.modalite!= param.modalite){
                     this.modalite = lang.translate('multiples');
                 }
@@ -73,9 +73,9 @@ export class Service {
 
     hasAllServicesEvaluable(){
         if(this.hasCompetencesParams() ){
-            let hasAllServiceEvaluable = true ;
+            let hasAllServiceEvaluable = true;
             this.competencesParams.forEach(param => {
-                hasAllServiceEvaluable = hasAllServiceEvaluable &&  param.evaluable;
+                hasAllServiceEvaluable = hasAllServiceEvaluable && param.evaluable;
             });
             return hasAllServiceEvaluable;
         }else
@@ -83,9 +83,9 @@ export class Service {
     }
     hasAllServicesNotEvaluable(){
         if(this.hasCompetencesParams() ){
-            let hasAllServiceEvaluable = false ;
+            let hasAllServiceEvaluable = false;
             this.competencesParams.forEach(param => {
-                hasAllServiceEvaluable = hasAllServiceEvaluable ||  param.evaluable;
+                hasAllServiceEvaluable = hasAllServiceEvaluable || param.evaluable;
             });
             return !hasAllServiceEvaluable;
         }else
@@ -195,18 +195,15 @@ export class Service {
     }
     async getDevoirsService(){
         try {
-            let url;
+            let url = "/competences/devoirs/service";
             if(this.hasCompetencesParams()) {
-                url = "/competences/devoirs/service" +
-                    `?id_matiere=${this.id_matiere}`+
+                url += `?id_matiere=${this.id_matiere}` +
+                    `&id_enseignant=${this.id_enseignant}` +
                     `&id_groups=${this.id_groups.join(",")}`;
-
-                url += `&id_enseignant=${this.id_enseignant}`;
             }else{
-                url = "/competences/devoirs/service"+
-                    `?id_matiere=${this.id_matiere}`+
-                    `&id_groups=${this.id_groupe}`+
-                    `&id_enseignant=${this.id_enseignant}`;
+                url += `?id_matiere=${this.id_matiere}` +
+                    `&id_enseignant=${this.id_enseignant}` +
+                    `&id_groups=${this.id_groupe}`;
             }
             return await http.get(url);
         } catch (e) {

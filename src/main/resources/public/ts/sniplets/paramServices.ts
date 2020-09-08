@@ -326,17 +326,16 @@ export const paramServices = {
             paramServices.that.lightboxes.switchEvaluation = true;
             safeApply(paramServices.that);
         },
-        switchEvaluableService: async function(service,isVarious?) {
-            if(isVarious){
+        switchEvaluableService: async function(service) {
+            if(!service.evaluable || service.hasAllServicesNotEvaluable() || service.hasVariousEvaluable()) {
                 service.evaluable = true;
-            }else{
-                service.evaluable = !service.evaluable;
-            }
-            if(service.hasAllServicesNotEvaluable() || service.hasVariousEvaluable()) {
                 await service.updateServiceEvaluable();
             } else {
-
-                await paramServices.that.checkDevoirsService(service, async () => await service.updateServiceEvaluable());
+                console.log(service);
+                await paramServices.that.checkDevoirsService(service, async () => {
+                    service.evaluable = false;
+                    await service.updateServiceEvaluable();
+                });
             }
         },
         changeSort:function (nameSort)  {
