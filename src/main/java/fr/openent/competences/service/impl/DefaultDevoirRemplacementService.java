@@ -68,11 +68,11 @@ public class DefaultDevoirRemplacementService extends SqlCrudService implements 
         SqlStatementsBuilder s = new SqlStatementsBuilder();
 
         // Ajout du titulaire dans la table users s'il n'existe pas
-        String userQueryTitulaire = "SELECT "+ Competences.COMPETENCES_SCHEMA+ ".function_merge_users(?,?)";
+        String userQueryTitulaire = "SELECT "+ Competences.COMPETENCES_SCHEMA+ ".merge_users(?,?)";
         s.prepared(userQueryTitulaire, new fr.wseduc.webutils.collections.JsonArray().add(poRemplacement.getString("id_titulaire")).add(poRemplacement.getString("libelle_titulaire")));
 
         // Ajout du remplaçant dans la table users s'il n'existe pas
-        String userQueryRemplacant = "SELECT "+ Competences.COMPETENCES_SCHEMA+ ".function_merge_users(?,?)";
+        String userQueryRemplacant = "SELECT "+ Competences.COMPETENCES_SCHEMA+ ".merge_users(?,?)";
         s.prepared(userQueryRemplacant, new fr.wseduc.webutils.collections.JsonArray().add(poRemplacement.getString("id_remplacant")).add(poRemplacement.getString("libelle_remplacant")));
 
 

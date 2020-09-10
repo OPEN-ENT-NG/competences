@@ -1,0 +1,1 @@
+ALTER FUNCTION  notes.function_merge_users(key character varying, data character varying) RENAME TO merge_users;

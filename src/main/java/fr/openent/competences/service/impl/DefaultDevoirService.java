@@ -176,7 +176,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         paramsForMerge.add(user.getUserId()).add(user.getUsername());
 
         StringBuilder queryForMerge = new StringBuilder()
-                .append("SELECT " + schema + "function_merge_users(?,?)" );
+                .append("SELECT " + schema + "merge_users(?,?)" );
         statements.add(new JsonObject()
                 .put("statement", queryForMerge.toString())
                 .put("values", paramsForMerge)
