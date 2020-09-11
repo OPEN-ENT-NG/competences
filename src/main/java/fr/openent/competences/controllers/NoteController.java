@@ -57,6 +57,7 @@ import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
@@ -333,6 +334,9 @@ public class NoteController extends ControllerHelper {
                     CompositeFuture.all(listFuturesEachPeriode).setHandler(exportPeriodeEvent -> {
                         try{
                             if (exportPeriodeEvent.succeeded()) {
+                                DecimalFormat decimalFormat = new DecimalFormat("#.00");
+                                decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
+
                                 for (int i=0; i< param.getJsonArray("idPeriodes").size();i++) {
                                     resultHandler.put(param.getJsonArray("idPeriodes").getLong(i).toString(),
                                             ((JsonObject) listFuturesEachPeriode.get(i).result()));
@@ -355,11 +359,11 @@ public class NoteController extends ControllerHelper {
                                                         if (((JsonObject) eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) ||
                                                                 ((JsonObject) eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals("")) {
                                                             ((JsonObject) eleve).getJsonObject("moyenneFinale")
-                                                                    .put(idMatiere.toString(),Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString().replace(",",".")));
+                                                                    .put(idMatiere.toString(), decimalFormat.format(Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString().replace(",","."))));
                                                         }else {
                                                             ((JsonObject) eleve).getJsonObject("moyenneFinale")
-                                                                    .put(idMatiere.toString(),Double.parseDouble(((JsonObject) eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString().replace(",",".")) +
-                                                                            Double.parseDouble(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString().replace(",",".")));
+                                                                    .put(idMatiere.toString(), decimalFormat.format(Double.parseDouble(((JsonObject) eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString().replace(",",".")) +
+                                                                            Double.parseDouble(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString().replace(",","."))));
                                                             if (((JsonObject) eleve).containsKey("nbPeriodeMoyenne")) {
                                                                 if (((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").containsKey(idMatiere.toString())) {
                                                                     ((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").put(idMatiere.toString(),
@@ -376,7 +380,7 @@ public class NoteController extends ControllerHelper {
                                                             ((JsonObject)eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null &&
                                                             !(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(""))){
                                                         ((JsonObject) eleve).getJsonObject("moyenneFinale")
-                                                                .put(idMatiere.toString(),Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString().replace(",",".")));
+                                                                .put(idMatiere.toString(), decimalFormat.format(Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString().replace(",","."))));
                                                     }
 
                                                     if(((JsonObject)eleve).getJsonObject("positionnement").containsKey(idMatiere.toString()) && ((JsonObject)eleve).getJsonObject("positionnement").getValue(idMatiere.toString()) != null &&
@@ -412,12 +416,12 @@ public class NoteController extends ControllerHelper {
                                                         ((JsonObject)eleveAutrePeriode).containsKey("moyenne_generale") && ((JsonObject)eleveAutrePeriode).getValue("moyenne_generale") != null &&
                                                         !(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(NN) || ((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(""))) {
                                                     if (((JsonObject) eleve).getValue("moyenne_generale").equals(NN) || ((JsonObject) eleve).getValue("moyenne_generale").equals("")) {
-                                                        ((JsonObject) eleve).put("moyenne_generale",Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString()));
+                                                        ((JsonObject) eleve).put("moyenne_generale", decimalFormat.format(Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString())));
                                                         if (!((JsonObject) eleve).containsKey("nbPeriodesMoyenne"))
                                                             ((JsonObject) eleve).put("nbPeriodesMoyenne", 1);
                                                     }else {
-                                                        ((JsonObject) eleve).put("moyenne_generale", Double.parseDouble(((JsonObject) eleve).getValue("moyenne_generale").toString().replace(",",".")) +
-                                                                Double.parseDouble(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString().replace(",",".")));
+                                                        ((JsonObject) eleve).put("moyenne_generale", decimalFormat.format(Double.parseDouble(((JsonObject) eleve).getValue("moyenne_generale").toString().replace(",",".")) +
+                                                                Double.parseDouble(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString().replace(",","."))));
                                                         if (((JsonObject) eleve).containsKey("nbPeriodesMoyenne")) {
                                                             ((JsonObject) eleve).put("nbPeriodesMoyenne",((JsonObject) eleve).getLong("nbPeriodesMoyenne") + 1);
                                                         } else {
@@ -426,12 +430,12 @@ public class NoteController extends ControllerHelper {
                                                     }
                                                 }else if(((JsonObject)eleveAutrePeriode).containsKey("moyenne_generale") && ((JsonObject)eleveAutrePeriode).getValue("moyenne_generale") != null &&
                                                         !(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(NN) || ((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(""))){
-                                                    ((JsonObject) eleve).put("moyenne_generale",Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString()));
+                                                    ((JsonObject) eleve).put("moyenne_generale", decimalFormat.format(Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString())));
                                                     if (!((JsonObject) eleve).containsKey("nbPeriodesMoyenne"))
                                                         ((JsonObject) eleve).put("nbPeriodesMoyenne", 1);
                                                 }else if(((JsonObject)eleve).containsKey("moyenne_generale") && ((JsonObject)eleve).getValue("moyenne_generale") != null &&
                                                         !(((JsonObject) eleve).getValue("moyenne_generale").equals(NN) || ((JsonObject) eleve).getValue("moyenne_generale").equals(""))){
-                                                    ((JsonObject) eleve).put("moyenne_generale",Double.valueOf(((JsonObject) eleve).getValue("moyenne_generale").toString()));
+                                                    ((JsonObject) eleve).put("moyenne_generale", decimalFormat.format(Double.valueOf(((JsonObject) eleve).getValue("moyenne_generale").toString())));
                                                     if (!((JsonObject) eleve).containsKey("nbPeriodesMoyenne"))
                                                         ((JsonObject) eleve).put("nbPeriodesMoyenne", 1);
                                                 }
@@ -446,7 +450,6 @@ public class NoteController extends ControllerHelper {
                                     }
                                 }
 
-                                DecimalFormat decimalFormat = new DecimalFormat("#.00");
                                 for (int i=0; i< param.getJsonArray("idPeriodes").size();i++) {
                                     JsonArray elevesAutresPeriodes = ((JsonObject) listFuturesEachPeriode.get(i).result()).getJsonArray("eleves");
                                     for (Object eleveAutrePeriode : elevesAutresPeriodes) {
@@ -470,12 +473,10 @@ public class NoteController extends ControllerHelper {
                                         if (jsonEleve.getJsonObject("moyenneFinale").containsKey(idMatiere.toString()) && jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null) {
                                             if (!(jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(""))) {
                                                 if (jsonEleve.containsKey("nbPeriodeMoyenne") && jsonEleve.getJsonObject("nbPeriodeMoyenne").containsKey(idMatiere.toString())) {
-                                                    jsonEleve.getJsonObject("moyenneFinale")
-                                                            .put(idMatiere.toString(),
-                                                                    jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString()) / jsonEleve.getJsonObject("nbPeriodeMoyenne").getLong(idMatiere.toString()));
+                                                    jsonEleve.getJsonObject("moyenneFinale").put(idMatiere.toString(), decimalFormat.format(Double.valueOf(jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString().replace(",",".")) / jsonEleve.getJsonObject("nbPeriodeMoyenne").getLong(idMatiere.toString())));
                                                 } else {
                                                     jsonEleve.getJsonObject("moyenneFinale")
-                                                            .put(idMatiere.toString(), Double.valueOf(jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString().replace(",",".")));
+                                                            .put(idMatiere.toString(), decimalFormat.format(Double.valueOf(jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString().replace(",","."))));
                                                 }
                                             }
                                         }
@@ -505,7 +506,7 @@ public class NoteController extends ControllerHelper {
                                                 max = Double.parseDouble(jsonEleve.getValue("moyenne_generale").toString().replace(",",".")) / jsonEleve.getLong("nbPeriodesMoyenne");
                                         }
                                         jsonEleve.put("moyenne_generale",
-                                                decimalFormat.format((Double.parseDouble(jsonEleve.getValue("moyenne_generale").toString().replace(",",".")) / jsonEleve.getLong("nbPeriodesMoyenne"))));
+                                                decimalFormat.format(Double.parseDouble(jsonEleve.getValue("moyenne_generale").toString().replace(",",".")) / jsonEleve.getLong("nbPeriodesMoyenne")));
                                     } else if (!jsonEleve.containsKey("moyenne_generale") || jsonEleve.getValue("moyenne_generale") == null
                                             || (jsonEleve.getValue("moyenne_generale").equals(NN) || jsonEleve.getValue("moyenne_generale").equals(""))) {
                                         jsonEleve.put("moyenne_generale", NN);
@@ -513,16 +514,16 @@ public class NoteController extends ControllerHelper {
                                 }
                                 if(nbElevesMoyenne == 0){
                                     JsonObject minMoy = new JsonObject().put("minimum", NN);
-                                    JsonObject moyenneJson = new JsonObject().put("moyenne_generale",minMoy);
-                                    resultHandler.getJsonObject("annual").put("statistiques",moyenneJson);
+                                    JsonObject moyenneJson = new JsonObject().put("moyenne_generale", minMoy);
+                                    resultHandler.getJsonObject("annual").put("statistiques", moyenneJson);
                                     resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject("moyenne_generale").put("maximum", NN);
                                     resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject("moyenne_generale").put("moyenne", NN);
-                                }else{
+                                } else {
                                     JsonObject minMoy = new JsonObject().put("minimum", decimalFormat.format(min));
                                     JsonObject moyenneJson = new JsonObject().put("moyenne_generale", minMoy);
-                                    resultHandler.getJsonObject("annual").put("statistiques",moyenneJson);
+                                    resultHandler.getJsonObject("annual").put("statistiques", moyenneJson);
                                     resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject("moyenne_generale").put("maximum", decimalFormat.format(max));
-                                    resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject("moyenne_generale").put("moyenne", decimalFormat.format((moyenneDeMoyenne / nbElevesMoyenne)));
+                                    resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject("moyenne_generale").put("moyenne", decimalFormat.format(moyenneDeMoyenne / nbElevesMoyenne));
                                 }
                                 for(Object idMatiere : param.getJsonArray("idMatieres")){
                                     Double moyenne = 0.0;
@@ -587,7 +588,7 @@ public class NoteController extends ControllerHelper {
                                         else
                                             resultHandler.getJsonObject("annual").getJsonObject("statistiques").put(idMatiere.toString(), moyenneMatJson);
                                         resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).getJsonObject("moyenne").put("maximum", decimalFormat.format(max));
-                                        resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).getJsonObject("moyenne").put("moyenne", decimalFormat.format((moyenne / nbElevesMoyenne)));
+                                        resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).getJsonObject("moyenne").put("moyenne", decimalFormat.format(moyenne / nbElevesMoyenne));
                                     }
                                     if(nbElevesMoyennePos == 0){
                                         JsonObject minMoy = new JsonObject().put("minimum", NN);

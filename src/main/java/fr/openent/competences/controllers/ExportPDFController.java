@@ -47,6 +47,7 @@ import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -1026,7 +1027,9 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                                         note.put("visu", ((JsonObject) niveau).getString("visu"));
                                                                                                                         note.put("persoColor", ((JsonObject) niveau).getString("persoColor"));
                                                                                                                         note.put("nonEvalue", false);
-                                                                                                                        String moyCalcule = new DecimalFormat("#0.00").format(((JsonObject) resultNote).getDouble(MOYENNE).doubleValue());
+                                                                                                                        DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+                                                                                                                        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
+                                                                                                                        String moyCalcule = decimalFormat.format(((JsonObject) resultNote).getDouble(MOYENNE).doubleValue());
                                                                                                                         if (isHabilite)
                                                                                                                             note.put(MOYENNE, text ? "- " + moyCalcule
                                                                                                                                     : "" + moyCalcule);

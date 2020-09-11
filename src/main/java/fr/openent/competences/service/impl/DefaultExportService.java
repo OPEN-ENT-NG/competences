@@ -53,6 +53,7 @@ import static fr.openent.competences.helpers.ExportEvaluationHelper.*;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -1755,6 +1756,7 @@ public class DefaultExportService implements ExportService {
                 }
                 if(isNotNull(nbrEleves) && isNotNull(sumNotes)){
                     DecimalFormat df = new DecimalFormat("0.##");
+                    df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
                     Double moyenneClasse = sumNotes/nbrEleves;
                     devoirJson.put("moyenneClasse", df.format(moyenneClasse));
                     devoirJson.put("hasMoyenneClasse", true);

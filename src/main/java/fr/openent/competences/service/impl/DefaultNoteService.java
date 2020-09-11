@@ -59,6 +59,7 @@ import static fr.wseduc.webutils.http.Renders.badRequest;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2134,7 +2135,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             resultJO.put("moyClassAllEleves", "");
             resultJO.put("moyMinClass", "");
             resultJO.put("moyMaxClass", "");
-        }else {
+        } else {
             JsonObject resultCalculMoy =  utilsService.calculMoyenne(notesList, true,null,false);
             resultJO.put("moyClassAllEleves", resultCalculMoy.getDouble("moyenne"));
             resultJO.put("moyMinClass", resultCalculMoy.getDouble("noteMin"));
@@ -2891,6 +2892,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
             Object moyClasse;
             DecimalFormat decimalFormat = new DecimalFormat("#.00");
+            decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
             if(!annual) {
                 moyClasse = (nbMoyenneClasse > 0) ? decimalFormat.format((sumMoyClasse / nbMoyenneClasse)) : " ";
                 result.put("moyenne_classe", moyClasse);
@@ -3187,6 +3189,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
 
         JsonObject statsToAdd = new JsonObject();
         if(!initialisationPositionnement){
@@ -3205,7 +3208,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     statsToAdd.getJsonObject("positionnement").put("moyenne", Double.valueOf(0));
                 }
             }else
-                statsToAdd.getJsonObject("positionnement").put("moyenne", (moyennePos/nbElevesPositionnement));
+                statsToAdd.getJsonObject("positionnement").put("moyenne", moyennePos/nbElevesPositionnement);
 
         }
         if(!initialisationMoyenne){
@@ -3318,7 +3321,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     }
 
-    private void getMoyenneGeneraleMinMax(Map<String, JsonObject> eleveMapObject, Long idPeriode, JsonArray idMatieres, Boolean annual, JsonObject resulHandler) {
+    private void getMoyenneGeneraleMinMax(Map<String, JsonObject> eleveMapObject, Long idPeriode, JsonArray idMatieres,
+                                          Boolean annual, JsonObject resulHandler) {
         String moyenneLabel = MOYENNE;
         moyenneLabel += (idPeriode!=null)? "Finale" : "sFinales";
         double moyenneDeMoyenne = 0.0;
@@ -3327,6 +3331,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         double moyenneMax = 0.0;
         boolean initialisationMoyenne = false;
         DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
 
         for (Map.Entry<String, JsonObject> student : eleveMapObject.entrySet()) {
             Double moyenne = 0.0;
@@ -3347,21 +3352,23 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             if(nbMatieres == 0){
                 student.getValue().put("moyenne_generale",NN);
             }else{
-                if(!annual)
-                    student.getValue().put("moyenne_generale",decimalFormat.format((moyenne/nbMatieres)));
-                else
-                    student.getValue().put("moyenne_generale",(moyenne/nbMatieres));
-                moyenneDeMoyenne += moyenne/nbMatieres;
+                if(!annual){
+                    student.getValue().put("moyenne_generale", decimalFormat.format((moyenne / nbMatieres)));
+                }
+                else {
+                    student.getValue().put("moyenne_generale", (moyenne / nbMatieres));
+                }
+                moyenneDeMoyenne += moyenne / nbMatieres;
                 nbElevesMoyenne++;
                 if (!initialisationMoyenne) {
-                    moyenneMin = moyenne/nbMatieres;
-                    moyenneMax = moyenne/nbMatieres;
+                    moyenneMin = moyenne / nbMatieres;
+                    moyenneMax = moyenne / nbMatieres;
                     initialisationMoyenne = true;
                 } else {
-                    if (moyenneMin > moyenne/nbMatieres)
-                        moyenneMin = moyenne/nbMatieres;
-                    if (moyenneMax < moyenne/nbMatieres)
-                        moyenneMax = moyenne/nbMatieres;
+                    if (moyenneMin > moyenne / nbMatieres)
+                        moyenneMin = moyenne / nbMatieres;
+                    if (moyenneMax < moyenne / nbMatieres)
+                        moyenneMax = moyenne / nbMatieres;
                 }
             }
         }

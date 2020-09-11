@@ -40,6 +40,7 @@ import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.math.RoundingMode;
 import java.sql.SQLTimeoutException;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -1750,6 +1751,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             }
         }
         DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
         moyenAnnuelle = (sumCoef > 0)? decimalFormat.format(moy/sumCoef) : NN;
 
         eleveObject.put(PRINT_MOYENNE_ANNUELLE, params.getBoolean(MOYENNE_ANNUELLE));
@@ -1808,6 +1810,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
 
         DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
         moyenGeneral = (sumCoef > 0)? decimalFormat.format(moy/sumCoef) : NN;
         moyenGeneralClass = (sumCoefClass > 0)? decimalFormat.format(moyClass/sumCoefClass) : NN;
         JsonArray moyFinalesEleves = new JsonArray();
