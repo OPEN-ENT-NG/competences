@@ -161,11 +161,34 @@ public class DevoirController extends ControllerHelper {
                     RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
                         @Override
                         public void handle(final JsonObject resource) {
-                            if(null != resource.getLong("type_groupe")
-                                    && resource.getLong("type_groupe")>-1){
-                                DevoirControllerHelper.creationDevoir(request, user, resource,pathPrefix,devoirsService,shareService,eb);
-                            } else {
-                                checkEleveEvaluable(resource, request, user);
+                            if(null != resource.getString("owner")
+                                    && !resource.getString("owner").equals(user.getUserId())) {
+                                UserUtils.getUserInfos(eb, resource.getString("owner"), new Handler<UserInfos>() {
+                                    @Override
+                                    public void handle(final UserInfos user) {
+                                        if(user != null) {
+                                            if(null != resource.getLong("type_groupe")
+                                                    && resource.getLong("type_groupe") > -1){
+                                                DevoirControllerHelper.creationDevoir(request, user, resource, pathPrefix,
+                                                        devoirsService, shareService, eb);
+                                            } else {
+                                                checkEleveEvaluable(resource, request, user);
+                                            }
+                                        } else {
+                                            log.debug("User not found in session.");
+                                            Renders.unauthorized(request);
+                                        }
+                                    }
+                                });
+                            }
+                            else {
+                                if(null != resource.getLong("type_groupe")
+                                        && resource.getLong("type_groupe") > -1){
+                                    DevoirControllerHelper.creationDevoir(request, user, resource, pathPrefix,
+                                            devoirsService, shareService, eb);
+                                } else {
+                                    checkEleveEvaluable(resource, request, user);
+                                }
                             }
                         }
                     });
@@ -182,16 +205,16 @@ public class DevoirController extends ControllerHelper {
                 .put("action", "eleve.isEvaluableOnPeriode")
                 .put("idEleve", resource.getJsonObject("competenceEvaluee").getString("id_eleve"))
                 .put("idPeriode", new Long(resource.getInteger("id_periode")))
-                .put(Competences.ID_ETABLISSEMENT_KEY,
-                        resource.getString("id_etablissement"));
+                .put(Competences.ID_ETABLISSEMENT_KEY, resource.getString("id_etablissement"));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
                 if ("ok".equals(body.getString("status"))) {
                     if(body.getJsonArray("results").size() > 0){
-                        DevoirControllerHelper.creationDevoir(request, user, resource,pathPrefix,devoirsService,shareService,eb);
+                        DevoirControllerHelper.creationDevoir(request, user, resource, pathPrefix,
+                                devoirsService, shareService, eb);
                     } else {
                         log.debug("Student not evaluable on this period");
                         Renders.unauthorized(request);
@@ -742,15 +765,13 @@ public class DevoirController extends ControllerHelper {
                         });
                         futures.add(future2);
                     }
-                    CompositeFuture.all(futures).setHandler(
-                            eventFutur -> {
-                                if (eventFutur.succeeded()) {
-                                    Renders.ok(request);
-                                } else {
-                                    leftToResponse(request, new Either.Left<String,JsonObject>(eventFutur.cause().getMessage()));
-                                }
-                            });
-
+                    CompositeFuture.all(futures).setHandler(eventFutur -> {
+                        if (eventFutur.succeeded()) {
+                            Renders.ok(request);
+                        } else {
+                            leftToResponse(request, new Either.Left<String,JsonObject>(eventFutur.cause().getMessage()));
+                        }
+                    });
                 } else {
                     leftToResponse(request, event.left());
                 }
@@ -811,7 +832,7 @@ public class DevoirController extends ControllerHelper {
 
         // On récupère le nombre d'annotations
         Future<JsonArray> nbAnnotationsDevoirsFuture = Future.future();
-        devoirsService.getNbAnnotationsDevoirs(user, idEleves, idDevoir ,
+        devoirsService.getNbAnnotationsDevoirs(user, idEleves, idDevoir,
                 nbsAnnotations -> FormateFutureEvent.formate(nbAnnotationsDevoirsFuture, nbsAnnotations));
 
         // On récupère le nombre de compétences par élèves pour le devoir courant

@@ -32,7 +32,6 @@ public class DevoirControllerHelper {
 
     public static void creationDevoir(HttpServerRequest request, UserInfos user, JsonObject resource, String pathPrefix,
                                       DevoirService devoirsService, ShareService shareService, EventBus eb) {
-
         resource.remove("competences");
         resource.remove("competencesAdd");
         resource.remove("competencesRem");
@@ -43,8 +42,8 @@ public class DevoirControllerHelper {
             @Override
             public void handle(final JsonObject devoirJO) {
                 Devoir devoir = new Devoir(devoirJO);
-                devoirsService.createDevoir(devoir.getOldModel(), user, getCreationDevoirHandler(devoir,  user, shareService, request,eb));
-
+                devoirsService.createDevoir(devoir.getOldModel(), user,
+                        getCreationDevoirHandler(devoir,  user, shareService, request, eb));
             }
         });
     }

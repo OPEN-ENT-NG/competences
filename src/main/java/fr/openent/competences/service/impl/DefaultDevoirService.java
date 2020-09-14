@@ -79,20 +79,17 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     private static final String attributeIdGroupe = "id_groupe";
 
     @Override
-
     public void createDevoir(final JsonObject devoir, final UserInfos user, final Handler<Either<String, JsonObject>> handler) {
         // Requête de recupération de l'id du devoir à créer
-        final String queryNewDevoirId =
-                "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".devoirs_id_seq') as id";
+        final String queryNewDevoirId = "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".devoirs_id_seq') as id";
 
         sql.raw(queryNewDevoirId, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> event) {
-
                 if (event.isRight()) {
                     final Long devoirId = event.right().getValue().getLong("id");
                     // Limitation du nombre de compétences
-                    if( devoir.getJsonArray("competences").size() > Competences.MAX_NBR_COMPETENCE) {
+                    if(devoir.getJsonArray("competences").size() > Competences.MAX_NBR_COMPETENCE) {
                         handler.handle(new Either.Left<String, JsonObject>(event.left().getValue()));
                     }
                     else {
@@ -176,7 +173,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         paramsForMerge.add(user.getUserId()).add(user.getUsername());
 
         StringBuilder queryForMerge = new StringBuilder()
-                .append("SELECT " + schema + "merge_users(?,?)" );
+                .append("SELECT " + schema + "merge_users(?,?)");
         statements.add(new JsonObject()
                 .put("statement", queryForMerge.toString())
                 .put("values", paramsForMerge)
@@ -195,15 +192,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 queryParams.append(" , ").append(attr);
                 valueParams.append(" , to_date(?,'YYYY-MM-DD') ");
                 params.add(HomeworkUtils.formatDate(devoir.getString(attr)).toString());
-            }
-            else{
+            } else{
                 Boolean isCompetencesAtt = "competencesAdd".equals(attr)
                         ||  "competencesRem".equals(attr)
                         ||  "competenceEvaluee".equals(attr)
                         ||  "competences".equals(attr)
                         || "competencesUpdate".equals(attr);
-                if(!( isCompetencesAtt ||  attr.equals(attributeTypeGroupe)
-                        ||  attr.equals(attributeIdGroupe))) {
+                if(!(isCompetencesAtt ||  attr.equals(attributeTypeGroupe) ||  attr.equals(attributeIdGroupe))) {
                     queryParams.append(" , ").append(attr);
                     valueParams.append(" , ? ");
                     params.add(devoir.getValue(attr));
@@ -222,9 +217,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
 
         //Ajout de chaque compétence dans la pile de transaction
-        if (devoir.containsKey("competences") &&
-                devoir.getJsonArray("competences").size() > 0) {
-
+        if (devoir.containsKey("competences") && devoir.getJsonArray("competences").size() > 0) {
             JsonArray paramsComp = new fr.wseduc.webutils.collections.JsonArray();
             StringBuilder queryComp = new StringBuilder()
                     .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA
@@ -233,7 +226,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 queryComp.append("(?, ?,").append(i).append(")");
                 paramsComp.add(idDevoir);
                 paramsComp.add((Number) competences.getLong(i));
-                if(i != competences.size()-1){
+                if(i != competences.size() - 1){
                     queryComp.append(",");
                 }else{
                     queryComp.append(";");
