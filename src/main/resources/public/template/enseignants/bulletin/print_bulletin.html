@@ -44,7 +44,7 @@
                                    ng-class="{selected:bSelectAllClasses}">
                         </label>
                         <ul class="selectable-list">
-                            <li ng-repeat="classe in printClasses.all| orderBy:['type_groupe_libelle','name']"
+                            <li ng-repeat="classe in printClasses.all |filter:filterHeadTeacher() | orderBy:['type_groupe_libelle','name']"
                                 ng-init="classe.selected = false;"
                                 ng-click="chooseClasse(classe);"
                                 ng-class="{selected : classe.selected}">[[(classe.name)]]</li>

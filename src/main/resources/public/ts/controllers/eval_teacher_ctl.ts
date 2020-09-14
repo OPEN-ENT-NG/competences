@@ -3240,9 +3240,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.filterValidClasse = () => {
             return (item) => {
-                return isValidClasse(item.id_groupe || item.id, item.id_matiere,$scope.classes.all);
+                return isValidClasse(item.id_groupe || item.id, item.id_matiere, $scope.classes.all);
             };
         };
+
+        $scope.filterHeadTeacher = () => {
+            return (item) => {
+                return Utils.isChefEtab(item);
+            }
+        }
 
         $rootScope.notYear = () => {
             return (periode) => {
