@@ -161,34 +161,12 @@ public class DevoirController extends ControllerHelper {
                     RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
                         @Override
                         public void handle(final JsonObject resource) {
-                            if(null != resource.getString("owner")
-                                    && !resource.getString("owner").equals(user.getUserId())) {
-                                UserUtils.getUserInfos(eb, resource.getString("owner"), new Handler<UserInfos>() {
-                                    @Override
-                                    public void handle(final UserInfos user) {
-                                        if(user != null) {
-                                            if(null != resource.getLong("type_groupe")
-                                                    && resource.getLong("type_groupe") > -1){
-                                                DevoirControllerHelper.creationDevoir(request, user, resource, pathPrefix,
-                                                        devoirsService, shareService, eb);
-                                            } else {
-                                                checkEleveEvaluable(resource, request, user);
-                                            }
-                                        } else {
-                                            log.debug("User not found in session.");
-                                            Renders.unauthorized(request);
-                                        }
-                                    }
-                                });
-                            }
-                            else {
-                                if(null != resource.getLong("type_groupe")
-                                        && resource.getLong("type_groupe") > -1){
-                                    DevoirControllerHelper.creationDevoir(request, user, resource, pathPrefix,
-                                            devoirsService, shareService, eb);
-                                } else {
-                                    checkEleveEvaluable(resource, request, user);
-                                }
+                            if(null != resource.getLong("type_groupe")
+                                    && resource.getLong("type_groupe") > -1){
+                                DevoirControllerHelper.creationDevoir(request, user, resource, pathPrefix,
+                                        devoirsService, shareService, eb);
+                            } else {
+                                checkEleveEvaluable(resource, request, user);
                             }
                         }
                     });

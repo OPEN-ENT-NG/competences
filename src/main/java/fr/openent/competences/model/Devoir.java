@@ -7,6 +7,7 @@ public class Devoir extends Model implements Cloneable {
     private String structureId;
     private String name;
     private String owner;
+    private String ownerName;
     private String libelle;
     private String subjectId;
     private String groupId;
@@ -34,6 +35,7 @@ public class Devoir extends Model implements Cloneable {
         this.structureId = devoirJO.getString("id_etablissement");
         this.name = devoirJO.getString("name");
         this.owner = devoirJO.getString("owner");
+        this.ownerName = devoirJO.getString("owner_name");
         this.subjectId = devoirJO.getString("id_matiere");
         this.groupId = devoirJO.getString("id_groupe");
         this.publishDate = devoirJO.getString("date_publication");
@@ -140,6 +142,14 @@ public class Devoir extends Model implements Cloneable {
 
     public void setOwner(String owner) {
         this.owner = owner;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
     }
 
     public String getLibelle() {

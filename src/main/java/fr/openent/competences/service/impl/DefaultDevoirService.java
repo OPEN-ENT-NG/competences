@@ -170,7 +170,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         //Merge_user dans la transaction
 
         JsonArray paramsForMerge = new fr.wseduc.webutils.collections.JsonArray();
-        paramsForMerge.add(user.getUserId()).add(user.getUsername());
+        if(!user.getUserId().equals(devoir.getString("owner")) && null != devoir.getString("owner_name")) {
+            paramsForMerge.add(devoir.getString("owner")).add(devoir.getString("owner_name"));
+            devoir.remove("owner_name");
+        } else {
+            paramsForMerge.add(user.getUserId()).add(user.getUsername());
+        }
 
         StringBuilder queryForMerge = new StringBuilder()
                 .append("SELECT " + schema + "merge_users(?,?)");
@@ -243,7 +248,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             final JsonObject oCompetenceNote = devoir.getJsonObject("competenceEvaluee");
             JsonArray paramsCompLibre = new fr.wseduc.webutils.collections.JsonArray();
             StringBuilder valueParamsLibre = new StringBuilder();
-            oCompetenceNote.put("owner", user.getUserId());
+            oCompetenceNote.put("owner", devoir.getString("owner"));
             StringBuilder queryCompLibre = new StringBuilder()
                     .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".competences_notes ");
             queryCompLibre.append("( id_devoir ");
@@ -271,10 +276,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
 
         // Ajoute une relation notes.rel_devoirs_groupes
-        if(null != devoir.getLong(attributeTypeGroupe)
-                && devoir.getLong(attributeTypeGroupe)>-1){
+        if(null != devoir.getLong(attributeTypeGroupe) && devoir.getLong(attributeTypeGroupe) > -1){
             JsonArray paramsAddRelDevoirsGroupes = new fr.wseduc.webutils.collections.JsonArray();
-            String queryAddRelDevoirsGroupes = new String("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes(id_groupe, id_devoir,type_groupe) VALUES (?, ?, ?)");
+            String queryAddRelDevoirsGroupes = new String("INSERT INTO " + Competences.COMPETENCES_SCHEMA +
+                    ".rel_devoirs_groupes(id_groupe, id_devoir,type_groupe) VALUES (?, ?, ?)");
             paramsAddRelDevoirsGroupes.add(devoir.getValue(attributeIdGroupe));
             paramsAddRelDevoirsGroupes.add(idDevoir);
             paramsAddRelDevoirsGroupes.add(devoir.getInteger(attributeTypeGroupe).intValue());

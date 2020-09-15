@@ -104,14 +104,11 @@ public class DevoirControllerHelper {
                 List<String> actions = new ArrayList<String>();
                 actions.add(Competences.DEVOIR_ACTION_UPDATE);
                 for(int i = 0; i < results.size() ; i++){
-                    Future<JsonObject>  shareServiceFuture = Future.future();
-
+                    Future<JsonObject> shareServiceFuture = Future.future();
                     futures.add(shareServiceFuture);
 
                     String id = results.getJsonObject(i).getString("teacher_id");
-                    shareService.userShare(user.getUserId(),
-                        id,
-                        devoirWithId.getLong("id").toString(),
+                    shareService.userShare(user.getUserId(), id, devoirWithId.getLong("id").toString(),
                         actions, getFutureHandler(shareServiceFuture));
                 }
                 CompositeFuture.all(futures).setHandler(futuresEvent -> {

@@ -46,6 +46,7 @@ export class Devoir extends Model implements IModel{
     coefficient : number;
     name : string ;
     owner : string;
+    owner_name : string;
     libelle : string;
     id_sousmatiere : number | string;
     id_periode : number | string;
@@ -200,6 +201,7 @@ export class Devoir extends Model implements IModel{
         return {
             name            : this.name,
             owner           : this.owner,
+            owner_name           : this.owner_name,
             libelle         : this.libelle,
             old_id_groupe   : this.old_id_groupe,
             id_groupe       : id_groupe,

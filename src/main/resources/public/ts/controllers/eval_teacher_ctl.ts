@@ -2111,6 +2111,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
                 }
             }
+            if($scope.devoir.owner && $scope.devoir.teachersByClass.length > 0) {
+                $scope.devoir.owner_name = _.findWhere($scope.devoir.teachersByClass,
+                    {id : $scope.devoir.owner}).displayName;
+            }
         };
 
         $scope.deleteDevoir = function () {
