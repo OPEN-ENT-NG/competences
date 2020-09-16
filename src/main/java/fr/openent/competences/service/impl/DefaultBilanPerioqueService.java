@@ -245,7 +245,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
     private void getServicesAndAddMissingTeachers(final String idEtablissement, final JsonArray idsMatieres, final JsonArray idClasseGroups,
                                                   final List<String> matieresMissingTeachers, final Map<String,JsonObject> idsMatieresIdsTeachers,
-                                                  final JsonArray idsTeachers, Future<JsonArray> servicesFuture) {
+                                                  final JsonArray idsTeachers, final JsonArray multiTeachers, Future<JsonArray> servicesFuture) {
         JsonObject action = new JsonObject()
                 .put("action", "service.getDefaultServices")
                 .put("idEtablissement", idEtablissement)
@@ -281,6 +281,20 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                 if (!coeffObject.getJsonArray(coefficient.toString()).contains(owner))
                                     coeffObject.getJsonArray(coefficient.toString()).add(owner);
                             }
+
+                            multiTeachers.forEach(item -> {
+                                JsonObject teacher = (JsonObject) item;
+
+                                String subjectId = teacher.getString("subject_id");
+                                String coTeacherId = teacher.getString("second_teacher_id");
+
+                                if (subjectId.equals(idMatiere)) {
+                                    if (!teachers.contains(coTeacherId) && isNotNull(coTeacherId))
+                                        teachers.add(coTeacherId);
+                                    if (!idsTeachers.contains(coTeacherId) && isNotNull(coTeacherId))
+                                        idsTeachers.add(coTeacherId);
+                                }
+                            });
                         }
                     });
                 });
@@ -355,7 +369,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                         // Récupération des services afin de récupérer les idTeachers manquants
                         Future<JsonArray> servicesFuture = Future.future();
                         getServicesAndAddMissingTeachers(idEtablissement, idsMatieres, idClasseGroups, matieresMissingTeachers,
-                                idsMatieresIdsTeachers, idsTeachers, servicesFuture);
+                                idsMatieresIdsTeachers, idsTeachers, multiTeachersArray, servicesFuture);
                         futures.add(servicesFuture);
                     } else {
                         // Récupération des noms et prénoms des professeurs
@@ -595,9 +609,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                         break;
                     }
                 }
-                if(isVisible
-                        && !teachers.contains(owner)
-                        && isNotNull(owner)
+                if(isVisible && !teachers.contains(owner) && isNotNull(owner)
                         && !Boolean.FALSE.equals(isVisibleFromService)){
                     teachers.add(owner);
                 }
@@ -606,7 +618,6 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     JsonObject teacher = (JsonObject) item;
 
                     String subjectId = teacher.getString("subject_id");
-                    String mainTeacherId = teacher.getString("main_teacher_id");
                     String coTeacherId = teacher.getString("second_teacher_id");
 
                     if (subjectId.equals(idMatiere)) {
@@ -618,17 +629,14 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 });
             }
 
-            if(!idsTeachers.contains(owner)
-                    && isNotNull(owner)
-                    && !Boolean.FALSE.equals(isVisibleFromService)) {
+            if(!idsTeachers.contains(owner) && isNotNull(owner) && !Boolean.FALSE.equals(isVisibleFromService)) {
                 idsTeachers.add(owner);
             }
             JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
             if(!coeffObject.containsKey(coefficient.toString())){
                 coeffObject.put(coefficient.toString(), new JsonArray());
             }
-            if(isNotNull(owner)
-                    && !coeffObject.getJsonArray(coefficient.toString()).contains(owner)
+            if(isNotNull(owner) && !coeffObject.getJsonArray(coefficient.toString()).contains(owner)
                     && !Boolean.FALSE.equals(isVisibleFromService)){
                 coeffObject.getJsonArray(coefficient.toString()).add(owner);
             }
@@ -640,7 +648,6 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         }
         return matieresMissingTeachers;
     }
-
 
     private void setElementProgramme(final JsonObject result, final JsonArray eltsProg) {
         String elementsProg = "";
