@@ -374,9 +374,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.getTeacherDisplayName = function (owner) {
             if (owner === undefined || owner === null || owner === "") return "";
             let enseignant = _.findWhere(evaluations.enseignants.all, {id: owner});
-            if (enseignant !== undefined && enseignant.hasOwnProperty('name')) {
+            if (enseignant !== undefined) {
                 if(enseignant.hasOwnProperty('displayName'))
-                    return enseignant.displayName
+                    return enseignant.displayName;
                 else if(enseignant.hasOwnProperty('lastName') && enseignant.hasOwnProperty('firstName'))
                     return enseignant.firstName[0] + '.' + enseignant.lastName;
             }
