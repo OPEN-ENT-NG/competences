@@ -2049,17 +2049,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 return _.first(collection);
             }
         };
-        /**
-         * Set les matière en fonction de l'identifiant de la classe
-         */
-        /*$scope.setClasseMatieres = function () {
-            $scope.devoir.matieresByClasse = $filter('getMatiereClasse')($scope.structure.matieres.all,
-                $scope.devoir.id_groupe, $scope.classes, $scope.search);
-            if ($scope.devoir.matieresByClasse.length === 1){
-                $scope.devoir.id_matiere = $scope.devoir.matieresByClasse[0].id;
-            }
-            $scope.selectedMatiere($scope.devoir);
-        };*/
 
         /**
          * Set les enseignants en fonction de l'identifiant de la classe
@@ -2530,8 +2519,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 && devoir.id_sousmatiere !== null){
                 devoir.id_sousmatiere = null;
             }
-
-
         };
 
         /**
@@ -3222,8 +3209,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.isValidClasseMatiere = (idClasse, idMatiere) => {
             if ($scope.classes !== undefined) {
-                let matiereClasse = $filter('getMatiereClasse')($scope.structure.matieres.all,
-                    idClasse, $scope.classes);
+                let matiereClasse = $filter('getMatiereClasse')($scope.structure.matieres.all, idClasse, $scope.classes);
                 if(idMatiere)
                     return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
                         && !_.isEmpty(matiereClasse) && _.findWhere(matiereClasse, {id:idMatiere});
@@ -3252,7 +3238,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return (item) => {
                 return Utils.isChefEtab(item);
             }
-        }
+        };
 
         $rootScope.notYear = () => {
             return (periode) => {
