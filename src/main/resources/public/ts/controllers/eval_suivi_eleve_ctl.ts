@@ -1097,7 +1097,6 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             domaine.slider.options.disabled = !domaine.slider.options.disabled;
             domaine.slider.options.readOnly = !domaine.slider.options.readOnly;
             await $scope.baremeBrevet();
-
         };
 
 

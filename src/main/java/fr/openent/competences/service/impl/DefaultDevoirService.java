@@ -172,9 +172,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         JsonArray paramsForMerge = new fr.wseduc.webutils.collections.JsonArray();
         if(!user.getUserId().equals(devoir.getString("owner")) && null != devoir.getString("owner_name")) {
             paramsForMerge.add(devoir.getString("owner")).add(devoir.getString("owner_name"));
-            devoir.remove("owner_name");
         } else {
             paramsForMerge.add(user.getUserId()).add(user.getUsername());
+        }
+
+        if(devoir.containsKey("owner_name")){
+            devoir.remove("owner_name");
         }
 
         StringBuilder queryForMerge = new StringBuilder()
@@ -371,6 +374,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 && !devoir.getString("old_id_groupe").isEmpty()){
             old_id_groupe = devoir.getString("old_id_groupe");
             devoir.remove("old_id_groupe");
+        }
+        if(devoir.containsKey("owner_name")){
+            devoir.remove("owner_name");
         }
         if (devoir.containsKey("competencesAdd") &&
                 devoir.getJsonArray("competencesAdd").size() > 0) {
