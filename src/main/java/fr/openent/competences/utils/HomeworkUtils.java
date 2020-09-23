@@ -110,7 +110,6 @@ public class HomeworkUtils {
 
     public static JsonObject formatDevoirForDuplication (JsonObject devoir) {
         JsonObject o = new JsonObject(devoir.getMap());
-        o.remove("owner");
         o.remove("created");
         o.remove("modified");
         o.remove("id");

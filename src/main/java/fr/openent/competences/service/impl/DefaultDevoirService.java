@@ -335,7 +335,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     o = HomeworkUtils.formatDevoirForDuplication(devoir);
                     o.put("id_groupe", g.getString("id"));
                     o.put("type_groupe", g.getInteger("type_groupe"));
-                    o.put("owner", user.getUserId());
                     JsonArray tempStatements = this.createStatement(ids.getLong(i), o, user);
                     for (int j = 0; j < tempStatements.size(); j++) {
                         statements.add(tempStatements.getValue(j));
