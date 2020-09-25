@@ -38,6 +38,7 @@ import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -1468,6 +1469,25 @@ public class ExportPDFController extends ControllerHelper {
 
                             JsonObject result = new JsonObject(resultEleves.getMap());
 
+                            // Re order moy by rank
+                            for(Object eleve : result.getJsonArray("eleves")){
+                                JsonObject jsonEleve = (JsonObject) eleve;
+                                JsonArray orderedEleveMoy = new JsonArray();
+                                for(Object eleveMoy : jsonEleve.getJsonArray("eleveMoyByMat")){
+                                    JsonObject jsonEleveMoy = (JsonObject) eleveMoy;
+                                    int rank = 0;
+                                    for(Object matiere : resultMatieres.getJsonArray("matieres")){
+                                        JsonObject jsonMatiere = (JsonObject) matiere;
+                                        if(jsonEleveMoy.getString("id_matiere").equals(jsonMatiere.getString("id"))){
+                                            rank = jsonMatiere.getInteger("rank");
+                                            break;
+                                        }
+                                    }
+                                    jsonEleveMoy.put("rank", rank);
+                                    orderedEleveMoy.add(jsonEleveMoy);
+                                }
+                                jsonEleve.put("eleveMoyByMat", Utils.sortJsonArrayIntValue("rank", orderedEleveMoy));
+                            }
                             if(idPeriodeFinal != null) {
                                 Utils.getLibellePeriode(eb, request, idPeriodeFinal, new Handler<Either<String, String>>() {
                                     @Override

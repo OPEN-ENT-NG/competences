@@ -265,7 +265,10 @@ public interface NoteService extends CrudService {
      * @param mapAllidMatAndidTeachers
      * @param handler
      */
-    void getMoysEleveByMatByYear(String idEtablissement, JsonArray periodes, SortedMap<String, Set<String>> mapAllidMatAndidTeachers, Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,Handler<Either<String,JsonObject>> handler);
+    void getMoysEleveByMatByYear(String idEtablissement, JsonArray periodes,
+                                 SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
+                                 Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
+                                 Handler<Either<String,JsonObject>> handler);
 
     /**
      * @param
@@ -273,9 +276,9 @@ public interface NoteService extends CrudService {
      * @param mapIdMatListMoyByEleve
      * @param handler
      */
-    void getMatEvaluatedAndStat( SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
-                                 Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
-                                 Handler<Either<String,JsonObject>> handler);
+    void getMatEvaluatedAndStat(SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
+                                Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
+                                Handler<Either<String,JsonObject>> handler);
 
     /**
      * Réalise l'export d'un relevé
