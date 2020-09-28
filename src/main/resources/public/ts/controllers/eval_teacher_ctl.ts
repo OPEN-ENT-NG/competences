@@ -2710,8 +2710,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param isAnnotaion sauvegarde depuis un champ de type annotation (evaluation devoir actuellement)
          */
         $scope.saveAnnotationDevoirEleve = function (evaluation, $event, eleve, isAnnotaion) {
-            if (evaluation.id_annotation !== undefined
-                && evaluation.id_annotation > 0) {
+            if (evaluation.id_annotation !== undefined && evaluation.id_annotation > 0) {
                 if (evaluation.oldId_annotation !== evaluation.id_annotation && evaluation.oldValeur !== evaluation.valeur) {
                     evaluation.saveAnnotation().then((res) => {
                         let annotation = _.findWhere($scope.evaluations.annotations.all, {id: evaluation.id_annotation});
@@ -2727,7 +2726,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                         evaluation.oldId_annotation = evaluation.id_annotation;
                         if (evaluation.valeur === utils.getNN() && !isAnnotaion) {
-                            $scope.calculerMoyenneEleve(eleve, $scope.releveNote.devoirs.all);
+                            $scope.calculerMoyenneEleve(eleve);
                             $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
                         }
                         else {
@@ -2851,19 +2850,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             // todo refacto make this function more readable
             if ($location.$$path === '/releve')
                 idHTMLofInput = getHTMLiD($event);
-            if(isWorkingProgress) return;
+            //if(isWorkingProgress) return;
             let isValueChanged:Boolean = (evaluation.valeur !== evaluation.oldValeur);
+            let isAppreciationChanged:Boolean = (evaluation.oldAppreciation !== evaluation.appreciation);
             const reg = /^[0-9]+(\.[0-9]{1,2})?$/;
             cleanShortTermCaseValue(evaluation);
-            if ((isValueChanged || evaluation.oldAppreciation !== evaluation.appreciation)) {
+            if (isValueChanged || isAppreciationChanged) {
                 giveShortTermToValue(evaluation);
                 cleanComma(evaluation);
                 updateValueToNN(evaluation, isAnnotaion);
                 cleanIdAppreciation(evaluation);
                 // On est dans le cas d'une sauvegarde ou création d'appréciation
-                if (evaluation.oldAppreciation !== undefined
-                    && evaluation.oldAppreciation !== evaluation.appreciation
-                    && evaluation.appreciation !== undefined && evaluation.appreciation !== '') {
+                if (evaluation.oldAppreciation != undefined && evaluation.appreciation != undefined
+                    && isAppreciationChanged && evaluation.appreciation !== '') {
                     evaluation.saveAppreciation().then((res) => {
                         evaluation.oldAppreciation = evaluation.appreciation;
                         if (res.id !== undefined) {
@@ -2889,16 +2888,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             evaluation.id = evaluation.data.id;
                         }
                         let annotation = _.findWhere($scope.evaluations.annotations.all, {libelle_court: evaluation.valeur});
-                        if (!reg.test(evaluation.valeur)
-                            && ((annotation !== undefined
-                                && annotation !== null
-                                && annotation.id !== evaluation.oldId_annotation))) {
+                        if (!reg.test(evaluation.valeur) && (annotation !== undefined && annotation !== null
+                            && annotation.id !== evaluation.oldId_annotation)) {
                             evaluation.id_annotation = annotation.id;
                             $scope.saveAnnotationDevoirEleve(evaluation, $event, eleve, isAnnotaion);
                         } else {
-                            if ((evaluation.oldValeur !== undefined && isValueChanged)
-                                || evaluation.oldAppreciation !== undefined && evaluation.oldAppreciation !== evaluation.appreciation) {
-                                if (evaluation.valeur !== "" && evaluation.valeur && reg.test(evaluation.valeur) && evaluation.valeur !== null) {
+                            if ((evaluation.oldValeur != undefined && isValueChanged) || evaluation.oldAppreciation != undefined && isAppreciationChanged) {
+                                if (evaluation.valeur != undefined && evaluation.valeur !== "" && reg.test(evaluation.valeur)) {
                                     let devoir = evaluations.devoirs.findWhere({id: evaluation.id_devoir});
                                     if (devoir !== undefined) {
                                         if (parseFloat(evaluation.valeur) <= devoir.diviseur && parseFloat(evaluation.valeur) >= 0) {
@@ -2915,7 +2911,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                             }
 
                                             if ($location.$$path === '/releve') {
-                                                await $scope.releveNote.sync();
+                                                $scope.calculerMoyenneEleve(eleve);
+                                                $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
                                             } else {
                                                 $scope.calculStatsDevoir();
                                             }
@@ -2948,7 +2945,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                                 evaluation.id = undefined;
                                                 evaluation.data.id = undefined;
                                             }
-                                            await $scope.releveNote.sync();
+                                            $scope.calculerMoyenneEleve(eleve);
+                                            $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
                                         } else {
                                             if (res.rows === 1) {
                                                 evaluation.id = undefined;
@@ -3017,7 +3015,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param bool état du détail
          */
         $scope.expandAppreciation = function (index, bool) {
-
             if ($scope.openedEleve !== index) {
                 $scope.openedEleve = index;
             } else {
@@ -3031,15 +3028,50 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Calcul la moyenne pour un élève
          * @param eleve élève
          */
-        $scope.calculerMoyenneEleve = function (eleve, devoirs) {
-            eleve.getMoyenne(devoirs).then(() => {
+        $scope.calculerMoyenneEleve = function (eleve) {
+            eleve.getMoyenne($scope.releveNote.devoirs.all).then(() => {
                 if(!eleve.moyenneFinaleIsSet){
                     eleve.moyenneFinale = eleve.moyenne;
                     eleve.oldMoyenneFinale = eleve.moyenne;
                 }
+                $scope.calculerMoyenneClasse();
                 utils.safeApply($scope);
             });
         };
+
+        $scope.calculerMoyenneClasse = function() {
+            let moyenne = 0, max = 0, nbEleve = 0, moyenneFinal = 0, maxFinal = 0, nbEleveFinal = 0;
+            let min = 20, minFinal = 20;
+            $scope.releveNote.classe.eleves.all.forEach(eleve => {
+                if(eleve.moyenne !== utils.getNN()){
+                    moyenne += eleve.moyenne;
+                    nbEleve++;
+                    if(eleve.moyenne > max)
+                        max = eleve.moyenne;
+                    if(min > eleve.moyenne)
+                        min = eleve.moyenne;
+                }
+                if(eleve.moyenneFinale !== utils.getNN()){
+                    let moyF = eleve.moyenneFinale;
+                    if(eleve.moyenneFinaleIsSet)
+                        moyF = parseFloat(moyF);
+                    moyenneFinal += moyF;
+                    nbEleveFinal++;
+                    if(moyF > maxFinal)
+                        maxFinal = moyF;
+                    if(minFinal > moyF)
+                        minFinal = moyF;
+                }
+            });
+            moyenne = moyenne / nbEleve;
+            moyenneFinal = moyenneFinal / nbEleveFinal;
+            $scope.releveNote._tmp._moyenne_classe.null.moyenne = moyenne.toFixed(2);
+            $scope.releveNote._tmp._moyenne_classe.null.min = min;
+            $scope.releveNote._tmp._moyenne_classe.null.max = max;
+            $scope.releveNote._tmp._moyenne_classe.nullFinal.moyenne = moyenneFinal.toFixed(2);
+            $scope.releveNote._tmp._moyenne_classe.nullFinal.min = minFinal;
+            $scope.releveNote._tmp._moyenne_classe.nullFinal.max = maxFinal;
+        }
 
         /**
          * Ouvre la fenêtre détail des compétences sur un devoir
@@ -3397,7 +3429,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Supprime les remplacments sélectionnés
          */
         $scope.deleteSelectedRemplacement = function () {
-
             var iNbSupp = $scope.gestionRemplacement.selectedRemplacements.length;
             var iCpteur = 0;
 
@@ -4069,7 +4100,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 eleve.moyenneFinaleIsSet = true;
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
             }
-
         };
 
         $scope.isEndSaisie = function() {
@@ -4135,7 +4165,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                     eleve.oldMoyenneFinale = eleve.moyenneFinale;
                                 }
                                 if ($location.$$path === '/releve') {
-                                    await $scope.releveNote.sync();
+                                    $scope.calculerMoyenneEleve(eleve);
                                 }
                                 utils.safeApply($scope);
                             });
