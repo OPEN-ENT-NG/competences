@@ -78,6 +78,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
         return {
             idMatieres: this.matieresId,
             idClasse: this.idClasse,
+            idGroups: this.idGroups,
             idEtablissement: this.idEtablissement,
             idPeriode: this.idPeriode,
             idPeriodes: _.pluck(this.periodes,'idPeriode'),
@@ -92,12 +93,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                 let columnCsv = [];
                 let blob;
                 let addingAllStudents = false;
-                let parameter = this.toJson();
-                if(this.idGroups.length != 0)
-                    _.extend(parameter, {
-                        idGroups: this.idGroups
-                    });
-                let data = await httpAxios.post(this.api.EXPORT, parameter);
+                let data = await httpAxios.post(this.api.EXPORT, this.toJson());
                 let response;
                 let responseOtherPeriodes;
                 if(this.periodes.length > 0){

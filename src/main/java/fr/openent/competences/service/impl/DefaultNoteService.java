@@ -2421,7 +2421,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             final JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
             final JsonObject resultHandler = new JsonObject();
             final JsonObject data = new JsonObject();
-            final JsonArray idGroups = ((params.getJsonArray("idGroups").size() == 0)? null : params.getJsonArray("idGroups"));
+            final JsonArray idGroups = params.getJsonArray("idGroups").size() == 0 ? null : params.getJsonArray("idGroups");
             Map<String, JsonObject> elevesMapObject = new HashMap<>();
             // Récupération des élèves de la classe
             Future<JsonArray> studentsClassFuture =  Future.future();
