@@ -49,98 +49,136 @@
         table tr td {
             width: auto;
             border: 1px solid black;
-
         }
+
         tr{
             page-break-inside: avoid;
         }
 
         .title {
-            font-size: 14px;
-            font-weight: bold !important;
+            font-size: 12px;
         }
+
         .bold {
             font-weight: bold !important;
         }
-        table .list-eleve td:first-child {
-            width: 25%;
-            max-width: 25%;
-            min-width: 25%;
+
+        table tr td:first-child {
+            width: 30%;
+            max-width: 30%;
+            min-width: 30%;
         }
-        #eleves-table {
+
+        .list-eleve td{
             vertical-align: top;
+            padding-top: 8px;
+            padding-bottom: 8px;
         }
-        #eleves-table tr td {
-            padding-top:10px;
-            padding-bottom:10px;
+
+        .invisible-row td:first-child{
+            border: none;
         }
 
         @page {
-            size:  A4 ;
+            size: A4;
             margin-left: 5%;
             margin-right: 5%;
-        {{#hasCompetences}}  margin-top :{{ligne}} ;{{/hasCompetences}}
-        {{^hasCompetences}}  margin-top :25% ;{{/hasCompetences}}
-        @top-center {
-            content: element(repeated-top);
-            height : auto;
-            vertical-align : text-before-edge;
-        }
-        @top-left-corner{
-            width : 5%;
+            @top-center {
+                content: element(repeated-top);
+                height : auto;
+                vertical-align : text-before-edge;
+            }
 
-        }
-        @top-right-corner{
-            width : 5%;
+            @top-left-corner{
+                width : 5%;
+            }
 
-        }
-
+            @top-right-corner{
+                width : 5%;
+            }
         }
 
         #repeated-top{
             position: running(repeated-top);
             margin-left : auto;
             margin-right : auto;
+            margin-top: auto;
+            padding-left: 2px;
             width: 98%;
-            > span{
-                  display : block;
-                  margin-top : 1px ;
-              }
+        > span{
+            display : block;
+            margin-top : 1px;
         }
+        }
+
         .overIt{
             word-wrap: break-word;
             width: 100%;
+            padding-left: 2px;
         }
+
         .dashed-border{
             border-left: 2px dashed grey;
         }
-        .aligne-center{
+
+        .align-center{
             text-align: center;
+        }
+
+        .pull-right{
+            float:right;
+            text-align: right;
+            padding-right: 2px;
+        }
+
+        .h10 {
+            height: 10px;
+        }
+        .h40 {
+            height: 40px;
         }
     </style>
 </head>
 <body>
-
 <div class="page">
-
     <table id="repeated-top">
-        <tr class="list-eleve ">
-            {{#hasCompetences}}<td   rowspan="2"> {{/hasCompetences}}
-            {{^hasCompetences}}<td   > {{/hasCompetences}}
+        <tr class="invisible-row h40"><td> </td></tr>
+        <tr>
+            {{#hasCompetences}}<td rowspan="2"> {{/hasCompetences}}
+            {{^hasCompetences}}<td> {{/hasCompetences}}
 
-            <span class="title aligne-center"> {{devoirName}}</span> <br/>
-                <br/>
-            <p class="overIt">
-                <span class="bold">Classe:</span> {{classeName}}<br/>
-                <span class="bold">Matière:</span><span> {{matiere}}{{#hasSousMatiere}}&nbsp;{{sousMatiere}}{{/hasSousMatiere}}</span> <br/>
-                <span class="bold">Periode:</span><span>{{periode}}</span><br/>
-                <span class="bold">Date : </span>{{ date }}<br/>
-                <span class="bold">Coefficient:</span><span >{{devoirCoefficient}}</span><br/>
-                <span class="bold">Note sur:</span><span> {{devoirDiviseur}}</span><br/>
-            </p>
-        </td >
+            <p class="title bold align-center">{{devoirName}}</p>
+            <div class="overIt">
+                <div>
+                    <span>
+                        <b>Classe : </b>{{classeName}}
+                    </span>
+                    <span class="pull-right">
+                        <b>Periode : </b>{{periode}}
+                    </span>
+                </div>
+                <div>
+                    <span>
+                        <b>Matière : </b>{{matiere}}{{#hasSousMatiere}}&nbsp;{{sousMatiere}}{{/hasSousMatiere}}
+                    </span>
+                </div>
+                <div>
+                    <span>
+                        <b>Date : </b>{{date}}
+                    </span>
+                </div>
+                <div>
+                    <span>
+                        <b>Coefficient : </b>{{devoirCoefficient}}
+                    </span>
+                    <span class="pull-right">
+                        <b>Note sur : </b>{{devoirDiviseur}}
+                    </span>
+                </div>
+            </div>
+        </td>
             {{#hasCompetences}}
-            <td  class="dashed-border" colspan="{{nbrCompetences}}">
+            <td class="dashed-border" colspan="{{nbrCompetences}}">
                 {{#hasCompetences}}
                 {{#competences}}
                 [ C{{i}} ] - {{code_domaine}}: {{nom}} <br/>
@@ -149,12 +187,12 @@
             </td>
             {{/hasCompetences}}
             {{^hasCompetences}}
-            <td class="aligne-center" >Note</td>
+            <td class="align-center">Note</td>
             {{/hasCompetences}}
         </tr>
         {{#hasCompetences}}
         <tr >
-            {{#evaluation}}<td >Note</td>{{/evaluation}}
+            {{#evaluation}}<td>Note</td>{{/evaluation}}
             {{#hasCompetences}}
             {{#competences}}
             <td>[C{{i}}]</td>
@@ -162,11 +200,10 @@
             {{/hasCompetences}}
         </tr>
         {{/hasCompetences}}
-    </table>
-    <table id="eleves-table">
+        <tr class="invisible-row h10"><td> </td></tr>
         {{#eleves}}
-        <tr class="list-eleve ">
-            <td class="overIt" >
+        <tr class="list-eleve">
+            <td class="overIt">
                 {{lastName}} {{firstName}}
             </td>
             {{#evaluation}}<td > </td>{{/evaluation}}
@@ -178,10 +215,6 @@
         </tr>
         {{/eleves}}
     </table>
-
-
 </div>
-
-
 </body>
 </html>
