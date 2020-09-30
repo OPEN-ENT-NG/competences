@@ -57,9 +57,8 @@ export class Classe extends Model {
 
     get api () {
         return {
-            syncClasse: '/viescolaire/classes/' + this.id + '/users?type=Student',
+            syncClasse: '/viescolaire/classes/' + this.id + '/users',
             syncGroupe : '/viescolaire/groupe/enseignement/users/' + this.id + '?type=Student',
-            syncClasseChefEtab : '/viescolaire/classes/'+this.id+'/users',
             syncPeriode : '/viescolaire/periodes?idGroupe=' + this.id
         }
     }
@@ -78,13 +77,12 @@ export class Classe extends Model {
             sync : () : Promise<any> => {
                 return new Promise((resolve) => {
                     this.mapEleves = {};
-                    let url;
-                    if(Utils.isChefEtab(this)){
-                        url = this.type_groupe !== Classe.type.CLASSE ?
-                            this.api.syncGroupe : this.api.syncClasseChefEtab;
-                    }else {
-                        url = this.type_groupe !== Classe.type.CLASSE ? this.api.syncGroupe : this.api.syncClasse;
+                    let url = this.type_groupe !== Classe.type.CLASSE ? this.api.syncGroupe : this.api.syncClasse;
+
+                    if(!Utils.isChefEtab(this)){
+                        url += '?type=Student';
                     }
+
                     http().getJson(url).done((data) => {
                         // On tri les élèves par leur lastName en ignorant les accents
                         utils.sortByLastnameWithAccentIgnored(data);

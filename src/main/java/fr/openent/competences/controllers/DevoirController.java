@@ -423,11 +423,10 @@ public class DevoirController extends ControllerHelper {
             @Override
             public void handle(final UserInfos user) {
                 if(user != null) {
-
                     final HashMap<Long, Float> nbNotesByDevoir = new HashMap<>();
 
                     // Paramètres d'entrée
-                    final Long idDevoir = testLongFormatParameter("idDevoir",request);
+                    final Long idDevoir = testLongFormatParameter("idDevoir", request);
 
                     new DefaultDevoirService(eb).getDevoirInfo(idDevoir, new Handler<Either<String, JsonObject>>() {
                         @Override
@@ -542,7 +541,6 @@ public class DevoirController extends ControllerHelper {
                     Long idDevoir = Long.parseLong(request.params().get("idDevoir"));
                     boolean stats = Boolean.parseBoolean(request.params().get("stats"));
                     devoirsService.getMoyenne(idDevoir, stats, new Handler<Either<String, JsonObject>>() {
-
                         @Override
                         public void handle(Either<String, JsonObject> event) {
                             if(event.isRight()) {
@@ -758,9 +756,8 @@ public class DevoirController extends ControllerHelper {
     }
 
     // Methode permettant de calculer le nombre de note(s)
-    private void updatePercentageWithNotes (final List<String>  idEleves, final long idDevoir, final UserInfos user,
-                                            final String  idGroupe,
-                                            final HashMap<Long, Float> nbNotesByDevoir,
+    private void updatePercentageWithNotes (final List<String> idEleves, final long idDevoir, final UserInfos user,
+                                            final String idGroupe, final HashMap<Long, Float> nbNotesByDevoir,
                                             final String is_evaluated, final HttpServerRequest request,
                                             final String has_competence, final boolean returning,
                                             final int currentThread, final int number, final int nbStudents){
@@ -791,22 +788,18 @@ public class DevoirController extends ControllerHelper {
                     leftToResponse(request, event.left());
                 }
             }
-
         });
     }
 
     // Methode permettant de calculer le nombre d'annotation(s) et de compétence(s)
-    void updatePercentWithAnnotationsAndCompetences(final List<String>  idEleves, final long idDevoir,
-                                                    final UserInfos user,
-                                                    final String  idGroupe,
+    void updatePercentWithAnnotationsAndCompetences(final List<String> idEleves, final long idDevoir,
+                                                    final UserInfos user, final String idGroupe,
                                                     final HashMap<Long, Float> nbNotesByDevoir,
                                                     final String is_evaluated, final HttpServerRequest request ,
                                                     final boolean returning, final int currentThread, final int number,
                                                     final int nbStudents, final boolean devoirHasCompetence){
-
         final JsonArray result = new fr.wseduc.webutils.collections.JsonArray();
         final HashMap<String, Integer> nbElevesByGroupe = new HashMap<>();
-
 
         // On récupère le nombre d'annotations
         Future<JsonArray> nbAnnotationsDevoirsFuture = Future.future();

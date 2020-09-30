@@ -19,7 +19,7 @@
     <i18n>evaluation.no.service.evaluable</i18n>
 </article>
 <div ng-hide="hideCreation"
-        class="addDevoir row twelve cell">
+     class="addDevoir row twelve cell">
     <div class="eight cell twelve-mobile">
         <div class="pannel-in-cell">
             <tabs>
@@ -66,9 +66,8 @@
                                             <select ng-model="devoir.id_groupe"
                                                     ng-change="syncPeriode(devoir.id_groupe);
                                                     setClasseEnseignants();loadEnseignementsByClasse();"
-                                                    ng-init="setClasseEnseignants(search);"
                                                     ng-options="classe.id as classe.name group by classe.type_groupe_libelle for classe in classes.all
-                                                    | filter:filterValidClasseMatiere() | orderBy:['type_groupe_libelle','name']">
+                                                    | filter:filterValidClasseMatiere() | orderBy:['type_groupe_libelle', 'name']">
                                             </select>
                                         </label>
                                     </div>
@@ -84,10 +83,8 @@
                                     <div class="three cell twelve-mobile">
                                         <label class="select twelve-mobile" ng-class="{disabled : teachersFiltered.length == 0}">
                                             <select ng-model="devoir.owner"
-                                                    ng-disabled="devoir.teachersByClass.length == 0"
-                                                    ng-disabled="devoir.idEtablissement === undefined"
                                                     ng-change="setEnseignantMatieres();"
-                                                    ng-init="setEnseignantMatieres();"
+                                                    ng-disabled="devoir.teachersByClass.length == 0"
                                                     ng-options="teacher.id as teacher.displayName for teacher
                                                     in devoir.teachersByClass | unique:'displayName'">
                                             </select>
@@ -104,14 +101,12 @@
 
                                     <div class="three cell twelve-mobile">
                                         <label class="select twelve-mobile" ng-class="{disabled : matieresFiltered.length == 0}">
-                                             <select ng-model="devoir.id_matiere"
-                                                     ng-disabled="matieresByClassByTeacher.length == 0"
-                                                     ng-disabled="devoir.idEtablissement === undefined"
-                                                     ng-change="selectedMatiere(devoir)"
-                                                     ng-options ="matiere.id as matiere.name for matiere in devoir.matieresByClassByTeacher |
-                                                 unique:'name'"
-                                                    >
-                                             </select>
+                                            <select ng-model="devoir.id_matiere"
+                                                    ng-disabled="matieresByClassByTeacher.length == 0"
+                                                    ng-change="selectedMatiere(devoir)"
+                                                    ng-options="matiere.id as matiere.name for matiere
+                                                     in devoir.matieresByClassByTeacher | unique:'name'">
+                                            </select>
                                         </label>
                                     </div>
 
@@ -542,43 +537,43 @@
 
 <lightbox show="lightboxChampsObligatoire == true" on-close="closeLightboxChampsObligatoire()">
     <h2><i18n>formulaire.incomplet</i18n></h2>
-        <p><i18n>required.fields.not.selected</i18n></p>
-        <ul>
-            <li ng-if="devoir.id_type == undefined">
-                <span><i18n>choose.evaluation.type</i18n></span>
-            </li>
-            <li ng-if="devoir.id_groupe == undefined">
-                <span><i18n>viescolaire.utils.class.groupe</i18n></span>
-            </li>
-            <li ng-if="!devoir.name">
-                <span><i18n>evaluations.test.title</i18n></span>
-            </li>
-            <li ng-if="devoir.id_periode == undefined">
-                <span><i18n>viescolaire.utils.periode</i18n></span>
-            </li>
-            <li ng-if="devoir.dateDevoir == undefined">
-                <span><i18n>evaluations.test.date</i18n></span>
-            </li>
-            <li ng-if="devoir.is_evaluated && devoir.coefficient == undefined">
-                <span><i18n>viescolaire.utils.coefficient</i18n></span>
-            </li>
-            <li ng-if="errDateDevoir">
-                <span><i18n>devoir.errDateDevoir</i18n></span>
-            </li>
-            <li ng-if="errDatePubli">
-                <span><i18n>devoir.errDatePubli</i18n></span>
-            </li>
-            <li ng-if="endSaisie">
-                <span><i18n>end.saisie</i18n></span>
-            </li>
-            <li ng-if="toMuchCompetences()">
-                    <p><i18n>you.have</i18n>[[evaluations.competencesDevoir.length]] <i18n>evaluations.competences</i18n></p>
-                    <p><i18n>evaluations.max.competences</i18n></p>
-            </li>
-        </ul>
-        <p ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
-            <i18n>required.fields.double.asterisk</i18n>
-        </p>
+    <p><i18n>required.fields.not.selected</i18n></p>
+    <ul>
+        <li ng-if="devoir.id_type == undefined">
+            <span><i18n>choose.evaluation.type</i18n></span>
+        </li>
+        <li ng-if="devoir.id_groupe == undefined">
+            <span><i18n>viescolaire.utils.class.groupe</i18n></span>
+        </li>
+        <li ng-if="!devoir.name">
+            <span><i18n>evaluations.test.title</i18n></span>
+        </li>
+        <li ng-if="devoir.id_periode == undefined">
+            <span><i18n>viescolaire.utils.periode</i18n></span>
+        </li>
+        <li ng-if="devoir.dateDevoir == undefined">
+            <span><i18n>evaluations.test.date</i18n></span>
+        </li>
+        <li ng-if="devoir.is_evaluated && devoir.coefficient == undefined">
+            <span><i18n>viescolaire.utils.coefficient</i18n></span>
+        </li>
+        <li ng-if="errDateDevoir">
+            <span><i18n>devoir.errDateDevoir</i18n></span>
+        </li>
+        <li ng-if="errDatePubli">
+            <span><i18n>devoir.errDatePubli</i18n></span>
+        </li>
+        <li ng-if="endSaisie">
+            <span><i18n>end.saisie</i18n></span>
+        </li>
+        <li ng-if="toMuchCompetences()">
+            <p><i18n>you.have</i18n>[[evaluations.competencesDevoir.length]] <i18n>evaluations.competences</i18n></p>
+            <p><i18n>evaluations.max.competences</i18n></p>
+        </li>
+    </ul>
+    <p ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
+        <i18n>required.fields.double.asterisk</i18n>
+    </p>
 </lightbox>
 
 <lightbox  show="opened.lightboxs.updateDevoir.firstConfirmSupp" on-close="opened.lightboxs.updateDevoir.firstConfirmSupp = false">

@@ -661,17 +661,10 @@ export class Utils {
         }
         $scope.opened.displayMessageLoader = true;
         await utils.safeApply($scope);
-        if (classe.synchronized.periodes !== true) {
-            await classe.periodes.sync();
-        }
-        if (classe.synchronized.eleves !== true && withStudent === true) {
-            await classe.eleves.sync();
-        }
         await updateFilters($scope, withStudent);
         $scope.opened.displayMessageLoader = false;
         await utils.safeApply($scope);
     };
-
 
     static switchAll =  async function (collection , b, isClasse, $scope, withStudent) {
         _.forEach(collection ,async (c) => {

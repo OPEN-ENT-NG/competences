@@ -70,7 +70,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return selectCycleForView($scope, $location, id_cycle);
         };
 
-
         $scope.printOption = {
             display: false,
             fileType: "formSaisie",
@@ -119,10 +118,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.showPanel = !$scope.showPanel;
             $event.stopPropagation();
         };
+
         $rootScope.$on('close-panel', function (e) {
             $scope.showPanel = false;
         });
-
 
         function endAccueil() {
             utils.safeApply($scope);
@@ -131,7 +130,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         }
         let routesActions = {
-
             accueil: function (params) {
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
@@ -759,14 +757,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.synchronizeStudents = (idClasse): boolean => {
             if (idClasse) {
-                let _classe = evaluations.structure.classes.findWhere({id: idClasse});
-                evaluations.structure.cycle = _.findWhere(evaluations.structure.cycles, {id_cycle: _classe.id_cycle});
+                if($scope.search.classe == undefined)
+                    $scope.search.classe = evaluations.structure.classes.findWhere({id: idClasse});
+                evaluations.structure.cycle = _.findWhere(evaluations.structure.cycles,
+                    {id_cycle: $scope.search.classe.id_cycle});
                 $scope.structure.cycle = evaluations.structure.cycle;
                 utils.safeApply($scope);
-                if (!_classe.remplacement && _classe.eleves.empty()) {
-                    _classe.eleves.sync().then(() => {
+                if (!$scope.search.classe.remplacement && $scope.search.classe.eleves
+                    && $scope.search.classe.eleves.length() === 0) {
+                    $scope.search.classe.eleves.sync().then(() => {
                         utils.safeApply($scope);
-                        _classe.trigger('synchronize-students');
+                        $scope.search.classe.trigger('synchronize-students');
                         return true;
                     });
                 }
@@ -1866,16 +1867,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($location.path() === "/devoir/create") {
                 $scope.devoir = $scope.initDevoir();
                 let classes = _.filter($scope.structure.classes.all, (classe) => {
-                    return $scope.isValidClasseMatiere(classe.id)});
+                    return $scope.isValidClasseMatiere(classe.id)
+                });
                 if(!_.isEmpty(classes)) {
                     $scope.devoir.id_groupe = $scope.searchOrFirst("classe", classes).id;
                     $scope.devoir.id_type = _.findWhere($scope.structure.types.all, {default_type: true}).id;
+                    $scope.setClasseEnseignants($scope.search);
 
                     let currentPeriode = await $scope.getCurrentPeriode(_.findWhere(classes,
                         {id: $scope.devoir.id_groupe}));
                     $scope.devoir.id_periode = currentPeriode !== -1 ? currentPeriode.id_type : null;
-                    if ($scope.devoir.id_periode == null
-                        && $scope.search.periode && $scope.search.periode !== "*") {
+                    if ($scope.devoir.id_periode == null && $scope.search.periode && $scope.search.periode !== "*") {
                         $scope.devoir.id_periode = $scope.search.periode.id_type;
                         await utils.safeApply($scope);
                     }
@@ -1908,7 +1910,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 });
             }
 
-
             if ($scope.devoir.id_type === undefined) {
                 $scope.devoir.id_type = _.findWhere($scope.structure.types, {default_type: true});
             }
@@ -1922,7 +1923,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 } else {
                     // selection de la premiere classe par defaut
                     $scope.devoir.id_groupe = $scope.classes.all[0].id;
-
                 }
                 //$scope.selectedMatiere($scope.devoir);
             }
@@ -1944,8 +1944,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 });
             }
 
-            if ($scope.devoir.dateDevoir === undefined
-                && $scope.devoir.date !== undefined) {
+            if ($scope.devoir.dateDevoir === undefined && $scope.devoir.date !== undefined) {
                 $scope.devoir.dateDevoir = new Date($scope.devoir.date);
             }
             // Chargement des enseignements et compétences en fonction de la classe
@@ -2074,7 +2073,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.devoir.owner = $scope.devoir.teachersByClass[0].id;
                     }
                 }
-            }else{ //Sinon c'est le professeur connecté qui est le créateur du devoir
+            } else { //Sinon c'est le professeur connecté qui est le créateur du devoir
                 $scope.devoir.owner = model.me.userId;
             }
             $scope.setEnseignantMatieres();
@@ -3728,37 +3727,34 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        evaluations.sync()
-            .then(() => {
-                $scope.structure = evaluations.structure;
-                $scope.opened.displayStructureLoader = true;
-                template.close('main');
-                evaluations.structure.sync().then(() => {
-                    $scope.initReferences();
-                    if ($location.path() === '/disabled') {
-                        $location.path('/');
-                        $location.replace();
-                    } else {
-                        executeAction();
-                        utils.safeApply($scope);
-                    }
-                    $scope.opened.displayStructureLoader = false;
-                });
-                utils.safeApply($scope);
-            })
-            .catch(() => {
-                $location.path() === '/disabled' ?
-                    executeAction() :
-                    $location.path('/disabled');
-                $location.replace();
+        evaluations.sync().then(() => {
+            $scope.structure = evaluations.structure;
+            $scope.opened.displayStructureLoader = true;
+            template.close('main');
+            evaluations.structure.sync().then(() => {
+                $scope.initReferences();
+                if ($location.path() === '/disabled') {
+                    $location.path('/');
+                    $location.replace();
+                } else {
+                    executeAction();
+                    utils.safeApply($scope);
+                }
+                $scope.opened.displayStructureLoader = false;
             });
+            utils.safeApply($scope);
+        }).catch(() => {
+            $location.path() === '/disabled' ?
+                executeAction() :
+                $location.path('/disabled');
+            $location.replace();
+        });
 
         $scope.saveTheme = function () {
             $rootScope.chooseTheme();
         };
 
         $scope.updateColorAndLetterForSkills = function () {
-
             $scope.niveauCompetences = $scope.selectCycleForView();
             $scope.currentDevoir.niveauCompetences = $scope.niveauCompetences;
 
@@ -3783,14 +3779,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $event.stopPropagation();
         };
 
-
         $rootScope.$on('close-panel', function (e) {
             $scope.showPanel = false;
         });
 
 
         $scope.printCartouche = async (unType?: String) => {
-
             let url;
             if (unType) {
                 url = '/competences/devoirs/print/' + $scope.currentDevoir.id + '/formsaisie';

@@ -177,26 +177,22 @@ public class Utils {
         }));
     }
 
-    public static void getIdElevesClassesGroupes(EventBus eb, final String idGroupe,
-                                                 final Integer idPeriode,
+    public static void getIdElevesClassesGroupes(EventBus eb, final String idGroupe, final Integer idPeriode,
                                                  final int typeClasse,
                                                  final Handler<Either<String, List<String>>> handler) {
-
         JsonObject action = new JsonObject();
         if (typeClasse == 0) {
-            action.put(ACTION, "classe.getEleveClasse")
-                    .put(ID_CLASSE_KEY, idGroupe);
+            action.put(ACTION, "classe.getEleveClasse").put(ID_CLASSE_KEY, idGroupe);
 
-            if (idPeriode != null) action.put("idPeriode", idPeriode);
-
+            if (idPeriode != null)
+                action.put("idPeriode", idPeriode);
         } else if (typeClasse == 1 || typeClasse == 2) {
             action.put(ACTION, "groupe.listUsersByGroupeEnseignementId")
-                    .put("groupEnseignementId", idGroupe)
-                    .put("profile", "Student");
+                    .put("groupEnseignementId", idGroupe).put("profile", "Student");
 
-            if (idPeriode != null) action.put("idPeriode", idPeriode);
+            if (idPeriode != null)
+                action.put("idPeriode", idPeriode);
         }
-
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
@@ -218,7 +214,6 @@ public class Utils {
                 }
             }
         }));
-
     }
 
     /**
@@ -240,13 +235,11 @@ public class Utils {
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> message) {
-
                         JsonObject body = message.body();
                         if (!OK.equals(body.getString(STATUS))) {
                             handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
                             log.error("getGroupsEleve : " + body.getString("message"));
                         } else {
-
                             JsonArray result = body.getJsonArray(RESULTS);
                             JsonArray idGroupsResult = new JsonArray();
 

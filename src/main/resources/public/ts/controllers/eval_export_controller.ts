@@ -196,6 +196,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             await Utils.chooseClasse(classe, $scope, false);
             await utils.safeApply($scope);
         };
+
         $scope.controleAllIgnored = function (students, periodes): boolean {
             let allStudentChoose = $scope.controleExportLSU();
             if (allStudentChoose === false) {

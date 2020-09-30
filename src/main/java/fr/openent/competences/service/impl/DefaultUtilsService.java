@@ -341,7 +341,6 @@ public class DefaultUtilsService  implements UtilsService {
      **/
     @Override
     public JsonObject calculMoyenneParDiviseur(List<NoteDevoir> listeNoteDevoirs, Boolean statistiques) {
-
         Double noteMax = (double) 0;
         Double noteMin = null;
         Double notes = (double) 0;
@@ -362,7 +361,6 @@ public class DefaultUtilsService  implements UtilsService {
                     noteMin = currNote;
                 }
             }
-
         }
 
         Double moyenne = ((notes) / (listeNoteDevoirs.size()));

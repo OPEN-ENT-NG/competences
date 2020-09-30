@@ -72,7 +72,6 @@ export class Structure extends Model {
 
     get api() {
         return {
-            getEleves: '/competences/eleves?idEtablissement=' + this.id,
             getEnseignants: '/competences/user/list?profile=Teacher&structureId=',
             getDevoirs: '/competences/etab/devoirs/',
             getClasses: '/viescolaire/classes?idEtablissement=' + this.id,
@@ -220,8 +219,7 @@ export class Structure extends Model {
                             url += '&idClasse=' + classe.id;
                         });
                     }
-                    if (model.me.type === 'PERSEDUCNAT'
-                        || model.me.type === 'ENSEIGNANT') {
+                    if (model.me.type === 'PERSEDUCNAT' || model.me.type === 'ENSEIGNANT') {
                         http().getJson(url).done((res) => {
                             // On tri les élèves par leur lastName en ignorant les accents
                             utils.sortByLastnameWithAccentIgnored(res);
@@ -401,7 +399,6 @@ export class Structure extends Model {
                     b = b && this.synchronized.enseignants;
                 }
 
-
                 if (Utils.canCreateElementBilanPeriodique() || Utils.canSaisieProjet()) {
                     b = b && this.synchronized.classesBilanPeriodique;
                 }
@@ -477,7 +474,7 @@ export class Structure extends Model {
                     classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
                     return classe;
                 });
-                this.classesBilanPeriodique =  Mix.castArrayAs(Classe,res);
+                this.classesBilanPeriodique =  Mix.castArrayAs(Classe, res);
                 this.synchronized.classesBilanPeriodique = true;
                 resolve();
             }) .error(() => {

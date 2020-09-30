@@ -510,7 +510,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         };
 
         $scope.changeContent = async function () {
-            if (_.isEmpty($scope.search.classe.eleves.all)) {
+            if ($scope.search.classe.eleves && $scope.search.classe.eleves.length() === 0) {
                 await $scope.search.classe.eleves.sync();
             }
             $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;

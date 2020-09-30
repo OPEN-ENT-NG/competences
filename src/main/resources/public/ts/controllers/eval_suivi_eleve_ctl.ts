@@ -697,7 +697,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
          */
         $scope.incrementEleve = async function (num) {
             $scope.selected.grey = true;
-            if (_.isEmpty($scope.search.classe.eleves.all)) {
+            if ($scope.search.classe.eleves && $scope.search.classe.eleves.length() === 0) {
                 await $scope.search.classe.eleves.sync();
             }
             let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
@@ -762,7 +762,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
 
         $scope.changeContent = async function (cycle?) {
             return new Promise(async (resolve) => {
-                if (_.isEmpty($scope.search.classe.eleves.all)) {
+                if ($scope.search.classe.eleves && $scope.search.classe.eleves.length() === 0) {
                     await $scope.search.classe.eleves.sync();
                 }
                 let periode = new TypePeriode({id:$scope.search.periode.id_type,

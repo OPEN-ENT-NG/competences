@@ -2,10 +2,8 @@ import {Classe} from "../../models/teacher";
 import {_} from "entcore";
 import {safeApply} from "./safeApply";
 
-
-export function  updateFilters ($scope, withStudent) {
+export function updateFilters ($scope, withStudent) {
     return new Promise(async (resolve, reject) => {
-
         try {
             let selectedClasses = _.where($scope.printClasses.all, {selected: true});
             $scope.filteredPeriodes = [];
@@ -13,17 +11,14 @@ export function  updateFilters ($scope, withStudent) {
                 $scope.allElevesClasses = [];
                 $scope.filteredPeriodes = [];
                 safeApply($scope);
-            }
-            else {
-
+            } else {
                 // synchronisation de toutes les périodes et les élèves des classes sélectionnées
                 let allPromise = [];
                 _.forEach(selectedClasses, (classe: Classe) => {
-                    if (withStudent === true) {
-                        allPromise.push(Promise.all([classe.periodes.sync(), classe.eleves.sync()]));
+                    if(withStudent === true && classe.eleves.length() === 0) {
+                        allPromise.push(Promise.all([classe.eleves.sync()]));
                     }
-                    else {
-                        classe.unSyncEleves();
+                    if(classe.periodes.length() === 0) {
                         allPromise.push(Promise.all([classe.periodes.sync()]));
                     }
                 });
@@ -33,9 +28,7 @@ export function  updateFilters ($scope, withStudent) {
                 let periodes = [];
 
                 _.forEach(selectedClasses, (classe) => {
-                    _.map(classe.eleves.all, (eleve) => {
-                        $scope.allElevesClasses.push(eleve);
-                    });
+                    $scope.allElevesClasses = $scope.allElevesClasses.concat(classe.eleves.all);
                     periodes = _.union(periodes, classe.periodes.all);
                 });
 
@@ -46,15 +39,13 @@ export function  updateFilters ($scope, withStudent) {
                         if (periodeToset === undefined) {
                             let classe = [];
                             classe.push(periode.id_classe);
-                            $scope.filteredPeriodes.push(
-                                {
-                                    id_type: periode.id_type,
-                                    type: periode.type,
-                                    periode: periode,
-                                    classes: classe
-                                });
-                        }
-                        else {
+                            $scope.filteredPeriodes.push({
+                                id_type: periode.id_type,
+                                type: periode.type,
+                                periode: periode,
+                                classes: classe
+                            });
+                        } else {
                             periodeToset.classes.push(periode.id_classe);
                         }
                     }
@@ -67,7 +58,7 @@ export function  updateFilters ($scope, withStudent) {
                 }
                 if (!_.isEmpty($scope.allElevesClasses)) {
                     $scope.allElevesClasses = _.sortBy($scope.allElevesClasses, function (eleve) {
-                        return eleve.lastName + ' ' + eleve.firstName;
+                        return eleve.displayName ? eleve.displayName : eleve.lastName + ' ' + eleve.firstName;
                     })
                 }
             }
@@ -77,4 +68,4 @@ export function  updateFilters ($scope, withStudent) {
             reject(e);
         }
     });
-};
+}

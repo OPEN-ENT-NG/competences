@@ -309,7 +309,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
         }
     }
 
-   
+
 
     /**
      * Retourne les éléments du bilan périodique
@@ -435,15 +435,14 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request,  user -> {
             if(user != null){
                 final String idStructure = request.params().get("idStructure");
-                defaultElementBilanPeriodiqueService.getClasseProjets(
-                        idStructure, user,  event -> {
-                            if (event.isRight()) {
-                                JsonArray jsonArrayResultat = event.right().getValue();
-                                Renders.renderJson(request, jsonArrayResultat);
-                            } else {
-                                leftToResponse(request, event.left());
-                            }
-                        });
+                defaultElementBilanPeriodiqueService.getClasseProjets(idStructure, user, event -> {
+                    if (event.isRight()) {
+                        JsonArray jsonArrayResultat = event.right().getValue();
+                        Renders.renderJson(request, jsonArrayResultat);
+                    } else {
+                        leftToResponse(request, event.left());
+                    }
+                });
             }else{
                 unauthorized(request);
             }
@@ -565,5 +564,5 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
         defaultElementBilanPeriodiqueService.createApprec(request);
     }
 
-   
+
 }

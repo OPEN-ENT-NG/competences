@@ -32,7 +32,7 @@
         <section>
             <label class="select" >
                 <select ng-model="search.classe"
-                        ng-change="synchronizeStudents(search.classe.id); syncPeriodesBilanPeriodique(); displayBilanPeriodique(); deleteStudent();"
+                        ng-change="syncPeriodesBilanPeriodique(); displayBilanPeriodique(); deleteStudent();"
                         ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
                     <option class="header-opt" disabled value="">[[translate('viescolaire.utils.class.groupe')]]</option>
                 </select>
