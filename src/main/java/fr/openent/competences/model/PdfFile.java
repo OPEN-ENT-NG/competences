@@ -5,6 +5,8 @@ import io.vertx.core.json.JsonObject;
 public class PdfFile extends Model{
     String id_class;
     String id_structure;
+
+
     String filename ;
 
 
@@ -14,6 +16,9 @@ public class PdfFile extends Model{
 
     public String getId_class() {
         return id_class;
+    }
+    public String getFilename() {
+        return filename;
     }
 
     public void setId_class(String id_class) {

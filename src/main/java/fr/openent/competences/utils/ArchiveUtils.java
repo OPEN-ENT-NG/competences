@@ -30,9 +30,7 @@ import org.entcore.common.storage.Storage;
 import org.entcore.common.utils.StringUtils;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Competences.ACTION;
@@ -272,12 +270,90 @@ public class ArchiveUtils {
         Neo4j.getInstance().execute(query, new JsonObject().put(ID_STRUCTURE_KEY, idStructure), new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
-                Folder structureFolder =  new Folder(event.body().getJsonArray("result").getJsonObject(0).getString("name"));
+                Folder structureFolder = new Folder(event.body().getJsonArray("result").getJsonObject(0).getString("name"));
                 structureFolder.setId_folder(idStructure);
-                createClassesFolders(structureFolder,listBulletin,eb, storage, vertx, request);
+                Map<String, String> mapClassIdClass = new HashMap<>();
+
+
+                createClassTempZipTree(structureFolder, mapClassIdClass, listBulletin, storage, vertx, request);
+
+//                createClassesFolders(structureFolder,listBulletin,eb, storage, vertx, request);
 
             }
         });
+    }
+
+    //TODO DELETE THIS AFTER 2020
+    private static void createClassTempZipTree(Folder structureFolder, Map<String, String> mapClassIdClass, List<PdfFile> listBulletin, Storage storage, Vertx vertx, HttpServerRequest request) {
+        for (PdfFile file : listBulletin) {
+            String idClass = file.getId_class();
+            if (!mapClassIdClass.containsKey(idClass)) {
+                Folder classFolder = new Folder(getClassName(file.getFilename()));
+                classFolder.setId_folder(idClass);
+                structureFolder.addFolder(classFolder);
+                classFolder.setId_parent(structureFolder.getId_folder());
+                mapClassIdClass.put(idClass, getClassName(file.getFilename()));
+            }
+            log.info(getStudentName(file.getFilename()));
+        }
+        List<String> idStudents = new ArrayList<>();
+        for (PdfFile file : listBulletin){
+            structureFolder.getSubfolders().forEach(classFolder -> {
+                if (classFolder.getId_folder().equals(file.getId_class())) {
+//                    file.setId_parent(classFolder.getId_folder());
+//                    classFolder.addBulletin(file);
+                    if(!idStudents.contains(file.getId_student())){
+                        idStudents.add(file.getId_student());
+                        Folder studentFolder = new Folder(getStudentName(file.getFilename()));
+                        studentFolder.setId_folder(file.getId_student());
+                        studentFolder.setId_parent(classFolder.getId_folder());
+                        classFolder.addFolder(studentFolder);
+                    }
+                }
+            });
+        }
+
+        for (PdfFile file : listBulletin){
+            structureFolder.getSubfolders().forEach(classFolder -> {
+                classFolder.getSubfolders().forEach(studentFolder ->{
+                    if(studentFolder.getId_folder().equals(file.getId_student())){
+                        studentFolder.addBulletin(file);
+                        log.info(studentFolder.getName());
+                        file.setId_parent(studentFolder.getId_folder());
+                    }
+                });
+            });
+
+        }
+
+        FolderExporterZip zipBuilder = new FolderExporterZip(storage, vertx.fileSystem(), false);
+        List<JsonObject> files = new ArrayList<>();
+        files = getAllFilesAndFolders(structureFolder);
+
+        zipBuilder.exportAndSendZip(structureFolder.toJsonObject(),files , request, true).setHandler(zipEvent -> {
+            if (zipEvent.failed()) {
+                request.response().setStatusCode(500).end();
+            }else{
+                log.info("jobs done");
+            }
+        });
+    }
+
+    private static String getStudentName(String filename) {
+        String[] parts = filename.split("_");
+        StringBuilder result = new StringBuilder();
+        String prefix = "";
+        for(int i=1; i< parts.length -1  ; i ++){
+            result.append(prefix);
+            prefix = "_";
+            result.append(parts[i]);
+        }
+        return result.toString() ;
+    }
+
+    private static String getClassName(String filename) {
+        String[] parts = filename.split("_");
+        return  parts[0];
     }
 
     private static void createClassesFolders(Folder structureFolder, List<PdfFile> listBulletin, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request) {
