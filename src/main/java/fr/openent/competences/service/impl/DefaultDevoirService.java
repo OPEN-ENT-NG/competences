@@ -119,30 +119,32 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     @Override
     public void getDevoirInfo(final Long idDevoir, final Handler<Either<String, JsonObject>> handler){
-        String query = "SELECT devoir.id, devoir.name, devoir.created, devoir.date, devoir.id_etablissement," +
-                " devoir.coefficient, devoir.id_matiere, devoir.diviseur, devoir.is_evaluated," +
-                " devoir.id_periode, devoir.percent," +
-                " rel_periode.type AS periodeType,rel_periode.ordre AS periodeOrdre, Gdevoir.id_groupe, comp.*," +
-                " Gdevoir.type_groupe, devoir.id_sousmatiere, type_sousmatiere.libelle, id_cycle " +
-                " FROM notes.devoirs devoir" +
-                " INNER JOIN viesco.rel_type_periode rel_periode on rel_periode.id = devoir.id_periode" +
-                " NATURAL  JOIN (SELECT COALESCE(count(*), 0) NbrCompetence" +
-                " FROM notes.competences_devoirs c" +
-                " WHERE c.id_devoir = ?) comp" +
-                " INNER JOIN  notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id" +
-                " LEFT JOIN " + Competences.VSCO_SCHEMA + ".sousmatiere" +
-                "            ON devoir.id_sousmatiere = sousmatiere.id " +
-                " LEFT JOIN " + Competences.VSCO_SCHEMA + ".type_sousmatiere " +
-                "            ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id " +
-                " LEFT JOIN " + Competences.EVAL_SCHEMA + ".rel_devoirs_groupes " +
-                "            ON rel_devoirs_groupes.id_devoir = devoir.id " +
-                " LEFT JOIN " + Competences.EVAL_SCHEMA + ".rel_groupe_cycle " +
-                "            ON rel_groupe_cycle.id_groupe = rel_devoirs_groupes.id_groupe " +
-                " WHERE devoir.id = ? ;";
+        StringBuilder query = new StringBuilder();
+
+        query.append("SELECT devoir.id, devoir.name, devoir.created, devoir.date, devoir.id_etablissement,")
+                .append(" devoir.coefficient, devoir.id_matiere, devoir.diviseur, devoir.is_evaluated,")
+                .append(" devoir.id_periode, devoir.percent,")
+                .append(" rel_periode.type AS periodeType,rel_periode.ordre AS periodeOrdre, Gdevoir.id_groupe, comp.*")
+                .append(" , Gdevoir.type_groupe, devoir.id_sousmatiere, type_sousmatiere.libelle, id_cycle ")
+                .append(" FROM notes.devoirs devoir")
+                .append(" INNER JOIN viesco.rel_type_periode rel_periode on rel_periode.id = devoir.id_periode")
+                .append(" NATURAL  JOIN (SELECT COALESCE(count(*), 0) NbrCompetence" )
+                .append(" FROM notes.competences_devoirs c" )
+                .append(" WHERE c.id_devoir =?) comp")
+                .append(" INNER JOIN  notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id")
+                .append(" LEFT JOIN "+ Competences.VSCO_SCHEMA +".sousmatiere")
+                .append("            ON devoir.id_sousmatiere = sousmatiere.id ")
+                .append(" LEFT JOIN "+ Competences.VSCO_SCHEMA +".type_sousmatiere ")
+                .append("            ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
+                .append(" LEFT JOIN "+ Competences.EVAL_SCHEMA +".rel_devoirs_groupes ")
+                .append("            ON rel_devoirs_groupes.id_devoir = devoir.id ")
+                .append(" LEFT JOIN "+ Competences.EVAL_SCHEMA +".rel_groupe_cycle ")
+                .append("            ON rel_groupe_cycle.id_groupe = rel_devoirs_groupes.id_groupe ")
+                .append(" WHERE devoir.id = ? ;");
 
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
         values.add(idDevoir).add(idDevoir);
-        Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
     }
 
     /**
