@@ -79,10 +79,6 @@ export class Classe extends Model {
                     this.mapEleves = {};
                     let url = this.type_groupe !== Classe.type.CLASSE ? this.api.syncGroupe : this.api.syncClasse;
 
-                    if(!Utils.isChefEtab(this)){
-                        url += '?type=Student';
-                    }
-
                     http().getJson(url).done((data) => {
                         // On tri les élèves par leur lastName en ignorant les accents
                         utils.sortByLastnameWithAccentIgnored(data);
