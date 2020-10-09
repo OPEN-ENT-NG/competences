@@ -52,6 +52,7 @@ import {getEnseignantClasseFilter} from './utils/filters/getEnseignantClasse';
 import {customClassFilters} from './filters/customClassPeriodeFilter';
 import {customPeriodeFilters} from "./filters/customClassPeriodeFilter";
 import {customClassPeriodeFilters} from "./filters/customClassPeriodeFilter";
+import {customPeriodeTypeFilter} from "./filters/customClassPeriodeFilter";
 
 ng.filters.push(uniqueFilter);
 ng.filters.push(customSearchFilter);
@@ -61,6 +62,7 @@ ng.filters.push(getEnseignantClasseFilter);
 ng.filters.push(customClassFilters);
 ng.filters.push(customPeriodeFilters);
 ng.filters.push(customClassPeriodeFilters);
+ng.filters.push(customPeriodeTypeFilter);
 
 //SERVICES
 import * as services from './services';

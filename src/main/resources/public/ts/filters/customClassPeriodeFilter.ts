@@ -27,9 +27,20 @@ export let customClassFilters = ng.filter('customClassFilters', function(){
         });
     };
 });
+export let customPeriodeTypeFilter = ng.filter('customPeriodeTypeFilter', function(){
+    return function(typePeriodes,searchParms){
 
+        let id_typeClasse = _.map(searchParms.classe.periodes.all,(pc) => {
+           return (pc.id != null) ? pc.id_type : pc.id ;
+        });
+        return _.reject (typePeriodes, function (periode) {
+
+                return !_.contains (id_typeClasse,periode.id_type);
+                });
+    };
+});
 export let customPeriodeFilters = ng.filter('customPeriodeFilters', function(){
-    return function(periodes, devoirs, searchParams){
+    return function(periodes, devoirs, searchParams ){
         let output = devoirs;
         let tempTable = [];
         if (searchParams.classe !== '*' && searchParams.classe !== null) {
