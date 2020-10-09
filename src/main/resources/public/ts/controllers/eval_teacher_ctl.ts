@@ -354,7 +354,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // récupération de tous les devoirs sans limite
                     evaluations.structure.syncDevoirs();
 
-                    // $scope.initPeriodesList();
                     // Affichage des criteres par défaut quand on arrive sur le releve
                     $scope.openLeftMenu("opened.criteres", false);
                     if (!template.isEmpty('leftSide-userInfo')) template.close('leftSide-userInfo');
@@ -368,7 +367,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.releveNote = undefined;
                     }
 
-                    $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
+                    //$scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
 
                     if ($scope.search.classe !== '*' &&
                         ($scope.search.matiere !== null && $scope.search.matiere.id !== '*')
@@ -700,7 +699,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 else {
                     $scope.search.periode = res;
                 }
-            } /*else {//sinon dans les autres vue search.periode est l'objet TypePeriode et si on veut initialiaser search.periode à la période en cours il faudra faire
+            } else {
+                $scope.search.periode = res;
+            }
+            /*else {//sinon dans les autres vue search.periode est l'objet TypePeriode et si on veut initialiaser search.periode à la période en cours il faudra faire
                 $scope.search.periode = (res.id !== null)?
                     _.findWhere($scope.structure.typePeriodes.all, {id: res.id_type}) : _.findWhere($scope.structure.typePeriodes.all, {id: res.id}) ;
              }*/
@@ -2416,11 +2418,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Séquence de récupération d'un relevé de note
          */
-        let oldExternalIdClassSearch:String = undefined;
+      /*  let oldExternalIdClassSearch:String = undefined;
         function initSubjectWhenSearchAnotherThing():any{
             if(oldExternalIdClassSearch === $scope.search.matiere.externalId) $scope.search.matiere = "*";
             oldExternalIdClassSearch = $scope.search.matiere.externalId;
-        }
+        }*/
 
         $scope.getReleve = async function () {
             if (Utils.isNotNull($scope.releveNote)) {
@@ -2437,15 +2439,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.selected.devoirs.list = [];
             }
 
-            initSubjectWhenSearchAnotherThing();
+           // initSubjectWhenSearchAnotherThing();
 
             if (Utils.isNotDefault($scope.search.classe) && $scope.search.classe.id !== undefined
                 && Utils.isNotDefault($scope.search.matiere) && $scope.search.matiere.id !== undefined
-                && _.findWhere($scope.evaluations.devoirs.all, {id_groupe: $scope.search.classe.id})
                 && $scope.search.periode !== '*'
                 && $scope.search.matiere !== "*") {
-
-
 
                 let p = {
                     idEtablissement: evaluations.structure.id,
@@ -2484,8 +2483,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await utils.safeApply($scope);
             }
 
-            $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all,
-                $scope.devoirs.all, $scope.search);
+            $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
+
             if(Utils.isNotNull($scope.informations) && Utils.isNotNull($scope.informations.eleve)) {
                 await $scope.getEleveInfo($scope.informations.eleve);
             }
@@ -4627,7 +4626,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.filteredPeriode = filteredPeriode;
             $scope.opened.lightboxReleve = true;
             eleve.showCompetencesDetails = false;
-            await $scope.initDataLightBoxEleve();
+            await $scope.updateHistorique(eleve,'');
             template.close('lightboxEleveDetails');
             template.open('lightboxContainerReleve', 'enseignants/releve_notes/details_releve_periodique_eleve');
             await utils.safeApply($scope);

@@ -141,9 +141,20 @@
                 </section>
                 <section>
                     <label class="select">
+                        <select ng-model="search.classe"
+                                ng-change="getReleve(); syncPeriode(search.classe.id);"
+                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe
+                                in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
+                            <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
+                        </select>
+                    </label>
+                </section>
+                <section>
+                    <label class="select">
                         <select ng-model="search.periode"
+                                ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
                                 ng-change="getReleve()"
-                                ng-options="getI18nPeriode(periode) for periode in filteredPeriode | orderBy:'-type'">
+                                ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all | orderBy:'id_type'">
                             <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
                             </option>
                         </select>
@@ -151,18 +162,12 @@
                 </section>
                 <section>
                     <label class="select">
-                        <select ng-model="search.classe"
-                                ng-change="getReleve(); syncPeriode(search.classe.id);"
-                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
-                            <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
-                        </select>
-                    </label>
-                </section>
-                <section>
-                    <label class="select">
-                        <select ng-model="search.matiere" ng-change="getReleve()"
+                        <select ng-model="search.matiere"
+                                ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
+                                ng-change="getReleve()"
                                 ng-init="initDefaultMatiere()"
-                                ng-options="matiere.name for matiere in matieresFiltered = (matieres.all | getMatiereClasse:search.classe.id:classes) | unique:'name'">
+                                ng-options="matiere.name for matiere in matieresFiltered = (matieres.all |
+                                getMatiereClasse:search.classe.id:classes) | unique:'name'">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
                         </select>
                     </label>
