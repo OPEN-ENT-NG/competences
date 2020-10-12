@@ -2454,7 +2454,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 };
 
                 if ($scope.search.periode) {
-                    p.idPeriode = $scope.search.periode.id_type;
+                    p.idPeriode = ($scope.search.periode.id_type) ? $scope.search.periode.id_type : $scope.search.periode.id;
                 }
 
                 $scope.opened.displayMessageLoader = true;
@@ -4104,8 +4104,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if ($scope.releveNote === undefined || $scope.releveNote.classe === undefined) {
                     return true;
                 } else {
-                    let selectedPeriode = _.findWhere($scope.releveNote.classe.periodes.all,
-                        {id_type: $scope.search.periode.id});
+                    let selectedPeriode = $scope.search.periode;
                     if (selectedPeriode !== undefined) {
                         return moment().isAfter(moment(selectedPeriode.date_fin_saisie), "days");
                     }
