@@ -4242,6 +4242,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 } else if (student.appreciation_matiere_periode.length === 0
                     && $scope.previousAppreciationMatiere !== student.appreciation_matiere_periode
                     && $scope.previousAppreciationMatiere) {
+                    if(!$scope.appreciationBackUp) $scope.appreciationBackUp = $scope.previousAppreciationMatiere;
+                    if(!$scope.studentTemp) $scope.studentTemp = student;
                     template.open('lightboxConfirmCleanAppreciation', '/enseignants/informations/lightbox_confirm_clean_appreciation');
                     $scope.opened.lightboxConfirmCleanAppreciation = true;
                 }
