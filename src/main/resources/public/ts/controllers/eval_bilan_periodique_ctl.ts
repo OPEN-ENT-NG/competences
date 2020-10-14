@@ -950,5 +950,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
             $scope.showNewOpinion = false;
         };
+
+        $scope.switchEtablissementSuivi = () => {
+            $scope.changeEtablissement();
+        };
     }
 ]);

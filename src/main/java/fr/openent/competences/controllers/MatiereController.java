@@ -107,7 +107,7 @@ public class MatiereController extends ControllerHelper {
             JsonArray idsSubjectPrepared = new JsonArray();
             String paramsSubjectsIds = request.params().get("ids");
             List<String> subjectsIds = Arrays.asList(paramsSubjectsIds.split(","));
-            if(subjectsIds.size() == 0){
+            if(paramsSubjectsIds.isEmpty() && subjectsIds.size() == 0){
                 defaultResponseHandler(request, 204);
             } else {
                 for (String subjectId : subjectsIds) {

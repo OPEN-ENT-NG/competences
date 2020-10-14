@@ -604,37 +604,34 @@ public class Utils {
         JsonObject action = new JsonObject()
                 .put(ACTION, "matiere.getMatieres")
                 .put("idMatieres", idsMatieres);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-                        JsonObject body = message.body();
-                        Map<String, JsonObject> idsMatLibelle = new HashMap<>();
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                Map<String, JsonObject> idsMatLibelle = new HashMap<>();
 
-                        if (OK.equals(body.getString(STATUS))) {
+                if (OK.equals(body.getString(STATUS))) {
+                    JsonArray requestMats = body.getJsonArray(RESULTS);
 
-                            JsonArray requestMats = body.getJsonArray(RESULTS);
-
-                            if (requestMats != null && requestMats.size() > 0) {
-                                matiereService.getLibellesCourtsMatieres(true, new Handler<Either<String, Map<String, String>>>() {
-                                    @Override
-                                    public void handle(Either<String, Map<String, String>> event) {
-                                        Map mapCodeLibelleCourt = event.right().getValue();
-                                        buildMapSubject(requestMats, idsMatLibelle, mapCodeLibelleCourt);
-                                        handler.handle(new Either.Right<>(idsMatLibelle));
-                                    }
-                                });
-
-                            } else {
-                                handler.handle(new Either.Left<>(" no subject "));
-                                log.error("getMatieres : no subject");
+                    if (requestMats != null && requestMats.size() > 0) {
+                        matiereService.getLibellesCourtsMatieres(true, new Handler<Either<String, Map<String, String>>>() {
+                            @Override
+                            public void handle(Either<String, Map<String, String>> event) {
+                                Map mapCodeLibelleCourt = event.right().getValue();
+                                buildMapSubject(requestMats, idsMatLibelle, mapCodeLibelleCourt);
+                                handler.handle(new Either.Right<>(idsMatLibelle));
                             }
-                        } else {
-                            handler.handle(new Either.Left<>(body.getString("message")));
-                            log.error("getMatieres : " + body.getString("message"));
-                        }
+                        });
+                    } else {
+                        handler.handle(new Either.Left<>(" no subject "));
+                        log.error("getMatieres : no subject");
                     }
-                }));
+                } else {
+                    handler.handle(new Either.Left<>(body.getString("message")));
+                    log.error("getMatieres : " + body.getString("message"));
+                }
+            }
+        }));
     }
 
     public static void buildMapSubject(JsonArray subjects, Map<String, JsonObject> mapSubjects, Map mapCodeLibelleCourt) {
@@ -676,7 +673,7 @@ public class Utils {
 
     public static void getLastNameFirstNameUser(EventBus eb, final JsonArray idsUsers,
                                                 final Handler<Either<String, Map<String, JsonObject>>> handler) {
-       List<String> idsTeacherNotInNeo = idsUsers.stream().map(Object::toString).collect(Collectors.toList());
+        List<String> idsTeacherNotInNeo = idsUsers.stream().map(Object::toString).collect(Collectors.toList());
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getUsers")
                 .put("idUsers", idsUsers);

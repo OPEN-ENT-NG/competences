@@ -29,7 +29,7 @@
                             <label class="ten small"><i18n>evaluations.choice.structure</i18n>
                                 <select ng-model="lsu.idStructure"
                                         ng-options="structure.id as structure.libelle for structure in evaluations.structures.all"
-                                        ng-change="getResponsables()">
+                                        ng-change="getResponsablesAndClasses()">
                                 </select>
                             </label>
                         </div>

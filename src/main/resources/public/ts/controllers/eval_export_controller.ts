@@ -92,11 +92,16 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
 
         };
 
-        $scope.getResponsables = function () {
+        $scope.getResponsablesAndClasses = function () {
+            $scope.structure = _.findWhere($scope.evaluations.structures.all, {id: $scope.lsu.idStructure});
             $scope.structure.responsables.sync().then(async function () {
-                $scope.lsu.responsable = $scope.structure.responsables.all[0].displayName;
+                if($scope.structure.responsables.length() > 0)
+                    $scope.lsu.responsable = $scope.structure.responsables.all[0].displayName;
                 await utils.safeApply($scope);
             });
+            $scope.structure.classes.sync().then(async function () {
+                $scope.lsu.classes = $scope.structure.classes.all;
+            })
         };
         $scope.setParamsContentFile = () => {
             $scope.paramsLSU.stsFile = $scope.selectStsFiles.selected.content;
@@ -352,7 +357,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
          * Séquence exécuté au chargement du controleur
          *********************************************************************************************/
         await initparams("1","bfc");
-        $scope.getResponsables();
+        $scope.getResponsablesAndClasses();
         $scope.initSelectStsFiles();
     }
 ]);

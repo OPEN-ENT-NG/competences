@@ -747,8 +747,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT moy.id_eleve, moy.id_periode, null as avis_conseil_orientation, null as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, " +
-                "moy.id_matiere, COALESCE(moy.moyenne, -100) AS moyenne, moy.id_classe FROM "+COMPETENCES_SCHEMA + ".moyenne_finale AS moy WHERE " );
+        query.append("SELECT moy.id_eleve, moy.id_periode, null as avis_conseil_orientation, " +
+                "null as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, " +
+                "moy.id_matiere, COALESCE(moy.moyenne, -100) AS moyenne, moy.id_classe " +
+                "FROM " + COMPETENCES_SCHEMA + ".moyenne_finale AS moy WHERE " );
 
         if (null != idEleves) {
             query.append("moy.id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()));
@@ -801,8 +803,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         query.append(" UNION " +
                 "SELECT IdTableAvisOrientation.id_eleve, IdTableAvisOrientation.id_periode, libelleTableAvisOrientation.libelle as avis_conseil_orientation, " +
                 "null as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, null as id_matiere, null as moyenne, null as id_classe " +
-                "FROM "+COMPETENCES_SCHEMA + ".avis_conseil_orientation AS IdTableAvisOrientation " +
-                "JOIN "+COMPETENCES_SCHEMA +".avis_conseil_bilan_periodique AS libelleTableAvisOrientation ON " +
+                "FROM " + COMPETENCES_SCHEMA + ".avis_conseil_orientation AS IdTableAvisOrientation " +
+                "JOIN " + COMPETENCES_SCHEMA + ".avis_conseil_bilan_periodique AS libelleTableAvisOrientation ON " +
                 "IdTableAvisOrientation.id_avis_conseil_bilan = libelleTableAvisOrientation.id WHERE ");
 
         if (null != idEleves) {

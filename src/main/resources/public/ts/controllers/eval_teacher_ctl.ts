@@ -495,7 +495,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         await utils.safeApply($scope);
                     };
                     if (!Utils.isChefEtab()) {
-                        http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,)
+                        http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id)
                             .done(async function (res) {
                                 $scope.allMatieresSorted = _.sortBy(res, 'rank');
                                 await utils.safeApply($scope);
@@ -846,10 +846,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             };
 
             $scope.structure = evaluations.structure;
+
             if (!evaluations.structure.isSynchronized) {
                 $scope.opened.displayStructureLoader = true;
                 evaluations.structure.sync().then(async () => {
-                    await  init();
+                    await init();
                     await initFieldOfDevoir();
                 });
             } else {
@@ -3705,6 +3706,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.devoirs = evaluations.structure.devoirs;
             $scope.enseignements = evaluations.structure.enseignements;
             $scope.matieres = evaluations.structure.matieres;
+            $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
             $scope.releveNotes = evaluations.structure.releveNotes;
             $scope.classes = evaluations.structure.classes;
             $scope.types = evaluations.structure.types;
