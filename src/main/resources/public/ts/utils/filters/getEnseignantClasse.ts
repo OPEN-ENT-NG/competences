@@ -18,42 +18,42 @@
 /**
  * Created by Samuel Jollois on 27/01/2020.
  */
-import {_, model, moment, ng} from 'entcore';
+import {_, moment, ng} from 'entcore';
 
 export let getEnseignantClasseFilter = ng.filter('getEnseignantClasse', function () {
-    return function (enseignants, idClasse, classes, search) {
+    return function (enseignants, idClasse, classes) {
         if (idClasse === '*' || idClasse === undefined) return enseignants;
         if (classes.all.length > 0) {
             let classe = classes.findWhere({id : idClasse});
             if (classe !== undefined) {
                 let enseignantsClasse = enseignants.filter((enseignant) => {
-                        if (classe.services){
-                            let evaluables =  _.findWhere(classe.services, {
-                                id_enseignant: enseignant.id,
-                                evaluable: true
+                    if (classe.services){
+                        let evaluables =  _.findWhere(classe.services, {
+                            id_enseignant: enseignant.id,
+                            evaluable: true
+                        });
+                        if(evaluables == undefined){
+                            evaluables = _.filter(classe.services, service => {
+                                let substituteTeacher = _.findWhere(service.substituteTeachers, {second_teacher_id : enseignant.id});
+                                let correctDateSubstituteTeacher = substituteTeacher &&
+                                    moment(new Date()).isBetween(moment(substituteTeacher.start_date),
+                                        moment(substituteTeacher.entered_end_date), 'days', '[]');
+                                let coTeachers = _.findWhere(service.coTeachers, {second_teacher_id : enseignant.id});
+                                return service.evaluable && (coTeachers || correctDateSubstituteTeacher);
                             });
-                            if(evaluables == undefined){
-                                evaluables = _.filter(classe.services, service => {
-                                    let substituteTeacher = _.findWhere(service.substituteTeachers, {second_teacher_id : enseignant.id});
-                                    let correctDateSubstituteTeacher = substituteTeacher &&
-                                        moment(new Date()).isBetween(moment(substituteTeacher.start_date),
-                                            moment(substituteTeacher.entered_end_date), 'days', '[]');
-                                    let coTeachers = _.findWhere(service.coTeachers, {second_teacher_id : enseignant.id});
-                                    return service.evaluable && (coTeachers || correctDateSubstituteTeacher);
-                                });
-                                if(evaluables.length == 0)
-                                    evaluables = undefined;
-                            }
-                            return evaluables !== undefined;
-                        }else if (enseignant.hasOwnProperty('allClasses')) {
-                            return (_.pluck(enseignant.allClasses, 'id').indexOf(classe.id) !== -1)
-                        } else {
+                            if(evaluables.length == 0)
+                                evaluables = undefined;
+                        }
+                        return evaluables !== undefined;
+                    } else if (enseignant.hasOwnProperty('allClasses')) {
+                        return (_.pluck(enseignant.allClasses, 'id').indexOf(classe.id) !== -1)
+                    } else {
                         return false;
                     }
                 });
                 if (enseignantsClasse.length > 0) {
-                     return enseignantsClasse;
-                }else{
+                    return enseignantsClasse;
+                } else {
                     return enseignants;
                 }
             }

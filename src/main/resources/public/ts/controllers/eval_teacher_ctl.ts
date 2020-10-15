@@ -199,6 +199,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.evaluatedDisabel = false;
                     $scope.allCompetences = devoirTmp.competences;
                     $scope.evaluatedCompetence = $scope.evaluationOfSkilles($scope.allCompetences, devoirTmp);
+                    $scope.setClasseEnseignants($scope.search);
                     $scope.devoir.competences.sync().then(async () => {
                         await $scope.createDevoir();
                         template.open('main', 'enseignants/creation_devoir/display_creation_devoir');
@@ -2059,7 +2060,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             //si c'est un chef étab on va chercher les enseignants
             if(Utils.isChefEtab()) {
                 $scope.devoir.teachersByClass = $filter('getEnseignantClasse')($scope.structure.enseignants.all,
-                    $scope.devoir.id_groupe, $scope.classes, $scope.search);
+                    $scope.devoir.id_groupe, $scope.classes);
                 if ($scope.devoir.owner === undefined && search !== undefined && search.matiere !== undefined
                     && search.matiere !== "*" && $scope.search.classe != '*') {
                     if (search.enseignant != undefined && search.enseignant !== "*") {
