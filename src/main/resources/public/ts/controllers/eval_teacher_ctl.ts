@@ -3034,7 +3034,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     eleve.moyenneFinale = eleve.moyenne;
                     eleve.oldMoyenneFinale = eleve.moyenne;
                 }
-                $scope.calculerMoyenneClasse();
                 utils.safeApply($scope);
             });
         };
@@ -3065,9 +3064,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             });
             moyenne = moyenne / nbEleve;
             moyenneFinal = moyenneFinal / nbEleveFinal;
-            $scope.releveNote._tmp._moyenne_classe.null.moyenne = moyenne.toFixed(2);
-            $scope.releveNote._tmp._moyenne_classe.null.min = min;
-            $scope.releveNote._tmp._moyenne_classe.null.max = max;
+            if($scope.releveNote._tmp._moyenne_classe.null.moyenne != "NN") {
+                $scope.releveNote._tmp._moyenne_classe.null.moyenne = moyenne.toFixed(2);
+                $scope.releveNote._tmp._moyenne_classe.null.min = min;
+                $scope.releveNote._tmp._moyenne_classe.null.max = max;
+            }
             $scope.releveNote._tmp._moyenne_classe.nullFinal.moyenne = moyenneFinal.toFixed(2);
             $scope.releveNote._tmp._moyenne_classe.nullFinal.min = minFinal;
             $scope.releveNote._tmp._moyenne_classe.nullFinal.max = maxFinal;
@@ -4093,7 +4094,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }else{
                 if(eleve.moyenneFinale === null)
                     eleve.moyenneFinale = "NN";
-                eleve.moyenneFinaleIsSet = true;
+               (eleve.moyenneFinale === "NN") ? eleve.moyenneFinaleIsSet = false : eleve.moyenneFinaleIsSet = true;
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
             }
         };
@@ -4159,9 +4160,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                     eleve.moyenneFinale = eleve.moyenne;
                                     eleve.oldMoyenneFinale = eleve.moyenneFinale;
                                 }
-                                if ($location.$$path === '/releve') {
-                                    $scope.calculerMoyenneEleve(eleve);
-                                }
+                                $scope.calculerMoyenneClasse();
                                 utils.safeApply($scope);
                             });
                             utils.safeApply($scope);

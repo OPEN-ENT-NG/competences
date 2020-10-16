@@ -72,6 +72,7 @@ export class Eleve extends DefaultEleve  {
                     if (!res.error) {
                         if (!res.hasNote) {
                             this.moyenne = "NN";
+                            this.hasNote = res.hasNote;
                         }
                         else {
                             this.moyenne = res.moyenne;
