@@ -98,22 +98,20 @@ export class DevoirsCollection {
 
 
     getPercentDone (devoir?) : Promise<any> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if(devoir && evaluations.structure.synchronized.devoirs) {
-                let url = this.api.done + "?idDevoir="+devoir.id;
-                http().getJson(url)
-                    .done((res) => {
-                        let calculatedPercent = _.findWhere(res, {id : devoir.id});
-                        let _devoir = _.findWhere(this.all, {id : devoir.id});
-                        if (_devoir !== undefined) {
-                            _devoir.percent = calculatedPercent === undefined ? 0 : calculatedPercent.percent;
-                        }
-                        model.trigger('apply');
-                        resolve();
-                    })
-                    .error(() => {
-                        reject();
-                    });
+                let url = this.api.done + "?idDevoir=" + devoir.id + "&nbStudents=" + devoir.eleves.length();
+                http().getJson(url).done((res) => {
+                    let calculatedPercent = _.findWhere(res, {id : devoir.id});
+                    let _devoir = _.findWhere(this.all, {id : devoir.id});
+                    if (_devoir !== undefined) {
+                        _devoir.percent = calculatedPercent === undefined ? 0 : calculatedPercent.percent;
+                    }
+                    model.trigger('apply');
+                    resolve();
+                }).error(() => {
+                    reject();
+                });
             }
         });
     }

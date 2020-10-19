@@ -917,21 +917,20 @@ public class NoteController extends ControllerHelper {
     @ResourceFilter(AccessReleveFilter.class)
     public void getInfosEleve(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request,  user -> {
-                    final String idEtablissement = request.params().get("idEtablissement");
-                    final String idClasse = request.params().get("idClasse");
-                    final String idMatiere = request.params().get("idMatiere");
-                    final String idEleve = request.params().get("idEleve");
+            final String idEtablissement = request.params().get("idEtablissement");
+            final String idClasse = request.params().get("idClasse");
+            final String idMatiere = request.params().get("idMatiere");
+            final String idEleve = request.params().get("idEleve");
 
-                    new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
-                            false, hasAccessToMatiere -> {
-                                if (!hasAccessToMatiere) {
-                                    unauthorized(request);
-                                    return;
-                                }
-                                notesService.getDetailsReleve(idEleve, idClasse, idMatiere, idEtablissement, request);
-                            });
-                }
-        );
+            new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,false,
+                    hasAccessToMatiere -> {
+                        if (!hasAccessToMatiere) {
+                            unauthorized(request);
+                            return;
+                        }
+                        notesService.getDetailsReleve(idEleve, idClasse, idMatiere, idEtablissement, request);
+                    });
+        });
     }
 
 

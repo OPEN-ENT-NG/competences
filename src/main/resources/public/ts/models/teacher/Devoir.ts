@@ -250,12 +250,9 @@ export class Devoir extends Model implements IModel{
     }
 
     isEvaluatedDevoir (idDevoir) : Promise<any> {
-
         return new Promise((resolve, reject) => {
             var that = this;
             http().getJson(this.api.isEvaluatedDevoir+idDevoir).done(function(data){
-
-
                 that.evaluationDevoirs.load(data);
                 if (resolve && (typeof (resolve) === 'function')) {
                     resolve(data);
@@ -263,6 +260,7 @@ export class Devoir extends Model implements IModel{
             });
         });
     }
+
     update (addArray, remArray, updateArray) : Promise<any> {
         return new Promise((resolve, reject) => {
             let devoirJSON = this.toJSON();
@@ -288,10 +286,9 @@ export class Devoir extends Model implements IModel{
                 if (resolve && (typeof (resolve) === 'function')) {
                     resolve(data);
                 }
-            })
-                .error(function () {
-                    reject();
-                });
+            }).error(function () {
+                reject();
+            });
         });
     }
 
@@ -320,10 +317,10 @@ export class Devoir extends Model implements IModel{
                 let allPromise = [axioshttp.get(this.api.getStatsDevoir)];
                 if(change)
                     allPromise.push(evaluations.devoirs.getPercentDone(that));
+
                 let response = await Promise.all(allPromise);
 
                 let stat = response[0].data;
-
                 if (!stat.error) {
                     that.statistiques = stat;
                     that.statistiques.percentDone =
@@ -344,8 +341,7 @@ export class Devoir extends Model implements IModel{
         });
     }
 
-    loadCompetencesNotes (that, res)  {
-
+    loadCompetencesNotes (that, res) {
         for (let i = 0; i < that.eleves.all.length; i++) {
             let _comps = _.where(res, {id_eleve : that.eleves.all[i].id});
             if (_comps.length > 0) {

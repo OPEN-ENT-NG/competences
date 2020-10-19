@@ -41,24 +41,30 @@ public class HomeworkUtils {
     public static void getNbNotesDevoirs(UserInfos user, List<String> idEleves, Long idDevoir,
                                          Handler<Either<String, JsonArray>> handler, Boolean isChefEtab) {
         StringBuilder query = new StringBuilder();
-
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT count(notes.id) as nb_notes , devoirs.id, rel_devoirs_groupes.id_groupe ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".notes," + Competences.COMPETENCES_SCHEMA + ".devoirs, " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".notes, " + Competences.COMPETENCES_SCHEMA + ".devoirs, " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes ")
                 .append("WHERE notes.id_devoir = devoirs.id ")
                 .append("AND rel_devoirs_groupes.id_devoir = devoirs.id ")
                 .append("AND devoirs.id = ? ");
 
+        values.add(idDevoir);
+
         // filtre sur les élèves de la classe à l'instant T
         if (idEleves != null && idEleves.size() > 0) {
-            query.append(" AND " + Competences.NOTES_TABLE + ".id_eleve IN ").append(Sql.listPrepared(idEleves.toArray()));
+            query.append(" AND " + Competences.NOTES_TABLE + ".id_eleve IN ")
+                    .append(Sql.listPrepared(idEleves.toArray()));
+            for (String idEleve : idEleves) {
+                values.add(idEleve);
+            }
         }
 
         if (!isChefEtab) {
             query.append(" AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
                     .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ") // ou dont l'un de mes tiulaires le sont (on regarde sur tous mes établissments)
                     .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
-                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement  ")
+                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement ")
                     .append("WHERE id_remplacant = ? ")
                     .append("AND rel_professeurs_remplacants.id_etablissement IN " + Sql.listPrepared(user.getStructures().toArray()) + " ")
                     .append(") OR ")
@@ -70,17 +76,6 @@ public class HomeworkUtils {
         }
         query.append("GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
 
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-
-        //Ajout des id désirés
-        values.add(idDevoir);
-
-        // Ajout des id pour le filtre sur les élèves de la classe à l'instant T
-        if (idEleves != null && idEleves.size() > 0) {
-            for (String idEleve : idEleves) {
-                values.add(idEleve);
-            }
-        }
         HomeworkUtils.addValueForRequest(values, user, isChefEtab);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));

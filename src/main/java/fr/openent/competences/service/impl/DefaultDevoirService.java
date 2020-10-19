@@ -943,18 +943,15 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         else {
                             isHeadTeacher = event.right().getValue();
                         }
-                        HomeworkUtils.getNbNotesDevoirs(user,idEleves,idDevoir,handler, isChefEtab || isHeadTeacher);
+                        HomeworkUtils.getNbNotesDevoirs(user, idEleves, idDevoir, handler,
+                                isChefEtab || isHeadTeacher);
                     }
                 });
-
-
     }
 
     @Override
     public void getNbAnnotationsDevoirs(UserInfos user, List<String> idEleves, Long idDevoir,
                                         Handler<Either<String, JsonArray>> handler) {
-        StringBuilder query = new StringBuilder();
-
         // Si l'utilisateur est null c'est qu'on essait de mettre à jour le taux de completude des devoirs
         boolean isChefEtab = (user!= null)?(new WorkflowActionUtils().hasRight(user,
                 WorkflowActions.ADMIN_RIGHT.toString())):true;
@@ -971,10 +968,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         else {
                             isHeadTeacher = event.right().getValue();
                         }
-                        getNbAnnotationsDevoirs(user,idEleves,idDevoir,handler, isChefEtab || isHeadTeacher);
+                        getNbAnnotationsDevoirs(user, idEleves, idDevoir, handler, isChefEtab || isHeadTeacher);
                     }
                 });
-
     }
 
     private StringBuilder buildAnnotationNotNNQuery(List<String> idsStudents, JsonArray values, Long idDevoir) {
@@ -1032,8 +1028,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                          Handler<Either<String, JsonArray>> handler, Boolean isChefEtab) {
 
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
-        StringBuilder queryAnnotationNotNN = buildAnnotationNotNNQuery(idsStudents,values, idDevoir);
-        StringBuilder queryAnnotationNN = buildAnnotationNNQuery(idsStudents,values,idDevoir);
+        StringBuilder queryAnnotationNotNN = buildAnnotationNotNNQuery(idsStudents, values, idDevoir);
+        StringBuilder queryAnnotationNN = buildAnnotationNNQuery(idsStudents, values, idDevoir);
 
         StringBuilder query = new StringBuilder().append(queryAnnotationNotNN)
                 .append(" UNION ").append(queryAnnotationNN);
@@ -1110,87 +1106,40 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void getMoyenne(Long idDevoir, final boolean stats, final Handler<Either<String, JsonObject>> handler) {
-        getDevoirInfo(idDevoir, new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(final Either<String, JsonObject> devoirInfo) {
-                if (devoirInfo.isRight()) {
-                    final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
+    public void getMoyenne(Long idDevoir, final boolean stats, String[] idEleves,
+                           final Handler<Either<String, JsonObject>> handler) {
+        noteService.getNotesParElevesParDevoirs(idEleves, new Long[]{idDevoir},
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if (event.isRight()) {
+                            ArrayList<NoteDevoir> notes = new ArrayList<>();
 
-                    JsonObject action = new JsonObject()
-                            .put("action", "classe.getEleveClasse")
-                            .put("idClasse", devoirInfos.getString("id_groupe"))
-                            .put("idPeriode", devoirInfos.getInteger("id_periode"));
+                            JsonArray listNotes = event.right().getValue();
 
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                            handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                @Override
-                                public void handle(Message<JsonObject> message) {
-                                    JsonObject body = message.body();
+                            for (int i = 0; i < listNotes.size(); i++) {
+                                JsonObject note = listNotes.getJsonObject(i);
+                                String coef = note.getString("coefficient");
+                                if(coef != null) {
+                                    NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(note.getString("valeur")),
+                                            note.getBoolean("ramener_sur"), Double.valueOf(coef));
 
-                                    if ("ok".equals(body.getString("status"))) {
-                                        JsonArray eleves = body.getJsonArray("results");
-                                        String[] idEleves = new String[eleves.size()];
-                                        for (int i = 0; i < eleves.size(); i++) {
-                                            idEleves[i] = eleves.getJsonObject(i).getString("id");
-                                        }
-
-                                        noteService.getNotesParElevesParDevoirs(idEleves, new Long[]{idDevoir},
-                                                new Handler<Either<String, JsonArray>>() {
-                                                    @Override
-                                                    public void handle(Either<String, JsonArray> event) {
-                                                        if (event.isRight()) {
-                                                            ArrayList<NoteDevoir> notes = new ArrayList<>();
-
-                                                            JsonArray listNotes = event.right().getValue();
-
-                                                            for (int i = 0; i < listNotes.size(); i++) {
-                                                                JsonObject note = listNotes.getJsonObject(i);
-                                                                String coef = note.getString("coefficient");
-                                                                if(coef != null) {
-                                                                    NoteDevoir noteDevoir = new NoteDevoir(
-                                                                            Double.valueOf(note
-                                                                                    .getString("valeur")),
-                                                                            note.getBoolean("ramener_sur"),
-                                                                            Double.valueOf(coef));
-
-                                                                    notes.add(noteDevoir);
-                                                                }
-                                                            }
-
-                                                            Either<String, JsonObject> result;
-
-                                                            if (!notes.isEmpty()) {
-                                                                result = new Either.Right<>(utilsService
-                                                                        .calculMoyenneParDiviseur(notes, stats));
-                                                            } else {
-                                                                result = new Either.Right<>(new JsonObject());
-                                                            }
-
-                                                            handler.handle(result);
-
-                                                        } else {
-                                                            log.error("[get Moyenne]: cannot get Eleves class");
-                                                            handler.handle(new Either.Left<String, JsonObject>(
-                                                                    event.left().getValue()));
-                                                        }
-                                                    }
-                                                });
-                                    }
-                                    else {
-                                        log.error("[get Moyenne]: cannot get Eleves class");
-                                        handler.handle(new Either.Left<>("[get Moyenne]: cannot get Eleves class"));
-                                    }
+                                    notes.add(noteDevoir);
                                 }
-                            }));
-                } else {
-                    log.error("[get Moyenne]: cannot get Eleves class");
-                    handler.handle(devoirInfo.left());
-                }
-            }
-        });
-    }
+                            }
 
+                            if (!notes.isEmpty()) {
+                                handler.handle(new Either.Right<>(utilsService.calculMoyenneParDiviseur(notes, stats)));
+                            } else {
+                                handler.handle(new Either.Right<>(new JsonObject()));
+                            }
+                        } else {
+                            log.error("[get Moyenne]: cannot get Eleves class");
+                            handler.handle(new Either.Left<String, JsonObject>(event.left().getValue()));
+                        }
+                    }
+                });
+    }
 
     @Override
     public void getNbCompetencesDevoirs(Long[] idDevoirs, Handler<Either<String, JsonArray>> handler) {

@@ -18,7 +18,6 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
-import fr.openent.competences.Utils;
 import fr.openent.competences.helpers.DevoirControllerHelper;
 import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessPeriodeFilter;
@@ -43,7 +42,6 @@ import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import io.vertx.core.Handler;
@@ -418,7 +416,7 @@ public class DevoirController extends ControllerHelper {
     @Get("/devoirs/done")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     @ApiDoc("Calcul le pourcentage réalisé pour un devoir")
-    public void getPercentDone (final HttpServerRequest request) {
+    public void getPercentDone(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
@@ -427,6 +425,7 @@ public class DevoirController extends ControllerHelper {
 
                     // Paramètres d'entrée
                     final Long idDevoir = testLongFormatParameter("idDevoir", request);
+                    final Integer nbStudents = Integer.parseInt(request.params().get("nbStudents"));
 
                     new DefaultDevoirService(eb).getDevoirInfo(idDevoir, new Handler<Either<String, JsonObject>>() {
                         @Override
@@ -434,41 +433,18 @@ public class DevoirController extends ControllerHelper {
                             if (devoirInfo.isRight()) {
                                 final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
 
-                                final String is_evaluated = devoirInfos.getBoolean("is_evaluated").toString();
-                                final String has_competence =
-                                        (devoirInfos.getLong("nbrcompetence") > 0) ? "true" : "false";
+                                final boolean is_evaluated = devoirInfos.getBoolean("is_evaluated");
+                                final boolean has_competence = devoirInfos.getLong("nbrcompetence") > 0;
                                 final String idGroupe = devoirInfos.getString("id_groupe");
-                                final Long idPeriode = devoirInfos.getLong("id_periode");
-                                final int typeClasse = devoirInfos.getInteger("type_groupe");
 
-                                Utils.getIdElevesClassesGroupes(eb, idGroupe, idPeriode.intValue(), typeClasse,
-                                        new Handler<Either<String, List<String>>>() {
-                                            @Override
-                                            public void handle(Either<String, List<String>> eventResultEleves) {
-                                                if (eventResultEleves.isRight()) {
-                                                    List<String> idEleves = eventResultEleves.right().getValue();
-                                                    /*
-                                                     - Si le devoir contient une evaluation numérique, on regarde le nombre de note en base
-                                                     - Sinon, on regarde directement le nombre d'annotation(s) et de compétence(s)
-                                                     */
-                                                    if (String.valueOf(true).equals(is_evaluated)) {
-                                                        updatePercentageWithNotes(idEleves, idDevoir, user, idGroupe,
-                                                                nbNotesByDevoir, is_evaluated,
-                                                                request, has_competence, true,
-                                                                0, 0, idEleves.size());
-                                                    } else {
-                                                        updatePercentWithAnnotationsAndCompetences(idEleves, idDevoir,
-                                                                user, idGroupe,
-                                                                nbNotesByDevoir, is_evaluated, request, true,
-                                                                0, 0, idEleves.size(),
-                                                                Boolean.valueOf(has_competence));
-                                                    }
-                                                } else {
-                                                    leftToResponse(request, eventResultEleves.left());
-                                                }
+                                if (is_evaluated) {
+                                    updatePercentageWithNotes(null, idDevoir, user, idGroupe,
+                                            nbNotesByDevoir, is_evaluated, request, has_competence, nbStudents);
+                                } else {
+                                    updatePercentWithAnnotationsAndCompetences(null, idDevoir, user, idGroupe,
+                                            nbNotesByDevoir, is_evaluated, request, has_competence, nbStudents);
+                                }
 
-                                            }
-                                        });
                             } else {
                                 leftToResponse(request, devoirInfo.left());
                             }
@@ -540,7 +516,8 @@ public class DevoirController extends ControllerHelper {
                 if(user != null) {
                     Long idDevoir = Long.parseLong(request.params().get("idDevoir"));
                     boolean stats = Boolean.parseBoolean(request.params().get("stats"));
-                    devoirsService.getMoyenne(idDevoir, stats, new Handler<Either<String, JsonObject>>() {
+
+                    devoirsService.getMoyenne(idDevoir, stats, null, new Handler<Either<String, JsonObject>>() {
                         @Override
                         public void handle(Either<String, JsonObject> event) {
                             if(event.isRight()) {
@@ -756,34 +733,30 @@ public class DevoirController extends ControllerHelper {
     }
 
     // Methode permettant de calculer le nombre de note(s)
-    private void updatePercentageWithNotes (final List<String> idEleves, final long idDevoir, final UserInfos user,
-                                            final String idGroupe, final HashMap<Long, Float> nbNotesByDevoir,
-                                            final String is_evaluated, final HttpServerRequest request,
-                                            final String has_competence, final boolean returning,
-                                            final int currentThread, final int number, final int nbStudents){
+    private void updatePercentageWithNotes(final List<String> idEleves, final long idDevoir, final UserInfos user,
+                                           final String idGroupe, final HashMap<Long, Float> nbNotesByDevoir,
+                                           final boolean is_evaluated, final HttpServerRequest request,
+                                           final boolean has_competence, final Integer nbStudents){
         devoirsService.getNbNotesDevoirs(user, idEleves, idDevoir , new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
                 if (event.isRight()) {
-                    if (event.right().getValue() != null) {
-                        JsonArray resultNbNotesDevoir = event.right().getValue();
+                    JsonArray resultNbNotesDevoir = event.right().getValue();
 
-                        if (resultNbNotesDevoir.size() > 0) {
-                            JsonObject o = resultNbNotesDevoir.getJsonObject(0);
-                            if (o != null) {
-                                if (String.valueOf(true).equals(has_competence)) {
-                                    nbNotesByDevoir.put(o.getLong("id"),
-                                            Float.valueOf(o.getInteger("nb_notes")) / 2);
-                                } else {
-                                    nbNotesByDevoir.put(o.getLong("id"),
-                                            Float.valueOf(o.getInteger("nb_notes")));
-                                }
+                    if (resultNbNotesDevoir != null && resultNbNotesDevoir.size() > 0) {
+                        JsonObject o = resultNbNotesDevoir.getJsonObject(0);
+                        if (o != null) {
+                            if (has_competence) {
+                                nbNotesByDevoir.put(o.getLong("id"),
+                                        Float.valueOf(o.getInteger("nb_notes")) / 2);
+                            } else {
+                                nbNotesByDevoir.put(o.getLong("id"),
+                                        Float.valueOf(o.getInteger("nb_notes")));
                             }
                         }
-                        updatePercentWithAnnotationsAndCompetences(idEleves, idDevoir, user, idGroupe,
-                                nbNotesByDevoir, is_evaluated, request, returning, currentThread,number, nbStudents,
-                                Boolean.valueOf(has_competence));
                     }
+                    updatePercentWithAnnotationsAndCompetences(idEleves, idDevoir, user, idGroupe, nbNotesByDevoir,
+                            is_evaluated, request, has_competence, nbStudents);
                 } else {
                     leftToResponse(request, event.left());
                 }
@@ -795,9 +768,8 @@ public class DevoirController extends ControllerHelper {
     void updatePercentWithAnnotationsAndCompetences(final List<String> idEleves, final long idDevoir,
                                                     final UserInfos user, final String idGroupe,
                                                     final HashMap<Long, Float> nbNotesByDevoir,
-                                                    final String is_evaluated, final HttpServerRequest request ,
-                                                    final boolean returning, final int currentThread, final int number,
-                                                    final int nbStudents, final boolean devoirHasCompetence){
+                                                    final boolean is_evaluated, final HttpServerRequest request ,
+                                                    final boolean devoirHasCompetence, final Integer nbStudents){
         final JsonArray result = new fr.wseduc.webutils.collections.JsonArray();
         final HashMap<String, Integer> nbElevesByGroupe = new HashMap<>();
 
@@ -820,16 +792,15 @@ public class DevoirController extends ControllerHelper {
                     }
                     else {
                         JsonArray resultNbAnnotationsDevoir = nbAnnotationsDevoirsFuture.result();
-                        Boolean isEvaluated = String.valueOf(true).equals(is_evaluated);
                         if (resultNbAnnotationsDevoir.size() > 0) {
                             for (int i = 0; i < resultNbAnnotationsDevoir.size(); i++) {
                                 JsonObject o = resultNbAnnotationsDevoir.getJsonObject(i);
-                                Boolean isNN = o.getString("type") != null && NN.equals(o.getString("type"));
+                                boolean isNN = o.getString("type") != null && NN.equals(o.getString("type"));
                                 // On ajoute le nombre d'annotations au nombre de notes pour déterminer
                                 // le taux d'avancement
                                 Float nbAnnotations = Float.valueOf(o.getInteger("nb_annotations"));
-                                if (isNN && isEvaluated && devoirHasCompetence) {
-                                    nbAnnotations = nbAnnotations/2;
+                                if (isNN && is_evaluated && devoirHasCompetence) {
+                                    nbAnnotations = nbAnnotations / 2;
                                 }
                                 if (!nbNotesByDevoir.containsKey(o.getLong("id"))) {
                                     nbNotesByDevoir.put(o.getLong("id"), nbAnnotations);
@@ -850,9 +821,9 @@ public class DevoirController extends ControllerHelper {
                                       une évaluation numérique
                                     */
                             if (ob != null) {
-                                if (ob.getInteger("nb_competences") >= 1 && isEvaluated) {
+                                if (ob.getInteger("nb_competences") >= 1 && is_evaluated) {
                                     nbCompetences += Float.valueOf(1) / 2;
-                                } else if (ob.getInteger("nb_competences") >= 1 && !isEvaluated) {
+                                } else if (ob.getInteger("nb_competences") >= 1 && !is_evaluated) {
                                     nbCompetences += 1;
                                 }
                             }
@@ -863,7 +834,6 @@ public class DevoirController extends ControllerHelper {
                         if (!nbNotesByDevoir.containsKey(idDevoir)) {
                             nbNotesByDevoir.put(idDevoir, nbCompetences);
                         } else {
-
                             Float nbNotesAnnotionsCompetences = nbNotesByDevoir.get(idDevoir) + nbCompetences;
                             nbNotesByDevoir.put(idDevoir, nbNotesAnnotionsCompetences);
                         }
@@ -871,46 +841,33 @@ public class DevoirController extends ControllerHelper {
                         nbElevesByGroupe.put(idGroupe, nbStudents);
 
                         JsonObject o = new JsonObject();
-                        if (nbElevesByGroupe.get(idGroupe) != Integer.valueOf(0)) {
-                            final float nbElevesEvalues = nbNotesByDevoir.get(idDevoir);
-                            final Integer nbEleves = nbElevesByGroupe.get(idGroupe);
+                        final float nbElevesEvalues = nbNotesByDevoir.get(idDevoir);
+                        final Integer nbEleves = nbElevesByGroupe.get(idGroupe);
 
-                            int _percent = 0;
-                            if (nbEleves != Integer.valueOf(0) && nbEleves != null) {
-                                _percent = (int) (nbElevesEvalues * 100 / nbEleves);
-                            }
-
-                            final Integer percent = _percent;
-
-                            o.put("id", idDevoir);
-                            o.put("percent", percent);
-                            result.add(o);
-
-                            devoirsService.updatePercent(idDevoir, percent, updated -> {
-                                if (updated.isRight()) {
-                                    if (returning) {
-                                        Renders.renderJson(request, result);
-                                    } else if (number == currentThread) {
-                                        JsonObject res = new JsonObject();
-                                        int nbrs = number + 1;
-                                        res.put("nbUpdatedDevoirs", nbrs);
-                                        Renders.renderJson(request, res);
-                                        log.info(" FIN : " + nbrs + " devoir(s) mis à jour");
-                                    }
-                                } else {
-                                    log.error("UPDATE NOT DONE FOR" + number + 1 + "devoirs");
-                                }
-                            });
-                        } else {
-                            log.info(" No students for class or group: " + idGroupe);
+                        int _percent = 0;
+                        if (nbEleves != Integer.valueOf(0) && nbEleves != null) {
+                            _percent = (int) (nbElevesEvalues * 100 / nbEleves);
                         }
+
+                        final Integer percent = _percent;
+
+                        o.put("id", idDevoir);
+                        o.put("percent", percent);
+                        result.add(o);
+
+                        devoirsService.updatePercent(idDevoir, percent, updated -> {
+                            if (updated.isRight()) {
+                                Renders.renderJson(request, result);
+                            } else {
+                                log.error("UPDATE NOT DONE FOR DEVOIRS");
+                            }
+                        });
                     }
                 }
         );
     }
 
-
-    Long testLongFormatParameter(String name,final HttpServerRequest request) {
+    Long testLongFormatParameter(String name, final HttpServerRequest request) {
         Long param = null;
         try {
             param = Long.parseLong(request.params().get(name));
@@ -920,99 +877,6 @@ public class DevoirController extends ControllerHelper {
             return null;
         }
         return param;
-    }
-
-
-    @Get("/devoirs/updatedone")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(SuperAdminFilter.class)
-    @ApiDoc("Met à jour le pourcentage réalisé pour chaque devoir")
-    public void updatePercentDone (final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                if (user != null) {
-                    final HashMap<Long, Float> nbNotesByDevoir = new HashMap<>();
-
-                    List<String> idDevoirsList = request.params().getAll("id");
-
-                    Long[] idDevoirsArray =  null;
-
-                    if(!idDevoirsList.isEmpty()) {
-                        idDevoirsArray =  new Long[idDevoirsList.size()];
-                        for (int i = 0; i < idDevoirsList.size(); i++) {
-                            idDevoirsArray[i] = Long.valueOf(idDevoirsList.get(i));
-
-                        }
-                        log.info(" MAJ du taux de complétude pour "+ idDevoirsList.size() + " devoir(s).");
-
-                    }
-                    else {
-                        log.info("MAJ du taux de complétude pour tous les devoirs.");
-                    }
-
-                    devoirsService.getDevoirsInfosCompetencesCondition(idDevoirsArray, new Handler<Either<String, JsonArray>>() {
-                        @Override
-                        public void handle(Either<String, JsonArray> event) {
-                            if (event.isRight()) {
-                                final JsonArray devoirsInfos = event.right().getValue();
-                                log.info(" Récupération de  "+ devoirsInfos.size()+ " devoir(s).");
-                                log.info("Devoir  |  Completude ");
-                                for (int i =0; i < devoirsInfos.size(); i++) {
-                                    JsonObject o = devoirsInfos.getJsonObject(i);
-                                    if (o != null) {
-                                        // Paramètres d'entrée
-                                        final Long idDevoir = Long.valueOf(o.getInteger("id"));
-                                        final String is_evaluated = String.valueOf(o.getBoolean("is_evaluated"));
-                                        final String has_competence = String.valueOf(o.getBoolean("has_competences"));
-                                        final String idGroupe = o.getString("id_groupe");
-                                        final int typeClasse = o.getInteger("type_groupe");
-                                        final int indiceBoucle = i;
-
-                                        Utils.getIdElevesClassesGroupes(eb, idGroupe, indiceBoucle, typeClasse,
-                                                new Handler<Either<String, List<String>>>() {
-
-                                                    @Override
-                                                    public void handle(Either<String, List<String>> eventResultEleves) {
-
-                                                        if (eventResultEleves.isRight()) {
-                                                            List<String> idEleves = eventResultEleves.right().getValue();
-
-                                                    /*
-                                                     - Si le devoir contient une evaluation numérique, on regarde
-                                                        le nombre de note en base
-                                                     - Sinon, on regarde directement le nombre d'annotation(s)
-                                                     et de compétence(s)
-                                                     */
-                                                            if (Boolean.valueOf(is_evaluated)) {
-                                                                updatePercentageWithNotes(idEleves, idDevoir,
-                                                                        null, idGroupe,
-                                                                        nbNotesByDevoir, is_evaluated,
-                                                                        request, has_competence, false, indiceBoucle,
-                                                                        devoirsInfos.size() - 1, idEleves.size());
-
-                                                            } else {
-                                                                updatePercentWithAnnotationsAndCompetences(idEleves, idDevoir,
-                                                                        null, idGroupe,
-                                                                        nbNotesByDevoir, is_evaluated, request,
-                                                                        false, indiceBoucle,
-                                                                        devoirsInfos.size() - 1,
-                                                                        idEleves.size(), Boolean.valueOf(has_competence));
-                                                            }
-                                                        }
-                                                    }
-                                                });
-                                    }
-                                }
-
-                            }
-
-                        }
-                    });
-
-                }
-            }
-        });
     }
 
     @Put("/devoir/finish")

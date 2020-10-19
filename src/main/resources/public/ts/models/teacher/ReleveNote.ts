@@ -434,6 +434,9 @@ export class ReleveNote extends  Model implements IModel {
                         } else {
                             d.statistiques.percentDone = d.percent;
                         }
+
+                        if(d.eleves.length() === 0)
+                            d.eleves.all = this.classe.eleves.all;
                     }
                 });
 

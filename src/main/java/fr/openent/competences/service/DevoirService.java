@@ -178,7 +178,8 @@ public interface DevoirService extends CrudService {
      * @param stats Booléen permettant de demander le calcul des statistique en plus
      * @param handler handler portant le résultat de la requête.
      */
-    void getMoyenne(Long idDevoir, final boolean stats, final Handler<Either<String, JsonObject>> handler);
+    void getMoyenne(Long idDevoir, final boolean stats, String[] idEleves,
+                    final Handler<Either<String, JsonObject>> handler);
 
     /**
      * Récupère le nombre de compétences en fonction du devoir pour un utilisateur donné
