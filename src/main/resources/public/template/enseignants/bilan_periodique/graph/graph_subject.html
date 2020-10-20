@@ -7,21 +7,22 @@
                     chart-labels="informations.eleve.configMixedChart.labels"
                     chart-options="informations.eleve.configMixedChart.options"
                     chart-data="informations.eleve.configMixedChart._datas"
-                    chart-dataset-override="informations.eleve.configMixedChart.datasetsOveride"></canvas>
+                    chart-dataset-override="informations.eleve.configMixedChart.datasetsOveride">
+            </canvas>
         </div>
     </div>
     <div class=" twelve cell twelve-mobile" ng-if="graph.notes">
         <div class="chart-container" style="position: relative; height:auto; width:auto; margin: auto;"  >
             <canvas id="mixedChartfalseNotes"
-                    class="chart chart-bar" width="400" height="800"
+                    class="chart chart-bar" width="400" height="400"
                     chart-labels="informations.eleve.configMixedChart.labels"
                     chart-options="informations.eleve.configMixedChart.optionsNotes"
                     chart-data="informations.eleve.configMixedChart._datasNotes"
-                    chart-dataset-override="informations.eleve.configMixedChart.datasetsNotesOveride"></canvas>
+                    chart-dataset-override="informations.eleve.configMixedChart.datasetsNotesOveride">
+            </canvas>
         </div>
     </div>
 </div>
-
 
 <div class="twelve center" ng-if="graph.type == 'radar'">
     <div class="twelve-mobile six inline-block" ng-class="{'cell': graph.notes && graph.competences }" ng-if="graph.notes">
@@ -31,8 +32,7 @@
                     chart-labels="informations.eleve.configRadarChart.datasets.labels"
                     chart-series="informations.eleve.configRadarChart.averageSeries"
                     chart-options="informations.eleve.configRadarChart.options.average"
-                    chart-colors="informations.eleve.configRadarChart.colors"
-            >
+                    chart-colors="informations.eleve.configRadarChart.colors">
             </canvas>
         </div>
     </div>
@@ -43,8 +43,7 @@
                     chart-labels="informations.eleve.configRadarChart.datasets.labels"
                     chart-series="informations.eleve.configRadarChart.series"
                     chart-options="informations.eleve.configRadarChart.options.level"
-                    chart-colors="informations.eleve.configRadarChart.colors"
-            >
+                    chart-colors="informations.eleve.configRadarChart.colors">
             </canvas>
         </div>
     </div>
