@@ -2620,34 +2620,42 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         // Si pour il n'y a pas de devoirs avec évaluation numérique, la moyenne auto est NN
         if (!hasEvaluatedHomeWork) {
-            List<NoteDevoir> listMoyF = new ArrayList<>();
+
             if(idMatiere == null){
+                List<NoteDevoir> listMoyF = new ArrayList<>();
                 for (Map.Entry<String, JsonObject> student : eleveMapObject.entrySet()) {
-                    student.getValue().put(MOYENNE, NN);
-                    if(!"NN".equals(student.getValue().getString("moyenneFinale"))){
-                        NoteDevoir moyF = new NoteDevoir(Double.valueOf(student.getValue().getString("moyenneFinale")),
-                                false,1.0);
-                        listMoyF.add(moyF);
+
+                    if(idPeriode != null) {
+                        student.getValue().put(MOYENNE, NN);
+                        if (!"NN".equals(student.getValue().getString("moyenneFinale"))) {
+
+                            NoteDevoir moyF = new NoteDevoir(Double.valueOf(student.getValue().getString("moyenneFinale")),
+                                    false, 1.0);
+                            listMoyF.add(moyF);
+                        }
                     }
                 };
-                JsonObject o_statClasseF = new JsonObject();
-                if(listMoyF.isEmpty()){
-                    o_statClasseF.put("min", NN)
+                if(idPeriode != null){
+                    JsonObject o_statClasseF = new JsonObject();
+                    if(listMoyF.isEmpty()){
+                        o_statClasseF.put("min", NN)
+                                .put("max", NN)
+                                .put("moyenne", NN);
+
+                    }else{
+                        JsonObject statMoyF = utilsService.calculMoyenneParDiviseur(listMoyF, true);
+                        o_statClasseF.put("min", statMoyF.getValue("noteMin"))
+                                .put("max", statMoyF.getValue("noteMax"))
+                                .put("moyenne", statMoyF.getValue("moyenne"));
+                    }
+                    result.put("_moyenne_classe",  new JsonObject().put("nullFinal",o_statClasseF));
+                    JsonObject o_statClasse = new JsonObject()
+                            .put("min", NN)
                             .put("max", NN)
                             .put("moyenne", NN);
+                    result.getJsonObject("_moyenne_classe").put("null",o_statClasse);
 
-                }else{
-                    JsonObject statMoyF = utilsService.calculMoyenneParDiviseur(listMoyF, true);
-                    o_statClasseF.put("min", statMoyF.getValue("noteMin"))
-                            .put("max", statMoyF.getValue("noteMax"))
-                            .put("moyenne", statMoyF.getValue("moyenne"));
                 }
-                result.put("_moyenne_classe",  new JsonObject().put("nullFinal",o_statClasseF));
-                JsonObject o_statClasse = new JsonObject()
-                        .put("min", NN)
-                        .put("max", NN)
-                        .put("moyenne", NN);
-                result.getJsonObject("_moyenne_classe").put("null",o_statClasse);
 
             }
             else {

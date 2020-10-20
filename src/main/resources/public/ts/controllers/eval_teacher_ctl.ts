@@ -2628,8 +2628,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @returns {string}
          */
         $scope.getMoyenne = function (idPeriode,eleve) {
-            if(idPeriode == null){
-                let periodes = 0;
+         if(idPeriode == null){
+               let periodes = 0;
                 let sum = 0;
                 for(let i=1;i<6;i++){
                     let _moyenneFinale = _.findWhere(eleve.moyennesFinales, {id_periode: i});
