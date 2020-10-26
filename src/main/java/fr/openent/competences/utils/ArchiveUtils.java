@@ -10,7 +10,7 @@ import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
-import io.vertx.core.CompositeFuture;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -23,10 +23,12 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.storage.Storage;
+import org.entcore.common.user.UserInfos;
 import org.entcore.common.utils.StringUtils;
 
 import java.text.SimpleDateFormat;
@@ -228,23 +230,23 @@ public class ArchiveUtils {
 
 
 
-    public static void getArchiveBulletinZip(String idStructure, HttpServerRequest request, EventBus eb, Storage storage, Vertx vertx) {
-        getListToDownloadSQL(idStructure,eb,storage, vertx,request);
+    public static void getArchiveBulletinZip(String idStructure, HttpServerRequest request, EventBus eb, Storage storage, Vertx vertx, WorkspaceHelper workspaceHelper, UserInfos user) {
+        getListToDownloadSQL(idStructure,eb,storage, vertx,request,user,workspaceHelper);
     }
     private static void getListToDownloadBFCSQL(String idStructure, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request) {
         String query = "SELECT id_classe,id_etablissement, id_eleve,id_file , file_name as name from " + COMPETENCES_SCHEMA + ".archive_bfc where id_etablissement =  ?";
         JsonArray params = new JsonArray().add(idStructure);
-        executeSqlRequest(eb, storage, vertx, request, query, params);
+        executeSqlRequest(eb, storage, vertx, request, query, params, null, null);
     }
 
-    private static void getListToDownloadSQL(String idStructure, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request) {
+    private static void getListToDownloadSQL(String idStructure, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request, UserInfos user, WorkspaceHelper workspaceHelper) {
         String query = "SELECT id_classe,id_etablissement, id_eleve,id_file , file_name as name from " + COMPETENCES_SCHEMA + ".archive_bulletins where id_etablissement =  ?";
         JsonArray params = new JsonArray().add(idStructure);
 
-        executeSqlRequest(eb, storage, vertx, request, query, params);
+        executeSqlRequest(eb, storage, vertx, request, query, params,user,workspaceHelper);
     }
 
-    private static void executeSqlRequest(EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request, String query, JsonArray params) {
+    private static void executeSqlRequest(EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request, String query, JsonArray params, UserInfos user, WorkspaceHelper workspaceHelper) {
         List<PdfFile> listPdf = new ArrayList<>();
         Sql.getInstance().prepared(query, params, new Handler<Message<JsonObject>>() {
             @Override
@@ -256,7 +258,7 @@ public class ArchiveUtils {
                     listPdf.add(bpdf);
                 }
                 if(listPdf.size() > 0 ) {
-                    createFolders(listPdf, eb, storage, vertx, request);
+                    createFolders(listPdf, eb, storage, vertx, request,user,workspaceHelper);
                 }else{
                     request.response().setStatusCode(204).setStatusMessage("No data to export").end();
                 }
@@ -264,7 +266,7 @@ public class ArchiveUtils {
         });
     }
 
-    private static void createFolders(List<PdfFile> listBulletin, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request) {
+    private static void createFolders(List<PdfFile> listBulletin, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request, UserInfos user, WorkspaceHelper workspaceHelper) {
         String idStructure = listBulletin.get(0).getId_structure();
         String query = "Match (s:Structure{id:{idStructure} }) return s.name as name";
         Neo4j.getInstance().execute(query, new JsonObject().put(ID_STRUCTURE_KEY, idStructure), new Handler<Message<JsonObject>>() {
@@ -275,7 +277,7 @@ public class ArchiveUtils {
                 Map<String, String> mapClassIdClass = new HashMap<>();
 
 
-                createClassTempZipTree(structureFolder, mapClassIdClass, listBulletin, storage, vertx, request);
+                createClassTempZipTree(structureFolder, mapClassIdClass, listBulletin, storage, vertx, request,user,workspaceHelper);
 
 //                createClassesFolders(structureFolder,listBulletin,eb, storage, vertx, request);
 
@@ -284,7 +286,10 @@ public class ArchiveUtils {
     }
 
     //TODO DELETE THIS AFTER 2020
-    private static void createClassTempZipTree(Folder structureFolder, Map<String, String> mapClassIdClass, List<PdfFile> listBulletin, Storage storage, Vertx vertx, HttpServerRequest request) {
+    private static void createClassTempZipTree(Folder structureFolder, Map<String, String> mapClassIdClass, List<PdfFile> listBulletin, Storage storage,
+                                               Vertx vertx, HttpServerRequest request, UserInfos user, WorkspaceHelper workspaceHelper) {
+        if(workspaceHelper != null)
+            request.response().setStatusCode(202).end();
         for (PdfFile file : listBulletin) {
             String idClass = file.getId_class();
             if (!mapClassIdClass.containsKey(idClass)) {
@@ -330,11 +335,35 @@ public class ArchiveUtils {
         List<JsonObject> files = new ArrayList<>();
         files = getAllFilesAndFolders(structureFolder);
 
-        zipBuilder.exportAndSendZip(structureFolder.toJsonObject(),files , request, true).setHandler(zipEvent -> {
+        zipBuilder.exportAndSendZip(structureFolder.toJsonObject(),files , request, workspaceHelper == null).setHandler(zipEvent -> {
             if (zipEvent.failed()) {
                 request.response().setStatusCode(500).end();
             }else{
-                log.info("jobs done");
+                if(workspaceHelper == null){
+                    log.info("jobs done");
+                }else {
+                    sendToWorkspace(storage, vertx, user, workspaceHelper, zipEvent);
+                }
+            }
+        });
+    }
+
+    private static void sendToWorkspace(Storage storage, Vertx vertx, UserInfos user, WorkspaceHelper workspaceHelper, AsyncResult<FolderExporterZip.ZipContext> zipEvent) {
+        vertx.fileSystem().readFile( zipEvent.result().zipFullPath, readEvent -> {
+            if (readEvent.succeeded()) {
+                Buffer fileBuffer = readEvent.result();
+                storage.writeBuffer(fileBuffer, "application/zip", "Bulletins.zip", entries -> {
+                    JsonObject file = entries;
+                    workspaceHelper.addDocument(file, user, "Bulletins.zip", "media-library", false, new JsonArray(), handlerToAsyncHandler(message -> {
+                        if ("ok".equals(message.body().getString("status"))) {
+                            log.info("File written in workspace");
+                        } else {
+                            log.error("Can t write in workspace");
+                        }
+                    }));
+                });
+            } else {
+                log.error("can t read archive");
             }
         });
     }
@@ -356,119 +385,119 @@ public class ArchiveUtils {
         return  parts[0];
     }
 
-    private static void createClassesFolders(Folder structureFolder, List<PdfFile> listBulletin, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request) {
-        List<String> idsClasses = new ArrayList<>();
-        for(int i = 0; i < listBulletin.size();i++){
-            String idClasse = listBulletin.get(i).getId_class();
-            if(!idsClasses.contains(idClasse)) {
-                idsClasses.add(idClasse);
-            }
-        }
-
-        JsonObject action = new JsonObject()
-                .put(ACTION, "classe.getClassesInfo")
-                .put("idClasses", idsClasses);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(handleGetClassesInfo(structureFolder, listBulletin, eb, storage, vertx, request)));
-
-
-    }
-
-    private static Handler<Message<JsonObject>> handleGetClassesInfo(Folder structureFolder, List<PdfFile> listBulletin, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request) {
-        return message -> {
-            JsonObject body = message.body();
-            List<Future> futures = new ArrayList<>();
-
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray results = body.getJsonArray(RESULTS);
-                for(int i = 0 ; i < results.size();i++){
-                    Future<Folder> folderFuture = Future.future();
-                    futures.add(folderFuture);
-
-                }
-
-                CompositeFuture.all(futures).setHandler(event -> {
-                    if (event.succeeded()) {
-                        event.result().list().forEach(f ->{
-                            ((Folder)f).setId_parent(structureFolder.getId_folder());
-                            structureFolder.addFolder((Folder)f);
-                        });
-                        FolderExporterZip zipBuilder = new FolderExporterZip(storage, vertx.fileSystem(), false);
-                        List<JsonObject> files = new ArrayList<>();
-                        files = getAllFilesAndFolders(structureFolder);
-
-                        zipBuilder.exportAndSendZip(structureFolder.toJsonObject(),files , request, true).setHandler(zipEvent -> {
-                            if (zipEvent.failed()) {
-                                request.response().setStatusCode(500).end();
-                            }else{
-                                log.info("jobs done");
-                            }
-                        });
-                    }
-                });
-
-                for(int i = 0 ; i < results.size();i++){
-                    Folder classFolder = new Folder(results.getJsonObject(i).getString("name"));
-                    classFolder.setId_folder(results.getJsonObject(i).getString("id"));
-                    createStudentFoldersForClass(structureFolder,classFolder,listBulletin,eb,getHandlerFolder(futures.get(i)));
-                }
-
-            }
-
-        };
-    }
+//    private static void createClassesFolders(Folder structureFolder, List<PdfFile> listBulletin, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request) {
+//        List<String> idsClasses = new ArrayList<>();
+//        for(int i = 0; i < listBulletin.size();i++){
+//            String idClasse = listBulletin.get(i).getId_class();
+//            if(!idsClasses.contains(idClasse)) {
+//                idsClasses.add(idClasse);
+//            }
+//        }
+//
+//        JsonObject action = new JsonObject()
+//                .put(ACTION, "classe.getClassesInfo")
+//                .put("idClasses", idsClasses);
+//        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(handleGetClassesInfo(structureFolder, listBulletin, eb, storage, vertx, request)));
+//
+//
+//    }
+//
+//    private static Handler<Message<JsonObject>> handleGetClassesInfo(Folder structureFolder, List<PdfFile> listBulletin, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request) {
+//        return message -> {
+//            JsonObject body = message.body();
+//            List<Future> futures = new ArrayList<>();
+//
+//            if (OK.equals(body.getString(STATUS))) {
+//                JsonArray results = body.getJsonArray(RESULTS);
+//                for(int i = 0 ; i < results.size();i++){
+//                    Future<Folder> folderFuture = Future.future();
+//                    futures.add(folderFuture);
+//
+//                }
+//
+//                CompositeFuture.all(futures).setHandler(event -> {
+//                    if (event.succeeded()) {
+//                        event.result().list().forEach(f ->{
+//                            ((Folder)f).setId_parent(structureFolder.getId_folder());
+//                            structureFolder.addFolder((Folder)f);
+//                        });
+//                        FolderExporterZip zipBuilder = new FolderExporterZip(storage, vertx.fileSystem(), false);
+//                        List<JsonObject> files = new ArrayList<>();
+//                        files = getAllFilesAndFolders(structureFolder);
+//
+//                        zipBuilder.exportAndSendZip(structureFolder.toJsonObject(),files , request, true).setHandler(zipEvent -> {
+//                            if (zipEvent.failed()) {
+//                                request.response().setStatusCode(500).end();
+//                            }else{
+//                                log.info("jobs done");
+//                            }
+//                        });
+//                    }
+//                });
+//
+//                for(int i = 0 ; i < results.size();i++){
+//                    Folder classFolder = new Folder(results.getJsonObject(i).getString("name"));
+//                    classFolder.setId_folder(results.getJsonObject(i).getString("id"));
+//                    createStudentFoldersForClass(structureFolder,classFolder,listBulletin,eb,getHandlerFolder(futures.get(i)));
+//                }
+//
+//            }
+//
+//        };
+//    }
 
     private static List<JsonObject> getAllFilesAndFolders(Folder structureFolder) {
         return structureFolder.getAllFilesAndFolders();
     }
-
-    private static void createStudentFoldersForClass(Folder structureFolder, Folder classFolder, List<PdfFile> listBulletin, EventBus eb, Handler<Either<String, Folder>> handlerFolder) {
-        List<String> idsStudents = new ArrayList<>();
-        for (int i = 0; i < listBulletin.size(); i++) {
-            PdfFile pdfFile = listBulletin.get(i);
-            String idClasse = pdfFile.getId_class();
-            if (idClasse.equals(classFolder.getId_folder())) {
-                String idStudent = pdfFile.getId_student();
-                if (!idsStudents.contains(idStudent)) {
-                    idsStudents.add(idStudent);
-                }
-            }
-        }
-
-        JsonObject action = new JsonObject()
-                .put(ACTION, "eleve.getInfoEleve")
-                .put("idEleves", idsStudents)
-                .put("idEtablissement",listBulletin.get(0).getId_structure());
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
-            JsonObject body = message.body();
-
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray results= body.getJsonArray(RESULTS);
-                for (int i = 0 ; i < results.size(); i++){
-                    JsonObject result = results.getJsonObject(i);
-                    Folder studentFolder = new Folder(result.getString("firstName") + "_" + result.getString("lastName"));
-                    studentFolder.setId_folder(result.getString("idEleve"));
-                    studentFolder.setId_parent(classFolder.getId_folder());
-                    addPdfToStudent(studentFolder,listBulletin);
-                    classFolder.addFolder(studentFolder);
-                }
-                handlerFolder.handle(new Either.Right<>(classFolder));
-
-            }
-        }));
-
-
-    }
-
-    private static void addPdfToStudent( Folder studentFolder, List<PdfFile> listBulletin) {
-        for (int i = 0; i < listBulletin.size(); i++) {
-            PdfFile pdfFile = listBulletin.get(i);
-            String idStudent = pdfFile.getId_student();
-            if(idStudent.equals(studentFolder.getId_folder())){
-                pdfFile.setId_parent(studentFolder.getId_folder());
-                studentFolder.addBulletin(pdfFile);
-            }
-        }
-    }
+//
+//    private static void createStudentFoldersForClass(Folder structureFolder, Folder classFolder, List<PdfFile> listBulletin, EventBus eb, Handler<Either<String, Folder>> handlerFolder) {
+//        List<String> idsStudents = new ArrayList<>();
+//        for (int i = 0; i < listBulletin.size(); i++) {
+//            PdfFile pdfFile = listBulletin.get(i);
+//            String idClasse = pdfFile.getId_class();
+//            if (idClasse.equals(classFolder.getId_folder())) {
+//                String idStudent = pdfFile.getId_student();
+//                if (!idsStudents.contains(idStudent)) {
+//                    idsStudents.add(idStudent);
+//                }
+//            }
+//        }
+//
+//        JsonObject action = new JsonObject()
+//                .put(ACTION, "eleve.getInfoEleve")
+//                .put("idEleves", idsStudents)
+//                .put("idEtablissement",listBulletin.get(0).getId_structure());
+//        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+//            JsonObject body = message.body();
+//
+//            if (OK.equals(body.getString(STATUS))) {
+//                JsonArray results= body.getJsonArray(RESULTS);
+//                for (int i = 0 ; i < results.size(); i++){
+//                    JsonObject result = results.getJsonObject(i);
+//                    Folder studentFolder = new Folder(result.getString("firstName") + "_" + result.getString("lastName"));
+//                    studentFolder.setId_folder(result.getString("idEleve"));
+//                    studentFolder.setId_parent(classFolder.getId_folder());
+//                    addPdfToStudent(studentFolder,listBulletin);
+//                    classFolder.addFolder(studentFolder);
+//                }
+//                handlerFolder.handle(new Either.Right<>(classFolder));
+//
+//            }
+//        }));
+//
+//
+//    }
+//
+//    private static void addPdfToStudent( Folder studentFolder, List<PdfFile> listBulletin) {
+//        for (int i = 0; i < listBulletin.size(); i++) {
+//            PdfFile pdfFile = listBulletin.get(i);
+//            String idStudent = pdfFile.getId_student();
+//            if(idStudent.equals(studentFolder.getId_folder())){
+//                pdfFile.setId_parent(studentFolder.getId_folder());
+//                studentFolder.addBulletin(pdfFile);
+//            }
+//        }
+//    }
 
     private static Handler<Either<String, Folder>> getHandlerFolder(Future<Folder> serviceFuture) {
         return event -> {

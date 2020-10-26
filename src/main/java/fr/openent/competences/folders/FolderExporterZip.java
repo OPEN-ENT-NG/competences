@@ -19,7 +19,7 @@ import io.vertx.core.json.JsonObject;
 
 public class FolderExporterZip extends FolderExporter {
     public static class ZipContext extends FolderExporterContext {
-        final String zipFullPath;
+        final public String zipFullPath;
         final String zipName;
         final String baseName;
         final String rootBase;
@@ -65,13 +65,17 @@ public class FolderExporterZip extends FolderExporter {
 
     public Future<Void> sendZip(HttpServerRequest req, ZipContext context) {
         Future<Void> future = Future.future();
-        final HttpServerResponse resp = req.response();
-        System.out.println("sending  ");
-        resp.putHeader("Content-Disposition", "attachment; filename=\"" + context.zipName + "\"");
-        resp.putHeader("Content-Type", "application/octet-stream");
-        resp.putHeader("Content-Description", "File Transfer");
-        resp.putHeader("Content-Transfer-Encoding", "binary");
-        resp.sendFile(context.zipFullPath, future.completer());
+        try {
+            final HttpServerResponse resp = req.response();
+            System.out.println("sending  ");
+            resp.putHeader("Content-Disposition", "attachment; filename=\"" + context.zipName + "\"");
+            resp.putHeader("Content-Type", "application/octet-stream");
+            resp.putHeader("Content-Description", "File Transfer");
+            resp.putHeader("Content-Transfer-Encoding", "binary");
+            resp.sendFile(context.zipFullPath, future.completer());
+        }catch (java.lang.IllegalStateException e){
+            future.complete();
+        }
 
         return future;
     }

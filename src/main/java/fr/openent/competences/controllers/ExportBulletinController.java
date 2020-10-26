@@ -15,10 +15,12 @@ import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.storage.Storage;
+import org.entcore.common.user.UserUtils;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
@@ -28,10 +30,13 @@ import static org.entcore.common.http.response.DefaultResponseHandler.defaultRes
 public class ExportBulletinController extends ControllerHelper {
     private UtilsService utilsService;
     private final Storage storage;
+    private WorkspaceHelper workspaceHelper;
+
 
     public ExportBulletinController(EventBus eb, Storage storage) {
         utilsService = new DefaultUtilsService(eb);
         this.storage = storage;
+        this.workspaceHelper = new WorkspaceHelper(eb, storage);
     }
 
 
@@ -151,14 +156,16 @@ public class ExportBulletinController extends ControllerHelper {
 //        });
     }
 
+
     @Get("/archive/bulletin/:idStructure")
     @ApiDoc("télécharge l archive d'un étab")
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
     @ResourceFilter(SuperAdminFilter.class)
     public  void getArchiveBulletin(final  HttpServerRequest request){
         String idStructure = request.params().get("idStructure");
-        ArchiveUtils.getArchiveBulletinZip(idStructure,request,eb,storage, vertx);
-//        request.response().setStatusCode(201).end();
+        UserUtils.getUserInfos(eb, request, user -> {
+                    ArchiveUtils.getArchiveBulletinZip(idStructure, request, eb, storage, vertx, workspaceHelper,user);
+                });
 
     }
 
