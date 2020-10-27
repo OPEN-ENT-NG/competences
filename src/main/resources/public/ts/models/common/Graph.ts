@@ -408,7 +408,7 @@ export class Graph extends Model{
                 if(matiereOrDomaine.studentAverage !== null){
                     averageStudent.push(parseFloat(matiereOrDomaine.studentAverage));
                 }else{
-                    averageStudent.push(0);
+                    averageStudent.push('NN');
                 }
                 if(matiereOrDomaine.classAverage !== null){
                     averageClass.push(parseFloat(matiereOrDomaine.classAverage));

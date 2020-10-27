@@ -21,6 +21,10 @@ public class StatMat {
         return mapIdMatStatclass;
     }
 
+    public void setMapIdMatStatclass (Map<String, StatClass> mapIdMatStatclass) {
+        this.mapIdMatStatclass = mapIdMatStatclass;
+    }
+
     public void setMapIdMatStatclass(JsonArray listNotes) {
         for(int i = 0; i < listNotes.size(); i++){
             JsonObject note = listNotes.getJsonObject(i);
@@ -78,7 +82,5 @@ public class StatMat {
         }
 
     }
-
-
 
 }

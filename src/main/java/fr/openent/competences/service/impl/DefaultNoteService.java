@@ -3547,17 +3547,163 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     true);
 
             // 5. On regroupe les notes par idMatière
-            Map<String,JsonArray> matieresNotes = new HashMap<>();
-            Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
-            idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes, matieresNotes, matieresNotesEleve, idEleve,
-                    false), idMatieres);
+
+                Map<String,JsonArray> matieresNotes = new HashMap<>();
+                Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
+                idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes, matieresNotes, matieresNotesEleve, idEleve,
+                        false), idMatieres);
+
+            Map<String, StatClass> mapMatieresStatClasseAndEleve = new HashMap<>();
+
             StatMat statMat = new StatMat();
-            statMat.setMapIdMatStatclass(listNotes);
-            Map<String, StatClass> mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
+            if(idPeriode != null ) {
+
+                statMat.setMapIdMatStatclass(listNotes);
+                mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
+            } else {//il faut trier les notes par période
+
+                Map<Integer, JsonArray> mapIdPeriodeNotes = getListNotesByPeriode(listNotes, false);
+                if( !mapIdPeriodeNotes.isEmpty()) {
+                    //max nb of pperiode on class = 3
+                        StatMat statMatP1 = new StatMat();
+                        StatMat statMatP2 = new StatMat();
+                        StatMat statMatP3 = new StatMat();
+
+                    if(mapIdPeriodeNotes.containsKey(1) || mapIdPeriodeNotes.containsKey(2)) {
+                        statMatP1.setMapIdMatStatclass((mapIdPeriodeNotes.containsKey(1)) ? mapIdPeriodeNotes.get(3) : new JsonArray());
+                        statMatP2.setMapIdMatStatclass((mapIdPeriodeNotes.containsKey(2)) ? mapIdPeriodeNotes.get(4) : new JsonArray());
+                        } else{
+                            statMatP1.setMapIdMatStatclass((mapIdPeriodeNotes.containsKey(3)) ? mapIdPeriodeNotes.get(3) : new JsonArray());
+                            statMatP2.setMapIdMatStatclass((mapIdPeriodeNotes.containsKey(4)) ? mapIdPeriodeNotes.get(4) : new JsonArray());
+                            statMatP3.setMapIdMatStatclass((mapIdPeriodeNotes.containsKey(5)) ? mapIdPeriodeNotes.get(5) : new JsonArray());
+                        }
+
+                        Map<String, StatClass> mapMatieresStatClasseAndEleveP1 = statMatP1.getMapIdMatStatclass();
+                        Map<String, StatClass> mapMatieresStatClasseAndEleveP2 = statMatP2.getMapIdMatStatclass();
+                        Map<String, StatClass> mapMatieresStatClasseAndEleveP3 = statMatP3.getMapIdMatStatclass();
+
+                        for (int i = 0; i < subjectF.result().size(); i++) {
+                            JsonObject matiere = subjectF.result().getJsonObject(i);
+                            String idMatiere = matiere.getString("id");
+                            if (!idMatieres.contains(idMatiere)) {
+                                continue;
+                            }
+
+                            List<NoteDevoir> listAverageClass = new ArrayList<>();
+                            List<NoteDevoir> listAverageStudent = new ArrayList<>();
+                            Double annualClassAverage = null;
+                            Double annualClassMin = null;
+                            Double annualClassMax = null;
+                            Double annualAverageStudent = null;
+
+                            StatClass statClasseP1 = (!mapMatieresStatClasseAndEleveP1.isEmpty()) ?
+                                    mapMatieresStatClasseAndEleveP1.get(matiere.getString("id")) : null;
+                            StatClass statClasseP2 = (!mapMatieresStatClasseAndEleveP2.isEmpty()) ?
+                                    mapMatieresStatClasseAndEleveP2.get(matiere.getString("id")) : null;
+                            StatClass statClasseP3 = (!mapMatieresStatClasseAndEleveP3.isEmpty()) ?
+                                    mapMatieresStatClasseAndEleveP3.get(matiere.getString("id")) : null;
+
+                            if (statClasseP1 != null && statClasseP1.getAverageClass() != null) {
+                                listAverageClass.add(new NoteDevoir
+                                        (statClasseP1.getAverageClass(),new Double(20), false, 1.0));
+                                annualClassMin = statClasseP1.getMinMaxClass(true);
+                                annualClassMax = statClasseP1.getMinMaxClass(false);
+                                if(statClasseP1.getMoyenneEleve(idEleve) != null){
+                                    listAverageStudent.add(new NoteDevoir
+                                            ( statClasseP1.getMoyenneEleve(idEleve),new Double(20), false, 1.0));
+
+                                }
+
+                            }
+                            if (statClasseP2 != null && statClasseP2.getAverageClass() != null) {
+                                listAverageClass.add(new NoteDevoir
+                                        (statClasseP2.getAverageClass(),new Double(20), false, 1.0));
+
+                                Double minP2 = statClasseP2.getMinMaxClass(true);
+                                Double maxP2 = statClasseP2.getMinMaxClass(false);
+                                if(annualClassMin != null){
+                                    if(minP2 < annualClassMin){
+                                        annualClassMin = minP2;
+                                    }
+                                } else {
+                                    annualClassMin = minP2;
+                                }
+                                if(annualClassMax != null){
+                                    if(maxP2 > annualClassMax) {
+                                        annualClassMax = maxP2;
+                                    }
+                                } else {
+                                    annualClassMax = maxP2;
+                                }
+
+                                if(statClasseP2.getMoyenneEleve(idEleve) != null){
+                                    listAverageStudent.add(new NoteDevoir
+                                            ( statClasseP2.getMoyenneEleve(idEleve),new Double(20), false, 1.0));
+
+                                }
+
+                            }
+                            if (statClasseP3 != null && statClasseP3.getAverageClass() != null ) {
+                                listAverageClass.add(new NoteDevoir
+                                        (statClasseP3.getAverageClass(),new Double(20), false, 1.0));
+
+                                Double minP3 = statClasseP3.getMinMaxClass(true);
+                                Double maxP3 = statClasseP3.getMinMaxClass(false);
+                                if(annualClassMin != null){
+                                    if(minP3 < annualClassMin){
+                                        annualClassMin = minP3;
+                                    }
+                                } else {
+                                    annualClassMin = minP3;
+                                }
+                                if(annualClassMax != null){
+                                    if(maxP3 > annualClassMax) {
+                                        annualClassMax = maxP3;
+                                    }
+                                } else {
+                                    annualClassMax = maxP3;
+                                }
+
+                                if(statClasseP3.getMoyenneEleve(idEleve) != null){
+                                    listAverageStudent.add(new NoteDevoir
+                                            ( statClasseP3.getMoyenneEleve(idEleve),new Double(20), false, 1.0));
+
+                                }
+
+                            }
+                            if(!listAverageClass.isEmpty()){
+                                annualClassAverage = utilsService.calculMoyenneParDiviseur(listAverageClass,
+                                        false).getDouble("moyenne");
+
+                            }
+                            if(!listAverageStudent.isEmpty()){
+                                annualAverageStudent = utilsService.calculMoyenneParDiviseur(listAverageStudent,
+                                        false).getDouble("moyenne");
+
+                            }
+
+                            StatEleve statEleveAnnual = new StatEleve();
+                            statEleveAnnual.setMoyenneAuto(annualAverageStudent);
+
+                            StatClass statClassAnnual = new StatClass();
+                            statClassAnnual.setAverageClass(annualClassAverage);
+                            statClassAnnual.getMapEleveStat().put(idEleve, statEleveAnnual);
+                            statClassAnnual.setMax(annualClassMax);
+                            statClassAnnual.setMin(annualClassMin);
+                            mapMatieresStatClasseAndEleve.put(idMatiere, statClassAnnual);
+                        }
+                    statMat.setMapIdMatStatclass(mapMatieresStatClasseAndEleve);
+
+                } else {
+
+                    statMat.setMapIdMatStatclass(listNotes);
+                    mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
+                }
+            }
 
             // 6. On récupère tous les libelles des matières de l'établissement et on fait correspondre
             // aux résultats par idMatière
-            linkIdSubjectToLibelle(idEleve, getMaxByItem(matieresCompNotes, tableauDeConversionFuture.result()),
+            linkIdSubjectToLibelle(idEleve, idPeriode, getMaxByItem(matieresCompNotes, tableauDeConversionFuture.result()),
                     getMaxByItem(matieresCompNotesEleve, tableauDeConversionFuture.result()), matieresNotes, matieresNotesEleve,
                     mapMatieresStatClasseAndEleve, idMatieres, subjectF.result(), handler);
         });
@@ -3658,8 +3804,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         JsonArray result = new JsonArray();
         for (int i=0; i< datas.size(); i++ ) {
             JsonObject data = datas.getJsonObject(i);
-            if (!checkFormative || (data != null && data.getBoolean("formative") != null && !data.getBoolean("formative"))) {
-                String idMatiere = data.getString("id_matiere");
+            if (!checkFormative || (data != null && data.getBoolean("formative") != null &&
+                    !data.getBoolean("formative")) || data.getString("id_devoir") == null) {
+                String idMatiere = (data.getString("id_matiere") != null ) ? data.getString("id_matiere") : data.getString("id_matiere_moyf");
                 idMatiere = (idMatiere!= null)? idMatiere : "no_id_matiere";
                 if (!mapDataClasse.containsKey(idMatiere)) {
                     mapDataClasse.put(idMatiere, new JsonArray());
@@ -3676,7 +3823,30 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return result;
     }
 
-    // Permet de Calculer le Max des Niveaux Atteints par Items regroupés par Matière
+    private Map<Integer, JsonArray> getListNotesByPeriode (JsonArray listNotes, boolean checkFormative) {
+        Map< Integer, JsonArray> mapIdPeriodeListeNotes = new HashMap<>();
+        if( listNotes != null && !listNotes.isEmpty()) {
+            for( int i = 0 ; i < listNotes.size(); i++){
+
+                JsonObject note = listNotes.getJsonObject(i);
+
+                if( !checkFormative || (note != null && note.getBoolean("formative") != null &&
+                        !note.getBoolean("formative")) || note.getString("id_devoir") == null) {
+                    Integer idPeriode = (note.getInteger("id_periode") != null ) ?
+                            note.getInteger("id_periode") : note.getInteger("id_periode_moyenne_finale");
+
+                    if(!mapIdPeriodeListeNotes.containsKey(idPeriode)) {
+                        mapIdPeriodeListeNotes.put( idPeriode, new JsonArray());
+                    }
+                    mapIdPeriodeListeNotes.get(idPeriode).add(note);
+
+                }
+            }
+        }
+
+        return mapIdPeriodeListeNotes;
+    }
+     // Permet de Calculer le Max des Niveaux Atteints par Items regroupés par Matière
     private Map<String,JsonArray> getMaxByItem(Map<String,JsonArray> mapData, JsonArray tableauConversion){
         Map<String,JsonArray> result = new HashMap<>();
 
@@ -3805,7 +3975,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return maxComp;
     }
 
-    private void linkIdSubjectToLibelle(String idEleve, Map<String, JsonArray> matieresCompNotes,
+    private void linkIdSubjectToLibelle(String idEleve, Long idPeriode, Map<String, JsonArray> matieresCompNotes,
                                         Map<String, JsonArray> matieresCompNotesEleve,
                                         Map<String, JsonArray> matieresNotes,
                                         Map<String, JsonArray> matieresNotesEleve,
@@ -3828,8 +3998,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             StatClass statClasse = mapMatieresStatClasseAndEleve.get(matiere.getString("id"));
             if (statClasse != null) {
                 classAverage = statClasse.getAverageClass();
-                classMin = statClasse.getMinMaxClass(true);
-                classMax = statClasse.getMinMaxClass(false);
+                if ( idPeriode != null ) {
+                    classMin = statClasse.getMinMaxClass(true);
+                    classMax = statClasse.getMinMaxClass(false);
+                } else {
+                    classMin = statClasse.getMin();
+                    classMax = statClasse.getMax();
+                }
                 averageStudent = statClasse.getMoyenneEleve(idEleve);
             }
             matiere.put("competencesNotes", matieresCompNotes

@@ -14,6 +14,8 @@ public class StatClass {
      */
     private Map<String,StatEleve> mapEleveStat;
     private Double averageClass;
+    private Double min;
+    private Double max;
     private UtilsService utilsService;
 
     public StatClass(){
@@ -21,6 +23,22 @@ public class StatClass {
             mapEleveStat = new HashMap<String, StatEleve>();
         }
         utilsService = new DefaultUtilsService();
+    }
+
+    public Double getMin () {
+        return min;
+    }
+
+    public void setMin (Double min) {
+        this.min = min;
+    }
+
+    public Double getMax () {
+        return max;
+    }
+
+    public void setMax (Double max) {
+        this.max = max;
     }
 
     public Double getMoyenneEleve (String idEleve) {
@@ -80,8 +98,8 @@ public class StatClass {
                         false, new Double(1)));
 
             }
-            this.averageClass = utilsService.calculMoyenneParDiviseur(averageStudentList,
-                    false).getDouble("moyenne");
+            this.averageClass = ( !averageStudentList.isEmpty() ) ?
+            utilsService.calculMoyenneParDiviseur(averageStudentList,false).getDouble("moyenne") : null;
         }else{
             this.averageClass = null;
         }
