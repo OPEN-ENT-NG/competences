@@ -91,10 +91,11 @@ public class BilanPeriodiqueController extends ControllerHelper{
             @Override
             public void handle(final UserInfos user) {
                 if (user != null) {
-                    syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(
-                            Long.parseLong(request.params().get("id_typePeriode")),
-                            request.params().get("id_eleve"),
-                            request.params().get("id_structure"),
+                    final Long idTypePeriode = Long.parseLong(request.params().get("id_typePeriode"));
+                    final String idEleve = request.params().get("id_eleve");
+                    final String idStructure = request.params().get("id_structure");
+
+                    syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(idTypePeriode, idEleve, idStructure,
                             arrayResponseHandler(request));
                 } else {
                     badRequest(request);
@@ -185,21 +186,17 @@ public class BilanPeriodiqueController extends ControllerHelper{
             public void handle(final UserInfos user) {
                 if (user != null) {
                     String validator = pathPrefix + Competences.SCHEMA_SYNTHESE_CREATE;
-                    RequestUtils.bodyToJson(request, validator,
-                            new Handler<JsonObject>() {
-                                @Override
-                                public void handle(JsonObject synthese) {
-                                    final Long idTypePeriode = synthese.getLong("id_typePeriode");
-                                    final String idEleve = synthese.getString("id_eleve");
-                                    final String idStructure = synthese.getString("id_structure");
-                                    syntheseBilanPeriodiqueService.createOrUpdateSyntheseBilanPeriodique(
-                                            idTypePeriode,
-                                            idEleve,
-                                            idStructure,
-                                            synthese.getString("synthese"),
-                                            DefaultResponseHandler.defaultResponseHandler(request));
-                                }
-                            });
+                    RequestUtils.bodyToJson(request, validator, new Handler<JsonObject>() {
+                        @Override
+                        public void handle(JsonObject synthese) {
+                            final Long idTypePeriode = synthese.getLong("id_typePeriode");
+                            final String idEleve = synthese.getString("id_eleve");
+                            final String idStructure = synthese.getString("id_structure");
+                            final String syntheseValue = synthese.getString("synthese");
+                            syntheseBilanPeriodiqueService.createOrUpdateSyntheseBilanPeriodique(idTypePeriode,
+                                    idEleve, idStructure, syntheseValue, defaultResponseHandler(request));
+                        }
+                    });
                 } else {
                     log.debug("User not found in session.");
                     Renders.unauthorized(request);

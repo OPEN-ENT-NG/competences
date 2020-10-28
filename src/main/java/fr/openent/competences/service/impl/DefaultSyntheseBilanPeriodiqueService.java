@@ -20,57 +20,39 @@ public class DefaultSyntheseBilanPeriodiqueService {
             deleteSynthese(idTypePeriode, idEleve, idStructure, handler);
         }
         else {
-          String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique" +
+            String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique" +
                     "(id_typePeriode, id_eleve, synthese, id_etablissement) VALUES (?, ?, ?, ?)" +
                     "ON CONFLICT (id_typePeriode, id_eleve, id_etablissement) DO UPDATE SET synthese = ?";
-            JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-            values.add(idTypePeriode);
-            values.add(idEleve);
-            values.add(synthese);
-            values.add(idStructure);
-            values.add(synthese);
+            JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(idTypePeriode).add(idEleve)
+                    .add(synthese).add(idStructure).add(synthese);
             Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(handler));
         }
-
     }
 
-    private void deleteSynthese (Long idTypePeriode, String idEleve, String idStructure, Handler<Either<String, JsonObject>> handler){
+    private void deleteSynthese (Long idTypePeriode, String idEleve, String idStructure,
+                                 Handler<Either<String, JsonObject>> handler){
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique " +
+                " WHERE id_eleve = ? AND id_typePeriode = ? AND id_etablissement = ?";
 
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "";
-
-            query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique " +
-                    " WHERE id_eleve = ?" +
-                    " AND id_typePeriode = ?" +
-                    " AND id_etablissement = ?";
-        params.add(idEleve)
-                .add(idTypePeriode)
-                .add(idStructure);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idEleve)
+                .add(idTypePeriode).add(idStructure);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
-    public void getSyntheseBilanPeriodique (Long idTypePeriode, String idEleve, String idStructure, Handler<Either<String, JsonArray>> handler) {
+    public void getSyntheseBilanPeriodique(Long idTypePeriode, String idEleve, String idStructure,
+                                           Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique " +
+                "WHERE id_eleve = ? AND id_etablissement = ? ";
 
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "";
-
-        query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique " +
-                "WHERE "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique.id_eleve = ? " +
-                "AND "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique.id_etablissement = ? ";
-
-        params.add(idEleve);
-        params.add(idStructure);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idEleve).add(idStructure);
 
         if(idTypePeriode != null){
-            query += "AND "+ Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique.id_typePeriode = ? ";
+            query += "AND id_typePeriode = ?";
             params.add(idTypePeriode);
         }
 
-        Sql.getInstance().prepared(query, params,
-                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                        .getInteger("timeout-transaction") * 1000L),
-                SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, params, new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                .getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
     }
-
 }

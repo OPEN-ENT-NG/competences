@@ -586,7 +586,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             const res = await $scope.elementBilanPeriodique.getAllAvisSyntheses();
             $scope.elementBilanPeriodique.avisConseil.avis = res.libelleAvis;
             for (const periode of $scope.search.classe.periodes.all.sort((a, b) => (a.id_type > b.id_type) ? 1 : -1)) {
-                if(periode.id != null){
+                if(periode.id_type != null){
                     let oldElement = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
                         periode, $scope.structure, $scope.filteredPeriode);
                     oldElement.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
@@ -595,9 +595,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                         periode, $scope.structure.id);
                     oldElement.avisOrientation = new AvisOrientation($scope.informations.eleve.id,
                         periode, $scope.structure.id);
-                    let synthesePeriode = _.findWhere(res.syntheses,{id_typeperiode:periode.id_type});
-                    let avisConseilPeriode = _.findWhere(res.avisConseil,{id_periode:periode.id_type});
-                    let avisOrientationPeriode = _.findWhere(res.avisOrientation,{id_periode:periode.id_type});
+                    let synthesePeriode = _.findWhere(res.syntheses, {id_typeperiode : periode.id_type});
+                    let avisConseilPeriode = _.findWhere(res.avisConseil, {id_periode : periode.id_type});
+                    let avisOrientationPeriode = _.findWhere(res.avisOrientation, {id_periode : periode.id_type});
                     if(synthesePeriode)
                         oldElement.syntheseBilanPeriodique.synthese = synthesePeriode.synthese;
                     if(avisConseilPeriode)
@@ -621,7 +621,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.search.avisOrientation = _.find($scope.elementBilanPeriodique.avisConseil.avis,
                 {id: $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan});
             $scope.previousOrientationOpinion = $scope.search.avisOrientation;
-
         };
 
         $scope.deleteStudent = async function () {
