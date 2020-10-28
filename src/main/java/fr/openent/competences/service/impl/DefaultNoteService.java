@@ -3560,138 +3560,73 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 statMat.setMapIdMatStatclass(listNotes);
                 mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
-            } else {//il faut trier les notes par période
+            } else { // notes order by periode
 
                 Map<Integer, JsonArray> mapIdPeriodeNotes = getListNotesByPeriode(listNotes, false);
                 if( !mapIdPeriodeNotes.isEmpty()) {
-                    //max nb of pperiode on class = 3
-                        StatMat statMatP1 = new StatMat();
-                        StatMat statMatP2 = new StatMat();
-                        StatMat statMatP3 = new StatMat();
 
-                    if(mapIdPeriodeNotes.containsKey(1) || mapIdPeriodeNotes.containsKey(2)) {
-                        statMatP1.setMapIdMatStatclass((mapIdPeriodeNotes.containsKey(1)) ? mapIdPeriodeNotes.get(3) : new JsonArray());
-                        statMatP2.setMapIdMatStatclass((mapIdPeriodeNotes.containsKey(2)) ? mapIdPeriodeNotes.get(4) : new JsonArray());
-                        } else{
-                            statMatP1.setMapIdMatStatclass((mapIdPeriodeNotes.containsKey(3)) ? mapIdPeriodeNotes.get(3) : new JsonArray());
-                            statMatP2.setMapIdMatStatclass((mapIdPeriodeNotes.containsKey(4)) ? mapIdPeriodeNotes.get(4) : new JsonArray());
-                            statMatP3.setMapIdMatStatclass((mapIdPeriodeNotes.containsKey(5)) ? mapIdPeriodeNotes.get(5) : new JsonArray());
+                    for (int i = 0; i < idMatieres.size(); i++) {
+
+                        String idMatiere = idMatieres.getString(i);
+                        List<NoteDevoir> listAverageClass = new ArrayList<>();
+                        List<NoteDevoir> listAverageStudent = new ArrayList<>();
+                        Double annualClassAverage;
+                        Double annualClassMin = null;
+                        Double annualClassMax = null;
+                        Double annualAverageStudent;
+                        for(Map.Entry<Integer, JsonArray> IdPeriodeNotesEntry : mapIdPeriodeNotes.entrySet()){
+                            StatMat statMatP = new StatMat();
+                            statMatP.setMapIdMatStatclass(IdPeriodeNotesEntry.getValue());
+                            Map<String, StatClass> mapMatieresStatClasseAndEleveP = statMatP.getMapIdMatStatclass();
+                            StatClass statClasseP = mapMatieresStatClasseAndEleveP.get(idMatiere);
+
+                            if (statClasseP != null && !statClasseP.getMapEleveStat().isEmpty()) {
+                                listAverageClass.add(new NoteDevoir
+                                        (statClasseP.getAverageClass(), new Double(20), false, 1.0));
+                                if (annualClassMin == null) {
+                                    annualClassMin = statClasseP.getMinMaxClass(true);
+                                } else {
+                                    if (statClasseP.getMinMaxClass(true) < annualClassMin)
+                                        annualClassMin = statClasseP.getMinMaxClass(true);
+                                }
+                                if (annualClassMax == null) {
+                                    annualClassMax = statClasseP.getMinMaxClass(false);
+                                } else {
+                                    if (statClasseP.getMinMaxClass(false) > annualClassMax)
+                                        annualClassMax = statClasseP.getMinMaxClass(false);
+                                }
+
+                                if (statClasseP.getMoyenneEleve(idEleve) != null) {
+                                    listAverageStudent.add(new NoteDevoir
+                                            (statClasseP.getMoyenneEleve(idEleve), new Double(20), false, 1.0));
+
+
+                                }
+                            }
                         }
 
-                        Map<String, StatClass> mapMatieresStatClasseAndEleveP1 = statMatP1.getMapIdMatStatclass();
-                        Map<String, StatClass> mapMatieresStatClasseAndEleveP2 = statMatP2.getMapIdMatStatclass();
-                        Map<String, StatClass> mapMatieresStatClasseAndEleveP3 = statMatP3.getMapIdMatStatclass();
-
-                        for (int i = 0; i < subjectF.result().size(); i++) {
-                            JsonObject matiere = subjectF.result().getJsonObject(i);
-                            String idMatiere = matiere.getString("id");
-                            if (!idMatieres.contains(idMatiere)) {
-                                continue;
-                            }
-
-                            List<NoteDevoir> listAverageClass = new ArrayList<>();
-                            List<NoteDevoir> listAverageStudent = new ArrayList<>();
-                            Double annualClassAverage = null;
-                            Double annualClassMin = null;
-                            Double annualClassMax = null;
-                            Double annualAverageStudent = null;
-
-                            StatClass statClasseP1 = (!mapMatieresStatClasseAndEleveP1.isEmpty()) ?
-                                    mapMatieresStatClasseAndEleveP1.get(matiere.getString("id")) : null;
-                            StatClass statClasseP2 = (!mapMatieresStatClasseAndEleveP2.isEmpty()) ?
-                                    mapMatieresStatClasseAndEleveP2.get(matiere.getString("id")) : null;
-                            StatClass statClasseP3 = (!mapMatieresStatClasseAndEleveP3.isEmpty()) ?
-                                    mapMatieresStatClasseAndEleveP3.get(matiere.getString("id")) : null;
-
-                            if (statClasseP1 != null && statClasseP1.getAverageClass() != null) {
-                                listAverageClass.add(new NoteDevoir
-                                        (statClasseP1.getAverageClass(),new Double(20), false, 1.0));
-                                annualClassMin = statClasseP1.getMinMaxClass(true);
-                                annualClassMax = statClasseP1.getMinMaxClass(false);
-                                if(statClasseP1.getMoyenneEleve(idEleve) != null){
-                                    listAverageStudent.add(new NoteDevoir
-                                            ( statClasseP1.getMoyenneEleve(idEleve),new Double(20), false, 1.0));
-
-                                }
-
-                            }
-                            if (statClasseP2 != null && statClasseP2.getAverageClass() != null) {
-                                listAverageClass.add(new NoteDevoir
-                                        (statClasseP2.getAverageClass(),new Double(20), false, 1.0));
-
-                                Double minP2 = statClasseP2.getMinMaxClass(true);
-                                Double maxP2 = statClasseP2.getMinMaxClass(false);
-                                if(annualClassMin != null){
-                                    if(minP2 < annualClassMin){
-                                        annualClassMin = minP2;
-                                    }
-                                } else {
-                                    annualClassMin = minP2;
-                                }
-                                if(annualClassMax != null){
-                                    if(maxP2 > annualClassMax) {
-                                        annualClassMax = maxP2;
-                                    }
-                                } else {
-                                    annualClassMax = maxP2;
-                                }
-
-                                if(statClasseP2.getMoyenneEleve(idEleve) != null){
-                                    listAverageStudent.add(new NoteDevoir
-                                            ( statClasseP2.getMoyenneEleve(idEleve),new Double(20), false, 1.0));
-
-                                }
-
-                            }
-                            if (statClasseP3 != null && statClasseP3.getAverageClass() != null ) {
-                                listAverageClass.add(new NoteDevoir
-                                        (statClasseP3.getAverageClass(),new Double(20), false, 1.0));
-
-                                Double minP3 = statClasseP3.getMinMaxClass(true);
-                                Double maxP3 = statClasseP3.getMinMaxClass(false);
-                                if(annualClassMin != null){
-                                    if(minP3 < annualClassMin){
-                                        annualClassMin = minP3;
-                                    }
-                                } else {
-                                    annualClassMin = minP3;
-                                }
-                                if(annualClassMax != null){
-                                    if(maxP3 > annualClassMax) {
-                                        annualClassMax = maxP3;
-                                    }
-                                } else {
-                                    annualClassMax = maxP3;
-                                }
-
-                                if(statClasseP3.getMoyenneEleve(idEleve) != null){
-                                    listAverageStudent.add(new NoteDevoir
-                                            ( statClasseP3.getMoyenneEleve(idEleve),new Double(20), false, 1.0));
-
-                                }
-
-                            }
-                            if(!listAverageClass.isEmpty()){
-                                annualClassAverage = utilsService.calculMoyenneParDiviseur(listAverageClass,
-                                        false).getDouble("moyenne");
-
-                            }
-                            if(!listAverageStudent.isEmpty()){
+                        StatEleve statEleveAnnual = new StatEleve();
+                        StatClass statClassAnnual = new StatClass();
+                        if( !listAverageClass.isEmpty() ){
+                            if( !listAverageStudent.isEmpty() ) {
                                 annualAverageStudent = utilsService.calculMoyenneParDiviseur(listAverageStudent,
                                         false).getDouble("moyenne");
-
+                                statEleveAnnual.setMoyenneAuto(annualAverageStudent);
+                                statClassAnnual.getMapEleveStat().put(idEleve, statEleveAnnual);
                             }
 
-                            StatEleve statEleveAnnual = new StatEleve();
-                            statEleveAnnual.setMoyenneAuto(annualAverageStudent);
+                            annualClassAverage = utilsService.calculMoyenneParDiviseur(listAverageClass,
+                                    false).getDouble("moyenne");
 
-                            StatClass statClassAnnual = new StatClass();
                             statClassAnnual.setAverageClass(annualClassAverage);
-                            statClassAnnual.getMapEleveStat().put(idEleve, statEleveAnnual);
                             statClassAnnual.setMax(annualClassMax);
                             statClassAnnual.setMin(annualClassMin);
                             mapMatieresStatClasseAndEleve.put(idMatiere, statClassAnnual);
+
                         }
+
+                    }
+
                     statMat.setMapIdMatStatclass(mapMatieresStatClasseAndEleve);
 
                 } else {
@@ -3995,7 +3930,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             Double classMin = null;
             Double classMax = null;
             Double averageStudent = null;
-            StatClass statClasse = mapMatieresStatClasseAndEleve.get(matiere.getString("id"));
+            StatClass statClasse = mapMatieresStatClasseAndEleve.get(idMatiere);
             if (statClasse != null) {
                 classAverage = statClasse.getAverageClass();
                 if ( idPeriode != null ) {
@@ -4008,11 +3943,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 averageStudent = statClasse.getMoyenneEleve(idEleve);
             }
             matiere.put("competencesNotes", matieresCompNotes
-                    .get(matiere.getString("id")))
+                    .get(idMatiere))
                     .put("competencesNotesEleve", matieresCompNotesEleve
-                            .get(matiere.getString("id")))
-                    .put("notes", matieresNotes.get(matiere.getString("id")))
-                    .put("notesEleve", matieresNotesEleve.get(matiere.getString("id")))
+                            .get(idMatiere))
+                    .put("notes", matieresNotes.get(idMatiere))
+                    .put("notesEleve", matieresNotesEleve.get(idMatiere))
                     .put("studentAverage", averageStudent)
                     .put("classAverage", classAverage)
                     .put("classMin", classMin)
