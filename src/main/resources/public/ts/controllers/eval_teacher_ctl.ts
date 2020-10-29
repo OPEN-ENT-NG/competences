@@ -3034,6 +3034,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     eleve.moyenneFinale = eleve.moyenne;
                     eleve.oldMoyenneFinale = eleve.moyenne;
                 }
+                $scope.calculerMoyenneClasse();
                 utils.safeApply($scope);
             });
         };
@@ -3072,6 +3073,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.releveNote._tmp._moyenne_classe.nullFinal.moyenne = moyenneFinal.toFixed(2);
             $scope.releveNote._tmp._moyenne_classe.nullFinal.min = minFinal;
             $scope.releveNote._tmp._moyenne_classe.nullFinal.max = maxFinal;
+
+            utils.safeApply($scope);
         }
 
         /**
