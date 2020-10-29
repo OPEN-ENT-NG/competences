@@ -136,7 +136,7 @@
                     <i18n>evaluation.lsu.export.button</i18n>
                 </button>
             </div>
-           <div ng-if="isChefEtab()" class="row vertical-spacing">
+            <div ng-if="isChefEtab()" class="row vertical-spacing">
                 <h3><i18n>evaluations.title.archivesBulletinsBFC</i18n></h3>
                 <h4><i18n>evaluations.archives.choice.type</i18n></h4>
                 <div ng-if="evaluations.structures.all.length > 1" class="three cell horizontal-spacing">
@@ -156,10 +156,13 @@
                     <label>
                         <input type="radio" ng-model="paramsArchive.type" value="bulletin">
                         <i18n>evaluations.bulletin</i18n>
+                        <span ng-show="showMessageBulletin" class="italic">
+                            (<i18n>evaluations.archives.done</i18n>)
+                        </span>
                     </label>
                 </div>
                 <!-- Archives pas encore générer par le superUser-->
-               <button type="button" ng-click="generateArchives()" class="vertical-spacing">
+                <button type="button" ng-click="generateArchives()" class="vertical-spacing">
                     <i18n>evaluations.archives.button</i18n>
                 </button>
             </div>

@@ -38,7 +38,6 @@ export class Archives {
                                 resolve(data);
                             }
                         if (data.status === 202) {
-                            toasts.info("oui")
                             reject();
                         }
                         if(data.status === 204){

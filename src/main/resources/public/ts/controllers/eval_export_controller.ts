@@ -35,6 +35,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             $scope.allClasses = $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE});
             $scope.errorResponse = (errorResponse !== undefined) ? errorResponse : null;
             $scope.inProgress = false;
+            $scope.showMessageBulletin = false;
             $scope.filteredPeriodes = [];
 
             $scope.paramsLSU = {
@@ -334,6 +335,8 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         $scope.generateArchives = async function () {
             await Utils.runMessageLoader($scope);
             $scope.inProgress = true;
+            $scope.showMessageBulletin = $scope.paramsArchive.type === 'bulletin';
+
             $scope.archive.export($scope.paramsArchive)
                 .then(async function (res) {
                     let blob = new Blob([res.data]);
