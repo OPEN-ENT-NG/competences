@@ -156,15 +156,16 @@
                     <label>
                         <input type="radio" ng-model="paramsArchive.type" value="bulletin">
                         <i18n>evaluations.bulletin</i18n>
-                        <span ng-show="showMessageBulletin" class="italic">
-                            (<i18n>evaluations.archives.done</i18n>)
-                        </span>
+
                     </label>
                 </div>
                 <!-- Archives pas encore générer par le superUser-->
                 <button type="button" ng-click="generateArchives()" class="vertical-spacing">
                     <i18n>evaluations.archives.button</i18n>
                 </button>
+                <span ng-show="showMessageBulletin" class="row cell vertical-spacing italic">
+                    <i18n>evaluations.archives.done</i18n>
+                </span>
             </div>
         </div>
     </article>

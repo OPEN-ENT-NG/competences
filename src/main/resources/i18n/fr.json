@@ -748,7 +748,7 @@
   "evaluation.archives.generation.error" : "Une erreur est survenue lors de la génération de l'archive. ",
   "evaluations.archives.choice.type": "Choix du type d'archive",
   "evaluations.archives.button": "Générer l'archive",
-  "evaluations.archives.done" : "L'archive des bulletins sera disponible dans quelques minutes dans votre espace documentaire",
+  "evaluations.archives.done" : "L'archive des bulletins sera disponible dans quelques minutes dans votre espace documentaire.",
   "evaluations.choice.structure": "Choix de la structure",
   "no.data.to.export": "Pas de données à exporter",
   "evaluation.orderShowSubject.title": "Organiser les matières",
