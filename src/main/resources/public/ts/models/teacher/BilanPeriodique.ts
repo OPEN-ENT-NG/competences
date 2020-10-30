@@ -286,8 +286,7 @@ export class BilanPeriodique extends  Model {
         if(!Object.keys(data).map(element => data[element]).some(array => array.length > 0)) return [];
         let resultHeader : Array<any> = [];
         const dataSynthesis = await this.makerHeaderWithTeachersAndSubjects(data, teacherBysubject);
-        const dataSynthesisClean = dataSynthesis
-            .filter(subjectToSynthesis => subjectToSynthesis.subjectShortName)
+        const dataSynthesisClean = dataSynthesis.filter(subjectToSynthesis => subjectToSynthesis.subjectShortName)
             .map(subjectToSynthesis => {
                 let lastName, firstName;
                 let teacherName;

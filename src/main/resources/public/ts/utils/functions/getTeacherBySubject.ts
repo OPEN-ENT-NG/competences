@@ -9,19 +9,21 @@ import {Periode} from "../../models/common/Periode";
  * @return { {idSubject:Enseignant}[] }
  */
 
-export const getTeacherBySubject:Function = (schoolClasses:Array<any>,
-                                             schoolClassId:string,
-                                             teachers:Array<Enseignant>,
-                                             periode : Periode):{idSubject:Enseignant}[] => {
-    const currentClass = _.chain(schoolClasses)
-        .findWhere({id: schoolClassId})
-        .value();
+export const getTeacherBySubject:Function = (schoolClasses:Array<any>, schoolClassId:string, teachers:Array<Enseignant>,
+                                             periode : Periode) : {idSubject : Enseignant}[] => {
+    const currentClass = _.chain(schoolClasses).findWhere({id: schoolClassId}).value();
     const teacherBySubject:{} = {};
+
     if(currentClass && currentClass.services){
-        currentClass.services.forEach(item => {
+        _.where(currentClass.services, {evaluable : true}).forEach(item => {
             if(item && item.id_matiere && item.id_enseignant){
-                teacherBySubject[item.id_matiere] = _.findWhere(teachers, {id : item.id_enseignant});
-                if(teacherBySubject[item.id_matiere] != undefined){
+                let teacher = _.findWhere(teachers, {id : item.id_enseignant})
+
+                if(teacher != undefined){
+                    if(!teacherBySubject[item.id_matiere]) {
+                        teacherBySubject[item.id_matiere] = teacher;
+                    }
+
                     teacherBySubject[item.id_matiere].coTeachers = [];
                     teacherBySubject[item.id_matiere].substituteTeachers = [];
                     item.coTeachers.forEach(coTeacher => {
@@ -52,5 +54,5 @@ export const getTeacherBySubject:Function = (schoolClasses:Array<any>,
             }
         });
     }
-    return <{idSubject:Enseignant}[]> teacherBySubject;
+    return <{idSubject : Enseignant}[]> teacherBySubject;
 };
