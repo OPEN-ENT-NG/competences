@@ -128,7 +128,7 @@ public class DefaultUtilsService  implements UtilsService {
     }
 
     public void getMultiTeachersByClass(String idEtablissement, String idClasse, Integer idPeriode,
-                                   Handler<Either<String, JsonArray>> handler) {
+                                        Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "multiTeaching.getMultiTeachersByClass")
                 .put("structureId", idEtablissement)
@@ -136,22 +136,22 @@ public class DefaultUtilsService  implements UtilsService {
                 .put("periodId", idPeriode != null ? idPeriode.toString() : null);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-                if (OK.equals(body.getString(STATUS))) {
-                    JsonArray result = body.getJsonArray(RESULT);
-                    handler.handle(new Either.Right<String, JsonArray>(result));
-                } else {
-                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                    log.error("getMultiTeachersByClass : " + body.getString("message"));
-                }
-            }
-        }));
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        if (OK.equals(body.getString(STATUS))) {
+                            JsonArray result = body.getJsonArray(RESULT);
+                            handler.handle(new Either.Right<String, JsonArray>(result));
+                        } else {
+                            handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                            log.error("getMultiTeachersByClass : " + body.getString("message"));
+                        }
+                    }
+                }));
     }
 
     public void getServices(final String idEtablissement, final JsonArray idClasse,
-                             Handler<Either<String, JsonArray>> handler) {
+                            Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "service.getDefaultServices")
                 .put("idEtablissement", idEtablissement)
@@ -502,7 +502,7 @@ public class DefaultUtilsService  implements UtilsService {
 
         } else {
 
-           JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+            JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
             values.add(valueToAdd);
             map.put(id, values);
         }
@@ -639,27 +639,35 @@ public class DefaultUtilsService  implements UtilsService {
                         }
 
                         // CREATION DU LIEN VERS LE NOUVEAU CYCLE
-                        StringBuilder queryLink = new StringBuilder()
-                                .append("INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
-                                .append(" (id_cycle, id_groupe, type_groupe) VALUES ");
+                        StringBuilder queryLink = new StringBuilder();
                         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-                        for (int i = 0; i < idClasses.length; i++) {
-                            queryLink.append(" (?, ?, ?) ");
-                            values.add(id_cycle)
-                                    .add(idClasses[i]).add(typeGroupes[i]);
-                            if (i != (idClasses.length - 1)) {
-                                queryLink.append(",");
-                            } else {
-                                queryLink.append(" ON CONFLICT (id_groupe)")
-                                        .append(" DO UPDATE SET id_cycle = ? ");
-                                values.add(id_cycle);
+                        if(id_cycle.intValue() != 0) {
+                            queryLink.append("INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
+                                    .append(" (id_cycle, id_groupe, type_groupe) VALUES ");
+                            for (int i = 0; i < idClasses.length; i++) {
+                                queryLink.append(" (?, ?, ?) ");
+                                values.add(id_cycle).add(idClasses[i]).add(typeGroupes[i]);
+                                if (i != (idClasses.length - 1)) {
+                                    queryLink.append(",");
+                                } else {
+                                    queryLink.append(" ON CONFLICT (id_groupe)")
+                                            .append(" DO UPDATE SET id_cycle = ? ");
+                                    values.add(id_cycle);
+                                }
                             }
                         }
+                        else {
+                            queryLink.append("DELETE FROM ").append(COMPETENCES_SCHEMA).append(".rel_groupe_cycle")
+                                    .append(" WHERE id_groupe IN ").append(Sql.listPrepared(idClasses));
+                            for (String idClass : idClasses) {
+                                values.add(idClass);
+                            }
+                        }
+
                         statements.add(new JsonObject()
                                 .put("statement", queryLink.toString())
                                 .put("values", values)
                                 .put("action", "prepared"));
-
 
                         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
                     } else {
@@ -686,7 +694,6 @@ public class DefaultUtilsService  implements UtilsService {
                 .append(" GROUP BY devoirs.id, devoirs.name, id_groupe ")
                 .append(" HAVING COUNT(competences_devoirs.id) > 0 ")
                 .append(" ORDER BY id_groupe ");
-
 
         for (String id : idClasses) {
             values.add(id);
@@ -1145,7 +1152,7 @@ public class DefaultUtilsService  implements UtilsService {
                 JsonObject o = array.getJsonObject(i);
                 if (isNotNull(o)){
                     if((isNotNull(o.getValue(key)) && o.getLong(key).equals(idPeriode) && isNotNull(idPeriode))
-                    || (isNull(idPeriode) && isNull(o.getValue(key))) ) {
+                            || (isNull(idPeriode) && isNull(o.getValue(key))) ) {
                         res = o;
                     }
                 }
@@ -1189,7 +1196,7 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public void getActivesStructure(EventBus event, Handler<Either<String, JsonArray>>handler) {
 
-     String query = "SELECT DISTINCT id_etablissement from " + VSCO_SCHEMA +".periode ;";
+        String query = "SELECT DISTINCT id_etablissement from " + VSCO_SCHEMA +".periode ;";
         Sql.getInstance().prepared(query, new JsonArray(), new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {

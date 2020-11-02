@@ -196,7 +196,7 @@ public class UtilsController extends ControllerHelper {
     }
 
     @Put("/link/groupes/cycles")
-    @ApiDoc("Met à jour  les classes de l'établissement")
+    @ApiDoc("Met à jour les cycles des classes de l'établissement")
     @SecuredAction(value = Competences.PARAM_LINK_GROUP_CYCLE_RIGHT)
     public void updateLinkGroupesCycles(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
@@ -227,7 +227,6 @@ public class UtilsController extends ControllerHelper {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
             public void handle(final JsonObject ressource) {
-                Number id_cycle = ressource.getInteger("id_cycle");
                 final String[] idClasses = (String[]) ressource.getJsonArray("idClasses")
                         .getList().toArray(new String[0]);
 

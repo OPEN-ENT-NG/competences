@@ -180,7 +180,7 @@ public interface UtilsService {
      * @param id_cycle cycle vers lequel on lie les classes
      * @param handler
      */
-    void linkGroupesCycles(final String[] idClasses, final Number id_cycle,final Number[] typeGroupes,
+    void linkGroupesCycles(final String[] idClasses, final Number id_cycle, final Number[] typeGroupes,
                            Handler<Either<String, JsonArray>> handler);
 
     /**
