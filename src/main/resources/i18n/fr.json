@@ -441,6 +441,7 @@
   "devoir.errDatePubli" : "Vous ne pouvez pas saisir une date de publication antérieure à la date du devoir.",
   "true": "oui",
   "false": "non",
+  "none": "Aucun",
   "evaluation.last.child": "Les dernières évaluations de ",
   "evaluation.change.devoir": "Changer de devoir",
   "evaluation.access.to.list": "Accès à la liste des évaluations",

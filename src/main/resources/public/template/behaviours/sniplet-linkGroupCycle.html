@@ -126,13 +126,21 @@
 <lightbox show="opened.lightboxLinkGroupCycle" on-close="!opened.lightboxLinkGroupCycle">
     <h3><i18n>evaluation.link.group.lightbox.title</i18n></h3>
     <form name="SelectCycleForm">
-        <p  ng-repeat="cycle in cycles">
+        <p ng-repeat="cycle in cycles">
             <label>
-            <input type="radio" ng-model="selectedRadio.id_cycle"
-                   value="[[::cycle.id_cycle]]">
-            [[::cycle.libelle]]
+                <input type="radio" ng-model="selectedRadio.id_cycle"
+                       value="[[::cycle.id_cycle]]">
+                [[::cycle.libelle]]
             </label>
-        </p><br/>
+        </p>
+        <p>
+            <label>
+                <input type="radio" ng-model="selectedRadio.id_cycle"
+                       value="0">
+                <i18n>none</i18n>
+            </label>
+        </p>
+        <br/>
     </form>
 
     <button class="marginFive magnet-right"
@@ -144,13 +152,19 @@
     </button>
 </lightbox>
 <lightbox show="opened.lightboxDataOnDevoirs" on-close="!opened.lightboxDataOnDevoirs">
-    <h3><i18n>evaluation.link.group.to</i18n>[[getClasseCycle(selectedRadio.id_cycle)]]</h3>
-    <p><i18n>evaluation.link.message</i18n></p>
+    <div ng-if="selectedRadio.id_cycle != 0">
+        <h3><i18n>evaluation.link.group.to</i18n>[[getClasseCycle(selectedRadio.id_cycle)]]</h3>
+        <p><i18n>evaluation.link.message</i18n></p>
+    </div>
+    <div ng-if="selectedRadio.id_cycle == 0">
+        <h3><i18n>evaluation.unlink.group.title</i18n></h3>
+        <p><i18n>evaluation.unlink.group.message</i18n></p>
+    </div>
     <section>
         <ul class="devoirToDelete">
-        <li ng-repeat="devoir in dataOnClasses">
-            <span>[[::devoir.name]]</span>&nbsp;-&nbsp;<span>([[::devoir.classe]])</span>
-        </li>
+            <li ng-repeat="devoir in dataOnClasses">
+                <span>[[::devoir.name]]</span>&nbsp;-&nbsp;<span>([[::devoir.classe]])</span>
+            </li>
         </ul>
     </section>
     <p><i18n>evaluations.devoir.confirmation.question</i18n></p>
@@ -159,7 +173,7 @@
             ng-click="save(selectedClasses);">
         <i18n>evaluations.perso.ok</i18n>
     </button>
-    <button data-ng-click="opened.lightboxDataOnDevoirs=false;opened.lightboxLinkGroupCycle = true;"
+    <button data-ng-click="opened.lightboxDataOnDevoirs=false; opened.lightboxLinkGroupCycle = true;"
             class="right-magnet cancel">
         <span><i18n>evaluations.perso.cancel</i18n></span>
     </button>
@@ -169,10 +183,12 @@
     <div class="toggle">
         <div class="row">
             <button class="cell"
-                    ng-click="initRadio(filteredItems);opened.lightboxLinkGroupCycle = true;">
-                <span ng-if="checkSelectedClasses(filteredItems)[0].id_cycle === null">
+                    ng-click="initRadio(filteredItems); opened.lightboxLinkGroupCycle = true;">
+                <span ng-if="checkSelectedClasses(filteredItems)[0].id_cycle === null ||
+                                checkSelectedClasses(filteredItems)[0].id_cycle === 0">
                     <i18n>evaluation.link.group.edit</i18n></span>
-                <span ng-if="checkSelectedClasses(filteredItems)[0].id_cycle !== null">
+                <span ng-if="checkSelectedClasses(filteredItems)[0].id_cycle !== null &&
+                                checkSelectedClasses(filteredItems)[0].id_cycle !== 0">
                     <i18n>item.modify</i18n></span>
             </button>
         </div>
