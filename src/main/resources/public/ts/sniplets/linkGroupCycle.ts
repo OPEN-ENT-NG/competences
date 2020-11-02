@@ -196,7 +196,10 @@ export const linkGroupCycle = {
                     result = searchParams.type[classe.type_groupe];
                 }
                 if (result && searchParams.id_cycle !== undefined && classe !== undefined) {
-                    result = (classe.id_cycle === searchParams.id_cycle);
+                    if(classe.id_cycle === 0)
+                        result = (searchParams.id_cycle === null);
+                    else
+                        result = (classe.id_cycle === searchParams.id_cycle);
                 }
 
                 if (result && searchParams.name && searchParams.name !== '*' && classe !== undefined

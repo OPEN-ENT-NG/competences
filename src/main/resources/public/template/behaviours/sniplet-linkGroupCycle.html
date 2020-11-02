@@ -35,20 +35,20 @@
         <div class="twelve tabs vertical-spacing-twice heading-tabs">
             <header ng-class="{selected : search.id_cycle === undefined}"
                     class="horizontal-spacing-twice ng-scope">
-                <div class="horizontal-spacing"  ng-click="search.id_cycle = undefined;">
+                <div class="horizontal-spacing" ng-click="search.id_cycle = undefined">
                     <span><i18n>all</i18n></span>
                 </div>
             </header>
             <header ng-repeat="cycle in cycles"
                     ng-class="{selected : search.id_cycle === cycle.id_cycle}"
                     class="horizontal-spacing-twice ng-scope">
-                <div class="horizontal-spacing"  ng-click="search.id_cycle = cycle.id_cycle;">
-                    <span><i18n><span class="no-style ng-scope">[[::cycle.libelle]]</span></i18n></span>
+                <div class="horizontal-spacing" ng-click="search.id_cycle = cycle.id_cycle">
+                    <span class="no-style ng-scope"><i18n>[[::cycle.libelle]]</i18n></span>
                 </div>
             </header>
             <header ng-class="{selected : search.id_cycle === null}"
                     class="horizontal-spacing-twice ng-scope">
-                <div class="horizontal-spacing"  ng-click="search.id_cycle = null;">
+                <div class="horizontal-spacing" ng-click="search.id_cycle = null">
                     <span><i18n>evaluation.link.notset</i18n></span>
                 </div>
             </header>
@@ -72,7 +72,7 @@
         </div>
         <div class="ten cell padding-left">
             </br>
-            <div class="row " ng-hide="filteredItems.length === 0">
+            <div class="row" ng-hide="filteredItems.length === 0">
                 <div class="twelve cell header-class">
                     <div class="cell">
                         <label class="check-box" ng-class="{multiselect: search.classeAll}">
