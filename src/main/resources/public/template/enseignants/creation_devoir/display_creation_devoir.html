@@ -66,8 +66,8 @@
                                             <select ng-model="devoir.id_groupe"
                                                     ng-change="syncPeriode(devoir.id_groupe);
                                                     setClasseEnseignants();loadEnseignementsByClasse();"
-                                                    ng-options="classe.id as classe.name group by classe.type_groupe_libelle for classe in classes.all
-                                                    | filter:filterValidClasseMatiere() | orderBy:['type_groupe_libelle', 'name']">
+                                                    ng-options="classe.id as classe.name group by classe.type_groupe_libelle for classe in filteredClasses
+                                                    | orderBy:['type_groupe_libelle', 'name']">
                                             </select>
                                         </label>
                                     </div>
@@ -255,7 +255,7 @@
                                                     ng-change="controleDate(devoir)"
                                                     ng-init="controleDate(devoir)"
                                                     ng-options="periode.id_type as getI18nPeriode(periode)
-                                                    for periode in periodes.all | filter:notYear()">
+                                                    for periode in notYearPeriodes">
                                                 <option class="header-opt" disabled value="">
                                                     [[translate('viescolaire.utils.periode')]]
                                                 </option>
@@ -339,7 +339,7 @@
                             </label>
 
                             <ul class="selectable-list twelve-mobile">
-                                <li ng-repeat="enseignement in enseignements.all |filter:enseignementsWithCompetences"
+                                <li ng-repeat="enseignement in filteredEnseignements"
                                     ng-class="{selected : enseignementsFilter[enseignement.id].isSelected}"
                                     ng-click="enseignementsFilter[enseignement.id].isSelected = !enseignementsFilter[enseignement.id].isSelected">
                                     [[enseignement.nom]]

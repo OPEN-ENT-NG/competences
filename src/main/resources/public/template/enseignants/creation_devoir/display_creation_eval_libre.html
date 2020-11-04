@@ -136,7 +136,7 @@
                     <select ng-model="evaluationLibre.id_periode"
                             ng-change="controleDate()"
                             ng-options="periode.id_type as getI18nPeriode(periode)
-                            for periode in evaluationLibre.periodes | filter:notYear() | filter:isEvaluableOnPeriode()">
+                            for periode in evaluationLibre.periodes">
                         <option class="header-opt" disabled value="">
                             [[translate('viescolaire.utils.periode')]]
                         </option>

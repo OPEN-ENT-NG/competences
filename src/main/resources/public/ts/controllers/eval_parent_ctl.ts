@@ -271,6 +271,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             });
         };
 
+        $scope.filterTrimestres = (item) => {
+            return item.id_type > -1;
+        };
 
         /**
          * Charge la liste des periodes dans $scope.periodes et détermine la période en cours et positionne
@@ -280,6 +283,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             // récupération des périodes et filtre sur celle en cours
             return new Promise(async (resolve, reject)=> {
                 let periodes = evaluations.eleve.classe.periodes;
+                $scope.filteredTrimestresPeriodes = _.filter(periodes, (periode) => {
+                    return $scope.filterTrimestres(periode);
+                });
                 try {
                     await periodes.sync();
                     let formatStr = "DD/MM/YYYY";

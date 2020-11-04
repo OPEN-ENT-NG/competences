@@ -119,7 +119,10 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             if ($scope.search.classe && $scope.search.classe.periodes && $scope.search.classe.periodes.length() == 0) {
                 await $scope.search.classe.periodes.sync();
             }
-            $scope.evaluationLibre.periodes = $scope.search.classe.periodes.all;
+
+            $scope.evaluationLibre.periodes = _.filter($scope.search.classe.periodes.all, (periode) => {
+                return $scope.notYear(periode) && $scope.isEvaluableOnPeriode(periode);
+            });
 
             $scope.controleDate();
             $scope.opened.lightboxEvalLibre = true;

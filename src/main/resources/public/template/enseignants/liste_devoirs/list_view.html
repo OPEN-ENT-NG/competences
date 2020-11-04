@@ -57,7 +57,7 @@
 
     <div class="expandable-liste card"  bottom-scroll="pOFilterEval.limitTo = pOFilterEval.limitTo + 5" >
         <div class="expandable twelve"
-             ng-repeat="devoir in devoirs.all | filter:filterValidClasse() | customSearchFilters:search |orderBy: ['-date', '+nameClass'] | limitTo:pOFilterEval.limitTo "
+             ng-repeat="devoir in filteredDevoirs | customSearchFilters:search |orderBy: ['-date', '+nameClass'] | limitTo:pOFilterEval.limitTo "
              ng-class="{'opened shadow': openedDevoir === $index, 'DisabledDevoir': disabledDevoir[devoir.id]}" >
             <div class="row" >
                 <div class="one cell cell-check expandable-content two-mobile">

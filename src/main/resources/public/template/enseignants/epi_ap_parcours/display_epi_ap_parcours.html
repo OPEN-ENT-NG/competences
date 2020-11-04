@@ -37,7 +37,7 @@
                     <label class="select">
                         <select ng-model="search.periode"
                                 ng-change="getElementsBilanBilanPeriodique()"
-                                ng-options="getI18nPeriode(periode) for periode in filteredPeriode | filter:notYear() | orderBy:'-type'">
+                                ng-options="getI18nPeriode(periode) for periode in notYearPeriodes | orderBy:'-type'">
                             <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
                             </option>
                         </select>

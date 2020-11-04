@@ -1,4 +1,3 @@
-
 <div class="custom-mobile-releve"
      ng-include="'/competences/public/template/parent_enfant/accueil/eval_parent_menu.html'">
 </div>
@@ -6,10 +5,10 @@
      ng-include="'/competences/public/template/parent_enfant/accueil/eval_parent_selectEnfants.html'">
 </div>
 <section>
-    <label class="select" >
+    <label class="select">
         <select ng-model="search.periode"
                 ng-change="displayBilanPeriodique(); changeContent();"
-                ng-options="getI18nPeriode(periode) for periode in eleve.classe.periodes.all | filter: fiterTrimestres()">
+                ng-options="getI18nPeriode(periode) for periode in filteredTrimestresPeriodes">
             <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
         </select>
     </label>

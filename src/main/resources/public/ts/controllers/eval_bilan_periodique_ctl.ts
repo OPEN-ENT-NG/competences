@@ -79,10 +79,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.displayBilanPeriodique();
         }
 
-        $scope.fiterTrimestres = () => {
-            return (item) => {
-                return item.id_type > -1 || $scope.selected.bfc === true;
-            }
+        $scope.filterTrimestres = (item) => {
+            return item.id_type > -1 || $scope.selected.bfc === true;
         };
 
         $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH = 600;
@@ -687,7 +685,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 }
                 let typesPeriodes = $scope.structure.typePeriodes.all;
                 $scope.filteredPeriode = $filter('customClassPeriodeFilters')(typesPeriodes, $scope.search);
-
+                $scope.filteredTrimestresPeriodes = _.filter($scope.filteredPeriode, (periode) => {
+                    return $scope.filterTrimestres(periode);
+                });
                 if ($scope.selected.bfc === true) {
                     let cycle = _.findWhere($scope.filteredPeriode, {isCycle: true});
                     let year = _.findWhere($scope.filteredPeriode, {isCycle: false});
@@ -784,7 +784,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if ($scope.search.classe.periodes.all.length === 0) {
                 await $scope.search.classe.periodes.sync();
             }
-            $scope.filteredPeriode = $filter('customClassPeriodeFilters')
+            $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+            $scope.filteredTrimestresPeriodes = _.filter($scope.filteredPeriode, (periode) => {
+                return $scope.filterTrimestres(periode);
+            });
             ($scope.structure.typePeriodes.all, $scope.search);
             if ($scope.selected.bfc === true) {
                 let cycle = _.findWhere($scope.filteredPeriode, {isCycle: true});

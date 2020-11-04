@@ -58,7 +58,7 @@
                     <section>
                         <label class="select">
                             <select ng-model="search.classe" ng-change="syncPeriode(search.classe.id); synchronizeStudents(search.classe.id); "
-                                    ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name'] | customClassFilters:devoirs.all">
+                                    ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in filteredClasses | orderBy:['type_groupe_libelle','name'] | customClassFilters:devoirs.all">
                                 <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
                             </select>
                         </label>
@@ -160,7 +160,7 @@
     <div class="row">
         <h5><i18n>viescolaire.utils.class</i18n></h5>
         <div class="three cell horizontal-spacing vertical-spacing expandable-content six-mobile" ng-repeat="classe in getClassesByIdCycle(0) |
-         filter:filterValidClasseMatiere(classe.id) | filter:filterSearchDuplication() | orderBy:'name'">
+         filter:filterValidClasseMatiere(classe) | filter:filterSearchDuplication() | orderBy:'name'">
             <label>
                 <label class="checkbox">
                     <input type="checkbox" ng-checked="isSelected(classe.id)" ng-model="bool" ng-change="selectClasse(classe.id)">
@@ -173,7 +173,7 @@
     <div class="row">
         <h5><i18n>viescolaire.utils.groupeEnseignement</i18n></h5>
         <div class="three cell horizontal-spacing vertical-spacing expandable-content six-mobile" ng-repeat="classe in getClassesByIdCycle(1) |
-         filter:filterValidClasseMatiere(classe.id)| filter:filterSearchDuplication() | orderBy:'name'">
+         filter:filterValidClasseMatiere(classe)| filter:filterSearchDuplication() | orderBy:'name'">
             <label>
                 <label class="checkbox">
                     <input type="checkbox" ng-checked="isSelected(classe.id)" ng-model="bool" ng-change="selectClasse(classe.id)">

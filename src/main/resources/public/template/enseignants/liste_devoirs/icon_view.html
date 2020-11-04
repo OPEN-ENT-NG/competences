@@ -16,7 +16,7 @@
   -->
 <div class="devoir-icons-view">
     <div class="cell three devoir-icons-element"
-         ng-repeat="devoir in devoirs.all | filter:filterValidClasse() | customSearchFilters:search | filter:search.name" ng-init="rand(devoir)">
+         ng-repeat="devoir in filteredDevoirs | customSearchFilters:search | filter:search.name" ng-init="rand(devoir)">
         <a class="devoir-icons-container-link" ng-href="#/devoir/[[devoir.id]]">
             <section class="devoir-icons-container">
                 <div class="devoir-percent" ng-style="{width: devoir.percent+'%'}"></div>

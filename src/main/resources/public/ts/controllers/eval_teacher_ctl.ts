@@ -368,8 +368,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.releveNote = undefined;
                     }
 
-                    //$scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
-
                     if ($scope.search.classe !== '*' &&
                         ($scope.search.matiere !== null && $scope.search.matiere.id !== '*')
                         && $scope.search.periode !== '*') {
@@ -398,6 +396,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.selected = {EPI: true, AP: false, parcours: false};
 
                     $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+                    $scope.notYearPeriodes = _.filter($scope.filteredPeriode, (periode) => {
+                        return $scope.notYear(periode);
+                    });
 
                     utils.safeApply($scope);
                     template.open('main', 'enseignants/epi_ap_parcours/display_epi_ap_parcours');
@@ -410,6 +411,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
                     $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+
                     delete $scope.informations.eleve;
                     utils.safeApply($scope);
                     template.open('main', 'enseignants/bilan_periodique/display_bilan_periodique');
@@ -635,6 +637,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.evaluations = evaluations;
         $scope.competencesSearchKeyWord = "";
         $scope.devoirs = evaluations.devoirs;
+        $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+            return $scope.filterValidClasse(devoir);
+        });
         $scope.enseignements = evaluations.enseignements;
         $scope.bSelectAllEnseignements = false;
         $scope.bSelectAllDomaines = false;
@@ -643,6 +648,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.releveNote = null;
         $scope.releveNoteTotale = null;
         $scope.classes = evaluations.classes;
+        $scope.filteredClasses = _.filter($scope.classes.all, classe => {
+            return $scope.filterValidClasse(classe);
+        });
         $scope.types = evaluations.types;
         $scope.filter = $filter;
         $scope.template = template;
@@ -1579,9 +1587,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             }
         };
-        $scope.enseignementsWithCompetences = function (enseignement) {
+
+        $scope.enseignementsWithCompetences = (enseignement) => {
             return enseignement.competences.all.length > 0;
         };
+
         $scope.checkDomainesSelected = function (idDomaine) {
             $scope.showCompetencesDomaine[idDomaine] = !$scope.showCompetencesDomaine[idDomaine];
             let isAllDomainesSelected = true;
@@ -1602,7 +1612,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.bSelectAllDomaines = true;
             }
         }
-
 
         /**
          * Methode qui determine si une compétences doit être affichée ou non
@@ -3256,19 +3265,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.filterValidClasseMatiere = () => {
-            return (item) => {
-                if($scope.selected && $scope.selected.devoirs && $scope.selected.devoirs.list && $scope.selected.devoirs.list[0])
-                    return $scope.isValidClasseMatiere(item.id_groupe || item.id, $scope.selected.devoirs.list[0].id_matiere);
-                else
-                    return $scope.isValidClasseMatiere(item.id_groupe || item.id,undefined);
-            };
+        $scope.filterValidClasseMatiere = (item) => {
+            if($scope.selected && $scope.selected.devoirs && $scope.selected.devoirs.list && $scope.selected.devoirs.list[0])
+                return $scope.isValidClasseMatiere(item.id_groupe || item.id, $scope.selected.devoirs.list[0].id_matiere);
+            else
+                return $scope.isValidClasseMatiere(item.id_groupe || item.id,undefined);
         };
 
-        $scope.filterValidClasse = () => {
-            return (item) => {
-                return isValidClasse(item.id_groupe || item.id, item.id_matiere, $scope.classes.all);
-            };
+        $scope.filterValidClasse = (item) => {
+            return isValidClasse(item.id_groupe || item.id, item.id_matiere, $scope.classes.all);
         };
 
         $scope.filterHeadTeacher = () => {
@@ -3277,16 +3282,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $rootScope.notYear = () => {
-            return (periode) => {
-                return periode.id !== null;
-            };
+        $rootScope.notYear = (periode) => {
+            return periode.id !== null;
         };
 
-        $scope.isEvaluableOnPeriode = () => {
-            return (periode) => {
-                return periode.id !== null && $scope.search.eleve.isEvaluable(periode);
-            };
+        $scope.isEvaluableOnPeriode = (periode) => {
+            return periode.id !== null && $scope.search.eleve.isEvaluable(periode);
         };
 
         /**
@@ -3656,6 +3657,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await classe.periodes.sync();
             }
             $scope.periodes = classe.periodes;
+            $scope.notYearPeriodes = _.filter($scope.periodes.all, (periode) => {
+               return $scope.notYear(periode);
+            });
 
             let currentPeriode = _.find(classe.periodes.all, (periode) => {
                 return moment().isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]');
@@ -3709,12 +3713,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             evaluations.classes = evaluations.structure.classes;
             evaluations.devoirs = evaluations.structure.devoirs;
             evaluations.types = evaluations.structure.types;
-            $scope.devoirs = evaluations.structure.devoirs;
             $scope.enseignements = evaluations.structure.enseignements;
+            $scope.filteredEnseignements = _.filter($scope.enseignements.all, enseignement => {
+                return $scope.enseignementsWithCompetences(enseignement);
+            });
             $scope.matieres = evaluations.structure.matieres;
             $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
             $scope.releveNotes = evaluations.structure.releveNotes;
             $scope.classes = evaluations.structure.classes;
+            $scope.filteredClasses = _.filter($scope.classes.all, classe => {
+               return $scope.filterValidClasseMatiere(classe);
+            });
+            $scope.devoirs = evaluations.structure.devoirs;
+            $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+                return $scope.filterValidClasse(devoir);
+            });
             $scope.types = evaluations.structure.types;
             $scope.eleves = evaluations.structure.eleves;
             $scope.enseignants = evaluations.structure.enseignants;
