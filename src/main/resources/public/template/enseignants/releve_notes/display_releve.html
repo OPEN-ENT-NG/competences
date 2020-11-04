@@ -142,7 +142,7 @@
                 <section>
                     <label class="select">
                         <select ng-model="search.classe"
-                                ng-change="getReleve(); syncPeriode(search.classe.id);"
+                                ng-change="setMatieresFiltered(); getReleve(); syncPeriode(search.classe.id);"
                                 ng-options="classe as classe.name group by classe.type_groupe_libelle for classe
                                 in filteredClasses | orderBy:['type_groupe_libelle','name']">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
@@ -165,9 +165,7 @@
                         <select ng-model="search.matiere"
                                 ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
                                 ng-change="getReleve()"
-                                ng-init="initDefaultMatiere()"
-                                ng-options="matiere.name for matiere in matieresFiltered = (matieres.all |
-                                getMatiereClasse:search.classe.id:classes) | unique:'name'">
+                                ng-options="matiere.name for matiere in matieresFiltered | unique:'name'">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
                         </select>
                     </label>

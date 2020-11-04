@@ -2455,8 +2455,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             if (Utils.isNotDefault($scope.search.classe) && $scope.search.classe.id !== undefined
                 && Utils.isNotDefault($scope.search.matiere) && $scope.search.matiere.id !== undefined
-                && $scope.search.periode !== '*'
-                && $scope.search.matiere !== "*") {
+                && $scope.search.periode !== '*' && $scope.search.matiere !== "*") {
 
                 let p = {
                     idEtablissement: evaluations.structure.id,
@@ -2502,6 +2501,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             await utils.safeApply($scope);
         };
+
+        $scope.setMatieresFiltered = () => {
+            $scope.search.matiere = "*";
+            $scope.matieresFiltered = $filter('getMatiereClasse')($scope.matieres.all, $scope.search.classe.id, $scope.classes);
+            if($scope.matieresFiltered.length === 1) {
+                $scope.search.matiere = $scope.matieresFiltered[0];
+            }
+            utils.safeApply($scope);
+        }
 
         /**
          * Position l'objet matière sur le devoir en cours de création
