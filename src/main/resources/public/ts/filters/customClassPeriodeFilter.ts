@@ -31,7 +31,7 @@ export let customPeriodeTypeFilter = ng.filter('customPeriodeTypeFilter', functi
     return function(typePeriodes,searchParms){
 
         let id_typeClasse = _.map(searchParms.classe.periodes.all,(pc) => {
-           return (pc.id != null) ? pc.id_type : pc.id ;
+           return ( pc.id !== undefined && pc.id === null ) ? pc.id :  pc.id_type;
         });
         return _.reject (typePeriodes, function (periode) {
 

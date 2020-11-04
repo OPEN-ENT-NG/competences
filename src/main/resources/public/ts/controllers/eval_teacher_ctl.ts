@@ -714,6 +714,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
             if (classe && classe.periodes && classe.periodes.length() === 0) {
                 await classe.periodes.sync();
+                $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
                 if ($location.path() === '/competences/eleve' ) {
                     if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
                         classe.periodes.all.push({libelle: "cycle", id: null});
@@ -741,7 +742,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let cycle = _.findWhere(classe.periodes.all, {libelle: "cycle"});
                     classe.periodes.all = _.without(classe.periodes.all, cycle);
                 }
-
+                $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
                 $scope.getCurrentPeriode(classe).then(function (res) {
                     setSearchPeriode(classe,res);
                     $scope.displayCycles($scope.search.periode);
@@ -2485,7 +2486,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await utils.safeApply($scope);
             }
 
-            $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
+
 
             if(Utils.isNotNull($scope.informations) && Utils.isNotNull($scope.informations.eleve)) {
                 await $scope.getEleveInfo($scope.informations.eleve);

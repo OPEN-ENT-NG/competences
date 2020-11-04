@@ -114,7 +114,7 @@
                 <i18n>evaluations.test.list</i18n>
             </a>
             <a ng-click="releveNote.exportOptions.show =true"
-               ng-if="releveNote !== undefined && search.periode.id !== null"
+               ng-if="releveNote !== undefined && search.periode.id_type !== undefined"
                class="button twelve-mobile"
                tooltip="evaluations.export"
                ng-click="releveNote.exportOptions.show = true">
@@ -175,7 +175,7 @@
 
             </div>
             <div class="marginFive fiche left card"
-                 ng-if="search.periode.id !== null && search.periode.id !== undefined && showInfosEval && matieresFiltered.includes(search.matiere)">
+                 ng-if="search.periode.id_type !== undefined && showInfosEval && matieresFiltered.includes(search.matiere)">
                 <container template="leftSide-devoirInfo"></container>
             </div>
 
@@ -187,8 +187,8 @@
             </div>
 
             <div class="criteres card criterion"
-                 ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined
-                 && search.periode.type !== 0 && releveNote !== undefined && matieresFiltered.includes(search.matiere)"
+                 ng-show="search.periode.id_type !== undefined && search.classe.id !== undefined &&
+                 search.matiere.id !== undefined && releveNote !== undefined && matieresFiltered.includes(search.matiere)"
                  ng-class="{openedProgramme : opened.elementProgramme === true}">
                 <span class="plus-input" ng-click="openElementProgramme()"></span>
                 <div class="header" ng-click="openElementProgramme();">
@@ -210,7 +210,7 @@
             </div>
 
             <div class="criteres card criterion"
-                 ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined
+                 ng-show="search.periode.id_type !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined
                  && search.periode.type !== 0 && releveNote !== undefined && matieresFiltered.includes(search.matiere)"
                  ng-class="{openedAppreciation : opened.appreciation === true}">
                 <span class="plus-input" ng-click="openAppreciation();"></span>
@@ -246,7 +246,7 @@
                 <div class="tableReleves">
                     <div class="responsive-table">
                         <table class="list-view twelve tableReleve tableRelevePadding marginTopZero"
-                               c-naviga-table ng-if="search.periode.id !== null && search.periode.id !== undefined">
+                               c-naviga-table ng-if="search.periode.id_type !== undefined ">
                             <thead class="twelve">
                             <tr style="height: auto !important;" sticky offset="64">
                                 <th class="col1">
@@ -416,7 +416,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="responsive-table" ng-if="search.periode.id !== null && search.periode.id !== undefined">
+                    <div class="responsive-table" ng-if="search.periode.id_type !== undefined">
                         <table id="tableReleveStats"  class="tableReleve tableRelevePadding" c-naviga-table>
                             <tbody>
                             <tr class="moyenneClasse">
@@ -508,7 +508,7 @@
                     </div>
                 </div>
             </div>
-            <div ng-show="search.periode.id !== null && (releveNote === undefined || !matieresFiltered.includes(search.matiere))">
+            <div ng-show="search.periode.id_type !== undefined && (releveNote === undefined || !matieresFiltered.includes(search.matiere))">
                 <article class="card tableReleves">
                     <i18n>evaluations.no.summary.releve</i18n>
                 </article>
