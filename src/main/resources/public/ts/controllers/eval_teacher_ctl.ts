@@ -4406,7 +4406,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // On Clone (copie par valeur) les devoirs  et les competencesNotes ici, pour ne pas dénaturer
                     // les objects lors de l'utilisation de la fonction extend
 
-
                     let devoirTmp = $scope.releveNote.devoirs.findWhere({id: evaluation.id_devoir});
                     let devoir = utils.clone(devoirTmp);
 
@@ -4444,10 +4443,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 // Pour vérifier que si le Positionnement final de l'année a été modifié
                 let isPositionnementFinaleAnnee = false;
 
-                let historiqueAnnee;
+                let historiqueAnnee:any = {};
                 eleve.historiques = [];
                 _.forEach($scope.filteredPeriode, function (periode) {
-
                     let idPeriode = periode.id_type;
                     // get moyenne auto eleve
                     let details_moyennes = _.findWhere(eleve.details.moyennes, {
@@ -4486,9 +4484,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         if(moyenneSousMatiereAnnee[idSousMatiere] === '') {
                             moyenneSousMatiereAnnee[idSousMatiere] = [];
                         }
+
                         if(moy !== '') {
                             moyenneSousMatiereAnnee[idSousMatiere].push(moy);
                         }
+
                         if(Utils.isNotNull(eleve.details._positionnements_auto)) {
                             let pos_sous_mat = eleve.details._positionnements_auto[idPeriode];
                             pos_sous_mat = (pos_sous_mat !== undefined) ? pos_sous_mat[idSousMatiere] : undefined;
@@ -4508,15 +4508,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             pos_sous_matieres[idSousMatiere] = utils.getNN();
                         }
                     });
-// get positionnement Auto
-                    let details_pos_auto = _.findWhere(
-                        eleve.details.positionnements_auto,
-                        {id_periode: (idPeriode !== null) ? parseInt(idPeriode) : null});
 
+                    // get positionnement Auto
+                    let details_pos_auto = _.findWhere(eleve.details.positionnements_auto,
+                        {id_periode : (idPeriode !== null) ? parseInt(idPeriode) : null});
 
-// Déduction du positionnement par défaut en fonction de l'échelle de convertion
-// Ajout de 1 à la moyenne pour rentrer dans l'échelle de conversion
-// (Logique prise au calcul du niveau dans le BFC).
+                    // Déduction du positionnement par défaut en fonction de l'échelle de convertion
+                    // Ajout de 1 à la moyenne pour rentrer dans l'échelle de conversion
+                    // (Logique prise au calcul du niveau dans le BFC).
                     let positionnement = -1;
                     if(Utils.isNotNull(details_pos_auto) && details_pos_auto.hasNote) {
                         let moyenne_convertie = (details_pos_auto !== undefined) ? (utils.getMoyenneForBFC(
@@ -4524,15 +4523,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : -1;
                     }
 
-
-
-
-
-// get positionnement final
+                    // get positionnement final
                     let details_pos = _.findWhere( eleve.details.positionnements,
                         {id_periode: (idPeriode !== null) ? parseInt(idPeriode) : null});
                     let positionnementFinal = (details_pos !== undefined) ? details_pos.positionnement : "";
-// initialisation du positionnement pour le détail élève
+                    // initialisation du positionnement pour le détail élève
                     if ($scope.releveNote.idPeriode === idPeriode) {
                         let pos = Utils.isNull(positionnement)? -1 : positionnement;
                         eleve.positionnementCalcule = ((pos <= 0)? utils.getNN() : pos);
@@ -4541,9 +4536,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                     }
 
-// On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
-                    if (idPeriode !== null &&
-                        (details_moyennes_finales !== undefined || details_moyennes !== undefined)) {
+                    // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
+                    if (idPeriode !== null && (details_moyennes_finales !== undefined || details_moyennes !== undefined)) {
                         nbMoyenneAnnee++;
                         if (details_moyennes_finales !== undefined) {
                             isMoyenneFinaleAnnee = true;
@@ -4552,7 +4546,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             moyenneAnnee += moyenne;
                         }
                     }
-// On stocke le positionnement du trimestre pour le calcul du positionnement à l'année
+
+                    // On stocke le positionnement du trimestre pour le calcul du positionnement à l'année
                     if (idPeriode !== null) {
                         if (Utils.isNotNull(details_pos)) {
                             if (details_pos.positionnement > 0) {
@@ -4615,13 +4610,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     historiqueAnnee.moyenneFinale = "";
                 }
 
-                let posAnneeForHistorique =  (positionnementFinaleAnnee > 0)? positionnementFinaleAnnee : utils.getNN();
+                let posAnneeForHistorique =  (positionnementFinaleAnnee > 0) ? positionnementFinaleAnnee : utils.getNN();
                 if (isPositionnementFinaleAnnee) {
                     historiqueAnnee.positionnementFinal = posAnneeForHistorique;
                 } else {
                     historiqueAnnee.positionnement = posAnneeForHistorique;
                     historiqueAnnee.positionnementFinal = "";
                 }
+
                 _.forEach($scope.releveNote.matiere.sousMatieres.all, (sousMatiere) => {
                     let idSousMatiere = sousMatiere.id_type_sousmatiere;
                     let tabMoy = moyenneSousMatiereAnnee[idSousMatiere];
@@ -4629,15 +4625,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                     if(tabMoy !== '' && !_.isEmpty(tabMoy)){
                         moyenneSousMatiereAnnee[idSousMatiere] = Utils.basicMoy(moyenneSousMatiereAnnee[idSousMatiere]);
-                    }
-                    else{
+                    } else{
                         moyenneSousMatiereAnnee[idSousMatiere] = '';
                     }
+
                     if(tabPos !== '' && !_.isEmpty(tabPos)){
                         posSousMatiereAnnee[idSousMatiere] =
                             Math.round(Utils.basicMoy(posSousMatiereAnnee[idSousMatiere]));
-                    }
-                    else{
+                    } else{
                         posSousMatiereAnnee[idSousMatiere] = utils.getNN();
                     }
 
