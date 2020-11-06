@@ -367,7 +367,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append((null!= userId) ? " AND notes.id_eleve = ? " : "")
                 .append(" INNER JOIN " + COMPETENCES_SCHEMA + ".rel_devoirs_groupes ")
                 .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe IN " + Sql.listPrepared( idsClass.getList()))
-                .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".services ")
+                .append(" LEFT JOIN " + Competences.VSCO_SCHEMA + ".services ")
                 .append(" ON (rel_devoirs_groupes.id_groupe = services.id_groupe ")
                 .append(" AND devoirs.owner = services.id_enseignant AND devoirs.id_matiere = services.id_matiere) ")
                 .append(" WHERE devoirs.id_etablissement = ? ")

@@ -621,15 +621,15 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     String coTeacherId = teacher.getString("second_teacher_id");
 
                     if (subjectId.equals(idMatiere)) {
-                        if (!teachers.contains(coTeacherId) && isNotNull(coTeacherId))
+                        if ( isNotNull(coTeacherId) && !teachers.contains(coTeacherId) )
                             teachers.add(coTeacherId);
-                        if (!idsTeachers.contains(coTeacherId) && isNotNull(coTeacherId))
+                        if ( isNotNull(coTeacherId) && !idsTeachers.contains(coTeacherId) )
                             idsTeachers.add(coTeacherId);
                     }
                 });
             }
 
-            if(!idsTeachers.contains(owner) && isNotNull(owner) && !Boolean.FALSE.equals(isVisibleFromService)) {
+            if(isNotNull(owner) && !idsTeachers.contains(owner) && !Boolean.FALSE.equals(isVisibleFromService)) {
                 idsTeachers.add(owner);
             }
             JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
