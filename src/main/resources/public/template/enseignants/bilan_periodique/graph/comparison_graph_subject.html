@@ -1,51 +1,53 @@
 <div ng-if="informations.eleve.comparisonGraph !== undefined && graph.type == 'baton'"
      class="twelve">
-    <div class=" twelve cell twelve-mobile" ng-if="graph.competences">
-        <div class="chart-container" >
+    <div class="twelve cell twelve-mobile" ng-if="graph.competences">
+        <div class="chart-container">
             <canvas id="comparisonGraphCompetencesfalse"
                     class="chart chart-bar" width="400" height="400"
                     chart-labels="informations.eleve.comparisonGraph.data.labels"
                     chart-options="informations.eleve.comparisonGraph.options"
                     chart-type="informations.eleve.comparisonGraph.type"
                     chart-data="informations.eleve.comparisonGraph.data.data"
-                    chart-dataset-override="informations.eleve.comparisonGraph.data.datasetOverride"></canvas>
+                    chart-dataset-override="informations.eleve.comparisonGraph.data.datasetOverride">
+            </canvas>
         </div>
     </div>
     <div class=" twelve cell twelve-mobile" ng-if="graph.notes">
-        <div class="chart-container" >
+        <div class="chart-container">
             <canvas id="comparisonGraphNotesfalse"
-                    class="chart chart-bar" width="400" height="800"
+                    class="chart chart-bar" width="400" height="400"
                     chart-labels="informations.eleve.comparisonGraph.data.labels"
                     chart-options="informations.eleve.comparisonGraph.optionsNotes"
                     chart-type="informations.eleve.comparisonGraph.type"
                     chart-data="informations.eleve.comparisonGraph.dataNotes.data"
-                    chart-dataset-override="informations.eleve.comparisonGraph.dataNotes.datasetOverride"></canvas>
+                    chart-dataset-override="informations.eleve.comparisonGraph.dataNotes.datasetOverride">
+            </canvas>
         </div>
     </div>
 </div>
 
 <div class="twelve center" ng-if="graph.type == 'radar'">
-    <div class="twelve-mobile six inline-block" ng-class="{'cell': graph.notes && graph.competences }" ng-if="graph.notes">
+    <div class="twelve-mobile six inline-block" ng-class="{'cell': graph.notes && graph.competences}" ng-if="graph.notes">
         <div class="twelve-mobile twelve">
-            <canvas id="radar0" class="chart chart-radar align-center"
+            <canvas id="radar0"
+                    class="chart chart-radar align-center"
                     chart-data="informations.eleve.comparisonGraphRadar.datasetsNotes"
                     chart-labels="informations.eleve.comparisonGraphRadar.datasets.labels"
                     chart-series="informations.eleve.comparisonGraphRadar.averageSeries"
                     chart-options="informations.eleve.comparisonGraphRadar.options.average"
-                    chart-colors="informations.eleve.comparisonGraphRadar.colors"
-            >
+                    chart-colors="informations.eleve.comparisonGraphRadar.colors">
             </canvas>
         </div>
     </div>
-    <div class="twelve-mobile six inline-block " ng-class="{'cell': graph.notes && graph.competences }" ng-if="graph.competences">
+    <div class="twelve-mobile six inline-block" ng-class="{'cell': graph.notes && graph.competences}" ng-if="graph.competences">
         <div class="twelve-mobile twelve">
-            <canvas id="radar" class="chart chart-radar align-center"
+            <canvas id="radar"
+                    class="chart chart-radar align-center"
                     chart-data="informations.eleve.comparisonGraphRadar.datasets.data"
                     chart-labels="informations.eleve.comparisonGraphRadar.datasets.labels"
                     chart-series="informations.eleve.comparisonGraphRadar.series"
                     chart-options="informations.eleve.comparisonGraphRadar.options.level"
-                    chart-colors="informations.eleve.comparisonGraphRadar.colors"
-            >
+                    chart-colors="informations.eleve.comparisonGraphRadar.colors">
             </canvas>
         </div>
     </div>
