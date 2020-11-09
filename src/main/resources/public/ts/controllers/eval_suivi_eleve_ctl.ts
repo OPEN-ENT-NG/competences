@@ -765,12 +765,16 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
 
         $scope.changeContent = async function (cycle?) {
             return new Promise(async (resolve) => {
-                if ($scope.search.classe.eleves && $scope.search.classe.eleves.length() === 0) {
-                    await $scope.search.classe.eleves.sync();
+                if($scope.search.classe != "*"){
+                    if ($scope.search.classe.eleves && $scope.search.classe.eleves.length() === 0) {
+                        await $scope.search.classe.eleves.sync();
+                    }
+                    if($scope.search.periode != "*"){
+                        let periode = new TypePeriode({id : $scope.search.periode.id_type,
+                            ordre : $scope.search.periode.ordre, type:$scope.search.periode.type});
+                        $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
+                    }
                 }
-                let periode = new TypePeriode({id:$scope.search.periode.id_type,
-                    ordre:$scope.search.periode.ordre, type:$scope.search.periode.type});
-                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
                 $scope.loadingTab = true;
                 switch ($scope.displayFollowEleve) {
                     case ('followItems'):
