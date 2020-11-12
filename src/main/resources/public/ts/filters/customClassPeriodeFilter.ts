@@ -22,25 +22,29 @@ declare let _:any;
 
 export let customClassFilters = ng.filter('customClassFilters', function(){
     return function(classes, devoirs){
-        let output = _.filter(devoirs, devoir => {return isValidClasse(devoir.id_groupe, devoir.id_matiere,classes);});
+        let output = _.filter(devoirs, devoir => {
+            return isValidClasse(devoir.id_groupe, devoir.id_matiere,classes);
+        });
+
         return _.filter(classes, function (classe) { return _.findWhere(output, {id_groupe: classe.id});
         });
     };
 });
+
 export let customPeriodeTypeFilter = ng.filter('customPeriodeTypeFilter', function(){
     return function(typePeriodes,searchParms){
-
-        let id_typeClasse = _.map(searchParms.classe.periodes.all,(pc) => {
-           return ( pc.id !== undefined && pc.id === null ) ? pc.id :  pc.id_type;
+        let id_typeClasse = _.map(searchParms.classe.periodes.all, (pc) => {
+            return (pc.id !== undefined && pc.id === null) ? pc.id : pc.id_type;
         });
-        return _.reject (typePeriodes, function (periode) {
 
-                return !_.contains (id_typeClasse,periode.id_type);
-                });
+        return _.reject (typePeriodes, function (periode) {
+            return !_.contains (id_typeClasse,periode.id_type);
+        });
     };
 });
+
 export let customPeriodeFilters = ng.filter('customPeriodeFilters', function(){
-    return function(periodes, devoirs, searchParams ){
+    return function(periodes, devoirs, searchParams){
         let output = devoirs;
         let tempTable = [];
         if (searchParams.classe !== '*' && searchParams.classe !== null) {
@@ -51,25 +55,21 @@ export let customPeriodeFilters = ng.filter('customPeriodeFilters', function(){
             if(periode.id_type === undefined) {
                 periode.id_type = periode.id;
             }
-            return _.findWhere(output,{id_periode:  parseInt(periode.id_type)});
+            return _.findWhere(output,{id_periode: parseInt(periode.id_type)});
         });
-
-
 
         return _.reject(periodes, function (periode) {
             let _t = _.groupBy(types, 'type');
-            return !((_t!== undefined && _t[parseInt(periode.type)]!== undefined) || periode.id === null);
+            return !((_t !== undefined && _t[parseInt(periode.type)] !== undefined) || periode.id === null);
         });
     };
 });
 
 export let customClassPeriodeFilters = ng.filter('customClassPeriodeFilters', function(){
-    return  function(periodes, search){
-
+    return function(periodes, search){
         let result = periodes;
 
         if (search.classe !== '*' && search.classe !== null) {
-
             result =_.filter(periodes, function (periode) {
                 if(periode.id_type === undefined) {
                     periode.id_type = periode.id;

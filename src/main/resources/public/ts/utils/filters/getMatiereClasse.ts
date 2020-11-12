@@ -18,24 +18,12 @@
 /**
  * Created by ledunoiss on 20/09/2016.
  */
-import {_, model, moment, ng} from 'entcore';
+import {_, moment, ng} from 'entcore';
 import {Utils} from "../../models/teacher";
 
 export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
     function getEvaluables(classe, matiere, idTeacher) {
-        if (idTeacher) {
-            return _.filter(classe.services, service => {
-                let substituteTeacher = _.findWhere(service.substituteTeachers,
-                    {second_teacher_id: idTeacher, subject_id: matiere.id});
-                let correctDateSubstituteTeacher = substituteTeacher &&
-                    moment(new Date()).isBetween(moment(substituteTeacher.start_date),
-                        moment(substituteTeacher.entered_end_date), 'days', '[]');
-                let coTeachers = _.findWhere(service.coTeachers,
-                    {second_teacher_id: idTeacher, subject_id: matiere.id});
-                let mainTeacher = service.id_enseignant == idTeacher && service.id_matiere == matiere.id;
-                return service.evaluable && (coTeachers || correctDateSubstituteTeacher || mainTeacher);
-            });
-        } else if (Utils.isChefEtab()) {
+        if (Utils.isChefEtab()) {
             return _.where(classe.services, {
                 id_matiere: matiere.id,
                 evaluable: true
@@ -43,31 +31,34 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
         } else {
             return _.filter(classe.services, service => {
                 let substituteTeacher = _.findWhere(service.substituteTeachers,
-                    {second_teacher_id: model.me.userId, subject_id: matiere.id});
+                    {second_teacher_id: idTeacher, subject_id: matiere.id});
                 let correctDateSubstituteTeacher = substituteTeacher &&
                     moment(new Date()).isBetween(moment(substituteTeacher.start_date),
                         moment(substituteTeacher.entered_end_date), 'days', '[]');
+
                 let coTeachers = _.findWhere(service.coTeachers,
-                    {second_teacher_id: model.me.userId, subject_id: matiere.id});
-                let mainTeacher = service.id_enseignant == model.me.userId && service.id_matiere == matiere.id;
+                    {second_teacher_id: idTeacher, subject_id: matiere.id});
+
+                let mainTeacher = service.id_enseignant == idTeacher && service.id_matiere == matiere.id;
+                if (matiere.hasOwnProperty('libelleClasses')) {
+                    mainTeacher = mainTeacher && (matiere.libelleClasses.indexOf(classe.externalId) !== -1)
+                }
+
                 return service.evaluable && (coTeachers || correctDateSubstituteTeacher || mainTeacher);
             });
         }
     }
 
-    return function (matieres, idClasse, classes, idTeacher?) {
+    return function (matieres, idClasse, classes, idTeacher) {
         if (classes) {
             let classe = classes.findWhere({id : idClasse});
             if (classe) {
                 return matieres.filter((matiere) => {
+                    let evaluables;
                     if (classe.services) {
-                        let evaluables = getEvaluables(classe, matiere, idTeacher);
-                        return evaluables.length > 0;
-                    } else {
-                        if (matiere.hasOwnProperty('libelleClasses')) {
-                            return (matiere.libelleClasses.indexOf(classe.externalId) !== -1)
-                        }
+                        evaluables = getEvaluables(classe, matiere, idTeacher);
                     }
+                    return evaluables.length > 0;
                 });
             }
             else {

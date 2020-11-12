@@ -651,11 +651,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.filteredClasses = _.filter($scope.classes.all, classe => {
             return $scope.filterValidClasse(classe);
         });
+        $scope.search = $scope.initSearch();
+        $scope.matieresFiltered = $filter('getMatiereClasse')($scope.matieres.all, $scope.search.classe.id, $scope.classes, model.me.userId);
         $scope.types = evaluations.types;
         $scope.filter = $filter;
         $scope.template = template;
         $scope.currentDevoir = {};
-        $scope.search = $scope.initSearch();
         $scope.informations = {};
         $scope.messages = {
             successEvalLibre: false
@@ -953,15 +954,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.opened.lightboxs.duplication = false;
         };
 
-        $scope.getClassesByIdCycle = (type_groupe?: number) => {
+        $scope.getClassesByIdCycle = (type_groupe) => {
             let currentIdGroup = $scope.selected.devoirs.list[0].id_groupe;
             let targetIdCycle = _.find($scope.classes.all, {id: currentIdGroup}).id_cycle;
-            let classes = _.filter($scope.classes.all, function (classe) {
-                return type_groupe !== undefined ?
-                    (classe.id_cycle === targetIdCycle && classe.id !== currentIdGroup && type_groupe === classe.type_groupe) :
-                    (classe.id_cycle === targetIdCycle && classe.id !== currentIdGroup);
+
+            return _.filter($scope.classes.all, function (classe) {
+                return classe.id_cycle === targetIdCycle && classe.id !== currentIdGroup
+                    && type_groupe === classe.type_groupe;
             });
-            return classes;
         };
 
         $scope.filterSearchDuplication = () => {
@@ -2504,7 +2504,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.setMatieresFiltered = () => {
             $scope.search.matiere = "*";
-            $scope.matieresFiltered = $filter('getMatiereClasse')($scope.matieres.all, $scope.search.classe.id, $scope.classes);
+            $scope.matieresFiltered = $filter('getMatiereClasse')($scope.matieres.all, $scope.search.classe.id, $scope.classes, model.me.userId);
             if($scope.matieresFiltered.length === 1) {
                 $scope.search.matiere = $scope.matieresFiltered[0];
             }
@@ -2516,7 +2516,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.selectedMatiere = function (devoir) {
             let matieres = $filter('getMatiereClasse')($scope.structure.matieres.all,
-                $scope.devoir.id_groupe, $scope.classes);
+                $scope.devoir.id_groupe, $scope.classes, model.me.userId);
             if (matieres.length === 1){
                 $scope.devoir.id_matiere = matieres[0].id;
             }
@@ -3261,23 +3261,25 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return;
         };
 
-        $scope.isValidClasseMatiere = (idClasse, idMatiere) => {
+        $scope.isValidClasseMatiere = (idClasse, idMatiere?) => {
             if ($scope.classes !== undefined) {
-                let matiereClasse = $filter('getMatiereClasse')($scope.structure.matieres.all, idClasse, $scope.classes);
+                let matiereClasse = $filter('getMatiereClasse')($scope.structure.matieres.all, idClasse, $scope.classes, model.me.userId);
                 if(idMatiere)
                     return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
-                        && !_.isEmpty(matiereClasse) && _.findWhere(matiereClasse, {id:idMatiere});
+                        && !_.isEmpty(matiereClasse) && _.findWhere(matiereClasse, {id : idMatiere});
                 else
                     return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
                         && !_.isEmpty(matiereClasse);
             }
         };
 
-        $scope.filterValidClasseMatiere = (item) => {
-            if($scope.selected && $scope.selected.devoirs && $scope.selected.devoirs.list && $scope.selected.devoirs.list[0])
-                return $scope.isValidClasseMatiere(item.id_groupe || item.id, $scope.selected.devoirs.list[0].id_matiere);
-            else
-                return $scope.isValidClasseMatiere(item.id_groupe || item.id,undefined);
+        $scope.filterValidClasseMatiere = () => {
+            return (item) => {
+                if($scope.selected && $scope.selected.devoirs && $scope.selected.devoirs.list && $scope.selected.devoirs.list[0])
+                    return $scope.isValidClasseMatiere(item.id_groupe || item.id, $scope.selected.devoirs.list[0].id_matiere);
+                else
+                    return $scope.isValidClasseMatiere(item.id_groupe || item.id);
+            }
         };
 
         $scope.filterValidClasse = (item) => {
@@ -3730,7 +3732,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.releveNotes = evaluations.structure.releveNotes;
             $scope.classes = evaluations.structure.classes;
             $scope.filteredClasses = _.filter($scope.classes.all, classe => {
-               return $scope.filterValidClasseMatiere(classe);
+               return $scope.filterValidClasse(classe);
             });
             $scope.devoirs = evaluations.structure.devoirs;
             $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
