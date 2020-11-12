@@ -101,7 +101,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                                 public void handle(Message<JsonObject> message) {
                                     JsonObject body = message.body();
 
-                                    if ("ok".equals(body.getString("status"))) {
+                                    if ("ok".equals(body.getString("status")) && body.getJsonArray("results").size() > 0) {
                                         final Number idCycle = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getInteger("id_cycle");
                                         getCompetencesItem(idEtablissement, idCycle, handler);
                                     } else {

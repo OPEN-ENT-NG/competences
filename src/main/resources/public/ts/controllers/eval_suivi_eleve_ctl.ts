@@ -407,8 +407,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                             && $scope.suiviCompetence.periode.libelle !== undefined
                             && $scope.suiviCompetence.periode.id === null);
                         let idCycle = null;
-                        if($scope.selectedCycleRadio!== undefined){
-                            if ( $scope.selectedCycleRadio !== null) {
+                        if($scope.selectedCycleRadio !== undefined){
+                            if ($scope.selectedCycleRadio !== null) {
                                 idCycle = $scope.selectedCycleRadio.id_cycle;
                             }
                             else {
@@ -1114,8 +1114,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 && $scope.suiviCompetence.periode.libelle !== undefined
                 && $scope.suiviCompetence.periode.id === null);
             let idCycle = null;
-            if($scope.selectedCycleRadio!== undefined){
-                if ( $scope.selectedCycleRadio !== null) {
+            if($scope.selectedCycleRadio !== undefined){
+                if ($scope.selectedCycleRadio !== null) {
                     idCycle = $scope.selectedCycleRadio.id_cycle;
                 }
                 else {

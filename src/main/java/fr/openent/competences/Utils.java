@@ -860,6 +860,10 @@ public class Utils {
         return o == null;
     }
 
+    public static Boolean isCycleNotNull(String cycle) {
+        return cycle != null && !cycle.equals("null");
+    }
+
     public static <T> void returnFailure(String method, AsyncResult<CompositeFuture> event,
                                          Handler<Either<String, T>> handler) {
         String cause = event.cause().getMessage();

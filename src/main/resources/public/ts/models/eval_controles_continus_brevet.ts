@@ -50,7 +50,7 @@ export class BaremeBrevetEleves {
     async getBaremEleve(idClasse,idTypePeriode, isCycle, idCycle, idStructure, idEleve){
         let { data } = await http.get(`/competences/bfc/bareme/brevet/${idEleve}/${
             idClasse}/${idStructure}?idTypePeriode=${idTypePeriode}&isCycle=${isCycle}&idCycle=${idCycle}`);
-        this.all = Mix.castArrayAs(BaremeBrevetEleve,data);
+        this.all = Mix.castArrayAs(BaremeBrevetEleve, data);
         return data;
     }
 

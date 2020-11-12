@@ -222,7 +222,7 @@ public class BFCController extends ControllerHelper {
             String idEtablissement = request.params().get("idEtablissement");
 //            final Integer idCycle = Integer.parseInt(request.params().get("idCycle"));
 //            bfcService.getBFCsByEleve(new String[]{idEleve}, idEtablissement, new Long(idCycle), arrayResponseHandler(request));
-            if (request.params().contains("idCycle")) {
+            if (request.params().contains("idCycle") && Utils.isCycleNotNull(request.params().get("idCycle"))) {
                 bfcService.getBFCsByEleve(new String[]{idEleve}, idEtablissement, Long.parseLong(request.params().get("idCycle")), arrayResponseHandler(request));
             } else {
                 syntheseService.getIdCycleWithIdEleve(idEleve, new Handler<Either<String, Integer>>() {
@@ -298,7 +298,7 @@ public class BFCController extends ControllerHelper {
             final String idEleve = request.params().get("idEleve");
 //            final Integer idCycle = Integer.parseInt(request.params().get("idCycle"));
 //            syntheseService.getBfcSyntheseByEleve(idEleve, idCycle, defaultResponseHandler(request));
-            if (request.params().contains("idCycle")) {
+            if (request.params().contains("idCycle") && Utils.isCycleNotNull(request.params().get("idCycle"))) {
                 syntheseService.getBfcSyntheseByEleve(idEleve, Integer.parseInt(request.params().get("idCycle")), defaultResponseHandler(request));
             } else {
                 syntheseService.getIdCycleWithIdEleve(idEleve, new Handler<Either<String, Integer>>() {
@@ -469,7 +469,7 @@ public class BFCController extends ControllerHelper {
                     final String idEleve = request.params().get("idEleve");
 //                    final Long idCycle = Long.parseLong(request.params().get("idCycle"));
 //                    eleveEnseignementComplement.getNiveauEnsCplByEleve(idEleve, idCycle, defaultResponseHandler(request));
-                    if(request.params().contains("idCycle")){
+                    if(request.params().contains("idCycle") && Utils.isCycleNotNull(request.params().get("idCycle"))){
                         eleveEnseignementComplement.getNiveauEnsCplByEleve(idEleve, Long.parseLong(request.params().get("idCycle")), defaultResponseHandler(request));
                     } else {
                         syntheseService.getIdCycleWithIdEleve(idEleve, new Handler<Either<String, Integer>>() {
@@ -555,7 +555,7 @@ public class BFCController extends ControllerHelper {
         final List<String> idsClasses = request.params().contains("idClasse")?request.params().getAll("idClasse"):null;
         final Long idTypePeriode = (!request.params().get("idTypePeriode").equals("null")) ? Long.valueOf(request.params().get("idTypePeriode")) : null;
         final Boolean isCycle = Boolean.valueOf(request.params().get("isCycle"));
-        final Long idCycle = (isCycle)? Long.valueOf(request.params().get("idCycle")):null;
+        final Long idCycle = (isCycle) ? Long.valueOf(request.params().get("idCycle")) : null;
         if(idsClasses != null) {
             bfcService.getMoyenneControlesContinusBrevet(eb, idsClasses, idTypePeriode, isCycle, idCycle,
                     arrayResponseHandler(request));
@@ -576,7 +576,7 @@ public class BFCController extends ControllerHelper {
         final Long idTypePeriode = (!request.params().get("idTypePeriode").equals("null")) ?
                 Long.valueOf(request.params().get("idTypePeriode")) : null;
         final Boolean isCycle = Boolean.valueOf(request.params().get("isCycle"));
-        final Long idCycle = (isCycle)? Long.valueOf(request.params().get("idCycle")):null;
+        final Long idCycle = (isCycle) ? Long.valueOf(request.params().get("idCycle")) : null;
         if(isNotNull(idClasse) && isNotNull(idEleve)) {
             bfcService.getMoyenneControlesContinusBrevet(eb, idClasse, idEleve, idStrucutre,idTypePeriode, isCycle,
                     idCycle, arrayResponseHandler(request));
@@ -600,7 +600,7 @@ public class BFCController extends ControllerHelper {
     public void getArchive(final HttpServerRequest request){
         String idEleve = request.params().get(ID_ELEVE_KEY);
         String idClasse = request.params().get(ID_CLASSE_KEY);
-        Long idCycle = Long.valueOf(request.params().get("idCycle"));
+        Long idCycle = Utils.isCycleNotNull(request.params().get("idCycle")) ? Long.valueOf(request.params().get("idCycle")) : null;
         Boolean isCycle = true;
         ArchiveUtils.getArchiveBulletin(idEleve, idClasse, idCycle, storage, ARCHIVE_BFC_TABLE, isCycle, request);
     }

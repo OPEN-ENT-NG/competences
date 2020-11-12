@@ -195,7 +195,7 @@ public class ExportPDFController extends ControllerHelper {
         final String idStructure = request.params().get("idStructure");
         final List<String> idClasses = request.params().getAll("idClasse");
         final List<String> idEleves = request.params().getAll(ID_ELEVE_KEY);
-        final Long idCycle = (request.params().get("idCycle") != null) ?
+        final Long idCycle = Utils.isCycleNotNull(request.params().get("idCycle")) ?
                 Long.valueOf(request.params().get("idCycle")) : null;
         final Long idPeriode = isNull(request.params().get(ID_PERIODE_KEY)) ? null :
                 Long.valueOf(request.params().get(ID_PERIODE_KEY));

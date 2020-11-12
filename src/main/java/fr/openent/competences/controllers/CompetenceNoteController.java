@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.security.AccessCompetenceNoteFilter;
 import fr.openent.competences.security.AccessSuiviCompetenceFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
@@ -223,7 +224,7 @@ public class CompetenceNoteController extends ControllerHelper {
                 idPeriode = null;
             }
             Long idCycle;
-            if (request.params().contains("idCycle")) {
+            if (request.params().contains("idCycle") && Utils.isCycleNotNull(request.params().get("idCycle"))) {
                 try {
                     idCycle = Long.parseLong(request.params().get("idCycle"));
                 } catch (NumberFormatException e) {

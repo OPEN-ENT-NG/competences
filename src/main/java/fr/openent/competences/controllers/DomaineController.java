@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.security.CreateDispenseDomaineEleveFilter;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
@@ -86,12 +87,12 @@ public class DomaineController extends ControllerHelper {
     public void getArbreDomaines(final HttpServerRequest request){
         final JsonArray oArbreDomainesArray = new fr.wseduc.webutils.collections.JsonArray();
         final String idClasse = request.params().get("idClasse");
-        final String idEleve = request.params().contains("idEleve")? request.params().get("idEleve") : null;
-        final Long idCycle = request.params().contains("idCycle")? Long.parseLong(request.params().get("idCycle")) : null;
+        final String idEleve = request.params().contains("idEleve") ? request.params().get("idEleve") : null;
+        final Long idCycle = Utils.isCycleNotNull(request.params().get("idCycle")) ?
+                Long.parseLong(request.params().get("idCycle")) : null;
         final String idStructure = request.params().get("idStructure");
 
-
-                // 1 - Chargement des domaines ordonnés selon l'arbre recursif
+        // 1 - Chargement des domaines ordonnés selon l'arbre recursif
         domainesService.getArbreDomaines(idClasse, idEleve, idCycle, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
