@@ -101,7 +101,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                 await utils.safeApply($scope);
             });
             $scope.structure.classes.sync().then(async function () {
-                $scope.lsu.classes = $scope.structure.classes.all;
+                $scope.lsu.classes = $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE});
             })
         };
         $scope.setParamsContentFile = () => {
