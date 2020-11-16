@@ -17,7 +17,7 @@
 <ul class="skills-list twelve-mobile">
     <li class="skills-header skill-30 skills-section"
         ng-class="{opened : enseignement.open}"
-        ng-repeat="enseignement in data.all | filter:functionSearch(search.keyword) | filter:functionFilter"
+        ng-repeat="enseignement in data"
         ng-init="initHeader(enseignement)">
         <span class="skills-text-overflow skills-teach bold"
               title="Enseignement"
@@ -27,16 +27,16 @@
         </span>
         <ul class="twelve-mobile">
             <li class="twelve skills-header skill-40 underline"
-                ng-repeat="competence in enseignement.competences.all | filter:functionFilterHidden | filter:functionFilterCompetencesByDomaines"
+                ng-repeat="competence in enseignement.competences.all"
                 ng-init="initHeader(competence); initCheckBox(competence, $parent.enseignement)"
                 ng-class="{opened: competence.open}">
                 <label class="one checkbox skills-checkbox skills-headers-checkbox">
                     <input id="[[competence.id]]_[[competence.id_enseignement]]"
                            class="competence_[[competence.id]]"
                            type="checkbox"
-                           ng-model="competencesFilter[competence.id+'_'+competence.id_enseignement].isSelected"
+                           ng-model="competencesFilter[competence.id + '_' + competence.id_enseignement].isSelected"
                            ng-click="toggleCheckbox(competence, $parent.enseignement); doNotApplySearchFilter();"
-                           ng-init="doNotCheckIfCreation(competencesFilter[competence.id+'_'+competence.id_enseignement]);">
+                           ng-init="doNotCheckIfCreation(competencesFilter[competence.id + '_' + competence.id_enseignement]);">
                     <span></span>
                 </label>
                 <span ng-class="{whiteSpaceNormal : competence.hovering}"
@@ -46,18 +46,19 @@
                       title="Connaissance"
                       class="skills-text-overflow">
                     <i class="skills-open-icon"></i>
-                    <span ng-bind-html="competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml"></span>
+                    <span ng-bind-html="competencesFilter[competence.id + '_' + competence.id_enseignement].nomHtml"></span>
                 </span>
                 <ul class="twelve">
-                    <li ng-repeat="sousCompetence in competence.competences.all | filter:functionFilterHidden | filter:functionFilterCompetencesByDomaines" ng-init="initCheckBox(sousCompetence, $parent.$parent)" class="skills-connaissance">
+                    <li ng-repeat="sousCompetence in competence.competences.all"
+                        ng-init="initCheckBox(sousCompetence, $parent.$parent)" class="skills-connaissance">
                         <label class="skills-label">
                             <label class="one checkbox skills-checkbox">
                                 <input id="[[sousCompetence.id]]_[[sousCompetence.id_enseignement]]"
                                        class="competence_[[sousCompetence.id]]"
                                        type="checkbox"
-                                       ng-model="competencesFilter[sousCompetence.id+'_'+sousCompetence.id_enseignement].isSelected"
+                                       ng-model="competencesFilter[sousCompetence.id + '_' + sousCompetence.id_enseignement].isSelected"
                                        ng-click="toggleCheckbox(sousCompetence, $parent.competence); doNotApplySearchFilter();"
-                                       ng-init="doNotCheckIfCreation(competencesFilter[sousCompetence.id+'_'+sousCompetence.id_enseignement]);">
+                                       ng-init="doNotCheckIfCreation(competencesFilter[sousCompetence.id + '_' + sousCompetence.id_enseignement]);">
                                 <span></span>
                             </label>
                             <span ng-class="{whiteSpaceNormal : sousCompetence.hovering}"
@@ -65,7 +66,7 @@
                                   ng-mouseleave="hideIt(sousCompetence)" class="ten skills-list-connaissance skills-text-overflow italic"
                                   title="Compétence">
                                 <i class="skills-open-icon"></i>
-                                <span ng-bind-html="competencesFilter[sousCompetence.id+'_'+sousCompetence.id_enseignement].nomHtml"></span>
+                                <span ng-bind-html="competencesFilter[sousCompetence.id + '_' + sousCompetence.id_enseignement].nomHtml"></span>
                             </span>
                         </label>
                     </li>

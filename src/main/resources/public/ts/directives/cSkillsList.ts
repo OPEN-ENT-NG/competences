@@ -35,19 +35,15 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
         scope : {
             data : '=',
             devoir : '=',
-            functionFilter : '=',
-            functionSearch : '=',
             functionFilterCompetencesByDomaines : '=',
             functionFilterHidden : '=',
             enseignementsFilter : '=',
             competencesFilter: '=',
             search: '='
         },
-        templateUrl : "/"+appPrefix+"/public/template/directives/cSkillsList.html",
+        templateUrl : "/" + appPrefix + "/public/template/directives/cSkillsList.html",
         controller : ['$scope', '$sce','$timeout','$location', function($scope, $sce, $timeout,$location){
-
             $scope.initCheckBox = function(item, parentItem){
-
                 //item.nomHtml = item.nom;
 
                 // on regarde sur l'objet competencesLastDevoirList pour detecter quand il est charge
@@ -100,13 +96,11 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
             };
 
             $scope.toggleCheckbox = function(item, parentItem){
-
                 $scope.emitToggleCheckbox(item, parentItem);
                 var items = document.getElementsByClassName("competence_"+item.id);
 
                 if(items != null && items !== undefined) {
                     for (var i = 0; i < items.length; i++) {
-
                         var sIdCompetence = items[i].getAttribute("id");
 
                         // on coche également les compétences similaires à item qui sont dans d'autres enseignements
@@ -120,13 +114,9 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                             // appel de lamethode toggleCheckBox pour cocher les éventuelles sous competences et le parent
                             //$scope.toggleCheckbox(competenceSimilaire.data, competenceSimilaire.data.composer)
 
-
                             // si la competence a des sous competences
                             if(item.competences != undefined && item.competences.all.length > 0){
-
-
                                 if(competenceSimilaire.data.competences != undefined && competenceSimilaire.data.competences.all.length) {
-
                                     // on coche toutes ces sous competences dans l'arbre de la competence similaire
                                     competenceSimilaire.data.competences.each(function (sousCompSimilaire) {
 
@@ -143,8 +133,6 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                             } else {
                                 $scope.$emit('checkParent', competenceSimilaire.data.composer, competenceSimilaire.data);
                             }
-
-
                         }
                     }
                 }
@@ -160,21 +148,20 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
 
             $scope.$on('checkConnaissances', function(event, parentItem){
                 return (parentItem.competences.each(function(e){
-                    $scope.competencesFilter[e.id+"_"+e.id_enseignement].isSelected
-                        = $scope.competencesFilter[parentItem.id+"_"+parentItem.id_enseignement].isSelected
-                            && !($scope.competencesFilter[e.id + "_" + e.id_enseignement].data.masque
-                                && _.findWhere($scope.devoir.competences.all,{id: e.id}) === undefined);
+                    $scope.competencesFilter[e.id + "_" + e.id_enseignement].isSelected
+                        = $scope.competencesFilter[parentItem.id + "_" + parentItem.id_enseignement].isSelected
+                        && !($scope.competencesFilter[e.id + "_" + e.id_enseignement].data.masque
+                            && _.findWhere($scope.devoir.competences.all, {id: e.id}) === undefined);
                 }));
             });
 
             // item pas utilise ici mais utilise dans la creation d'un devoir
             $scope.$on('checkParent', function(event, parentItem, item){
-                return ($scope.competencesFilter[parentItem.id+"_"+parentItem.id_enseignement].isSelected = parentItem.competences.every(function(e){
+                return ($scope.competencesFilter[parentItem.id + "_" + parentItem.id_enseignement].isSelected = parentItem.competences.every(function(e){
                     let comp = $scope.competencesFilter[e.id + "_" + e.id_enseignement];
                     return comp.isSelected === true || comp.data.masque;
                 }));
             });
-
 
             // start with the div hidden
             $scope.hovering = false;
@@ -194,7 +181,6 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 $timeout.cancel(timer);
                 item.hovering = false;
             };
-
         }]
     };
 });

@@ -45,7 +45,6 @@ declare let $: any;
 declare let document: any;
 declare let window: any;
 declare let console: any;
-declare let location: any;
 declare let Chart: any;
 
 const {
@@ -805,6 +804,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (evaluations.structure.classes.empty()) {
                     await evaluations.structure.classes.sync();
                 }
+
                 if ($location.path() === '/devoir/create') {
                     $scope.devoir.id_groupe = $scope.searchOrFirst("classe", evaluations.structure.classes.all).id;
 
@@ -828,6 +828,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                     utils.safeApply($scope);
                 }
+
                 $scope.structure.classes = evaluations.structure.classes;
                 $scope.opened.displayStructureLoader = false;
                 utils.safeApply($scope);
@@ -1012,7 +1013,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             } else {
                 $scope.opened.accOp = 1;
             }
-
         };
 
         $scope.confirmSuppression = function () {
@@ -1444,14 +1444,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             for (let i = 0; i < $scope.enseignements.all.length; i++) {
                 let currEnseignement = $scope.enseignements.all[i];
                 let isSelected = (evaluationCreationEnseignementsPreferences && evaluationCreationEnseignementsPreferences.length > 0
-                    && evaluationCreationEnseignementsPreferences[i])
-                    ? evaluationCreationEnseignementsPreferences[i].isSelected
-                    : true;
+                    && evaluationCreationEnseignementsPreferences[i]) ? evaluationCreationEnseignementsPreferences[i].isSelected : true;
                 if(isSelected === false){
                     $scope.bSelectAllEnseignements = true;
                 }
                 $scope.enseignementsFilter[currEnseignement.id] = {
-
                     isSelected: isSelected,
                     nomHtml: currEnseignement.nom
                 };
@@ -1544,25 +1541,18 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param enseignement l'enseignement à tester
          * @returns {true si l'enseignement est sélectionné, false sinon.}
          */
-        $scope.enseignementsFilterFunction = function (enseignement) {
+        $scope.enseignementsFilterFunction = (enseignement) => {
             // si valeur est rensiegnée on la retourne sinon on considère qu'elle est sélectionné (gestion du CTRL-F5)
-            if ($scope.enseignementsFilter !== undefined) {
-                if ($scope.enseignementsFilter[enseignement.id] && $scope.enseignementsFilter[enseignement.id].isSelected) {
-                    if (enseignement.ids_domaine_int !== undefined && enseignement.ids_domaine_int.length > 0) {
-                        for (let i = 0; i < enseignement.ids_domaine_int.length; i++) {
-                            if ($scope.showCompetencesDomaine[enseignement.ids_domaine_int[i]]) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    } else {
-                        // Si un enseignement n'a pas de domaines (pas de conncompétence lié on ne l'affiche pas
-                        return false;
+            if ($scope.enseignementsFilter !== undefined && $scope.enseignementsFilter[enseignement.id]
+                && $scope.enseignementsFilter[enseignement.id].isSelected && enseignement.ids_domaine_int !== undefined
+                && enseignement.ids_domaine_int.length > 0) {
+                for (let i = 0; i < enseignement.ids_domaine_int.length; i++) {
+                    if ($scope.showCompetencesDomaine[enseignement.ids_domaine_int[i]]) {
+                        return true;
                     }
-                } else {
-                    return false;
                 }
             }
+            return false;
         };
 
         $scope.enseignementsWithCompetences = (enseignement) => {
@@ -1598,17 +1588,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param compétence à tester
          * @returns {true si compétence est sélectionnée, false sinon.}
          */
-        $scope.competencesByDomainesFilterFunction = function (competence) {
+        $scope.competencesByDomainesFilterFunction = (competence) => {
             // si valeur est rensiegnée on la retourne sinon on considère qu'elle est sélectionné (gestion du CTRL-F5)
             if ($scope.showCompetencesDomaine !== undefined) {
                 if (competence.ids_domaine_int !== undefined) {
-                    if (competence.ids_domaine_int.length === 1) {
-                        return $scope.showCompetencesDomaine[competence.ids_domaine_int[0]];
-                    } else {
-                        for (let i = 0; i < competence.ids_domaine_int.length; i++) {
-                            if ($scope.showCompetencesDomaine[competence.ids_domaine_int[i]]) {
-                                return true;
-                            }
+                    for (let i = 0; i < competence.ids_domaine_int.length; i++) {
+                        if ($scope.showCompetencesDomaine[competence.ids_domaine_int[i]]) {
+                            return true;
                         }
                     }
                 } else {
@@ -1621,7 +1607,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.hideHiddenCompetence = (competence) => {
             if (!_.isEmpty(competence.competences.all)) {
-                return _.some(competence.competences.all, {masque: false});
+                return _.some(competence.competences.all, {masque : false});
             } else if (_.findWhere($scope.devoir.competences.all, {id_competence: competence.id})) {
                 return true;
             } else {
@@ -1651,6 +1637,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.selectUnselectEnseignements = function () {
             $scope.selectEnseignements($scope.bSelectAllEnseignements);
             $scope.bSelectAllEnseignements = !$scope.bSelectAllEnseignements;
+            $scope.setCSkillsList(false, false);
         };
 
         /**
@@ -1684,35 +1671,30 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param psKeyword le mot clef recherché
          * @returns {function(enseignement): (retourne true systématiquement)}
          */
-        $scope.enseignementsSearchFunction = function (psKeyword) {
-
-            return function (enseignement) {
-
-                if (!$scope.search.haschange) {
-                    return true;
-                }
-
-                // on check ici si l'enseignement  match le mot clef recherché pour éviter de rechecker
-                // systématiquement dans la méthode récursive
-                enseignement.open = utils.containsIgnoreCase(enseignement.nom, psKeyword);
-                if (enseignement.open) {
-                    let nomHtml = $scope.highlight(enseignement.nom, psKeyword);
-                    // mise à jour que si la réelle valeur de la chaine html est différente ($sce.trustAsHtml renvoie systématiquement une valeur différente)
-                    if ($sce.getTrustedHtml($scope.enseignementsFilter[enseignement.id].nomHtml) !== $sce.getTrustedHtml(nomHtml)) {
-                        $scope.enseignementsFilter[enseignement.id].nomHtml = nomHtml;
-                    }
-
-                } else {
-                    $scope.enseignementsFilter[enseignement.id].nomHtml = enseignement.nom;
-                }
-
-                // Appel de la méthode récursive pour chercher dans les enseignements et compétences / sous compétences /
-                // sous sous compétences / ...
-                $scope.enseignementsSearchFunctionRec(enseignement, psKeyword);
-
-                // dans tous les cas, à la fin, on retourne l'enseignement "racine"
+        $scope.enseignementsSearchFunction = (enseignement, psKeyword) => {
+            if (!$scope.search.haschange) {
                 return true;
             }
+
+            // on check ici si l'enseignement  match le mot clef recherché pour éviter de rechecker
+            // systématiquement dans la méthode récursive
+            enseignement.open = utils.containsIgnoreCase(enseignement.nom, psKeyword);
+            if (enseignement.open) {
+                let nomHtml = $scope.highlight(enseignement.nom, psKeyword);
+                // mise à jour que si la réelle valeur de la chaine html est différente ($sce.trustAsHtml renvoie systématiquement une valeur différente)
+                if ($sce.getTrustedHtml($scope.enseignementsFilter[enseignement.id].nomHtml) !== $sce.getTrustedHtml(nomHtml)) {
+                    $scope.enseignementsFilter[enseignement.id].nomHtml = nomHtml;
+                }
+            } else {
+                $scope.enseignementsFilter[enseignement.id].nomHtml = enseignement.nom;
+            }
+
+            // Appel de la méthode récursive pour chercher dans les enseignements et compétences / sous compétences /
+            // sous sous compétences / ...
+            $scope.enseignementsSearchFunctionRec(enseignement, psKeyword);
+
+            // dans tous les cas, à la fin, on retourne l'enseignement "racine"
+            return true;
         };
 
 
@@ -1724,10 +1706,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @psKeyword le mot clef recherché
          */
         $scope.enseignementsSearchFunctionRec = function (item, psKeyword) {
-
             // Condition d'arret de l'appel récursif : pas de sous compétences (on est sur une feuille de l'arbre)
             if (item.competences != undefined) {
-
                 // Parcours de chaque compétences / sous compétences
                 for (let i = 0; i < item.competences.all.length; i++) {
                     let sousCompetence = item.competences.all[i];
@@ -1743,7 +1723,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
 
                     if (sousCompetence.open) {
-
                         let nomHtml = $scope.highlight(sousCompetence.nom, psKeyword);
                         let DisplayNomSousCompetence = nomHtml;
 
@@ -1758,18 +1737,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                         // mise à jour que si la réelle valeur de la chaine html est différente ($sce.trustAsHtml renvoie systématiquement une valeur différente)
                         if ($sce.getTrustedHtml($scope.competencesFilter[sousCompetence.id + "_" + sousCompetence.id_enseignement].nomHtml) !== $sce.getTrustedHtml(nomHtml)) {
-                            if ($scope.competencesFilter[sousCompetence.id + "_" + sousCompetence.id_enseignement]
-                                !== undefined) {
-                                $scope.competencesFilter[sousCompetence.id + "_" + sousCompetence.id_enseignement].nomHtml
-                                    = DisplayNomSousCompetence;
+                            if ($scope.competencesFilter[sousCompetence.id + "_" + sousCompetence.id_enseignement] !== undefined) {
+                                $scope.competencesFilter[sousCompetence.id + "_" + sousCompetence.id_enseignement].nomHtml = DisplayNomSousCompetence;
                             }
                         }
-
                     } else {
-                        if ($scope.competencesFilter[sousCompetence.id + "_" + sousCompetence.id_enseignement]
-                            !== undefined) {
-                            $scope.competencesFilter[sousCompetence.id + "_" + sousCompetence.id_enseignement].nomHtml
-                                = $scope.buildCompetenceNom(sousCompetence);
+                        if ($scope.competencesFilter[sousCompetence.id + "_" + sousCompetence.id_enseignement] !== undefined) {
+                            $scope.competencesFilter[sousCompetence.id + "_" + sousCompetence.id_enseignement].nomHtml = $scope.buildCompetenceNom(sousCompetence);
                         }
                     }
 
@@ -1783,7 +1757,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             parent = parent.composer;
                         }
                     }
-
 
                     // et on check sur les compétences de l'item en cours de parcours
                     $scope.enseignementsSearchFunctionRec(sousCompetence, psKeyword)
@@ -1838,6 +1811,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         _.extend($scope.devoir.enseignements, $scope.enseignements);
                     }
                     $scope.initFilter(true);
+                    $scope.setCSkillsList(false, true);
                     if ($location.path() === "/devoir/create") {
                         initCompetencesDevoir();
                     }
@@ -1850,6 +1824,34 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.cleanItems = false;
             }
         };
+
+        $scope.setCSkillsList = (searchChanged, enseignementsChanged) => {
+            if(enseignementsChanged){
+                $scope.filteredEnseignements = _.filter($scope.devoir.enseignements.all, enseignement => {
+                    return $scope.enseignementsWithCompetences(enseignement);
+                });
+            }
+
+            $scope.cSkilsListData = _.filter($scope.devoir.enseignements.all, (enseignement) => {
+                enseignement.competences.all = _.filter(enseignement.competences.all, (competence) => {
+                    competence.competences.all = _.filter(competence.competences.all, (comp) => {
+                        return $scope.hideHiddenCompetence(comp)
+                            && $scope.competencesByDomainesFilterFunction(comp);
+                    });
+                    return $scope.hideHiddenCompetence(competence)
+                        && $scope.competencesByDomainesFilterFunction(competence);
+                });
+                if(searchChanged) {
+                    return $scope.enseignementsSearchFunction(enseignement, $scope.search.keyword)
+                        && $scope.enseignementsFilterFunction(enseignement);
+                }
+                else {
+                    return $scope.enseignementsFilterFunction(enseignement);
+                }
+            });
+
+            utils.safeApply($scope);
+        }
 
         /**
          * Séquence de création d'un devoir
@@ -1923,6 +1925,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.structure.enseignements.sync($scope.devoir.id_groupe).then(() => {
                     _.extend($scope.devoir.enseignements, $scope.enseignements);
                     $scope.initFilter(true);
+                    $scope.setCSkillsList(false, true);
                     if ($location.path() === "/devoir/create") {
                         initCompetencesDevoir();
                     }
@@ -1938,8 +1941,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($scope.devoir.dateDevoir === undefined && $scope.devoir.date !== undefined) {
                 $scope.devoir.dateDevoir = new Date($scope.devoir.date);
             }
-            // Chargement des enseignements et compétences en fonction de la classe
-            // evaluations.enseignements.sync($scope.devoir.id_groupe);
 
             if ($location.path() === "/devoirs/list") {
                 $scope.devoir.id_type = $scope.search.type.id;
