@@ -45,7 +45,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
+import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.returnFailure;
 import static fr.openent.competences.helpers.DevoirControllerHelper.getDuplicationDevoirHandler;
 import static fr.openent.competences.helpers.FormSaisieHelper.*;
@@ -674,60 +674,54 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
 
         Sql.getInstance().prepared(globalQuery.toString(), values, validResultHandler(handler));
-
     }
 
 
     @Override
-    public void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long idPeriode,boolean historise, Handler<Either<String, JsonArray>> handler) {
+    public void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long idPeriode,
+                            boolean historise, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT devoirs.*, ")
-                .append("type.nom as _type_libelle, rel_type_periode.type as _periode_type, rel_type_periode.ordre as _periode_ordre, users.username as teacher ");
+        query.append("SELECT devoirs.*, type.nom as _type_libelle, rel_type_periode.type as _periode_type, rel_type_periode.ordre as _periode_ordre, users.username as teacher ");
         if (idEleve != null) {
             query.append(", notes.valeur as note, COUNT(competences_devoirs.id) as nbcompetences, sum.sum_notes, sum.nbr_eleves ");
         }
-        query.append("FROM ")
-                .append(Competences.COMPETENCES_SCHEMA +".devoirs ")
-                .append("LEFT JOIN "+ Competences.VSCO_SCHEMA +".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type on devoirs.id_type = type.id ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ");
+        query.append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ")
+                .append("LEFT JOIN ").append(Competences.VSCO_SCHEMA).append(".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type on devoirs.id_type = type.id ")
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users on users.id = devoirs.owner ");
         if(idClasse != null) {
-            query.append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes on " +
-                    "rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe =? ");
+            query.append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON " +
+                    "rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ? ");
             values.add(idClasse);
         }
         if (idEleve != null) {
-            query.append(" LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs ")
-                    .append(" on devoirs.id = competences_devoirs.id_devoir ")
-                    .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".notes on devoirs.id = notes.id_devoir ")
+            query.append(" LEFT JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences_devoirs ")
+                    .append(" ON devoirs.id = competences_devoirs.id_devoir ")
+                    .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".notes on devoirs.id = notes.id_devoir ")
                     .append("INNER JOIN ( SELECT devoirs.id, SUM(notes.valeur) as sum_notes, COUNT(notes.valeur) as nbr_eleves " +
                             "FROM notes.devoirs INNER JOIN notes.notes on devoirs.id = notes.id_devoir " +
                             "WHERE devoirs.id_etablissement = ? AND date_publication <= Now() ");
             values.add(idEtablissement);
             if (idPeriode != null) {
-                query.append("AND ")
-                        .append("devoirs.id_periode = ? ");
+                query.append("AND devoirs.id_periode = ? ");
                 values.add(idPeriode);
             }
             query.append("GROUP BY devoirs.id) sum ON sum.id = devoirs.id ");
         }
-        query.append("WHERE ")
-                .append("devoirs.id_etablissement = ? ");
+        query.append("WHERE devoirs.id_etablissement = ? ");
         values.add(idEtablissement);
         if( idMatiere != null ) {
-            query.append("AND ")
-                    .append("devoirs.id_matiere = ? ");
+            query.append("AND devoirs.id_matiere = ? ");
             values.add(idMatiere);
         }
         if (idEleve !=  null){
-            query.append(" AND  notes.id_eleve = ? AND date_publication <= Now() ");
+            query.append(" AND notes.id_eleve = ? AND date_publication <= Now() ");
             values.add(idEleve);
         }
         if (idPeriode != null) {
-            query.append("AND ")
-                    .append("devoirs.id_periode = ? ");
+            query.append("AND devoirs.id_periode = ? ");
             values.add(idPeriode);
         }
         if (historise) {
@@ -899,6 +893,24 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.delete(query.length() - 3, query.length());
 
         Sql.getInstance().prepared(query.toString(), params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void listDevoirsWithAnnotations(String idEleve, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put(ACTION, "eleve.getAnnotations")
+                .put("idEleve", idEleve)
+                .put("idPeriode", idPeriode);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray result = body.getJsonArray(RESULTS);
+                handler.handle(new Either.Right<String, JsonArray>(result));
+            } else {
+                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                log.error("listDevoirsWithAnnotations : " + body.getString("message"));
+            }
+        }));
     }
 
     @Override

@@ -1428,128 +1428,134 @@ public class DefaultExportService implements ExportService {
                                             final MultiMap params, Handler<Either<String, JsonObject>> handler) {
         // TODO verifier que l'utilisateur connecte est bien l'eleve dont essaie d'acceder au releve ou que
         // le parent connecte essaie bien d'acceder au releve d'un de ses enfants
+        List<Future> futures = new ArrayList<>();
 
         // récupération de l'élève
         Future<JsonObject> infoEleve = Future.future();
         utilsService.getInfoEleve(idUser, event -> formate(infoEleve, event));
+        futures.add(infoEleve);
 
         // récupération du Backup de l'élève s'il est supprimé
         Future<JsonObject> infoEleveBackup = Future.future();
         utilsService.getInfoEleveBackup(idUser, event -> formate(infoEleveBackup, event));
+        futures.add(infoEleveBackup);
 
         // Récupération de la liste des devoirs de la personne avec ses notes associées
         Future<JsonArray> devoirsFuture = Future.future();
         devoirService.listDevoirs(idUser, idEtablissement, null, null, idPeriode,
                 false, event -> formate(devoirsFuture, event));
+        futures.add(devoirsFuture);
+
+        // Récupération de la liste des devoirs de la personne avec ses notes associées
+        Future<JsonArray> annotationsFuture = Future.future();
+        devoirService.listDevoirsWithAnnotations(idUser, idPeriode, event -> formate(annotationsFuture, event));
+        futures.add(annotationsFuture);
 
         // Récupération des moyennes finales
         Future<JsonArray> moyenneFinaleFuture = Future.future();
         noteService.getColonneReleve(new JsonArray().add(idUser), idPeriode, null, null, "moyenne",
                 moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
+        futures.add(moyenneFinaleFuture);
 
         //Récupération de la structure
         Future<JsonObject> structureFuture = Future.future();
         utilsService.getStructure(idEtablissement, event -> formate(structureFuture, event));
+        futures.add(structureFuture);
 
         // Récupération des matières de l'établissement
         Future<JsonArray> subjectF = Future.future();
         new DefaultMatiereService(eb).getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
+        futures.add(subjectF);
 
-        CompositeFuture.all(infoEleve, devoirsFuture, structureFuture, subjectF,
-                infoEleveBackup, moyenneFinaleFuture)
-                .setHandler(event -> {
-                    if (event.failed()) {
-                        Utils.returnFailure("getExportReleveEleve : event failed", event, handler);
-                        return;
-                    }
-                    if(infoEleve.result().isEmpty() && infoEleveBackup.result().isEmpty()){
-                        Utils.returnFailure("getExportReleveEleve : No informations about the student", event, handler);
-                        return;
-                    }
+        CompositeFuture.all(futures).setHandler(event -> {
+            if (event.failed()) {
+                Utils.returnFailure("getExportReleveEleve : event failed", event, handler);
+                return;
+            }
+            if(infoEleve.result().isEmpty() && infoEleveBackup.result().isEmpty()){
+                Utils.returnFailure("getExportReleveEleve : No informations about the student", event, handler);
+                return;
+            }
 
-                    final JsonObject userJSON;
-                    final String classeEleve;
-                    boolean isBackup = false;
+            final JsonObject userJSON;
+            boolean isBackup = false;
 
-                    if(!infoEleve.result().isEmpty()){
-                        userJSON = infoEleve.result();
-                        classeEleve = userJSON.getJsonObject("u").getJsonObject("data")
-                                .getJsonArray("classes").getString(0);
-                    } else {
-                        userJSON = infoEleveBackup.result();
-                        classeEleve = userJSON.getString("idClasse");
-                        isBackup = true;
-                    }
+            if(!infoEleve.result().isEmpty()){
+                userJSON = infoEleve.result();
+            } else {
+                userJSON = infoEleveBackup.result();
+                isBackup = true;
+            }
 
-                    Future<JsonArray> multiTeachersFuture = Future.future();
-                    utilsService.getMultiTeachersByClass(idEtablissement,
-                            userJSON.getJsonObject("c").getJsonObject("data").getString("id"), idPeriode != null ? idPeriode.intValue() : null,
-                            multiTeacherEvent -> {
-                                formate(multiTeachersFuture, multiTeacherEvent);
-                            });
-
-                    Future<JsonArray> servicesFuture = Future.future();
-                    utilsService.getServices(idEtablissement,
-                            new JsonArray().add(userJSON.getJsonObject("c").getJsonObject("data").getString("id")),
-                            servicesEvent -> {
-                                formate(servicesFuture, servicesEvent);
-                            });
-
-                    // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
-                    final JsonArray devoirsJSON = devoirsFuture.result();
-                    final JsonArray idMatieres = new fr.wseduc.webutils.collections.JsonArray();
-                    final JsonArray idEnseignants = new fr.wseduc.webutils.collections.JsonArray();
-
-                    final JsonArray moyennesFinales = moyenneFinaleFuture.result();
-
-
-                    for (int i = 0; i < devoirsJSON.size(); i++) {
-                        JsonObject devoir = devoirsJSON.getJsonObject(i);
-                        String idMatiere = devoir.getString(ID_MATIERE);
-                        idMatieres.add(idMatiere);
-                        idEnseignants.add(devoir.getValue("owner"));
-                    }
-                    // récupération de l'ensemble des matières de l'élève
-
-                    JsonArray matieres = new JsonArray();
-
-                    for (int i = 0; i < subjectF.result().size(); i++) {
-                        JsonObject o = subjectF.result().getJsonObject(i);
-                        String idMatiere = o.getString(ID_KEY);
-                        if (idMatieres.contains(idMatiere)) {
-                            matieres.add(o);
-                            String key = classeEleve + "$" + o.getString("externalId");
-                        }
-                    }
-
-                    final JsonObject etabJSON = structureFuture.result().getJsonObject("s")
-                            .getJsonObject("data");
-                    final JsonObject periodeJSON = new JsonObject();
-
-                    if (null != params.get("idTypePeriode") && null != params.get("ordrePeriode")) {
-                        final long idTypePeriode = Long.parseLong(params.get("idTypePeriode"));
-                        final long ordrePeriode = Long.parseLong(params.get("ordrePeriode"));
-                        String libellePeriode = getLibelle("viescolaire.periode." + idTypePeriode);
-                        libellePeriode += (" " + ordrePeriode);
-                        periodeJSON.put("libelle", libellePeriode);
-                    } else {
-                        // Construction de la période année
-                        periodeJSON.put("libelle", "Ann\u00E9e");
-                    }
-                    final Boolean finalBackUp = isBackup;
-                    CompositeFuture.all(multiTeachersFuture, servicesFuture).setHandler(futuresEvent -> {
-                        final JsonArray multiTeachers = multiTeachersFuture.result();
-                        final JsonArray services = servicesFuture.result();
-
-                        for (int i = 0; i < multiTeachers.size(); i++) {
-                            JsonObject multiTeacher = multiTeachers.getJsonObject(i);
-                            idEnseignants.add(multiTeacher.getString("second_teacher_id"));
-                        }
-
-                        getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON, periodeJSON, userJSON, etabJSON,
-                                finalBackUp, moyennesFinales, multiTeachers, services, handler);
+            Future<JsonArray> multiTeachersFuture = Future.future();
+            utilsService.getMultiTeachersByClass(idEtablissement,
+                    userJSON.getJsonObject("c").getJsonObject("data").getString("id"), idPeriode != null ? idPeriode.intValue() : null,
+                    multiTeacherEvent -> {
+                        formate(multiTeachersFuture, multiTeacherEvent);
                     });
-                });
+
+            Future<JsonArray> servicesFuture = Future.future();
+            utilsService.getServices(idEtablissement,
+                    new JsonArray().add(userJSON.getJsonObject("c").getJsonObject("data").getString("id")),
+                    servicesEvent -> {
+                        formate(servicesFuture, servicesEvent);
+                    });
+
+            // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
+            final JsonArray devoirsJSON = devoirsFuture.result();
+            final JsonArray annotationsJSON = annotationsFuture.result();
+            final JsonArray idMatieres = new fr.wseduc.webutils.collections.JsonArray();
+            final JsonArray idEnseignants = new fr.wseduc.webutils.collections.JsonArray();
+
+            final JsonArray moyennesFinales = moyenneFinaleFuture.result();
+
+
+            for (int i = 0; i < devoirsJSON.size(); i++) {
+                JsonObject devoir = devoirsJSON.getJsonObject(i);
+                String idMatiere = devoir.getString(ID_MATIERE);
+                idMatieres.add(idMatiere);
+                idEnseignants.add(devoir.getValue("owner"));
+            }
+            // récupération de l'ensemble des matières de l'élève
+
+            JsonArray matieres = new JsonArray();
+
+            for (int i = 0; i < subjectF.result().size(); i++) {
+                JsonObject o = subjectF.result().getJsonObject(i);
+                String idMatiere = o.getString(ID_KEY);
+                if (idMatieres.contains(idMatiere)) {
+                    matieres.add(o);
+                }
+            }
+
+            final JsonObject etabJSON = structureFuture.result().getJsonObject("s")
+                    .getJsonObject("data");
+            final JsonObject periodeJSON = new JsonObject();
+
+            if (null != params.get("idTypePeriode") && null != params.get("ordrePeriode")) {
+                final long idTypePeriode = Long.parseLong(params.get("idTypePeriode"));
+                final long ordrePeriode = Long.parseLong(params.get("ordrePeriode"));
+                String libellePeriode = getLibelle("viescolaire.periode." + idTypePeriode);
+                libellePeriode += (" " + ordrePeriode);
+                periodeJSON.put("libelle", libellePeriode);
+            } else {
+                // Construction de la période année
+                periodeJSON.put("libelle", "Ann\u00E9e");
+            }
+            final Boolean finalBackUp = isBackup;
+            CompositeFuture.all(multiTeachersFuture, servicesFuture).setHandler(futuresEvent -> {
+                final JsonArray multiTeachers = multiTeachersFuture.result();
+                final JsonArray services = servicesFuture.result();
+
+                for (int i = 0; i < multiTeachers.size(); i++) {
+                    JsonObject multiTeacher = multiTeachers.getJsonObject(i);
+                    idEnseignants.add(multiTeacher.getString("second_teacher_id"));
+                }
+
+                getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON, periodeJSON, userJSON, etabJSON,
+                        finalBackUp, moyennesFinales, multiTeachers, services, handler);
+            });
+        });
     }
 
     /**
@@ -1710,7 +1716,6 @@ public class DefaultExportService implements ExportService {
      * @param matiereInter la matière dont on cherche les devoirs.
      */
     private void getDevoirsByMatiere(JsonArray devoirsJson, JsonObject matiereInter, JsonObject moyenneFinale) {
-
         JsonArray devoirsMatiereJson = new fr.wseduc.webutils.collections.JsonArray();
 
         List<NoteDevoir> listeNoteDevoirs = new ArrayList<NoteDevoir>();
@@ -1732,7 +1737,6 @@ public class DefaultExportService implements ExportService {
             devoirJson.put("hasCoeff", hasCoeff);
 
             // ajout du devoir sur la matiere, si son identifiant de matière correspond bien
-
             if (isNotNull(coefficient) && idMatiere.equals(devoirJson.getString("id_matiere"))) {
                 devoirsMatiereJson.add(devoirJson);
                 Double note = Double.valueOf(devoirJson.getString("note"));
@@ -1742,19 +1746,22 @@ public class DefaultExportService implements ExportService {
                 Long idSousMatiere = devoirJson.getLong("id_sousmatiere");
                 Long nbrEleves = devoirJson.getLong("nbr_eleves");
                 double sumNotes;
+
                 try {
                     sumNotes = Double.parseDouble(devoirJson.getString("sum_notes"));
                 } catch (ClassCastException exc) {
                     log.error("[ getDevoirsByMatiere ] : sum_notes of devoirJson cannot be transform to double");
                     sumNotes = 0.0;
                 }
+
                 if(isNotNull(nbrEleves) && isNotNull(sumNotes)){
                     DecimalFormat df = new DecimalFormat("0.##");
                     df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
-                    Double moyenneClasse = sumNotes/nbrEleves;
+                    Double moyenneClasse = sumNotes / nbrEleves;
                     devoirJson.put("moyenneClasse", df.format(moyenneClasse));
                     devoirJson.put("hasMoyenneClasse", true);
                 }
+
                 if(isNotNull(idSousMatiere)) {
                     if(!listNotesSousMatiere.containsKey(idSousMatiere)){
                         listNotesSousMatiere.put(idSousMatiere, new ArrayList<>());
@@ -1777,7 +1784,7 @@ public class DefaultExportService implements ExportService {
         matiereInter.put("hasDevoirs", hasDevoirs);
 
         if (hasDevoirs) {
-// param du calcul des moyennes
+            // param du calcul des moyennes
             final Boolean withStat = false;
             final int diviseur = 20;
             final Boolean annual = false;
@@ -1789,7 +1796,7 @@ public class DefaultExportService implements ExportService {
                     matiereInter.put(MOYENNE, moyenneFinale.getValue("moyenne").toString());
                 else
                     matiereInter.put(MOYENNE, "NN");
-            }else if( moyenneMatiere.getValue(MOYENNE) != null){
+            } else if( moyenneMatiere.getValue(MOYENNE) != null){
                 matiereInter.put(MOYENNE, moyenneMatiere.getValue(MOYENNE).toString());
             }
             matiereInter.put(MOYENNE_NON_NOTE, matiereInter.getValue(MOYENNE).equals("NN"));
@@ -1797,6 +1804,7 @@ public class DefaultExportService implements ExportService {
             JsonArray sousMatieres = matiereInter.getJsonArray(keySousMatiere);
             matiereInter.put("hasSousMatiere", sousMatieres.size()>0);
             JsonArray sousMatieresWithoutFirst = new JsonArray();
+
             for(int i = 0; i < sousMatieres.size(); i++) {
                 JsonObject sousMatiere = sousMatieres.getJsonObject(i);
                 Long idSousMatiere = sousMatiere.getLong("id_type_sousmatiere");
@@ -1825,7 +1833,6 @@ public class DefaultExportService implements ExportService {
                 }
             }
             matiereInter.put(keySousMatiere+ "_tail", sousMatieresWithoutFirst);
-
         }
     }
 

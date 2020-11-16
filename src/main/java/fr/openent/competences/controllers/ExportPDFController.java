@@ -140,17 +140,16 @@ public class ExportPDFController extends ControllerHelper {
 
             final String idEtablissement = params.get("idEtablissement");
             final String idUser = params.get("idUser");
-            exportService.getDataForExportReleveEleve(idUser, idEtablissement, idPeriode, params,
-                    event -> {
-                        if(event.isLeft()){
-                            leftToResponse(request, event.left());
-                            return;
-                        }
-                        JsonObject templateProps = event.right().getValue();
-                        String templateName = "releve-eleve.pdf.xhtml";
-                        String prefixPdfName = templateProps.getString("prefixPdfName");
-                        exportService.genererPdf(request, templateProps, templateName, prefixPdfName, vertx, config);
-                    });
+            exportService.getDataForExportReleveEleve(idUser, idEtablissement, idPeriode, params, event -> {
+                if(event.isLeft()){
+                    leftToResponse(request, event.left());
+                    return;
+                }
+                JsonObject templateProps = event.right().getValue();
+                String templateName = "releve-eleve.pdf.xhtml";
+                String prefixPdfName = templateProps.getString("prefixPdfName");
+                exportService.genererPdf(request, templateProps, templateName, prefixPdfName, vertx, config);
+            });
         });
     }
 

@@ -124,13 +124,12 @@ public class DevoirController extends ControllerHelper {
 
                             if( _STUDENT.equals(user.getType()) || _RELATIVE.equals(user.getType()) || forStudentReleve){
                                 String idEleve = request.params().get("idEleve");
-                                devoirsService.listDevoirs(idEleve,idEtablissement, idClasse, null,
-                                        idPeriode,historise, handler);
-
+                                devoirsService.listDevoirs(idEleve, idEtablissement, idClasse, null,
+                                        idPeriode, historise, handler);
                             } else if (idEtablissement != "undefined" && idClasse != "undefined"
                                     && idMatiere != "undefined" && request.params().get("idPeriode") != "undefined") {
-                                devoirsService.listDevoirs(null,idEtablissement, idClasse, idMatiere,
-                                        idPeriode,historise, handler);
+                                devoirsService.listDevoirs(null, idEtablissement, idClasse, idMatiere,
+                                        idPeriode, historise, handler);
                             } else {
                                 Renders.badRequest(request, "Invalid parameters");
                             }

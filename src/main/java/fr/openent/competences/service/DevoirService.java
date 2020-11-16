@@ -112,12 +112,14 @@ public interface DevoirService extends CrudService {
      * @param historise evaluation historise
      * @param handler handler portant le résultat de la requête
      */
-    void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long
-            idPeriode,boolean historise, Handler<Either<String, JsonArray>> handler);
+    void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long idPeriode,
+                     boolean historise, Handler<Either<String, JsonArray>> handler);
 
     void listDevoirs(String idEleve, String[] idGroupes, Long[] idDevoirs, Long[] idPeriodes,
                      String[] idEtablissement, String[] idMatieres, Boolean hasCompetences,
                      Boolean historise, Handler<Either<String, JsonArray>> handler);
+
+    void listDevoirsWithAnnotations(String idEleve, Long idPeriode, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Liste des devoirs publiés pour un établissement et une période donnée.
