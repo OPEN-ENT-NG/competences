@@ -54,7 +54,7 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
             let classe = classes.findWhere({id : idClasse});
             if (classe) {
                 return matieres.filter((matiere) => {
-                    let evaluables;
+                    let evaluables = [];
                     if (classe.services) {
                         evaluables = getEvaluables(classe, matiere, idTeacher);
                     }
