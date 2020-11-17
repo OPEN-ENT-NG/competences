@@ -2103,7 +2103,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             if(!$scope.devoir.matiere) {
                 $scope.devoir.matiere = $scope.devoir.matieresByClassByTeacher[0];
-            }else if(_.findWhere($scope.devoir.matieresByClassByTeacher, {id : $scope.devoir.matiere.id}) === undefined) {
+            } else if(_.findWhere($scope.devoir.matieresByClassByTeacher, {id : $scope.devoir.matiere.id}) === undefined) {
                 $scope.devoir.matiere = $scope.devoir.matieresByClassByTeacher[0];
             }
 

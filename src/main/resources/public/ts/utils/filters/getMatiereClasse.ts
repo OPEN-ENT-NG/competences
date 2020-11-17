@@ -18,12 +18,12 @@
 /**
  * Created by ledunoiss on 20/09/2016.
  */
-import {_, moment, ng} from 'entcore';
+import {_, moment, model, ng} from 'entcore';
 import {Utils} from "../../models/teacher";
 
 export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
     function getEvaluables(classe, matiere, idTeacher) {
-        if (Utils.isChefEtab()) {
+        if (Utils.isChefEtab() && idTeacher == model.me.userId) {
             return _.where(classe.services, {
                 id_matiere: matiere.id,
                 evaluable: true
