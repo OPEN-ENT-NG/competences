@@ -791,16 +791,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.confirmerDuplication = () => {
             if ($scope.selected.devoirs.list.length === 1) {
                 let devoir: Devoir = $scope.selected.devoirs.list[0];
-                devoir.duplicate($scope.selected.classes)
-                    .then(() => {
-                        $scope.devoirs.sync().then(() => {
-                            $scope.resetSelected();
-                            $scope.opened.lightboxs.duplication = false;
+                devoir.duplicate($scope.selected.classes).then(() => {
+                    $scope.devoirs.sync().then(() => {
+                        $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+                            return $scope.filterValidClasse(devoir);
                         });
-                    })
-                    .catch(() => {
-                        notify.error(lang.translate('evaluation.duplicate.devoir.error'));
+                        $scope.resetSelected();
+                        $scope.opened.lightboxs.duplication = false;
                     });
+                }).catch(() => {
+                    notify.error(lang.translate('evaluation.duplicate.devoir.error'));
+                });
             }
         };
 
@@ -2337,6 +2338,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 evaluations.structure.devoirs.sync().then(() => {
                     if ($location.path() === "/devoir/create") {
                         if (res !== undefined) {
+                            $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+                                return $scope.filterValidClasse(devoir);
+                            });
                             savePreferences();
                             let _devoir = evaluations.structure.devoirs.findWhere({id: res.id});
                             evaluations.structure.devoirs.getPercentDone(_devoir).then(async () => {
@@ -2344,7 +2348,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 await utils.safeApply($scope);
                             });
                         }
-
                     } else if ($location.path() === "/releve") {
                         $scope.opened.displayMessageLoader = false;
                         if ($scope.releveNote === undefined || !$scope.releveNote) {
@@ -2430,11 +2433,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Séquence de récupération d'un relevé de note
          */
-      /*  let oldExternalIdClassSearch:String = undefined;
-        function initSubjectWhenSearchAnotherThing():any{
-            if(oldExternalIdClassSearch === $scope.search.matiere.externalId) $scope.search.matiere = "*";
-            oldExternalIdClassSearch = $scope.search.matiere.externalId;
-        }*/
+        /*  let oldExternalIdClassSearch:String = undefined;
+          function initSubjectWhenSearchAnotherThing():any{
+              if(oldExternalIdClassSearch === $scope.search.matiere.externalId) $scope.search.matiere = "*";
+              oldExternalIdClassSearch = $scope.search.matiere.externalId;
+          }*/
 
         $scope.getReleve = async function () {
             if (Utils.isNotNull($scope.releveNote)) {
@@ -2451,7 +2454,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.selected.devoirs.list = [];
             }
 
-           // initSubjectWhenSearchAnotherThing();
+            // initSubjectWhenSearchAnotherThing();
 
             if (Utils.isNotDefault($scope.search.classe) && $scope.search.classe.id !== undefined
                 && Utils.isNotDefault($scope.search.matiere) && $scope.search.matiere.id !== undefined
@@ -2646,8 +2649,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @returns {string}
          */
         $scope.getMoyenne = function (idPeriode,eleve) {
-         if(idPeriode == null){
-               let periodes = 0;
+            if(idPeriode == null){
+                let periodes = 0;
                 let sum = 0;
                 for(let i=1;i<6;i++){
                     let _moyenneFinale = _.findWhere(eleve.moyennesFinales, {id_periode: i});
@@ -3668,7 +3671,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             $scope.periodes = classe.periodes;
             $scope.notYearPeriodes = _.filter($scope.periodes.all, (periode) => {
-               return $scope.notYear(periode);
+                return $scope.notYear(periode);
             });
 
             let currentPeriode = _.find(classe.periodes.all, (periode) => {
@@ -3732,7 +3735,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.releveNotes = evaluations.structure.releveNotes;
             $scope.classes = evaluations.structure.classes;
             $scope.filteredClasses = _.filter($scope.classes.all, classe => {
-               return $scope.filterValidClasse(classe);
+                return $scope.filterValidClasse(classe);
             });
             $scope.devoirs = evaluations.structure.devoirs;
             $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
@@ -4121,7 +4124,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }else{
                 if(eleve.moyenneFinale === null)
                     eleve.moyenneFinale = "NN";
-               (eleve.moyenneFinale === "NN") ? eleve.moyenneFinaleIsSet = false : eleve.moyenneFinaleIsSet = true;
+                (eleve.moyenneFinale === "NN") ? eleve.moyenneFinaleIsSet = false : eleve.moyenneFinaleIsSet = true;
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
             }
         };
