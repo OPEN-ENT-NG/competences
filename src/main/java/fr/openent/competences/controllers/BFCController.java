@@ -608,16 +608,15 @@ public class BFCController extends ControllerHelper {
     @Get("/delete/archive/bfc")
     @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
     public void deleteArchive(final HttpServerRequest request){
-        ArchiveUtils.deleteAll(ARCHIVE_BFC_TABLE, storage,  response -> Renders.renderJson(request, response));
+        ArchiveUtils.deleteAll(ARCHIVE_BFC_TABLE, storage, response -> Renders.renderJson(request, response));
     }
 
-    @Get("/archive/bfc/:idStructure")
+    @Get("/archive/bfc")
     @ApiDoc("télécharge l archive d'un étab")
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
     public  void getArchiveBulletin(final  HttpServerRequest request){
         String idStructure = request.params().get("idStructure");
-        ArchiveUtils.getArchiveBFCZip(idStructure,request,eb,storage, vertx);
-//        request.response().setStatusCode(201).end();
-
+        String idYear = request.params().get("idYear");
+        ArchiveUtils.getArchiveBFCZip(idStructure, request, eb, storage, vertx);
     }
 }

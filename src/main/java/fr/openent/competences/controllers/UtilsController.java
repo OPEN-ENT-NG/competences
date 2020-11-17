@@ -52,11 +52,10 @@ public class UtilsController extends ControllerHelper {
     private final UtilsService utilsService;
     private final Storage storage;
 
-    public UtilsController( Storage storage, EventBus eb) {
+    public UtilsController(Storage storage, EventBus eb) {
         utilsService = new DefaultUtilsService(eb);
         this.storage = storage;
     }
-
 
     /**
      * Retourne tous les types de devoir par etablissement

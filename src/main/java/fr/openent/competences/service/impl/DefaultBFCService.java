@@ -87,7 +87,6 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     private static final String CLASSES = "classes";
     private static final String NOM_CLASSE ="nomClasse";
 
-
     public DefaultBFCService(EventBus eb, Storage storage) {
         super(COMPETENCES_SCHEMA,  BFC_TABLE);
         this.eb = eb;
@@ -1788,14 +1787,13 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     forwardedFor, vertx, config, scheme, structuresFuture);
 
             // Lorsque le traitement est terminé, pour tous les etabs, on log la fin de l'archivage
-            CompositeFuture.all(structuresFuture, Future.succeededFuture())
-                    .setHandler( archiveStructure -> {
-                        if(archiveStructure.failed()){
-                            String error = archiveStructure.cause().getMessage();
-                            log.error("[ARCHIVE BFC | structuresFuture] :: " + error);
-                        }
-                        log.info("*************** END ARCHIVE BFC  ***************");
-                    });
+            CompositeFuture.all(structuresFuture, Future.succeededFuture()).setHandler(archiveStructure -> {
+                if(archiveStructure.failed()){
+                    String error = archiveStructure.cause().getMessage();
+                    log.error("[ARCHIVE BFC | structuresFuture] :: " + error);
+                }
+                log.info("*************** END ARCHIVE BFC  ***************");
+            });
         });
 
     }
@@ -1875,12 +1873,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                                             final Long idCycle,
                                                             Handler<Either<String, JsonObject>> handler){
         String noFileStored = "No file stored: (eleve: " + idEleve + ", classe: " + idClasse + ", cycle: "
-                + idCycle + ", externalIdClasse: "+ externalIdClasse + ", idEtablissement: " + idEtablissement +
-                ") ";
+                + idCycle + ", externalIdClasse: "+ externalIdClasse + ", idEtablissement: " + idEtablissement + ") ";
         return saveEvent -> {
             if (saveEvent.isRight()) {
-                log.debug("bfc stored: (eleve: " + idEleve + ", classe: " + idClasse + ", cycle: "
-                        + idCycle + ") ");
+                log.debug("bfc stored: (eleve: " + idEleve + ", classe: " + idClasse + ", cycle: " + idCycle + ") ");
             }
             else{
                 log.error(noFileStored);
@@ -1906,7 +1902,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     saveArchivePdf(name, file, idEleve, idClasse, externalIdClasse, idEtablissement, idCycle, handler);
                 }
                 else {
-                    endSave(error, handler );
+                    endSave(error, handler);
                 }
                 return;
             }

@@ -13,8 +13,8 @@ import org.vertx.java.busmods.BusModBase;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CompetencesTransitionWorker extends BusModBase  implements Handler<Message<JsonObject>> {
-    private static final Logger log = LoggerFactory.getLogger(ArchiveWorker.class);
+public class CompetencesTransitionWorker extends BusModBase implements Handler<Message<JsonObject>> {
+    private static final Logger log = LoggerFactory.getLogger(CompetencesTransitionWorker.class);
     private boolean isWorking = false;
     List<JsonObject> structures = new ArrayList<>();
     private TransitionService transitionService;
@@ -38,31 +38,28 @@ public class CompetencesTransitionWorker extends BusModBase  implements Handler<
                 processTransitionRepositery(StructureHandlerWork());
             }).start();
         }
-
     }
 
     private void stackStructure(JsonObject structure) {
         structures.add(structure);
-
     }
 
-    private JsonObject HandleStackJSonObject() {
-        JsonObject structure = new JsonObject();
-        if(structures.size() !=0) {
-            structure = structures.get(0);
+    private JsonObject HandleStackJsonObject() {
+        if(structures.size() != 0) {
+            JsonObject structure = structures.get(0);
             structures.remove(0);
-        }else{
+            return structure;
+        } else {
             log.info("end work");
             isWorking = false;
             return null;
         }
-        return structure;
     }
-    private void processTransitionRepositery(Handler<Either<String, Boolean>> structureHandlerWork) {
 
-        JsonObject structureToHandle = HandleStackJSonObject();
+    private void processTransitionRepositery(Handler<Either<String, Boolean>> structureHandlerWork) {
+        JsonObject structureToHandle = HandleStackJsonObject();
         if (structureToHandle == null) return;
-        log.info("start Work  ");
+        log.info("start Work ");
         transitionService.transitionAnneeStructure(structureToHandle, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
@@ -71,8 +68,6 @@ public class CompetencesTransitionWorker extends BusModBase  implements Handler<
             }
         });
     }
-
-
 
     private Handler<Either<String, Boolean>> StructureHandlerWork() {
         return new Handler<Either<String, Boolean>>() {

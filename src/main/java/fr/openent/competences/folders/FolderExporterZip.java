@@ -46,7 +46,6 @@ public class FolderExporterZip extends FolderExporter {
         return future;
     }
 
-
     public FolderExporterZip(Storage storage, FileSystem fs, boolean throwErrors) {
         super(storage, fs, throwErrors);
     }

@@ -4,6 +4,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -102,7 +103,7 @@ public interface ExportBulletinService {
      * @param finalHandler handler servant à la synchronisation des services
      */
     void getSyntheseBilanPeriodique ( String idEleve,  Map<String,JsonObject> elevesMap, Long idTypePeriode, String idStructure,
-                                      Handler<Either<String, JsonObject>> finalHandler);
+                                     Boolean isBulletinLycee, Handler<Either<String, JsonObject>> finalHandler);
 
     /**
      * Récupère le libelle de l'établissement de l'élève
@@ -286,4 +287,11 @@ public interface ExportBulletinService {
      */
     void getParameters(String idStudent, Long idPeriode, String idStructure, 
                        final Handler<Either<String, JsonObject>> finalHandler);
+
+    void savePdfInStorage(String name, Buffer file, final String idEleve, final String idClasse,
+                                 final String externalIdClasse, final String idEtablissement, final Long idPeriode,
+                                 final String idParent, Handler<Either<String, JsonObject>> handler);
+
+    void runSavePdf(JsonObject bulletin, Vertx vertx, JsonObject config,
+                    Handler<Either<String, Boolean>> bulletinHandlerWork);
 }

@@ -53,6 +53,7 @@ public class FolderExporter {
         this.storage = storage;
         this.throwErrors = throwErrors;
     }
+
     public static String getParent(JsonObject doc) {
         return doc.getString("parent");
     }

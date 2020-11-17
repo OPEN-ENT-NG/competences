@@ -494,6 +494,7 @@
   "viescolaire.eleve.recherche":"Recherche Élève",
   "viescolaire.utils.groupeEnseignement":"Groupe d'enseignement",
   "viescolaire.utils.annee" : "Année",
+  "viescolaire.utils.annee.encours" : "Année en cours",
   "viescolaire.utils.all.none": "Tous / Aucun",
   "viescolaire.utils.all.none.feminin": "Toutes / Aucune",
   "viescolaire.utils.appreciation":"Appréciation",

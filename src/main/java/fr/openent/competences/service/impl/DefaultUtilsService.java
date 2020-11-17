@@ -20,6 +20,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
@@ -1359,5 +1360,37 @@ public class DefaultUtilsService  implements UtilsService {
                 " WHERE id_etablissement = ? ";
         Sql.getInstance().prepared(query, params, Competences.DELIVERY_OPTIONS, validUniqueResultHandler(eitherHandler));
 
+    }
+
+    @Override
+    public void getYearsAndPeriodes(String idStructure, boolean onlyYear, Handler<Either<String,JsonObject>> handler) {
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT start_date, end_date");
+
+        if(!onlyYear){
+            query.append(", JSON_AGG(DISTINCT(id_type)) AS periodes");
+        }
+
+        query.append(" FROM viesco.setting_period");
+
+        if(!onlyYear) {
+            query.append(" JOIN viesco.periode ON id_etablissement = id_structure");
+        }
+
+        query.append(" WHERE id_structure = ?")
+                .append(" AND code = 'YEAR'")
+                .append(" GROUP BY start_date, end_date;");
+        JsonArray params = new JsonArray().add(idStructure);
+        Sql.getInstance().prepared(query.toString(), params, Competences.DELIVERY_OPTIONS,
+                validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void getPresencesReasonsId(String idStructure, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "get-reasons")
+                .put("structure", idStructure);
+
+        eb.send("fr.openent.presences", action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 }

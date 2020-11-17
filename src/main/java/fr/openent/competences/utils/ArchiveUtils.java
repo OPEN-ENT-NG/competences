@@ -53,33 +53,30 @@ public class ArchiveUtils {
                                          Handler<Either<String,JsonObject>> handler){
         String query = " SELECT id_file " +
                 " FROM notes." + table +
-                " WHERE id_eleve=? AND id_classe = ? AND " + (isCycle?"id_cycle=? ":"id_periode=? ") +
+                " WHERE id_eleve = ? AND id_classe = ? AND " + (isCycle ? "id_cycle = ? " : " id_periode = ? ") +
                 " ORDER by created  DESC limit 1;";
         JsonArray values = new JsonArray().add(idEleve).add(idClasse).add(idPeriode);
         Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS,
                 SqlResult.validUniqueResultHandler(handler));
-
     }
 
     private static void clearCompletedTable(){
-        String query = "DELETE FROM " + Competences.EVAL_SCHEMA
-                + ".arhive_bulletins_complet WHERE true ;";
-        Sql.getInstance().prepared(query, new JsonArray(), Competences.DELIVERY_OPTIONS,
-                event -> {
-                    JsonObject body = event.body();
-                    if(!body.getString(STATUS).equals(OK)){
-                        String message = body.getString(MESSAGE);
-                        log.error("[clearCompletedTable] :: " + message);
-                    }
-                    else{
-                        JsonArray structures = body.getJsonArray(RESULTS);
-                        log.info("[clearCompletedTable] :: " + structures.encode());
-                    }
-                });
+        String query = "DELETE FROM " + Competences.EVAL_SCHEMA + ".arhive_bulletins_complet WHERE true;";
+        Sql.getInstance().prepared(query, new JsonArray(), Competences.DELIVERY_OPTIONS, event -> {
+            JsonObject body = event.body();
+            if(!body.getString(STATUS).equals(OK)){
+                String message = body.getString(MESSAGE);
+                log.error("[clearCompletedTable] :: " + message);
+            }
+            else{
+                JsonArray structures = body.getJsonArray(RESULTS);
+                log.info("[clearCompletedTable] :: " + structures.encode());
+            }
+        });
     }
 
     private static void clearArchiveTable(JsonArray ids, String table, Handler<Either<String,JsonObject>> handler){
-        String query = "DELETE FROM notes." + table+ " WHERE id_file IN "+ Sql.listPrepared(ids.getList()) + " ;";
+        String query = "DELETE FROM notes." + table + " WHERE id_file IN "+ Sql.listPrepared(ids.getList()) + ";";
         Sql.getInstance().prepared(query, ids, Competences.DELIVERY_OPTIONS,
                 SqlResult.validUniqueResultHandler(handler));
         if(table.equals(ARCHIVE_BULLETIN_TABLE)){
@@ -88,7 +85,7 @@ public class ArchiveUtils {
     }
 
     private static void getAllIdFileArchive(String table, Handler<Either<String,JsonObject>> handler){
-        String query = " SELECT array_agg(id_file) as ids FROM notes." + table+ " ;";
+        String query = "SELECT array_agg(id_file) as ids FROM notes." + table + ";";
         JsonArray values = new JsonArray();
         Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS,
                 SqlResult.validUniqueResultHandler(handler));
@@ -155,7 +152,6 @@ public class ArchiveUtils {
                                           Storage storage, String table, Boolean isCycle,
                                           final HttpServerRequest request) {
 
-
         getArchiveBulletin(idEleve, idClasse, idPeriode, storage, table, isCycle, bufferEither -> {
             if (bufferEither.isLeft()) {
                 Renders.notFound(request, bufferEither.left().getValue());
@@ -184,7 +180,6 @@ public class ArchiveUtils {
             if(student.containsKey("classeName"))
                 classeName = student.getString("classeName");
             log.info("[Competences@ArchiveUTILS] getArchiveBulletin + isnull +" + classeName) ;
-
         }
 
         String periode = student.getString(PERIODE);
@@ -205,7 +200,7 @@ public class ArchiveUtils {
     }
 
     public static void generateArchiveBulletin(EventBus eb, HttpServerRequest request) {
-        new DefaultUtilsService(eb).getActivesStructureForArchiveBulletin( structuresEvent -> {
+        new DefaultUtilsService(eb).getActivesStructureForArchiveBulletin(structuresEvent -> {
             if(structuresEvent.isLeft()){
                 log.error(structuresEvent.left().getValue());
                 return;
@@ -230,23 +225,39 @@ public class ArchiveUtils {
 
 
 
-    public static void getArchiveBulletinZip(String idStructure, HttpServerRequest request, EventBus eb, Storage storage, Vertx vertx, WorkspaceHelper workspaceHelper, UserInfos user) {
-        getListToDownloadSQL(idStructure,eb,storage, vertx,request,user,workspaceHelper);
+    public static void getArchiveBulletinZip(String idStructure, String idYear, List<String> idsPeriode,
+                                             HttpServerRequest request, EventBus eb, Storage storage, Vertx vertx,
+                                             WorkspaceHelper workspaceHelper, UserInfos user) {
+        getListToDownloadSQL(idStructure, idYear, idsPeriode, eb, storage, vertx, request, user, workspaceHelper);
     }
+
     private static void getListToDownloadBFCSQL(String idStructure, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request) {
-        String query = "SELECT id_classe,id_etablissement, id_eleve,id_file , file_name as name from " + COMPETENCES_SCHEMA + ".archive_bfc where id_etablissement =  ?";
+        String query = "SELECT id_classe, id_etablissement, id_eleve, id_file, file_name as name" +
+                " FROM " + COMPETENCES_SCHEMA + ".archive_bfc WHERE id_etablissement = ?";
         JsonArray params = new JsonArray().add(idStructure);
         executeSqlRequest(eb, storage, vertx, request, query, params, null, null);
     }
 
-    private static void getListToDownloadSQL(String idStructure, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request, UserInfos user, WorkspaceHelper workspaceHelper) {
-        String query = "SELECT id_classe,id_etablissement, id_eleve,id_file , file_name as name from " + COMPETENCES_SCHEMA + ".archive_bulletins where id_etablissement =  ?";
-        JsonArray params = new JsonArray().add(idStructure);
+    private static void getListToDownloadSQL(String idStructure, String idYear, List<String> idsPeriode,
+                                             EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request,
+                UserInfos user, WorkspaceHelper workspaceHelper) {
+        String query = "SELECT id_classe, id_etablissement, id_eleve, id_file, file_name as name" +
+                " FROM " + COMPETENCES_SCHEMA + "." + ARCHIVE_BULLETIN_TABLE +
+                " WHERE id_etablissement = ? AND id_annee = ?";
+        JsonArray params = new JsonArray().add(idStructure).add(idYear);
 
-        executeSqlRequest(eb, storage, vertx, request, query, params,user,workspaceHelper);
+        if(idsPeriode.size() > 0) {
+            query += " AND id_periode IN " + Sql.listPrepared(idsPeriode);
+            for(String periode : idsPeriode) {
+                params.add(periode);
+            }
+        }
+
+        executeSqlRequest(eb, storage, vertx, request, query, params, user, workspaceHelper);
     }
 
-    private static void executeSqlRequest(EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request, String query, JsonArray params, UserInfos user, WorkspaceHelper workspaceHelper) {
+    private static void executeSqlRequest(EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request,
+                                          String query, JsonArray params, UserInfos user, WorkspaceHelper workspaceHelper) {
         List<PdfFile> listPdf = new ArrayList<>();
         Sql.getInstance().prepared(query, params, new Handler<Message<JsonObject>>() {
             @Override
@@ -254,11 +265,12 @@ public class ArchiveUtils {
                 JsonArray results =  event.body().getJsonArray("results");
                 for(int i = 0 ; i < results.size() ; i ++ ){
                     JsonArray result = results.getJsonArray(i);
-                    PdfFile bpdf = new PdfFile(result.getString(0),result.getString(1),result.getString(2),result.getString(3),result.getString(4));
+                    PdfFile bpdf = new PdfFile(result.getString(0), result.getString(1),
+                            result.getString(2), result.getString(3), result.getString(4));
                     listPdf.add(bpdf);
                 }
                 if(listPdf.size() > 0 ) {
-                    createFolders(listPdf, eb, storage, vertx, request,user,workspaceHelper);
+                    createFolders(listPdf, eb, storage, vertx, request, user, workspaceHelper);
                 }else{
                     request.response().setStatusCode(204).setStatusMessage("No data to export").end();
                 }
@@ -268,7 +280,7 @@ public class ArchiveUtils {
 
     private static void createFolders(List<PdfFile> listBulletin, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request, UserInfos user, WorkspaceHelper workspaceHelper) {
         String idStructure = listBulletin.get(0).getId_structure();
-        String query = "Match (s:Structure{id:{idStructure} }) return s.name as name";
+        String query = "MATCH (s:Structure{id:{idStructure} }) RETURN s.name as name";
         Neo4j.getInstance().execute(query, new JsonObject().put(ID_STRUCTURE_KEY, idStructure), new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
@@ -508,6 +520,4 @@ public class ArchiveUtils {
             }
         };
     }
-
-
 }

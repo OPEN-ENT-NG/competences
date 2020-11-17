@@ -299,14 +299,14 @@ public interface UtilsService {
      * @param idClass id class
      * @param handler response
      */
-    void getClassInfo(final String idClass, Handler<Either<String, JsonObject>>handler);
+    void getClassInfo(final String idClass, Handler<Either<String, JsonObject>> handler);
 
     /**
      * get config viescolaire and activation state of presences modules
      * @param idStructure id of the structure
      * @param handler response
      */
-    void getActiveStatePresences ( final String idStructure, Handler<Either<String,JsonObject>> handler);
+    void getActiveStatePresences (final String idStructure, Handler<Either<String,JsonObject>> handler);
 
     /**
      * get sync state of data from presenecs
@@ -324,4 +324,13 @@ public interface UtilsService {
     void activeDeactiveSyncStatePresences(String idStructure, Boolean state, Handler<Either<String, JsonObject>> handler);
 
     void lauchTransition(List<String> structureIds);
+
+    void getYearsAndPeriodes(String idStructure, boolean onlyYear, Handler<Either<String,JsonObject>> handler);
+
+    /**
+     * get unregularized reasons id from presences
+     * @param idStructure
+     * @param handler
+     */
+    void getPresencesReasonsId(String idStructure, Handler<Either<String, JsonArray>> handler);
 }

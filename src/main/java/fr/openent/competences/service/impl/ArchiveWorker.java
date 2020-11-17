@@ -28,9 +28,7 @@ public class ArchiveWorker extends BusModBase {
         Neo4j.getInstance().init(vertx, new JsonObject(neo4jConfig));
         vertx.eventBus().localConsumer(ArchiveWorker.class.getSimpleName(), archiveHandler());
         this.storage = new StorageFactory(vertx).getStorage();
-
     }
-
 
     private Handler<Message<JsonObject>> archiveHandler() {
         return message -> {
@@ -40,19 +38,16 @@ public class ArchiveWorker extends BusModBase {
             final String acceptLanguage = body.getString(ACCEPT_LANGUAGE);
             final Boolean forwardedFor = body.getBoolean(X_FORWARDED_FOR);
             final String path = body.getString(PATH);
-             if(isNotNull(host) && isNotNull(acceptLanguage)
-                     && isNotNull(forwardedFor)) {
+             if(isNotNull(host) && isNotNull(acceptLanguage) && isNotNull(forwardedFor)) {
                  switch (action) {
-
                      case ARCHIVE_BULLETIN:
                          final JsonArray idStructures = body.getJsonArray(ID_STRUCTURES_KEY);
                          new DefaultExportBulletinService(eb, storage, vertx).archiveBulletin(idStructures, vertx,
                                  config, path, host, acceptLanguage, forwardedFor);
                          break;
-
                      case ARCHIVE_BFC:
                          String scheme = body.getString(SCHEME);
-                         new DefaultBFCService(eb,storage).archiveBFC(vertx, config, path, host, acceptLanguage,
+                         new DefaultBFCService(eb, storage).archiveBFC(vertx, config, path, host, acceptLanguage,
                                  forwardedFor, scheme);
                          break;
                      default:

@@ -21,6 +21,7 @@ import fr.openent.competences.enums.*;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
@@ -44,158 +45,182 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private final ElementProgramme elementProgramme;
     private final EventBus eb;
     private final Sql sql;
-    private String address = "fr.openent.presences";
 
     public DefaultBilanPerioqueService (EventBus eb){
         this.eb = eb;
-        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
         utilsService = new DefaultUtilsService(eb);
         devoirService = new DefaultDevoirService(eb);
         elementProgramme = new DefaultElementProgramme() ;
         sql = Sql.getInstance();
-
     }
 
     @Override
     public void getRetardsAndAbsences(String structureId, String idClasse, String idEleve, Handler<Either<String, JsonArray>> eitherHandler){
         // Récupération de l'état d'activation du module présences de l'établissement
         Future<JsonObject> activationFuture = Future.future();
-        utilsService.getActiveStatePresences(structureId,event -> formate(activationFuture,event));
+        utilsService.getActiveStatePresences(structureId, event -> formate(activationFuture, event));
 
         // Récupération de l'état de la récupération des données du modules présences
         Future<JsonObject> syncFuture = Future.future();
-        utilsService.getSyncStatePresences(structureId,event -> formate(syncFuture,event));
+        utilsService.getSyncStatePresences(structureId, event -> formate(syncFuture, event));
 
-        CompositeFuture.all(syncFuture, activationFuture).setHandler(
-                event -> {
-                    if(event.failed()){
-                        String error = event.cause().getMessage();
-                        log.error("[initRecuperationAbsencesRetardsFromPresences] : " + error);
-                        eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-config] Failed"));
-                    } else{
-                        JsonObject activationState = activationFuture.result();
-                        JsonObject syncState = syncFuture.result();
-                        if(activationState.getBoolean("installed") && activationState.getBoolean("activate") &&
-                                syncState.containsKey("presences_sync") && syncState.getBoolean("presences_sync")){
-                            getRetardsAndAbsencesFromPresences(structureId, idClasse, idEleve, eitherHandler);
-                        }else{
-                            getRetardsAndAbsencesFromCompetences(idEleve, eitherHandler);
-                        }
-                    }
-                });
+        CompositeFuture.all(syncFuture, activationFuture).setHandler(event -> {
+            if(event.failed()){
+                String error = event.cause().getMessage();
+                log.error("[initRecuperationAbsencesRetardsFromPresences] : " + error);
+                eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-config] Failed"));
+            } else{
+                JsonObject activationState = activationFuture.result();
+                JsonObject syncState = syncFuture.result();
+                if(activationState.getBoolean("installed") && activationState.getBoolean("activate") &&
+                        syncState.containsKey("presences_sync") && syncState.getBoolean("presences_sync")){
+                    getRetardsAndAbsencesFromPresences(structureId, idClasse, idEleve, eitherHandler);
+                }else{
+                    getRetardsAndAbsencesFromCompetences(idEleve, eitherHandler);
+                }
+            }
+        });
     }
 
     private void getRetardsAndAbsencesFromCompetences(String idEleve, Handler<Either<String, JsonArray>> eitherHandler){
         JsonArray params = new JsonArray().add(idEleve);
 
-        String query = " SELECT * " +
-                " FROM viesco.absences_et_retards " +
-                " WHERE id_eleve = ? ";
-        sql.prepared(query, params, Competences.DELIVERY_OPTIONS, validResultHandler(eitherHandler));
+        String query = "SELECT * " +
+                "FROM viesco.absences_et_retards " +
+                "WHERE id_eleve = ?";
 
+        sql.prepared(query, params, Competences.DELIVERY_OPTIONS, validResultHandler(eitherHandler));
     }
 
-    private void getRetardsAndAbsencesFromPresences(String structureId, String idClasse, String idEleve, Handler<Either<String, JsonArray>> eitherHandler){
+    private void getRetardsAndAbsencesFromPresences(String structureId, String idClasse, String idEleve,
+                                                    Handler<Either<String, JsonArray>> eitherHandler) {
+        Future<JsonArray> periodesFuture = Future.future();
+        utilsService.getPeriodes(Collections.singletonList(idClasse), structureId, event -> formate(periodesFuture, event));
 
-        // Récupération des périodes de l'élève
-        utilsService.getPeriodes(Collections.singletonList(idClasse),structureId,new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> eventPeriodes) {
-                if (eventPeriodes.isRight()) {
-                    JsonArray periodes = eventPeriodes.right().getValue();
-                    String beginningDateYear = periodes.getJsonObject(0).getString("timestamp_dt").substring(0,10);
-                    String endgDateYear = periodes.getJsonObject(periodes.size()-1).getString("timestamp_fn").substring(0,10);
-                    // Récupération des absences de l'élève
-                    Future<JsonArray> absencesFuture = Future.future();
-                    sendEventBusGetEvent(EventType.ABSENCE.getType(), Collections.singletonList(idEleve), structureId,
-                            beginningDateYear, endgDateYear, "HALF_DAY", event -> formate(absencesFuture,event));
+        Future<JsonArray> reasonsFuture = Future.future();
+        utilsService.getPresencesReasonsId(structureId, event -> formate(reasonsFuture, event));
 
-                    // Récupération des retards de l'élève
-                    Future<JsonArray> retardsFuture = Future.future();
-                    sendEventBusGetEvent(EventType.LATENESS.getType(), Collections.singletonList(idEleve), structureId,
-                            beginningDateYear, endgDateYear, "HOUR", event -> formate(retardsFuture,event));
+        CompositeFuture.all(periodesFuture, reasonsFuture).setHandler(eventParams -> {
+            if (eventParams.failed()) {
+                String error = eventParams.cause().getMessage();
+                log.error("[getRetardsAndAbsencesFromPresences] : " + error);
+                eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsencesFromPresences] Failed"));
+            } else {
+                JsonArray periodes = periodesFuture.result();
+                JsonArray reasons = reasonsFuture.result();
+                List<Integer> reasonIds = ((List<JsonObject>) reasons.getList())
+                        .stream()
+                        .map(reason -> reason.getLong("id").intValue())
+                        .collect(Collectors.toList());
 
-                    CompositeFuture.all(absencesFuture, retardsFuture).setHandler(
-                            event -> {
-                                if(event.failed()){
-                                    String message = event.cause().getMessage();
-                                    log.error("[getRetardsAndAbsencesFromPresences-getEventsStudent] : " + idEleve + " " + message);
-                                    eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-getEventsStudent] Future Failed"));
-                                } else {
-                                    JsonArray absencesArray = absencesFuture.result();
-                                    JsonArray retardsArray = retardsFuture.result();
-                                    JsonArray result = new JsonArray();
-                                    for (Object periode : periodes) {
-                                        JsonObject periodeJson = (JsonObject) periode;
-                                        LocalDateTime beginningDatePeriode = LocalDateTime.parse(periodeJson.getString("timestamp_dt"));
-                                        LocalDateTime endgDatePeriode = LocalDateTime.parse(periodeJson.getString("timestamp_fn"));
-                                        Integer idPeriode = periodeJson.getInteger("id_type");
-                                        JsonObject dataForPeriode = new JsonObject().put("id_periode", idPeriode)
-                                                .put("id_eleve", idEleve);
-                                        int nbrRetards = 0;
-                                        int nbrAbsenceJustificated = 0;
-                                        int minutesAbsenceJustificated = 0;
-                                        int nbrAbsenceUnjustificated = 0;
-                                        int minutesAbsenceUnjustificated = 0;
-                                        for (Object eventType : absencesArray) {
-                                            JsonObject eventTypeJson = (JsonObject) eventType;
-                                            //absence
-                                            LocalDateTime eventStartDate = LocalDateTime.parse(eventTypeJson.getString("start_date").replace(" ","T").substring(0,19));
-                                            if (eventStartDate.isAfter(beginningDatePeriode) && eventStartDate.isBefore(endgDatePeriode)) {
-                                                boolean isJustificated = false;
-                                                for (Object eventAbsences : eventTypeJson.getJsonArray("events")) {
-                                                    JsonObject eventJson = (JsonObject) eventAbsences;
-                                                    eventStartDate = LocalDateTime.parse(eventJson.getString("start_date"));
-                                                    LocalDateTime eventEndDate = LocalDateTime.parse(eventJson.getString("end_date"));
-                                                    if (isNotNull(eventJson.getInteger("reason_id"))) {
-                                                        isJustificated = true;
-                                                        minutesAbsenceJustificated += ChronoUnit.MINUTES.between(eventStartDate, eventEndDate);
-                                                    } else {
-                                                        minutesAbsenceUnjustificated += ChronoUnit.MINUTES.between(eventStartDate, eventEndDate);
-                                                    }
-                                                }
-                                                if(isJustificated)
-                                                    nbrAbsenceJustificated++;
-                                                else
-                                                    nbrAbsenceUnjustificated++;
-                                            }
-                                        }
-                                        for (Object eventType : retardsArray) {
-                                            JsonObject eventTypeJson = (JsonObject) eventType;
-                                            //retard
-                                            LocalDateTime eventStartDate = LocalDateTime.parse(eventTypeJson.getString("start_date").replace(" ","T").substring(0,19));
-                                            if (eventStartDate.isAfter(beginningDatePeriode) && eventStartDate.isBefore(endgDatePeriode)) {
-                                                nbrRetards++;
-                                            }
-                                        }
+                String beginningDateYear = periodes.getJsonObject(0).getString("timestamp_dt").substring(0, 10);
+                String endDateYear = periodes.getJsonObject(periodes.size() - 1).getString("timestamp_fn").substring(0, 10);
 
-                                        int hourAbsenceJustificated = (int) Math.round((long) minutesAbsenceJustificated / 60.0);
-                                        int hourAbsenceUnjustificated = (int) Math.round((long) minutesAbsenceUnjustificated / 60.0);
-                                        dataForPeriode.put("abs_just", nbrAbsenceJustificated);
-                                        dataForPeriode.put("abs_just_heure", hourAbsenceJustificated);
-                                        dataForPeriode.put("abs_non_just", nbrAbsenceUnjustificated);
-                                        dataForPeriode.put("abs_non_just_heure", hourAbsenceUnjustificated);
-                                        dataForPeriode.put("abs_totale", nbrAbsenceUnjustificated + nbrAbsenceJustificated);
-                                        dataForPeriode.put("abs_totale_heure", hourAbsenceJustificated + hourAbsenceUnjustificated);
-                                        dataForPeriode.put("retard", nbrRetards);
-                                        dataForPeriode.put("from_presences", true);
-                                        result.add(dataForPeriode);
+                Future<JsonArray> absencesRegularizedFuture = Future.future();
+                sendEventBusGetEvent(EventType.ABSENCE.getType(), Collections.singletonList(idEleve), structureId,
+                        beginningDateYear, endDateYear, "HALF_DAY", true, false,
+                        null, event -> formate(absencesRegularizedFuture, event));
+
+                Future<JsonArray> absencesUnregularizedFuture = Future.future();
+                sendEventBusGetEvent(EventType.ABSENCE.getType(), Collections.singletonList(idEleve), structureId,
+                        beginningDateYear, endDateYear, "HALF_DAY", false, true,
+                        reasonIds, event -> formate(absencesUnregularizedFuture, event));
+
+                Future<JsonArray> retardsFuture = Future.future();
+                sendEventBusGetEvent(EventType.LATENESS.getType(), Collections.singletonList(idEleve), structureId,
+                        beginningDateYear, endDateYear, "HOUR", null, true,
+                        null, event -> formate(retardsFuture, event));
+
+                CompositeFuture.all(absencesRegularizedFuture, absencesUnregularizedFuture, retardsFuture).setHandler(event -> {
+                    if (event.failed()) {
+                        String message = event.cause().getMessage();
+                        log.error("[getRetardsAndAbsencesFromPresences-getEventsStudent] : " + idEleve + " " + message);
+                        eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-getEventsStudent] Future Failed"));
+                    } else {
+                        JsonArray absencesRegularizedArray = absencesRegularizedFuture.result();
+                        JsonArray absencesNotRegularizedArray = absencesUnregularizedFuture.result();
+                        JsonArray retardsArray = retardsFuture.result();
+                        JsonArray result = new JsonArray();
+                        for (Object periode : periodes) {
+                            JsonObject periodeJson = (JsonObject) periode;
+
+                            LocalDateTime beginningDatePeriode = LocalDateTime.parse(periodeJson.getString("timestamp_dt"));
+                            LocalDateTime endDatePeriode = LocalDateTime.parse(periodeJson.getString("timestamp_fn"));
+                            Integer idPeriode = periodeJson.getInteger("id_type");
+
+                            int nbrRetards = 0;
+                            int nbrAbsenceJustificated = 0;
+                            int minutesAbsenceJustificated = 0;
+                            int nbrAbsenceUnjustificated = 0;
+                            int minutesAbsenceUnjustificated = 0;
+
+                            for (Object eventType : absencesRegularizedArray) {
+                                JsonObject eventTypeJson = (JsonObject) eventType;
+
+                                LocalDateTime eventStartDate = LocalDateTime.parse(eventTypeJson.getString("start_date").replace(" ", "T").substring(0, 19));
+                                if (eventStartDate.isAfter(beginningDatePeriode) && eventStartDate.isBefore(endDatePeriode)) {
+                                    for (Object eventAbsences : eventTypeJson.getJsonArray("events")) {
+                                        JsonObject eventJson = (JsonObject) eventAbsences;
+
+                                        eventStartDate = LocalDateTime.parse(eventJson.getString("start_date"));
+                                        LocalDateTime eventEndDate = LocalDateTime.parse(eventJson.getString("end_date"));
+                                        minutesAbsenceJustificated += ChronoUnit.MINUTES.between(eventStartDate, eventEndDate);
                                     }
-                                    eitherHandler.handle(new Either.Right<>(result));
+                                    nbrAbsenceJustificated++;
                                 }
-                            });
-                } else {
-                    String message = " " + eventPeriodes.left().getValue();
-                    log.error("[getRetardsAndAbsences-Periodes] : " + idEleve + " " + message);
-                    eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-Periodes] Failed"));
-                }
+                            }
+
+                            for (Object eventType : absencesNotRegularizedArray) {
+                                JsonObject eventTypeJson = (JsonObject) eventType;
+
+                                LocalDateTime eventStartDate = LocalDateTime.parse(eventTypeJson.getString("start_date").replace(" ", "T").substring(0, 19));
+                                if (eventStartDate.isAfter(beginningDatePeriode) && eventStartDate.isBefore(endDatePeriode)) {
+                                    for (Object eventAbsences : eventTypeJson.getJsonArray("events")) {
+                                        JsonObject eventJson = (JsonObject) eventAbsences;
+
+                                        eventStartDate = LocalDateTime.parse(eventJson.getString("start_date"));
+                                        LocalDateTime eventEndDate = LocalDateTime.parse(eventJson.getString("end_date"));
+                                        minutesAbsenceUnjustificated += ChronoUnit.MINUTES.between(eventStartDate, eventEndDate);
+                                    }
+                                    nbrAbsenceUnjustificated++;
+                                }
+                            }
+
+                            for (Object eventType : retardsArray) {
+                                JsonObject eventTypeJson = (JsonObject) eventType;
+
+                                LocalDateTime eventStartDate = LocalDateTime.parse(eventTypeJson.getString("start_date").replace(" ", "T").substring(0, 19));
+                                if (eventStartDate.isAfter(beginningDatePeriode) && eventStartDate.isBefore(endDatePeriode)) {
+                                    nbrRetards++;
+                                }
+                            }
+
+                            int hoursAbsenceJustificated = (int) Math.round((long) minutesAbsenceJustificated / 60.0);
+                            int hoursAbsenceUnjustificated = (int) Math.round((long) minutesAbsenceUnjustificated / 60.0);
+
+                            JsonObject dataForPeriode = new JsonObject().put("id_periode", idPeriode).put("id_eleve", idEleve);
+                            dataForPeriode.put("abs_just", nbrAbsenceJustificated);
+                            dataForPeriode.put("abs_just_heure", hoursAbsenceJustificated);
+                            dataForPeriode.put("abs_non_just", nbrAbsenceUnjustificated);
+                            dataForPeriode.put("abs_non_just_heure", hoursAbsenceUnjustificated);
+                            dataForPeriode.put("abs_totale", nbrAbsenceUnjustificated + nbrAbsenceJustificated);
+                            dataForPeriode.put("abs_totale_heure", hoursAbsenceJustificated + hoursAbsenceUnjustificated);
+                            dataForPeriode.put("retard", nbrRetards);
+                            dataForPeriode.put("from_presences", true);
+
+                            result.add(dataForPeriode);
+                        }
+                        eitherHandler.handle(new Either.Right<>(result));
+                    }
+                });
             }
         });
-
     }
 
     private void sendEventBusGetEvent(Integer eventType, List<String> students, String structure,
-                                      String startDate, String endDate, String recoveryMethod,
+                                      String startDate, String endDate, String recoveryMethod, Boolean regularized,
+                                      Boolean noReasons, List<Integer> reasonsId,
                                       Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("eventType", eventType)
@@ -203,10 +228,19 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 .put("structure", structure)
                 .put("startDate", startDate)
                 .put("endDate", endDate)
-                .put("noReasons", true)
-                .put("recoveryMethod",recoveryMethod)
+                .put("noReasons", noReasons)
+                .put("recoveryMethod", recoveryMethod)
                 .put("action", "get-events-by-student");
-        eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
+
+        if(regularized != null){
+            action.put("regularized", regularized);
+        }
+
+        if(reasonsId != null) {
+            action.put("reasonsId", reasonsId);
+        }
+
+        eb.send("fr.openent.presences", action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
     private void getSubjectLibelleForSuivi(final String idEtablissement, JsonArray idsMatieres,
@@ -326,8 +360,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         Future<JsonArray> multiTeachersFuture = Future.future();
         utilsService.getMultiTeachersByClass(idEtablissement, idClasse, idPeriode != null ? idPeriode.intValue() : null,
                 event -> {
-            formate(multiTeachersFuture, event);
-        });
+                    formate(multiTeachersFuture, event);
+                });
 
         Future<JsonArray> getServicesFuture = Future.future();
         utilsService.getServices(idEtablissement, new JsonArray().add(idClasse), event -> {

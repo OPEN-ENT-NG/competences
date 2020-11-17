@@ -52,8 +52,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         String idStructureATraiter =  structure.getString("id");
         log.info("DEBUT : transition année : isStructure : " + idStructureATraiter);
 
-        checkIfEtabActif(idStructureATraiter, handlerBusGetStrucuresActives(structure,finalHandler, idStructureATraiter));
-
+        checkIfEtabActif(idStructureATraiter, handlerBusGetStrucuresActives(structure, finalHandler, idStructureATraiter));
     }
 
     private void checkIfEtabActif(String idStructureATraiter, Handler<Either<String, JsonObject>> handler) {
@@ -150,8 +149,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                             finalHandler.handle(new Either.Left<>(
                                     "transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter));
                         }
-
-
                     }
                 }
             }

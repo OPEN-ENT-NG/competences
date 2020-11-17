@@ -72,10 +72,10 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @Get("/eleve/evenements/:idEleve")
     @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     public void getAbsencesAndRetards (final HttpServerRequest request) {
-        final String  idEleve = request.params().get("idEleve");
+        final String idEleve = request.params().get("idEleve");
         final String idStructure = request.params().get("idEtablissement");
         final String idClasse = request.params().get("idClasse");
-        bilanPeriodiqueService.getRetardsAndAbsences(idStructure,idClasse,idEleve,arrayResponseHandler(request));
+        bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idClasse, idEleve, arrayResponseHandler(request));
     }
 
     /**

@@ -46,14 +46,12 @@
                     </div>
                 </div>
                 <div class="row">
-
                     <h4><i18n>evaluations.data.to.export</i18n></h4>
-
                 </div>
                 <div class="row">
                     <div class=" cell horizontal-spacing">
                         <div class="row display-inline-block">
-                            <label class="ten small"> Fichier Sts: </label>
+                            <label class="ten small"> Fichier Sts : </label>
                             <select ng-if = "selectStsFiles.all.length > 0"
                                     ng-model = "selectStsFiles.selected"
                                     ng-options = "stsFile as stsFile.name_file + ' du '+ stsFile.creation_date for stsFile in selectStsFiles.all"
@@ -113,16 +111,16 @@
                         </div>
                     </div>
                 </div>
-                <div class="row" ng-show="paramsLSU.type == 2">
-                    <div class="five cell horizontal-spacing">
-                        <div class="row display-inline-block">
-                            <label class="checkbox ten"
+                <div ng-show="paramsLSU.type == 2">
+                    <div class="row ten cell horizontal-spacing">
+                        <h4><i18n>viescolaire.utils.periode</i18n></h4>
+                        <div class="row display-inline-block margin-loader">
+                            <label class="checkbox ten left-spacing-twice"
                                    ng-repeat="periode in filteredPeriodes | orderBy:'id_type'">
                                 <input type="checkbox"
                                        ng-model="periode.selected"
-                                       ng-click="toggleperiode(periode)"
-                                ><span>
-                        [[getI18nPeriode(periode.periode)]]</span>
+                                       ng-click="togglePeriode(periode)">
+                                <span>[[getI18nPeriode(periode.periode)]]</span>
                             </label>
                         </div>
                     </div>
@@ -138,7 +136,6 @@
             </div>
             <div ng-if="isChefEtab()" class="row vertical-spacing">
                 <h3><i18n>evaluations.title.archivesBulletinsBFC</i18n></h3>
-                <h4><i18n>evaluations.archives.choice.type</i18n></h4>
                 <div ng-if="evaluations.structures.all.length > 1" class="three cell horizontal-spacing">
                     <div class="row display-inline-block">
                         <label class="ten small" ><i18n>evaluations.choice.structure</i18n>
@@ -148,6 +145,26 @@
                         </label>
                     </div>
                 </div>
+                <div class="row ten cell horizontal-spacing">
+                    <h4><i18n>viescolaire.utils.periode</i18n></h4>
+                    <div class="row display-inline-block">
+                        <label class="ten small" ><span><i18n>viescolaire.utils.annee</i18n> : </span>
+                            <select ng-model="paramsArchive.year"
+                                    ng-options="year.id as year.libelle for year in years">
+                            </select>
+                        </label>
+                    </div>
+                    <div class="row display-inline-block margin-loader">
+                        <label class="checkbox ten left-spacing-twice"
+                               ng-show="paramsArchive.year === years[0].id && paramsArchive.type === 'bulletin'"
+                               ng-repeat="type_periode in currentYearTypesPeriodes | orderBy:'id'">
+                            <input type="checkbox"
+                                   ng-model="type_periode.selected">
+                            <span>[[getPeriodeLibelle(type_periode)]]</span>
+                        </label>
+                    </div>
+                </div>
+                <h4><i18n>evaluations.archives.choice.type</i18n></h4>
                 <div class="twelve cell horizontal-spacing">
                     <label>
                         <input type="radio" ng-model="paramsArchive.type" value="bfc">

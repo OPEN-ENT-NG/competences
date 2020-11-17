@@ -31,7 +31,12 @@ export class Archives {
     async export(params: any): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
-                http.get('/competences/archive/' + params.type + '/' + params.idStructure, {responseType: 'arraybuffer'})
+                let url = '/competences/archive/' + params.type + '?idStructure=' + params.idStructure
+                    + "&idYear=" + params.year;
+                if(params.periodes_type) {
+                    url += "&idsPeriode=" + params.periodes_type.join(",");
+                }
+                http.get(url, {responseType: 'arraybuffer'})
                     .then(function (data) {
                         if(data.status === 200)
                             if (resolve && typeof(resolve) === 'function') {

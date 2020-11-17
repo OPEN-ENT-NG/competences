@@ -19,6 +19,7 @@ package fr.openent.competences;
 
 import fr.openent.competences.controllers.*;
 import fr.openent.competences.service.impl.ArchiveWorker;
+import fr.openent.competences.service.impl.BulletinWorker;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
 import fr.openent.competences.service.impl.CompetencesTransitionWorker;
 import fr.wseduc.webutils.data.FileResolver;
@@ -254,10 +255,11 @@ public class Competences extends BaseServer {
     public static final String BLANK_SPACE = " ";
     public static final String UNDERSCORE = "_";
     public static final String ORDRE = "ordre";
+    public static final String ID_PARENT_KEY = "idParent";
     public static  String TEMPLATE_PATH;
 
     @Override
-	public void start() throws Exception {
+    public void start() throws Exception {
         super.start();
 
         COMPETENCES_SCHEMA = config.getString("db-schema");
@@ -275,24 +277,24 @@ public class Competences extends BaseServer {
         final EventBus eb = getEventBus(vertx);
         final Storage storage = new StorageFactory(vertx).getStorage();
 
-		// Controller
+        // Controller
         addController(new CompetencesController());
         addController(new AnnotationController());
-		addController(new AppreciationController());
-		addController(new BFCController(eb, storage));
-		addController(new CompetenceController(eb));
-		addController(new CompetenceNoteController(eb));
-		addController(new ModaliteController());
-		addController(new ExportBulletinController(eb,storage));
-		addController(new DomaineController(eb));
-		addController(new EnseignementController(eb));
-		addController(new ExportPDFController(eb, notification, storage));
-		addController(new LSUController(eb));
-		addController(new NiveauDeMaitriseController());
-		addController(new NoteController(eb));
-		addController(new DevoirRemplacementController());
+        addController(new AppreciationController());
+        addController(new BFCController(eb, storage));
+        addController(new CompetenceController(eb));
+        addController(new CompetenceNoteController(eb));
+        addController(new ModaliteController());
+        addController(new ExportBulletinController(eb,storage));
+        addController(new DomaineController(eb));
+        addController(new EnseignementController(eb));
+        addController(new ExportPDFController(eb, notification, storage));
+        addController(new LSUController(eb));
+        addController(new NiveauDeMaitriseController());
+        addController(new NoteController(eb));
+        addController(new DevoirRemplacementController());
         addController(new ElementProgrammeController());
-		addController(new UtilsController(storage,eb));
+        addController(new UtilsController(storage,eb));
         addController(new BilanPeriodiqueController(eb));
         addController(new MatiereController(eb));
         addController(new ElementBilanPeriodiqueController(eb));
@@ -320,21 +322,22 @@ public class Competences extends BaseServer {
         setRepositoryEvents(new CompetenceRepositoryEvents(eb));
 
         // Worker
-        log.info("WORKER : "+ ArchiveWorker.class.getSimpleName());
+        log.info("WORKER : " + ArchiveWorker.class.getSimpleName());
         vertx.deployVerticle(ArchiveWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
-        log.info("WORKER : "+ CompetencesTransitionWorker.class.getSimpleName());
+        log.info("WORKER : " + CompetencesTransitionWorker.class.getSimpleName());
         vertx.deployVerticle(CompetencesTransitionWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
-
+        log.info("WORKER : " + BulletinWorker.class.getSimpleName());
+        vertx.deployVerticle(BulletinWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
     }
 
     public static void launchTransitionWorker(EventBus eb, JsonObject params, boolean isHTTP) {
-
-        eb.send(CompetencesTransitionWorker.class.getSimpleName(),params.put("isHTTP",isHTTP), new DeliveryOptions().setSendTimeout(1000 * 1000L), handlerToAsyncHandler(eventExport ->{
-                    if(!eventExport.body().getString("status").equals("ok"))
-                        launchTransitionWorker(eb, params,isHTTP);
-                    log.info("Ok calling worker " + eventExport.body().toString());
-                }
-        ));
+        eb.send(CompetencesTransitionWorker.class.getSimpleName(), params.put("isHTTP", isHTTP),
+                new DeliveryOptions().setSendTimeout(1000 * 1000L), handlerToAsyncHandler(eventExport -> {
+                            if(!eventExport.body().getString("status").equals("ok"))
+                                launchTransitionWorker(eb, params, isHTTP);
+                            log.info("Ok calling worker " + eventExport.body().toString());
+                        }
+                ));
     }
 
 }

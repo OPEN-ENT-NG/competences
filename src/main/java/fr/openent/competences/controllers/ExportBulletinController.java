@@ -22,6 +22,10 @@ import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
 import static fr.openent.competences.utils.ArchiveUtils.generateArchiveBulletin;
@@ -39,15 +43,12 @@ public class ExportBulletinController extends ControllerHelper {
         this.workspaceHelper = new WorkspaceHelper(eb, storage);
     }
 
-
-
     @Post("/image/bulletins/structure")
     @ApiDoc("Met à jour l'image de la structure pour l'export des bulletins ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessExportBulletinFilter.class)
     public void setStructureImage(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, ressource -> {
-
             String idStructure = ressource.getString("idStructure");
             String path = ressource.getString("path");
             if(idStructure != null) {
@@ -60,14 +61,12 @@ public class ExportBulletinController extends ControllerHelper {
 
     }
 
-
     @Post("/informations/bulletins/ce")
     @ApiDoc("Retourne tous les types de devoir par etablissement")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessExportBulletinFilter.class)
     public void setInformationCE(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, ressource -> {
-
             String idStructure = ressource.getString("idStructure");
             String path = ressource.getString("path");
             String name = ressource.getString("name");
@@ -78,7 +77,6 @@ public class ExportBulletinController extends ControllerHelper {
                 badRequest(request);
             }
         });
-
     }
 
     @Get("/images/and/infos/bulletins/structure/:idStructure")
@@ -131,7 +129,7 @@ public class ExportBulletinController extends ControllerHelper {
     @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
     @ResourceFilter(SuperAdminFilter.class)
     public void deleteArchive(final HttpServerRequest request){
-        ArchiveUtils.deleteAll(ARCHIVE_BULLETIN_TABLE, storage,  response -> Renders.renderJson(request, response));
+        ArchiveUtils.deleteAll(ARCHIVE_BULLETIN_TABLE, storage, response -> Renders.renderJson(request, response));
     }
 
     @Post("/generate/archive/bulletin")
@@ -156,17 +154,27 @@ public class ExportBulletinController extends ControllerHelper {
 //        });
     }
 
-
-    @Get("/archive/bulletin/:idStructure")
+    @Get("/archive/bulletin")
     @ApiDoc("télécharge l archive d'un étab")
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
     @ResourceFilter(SuperAdminFilter.class)
-    public  void getArchiveBulletin(final  HttpServerRequest request){
+    public void getArchiveBulletin(final  HttpServerRequest request){
         String idStructure = request.params().get("idStructure");
+        String idYear = request.params().get("idYear");
+        List<String> idsPeriode = request.params().contains("idsPeriode") ?
+                Arrays.asList(request.params().get("idsPeriode").split(",")) : null;
         UserUtils.getUserInfos(eb, request, user -> {
-                    ArchiveUtils.getArchiveBulletinZip(idStructure, request, eb, storage, vertx, workspaceHelper,user);
+                    ArchiveUtils.getArchiveBulletinZip(idStructure, idYear, idsPeriode, request, eb, storage,
+                            vertx, workspaceHelper, user);
                 });
 
     }
 
+    @Get("/years")
+    @ApiDoc("Récupère les dates de l'année et les types de périodes associés")
+    @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
+    public void getYearsAndPeriodes(final  HttpServerRequest request){
+        String idStructure = request.params().get(ID_STRUCTURE_KEY);
+        utilsService.getYearsAndPeriodes(idStructure, false, defaultResponseHandler(request));
+    }
 }

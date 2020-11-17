@@ -32,20 +32,13 @@ declare let _: any;
 export let bulletinController = ng.controller('BulletinController', [
     '$scope', '$sce',
     async  function ($scope,$sce) {
-
-
-        let toJSON = function() {
-            return {idEleve: $scope.searchBulletin.eleve.id,idPeriode: $scope.searchBulletin.periode.id_type}
-        };
-
         /**
          * chargement d'un releve
          * @returns {Promise<void>}
          */
         $scope.loadBulletin = async function () {
-            await Utils.runMessageLoader($scope);
             try {
-                let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.searchBulletin.eleve.id
+                /*let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.searchBulletin.eleve.id
                     + "&idPeriode=" + $scope.searchBulletin.periode.id_type
                     + "&idStructure=" + $scope.searchBulletin.periode.id_etablissement;
                 let data = await http.get(url);
@@ -75,26 +68,30 @@ export let bulletinController = ng.controller('BulletinController', [
                         // Si on choisit de déssiner les graphes
                         await ExportBulletins.createCanvas(options, $scope);
                     }
-                    // lancement de l'export et récupération du fichier généré
-                    data = await http.post(`/competences/see/bulletins`, new ExportBulletins().toJSON(options),
-                        {responseType: 'arraybuffer'});
-                    if(data.status == 204){
-                        //empty result, le bulletin n'a pas encore été généré
-                        $scope.content = undefined;
-                    }else{
-                        var file = new Blob([data.data], {type: 'application/pdf'});
-                        var fileURL = window.URL.createObjectURL(file);
-                        $scope.content = $sce.trustAsResourceUrl(fileURL);
-                    }
-                    utils.safeApply($scope);
+                }*/
+                // lancement de l'export et récupération du fichier généré
+                let data = await http.post(`/competences/see/bulletins`, {
+                    idEleve: $scope.searchBulletin.eleve.id,
+                    idPeriode: $scope.searchBulletin.periode.id_type,
+                    idStructure: $scope.searchBulletin.eleve.idStructure,
+                    idClasse: $scope.searchBulletin.eleve.idClasse,
+                    idParent: $scope.me.type === 'PERSRELELEVE' ? $scope.me.externalId : null
+                },{responseType: 'arraybuffer'});
+                if(data.status == 204){
+                    //empty result, le bulletin n'a pas encore été généré
+                    $scope.content = undefined;
+                } else {
+                    var file = new Blob([data.data], {type: 'application/pdf'});
+                    var fileURL = window.URL.createObjectURL(file);
+                    $scope.content = $sce.trustAsResourceUrl(fileURL);
                 }
+                await utils.safeApply($scope);
             } catch (data) {
                 console.error(data);
                 if(data.response != undefined && data.response.status === 500){
                     this.manageError(data.response.data, $scope);
                 }
             }
-            await Utils.stopMessageLoader($scope);
         };
 
         let initSearchBulletin = (periode) => {
@@ -116,7 +113,8 @@ export let bulletinController = ng.controller('BulletinController', [
             }
 
             $scope.me = {
-                type: model.me.type
+                type: model.me.type,
+                externalId: model.me.externalId
             };
             await $scope.loadBulletin();
             await utils.safeApply($scope);
@@ -133,7 +131,7 @@ export let bulletinController = ng.controller('BulletinController', [
 
         $scope.checkHaveResult = function () {
             if ($scope.searchBulletin.periode !== null && $scope.searchBulletin.periode.id_type !== null)
-                return $scope.searchBulletin.periode.publication_bulletin && $scope.content;
+                return $scope.content;
             else
                 return false;
         };

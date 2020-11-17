@@ -24,6 +24,7 @@ import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
+import fr.openent.competences.utils.BulletinUtils;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -38,7 +39,6 @@ import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -109,8 +109,6 @@ public class ExportPDFController extends ControllerHelper {
         appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE);
         this.storage = storage;
     }
-
-
 
     /**
      * Genere le releve d'un eleve sous forme de PDF
@@ -1328,7 +1326,6 @@ public class ExportPDFController extends ControllerHelper {
             exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, params,
                     elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
                     finalHandler, null);
-
         });
     }
 
@@ -1337,20 +1334,20 @@ public class ExportPDFController extends ControllerHelper {
     public void seeBulletins(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request,  params -> {
             Long idPeriode = params.getLong(ID_PERIODE_KEY);
-            JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
+            String idEleve = params.getString(ID_ELEVE_KEY);
             String idClasse = params.getString(ID_CLASSE_KEY);
             String idEtablissement = params.getString(ID_STRUCTURE_KEY);
-            Future<JsonArray> elevesFuture = Future.future();
-            final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
-            final AtomicBoolean answered = new AtomicBoolean();
-
-            final Handler<Either<String, JsonObject>> finalHandler = exportBulletinService
-                    .getFinalBulletinHandler(request, elevesMap, vertx, config, elevesFuture, answered, params);
-
-            exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, params,
-                    elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
-                    finalHandler, null);
-
+            String idParent = params.getString(ID_PARENT_KEY);
+            utilsService.getYearsAndPeriodes(idEtablissement, true, event -> {
+                if (event.isRight()) {
+                    String idYear = event.right().getValue().getString("start_date").substring(0,4);
+                    BulletinUtils.getBulletin(idEleve, idClasse, idPeriode, idEtablissement, idParent,
+                            idYear, storage, request);
+                }
+                else {
+                    leftToResponse(request, event.left());
+                }
+            });
         });
     }
 

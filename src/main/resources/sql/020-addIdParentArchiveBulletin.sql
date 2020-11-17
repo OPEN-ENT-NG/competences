@@ -1,0 +1,1 @@
+ALTER TABLE notes.archive_bulletins ADD COLUMN id_parent character varying;

@@ -17,12 +17,13 @@
 /**
  * Created by agnes.lapeyronnie on 15/09/2017.
  */
-import {ng, _, notify} from "entcore";
+import {ng, _, notify, moment, idiom as lang, toasts} from "entcore";
 import {Classe, LSU, Utils} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {LSU_TYPE_EXPORT} from "../models/common/LSU";
 import {STSFile, STSFiles} from "../models/common/STSFile";
 import {Archives} from "../models/common/Archives";
+import http from "axios";
 
 export let exportControleur = ng.controller('ExportController', ['$scope',
     async function ($scope) {
@@ -46,6 +47,8 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                 periodes_type: [],
                 stsFile: (stsFile !== undefined) ? stsFile : null
             };
+
+            $scope.getYearsAndPeriodes();
             if(typeArchive !== undefined) {
                 $scope.paramsArchive = {
                     type: typeArchive,
@@ -58,11 +61,11 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         $scope.initSelectStsFiles = async () => {
             $scope.selectStsFiles = new STSFiles();
             await $scope.selectStsFiles.sync($scope.structure.id);
-            if ( $scope.selectStsFiles.selected != null ) {
+            if ($scope.selectStsFiles.selected != null) {
                 $scope.paramsLSU.stsFile = $scope.selectStsFiles.selected.content;
             }
-            await utils.safeApply( $scope );
-       };
+            await utils.safeApply($scope);
+        };
 
         $scope.changeType = async function (type: String) {
             await initparams(type);
@@ -73,7 +76,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             await utils.safeApply($scope);
         };
 
-        $scope.toggleperiode = async function toggleperiode(periode_type) {
+        $scope.togglePeriode = async function (periode_type) {
             if (periode_type.selected) {
                 let idx = $scope.paramsLSU.periodes_type.indexOf(periode_type);
                 if (idx > -1) {
@@ -90,7 +93,6 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                 $scope.paramsLSU.periodes_type = _.without($scope.paramsLSU.periodes_type,
                     _.findWhere($scope.paramsLSU.periodes_type, {id_type : _.propertyOf(periode_type)('id_type')})) ;
             }
-
         };
 
         $scope.getResponsablesAndClasses = function () {
@@ -337,25 +339,68 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             $scope.inProgress = true;
             $scope.showMessageBulletin = $scope.paramsArchive.type === 'bulletin';
 
-            $scope.archive.export($scope.paramsArchive)
-                .then(async function (res) {
-                    let blob = new Blob([res.data]);
-                    let link = document.createElement('a');
-                    link.href = window.URL.createObjectURL(blob);
-                    link.download = res.headers['content-disposition'].split('filename=')[1];
-                    link.download = link.download.split("\"").join("");
-                    console.log(link.download);
-                    document.body.appendChild(link);
-                    link.click();
-                    await Utils.stopMessageLoader($scope);
-                })
-                .catch(async (error) => {
-                    console.error(error);
-                    await Utils.stopMessageLoader($scope);
-                });
+            if($scope.paramsArchive.year === $scope.years[0].id){
+                $scope.paramsArchive.periodes_type = _.pluck(_.filter($scope.currentYearTypesPeriodes, (type_periode) => {
+                    return type_periode.selected;
+                }), "id");
+            }
+            $scope.archive.export($scope.paramsArchive).then(async function (res) {
+                let blob = new Blob([res.data]);
+                let link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = res.headers['content-disposition'].split('filename=')[1];
+                link.download = link.download.split("\"").join("");
+                console.log(link.download);
+                document.body.appendChild(link);
+                link.click();
+                await Utils.stopMessageLoader($scope);
+            }).catch(async (error) => {
+                console.error(error);
+                await Utils.stopMessageLoader($scope);
+            });
         };
 
+        $scope.getYearsAndPeriodes = function () {
+            $scope.currentYearTypesPeriodes = [];
+            $scope.years = [];
+            http.get('/competences/years?idStructure=' + $scope.structure.id).then(function (data) {
+                if(data.status === 200){
+                    let res = data.data;
 
+                    let periodes = JSON.parse(res.periodes);
+                    $scope.currentYearTypesPeriodes = _.filter($scope.structure.typePeriodes.all , (type) => {
+                        type.selected = true;
+                        return periodes.includes(type.id);
+                    });
+
+                    let startYear = moment(res.start_date).format('YYYY');
+                    let endYear = moment(res.end_date).format('YYYY');
+                    $scope.years.push({
+                        id: startYear,
+                        libelle : startYear + ' - ' + endYear +
+                            " (" + lang.translate('viescolaire.utils.annee.encours') + ")"
+                    });
+
+                    let nbYear = 1;
+                    for(var i = 1; i <= nbYear; i++) {
+                        $scope.years.push({
+                            id: parseInt(startYear) - i,
+                            libelle : (parseInt(startYear) - i) + ' - ' + (parseInt(endYear) - i)
+                        });
+                    }
+
+                    $scope.paramsArchive.year = $scope.years[0].id;
+
+                    utils.safeApply($scope);
+                } else if(data.status === 204){
+                    toasts.info("competence.error.results.eleve");
+                }
+            });
+        }
+
+        $scope.getPeriodeLibelle = function (type_periode) {
+            return lang.translate("viescolaire.periode." + type_periode.type) + " " + type_periode.ordre
+        }
         /*********************************************************************************************
          * Séquence exécuté au chargement du controleur
          *********************************************************************************************/
