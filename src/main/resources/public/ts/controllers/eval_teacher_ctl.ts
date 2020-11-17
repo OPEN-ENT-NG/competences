@@ -2099,20 +2099,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.deleteDevoir = function () {
             if ($scope.selected.devoirs.list.length > 0) {
                 $scope.selected.devoirs.list.forEach(function (d) {
-                        d.remove().then((res) => {
-                            evaluations.devoirs.sync();
-                            evaluations.devoirs.on('sync', function () {
+                        d.remove().then(() => {
+                            evaluations.devoirs.sync().then(() => {
                                 $scope.opened.lightbox = false;
                                 var index = $scope.selected.devoirs.list.indexOf(d);
                                 if (index > -1) {
                                     $scope.selected.devoirs.list = _.without($scope.selected.devoirs.list, d);
                                 }
+                                $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+                                    return $scope.filterValidClasse(devoir);
+                                });
                                 utils.safeApply($scope);
                             });
-                        })
-                            .catch(() => {
-                                notify.error("evaluation.delete.devoir.error");
-                            });
+                        }).catch(() => {
+                            notify.error("evaluation.delete.devoir.error");
+                        });
                     }
                 );
             }
