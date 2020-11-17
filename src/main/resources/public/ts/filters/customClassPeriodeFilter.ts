@@ -32,14 +32,18 @@ export let customClassFilters = ng.filter('customClassFilters', function(){
 });
 
 export let customPeriodeTypeFilter = ng.filter('customPeriodeTypeFilter', function(){
-    return function(typePeriodes,searchParms){
-        let id_typeClasse = _.map(searchParms.classe.periodes.all, (pc) => {
-            return (pc.id !== undefined && pc.id === null) ? pc.id : pc.id_type;
-        });
+    return function(typePeriodes,searchParams){
+        if (searchParams.classe !== '*' && searchParams.classe !== null) {
+            let id_typeClasse = _.map(searchParams.classe.periodes.all, (pc) => {
+                return (pc.id !== undefined && pc.id === null) ? pc.id : pc.id_type;
+            });
 
-        return _.reject (typePeriodes, function (periode) {
-            return !_.contains (id_typeClasse,periode.id_type);
-        });
+            return _.reject(typePeriodes, function (periode) {
+                return !_.contains(id_typeClasse, periode.id_type);
+            });
+        } else {
+            return typePeriodes;
+        }
     };
 });
 
