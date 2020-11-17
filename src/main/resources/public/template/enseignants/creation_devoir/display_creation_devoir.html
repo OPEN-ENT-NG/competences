@@ -100,9 +100,9 @@
                                     </div>
 
                                     <div class="three cell twelve-mobile">
-                                        <label class="select twelve-mobile" ng-class="{disabled : matieresFiltered.length == 0}">
+                                        <label class="select twelve-mobile">
                                             <select ng-model="devoir.id_matiere"
-                                                    ng-disabled="matieresByClassByTeacher.length == 0"
+                                                    ng-disabled="devoir.matieresByClassByTeacher.length == 0"
                                                     ng-change="selectedMatiere(devoir)"
                                                     ng-options="matiere.id as matiere.name for matiere
                                                      in devoir.matieresByClassByTeacher | unique:'name'">

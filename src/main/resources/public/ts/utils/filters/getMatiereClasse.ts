@@ -63,7 +63,7 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
             }
             else {
                 return matieres.filter((matiere) => {
-                    let evaluables;
+                    let evaluables = [];
                     for(let c of classes.all){
                         evaluables = getEvaluables(c, matiere, idTeacher);
                         if(evaluables.length > 0){
