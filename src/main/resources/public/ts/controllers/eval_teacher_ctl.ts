@@ -709,63 +709,39 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 else {
                     $scope.search.periode = res;
                 }
+            } else if ($location.path() === '/devoirs/list' || $location.path() === '/'){
+                $scope.search.periode = (res.id !== null)?
+                    _.findWhere($scope.structure.typePeriodes.all, {id: res.id_type}) : _.findWhere($scope.structure.typePeriodes.all, {id: res.id}) ;
             } else {
                 $scope.search.periode = res;
             }
-            /*else {//sinon dans les autres vue search.periode est l'objet TypePeriode et si on veut initialiaser search.periode à la période en cours il faudra faire
-                $scope.search.periode = (res.id !== null)?
-                    _.findWhere($scope.structure.typePeriodes.all, {id: res.id_type}) : _.findWhere($scope.structure.typePeriodes.all, {id: res.id}) ;
-             }*/
-
         };
 
         $scope.syncPeriode = async (idClasse) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
-            if (classe && classe.periodes && classe.periodes.length() === 0) {
-                await classe.periodes.sync();
+            let res = await $scope.getCurrentPeriode(classe);
                 $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
                 if ($location.path() === '/competences/eleve' ) {
                     if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
                         classe.periodes.all.push({libelle: "cycle", id: null});
                     }
-                }
-                $scope.getCurrentPeriode(classe).then(function (res) {
-                    setSearchPeriode(classe, res);
-                    if ($location.path() === '/devoir/create' ||
-                        ($scope.devoir !== undefined
-                            && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
-                        $scope.devoir.id_periode = res.id_type;
-                        $scope.controleDate($scope.devoir);
-                        utils.safeApply($scope);
-                    }
-                    utils.safeApply($scope);
-                });
-
-            } else if (classe && classe.periodes) {
-                if ($location.path() === '/competences/eleve' ) {
-                    if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
-                        classe.periodes.all.push({libelle: "cycle", id: null});
-                    }
-                }
-                else {
+                }else {
                     let cycle = _.findWhere(classe.periodes.all, {libelle: "cycle"});
                     classe.periodes.all = _.without(classe.periodes.all, cycle);
                 }
-                $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
-                $scope.getCurrentPeriode(classe).then(function (res) {
-                    setSearchPeriode(classe,res);
-                    $scope.displayCycles($scope.search.periode);
-                    if (($location.path() === '/devoir/create') ||
-                        ($scope.devoir !== undefined
-                            && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
-                        $scope.devoir.id_periode = res.id_type;
-                        $scope.controleDate($scope.devoir);
-                        utils.safeApply($scope);
-                    }
+                setSearchPeriode(classe, res);
+                if ($location.path() === '/devoir/create' ||
+                    ($scope.devoir !== undefined
+                        && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
+                    $scope.devoir.id_periode = res.id_type;
+                    $scope.controleDate($scope.devoir);
                     utils.safeApply($scope);
-                });
-            }
-            await utils.safeApply($scope);
+                }
+                if( $location.path() === '/releve') {
+                    $scope.getReleve()
+                }
+                utils.safeApply($scope);
+
         };
 
         $scope.synchronizeStudents = (idClasse): boolean => {
