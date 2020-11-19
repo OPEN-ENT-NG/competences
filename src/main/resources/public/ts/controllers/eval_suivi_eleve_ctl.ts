@@ -1344,7 +1344,10 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         };
 
         $scope.getMoyenneClasse = function(devoirReleveNotes) {
-            return +(parseFloat(devoirReleveNotes.sum_notes)/devoirReleveNotes.nbr_eleves).toFixed(2);
+            if(devoirReleveNotes.sum_notes != null && devoirReleveNotes.nbr_eleves != null)
+                return +(parseFloat(devoirReleveNotes.sum_notes) / devoirReleveNotes.nbr_eleves).toFixed(2);
+            else
+                return "NN";
         };
 
         // Initialisation des variables du relevé

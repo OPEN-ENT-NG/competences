@@ -1510,6 +1510,14 @@ public class DefaultExportService implements ExportService {
             final JsonArray moyennesFinales = moyenneFinaleFuture.result();
 
 
+            annotationsJSON.stream().forEach(annotation -> {
+                JsonObject annotationJson = (JsonObject) annotation;
+                annotationJson.put("is_annotation", true);
+                annotationJson.put("id", annotationJson.getInteger("id_devoir"));
+                annotationJson.put("note", annotationJson.getString("libelle_court"));
+                devoirsJSON.add(annotationJson);
+            });
+
             for (int i = 0; i < devoirsJSON.size(); i++) {
                 JsonObject devoir = devoirsJSON.getJsonObject(i);
                 String idMatiere = devoir.getString(ID_MATIERE);
@@ -1576,7 +1584,6 @@ public class DefaultExportService implements ExportService {
                                        final JsonObject etabJson, final boolean isBackup, final JsonArray moyennesFinales,
                                        final JsonArray multiTeachers, final JsonArray services,
                                        Handler<Either<String, JsonObject>> handler) {
-
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getUsers")
                 .put("idUsers", idUsers);
@@ -1633,6 +1640,7 @@ public class DefaultExportService implements ExportService {
                                         break;
                                     }
                                 }
+
                                 JsonArray _enseignantMatiere = matiereDevoir.getJsonArray("displayNameEnseignant");
                                 if (_enseignantMatiere == null) {
                                     _enseignantMatiere = new JsonArray();
@@ -1727,55 +1735,78 @@ public class DefaultExportService implements ExportService {
         // parcours des devoirs
         for (int i = 0; i < devoirsJson.size(); i++) {
             JsonObject devoirJson = devoirsJson.getJsonObject(i);
-            boolean hasCoeff = devoirJson.getString(COEFFICIENT) != null;
-            Double coefficient = null;
-            if(hasCoeff){
-                hasCoeff = !Double.valueOf(devoirJson.getString(COEFFICIENT)).equals(1d);
-                coefficient = Double.valueOf(devoirJson.getString(COEFFICIENT));
+            double sumNotes = 0.0;
+            if(!devoirJson.containsKey("is_annotation")) {
+                boolean hasCoeff = devoirJson.getString(COEFFICIENT) != null;
+                Double coefficient = null;
+                if (hasCoeff) {
+                    hasCoeff = !Double.valueOf(devoirJson.getString(COEFFICIENT)).equals(1d);
+                    coefficient = Double.valueOf(devoirJson.getString(COEFFICIENT));
+                }
+                // boolean permettant de savoir s'il y a un coefficient différent de 1 sur la note
+                devoirJson.put("hasCoeff", hasCoeff);
+
+                // ajout du devoir sur la matiere, si son identifiant de matière correspond bien
+                if (isNotNull(coefficient) && idMatiere.equals(devoirJson.getString("id_matiere"))) {
+                    devoirsMatiereJson.add(devoirJson);
+                    Double note = Double.valueOf(devoirJson.getString("note"));
+                    Double diviseur = Double.valueOf(devoirJson.getInteger("diviseur"));
+                    Boolean ramenerSur = devoirJson.getBoolean("ramener_sur");
+                    NoteDevoir noteDevoir = new NoteDevoir(note, diviseur, ramenerSur, coefficient);
+                    Long idSousMatiere = devoirJson.getLong("id_sousmatiere");
+                    Long nbrEleves = devoirJson.getLong("nbr_eleves");
+
+                    try {
+                        sumNotes = Double.parseDouble(devoirJson.getString("sum_notes"));
+                    } catch (ClassCastException exc) {
+                        log.error("[ getDevoirsByMatiere ] : sum_notes of devoirJson cannot be transform to double");
+                    }
+
+                    if (isNotNull(nbrEleves) && isNotNull(sumNotes)) {
+                        DecimalFormat df = new DecimalFormat("0.##");
+                        df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
+                        Double moyenneClasse = sumNotes / nbrEleves;
+                        devoirJson.put("moyenneClasse", df.format(moyenneClasse));
+                        devoirJson.put("hasMoyenneClasse", true);
+                    }
+
+                    if (isNotNull(idSousMatiere)) {
+                        if (!listNotesSousMatiere.containsKey(idSousMatiere)) {
+                            listNotesSousMatiere.put(idSousMatiere, new ArrayList<>());
+                        }
+                        listNotesSousMatiere.get(idSousMatiere).add(noteDevoir);
+                        if (!devoirsSousMat.containsKey(idMatiere)) {
+                            devoirsSousMat.put(idMatiere, new HashMap<>());
+                        }
+                        if (!devoirsSousMat.get(idMatiere).containsKey(idSousMatiere)) {
+                            devoirsSousMat.get(idMatiere).put(idSousMatiere, new JsonArray());
+                        }
+                        devoirsSousMat.get(idMatiere).get(idSousMatiere).add(devoirJson);
+                    }
+                    listeNoteDevoirs.add(noteDevoir);
+                }
             }
-            // boolean permettant de savoir s'il y a un coefficient différent de 1 sur la note
-            devoirJson.put("hasCoeff", hasCoeff);
+            else {
+                if(idMatiere.equals(devoirJson.getString("id_matiere"))){
+                    Long nbrEleves = devoirJson.getLong("nbr_eleves");
 
-            // ajout du devoir sur la matiere, si son identifiant de matière correspond bien
-            if (isNotNull(coefficient) && idMatiere.equals(devoirJson.getString("id_matiere"))) {
-                devoirsMatiereJson.add(devoirJson);
-                Double note = Double.valueOf(devoirJson.getString("note"));
-                Double diviseur = Double.valueOf(devoirJson.getInteger("diviseur"));
-                Boolean ramenerSur = devoirJson.getBoolean("ramener_sur");
-                NoteDevoir noteDevoir = new NoteDevoir(note, diviseur, ramenerSur, coefficient);
-                Long idSousMatiere = devoirJson.getLong("id_sousmatiere");
-                Long nbrEleves = devoirJson.getLong("nbr_eleves");
-                double sumNotes;
-
-                try {
-                    sumNotes = Double.parseDouble(devoirJson.getString("sum_notes"));
-                } catch (ClassCastException exc) {
-                    log.error("[ getDevoirsByMatiere ] : sum_notes of devoirJson cannot be transform to double");
-                    sumNotes = 0.0;
-                }
-
-                if(isNotNull(nbrEleves) && isNotNull(sumNotes)){
-                    DecimalFormat df = new DecimalFormat("0.##");
-                    df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
-                    Double moyenneClasse = sumNotes / nbrEleves;
-                    devoirJson.put("moyenneClasse", df.format(moyenneClasse));
-                    devoirJson.put("hasMoyenneClasse", true);
-                }
-
-                if(isNotNull(idSousMatiere)) {
-                    if(!listNotesSousMatiere.containsKey(idSousMatiere)){
-                        listNotesSousMatiere.put(idSousMatiere, new ArrayList<>());
+                    try {
+                        if(devoirJson.getString("sum_notes") != null){
+                            sumNotes = Double.parseDouble(devoirJson.getString("sum_notes"));
+                        }
+                    } catch (ClassCastException exc) {
+                        log.error("[ getDevoirsByMatiere ] : sum_notes of devoirJson cannot be transform to double");
                     }
-                    listNotesSousMatiere.get(idSousMatiere).add(noteDevoir);
-                    if(!devoirsSousMat.containsKey(idMatiere)){
-                        devoirsSousMat.put(idMatiere, new HashMap<>());
+
+                    if (isNotNull(nbrEleves) && isNotNull(sumNotes)) {
+                        DecimalFormat df = new DecimalFormat("0.##");
+                        df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
+                        Double moyenneClasse = sumNotes / nbrEleves;
+                        devoirJson.put("moyenneClasse", df.format(moyenneClasse));
+                        devoirJson.put("hasMoyenneClasse", true);
                     }
-                    if(!devoirsSousMat.get(idMatiere).containsKey(idSousMatiere)){
-                        devoirsSousMat.get(idMatiere).put(idSousMatiere, new JsonArray());
-                    }
-                    devoirsSousMat.get(idMatiere).get(idSousMatiere).add(devoirJson);
+                    devoirsMatiereJson.add(devoirJson);
                 }
-                listeNoteDevoirs.add(noteDevoir);
             }
         }
         matiereInter.put(DEVOIRS, devoirsMatiereJson);
@@ -1796,7 +1827,7 @@ public class DefaultExportService implements ExportService {
                     matiereInter.put(MOYENNE, moyenneFinale.getValue("moyenne").toString());
                 else
                     matiereInter.put(MOYENNE, "NN");
-            } else if( moyenneMatiere.getValue(MOYENNE) != null){
+            } else if(moyenneMatiere.getValue(MOYENNE) != null){
                 matiereInter.put(MOYENNE, moyenneMatiere.getValue(MOYENNE).toString());
             }
             matiereInter.put(MOYENNE_NON_NOTE, matiereInter.getValue(MOYENNE).equals("NN"));
@@ -1816,7 +1847,7 @@ public class DefaultExportService implements ExportService {
                     if(!moy.equals("NN"))
                         moy += "/20";
                 }
-                sousMatiere.put(MOYENNE, moy).put("isLast", i == sousMatieres.size()-1);
+                sousMatiere.put(MOYENNE, moy).put("isLast", i == sousMatieres.size() - 1);
                 sousMatiere.put(MOYENNE_NON_NOTE, sousMatiere.getValue(MOYENNE).equals("NN"));
                 JsonArray devoirsSousMatieres = new JsonArray();
                 if(isNotNull(devoirsSousMat.get(idMatiere))){
@@ -1832,7 +1863,10 @@ public class DefaultExportService implements ExportService {
                     sousMatieresWithoutFirst.add(sousMatiere);
                 }
             }
-            matiereInter.put(keySousMatiere+ "_tail", sousMatieresWithoutFirst);
+            matiereInter.put(keySousMatiere + "_tail", sousMatieresWithoutFirst);
+        }
+        else {
+            matiereInter.put(MOYENNE, "NN");
         }
     }
 

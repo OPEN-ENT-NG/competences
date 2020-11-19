@@ -120,6 +120,7 @@ export class Evaluations extends Model {
                 sync: async(structureId, userId, classeId, idPeriode, idCycle, historise) => {
                     return new Promise( (resolve) => {
                         let that = this;
+
                         let uri = Evaluations.api.GET_EVALUATIONS
                             + structureId + '&idEleve=' + userId;
                         if (classeId !== undefined) {
@@ -132,8 +133,8 @@ export class Evaluations extends Model {
                             uri = uri + '&historise=' + historise;
                         }
                         uri = uri + '&forStudentReleve=true';
-                        HTTP().getJson(uri).done((devoirs) => {
 
+                        HTTP().getJson(uri).done((devoirs) => {
                             // RECUPERATION DES COMPETENCES
                             let uriCompetences = Evaluations.api.GET_COMPETENCES + userId;
                             if(this.eleve && this.eleve.classe)
@@ -198,49 +199,48 @@ export class Evaluations extends Model {
                                 }
 
                                 HTTP().getJson(uriAnnotations).done((annotations) => {
-                                    annotations.forEach(function () {
-                                        annotations.forEach(function (annotation) {
-                                            let devoir = _.findWhere(devoirs, {id: annotation.id_devoir});
-                                            if (devoir !== undefined) {
-                                                devoir.annotation = {
+                                    annotations.forEach(function (annotation) {
+                                        let devoir = _.findWhere(devoirs, {id: annotation.id_devoir});
+                                        if (devoir !== undefined) {
+                                            devoir.annotation = {
+                                                id : annotation.id,
+                                                libelle: annotation.libelle,
+                                                libelle_court : annotation.libelle_court
+                                            };
+                                        }
+                                        else {
+                                            devoirs.push({
+                                                id : annotation.id_devoir,
+                                                id_matiere: annotation.id_matiere,
+                                                id_sousmatiere: annotation.id_sousmatiere,
+                                                owner : annotation.owner,
+                                                annotation : {
                                                     id : annotation.id,
                                                     libelle: annotation.libelle,
                                                     libelle_court : annotation.libelle_court
-                                                };
-                                            }
-                                            else {
-
-                                                devoirs.push({
-                                                    id : annotation.id_devoir,
-                                                    id_matiere: annotation.id_matiere,
-                                                    id_sousmatiere: annotation.id_sousmatiere,
-                                                    owner : annotation.owner,
-                                                    annotation : {
-                                                        id : annotation.id,
-                                                        libelle: annotation.libelle,
-                                                        libelle_court : annotation.libelle_court
-                                                    },
-                                                    apprec_visible : annotation.apprec_visible,
-                                                    coefficient : annotation.coefficient,
-                                                    created : annotation.created,
-                                                    date : annotation.date,
-                                                    date_publication : annotation.date_publication,
-                                                    diviseur : annotation.diviseur,
-                                                    id_etat : annotation.id_etat,
-                                                    id_periode : annotation.id_periode,
-                                                    id_type : annotation.id_type,
-                                                    is_evaluated : annotation.is_evaluated,
-                                                    libelle : annotation.lib,
-                                                    name : annotation.name,
-                                                    competences : [],
-                                                    _type_libelle : annotation._type_libelle
-                                                });
-                                            }
-                                        });
+                                                },
+                                                apprec_visible : annotation.apprec_visible,
+                                                coefficient : annotation.coefficient,
+                                                created : annotation.created,
+                                                date : annotation.date,
+                                                date_publication : annotation.date_publication,
+                                                diviseur : annotation.diviseur,
+                                                id_etat : annotation.id_etat,
+                                                id_periode : annotation.id_periode,
+                                                id_type : annotation.id_type,
+                                                is_evaluated : annotation.is_evaluated,
+                                                libelle : annotation.lib,
+                                                name : annotation.name,
+                                                competences : [],
+                                                _type_libelle : annotation._type_libelle,
+                                                sum_notes : annotation.sum_notes,
+                                                nbr_eleves : annotation.nbr_eleves
+                                            });
+                                        }
                                     });
 
                                     this.devoirs.load(devoirs);
-                                    let matieresDevoirs = _.omit(_.groupBy(devoirs, 'id_matiere'),null);
+                                    let matieresDevoirs = _.omit(_.groupBy(devoirs, 'id_matiere'), null);
                                     this.enseignants.sync(structureId).then(() => {
                                         if (!_.isEmpty(matieresDevoirs)) {
                                             this.matieres.sync(matieresDevoirs).then(() => {
@@ -357,8 +357,8 @@ export class Evaluations extends Model {
 
         location.replace(uri);
     }
-     setCompetenceNotes(poDomaine, poCompetencesNotes, tableauConversion) {
-         let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId,this.eleve.classe);
+    setCompetenceNotes(poDomaine, poCompetencesNotes, tableauConversion) {
+        let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId,this.eleve.classe);
         Utils.setCompetenceNotes(poDomaine, poCompetencesNotes,tableauConversion, undefined,undefined,
             undefined,undefined,listTeacher);
     }
