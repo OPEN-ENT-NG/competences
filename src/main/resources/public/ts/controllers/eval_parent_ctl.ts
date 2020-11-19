@@ -195,7 +195,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.getMoyenneClasse = function(devoirReleveNotes) {
-            if(devoirReleveNotes.sum_notes != null && devoirReleveNotes.nbr_eleves != null)
+            if(devoirReleveNotes.sum_notes !== null && devoirReleveNotes.nbr_eleves !== null)
                 return +(parseFloat(devoirReleveNotes.sum_notes) / devoirReleveNotes.nbr_eleves).toFixed(2);
             else
                 return "NN";

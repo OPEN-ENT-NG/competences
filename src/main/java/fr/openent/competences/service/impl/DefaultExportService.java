@@ -1515,6 +1515,7 @@ public class DefaultExportService implements ExportService {
                 annotationJson.put("is_annotation", true);
                 annotationJson.put("id", annotationJson.getInteger("id_devoir"));
                 annotationJson.put("note", annotationJson.getString("libelle_court"));
+                annotationJson.put("hasDiviseur", false);
                 devoirsJSON.add(annotationJson);
             });
 
@@ -1768,6 +1769,7 @@ public class DefaultExportService implements ExportService {
                         Double moyenneClasse = sumNotes / nbrEleves;
                         devoirJson.put("moyenneClasse", df.format(moyenneClasse));
                         devoirJson.put("hasMoyenneClasse", true);
+                        devoirJson.put("hasDiviseurClasse", true);
                     }
 
                     if (isNotNull(idSousMatiere)) {
@@ -1785,6 +1787,7 @@ public class DefaultExportService implements ExportService {
                     }
                     listeNoteDevoirs.add(noteDevoir);
                 }
+                devoirJson.put("hasDiviseur", true);
             }
             else {
                 if(idMatiere.equals(devoirJson.getString("id_matiere"))){
@@ -1804,6 +1807,12 @@ public class DefaultExportService implements ExportService {
                         Double moyenneClasse = sumNotes / nbrEleves;
                         devoirJson.put("moyenneClasse", df.format(moyenneClasse));
                         devoirJson.put("hasMoyenneClasse", true);
+                        devoirJson.put("hasDiviseurClasse", true);
+                    }
+                    else {
+                        devoirJson.put("moyenneClasse", "NN");
+                        devoirJson.put("hasMoyenneClasse", true);
+                        devoirJson.put("hasDiviseurClasse", false);
                     }
                     devoirsMatiereJson.add(devoirJson);
                 }
@@ -1830,6 +1839,7 @@ public class DefaultExportService implements ExportService {
             } else if(moyenneMatiere.getValue(MOYENNE) != null){
                 matiereInter.put(MOYENNE, moyenneMatiere.getValue(MOYENNE).toString());
             }
+            matiereInter.put("hasDiviseurMatiere", true);
             matiereInter.put(MOYENNE_NON_NOTE, matiereInter.getValue(MOYENNE).equals("NN"));
             String keySousMatiere = "sous_matieres";
             JsonArray sousMatieres = matiereInter.getJsonArray(keySousMatiere);
@@ -1867,6 +1877,7 @@ public class DefaultExportService implements ExportService {
         }
         else {
             matiereInter.put(MOYENNE, "NN");
+            matiereInter.put("hasDiviseurMatiere", false);
         }
     }
 

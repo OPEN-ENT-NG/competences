@@ -181,8 +181,8 @@
     <tr class="avoid-page-break top">
 
         <td class="upper align-left matiere top">
-            <span  class="align-left">{{name}}</span>
-            <span  class="align-left professeur">
+            <span class="align-left">{{name}}</span>
+            <span class="align-left professeur">
                 {{#displayNameEnseignant}}
                 <br/><span>{{.}}</span>
                 {{/displayNameEnseignant}}
@@ -191,14 +191,15 @@
         <td class="left-right align-left top">
             {{#devoirs}}
             <span class="div-note">
-            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
+            <span class="note">{{note}}</span>{{#hasDiviseur}}<span class="diviseur">/{{diviseur}}</span>{{/hasDiviseur}}
             {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
-                {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
+                {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span>{{#hasDiviseurClasse}}<span class="diviseur">/{{diviseur}}</span>{{/hasDiviseurClasse}}<span class="diviseur">)</span>{{/hasMoyenneClasse}}
           </span>
             {{/devoirs}}
         </td>
-        <td  class="right-bottom top"><span class="note">{{moyenne}}</span>{{^moyenne_non_note}}<span class="diviseur">/20</span>{{/moyenne_non_note}}</td>
-
+        <td class="right-bottom top">
+            <span class="note">{{moyenne}}</span>{{^moyenne_non_note}}{{#hasDiviseurMatiere}}<span class="diviseur">/20</span>{{/hasDiviseurMatiere}}{{/moyenne_non_note}}
+        </td>
     </tr>
     {{/matieres}}
     {{/printSousMatiere}}
@@ -210,12 +211,12 @@
     <tr class="top">
         {{#hasSousMatiere}}
         <td rowspan="{{rowspan}}" class="upper align-left matiere">
-            <span  class="align-left">{{name}}</span>
-            <span  class="align-left professeur">
-                    {{#displayNameEnseignant}}
-                    <br/><span>{{.}}</span>
-                    {{/displayNameEnseignant}}
-                </span>
+            <span class="align-left">{{name}}</span>
+            <span class="align-left professeur">
+                {{#displayNameEnseignant}}
+                <br/><span>{{.}}</span>
+                {{/displayNameEnseignant}}
+            </span>
         </td>
         {{#first_sous_matieres}}
         {{#isLast}}
@@ -229,7 +230,7 @@
               </span>
             {{/devoirs}}
         </td>
-        <td  class="bottom"><span class="diviseur">{{moyenne}}</span></td>
+        <td class="bottom"><span class="diviseur">{{moyenne}}</span></td>
         {{/isLast}}
         {{^isLast}}
         <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
@@ -242,7 +243,7 @@
               </span>
             {{/devoirs}}
         </td>
-        <td  class="none"><span class="diviseur">{{moyenne}}</span></td>
+        <td class="none"><span class="diviseur">{{moyenne}}</span></td>
         {{/isLast}}
         {{/first_sous_matieres}}
 
@@ -251,12 +252,12 @@
 
         {{^hasSousMatiere}}
         <td class="upper align-left matiere" colspan="2">
-            <span  class="align-left">{{name}}</span>
-            <span  class="align-left professeur">
-                    {{#displayNameEnseignant}}
-                    <br/><span>{{.}}</span>
-                    {{/displayNameEnseignant}}
-                </span>
+            <span class="align-left">{{name}}</span>
+            <span class="align-left professeur">
+                {{#displayNameEnseignant}}
+                <br/><span>{{.}}</span>
+                {{/displayNameEnseignant}}
+            </span>
         </td>
         <td class="left-right align-left">
             {{#devoirs}}

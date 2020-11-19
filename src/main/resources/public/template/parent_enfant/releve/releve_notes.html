@@ -49,7 +49,9 @@
                                 <div class="releve-coef" ng-if="devoirReleveNotes.sum_notes !== undefined &&
                                     devoirReleveNotes.nbr_eleves !== undefined">
                                     <span>([[getMoyenneClasse(devoirReleveNotes)]]</span>
-                                    <span> / [[devoirReleveNotes.diviseur]])</span>
+                                    <span ng-if="devoirReleveNotes.sum_notes !== null &&
+                                    devoirReleveNotes.nbr_eleves !== null"> / [[devoirReleveNotes.diviseur]]</span>
+                                    <span>)</span>
                                 </div>
                             </div>
                             <div class="gradetooltip"
@@ -107,10 +109,14 @@
 						            && devoirReleveNotes.coefficient != 1' class="bold fontLarge">
                                     [[+devoirReleveNotes.coefficient]]
                                 </sup>
-                                <div class="releve-coef"  ng-if="devoirReleveNotes.sum_notes !== undefined &&
+                                <div class="releve-coef" ng-if="devoirReleveNotes.sum_notes !== undefined &&
                                     devoirReleveNotes.nbr_eleves !== undefined">
                                     <span>([[getMoyenneClasse(devoirReleveNotes)]]</span>
-                                    <span> / [[devoirReleveNotes.diviseur]])</span>
+                                    <span ng-if="devoirReleveNotes.sum_notes !== null &&
+                                    devoirReleveNotes.nbr_eleves !== null">
+                                        / [[devoirReleveNotes.diviseur]]
+                                    </span>
+                                    <span>)</span>
                                 </div>
                             </div>
                             <div class="gradetooltip"

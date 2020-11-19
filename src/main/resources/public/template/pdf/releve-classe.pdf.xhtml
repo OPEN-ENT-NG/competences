@@ -175,12 +175,12 @@
         <td class="left-right">
             {{#devoirs}}
             <span class="div-note">
-            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
+            <span class="note">{{note}}</span>{{#hasDiviseur}}<span class="diviseur">/{{diviseur}}</span>{{/hasDiviseur}}
             {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
           </span>
             {{/devoirs}}
         </td>
-        <td  class="right-bottom"><span class="note">{{moyenne}}</span>{{^moyenne_non_note}}<span class="diviseur">/20</span>{{/moyenne_non_note}}</td>
+        <td  class="right-bottom"><span class="note">{{moyenne}}</span>{{^moyenne_non_note}}{{#hasDiviseurMatiere}}<span class="diviseur">/20</span>{{/hasDiviseurMatiere}}{{/moyenne_non_note}}</td>
 
     </tr>
     {{/matieres}}
