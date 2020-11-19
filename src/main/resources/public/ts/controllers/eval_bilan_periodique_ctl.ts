@@ -496,8 +496,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 && index + parseInt(num) < $scope.filteredEleves.all.length) {
                 $scope.search.eleve = $scope.filteredEleves.all[index + parseInt(num)];
                 await $scope.changeContent();
-                delete $scope.informations.competencesNotes;
-                $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
+                await utils.safeApply($scope);
             }
         };
 

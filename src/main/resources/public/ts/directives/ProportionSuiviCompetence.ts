@@ -46,9 +46,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
         },
         templateUrl : "/"+appPrefix+"/public/template/directives/cProportionSuiviCompetence.html",
         controller : ['$scope', function ($scope) {
-
             $scope.isClasse = $scope.isClasse !== undefined ? $scope.isClasse : false;
-
 
             /**
              * Listener sur la variable filter. Si modification de la variable, recalcule des proportions
@@ -72,14 +70,14 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
             $scope.$watch('mapLettres', function (newValue, oldValue) {
                 if (newValue !== oldValue) {
                     $scope.majInlineText();
-                    $scope.calculProportion();
+                    $scope.init();
                     utils.safeApply($scope);
                 }
             });
 
             $scope.$watch('majProportions', function (newValue, oldValue) {
                 if (newValue !== oldValue) {
-                    $scope.calculProportion();
+                    $scope.init();
                     utils.safeApply($scope);
                 }
             });
@@ -109,10 +107,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                     if ($scope.isClasse == true) {
                         var elevesMap = {};
 
-                        var nbCompetencesEvaluations = $scope.competencesEvaluations.length;
-
-                        for (var i = 0; i < nbCompetencesEvaluations; ++i) {
-
+                        for (var i = 0; i < $scope.competencesEvaluations.length; ++i) {
                             var competencesEval = $scope.competencesEvaluations[i];
 
                             if (!elevesMap.hasOwnProperty(competencesEval.id_eleve)) {
@@ -127,11 +122,8 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                         }
                     }
 
-                    var nbProportion = $scope.proportion.length;
-
-                    for (var i = 0; i < nbProportion; ++i) {
+                    for (var i = 0; i < $scope.proportion.length; ++i) {
                         if ($scope.isClasse == true) {
-
                             // si aucune competence evaluee on n'affiche pas la proportion
                             if ($scope.proportion[0].percent === 100) {
                                 $scope.proportion[0].percent = 0;
@@ -147,6 +139,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                             $scope.proportion[i].percent = (nb.length / $scope.competencesEvaluations.length) * 100;
                             $scope.proportion[i].nb = nb.length;
                         }
+
                         let proportion = $scope.proportion[i];
                         let print = `${proportion.nb} ${$scope.mapProportionLettres[proportion.eval]}`;
                         $scope.proportion[i].print = print;
@@ -204,9 +197,9 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
             $scope.init = function () {
                 if ($scope.filter.mine === 'true' || $scope.filter.mine === true) {
                     $scope.evaluationsToSort = _.filter($scope.evaluations, function (evaluation) {
-                        return _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
+                        return _.findWhere($scope.listTeacher, {id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
                     });
-                }else{
+                } else {
                     $scope.evaluationsToSort = $scope.evaluations;
                 }
                 if ($scope.isCycle || $scope.isYear) {
@@ -229,10 +222,12 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                         $scope.calculProportion();
                         $scope.periodes[i].proportion = $scope.proportion.slice();
                         $scope.periodes[i].percent = (($scope.competencesEvaluations.length / $scope.evaluationsToSort.length) * 100) - 0.3;
+                        utils.safeApply($scope);
                     }
                 } else {
                     $scope.competencesEvaluations = $scope.evaluationsToSort;
                     $scope.calculProportion();
+                    utils.safeApply($scope);
                 }
             };
 

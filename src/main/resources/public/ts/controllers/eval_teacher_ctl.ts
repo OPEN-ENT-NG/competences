@@ -720,27 +720,27 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.syncPeriode = async (idClasse) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
             let res = await $scope.getCurrentPeriode(classe);
-                $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
-                if ($location.path() === '/competences/eleve' ) {
-                    if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
-                        classe.periodes.all.push({libelle: "cycle", id: null});
-                    }
-                }else {
-                    let cycle = _.findWhere(classe.periodes.all, {libelle: "cycle"});
-                    classe.periodes.all = _.without(classe.periodes.all, cycle);
+            $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
+            if ($location.path() === '/competences/eleve' ) {
+                if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
+                    classe.periodes.all.push({libelle: "cycle", id: null});
                 }
-                setSearchPeriode(classe, res);
-                if ($location.path() === '/devoir/create' ||
-                    ($scope.devoir !== undefined
-                        && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
-                    $scope.devoir.id_periode = res.id_type;
-                    $scope.controleDate($scope.devoir);
-                    utils.safeApply($scope);
-                }
-                if( $location.path() === '/releve') {
-                    $scope.getReleve()
-                }
+            }else {
+                let cycle = _.findWhere(classe.periodes.all, {libelle: "cycle"});
+                classe.periodes.all = _.without(classe.periodes.all, cycle);
+            }
+            setSearchPeriode(classe, res);
+            if ($location.path() === '/devoir/create' ||
+                ($scope.devoir !== undefined
+                    && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
+                $scope.devoir.id_periode = res.id_type;
+                $scope.controleDate($scope.devoir);
                 utils.safeApply($scope);
+            }
+            if( $location.path() === '/releve') {
+                $scope.getReleve()
+            }
+            utils.safeApply($scope);
 
         };
 
@@ -4326,8 +4326,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-
-
         $scope.openEditElementProgramme = function () {
             $scope.disabledSaisieNNoutPeriode = () => {
                 if ($scope.search.periode.id === null || $scope.search.periode === "*") {
@@ -4364,7 +4362,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.releveNote.elementProgramme.texte += libelleProposition;
         }
 
-
         $scope.toogleDevoirNote = function () {
             if ($scope.releveNote !== undefined && $scope.releveNote.idPeriode !== null) {
                 $scope.releveNote.toogle = !$scope.releveNote.toogle;
@@ -4380,9 +4377,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-
         $scope.initDataLightBoxEleve = async function () {
-            let eleve =  $scope.informations.eleve;
+            let eleve = $scope.informations.eleve;
             if (eleve.evaluations.extended !== true) {
                 _.forEach(eleve.evaluations.all, (evaluation) => {
                     // On Clone (copie par valeur) les devoirs  et les competencesNotes ici, pour ne pas dénaturer
@@ -4626,7 +4622,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.openedLigthboxEleve = async (eleve, filteredPeriode) => {
+        $scope.openedLightboxEleve = async (eleve, filteredPeriode) => {
             await $scope.getEleveInfo(eleve);
             $scope.filteredPeriode = filteredPeriode;
             $scope.opened.lightboxReleve = true;
@@ -4666,10 +4662,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 && index + parseInt(num) < $scope.releveNote.classe.eleves.all.length) {
                 $scope.informations.eleve = $scope.releveNote.classe.eleves.all[index + parseInt(num)];
                 $scope.initDataLightBoxEleve();
-                delete $scope.informations.competencesNotes;
-                $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
             }
-            if(details === true ) {
+            if(details === true) {
                 await $scope.openedLigthboxDetailsEleve($scope.informations.eleve);
             }
             if(template.contains('contentDetails', 'enseignants/releve_notes/details_graph_view')) {
@@ -4678,8 +4672,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await $scope.releveNote.getDataForGraph($scope.informations.eleve, $scope.displayDomaine,
                     $scope.niveauCompetences);
                 template.open('contentDetails', 'enseignants/releve_notes/details_graph_view');
-                await utils.safeApply($scope);
             }
+            await utils.safeApply($scope);
         };
         $scope.hasCompetences = function (devoir) {
             return devoir.nbcompetences > 0;
