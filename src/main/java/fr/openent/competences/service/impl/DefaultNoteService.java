@@ -1257,11 +1257,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                  Map<Long, Map<String, Double>> moyFinalesElevesByPeriode,
                                                  Map<Long, List<String>> moyFinalesNNElevesByPeriode,
                                                  Long idPeriode){
-
         if(!result.containsKey(NOTES_BY_PERIODE_BY_STUDENT)) {
             result.put(NOTES_BY_PERIODE_BY_STUDENT, new JsonObject());
         }
-        String periodeKey = isNull(idPeriode)? "null": idPeriode.toString();
+        String periodeKey = isNull(idPeriode) ? "null" : idPeriode.toString();
         if(!result.getJsonObject(NOTES_BY_PERIODE_BY_STUDENT).containsKey(periodeKey)){
             result.getJsonObject(NOTES_BY_PERIODE_BY_STUDENT).put(periodeKey, new JsonObject());
         }
@@ -1278,48 +1277,45 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
         }
 
-        Integer nbEleve = notesPeriodeByEleves.size();
+        Integer nbEleve = 0;
         Double sumMoyClasse = 0.0;
         Map<String, Double> moyFinalesPeriode = null;
-        if( moyFinalesElevesByPeriode != null && moyFinalesElevesByPeriode.containsKey(idPeriode)) {
+        if(moyFinalesElevesByPeriode != null && moyFinalesElevesByPeriode.containsKey(idPeriode)) {
             moyFinalesPeriode = moyFinalesElevesByPeriode.get(idPeriode);
             //un élève peut ne pas être noté et avoir une moyenne finale
-            //il faut donc ajouter sa moyenne finale à  sumMoyClasse
+            //il faut donc ajouter sa moyenne finale à sumMoyClasse
             for(Map.Entry<String,Double> moyFinale : moyFinalesPeriode.entrySet() ){
-
-                if(!notesPeriodeByEleves.containsKey(moyFinale.getKey())){
-                    sumMoyClasse += moyFinale.getValue();
-                    nbEleve ++;
-                }
+                sumMoyClasse += moyFinale.getValue();
+                nbEleve ++;
             }
         }
 
         //pour tous les élèves qui ont une note mettre leur moyenne finale ou auto dans sumMoyClasse
         for(Map.Entry<String, ArrayList<NoteDevoir>> notesPeriodeByEleve : notesPeriodeByEleves.entrySet()){
-
             String idEleve = notesPeriodeByEleve.getKey();
             //si l'éleve en cours a une moyenne finale sur la période l'ajouter à sumMoyClasse
             //sinon calculer la moyenne de l'eleve et l'ajouter à sumMoyClasse
             Double moyEleve = 0.0;
-            if(moyFinalesPeriode != null && moyFinalesPeriode.containsKey(idEleve)){
+            if (moyFinalesPeriode != null && moyFinalesPeriode.containsKey(idEleve)){
                 moyEleve = moyFinalesPeriode.get(idEleve);
             } else {
-                if("NN".equals(utilsService.calculMoyenne(notesPeriodeByEleve.getValue(), false, 20,false).getValue("moyenne"))){
+                if ("NN".equals(utilsService.calculMoyenne(notesPeriodeByEleve.getValue(), false, 20,false).getValue("moyenne"))){
                     nbEleve--;
-                }  else {
+                } else {
                     moyEleve = utilsService.calculMoyenne(notesPeriodeByEleve.getValue(),
                             false, 20,false).getDouble("moyenne");
-                    sumMoyClasse = sumMoyClasse + moyEleve;
+                    sumMoyClasse += moyEleve;
+                    nbEleve++;
                 }
             }
             result.getJsonObject(NOTES_BY_PERIODE_BY_STUDENT).getJsonObject(periodeKey).put(idEleve, moyEleve);
         }
-        return (double) Math.round((sumMoyClasse/nbEleve) * 100) / 100;
+        return (double) Math.round((sumMoyClasse / nbEleve) * 100) / 100;
     }
+
     public Double calculMoyenneClasseByPeriode(ArrayList<NoteDevoir> allNotes,
                                                Map<Long, Map<String, Double>> moyFinalesElevesByPeriode,
-                                               Map<Long, List<String>> moyFinalesNNElevesByPeriode,
-                                               Long idPeriode){
+                                               Map<Long, List<String>> moyFinalesNNElevesByPeriode, Long idPeriode){
 
 
         return calculMoyenneByElevesByPeriode(new JsonObject(), allNotes, moyFinalesElevesByPeriode, moyFinalesNNElevesByPeriode, idPeriode);
@@ -1328,7 +1324,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public void calculAndSetMoyenneClasseByPeriode(final JsonArray moyFinalesEleves,
                                                    final HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
                                                    final JsonObject result) {
-
         JsonArray moyennesClasses = new fr.wseduc.webutils.collections.JsonArray();
 
         Map<Long, Map<String, Double>> moyFinales = null;
@@ -1347,7 +1342,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     }
                     moyFinales.get(periode).put(moyFinale.getString("id_eleve"),
                             Double.parseDouble(moyFinale.getString("moyenne").replace(",",".")));
-                }else if(isNull(moyFinale.getValue("moyenne")) && isNotNull(moyFinale.getValue("id_periode"))) {
+                } else if(isNull(moyFinale.getValue("moyenne")) && isNotNull(moyFinale.getValue("id_periode"))) {
                     Long periode = moyFinale.getLong("id_periode");
                     if (!moyFinalesNN.containsKey(periode)) {
                         moyFinalesNN.put(periode, new ArrayList<String>());
@@ -1355,6 +1350,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     moyFinalesNN.get(periode).add(moyFinale.getString("id_eleve"));
                 }
             }
+
             //cas où il n'y a que des compétences et avec des moyennes finales pour une période <=> notesByDevoirByPeriodeClasse n'a pas cette période
             //Pour cette periode, il faut calculer la moyenne de la classe à partir des moyennes finales
             //Donc on vérifie que pour chaque période où il y a des moyennes finale, il y a aussi des notes
@@ -1369,8 +1365,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             .put("moyenne", statClass.getAverageClass()));
                 }
             }
-
         }
+
         //notesByDevoirByPeriodeClasse contient au moins la clé null
         //pour chaque période où il y a des notes on calcul la moyenne de la classe
         //dans ce calcul on tient compte qu'un élève peut avoir une moyenne finale et pas de note
@@ -1378,14 +1374,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // soit calculée par la méthode calculMoyenneClasseByPeriode
         for (Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByPeriode :
                 notesByDevoirByPeriodeClasse.entrySet()) {
-
             Long idPeriode = notesByPeriode.getKey();
             JsonObject moyennePeriodeClasse = new JsonObject();
             // calcul de la moyenne de la classe si on a des notes pour 1 trimestre
             if (idPeriode != null) {
                 moyennePeriodeClasse.put("id", idPeriode);
-                ArrayList<NoteDevoir> allNotes =
-                        notesByPeriode.getValue().get(notesByPeriode.getKey());
+                ArrayList<NoteDevoir> allNotes = notesByPeriode.getValue().get(notesByPeriode.getKey());
 
                 moyennePeriodeClasse.put("moyenne",
                         calculMoyenneByElevesByPeriode(result, allNotes, moyFinales, moyFinalesNN, idPeriode));
@@ -1407,7 +1401,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
         result.put(MOYENNES_CLASSE, moyennesClasses);
     }
-
 
     public void setRankAndMinMaxInClasseByPeriode(final Long idPeriodAsked, final String idEleve, final HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
                                                   final JsonArray moyFinalesEleves, final JsonObject result) {

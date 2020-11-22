@@ -344,7 +344,6 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     public void getSuiviAcquis(final String idEtablissement, final Long idPeriode, final String idEleve,
                                final String idClasse, Handler<Either<String, JsonArray>> handler) {
-
         Future<JsonArray> subjectFuture = Future.future();
         // Récupération des matières et des professeurs
         devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, idEtablissement, idClasse, event -> {
@@ -445,7 +444,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                         public void handle(Either<String, Map<String, JsonObject>> eventTeachers) {
                             if(eventTeachers.isRight()){
                                 Map<String, JsonObject> teachersInfos = eventTeachers.right().getValue();
-                                setSubjectLibelleAndTeachers (idEleve, idClasseGroups, idClasse, idEtablissement, idsGroups,
+                                setSubjectLibelleAndTeachers(idEleve, idClasseGroups, idClasse, idEtablissement, idsGroups,
                                         idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, handler);
                             }else{
                                 String message = " " + eventTeachers.left().getValue();
@@ -456,7 +455,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     });
                 }else{
                     Map<String, JsonObject> teachersInfos = (Map<String, JsonObject>) futures.get(1).result();
-                    setSubjectLibelleAndTeachers (idEleve, idClasseGroups, idClasse, idEtablissement, idsGroups,
+                    setSubjectLibelleAndTeachers(idEleve, idClasseGroups, idClasse, idEtablissement, idsGroups,
                             idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, handler);
                 }
             }
@@ -655,9 +654,9 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     String coTeacherId = teacher.getString("second_teacher_id");
 
                     if (subjectId.equals(idMatiere)) {
-                        if ( isNotNull(coTeacherId) && !teachers.contains(coTeacherId) )
+                        if (isNotNull(coTeacherId) && !teachers.contains(coTeacherId))
                             teachers.add(coTeacherId);
-                        if ( isNotNull(coTeacherId) && !idsTeachers.contains(coTeacherId) )
+                        if (isNotNull(coTeacherId) && !idsTeachers.contains(coTeacherId))
                             idsTeachers.add(coTeacherId);
                     }
                 });
