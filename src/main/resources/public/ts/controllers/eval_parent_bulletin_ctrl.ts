@@ -131,7 +131,7 @@ export let bulletinController = ng.controller('BulletinController', [
 
         $scope.checkHaveResult = function () {
             if ($scope.searchBulletin.periode !== null && $scope.searchBulletin.periode.id_type !== null)
-                return $scope.content;
+                return $scope.searchBulletin.periode.publication_bulletin && $scope.content;
             else
                 return false;
         };
