@@ -20,6 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.security.AccessBulletinChildrenParentCEFilter;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
@@ -44,6 +45,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -1329,9 +1331,10 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Post("/see/bulletins")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessBulletinChildrenParentCEFilter.class)
     public void seeBulletins(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request,  params -> {
+        RequestUtils.bodyToJson(request, params -> {
             Long idPeriode = params.getLong(ID_PERIODE_KEY);
             String idEleve = params.getString(ID_ELEVE_KEY);
             String idClasse = params.getString(ID_CLASSE_KEY);
