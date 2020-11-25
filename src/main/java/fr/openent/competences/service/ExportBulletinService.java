@@ -292,6 +292,6 @@ public interface ExportBulletinService {
                                  final String externalIdClasse, final String idEtablissement, final Long idPeriode,
                                  final String idParent, Handler<Either<String, JsonObject>> handler);
 
-    void runSavePdf(JsonObject bulletin, Vertx vertx, JsonObject config,
+    void runSavePdf(JsonObject bulletinEleve, JsonObject bulletin, Vertx vertx, JsonObject config,
                     Handler<Either<String, Boolean>> bulletinHandlerWork);
 }

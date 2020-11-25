@@ -3261,6 +3261,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                  final String idParent, Handler<Either<String, JsonObject>> handler){
         this.storage.writeBuffer(file, "application/pdf", name, uploaded -> {
             String idFile = uploaded.getString("_id");
+            log.info("savePdfInStorage : " + idEleve + " " + externalIdClasse + " " + name + " " + idFile);
             if (!OK.equals(uploaded.getString(STATUS)) || idFile ==  null) {
                 String error = "save pdf  : " + uploaded.getString(MESSAGE);
                 if(error.contains(TIME)){
@@ -3327,19 +3328,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void runSavePdf(final JsonObject bulletin, Vertx vertx, JsonObject config,
+    public void runSavePdf( JsonObject bulletinEleve, final JsonObject bulletin, Vertx vertx, JsonObject config,
                            Handler<Either<String, Boolean>> bulletinHandlerWork){
         final HttpServerRequest request = new JsonHttpServerRequest(bulletin.getJsonObject("request"));
         final JsonObject templateProps =  bulletin.getJsonObject("resultFinal");
         final String templateName = bulletin.getString("template");
         final String prefixPdfName = bulletin.getString("title");
 
-        JsonArray eleves = templateProps.getJsonArray("eleves");
-        for(Object eleve : eleves){
-            JsonObject eleveJson = (JsonObject) eleve;
-            generateAndSavePdf(request, templateProps, templateName, prefixPdfName, eleveJson,
-                    vertx, config, bulletinHandlerWork);
-        }
+        generateAndSavePdf(request, templateProps, templateName, prefixPdfName, bulletinEleve,
+                vertx, config, bulletinHandlerWork);
     }
 
     public void generateAndSavePdf(final HttpServerRequest request, JsonObject resultFinal, final String templateName,
@@ -3360,7 +3357,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             public void handle(AsyncResult<Buffer> result) {
                 if (!result.succeeded()) {
                     badRequest(request, "Error while reading template : " + templatePath + templateName);
-                    log.error("Error while reading template : " + templatePath + templateName);
+                    log.error("[DefaultExportBulletinService] Error while reading template : " + templatePath + templateName);
                     return;
                 }
                 StringReader reader = new StringReader(result.result().toString("UTF-8"));
@@ -3368,7 +3365,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                 JsonObject templateProps = resultFinal;
                 templateProps.put("eleves", new JsonArray().add(eleve));
-
                 render.processTemplate(request, templateProps, templateName, reader, new Handler<Writer>() {
                     @Override
                     public void handle(Writer writer) {
@@ -3379,7 +3375,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             bytes = processedTemplate.getBytes("UTF-8");
                         } catch (UnsupportedEncodingException e) {
                             bytes = processedTemplate.getBytes();
-                            log.error(e.getMessage(), e);
+                            log.error("[DefaultExportBulletinService] " + e.getMessage() + " "+
+                                    eleve.getString("idEleve") + " " + eleve.getString("lastName"));
                         }
 
                         actionObject.put("content", bytes).put("baseUrl", baseUrl);
@@ -3403,13 +3400,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                             try {
                                                 outStream = new FileOutputStream(pdfFile);
                                             } catch (FileNotFoundException e) {
-                                                log.error(e.getMessage());
+                                                log.error("[DefaultExportBulletinService]" + e.getMessage() + " "
+                                                        + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
                                                 e.printStackTrace();
                                             }
                                             try {
                                                 outStream.write(pdf);
                                             } catch (IOException e) {
-                                                log.error(e.getMessage());
+                                                log.error("[DefaultExportBulletinService] " + e.getMessage() + " " +
+                                                        eleve.getString("idEleve") + " " + eleve.getString("lastName"));
                                                 e.printStackTrace();
                                             }
 
@@ -3439,7 +3438,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                         bos.write(buf, 0, readNum);
                                                     }
                                                     byte[] bytes = bos.toByteArray();
-
                                                     buffer = Buffer.buffer(bytes);
                                                     savePdfInStorage(getFileNameForStudent(eleve), buffer,
                                                             eleve.getString("idEleve"),
@@ -3452,7 +3450,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                                 @Override
                                                                 public void handle(Either<String, JsonObject> event) {
                                                                     if (event.isLeft()) {
-                                                                        log.info("Error on savePdfInStorage");
+                                                                        log.info("[DefaultExportBulletinService] : Error on savePdfInStorage "
+                                                                                + event.left().getValue() + " "
+                                                                                + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
                                                                         finalHandler.handle(new Either.Left<>(event.left().getValue()));
                                                                     }
                                                                     else {
@@ -3469,6 +3469,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                 }
                                             } catch (Exception e) {
                                                 e.printStackTrace();
+                                                log.error("[DefaultExportBulletinService] : " + e.getMessage() + " "
+                                                        + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                                                finalHandler.handle(new Either.Left<>(e.getMessage()));
                                             }
                                         } else {
                                             buffer = Buffer.buffer(pdf);
@@ -3483,7 +3486,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                         @Override
                                                         public void handle(Either<String, JsonObject> event) {
                                                             if (event.isLeft()) {
-                                                                log.info("Error on savePdfInStorage");
+                                                                log.error("[DefaultExportBulletinService] : Error on savePdfInStorage "
+                                                                        + event.left().getValue() + " "
+                                                                        + eleve.getString("idEleve") + " " + eleve.getString("lastName" ));
                                                                 finalHandler.handle(new Either.Left<>(event.left().getValue()));
                                                             }
                                                             else {

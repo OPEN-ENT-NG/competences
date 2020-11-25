@@ -4,6 +4,7 @@ import fr.openent.competences.service.ExportBulletinService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -20,7 +21,7 @@ import static fr.openent.competences.service.impl.DefaultExportBulletinService.*
 public class BulletinWorker extends BusModBase implements Handler<Message<JsonObject>>{
     private Storage storage;
     private boolean isWorking = false;
-    List<JsonObject> bulletins = new ArrayList<>();
+    List<JsonObject> bulletinsEleves = new ArrayList();
     private ExportBulletinService exportBulletinService;
     public static final String SAVE_BULLETIN = "saveBulletin";
     private static final Logger log = LoggerFactory.getLogger(BulletinWorker.class);
@@ -37,15 +38,17 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
 
     @Override
     public void handle(Message<JsonObject> message) {
-        JsonObject body = message.body();
-        final String action = body.getString(ACTION, "");
+        JsonObject paramBulletin = message.body();
+        JsonArray bulletins = paramBulletin.getJsonObject("resultFinal").getJsonArray("eleves");
+        paramBulletin.getJsonObject("resultFinal").remove("eleves");
+        final String action = paramBulletin.getString(ACTION, "");
         switch (action) {
             case SAVE_BULLETIN :
-                stackBulletin(body);
+                stackBulletin(bulletins);
                 if(!isWorking){
                     isWorking = true;
                     new Thread(() -> {
-                        processBulletin(event -> {
+                        processBulletin(paramBulletin, event -> {
                             log.info("end bulletin");
                         });
                     }).start();
@@ -56,14 +59,19 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
         }
     }
 
-    private void stackBulletin(JsonObject bulletin) {
-        bulletins.add(bulletin);
+    private void stackBulletin(JsonArray bulletins) {
+        if( bulletins != null ){
+            for(int i =0 ; i < bulletins.size(); i++){
+                bulletins.add(bulletins.getJsonObject(i));
+            }
+        }
     }
 
+
     private JsonObject HandleStackJsonObject() {
-        if(bulletins.size() != 0) {
-            JsonObject bulletin = bulletins.get(0);
-            bulletins.remove(0);
+        if (bulletinsEleves.size() != 0) {
+            JsonObject bulletin = bulletinsEleves.get(0);
+            bulletinsEleves.remove(0);
             return bulletin;
         } else {
             log.info("end Work");
@@ -72,12 +80,15 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
         }
     }
 
-    private void processBulletin(Handler<Either<String, Boolean>> bulletinHandlerWork) {
+    private void processBulletin(JsonObject paramBulletin ,Handler<Either<String, Boolean>> bulletinHandlerWork) {
         JsonObject bulletinToHandle = HandleStackJsonObject();
         if (bulletinToHandle == null) return;
         log.info("start Work");
-        exportBulletinService.runSavePdf(bulletinToHandle, vertx, config, event -> {
-            processBulletin(bulletinHandlerWork);
+        exportBulletinService.runSavePdf(bulletinToHandle, paramBulletin, vertx, config, event -> {
+            processBulletin(paramBulletin, bulletinHandlerWork);
+            if( event.isLeft()){
+                log.error("[BulletinWorker] : " + event.left().getValue());
+            }
         });
     }
 }

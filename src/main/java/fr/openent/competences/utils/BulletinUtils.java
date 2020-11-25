@@ -42,6 +42,7 @@ public class BulletinUtils {
                 handler.handle(new Either.Left<>(body.getString(MESSAGE)));
             }
             else{
+                log.info("saveIdBulletin : " + idEleve + " " + externalIdClasse + " " + name + " " + idFile);
                 handler.handle(new Either.Right<>(body));
             }
         });
