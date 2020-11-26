@@ -384,7 +384,7 @@ export class Utils {
             allmaxMats.forEach(maxMat =>{
                 sum += maxMat;
             });
-            return utils.getMoyenneForBFC((sum/allmaxMats.length)+1,tableConversion.all)-1;
+            return utils.getMoyenneForBFC((sum / allmaxMats.length) + 1, tableConversion.all) - 1;
         }
     }
     static setCompetenceNotes(poDomaine, poCompetencesNotes, tableConversion, object?, classe?, tabDomaine?, isCycle?, periode?, listTeacher?) {

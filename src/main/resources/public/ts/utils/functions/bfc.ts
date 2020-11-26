@@ -26,16 +26,18 @@
  */
 export function getMoyenneForBFC(moyenne, tableConversions){
     let maConvertion = undefined;
-    for(let i= 0 ; i < tableConversions.length ; i++){
-        if((tableConversions[i].valmin <= moyenne && tableConversions[i].valmax > moyenne) && tableConversions[i].ordre !== tableConversions.length ){
+
+    for(let i = 0 ; i < tableConversions.length ; i++){
+        if((tableConversions[i].valmin <= moyenne && tableConversions[i].valmax > moyenne) && tableConversions[i].ordre !== tableConversions.length){
             maConvertion = tableConversions[i];
-        }else if((tableConversions[i].valmin <= moyenne && tableConversions[i].valmax >= moyenne) && tableConversions[i].ordre === tableConversions.length ){
+        } else if ((tableConversions[i].valmin <= moyenne && tableConversions[i].valmax >= moyenne) && tableConversions[i].ordre === tableConversions.length){
             maConvertion = tableConversions[i];
         }
     }
+
     if(maConvertion !== undefined){
         return parseInt(maConvertion.ordre);
-    }else{
+    } else {
         return -1;
     }
-};
+}

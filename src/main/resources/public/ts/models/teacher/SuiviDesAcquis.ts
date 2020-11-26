@@ -307,14 +307,15 @@ export class SuivisDesAcquis extends Model{
         if(moy !== undefined) {
             moy = suivi._positionnements_auto[this.idPeriode];
             if(moy !== undefined) {
-                moy = moy [sousMat.id_type_sousmatiere];
+                moy = moy[sousMat.id_type_sousmatiere];
             }
         }
+
         if(Utils.isNotNull(moy) && moy.hasNote > 0) {
-            let positionnementConverti = utils.getMoyenneForBFC(moy.moyenne + 1, this.tableConversions.all);
+            let positionnementConverti = utils.getMoyenneForBFC(moy.moyenne, this.tableConversions.all);
             res = (positionnementConverti !== -1) ? positionnementConverti : 0;
         }
-        sousMat.posi = res;
+
         return res;
     }
 
@@ -326,7 +327,7 @@ export class SuivisDesAcquis extends Model{
                 moy = moy [sousMat.id_type_sousmatiere];
             }
         }
-        return (moy === undefined)? getNN() : moy.moyenne;
+        return (moy === undefined) ? getNN() : moy.moyenne;
     }
 
     getMoyenneClasse(suivi, sousMat) {
