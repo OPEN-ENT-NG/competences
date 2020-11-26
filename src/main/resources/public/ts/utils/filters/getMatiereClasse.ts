@@ -40,7 +40,7 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
                     {second_teacher_id: idTeacher, subject_id: matiere.id});
 
                 let mainTeacher = service.id_enseignant == idTeacher && service.id_matiere == matiere.id;
-                if (matiere.hasOwnProperty('libelleClasses')) {
+                if (matiere.hasOwnProperty('libelleClasses') && matiere.libelleClasses.isEmpty && classe.externalId) {
                     mainTeacher = mainTeacher && (matiere.libelleClasses.indexOf(classe.externalId) !== -1)
                 }
 

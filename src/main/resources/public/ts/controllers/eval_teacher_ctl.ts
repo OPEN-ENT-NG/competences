@@ -719,7 +719,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.syncPeriode = async (idClasse) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
             let res = await $scope.getCurrentPeriode(classe);
-            $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
             if ($location.path() === '/competences/eleve' ) {
                 if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
                     classe.periodes.all.push({libelle: "cycle", id: null});
@@ -737,6 +736,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 utils.safeApply($scope);
             }
             if( $location.path() === '/releve') {
+                $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
+                $scope.setMatieresFiltered();
                 $scope.getReleve()
             }
             utils.safeApply($scope);
@@ -2485,11 +2486,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.setMatieresFiltered = () => {
             $scope.search.matiere = "*";
-            $scope.matieresFiltered = $filter('getMatiereClasse')($scope.matieres.all, $scope.search.classe.id, $scope.classes, model.me.userId);
-            if($scope.matieresFiltered.length === 1) {
-                $scope.search.matiere = $scope.matieresFiltered[0];
+            if($scope.search.periode != '*' && $scope.search.periode != -1 ){
+                $scope.matieresFiltered = _.unique ($filter('getMatiereClasse')($scope.matieres.all,
+                    $scope.search.classe.id, $scope.classes, model.me.userId), (mat) => {
+                    return mat.id ;}
+                );
+
+                if($scope.matieresFiltered.length === 1) {
+                    $scope.search.matiere = $scope.matieresFiltered[0];
+                }
+                utils.safeApply($scope);
+            } else {
+                $scope.matieresFiltered = [];
+                utils.safeApply($scope);
             }
-            utils.safeApply($scope);
         }
 
         /**
@@ -3644,7 +3654,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.getCurrentPeriode = async (classe) => {
-            if (classe.periodes.length() === 0) {
+            if (classe.periodes && classe.periodes.length() === 0) {
                 await classe.periodes.sync();
             }
             $scope.periodes = classe.periodes;
