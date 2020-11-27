@@ -1340,14 +1340,53 @@ public class ExportPDFController extends ControllerHelper {
             String idClasse = params.getString(ID_CLASSE_KEY);
             String idEtablissement = params.getString(ID_STRUCTURE_KEY);
             String idParent = params.getString(ID_PARENT_KEY);
-            utilsService.getYearsAndPeriodes(idEtablissement, true, event -> {
-                if (event.isRight()) {
-                    String idYear = event.right().getValue().getString("start_date").substring(0,4);
-                    BulletinUtils.getBulletin(idEleve, idClasse, idPeriode, idEtablissement, idParent,
-                            idYear, storage, request);
-                }
-                else {
-                    leftToResponse(request, event.left());
+
+            UserUtils.getUserInfos(eb, request, user -> {
+
+                if(user != null && user.getType().equals("Student") || user.getType().equals("Relative")){
+
+                    utilsService.getPeriodesClasses(idEtablissement, new JsonArray().add(idClasse), idPeriode, eventvisibility -> {
+
+                        if(eventvisibility.isRight()){
+                            Boolean visibility = eventvisibility.right().getValue().getJsonObject(0).getBoolean("publication_bulletin");
+                            if(visibility) {
+                                utilsService.getYearsAndPeriodes(idEtablissement, true, event -> {
+                                    if (event.isRight()) {
+                                        String idYear = event.right().getValue().getString("start_date").substring(0,4);
+                                        BulletinUtils.getBulletin(idEleve, idClasse, idPeriode, idEtablissement, idParent,
+                                                idYear, storage, request);
+                                    }
+                                    else {
+                                        log.info("[ExportPDFController] :  No bulletin in Storage " + event.left().getValue());
+                                        leftToResponse(request, event.left());
+                                    }
+                                });
+
+                            } else {
+                                log.info("[ExportPDFController] :  No rights for visibility " );
+                                forbidden(request, "No rights for visibility");
+                            }
+                        } else {
+                            log.error("[ExportPDFController] :  No Periode classe " + idClasse + " " + eventvisibility.left().getValue());
+                            badRequest(request);
+                        }
+                    });
+
+                } else if( user != null && user.getType().equals("Teacher") || user.getType().equals("Personnel")) {
+
+                    utilsService.getYearsAndPeriodes(idEtablissement, true, event -> {
+                        if (event.isRight()) {
+                            String idYear = event.right().getValue().getString("start_date").substring(0,4);
+                            BulletinUtils.getBulletin(idEleve, idClasse, idPeriode, idEtablissement, idParent,
+                                    idYear, storage, request);
+                        }
+                        else {
+                            log.info("[ExportPDFController] :  No bulletin in Storage " + event.left().getValue());
+                            leftToResponse(request, event.left());
+                        }
+                    });
+                } else {
+                    unauthorized(request);
                 }
             });
         });

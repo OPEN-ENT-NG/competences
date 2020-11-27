@@ -37,7 +37,7 @@ export let bulletinController = ng.controller('BulletinController', [
          * @returns {Promise<void>}
          */
         $scope.loadBulletin = async function () {
-            if( $scope.searchBulletin.periode.publication_bulletin) {
+           //if( $scope.searchBulletin.periode.publication_bulletin) {
                 try {
                     // lancement de l'export et récupération du fichier généré
                     let data = await http.post(`/competences/see/bulletins`, {
@@ -48,7 +48,7 @@ export let bulletinController = ng.controller('BulletinController', [
                         idParent: $scope.me.type === 'PERSRELELEVE' ? $scope.me.externalId : null
                     }, {responseType: 'arraybuffer'});
                     if (data.status == 204) {
-                        //empty result, le bulletin n'a pas encore été généré
+                        //empty result or no rights for visibility, le bulletin n'a pas encore été généré
                         $scope.content = undefined;
                     } else {
                         var file = new Blob([data.data], {type: 'application/pdf'});
@@ -57,12 +57,13 @@ export let bulletinController = ng.controller('BulletinController', [
                     }
                     await utils.safeApply($scope);
                 } catch (data) {
-                    console.error(data);
-                    if (data.response != undefined && data.response.status === 500) {
-                        this.manageError(data.response.data, $scope);
+                    if(data) console.error(data);
+                    if (data.response != undefined && (data.response.status === 500 || data.response.status === 400
+                        || data.response.status === 403 || data.response.status === 401)) {
+                        $scope.content = undefined;
                     }
                 }
-            }
+           // }
         };
 
         let initSearchBulletin = (periode) => {

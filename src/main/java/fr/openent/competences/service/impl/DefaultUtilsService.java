@@ -1393,4 +1393,38 @@ public class DefaultUtilsService  implements UtilsService {
 
         eb.send("fr.openent.presences", action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
+
+    /**
+     * getPeriode one periode By classes
+     *
+     * @param idEtablissement
+     * @param idClasses
+     * @param idPeriode
+     * @param handler
+     */
+    @Override
+    public void getPeriodesClasses (String idEtablissement, JsonArray idClasses, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "periode.getPeriodesClasses")
+                .put("idEtablissement", idEtablissement)
+                .put("idsClasse", idClasses)
+                .put("idPeriode", idPeriode);
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        JsonArray periodes = body.getJsonArray("results");
+                        if ("ok".equals(body.getString("status"))) {
+                            handler.handle(new Either.Right<String,JsonArray>(periodes) );
+                        }else{
+                            handler.handle(new Either.Left<String,JsonArray>("no periode for this class : " + body.getString("message")) );
+                        }
+
+                    }
+                })
+
+        );
+    }
 }

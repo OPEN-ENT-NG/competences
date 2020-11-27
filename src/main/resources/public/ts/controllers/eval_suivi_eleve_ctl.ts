@@ -1246,41 +1246,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
          */
         $scope.loadBulletin = async function () {
             try {
-                /*if($scope.search.periode.id_type == null){
-                    $scope.content = undefined;
-                }else {
-                    let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.search.eleve.id
-                        + "&idPeriode=" + $scope.search.periode.id_type
-                        + "&idStructure=" + $scope.search.periode.id_etablissement;
-                    let data = await http.get(url);
-                    if (data.status == 204) {
-                        //empty result, le bulletin n'a pas encore été généré
-                        $scope.content = undefined;
-                    } else {
-                        let options = data.data;
-                        options.images = {}; // contiendra les id des images par élève
-                        options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
 
-                        options.students = [];
-
-                        _.forEach(options.idStudents, (id) => {
-                            let student = {id: id, idClasse: $scope.search.eleve.idClasse};
-                            options.students.push(student);
-                        });
-
-                        if (options.showBilanPerDomaines === true) {
-                            $scope.niveauCompetences = options.niveauCompetences;
-                        }
-
-                        if (!($scope.structure && $scope.structure.id))
-                            $scope.structure = new Structure({id: model.me.structures[0]});
-
-                        if (options.showBilanPerDomaines === true && options.simple !== true) {
-                            // Si on choisit de déssiner les graphes
-                            await ExportBulletins.createCanvas(options, $scope);
-                        }
-                    }
-                }*/
                 // lancement de l'export et récupération du fichier généré
                 let data = await http.post(`/competences/see/bulletins`, {
                     idEleve: $scope.search.eleve.id,
@@ -1300,8 +1266,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 await utils.safeApply($scope);
             } catch (data) {
                 console.error(data);
-                if(data.response != undefined && data.response.status === 500){
-                    this.manageError(data.response.data, $scope);
+                if (data.response != undefined && (data.response.status === 500 || data.response.status === 400
+                    || data.response.status === 403 || data.response.status === 401)) {
+                    $scope.content = undefined;
                 }
             }
         };

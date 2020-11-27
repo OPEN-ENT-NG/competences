@@ -333,4 +333,14 @@ public interface UtilsService {
      * @param handler
      */
     void getPresencesReasonsId(String idStructure, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * getPeriode one periode By classes
+     * @param idEtablissement
+     * @param idClasses
+     * @param idPeriode
+     * @param handler
+     */
+    void getPeriodesClasses (String idEtablissement, JsonArray idClasses,
+                             Long idPeriode, final Handler<Either<String, JsonArray>> handler);
 }
