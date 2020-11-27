@@ -597,7 +597,7 @@
   "evaluations.export.bulletin.nameCE": "Nom du chef ou de son adjoint",
   "evaluations.export.bulletin.asbence.just":"Absences justifiées par les responsables légaux ",
   "evaluations.export.bulletin.asbence.not.just":"Absences non justifiées par les responsables légaux ",
-  "evaluations.export.bulletin.asbence.nb.heures":"Nombre d’heures de cours manquées du fait de ses absences, justifiées ou non justifiées",
+  "evaluations.export.bulletin.asbence.nb.heures":"Nombre d'heures de cours manquées, justifiées ou non justifiées ",
   "evaluations.export.bulletin.element.programme.libelle": "Éléments du programme travaillés durant la période (connaissances/compétences)",
   "evaluations.export.bulletin.element.appreciation.libelle": "Acquisitions, progrès et difficultés éventuelles",
   "evaluations.export.bulletin.visa.libelle":"Visa de la famille",
