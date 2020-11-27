@@ -37,7 +37,7 @@ export let bulletinController = ng.controller('BulletinController', [
          * @returns {Promise<void>}
          */
         $scope.loadBulletin = async function () {
-           //if( $scope.searchBulletin.periode.publication_bulletin) {
+           if( $scope.searchBulletin.periode.publication_bulletin) {
                 try {
                     // lancement de l'export et récupération du fichier généré
                     let data = await http.post(`/competences/see/bulletins`, {
@@ -63,7 +63,7 @@ export let bulletinController = ng.controller('BulletinController', [
                         $scope.content = undefined;
                     }
                 }
-           // }
+            }
         };
 
         let initSearchBulletin = (periode) => {
