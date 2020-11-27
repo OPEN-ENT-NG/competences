@@ -37,59 +37,30 @@ export let bulletinController = ng.controller('BulletinController', [
          * @returns {Promise<void>}
          */
         $scope.loadBulletin = async function () {
-            try {
-                /*let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.searchBulletin.eleve.id
-                    + "&idPeriode=" + $scope.searchBulletin.periode.id_type
-                    + "&idStructure=" + $scope.searchBulletin.periode.id_etablissement;
-                let data = await http.get(url);
-                if(data.status == 204){
-                    //empty result, le bulletin n'a pas encore été généré
-                    $scope.content = undefined;
-                }else{
-                    let options = data.data;
-                    options.images = {}; // contiendra les id des images par élève
-                    options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
-
-                    options.students = [];
-
-                    _.forEach( options.idStudents, (id) => {
-                        let student = {id:id,idClasse:$scope.searchBulletin.eleve.idClasse};
-                        options.students.push(student);
-                    });
-
-                    if (options.showBilanPerDomaines === true) {
-                        $scope.niveauCompetences = options.niveauCompetences;
+            if( $scope.searchBulletin.periode.publication_bulletin) {
+                try {
+                    // lancement de l'export et récupération du fichier généré
+                    let data = await http.post(`/competences/see/bulletins`, {
+                        idEleve: $scope.searchBulletin.eleve.id,
+                        idPeriode: $scope.searchBulletin.periode.id_type,
+                        idStructure: $scope.searchBulletin.eleve.idStructure,
+                        idClasse: $scope.searchBulletin.eleve.idClasse,
+                        idParent: $scope.me.type === 'PERSRELELEVE' ? $scope.me.externalId : null
+                    }, {responseType: 'arraybuffer'});
+                    if (data.status == 204) {
+                        //empty result, le bulletin n'a pas encore été généré
+                        $scope.content = undefined;
+                    } else {
+                        var file = new Blob([data.data], {type: 'application/pdf'});
+                        var fileURL = window.URL.createObjectURL(file);
+                        $scope.content = $sce.trustAsResourceUrl(fileURL);
                     }
-
-                    if(!($scope.structure && $scope.structure.id))
-                        $scope.structure = new Structure({id:  model.me.structures[0]});
-
-                    if (options.showBilanPerDomaines === true && options.simple !== true) {
-                        // Si on choisit de déssiner les graphes
-                        await ExportBulletins.createCanvas(options, $scope);
+                    await utils.safeApply($scope);
+                } catch (data) {
+                    console.error(data);
+                    if (data.response != undefined && data.response.status === 500) {
+                        this.manageError(data.response.data, $scope);
                     }
-                }*/
-                // lancement de l'export et récupération du fichier généré
-                let data = await http.post(`/competences/see/bulletins`, {
-                    idEleve: $scope.searchBulletin.eleve.id,
-                    idPeriode: $scope.searchBulletin.periode.id_type,
-                    idStructure: $scope.searchBulletin.eleve.idStructure,
-                    idClasse: $scope.searchBulletin.eleve.idClasse,
-                    idParent: $scope.me.type === 'PERSRELELEVE' ? $scope.me.externalId : null
-                },{responseType: 'arraybuffer'});
-                if(data.status == 204){
-                    //empty result, le bulletin n'a pas encore été généré
-                    $scope.content = undefined;
-                } else {
-                    var file = new Blob([data.data], {type: 'application/pdf'});
-                    var fileURL = window.URL.createObjectURL(file);
-                    $scope.content = $sce.trustAsResourceUrl(fileURL);
-                }
-                await utils.safeApply($scope);
-            } catch (data) {
-                console.error(data);
-                if(data.response != undefined && data.response.status === 500){
-                    this.manageError(data.response.data, $scope);
                 }
             }
         };
