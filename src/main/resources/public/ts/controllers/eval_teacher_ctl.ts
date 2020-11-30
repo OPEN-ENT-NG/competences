@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {model, notify, idiom as lang, ng, template, moment, _, angular, http, skin} from 'entcore';
+import {model, notify, idiom as lang, ng, template, moment, _, angular, http, skin, Behaviours} from 'entcore';
 import {
     Devoir,
     Evaluation,
@@ -632,6 +632,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.canExport = () => {
             return Utils.isChefEtab() || Utils.canExportLSU();
+        }
+
+        $scope.canAccessBulletin = () => {
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.exportBulletins);
+        }
+
+        $scope.canAccessProjets = () => {
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.accessProjets);
         }
 
         $scope.evaluations = evaluations;
@@ -3278,7 +3286,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return isValidClasse(item.id, item.id_matiere, $scope.classes.all);
         };
 
-        $scope.filterValidDvoir = (item) => {
+        $scope.filterValidDevoir = (item) => {
             return isValidDevoir(item.id_groupe, item.id_matiere, $scope.classes.all);
         };
 
