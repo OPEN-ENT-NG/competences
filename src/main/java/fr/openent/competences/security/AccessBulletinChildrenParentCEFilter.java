@@ -16,6 +16,7 @@ public class AccessBulletinChildrenParentCEFilter implements ResourcesProvider {
     public void authorize(final HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         RequestUtils.bodyToJson(request, params -> {
             handler.handle(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())
+                    || "Teacher".equals(user.getType())
                     || (user.getUserId().equals(params.getString(ID_ELEVE_KEY))
                     || user.getChildrenIds().contains(params.getString(ID_ELEVE_KEY)))
             );

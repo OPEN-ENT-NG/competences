@@ -3667,7 +3667,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.getCurrentPeriode = async (classe) => {
-            if (classe.periodes && classe.periodes.length() === 0) {
+            if (classe && classe.periodes && classe.periodes.length() === 0) {
                 await classe.periodes.sync();
             }
             $scope.periodes = classe.periodes;
