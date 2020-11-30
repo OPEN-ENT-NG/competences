@@ -17,9 +17,9 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.file.FileSystemException;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -3329,7 +3329,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     @Override
     public void runSavePdf( JsonObject bulletinEleve, final JsonObject bulletin, Vertx vertx, JsonObject config,
-                           Handler<Either<String, Boolean>> bulletinHandlerWork){
+                            Handler<Either<String, Boolean>> bulletinHandlerWork){
         final HttpServerRequest request = new JsonHttpServerRequest(bulletin.getJsonObject("request"));
         final JsonObject templateProps =  bulletin.getJsonObject("resultFinal");
         final String templateName = bulletin.getString("template");
@@ -3364,145 +3364,173 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 Renders render = new Renders(vertx, config);
 
                 JsonObject templateProps = resultFinal;
+
+                /* HANDLE du logo
+                 */
+                generateImagesFromPath(eleve, vertx);
+                /*
+                en handle logo
+                 */
                 templateProps.put("eleves", new JsonArray().add(eleve));
-                render.processTemplate(request, templateProps, templateName, reader, new Handler<Writer>() {
-                    @Override
-                    public void handle(Writer writer) {
-                        String processedTemplate = ((StringWriter) writer).getBuffer().toString();
-                        JsonObject actionObject = new JsonObject();
-                        byte[] bytes;
-                        try {
-                            bytes = processedTemplate.getBytes("UTF-8");
-                        } catch (UnsupportedEncodingException e) {
-                            bytes = processedTemplate.getBytes();
-                            log.error("[DefaultExportBulletinService] " + e.getMessage() + " "+
-                                    eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                        }
-
-                        actionObject.put("content", bytes).put("baseUrl", baseUrl);
-                        eb.send(_node + "entcore.pdf.generator", actionObject,
-                                new DeliveryOptions().setSendTimeout(
-                                        TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
-                                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                    @Override
-                                    public void handle(Message<JsonObject> reply) {
-                                        JsonObject pdfResponse = reply.body();
-                                        if (!"ok".equals(pdfResponse.getString("status"))) {
-                                            badRequest(request, pdfResponse.getString("message"));
-                                            return;
-                                        }
-                                        byte[] pdf = pdfResponse.getBinary("content");
-
-                                        Buffer buffer;
-                                        if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
-                                            File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
-                                            OutputStream outStream = null;
-                                            try {
-                                                outStream = new FileOutputStream(pdfFile);
-                                            } catch (FileNotFoundException e) {
-                                                log.error("[DefaultExportBulletinService]" + e.getMessage() + " "
-                                                        + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                                                e.printStackTrace();
-                                            }
-                                            try {
-                                                outStream.write(pdf);
-                                            } catch (IOException e) {
-                                                log.error("[DefaultExportBulletinService] " + e.getMessage() + " " +
-                                                        eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                                                e.printStackTrace();
-                                            }
-
-                                            try {
-                                                String sourceDir = pdfFile.getAbsolutePath();
-                                                File sourceFile = new File(sourceDir);
-                                                while (!sourceFile.exists()) {
-                                                    System.err.println(sourceFile.getName() + " File does not exist");
-                                                }
-                                                if (sourceFile.exists()) {
-                                                    PDDocument document = PDDocument.load(sourceDir);
-                                                    @SuppressWarnings("unchecked")
-                                                    List<PDPage> list = document.getDocumentCatalog().getAllPages();
-                                                    File imageFile = null;
-                                                    for (PDPage page : list) {
-                                                        BufferedImage image = page.convertToImage();
-                                                        int height = 150 + Integer.parseInt(templateProps.getString("nbrCompetences")) * 50;
-                                                        BufferedImage SubImage = image.getSubimage(0, 0, 1684, height);
-                                                        imageFile = new File(prefixPdfName + "_" + dateDebut + ".jpg");
-                                                        ImageIO.write(SubImage, "jpg", imageFile);
-                                                    }
-                                                    document.close();
-                                                    FileInputStream fis = new FileInputStream(imageFile);
-                                                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                                                    byte[] buf = new byte[(int) imageFile.length()];
-                                                    for (int readNum; (readNum = fis.read(buf)) != -1; ) {
-                                                        bos.write(buf, 0, readNum);
-                                                    }
-                                                    byte[] bytes = bos.toByteArray();
-                                                    buffer = Buffer.buffer(bytes);
-                                                    savePdfInStorage(getFileNameForStudent(eleve), buffer,
-                                                            eleve.getString("idEleve"),
-                                                            eleve.getString("idClasse"),
-                                                            eleve.getString("externalId"),
-                                                            eleve.getString("idEtablissement"),
-                                                            eleve.getLong("idPeriode"),
-                                                            getIdParentForStudent(eleve),
-                                                            new Handler<Either<String, JsonObject>>() {
-                                                                @Override
-                                                                public void handle(Either<String, JsonObject> event) {
-                                                                    if (event.isLeft()) {
-                                                                        log.info("[DefaultExportBulletinService] : Error on savePdfInStorage "
-                                                                                + event.left().getValue() + " "
-                                                                                + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                                                                        finalHandler.handle(new Either.Left<>(event.left().getValue()));
-                                                                    }
-                                                                    else {
-                                                                        finalHandler.handle(new Either.Right<>(true));
-                                                                    }
-                                                                }
-                                                            });
-                                                    outStream.close();
-                                                    bos.close();
-                                                    fis.close();
-
-                                                    Files.deleteIfExists(Paths.get(pdfFile.getAbsolutePath()));
-                                                    Files.deleteIfExists(Paths.get(imageFile.getAbsolutePath()));
-                                                }
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                                log.error("[DefaultExportBulletinService] : " + e.getMessage() + " "
-                                                        + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                                                finalHandler.handle(new Either.Left<>(e.getMessage()));
-                                            }
-                                        } else {
-                                            buffer = Buffer.buffer(pdf);
-                                            savePdfInStorage(getFileNameForStudent(eleve), buffer,
-                                                    eleve.getString("idEleve"),
-                                                    eleve.getString("idClasse"),
-                                                    eleve.getString("externalId"),
-                                                    eleve.getString("idEtablissement"),
-                                                    eleve.getLong("idPeriode"),
-                                                    getIdParentForStudent(eleve),
-                                                    new Handler<Either<String, JsonObject>>() {
-                                                        @Override
-                                                        public void handle(Either<String, JsonObject> event) {
-                                                            if (event.isLeft()) {
-                                                                log.error("[DefaultExportBulletinService] : Error on savePdfInStorage "
-                                                                        + event.left().getValue() + " "
-                                                                        + eleve.getString("idEleve") + " " + eleve.getString("lastName" ));
-                                                                finalHandler.handle(new Either.Left<>(event.left().getValue()));
-                                                            }
-                                                            else {
-                                                                finalHandler.handle(new Either.Right<>(true));
-                                                            }
-                                                        }
-                                                    });
-                                        }
-                                    }
-                                }));
-                    }
-                });
+                render.processTemplate(request, templateProps, templateName, reader,
+                        getRenderProcessHandler(templateProps, baseUrl, _node, request, prefixPdfName, dateDebut, eleve, finalHandler));
 
             }
         });
+    }
+
+    private Handler<Writer> getRenderProcessHandler(JsonObject templateProps, String baseUrl, String _node, HttpServerRequest request, String prefixPdfName, String dateDebut, JsonObject eleve, Handler<Either<String, Boolean>> finalHandler) {
+        return new Handler<Writer>() {
+            @Override
+            public void handle(Writer writer) {
+                String processedTemplate = ((StringWriter) writer).getBuffer().toString();
+                JsonObject actionObject = new JsonObject();
+                byte[] bytes;
+                try {
+                    bytes = processedTemplate.getBytes("UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    bytes = processedTemplate.getBytes();
+                    log.error("[DefaultExportBulletinService] " + e.getMessage() + " "+
+                            eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                }
+
+                actionObject.put("content", bytes).put("baseUrl", baseUrl);
+                eb.send(_node + "entcore.pdf.generator", actionObject,
+                        new DeliveryOptions().setSendTimeout(
+                                TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                        handlerToAsyncHandler(getPdfRenderHandler(request, templateProps, prefixPdfName, dateDebut, eleve, finalHandler)));
+            }
+        };
+    }
+
+    private Handler<Message<JsonObject>> getPdfRenderHandler(HttpServerRequest request, JsonObject templateProps, String prefixPdfName, String dateDebut, JsonObject eleve, Handler<Either<String, Boolean>> finalHandler) {
+        return new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> reply) {
+                JsonObject pdfResponse = reply.body();
+                if (!"ok".equals(pdfResponse.getString("status"))) {
+                    badRequest(request, pdfResponse.getString("message"));
+                    return;
+                }
+                byte[] pdf = pdfResponse.getBinary("content");
+
+                Buffer buffer;
+                if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
+                    File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
+                    OutputStream outStream = null;
+                    try {
+                        outStream = new FileOutputStream(pdfFile);
+                    } catch (FileNotFoundException e) {
+                        log.error("[DefaultExportBulletinService]" + e.getMessage() + " "
+                                + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                        e.printStackTrace();
+                    }
+                    try {
+                        outStream.write(pdf);
+                    } catch (IOException e) {
+                        log.error("[DefaultExportBulletinService] " + e.getMessage() + " " +
+                                eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                        e.printStackTrace();
+                    }
+
+                    handleCreateFile(pdfFile, outStream, templateProps, prefixPdfName, dateDebut, eleve, finalHandler);
+                } else {
+                    buffer = Buffer.buffer(pdf);
+                    savePdfDefault(buffer, eleve, finalHandler);
+                }
+            }
+        };
+    }
+
+    private void handleCreateFile(File pdfFile, OutputStream outStream, JsonObject templateProps, String prefixPdfName, String dateDebut, JsonObject eleve, Handler<Either<String, Boolean>> finalHandler) {
+        Buffer buffer;
+        try {
+            String sourceDir = pdfFile.getAbsolutePath();
+            File sourceFile = new File(sourceDir);
+            while (!sourceFile.exists()) {
+                System.err.println(sourceFile.getName() + " File does not exist");
+            }
+            if (sourceFile.exists()) {
+                PDDocument document = PDDocument.load(sourceDir);
+                @SuppressWarnings("unchecked")
+                List<PDPage> list = document.getDocumentCatalog().getAllPages();
+                File imageFile = null;
+                for (PDPage page : list) {
+                    BufferedImage image = page.convertToImage();
+                    int height = 150 + Integer.parseInt(templateProps.getString("nbrCompetences")) * 50;
+                    BufferedImage SubImage = image.getSubimage(0, 0, 1684, height);
+                    imageFile = new File(prefixPdfName + "_" + dateDebut + ".jpg");
+                    ImageIO.write(SubImage, "jpg", imageFile);
+                }
+                document.close();
+                FileInputStream fis = new FileInputStream(imageFile);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                byte[] buf = new byte[(int) imageFile.length()];
+                for (int readNum; (readNum = fis.read(buf)) != -1; ) {
+                    bos.write(buf, 0, readNum);
+                }
+                byte[] bytes = bos.toByteArray();
+                buffer = Buffer.buffer(bytes);
+                savePdfDefault(buffer,eleve,finalHandler);
+                outStream.close();
+                bos.close();
+                fis.close();
+
+                Files.deleteIfExists(Paths.get(pdfFile.getAbsolutePath()));
+                Files.deleteIfExists(Paths.get(imageFile.getAbsolutePath()));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("[DefaultExportBulletinService] : " + e.getMessage() + " "
+                    + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+            finalHandler.handle(new Either.Left<>(e.getMessage()));}
+    }
+
+    private void generateImagesFromPath(JsonObject eleve, Vertx vertx) {
+        generatesImage(eleve, vertx, LOGO_PATH,"logoData");
+        eleve.put("hasImgLoaded",true);
+    }
+
+    private void generatesImage(JsonObject eleve, Vertx vertx, String path, String structureData) {
+        String structure = "public/" + eleve.getString(path);
+        log.info(structure);
+        try {
+
+            final String structurePath = FileResolver.absolutePath(structure);
+            Buffer structureBuffer = vertx.fileSystem().readFileBlocking(structurePath);
+            String encodedStructure = "";
+            try {
+                encodedStructure = new String(Base64.getMimeEncoder().encode(structureBuffer.getBytes()), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                log.error("[DefaultExportPDFService@generatePDF] An error occurred while encoding logo to base 64");
+            }
+            eleve.put(structureData, encodedStructure);
+        }catch (FileSystemException ee){
+            log.error("IMG FILE NOT FOUND");
+        }
+    }
+
+    private void savePdfDefault(Buffer buffer, JsonObject eleve, Handler<Either<String, Boolean>> finalHandler) {
+        savePdfInStorage(getFileNameForStudent(eleve), buffer,
+                eleve.getString("idEleve"),
+                eleve.getString("idClasse"),
+                eleve.getString("externalId"),
+                eleve.getString("idEtablissement"),
+                eleve.getLong("idPeriode"),
+                getIdParentForStudent(eleve),
+                new Handler<Either<String, JsonObject>>() {
+                    @Override
+                    public void handle(Either<String, JsonObject> event) {
+                        if (event.isLeft()) {
+                            log.error("[DefaultExportBulletinService] : Error on savePdfInStorage "
+                                    + event.left().getValue() + " "
+                                    + eleve.getString("idEleve") + " " + eleve.getString("lastName" ));
+                            finalHandler.handle(new Either.Left<>(event.left().getValue()));
+                        } else {
+                            finalHandler.handle(new Either.Right<>(true));
+                        }
+                    }
+                });
     }
 }
