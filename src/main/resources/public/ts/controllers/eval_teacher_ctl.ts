@@ -39,6 +39,7 @@ import {
 } from "../utils/preferences";
 import {ShortTermAnnotation} from "../constants/ShortTermAnnotation";
 import {isValidClasse} from "../utils/functions/isValidClasse";
+import {isValidDevoir} from "../utils/filters/isValidDevoir";
 import {AppreciationSubjectPeriodStudent} from "../models/teacher/AppreciationSubjectPeriodStudent";
 
 declare let $: any;
@@ -637,7 +638,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.competencesSearchKeyWord = "";
         $scope.devoirs = evaluations.devoirs;
         $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
-            return $scope.filterValidClasse(devoir);
+            return $scope.filterValidDevoir(devoir);
         });
         $scope.enseignements = evaluations.enseignements;
         $scope.bSelectAllEnseignements = false;
@@ -770,7 +771,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 devoir.duplicate($scope.selected.classes).then(() => {
                     $scope.devoirs.sync().then(() => {
                         $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
-                            return $scope.filterValidClasse(devoir);
+                            return $scope.filterValidDevoir(devoir);
                         });
                         $scope.resetSelected();
                         $scope.opened.lightboxs.duplication = false;
@@ -2109,7 +2110,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                     $scope.selected.devoirs.list = _.without($scope.selected.devoirs.list, d);
                                 }
                                 $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
-                                    return $scope.filterValidClasse(devoir);
+                                    return $scope.filterValidDevoir(devoir);
                                 });
                                 utils.safeApply($scope);
                             });
@@ -2318,7 +2319,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if ($location.path() === "/devoir/create") {
                         if (res !== undefined) {
                             $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
-                                return $scope.filterValidClasse(devoir);
+                                return $scope.filterValidDevoir(devoir);
                             });
                             savePreferences();
                             let _devoir = evaluations.structure.devoirs.findWhere({id: res.id});
@@ -3274,7 +3275,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.filterValidClasse = (item) => {
-            return isValidClasse(item.id_groupe || item.id, item.id_matiere, $scope.classes.all);
+            return isValidClasse(item.id, item.id_matiere, $scope.classes.all);
+        };
+
+        $scope.filterValidDvoir = (item) => {
+            return isValidDevoir(item.id_groupe, item.id_matiere, $scope.classes.all);
         };
 
         $scope.filterHeadTeacher = () => {
@@ -3727,7 +3732,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             });
             $scope.devoirs = evaluations.structure.devoirs;
             $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
-                return $scope.filterValidClasse(devoir);
+                return $scope.filterValidDevoir(devoir);
             });
             $scope.types = evaluations.structure.types;
             $scope.eleves = evaluations.structure.eleves;

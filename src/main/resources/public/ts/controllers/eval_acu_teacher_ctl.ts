@@ -96,7 +96,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
             $scope.initChartListNotDone = function () {
                 $scope.getDevoirsNotDone().then(async function(devoirs){
                     $scope.devoirsNotDone = _.filter(devoirs, (devoir) => {
-                        return $scope.filterValidClasse(devoir);
+                        return $scope.filterValidDevoir(devoir);
                     });
                     $scope.devoirsClasses = _.filter(evaluations.structure.classes.all, (classe) => {
                         return _.contains(_.uniq(_.pluck($scope.devoirsNotDone, 'id_groupe')), classe.id)
@@ -155,7 +155,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                 $scope.search = $scope.initSearch();
                 $scope.devoirs = evaluations.structure.devoirs;
                 $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
-                    return $scope.filterValidClasse(devoir);
+                    return $scope.filterValidDevoir(devoir);
                 });
                 $scope.usePerso = evaluations.structure.usePerso;
                 $scope.classes = evaluations.structure.classes;
