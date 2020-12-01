@@ -3261,7 +3261,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                  final String idParent, Handler<Either<String, JsonObject>> handler){
         this.storage.writeBuffer(file, "application/pdf", name, uploaded -> {
             String idFile = uploaded.getString("_id");
-            log.info("savePdfInStorage : " + idEleve + " " + externalIdClasse + " " + name + " " + idFile);
             if (!OK.equals(uploaded.getString(STATUS)) || idFile ==  null) {
                 String error = "save pdf  : " + uploaded.getString(MESSAGE);
                 if(error.contains(TIME)){

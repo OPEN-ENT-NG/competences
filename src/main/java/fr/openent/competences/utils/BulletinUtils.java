@@ -42,7 +42,6 @@ public class BulletinUtils {
                 handler.handle(new Either.Left<>(body.getString(MESSAGE)));
             }
             else{
-                log.info("saveIdBulletin : " + idEleve + " " + externalIdClasse + " " + name + " " + idFile);
                 handler.handle(new Either.Right<>(body));
             }
         });
@@ -129,20 +128,36 @@ public class BulletinUtils {
     }
 
     public static String getIdParentForStudent(JsonObject eleve) {
-        if(eleve.getBoolean("getResponsable") && eleve.getJsonArray("responsables").size() > 1) {
-            JsonArray responsables = eleve.getJsonArray("responsables");
-            boolean isDivorcedParents = !(responsables.getJsonObject(0).getString("address")
-                    .equals(responsables.getJsonObject(1).getString("address")));
-            if(isDivorcedParents){
-                for(Object responsable : responsables){
-                    JsonObject responsableJson = (JsonObject) responsable;
-                    if(responsableJson.getString("address").equals(eleve.getJsonArray("responsableLibelle").getString(1))
-                            && responsableJson.getString("lastNameRelative").equals(eleve.getString("responsableLastName"))){
-                        return responsableJson.getString("externalIdRelative");
-                    }
-                }
-            }
-        }
+       try {
+           if(eleve.getBoolean("getResponsable") && eleve.getJsonArray("responsables").size() > 1) {
+               JsonArray responsables = eleve.getJsonArray("responsables");
+               boolean isDivorcedParents;
+               String addressResp1,addressResp2;
+
+               addressResp1 =    (responsables.getJsonObject(0).getString("address") != null) ?
+                       responsables.getJsonObject(0).getString("address") : "";
+               addressResp2 =   ( responsables.getJsonObject(1).getString("address") != null ) ?
+                       responsables.getJsonObject(1).getString("address")  : "";
+
+               isDivorcedParents = !addressResp1.equals(addressResp2);
+               if(isDivorcedParents){
+                   String responsableLibelleEleve = (eleve.getJsonArray("responsableLibelle").getString(1) != null) ?
+                           eleve.getJsonArray("responsableLibelle").getString(1) : " ";
+                   for(Object responsable : responsables){
+                       JsonObject responsableJson = (JsonObject) responsable;
+                       String adressResponsableJson = responsableJson.getString("address") != null ?
+                               responsableJson.getString("address") : " ";
+
+                       if(adressResponsableJson.equals(responsableLibelleEleve)
+                               && responsableJson.getString("lastNameRelative").equals(eleve.getString("responsableLastName"))){
+                           return responsableJson.getString("externalIdRelative");
+                       }
+                   }
+               }
+           }
+       }catch(NullPointerException e ){
+           log.error("[Competences] NULLPTR AT BulletinUtils idEleve : " + eleve.getString("idEleve"));
+       }
 
         return null;
     }
