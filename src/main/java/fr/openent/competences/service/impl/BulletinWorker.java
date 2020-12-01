@@ -60,9 +60,9 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     }
 
     private void stackBulletin(JsonArray bulletins) {
-        if( bulletins != null ){
+        if( bulletinsEleves != null ){
             for(int i =0 ; i < bulletins.size(); i++){
-                bulletins.add(bulletins.getJsonObject(i));
+                bulletinsEleves.add(bulletins.getJsonObject(i));
             }
         }
     }

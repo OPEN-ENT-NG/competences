@@ -3491,21 +3491,20 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         eleve.put("hasImgLoaded",true);
     }
 
-    private void generatesImage(JsonObject eleve, Vertx vertx, String path, String structureData) {
-        String structure = "public/" + eleve.getString(path);
-        log.info(structure);
+    private void generatesImage(JsonObject eleve, Vertx vertx, String path, String imageData) {
+        String image = "public/" + eleve.getString(path);
         try {
 
-            final String structurePath = FileResolver.absolutePath(structure);
-            Buffer structureBuffer = vertx.fileSystem().readFileBlocking(structurePath);
-            String encodedStructure = "";
+            final String imagePath = FileResolver.absolutePath(image);
+            Buffer imageBuffer = vertx.fileSystem().readFileBlocking(imagePath);
+            String encodedImage = "";
             try {
-                encodedStructure = new String(Base64.getMimeEncoder().encode(structureBuffer.getBytes()), "UTF-8");
+                encodedImage = new String(Base64.getMimeEncoder().encode(imageBuffer.getBytes()), "UTF-8");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
                 log.error("[DefaultExportPDFService@generatePDF] An error occurred while encoding logo to base 64");
             }
-            eleve.put(structureData, encodedStructure);
+            eleve.put(imageData, encodedImage);
         }catch (FileSystemException ee){
             log.error("IMG FILE NOT FOUND");
         }
