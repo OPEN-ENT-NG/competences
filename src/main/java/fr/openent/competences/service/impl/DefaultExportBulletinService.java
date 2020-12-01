@@ -2414,7 +2414,32 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         String firstName = responsable.getString("firstNameRelative");
         String address = responsable.getString("address");
         String city = responsable.getString("city");
-        String zipCode = responsable.getString("zipCode");
+        try{
+            String zipCode = responsable.getString("zipCode");
+            if (zipCode == null) {
+                zipCode = " ";
+            }
+
+            if (city == null) {
+                city = zipCode;
+            }
+            else {
+                city = zipCode + " " + city;
+            }
+
+        } catch(ClassCastException e){
+            String zipCode = String.valueOf(responsable.getInteger("zipcode"));
+            if (zipCode == null) {
+                zipCode = " ";
+            }
+
+            if (city == null) {
+                city = zipCode;
+            }
+            else {
+                city = zipCode + " " + city;
+            }
+        }
 
         if (civilite == null) {
             civilite = "M.";
@@ -2426,18 +2451,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
             address = " ";
-        }
-
-
-        if (zipCode == null) {
-            zipCode = " ";
-        }
-
-        if (city == null) {
-            city = zipCode;
-        }
-        else {
-            city = zipCode + " " + city;
         }
 
         responsableLibelle.add(city);
