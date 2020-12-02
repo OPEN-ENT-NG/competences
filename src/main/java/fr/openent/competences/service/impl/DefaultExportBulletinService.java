@@ -2350,6 +2350,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                                 if (!addressResponsale.equals(addressResponsaleToCheck)) {
                                     isDifferentAddress = true;
+                                    responsable.put("externalIdRelative", responsables.getJsonObject(i).getString("externalIdRelative")  );
+                                    responsableToCheck.put("externalIdRelative", responsables.getJsonObject(i-1).getString("externalIdRelative"));
                                 } else { //if same adress
                                     //with same lastName
                                     JsonArray responsableNewLibelle = new fr.wseduc.webutils.collections.JsonArray();

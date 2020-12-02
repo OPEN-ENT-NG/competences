@@ -8,7 +8,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -128,37 +127,6 @@ public class BulletinUtils {
     }
 
     public static String getIdParentForStudent(JsonObject eleve) {
-       try {
-           if(eleve.getBoolean("getResponsable") && eleve.getJsonArray("responsables").size() > 1) {
-               JsonArray responsables = eleve.getJsonArray("responsables");
-               boolean isDivorcedParents;
-               String addressResp1,addressResp2;
-
-               addressResp1 =    (responsables.getJsonObject(0).getString("address") != null) ?
-                       responsables.getJsonObject(0).getString("address") : "";
-               addressResp2 =   ( responsables.getJsonObject(1).getString("address") != null ) ?
-                       responsables.getJsonObject(1).getString("address")  : "";
-
-               isDivorcedParents = !addressResp1.equals(addressResp2);
-               if(isDivorcedParents){
-                   String responsableLibelleEleve = (eleve.getJsonArray("responsableLibelle").getString(1) != null) ?
-                           eleve.getJsonArray("responsableLibelle").getString(1) : " ";
-                   for(Object responsable : responsables){
-                       JsonObject responsableJson = (JsonObject) responsable;
-                       String adressResponsableJson = responsableJson.getString("address") != null ?
-                               responsableJson.getString("address") : " ";
-
-                       if(adressResponsableJson.equals(responsableLibelleEleve)
-                               && responsableJson.getString("lastNameRelative").equals(eleve.getString("responsableLastName"))){
-                           return responsableJson.getString("externalIdRelative");
-                       }
-                   }
-               }
-           }
-       }catch(NullPointerException e ){
-           log.error("[Competences] NULLPTR AT BulletinUtils idEleve : " + eleve.getString("idEleve"));
-       }
-
-        return null;
+        return (eleve.containsKey("externalIdRelative")) ? eleve.getString("externalIdRelative") : null ;
     }
 }
