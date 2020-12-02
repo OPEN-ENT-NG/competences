@@ -84,6 +84,7 @@ export class Structure extends Model {
             },
             MATIERE: {
                 synchronizationCE: '/viescolaire/matieres?idEtablissement=' + this.id,
+                //check if this used
                 synchronization: '/viescolaire/matieres?idEnseignant=' + model.me.userId + '&idEtablissement=' + this.id
             },
             CLASSE: {
@@ -280,7 +281,7 @@ export class Structure extends Model {
             sync: function () {
                 return new Promise((resolve, reject) => {
 
-                    let uri = Utils.isChefEtab()? that.api.MATIERE.synchronizationCE : that.api.MATIERE.synchronization;
+                    let uri = that.api.MATIERE.synchronizationCE;
                     http().getJson(uri).done(function (res) {
                         this.load(res);
                         this.each(function (matiere) {
