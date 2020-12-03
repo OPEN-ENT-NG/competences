@@ -96,8 +96,8 @@ public class FilterPeriodeUtils {
         }
     }
 
-    private  void validateEndSaisieUtils(final HttpServerRequest request, final String idClasse,
-                                           final Integer idTypePeriode, final Handler<Boolean> handler)  {
+    private void validateEndSaisieUtils(final HttpServerRequest request, final String idClasse,
+                                        final Integer idTypePeriode, final Handler<Boolean> handler)  {
         JsonObject jsonRequest = new JsonObject()
                 .put("headers", new JsonObject()
                         .put("Accept-Language",
@@ -148,8 +148,8 @@ public class FilterPeriodeUtils {
             }
         }));
     }
-    public void validateStructure (final String idEtablissement, Long idPeriode, final Handler<Boolean> handler) {
 
+    public void validateStructure(final String idEtablissement, Long idPeriode, final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
                 .append("SELECT count(periode.*) " +
                         "FROM " + Competences.VSCO_SCHEMA + ".periode " +
@@ -161,7 +161,6 @@ public class FilterPeriodeUtils {
             params.add(idPeriode);
         }
 
-
         Sql.getInstance().prepared(query.toString(), params, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
@@ -169,7 +168,5 @@ public class FilterPeriodeUtils {
                 handler.handle(count != null && count > 0);
             }
         });
-
     }
-
 }

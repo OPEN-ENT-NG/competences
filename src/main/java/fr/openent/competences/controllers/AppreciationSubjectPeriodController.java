@@ -41,7 +41,7 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
         appreciationSubjectPeriodService = new DefaultAppreciationSubjectPeriod(
                 Competences.COMPETENCES_SCHEMA,
                 Competences.APPRECIATION_MATIERE_PERIODE_TABLE,
-                Competences.REL_APPRECIATION_USERS_NEO);
+                Competences.REL_APPRECIATION_USERS_NEO, eb);
     }
 
     @Post(URL)
@@ -67,7 +67,6 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
     public void deleteAppreciationSubjectPeriod(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, resource -> {
             AppreciationSubjectPeriodModel appreciationSubjectPeriod = new AppreciationSubjectPeriodModel(resource);
-
 
             RequestUtils.bodyToJson(request, result -> {
                 checkAllAccessAndStartCRUD(request, resource, authorized -> {
@@ -96,12 +95,14 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
                 JsonArray valuesPrepared = initAppreciationSubjectPeriod(appreciationSubjectPeriod);
 
                 RequestUtils.bodyToJson(request, result -> {
+                    final String idStructure = resource.getString("idEtablissement");
                     checkAllAccessAndStartCRUD(request, resource, authorized -> {
                         if (authorized.isRight()) {
                             appreciationSubjectPeriodService.updateOrInsertAppreciationSubjectPeriod(
                                     valuesPrepared,
                                     user,
                                     appreciationSubjectPeriod.getAppreciation(),
+                                    idStructure,
                                     defaultResponseHandler(request));
                         } else {
                             unauthorized(request, authorized.left().getValue());
@@ -144,20 +145,17 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
                 });
     }
 
-
     private void checkDateOfEndInput(HttpServerRequest request, UserInfos user, JsonObject resource, Handler<Either<String, JsonArray>> handler) {
         //verif date fin de saisie
         final String idClassSchool = resource.getString("idClasse");
         final Long idPeriod = resource.getLong("idPeriode");
-        new FilterPeriodeUtils(eb, user).validateEndSaisie(request, idClassSchool, idPeriod.intValue(),
-                isUpdatable -> {
-                    if (!isUpdatable) {
-                        log.error("Not access to API because of end of saisie");
-                        handler.handle(new Either.Left<>("Not access to API because of end of saisie"));
-                    } else {
-                        handler.handle(new Either.Right<>(new JsonArray().add("ok ok it is me ")));
-                    }
-                });
+        new FilterPeriodeUtils(eb, user).validateEndSaisie(request, idClassSchool, idPeriod.intValue(), isUpdatable -> {
+            if (!isUpdatable) {
+                log.error("Not access to API because of end of saisie");
+                handler.handle(new Either.Left<>("Not access to API because of end of saisie"));
+            } else {
+                handler.handle(new Either.Right<>(new JsonArray().add("ok ok it is me ")));
+            }
+        });
     }
-
 }

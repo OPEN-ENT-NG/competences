@@ -17,5 +17,6 @@ public interface AppreciationSubjectPeriodService extends CrudService {
     void updateOrInsertAppreciationSubjectPeriod(JsonArray valuesGetIdAppreciationSubjectPeriod,
                                                  UserInfos userInfos,
                                                  String appreciation,
+                                                 String idStructure,
                                                  Handler<Either<String, JsonObject>> handler);
 }

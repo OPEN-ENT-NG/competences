@@ -200,12 +200,10 @@ public class FilterUserUtils {
         //dans le bilanPériodique le PP peut mettre une appréciation ou un positionnement sur une matière qui n'est pas la sienne
         if(isBilanPeriodique){
            handler.handle(true);
-        }else {
+        } else {
             UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-
                 @Override
                 public void handle(UserInfos user) {
-
                     JsonObject action = new JsonObject()
                             .put("action", "matiere.getMatieresForUser")
                             .put("userType", user.getType())
@@ -219,7 +217,6 @@ public class FilterUserUtils {
                         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                             @Override
                             public void handle(Message<JsonObject> message) {
-
                                 JsonObject body = message.body();
                                 JsonArray listIdsMatieres = body.getJsonArray("results");
                                 JsonArray listReswithIdMatieres;

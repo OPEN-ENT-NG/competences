@@ -1,15 +1,25 @@
 package fr.openent.competences.service.impl;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import fr.openent.competences.Competences;
+import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.service.AppreciationSubjectPeriodService;
+import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.user.UserInfos;
 
 import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 /**
@@ -18,17 +28,22 @@ import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 public class DefaultAppreciationSubjectPeriod extends SqlCrudService implements AppreciationSubjectPeriodService {
     final String tableRelation;
     final String PERSONNEL = "Personnel";
-    final String ADMIN_LOCAL = "ADMIN_LOCAL";
-    public DefaultAppreciationSubjectPeriod(String schema, String table, String tableRelation) {
+
+    protected static final Logger log = LoggerFactory.getLogger(DefaultAppreciationSubjectPeriod.class);
+    private UtilsService utilsService;
+
+
+    public DefaultAppreciationSubjectPeriod(String schema, String table, String tableRelation, EventBus eb) {
         super(schema, table);
         this.tableRelation = tableRelation;
+        utilsService = new DefaultUtilsService(eb);
     }
 
     public void updateOrInsertAppreciationSubjectPeriod(JsonArray valuesGetIdAppreciationSubjectPeriod,
                                                         UserInfos userInfos,
                                                         String appreciation,
+                                                        String idStructure,
                                                         Handler<Either<String, JsonObject>> handler) {
-
         String queryGetIdAppreciationSubjectPeriod = "" +
                 "SELECT id FROM " + this.resourceTable + " " +
                 "WHERE id_periode = ? " +
@@ -37,7 +52,7 @@ public class DefaultAppreciationSubjectPeriod extends SqlCrudService implements 
                 "AND id_matiere = ? ;";
         Sql.getInstance().prepared(queryGetIdAppreciationSubjectPeriod,
                 valuesGetIdAppreciationSubjectPeriod,
-                validUniqueResultHandler(useIdForChooseMethod(valuesGetIdAppreciationSubjectPeriod, userInfos, appreciation, handler)));
+                validUniqueResultHandler(useIdForChooseMethod(valuesGetIdAppreciationSubjectPeriod, userInfos, appreciation, idStructure, handler)));
     }
 
     /**
@@ -50,34 +65,69 @@ public class DefaultAppreciationSubjectPeriod extends SqlCrudService implements 
     private Handler<Either<String, JsonObject>> useIdForChooseMethod(JsonArray valuesGetIdAppreciationSubjectPeriod,
                                                                      UserInfos userInfos,
                                                                      String appreciation,
+                                                                     String idStructure,
                                                                      Handler<Either<String, JsonObject>> handler) {
         return responseId -> {
             if (responseId.isLeft()) {
                 handler.handle(new Either.Left<>("Error in getResponseId: " + responseId.left().getValue()));
             } else {
-                Boolean isVisible = isVisibleForAppreciations(userInfos);
-                JsonArray values = new JsonArray()
-                        .add(appreciation)
-                        .addAll(valuesGetIdAppreciationSubjectPeriod);
+                isVisibleForAppreciations(userInfos, valuesGetIdAppreciationSubjectPeriod.getString(2),
+                        valuesGetIdAppreciationSubjectPeriod.getString(3), idStructure, isVisible -> {
+                    JsonArray values = new JsonArray()
+                            .add(appreciation)
+                            .addAll(valuesGetIdAppreciationSubjectPeriod);
 
-                if(isVisible) values.add(userInfos.getUserId());
+                    if(isVisible) values.add(userInfos.getUserId());
 
-                if (isNull(responseId.right().getValue().getInteger("id"))) {
-                    insertAppreciationSubjectPeriod(values, isVisible, handler);
-                } else {
-                    updateAppreciationSubjectPeriod(values, isVisible, handler);
-                }
+                    if (isNull(responseId.right().getValue().getInteger("id"))) {
+                        insertAppreciationSubjectPeriod(values, isVisible, handler);
+                    } else {
+                        updateAppreciationSubjectPeriod(values, isVisible, handler);
+                    }
+                });
+
             }
         };
     }
-
 
     /**
      * @param userInfos use for get right
      * @return boolean use for the visibility on appreciation view
      */
-    private boolean isVisibleForAppreciations(UserInfos userInfos) {
-        return !(userInfos.getType().contains(PERSONNEL));
+    private void isVisibleForAppreciations(UserInfos userInfos, String idClasse, String idMatiere, String idEtablissement, Handler<Boolean> handler) {
+        FilterUserUtils.validateHeadTeacherWithClasses(userInfos, new JsonArray().add(idClasse), response -> {
+            if(response.isRight()){
+                Boolean isHeadTeacher = response.right().getValue();
+                if(isHeadTeacher) {
+                    utilsService.getServices(idEtablissement, new JsonArray().add(idClasse), event -> {
+                        if(event.isRight()){
+                            Boolean isHisSubject = false;
+                            JsonArray services = event.right().getValue();
+                            JsonObject service = null;
+                            for(Object s : services) {
+                                JsonObject serviceJson = (JsonObject) s;
+                                if(serviceJson.getString("id_matiere").equals(idMatiere)){
+                                    service = serviceJson;
+                                    break;
+                                }
+                            }
+                            if(service != null) {
+                                isHisSubject = (service.getString("id_enseignant").equals(userInfos.getUserId()));
+                            }
+                            handler.handle(isHisSubject && !(userInfos.getType().contains(PERSONNEL)));
+                        }
+                        else{
+                            handler.handle(false);
+                            log.error("Error : isVisibleForAppreciations");
+                        }
+                    });
+                }
+                handler.handle(!isHeadTeacher && !(userInfos.getType().contains(PERSONNEL)));
+            } else {
+                handler.handle(false);
+                log.error("Error : isVisibleForAppreciations");
+            }
+        });
     }
 
     /**
@@ -111,7 +161,6 @@ public class DefaultAppreciationSubjectPeriod extends SqlCrudService implements 
      * @param handler
      */
     private void updateAppreciationSubjectPeriod(JsonArray values, Boolean isVisible, Handler<Either<String, JsonObject>> handler) {
-
         String addRelationHeaderQuery = "WITH update_appreciation_matiere_periode AS ( ";
         String queryForUpdate = "" +
                 "UPDATE " + this.resourceTable + " AS amp " +
