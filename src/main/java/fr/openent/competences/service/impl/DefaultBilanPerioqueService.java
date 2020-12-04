@@ -120,17 +120,17 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 Future<JsonArray> absencesRegularizedFuture = Future.future();
                 sendEventBusGetEvent(EventType.ABSENCE.getType(), Collections.singletonList(idEleve), structureId,
                         beginningDateYear, endDateYear, "HALF_DAY", true, false,
-                        null, event -> formate(absencesRegularizedFuture, event));
+                        null, true, event -> formate(absencesRegularizedFuture, event));
 
                 Future<JsonArray> absencesUnregularizedFuture = Future.future();
                 sendEventBusGetEvent(EventType.ABSENCE.getType(), Collections.singletonList(idEleve), structureId,
                         beginningDateYear, endDateYear, "HALF_DAY", false, true,
-                        reasonIds, event -> formate(absencesUnregularizedFuture, event));
+                        reasonIds, true, event -> formate(absencesUnregularizedFuture, event));
 
                 Future<JsonArray> retardsFuture = Future.future();
                 sendEventBusGetEvent(EventType.LATENESS.getType(), Collections.singletonList(idEleve), structureId,
                         beginningDateYear, endDateYear, "HOUR", null, true,
-                        null, event -> formate(retardsFuture, event));
+                        null, null, event -> formate(retardsFuture, event));
 
                 CompositeFuture.all(absencesRegularizedFuture, absencesUnregularizedFuture, retardsFuture).setHandler(event -> {
                     if (event.failed()) {
@@ -220,7 +220,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     private void sendEventBusGetEvent(Integer eventType, List<String> students, String structure,
                                       String startDate, String endDate, String recoveryMethod, Boolean regularized,
-                                      Boolean noReasons, List<Integer> reasonsId,
+                                      Boolean noReasons, List<Integer> reasonsId, Boolean compliance,
                                       Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("eventType", eventType)
@@ -236,8 +236,12 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             action.put("regularized", regularized);
         }
 
-        if(reasonsId != null) {
+        if(reasonsId != null){
             action.put("reasonsId", reasonsId);
+        }
+
+        if(compliance != null){
+            action.put("compliance", compliance);
         }
 
         eb.send("fr.openent.presences", action, MessageResponseHandler.messageJsonArrayHandler(handler));
