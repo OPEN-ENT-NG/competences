@@ -112,7 +112,6 @@ public class DevoirController extends ControllerHelper {
                                 && !_RELATIVE.equals(user.getType()) && !forStudentReleve) {
                             devoirsService.listDevoirs(user,idEtablissement, handler);
                         } else {
-
                             boolean historise = false;
                             if (request.params().get("historise") != null) {
                                 historise = Boolean.parseBoolean(request.params().get("historise"));
@@ -122,7 +121,7 @@ public class DevoirController extends ControllerHelper {
                                 idPeriode = testLongFormatParameter("idPeriode", request);
                             }
 
-                            if( _STUDENT.equals(user.getType()) || _RELATIVE.equals(user.getType()) || forStudentReleve){
+                            if(_STUDENT.equals(user.getType()) || _RELATIVE.equals(user.getType()) || forStudentReleve){
                                 String idEleve = request.params().get("idEleve");
                                 devoirsService.listDevoirs(idEleve, idEtablissement, idClasse, null,
                                         idPeriode, historise, handler);

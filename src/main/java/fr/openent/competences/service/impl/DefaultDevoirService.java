@@ -684,18 +684,22 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT devoirs.*, type.nom as _type_libelle, rel_type_periode.type as _periode_type, rel_type_periode.ordre as _periode_ordre, users.username as teacher ");
+
         if (idEleve != null) {
             query.append(", notes.valeur as note, COUNT(competences_devoirs.id) as nbcompetences, sum.sum_notes, sum.nbr_eleves ");
         }
+
         query.append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ")
                 .append("LEFT JOIN ").append(Competences.VSCO_SCHEMA).append(".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type on devoirs.id_type = type.id ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users on users.id = devoirs.owner ");
+
         if(idClasse != null) {
             query.append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON " +
                     "rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ? ");
             values.add(idClasse);
         }
+
         if (idEleve != null) {
             query.append(" LEFT JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences_devoirs ")
                     .append(" ON devoirs.id = competences_devoirs.id_devoir ")
@@ -710,31 +714,37 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             }
             query.append("GROUP BY devoirs.id) sum ON sum.id = devoirs.id ");
         }
+
         query.append("WHERE devoirs.id_etablissement = ? ");
         values.add(idEtablissement);
-        if( idMatiere != null ) {
+
+        if(idMatiere != null) {
             query.append("AND devoirs.id_matiere = ? ");
             values.add(idMatiere);
         }
-        if (idEleve !=  null){
+
+        if(idEleve != null){
             query.append(" AND notes.id_eleve = ? AND date_publication <= Now() ");
             values.add(idEleve);
         }
-        if (idPeriode != null) {
+
+        if(idPeriode != null) {
             query.append("AND devoirs.id_periode = ? ");
             values.add(idPeriode);
         }
-        if (historise) {
-            query.append(" AND ")
-                    .append("devoirs.eval_lib_historise = ? ");
+
+        if(historise) {
+            query.append(" AND devoirs.eval_lib_historise = ? ");
             values.add(historise);
         }
+
         if (idEleve != null) {
             query.append(" GROUP BY devoirs.id,rel_type_periode.type , rel_type_periode.ordre, type.nom, notes.valeur, sum_notes, nbr_eleves, users.username ")
                     .append(" ORDER BY devoirs.date ASC, devoirs.id ASC ");
         } else {
             query.append("ORDER BY devoirs.date ASC, devoirs.id ASC ");
         }
+
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
