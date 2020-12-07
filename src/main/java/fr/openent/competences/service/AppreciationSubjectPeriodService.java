@@ -1,5 +1,6 @@
 package fr.openent.competences.service;
 
+import fr.openent.competences.model.AppreciationSubjectPeriodModel;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
@@ -9,14 +10,10 @@ import org.entcore.common.user.UserInfos;
 
 public interface AppreciationSubjectPeriodService extends CrudService {
     /**
-     * @param valuesGetIdAppreciationSubjectPeriod [idPeriod, idStudent, idClassSchool, idSubject ]
      * @param userInfos
-     * @param appreciation
      * @param handler
      */
-    void updateOrInsertAppreciationSubjectPeriod(JsonArray valuesGetIdAppreciationSubjectPeriod,
-                                                 UserInfos userInfos,
-                                                 String appreciation,
-                                                 String idStructure,
+    void updateOrInsertAppreciationSubjectPeriod(AppreciationSubjectPeriodModel appreciationSubjectPeriod,
+                                                 UserInfos userInfos, String idStructure,
                                                  Handler<Either<String, JsonObject>> handler);
 }

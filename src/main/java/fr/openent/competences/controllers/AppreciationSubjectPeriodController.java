@@ -38,10 +38,8 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
     public AppreciationSubjectPeriodController(EventBus eb) {
         this.eb = eb;
         notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
-        appreciationSubjectPeriodService = new DefaultAppreciationSubjectPeriod(
-                Competences.COMPETENCES_SCHEMA,
-                Competences.APPRECIATION_MATIERE_PERIODE_TABLE,
-                Competences.REL_APPRECIATION_USERS_NEO, eb);
+        appreciationSubjectPeriodService = new DefaultAppreciationSubjectPeriod( Competences.COMPETENCES_SCHEMA,
+                Competences.APPRECIATION_MATIERE_PERIODE_TABLE, Competences.REL_APPRECIATION_USERS_NEO, eb);
     }
 
     @Post(URL)
@@ -71,13 +69,10 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
             RequestUtils.bodyToJson(request, result -> {
                 checkAllAccessAndStartCRUD(request, resource, authorized -> {
                     if (authorized.isRight()) {
-                        notesService.deleteColonneReleve(
-                                appreciationSubjectPeriod.getIdStudent(),
-                                appreciationSubjectPeriod.getIdPeriod(),
-                                appreciationSubjectPeriod.getIdSubject(),
+                        notesService.deleteColonneReleve(appreciationSubjectPeriod.getIdStudent(),
+                                appreciationSubjectPeriod.getIdPeriod(), appreciationSubjectPeriod.getIdSubject(),
                                 appreciationSubjectPeriod.getIdClassSchool(),
-                                Competences.APPRECIATION_MATIERE_PERIODE_TABLE,
-                                arrayResponseHandler(request));
+                                Competences.APPRECIATION_MATIERE_PERIODE_TABLE, arrayResponseHandler(request));
                     } else {
                         unauthorized(request, authorized.left().getValue());
                     }
@@ -92,18 +87,12 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
             RequestUtils.bodyToJson(request, resource -> {
                 AppreciationSubjectPeriodModel appreciationSubjectPeriod = new AppreciationSubjectPeriodModel(resource);
 
-                JsonArray valuesPrepared = initAppreciationSubjectPeriod(appreciationSubjectPeriod);
-
                 RequestUtils.bodyToJson(request, result -> {
                     final String idStructure = resource.getString("idEtablissement");
                     checkAllAccessAndStartCRUD(request, resource, authorized -> {
                         if (authorized.isRight()) {
-                            appreciationSubjectPeriodService.updateOrInsertAppreciationSubjectPeriod(
-                                    valuesPrepared,
-                                    user,
-                                    appreciationSubjectPeriod.getAppreciation(),
-                                    idStructure,
-                                    defaultResponseHandler(request));
+                            appreciationSubjectPeriodService.updateOrInsertAppreciationSubjectPeriod(appreciationSubjectPeriod,
+                                    user, idStructure, defaultResponseHandler(request));
                         } else {
                             unauthorized(request, authorized.left().getValue());
                         }
@@ -111,14 +100,6 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
                 });
             });
         });
-    }
-
-    private JsonArray initAppreciationSubjectPeriod(AppreciationSubjectPeriodModel appreciationSubjectPeriod) {
-        return new JsonArray()
-                .add(appreciationSubjectPeriod.getIdPeriod())
-                .add(appreciationSubjectPeriod.getIdStudent())
-                .add(appreciationSubjectPeriod.getIdClassSchool())
-                .add(appreciationSubjectPeriod.getIdSubject());
     }
 
     private void checkAllAccessAndStartCRUD(HttpServerRequest request, JsonObject resource, Handler<Either<String, JsonArray>> handler) {
