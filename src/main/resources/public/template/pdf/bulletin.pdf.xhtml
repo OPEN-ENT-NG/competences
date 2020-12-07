@@ -282,12 +282,10 @@
             background-color: #E2F0FA;
             padding-bottom: 1px;
             padding-top: 1px;
-            max-height: 43px!important;
             overflow: hidden;
         }
         .secondProjet {
             text-align:left;
-            max-height: 42px!important;
             overflow: hidden;
             padding-bottom: 1px;
             padding-top: 1px;
@@ -784,16 +782,16 @@
                     <span style="font-size: small; font-weight: bold">{{libelle}}</span><br/>
                     {{/hasLibelle}}
                     {{/theme}}
-                    {{#intervenantsMatieres}}
 
+                    {{#intervenantsMatieres}}
                     <span style="color: black; font-size: xx-small !important;">{{#intervenant}}
-                      * {{displayName}}-
-                    {{/intervenant}}
-                </span>
+                      * {{displayName}} - {{/intervenant}}
+                    </span>
                     <span style="color: black; font-size: x-small !important;">{{#matiere}}
-                    {{name}}
-                    {{/matiere}}
-                </span><br/>
+                        {{name}}
+                        {{/matiere}}
+                    </span>
+                    <br/>
                     {{/intervenantsMatieres}}
                 </td>
                 <td class="secondProjet" style="{{{commentaireStyle}}}">{{commentaire}}</td>

@@ -453,13 +453,11 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                             JsonObject parsedElem = new JsonObject();
 
                             parsedElem.put("id", element.getInteger("id"));
-                            parsedElem.put("type",element.getInteger("type_elt_bilan_periodique"));
+                            parsedElem.put("type", element.getInteger("type_elt_bilan_periodique"));
 
-                            if(element
-                                    .getString("intitule")
-                                    != null){
-                                parsedElem.put("libelle",element.getString("intitule"));
-                                parsedElem.put("description",element.getString("description"));
+                            if(element.getString("intitule") != null){
+                                parsedElem.put("libelle", element.getString("intitule"));
+                                parsedElem.put("description", element.getString("description"));
                             }
 
                             if(element.getInteger("id_thematique") != null){
@@ -483,21 +481,18 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                             parsedElem.put("groupes", groupes);
 
                             if(element.getJsonArray("intervenants_matieres") != null){
-
                                 JsonArray intMat = element.getJsonArray("intervenants_matieres");
-                                JsonArray intervenantsMatieres =
-                                        new fr.wseduc.webutils.collections.JsonArray();
+                                JsonArray intervenantsMatieres = new fr.wseduc.webutils.collections.JsonArray();
 
                                 for(int i = 0; i < intMat.size(); i++){
-                                    String[] intMatArray = intMat.getJsonArray(i)
-                                            .getString(1).split(",");
+                                    String[] intMatArray = intMat.getJsonArray(i).getString(1).split(",");
                                     JsonObject intervenantMatiere = new JsonObject();
 
                                     JsonObject intervenant = new JsonObject();
                                     intervenant.put("id", intMatArray[0]);
                                     intervenant.put("displayName", usersMap.get(intMatArray[0]));
                                     intervenantMatiere.put("intervenant", intervenant);
-                                    if(intMatArray.length > 1 ){
+                                    if(intMatArray.length > 1){
                                         JsonObject matiere = new JsonObject();
                                         matiere.put("id", intMatArray[1]);
                                         matiere.put("name", matieresMap.get(intMatArray[1]));
