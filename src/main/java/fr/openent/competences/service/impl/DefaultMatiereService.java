@@ -53,7 +53,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     @Override
     public void getLibellesCourtsMatieres(Boolean wantMapCodeLibelle, Handler<Either<String, Map<String, String>>> handler) {
 
-        String query = "SELECT bcn, code, libelle_court FROM " + this.resourceTable;
+        String query = "SELECT bcn, code, libelle_court FROM " + this.resourceTable + " ;";
         Map<String, String> responseMap = new HashMap<>();
 
         Sql.getInstance().prepared(query, new JsonArray(), Competences.DELIVERY_OPTIONS,
@@ -373,11 +373,13 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     public void getMatieresEtab(String idEtablissement, Handler<Either<String, JsonArray>> handler) {
         // Récupération des matières de l'établmissement
         Future<JsonArray> subjectF = Future.future();
+        //vu qu on use pas le user peut être appeller un autre fonction de viesco?
         JsonObject action = new JsonObject().put("action", "matiere.getMatieresForUser").put("userType", "Personnel")
                 .put("idUser", "null").put("idStructure", idEtablissement).put("onlyId", false);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
+                log.info(body.getJsonArray(RESULTS).size());
                 handler.handle(new Either.Right<>(body.getJsonArray(RESULTS)));
             } else {
                 handler.handle(new Either.Left<>(body.getString(MESSAGE)));

@@ -1288,6 +1288,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, String id_classe, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
+        //PK autant de union
         String headQuery = " SELECT DISTINCT devoirs.id_matiere, devoirs.owner, services.is_visible, services.coefficient, devoirs.id_periode " +
                 " FROM "+ Competences.COMPETENCES_SCHEMA + ".devoirs " +
                 " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes " +

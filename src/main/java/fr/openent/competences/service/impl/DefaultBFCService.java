@@ -59,7 +59,6 @@ import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getScheme;
 import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
 /**
  * Created by vogelmt on 29/03/2017.
@@ -799,7 +798,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         //On récupère les élèves qui sont dispensés pour un domaine racine
         Future<Map<String, Map<Long, Boolean>>> dispDomaineFuture = Future.future();
-        dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(idsEleves, event ->formate(dispDomaineFuture, event));
+        dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(idsEleves, event -> formate(dispDomaineFuture, event));
 
         //On récupère pour tous les élèves de la classe leurs résultats pour chaque domainesRacines évalué
         Future<JsonObject> bfcFuture = Future.future();

@@ -89,7 +89,7 @@ public class FolderExporter {
                 context.docByFolders.get(fullFolderPath).add(row);
             }
         }
-        log.info(context.folders.size());
+        log.info("folders Size : " + context.folders.size());
     }
 
     private Future<Void> mkdirs(FolderExporterContext context) {

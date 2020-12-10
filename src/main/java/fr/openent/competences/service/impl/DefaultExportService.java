@@ -72,6 +72,7 @@ public class DefaultExportService implements ExportService {
     public final static String  COEFFICIENT = "coefficient";
     private final static String DEVOIRS = "devoirs";
     private final static String PRINT_SOUS_MATIERE = "printSousMatiere";
+    private final DefaultMatiereService defaultMatiereService;
     /**
      * Déclaration des services
      */
@@ -98,6 +99,7 @@ public class DefaultExportService implements ExportService {
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
         annotationsService = new DefaultAnnotationService(Competences.COMPETENCES_SCHEMA, Competences.REL_ANNOTATIONS_DEVOIRS_TABLE);
+        defaultMatiereService = new DefaultMatiereService(eb);
         this.storage = storage;
     }
 
@@ -1464,7 +1466,7 @@ public class DefaultExportService implements ExportService {
 
         // Récupération des matières de l'établissement
         Future<JsonArray> subjectF = Future.future();
-        new DefaultMatiereService(eb).getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
+        defaultMatiereService.getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
         futures.add(subjectF);
 
         CompositeFuture.all(futures).setHandler(event -> {
@@ -1495,6 +1497,7 @@ public class DefaultExportService implements ExportService {
                     });
 
             Future<JsonArray> servicesFuture = Future.future();
+            log.info("getDataForExportReleveEleve");
             utilsService.getServices(idEtablissement,
                     new JsonArray().add(userJSON.getJsonObject("c").getJsonObject("data").getString("id")),
                     servicesEvent -> {

@@ -321,7 +321,6 @@ public class Utils {
     // au nom de l'export.
     public static void getClassesEleves(EventBus eb, String[] idsClasse, Long idPeriode,
                                         final Handler<Either<String, Map<String, JsonArray>>> handler) {
-        log.info("");
         JsonObject action = new JsonObject()
                 .put(ACTION, "classe.getElevesClasses")
                 .put(ID_PERIODE_KEY, idPeriode)
@@ -700,44 +699,47 @@ public class Utils {
                             }
                         }
                         if(!idsTeacherNotInNeo.isEmpty()) {
-
-                            JsonObject action2 = new JsonObject()
-                                    .put(ACTION,"user.getDeletedTeachers")
-                                    .put("idsTeacher", idsTeacherNotInNeo);
-                            eb.send(VIESCO_BUS_ADDRESS, action2, DELIVERY_OPTIONS,
-                                    handlerToAsyncHandler(event -> {
-                                        JsonObject bodyDeletedUsers = event.body();
-                                        if(OK.equals(bodyDeletedUsers.getString(STATUS)) &&
-                                                bodyDeletedUsers.getJsonArray(RESULTS) != null &&
-                                                !bodyDeletedUsers.isEmpty()){
-                                            JsonArray deletedUsers = bodyDeletedUsers.getJsonArray(RESULTS);
-
-                                            deletedUsers.stream().forEach(   deletedUser -> {
-                                                JsonObject o_deletedUser = (JsonObject) deletedUser;
-                                                if (!idsUserNamePrenom.containsKey( o_deletedUser.getString("id_user"))) {
-                                                    idsUserNamePrenom.put(o_deletedUser.getString("id_user"), new JsonObject()
-                                                            .put("firstName", o_deletedUser.getString("first_name"))
-                                                            .put("name", o_deletedUser.getString("last_name"))
-                                                            .put("id", o_deletedUser.getString("id_user"))
-                                                            .put("birthDate",o_deletedUser.getString("birth_date")));
-                                                }
-                                            });
-                                            handler.handle(new Either.Right<>(idsUserNamePrenom));
-
-                                        }else if(idsUserNamePrenom.isEmpty()){
-                                            handler.handle(new Either.Left<>("no User "));
-                                            log.error("getUsers : no User");
-                                        }else{
-                                            handler.handle(new Either.Right<>(idsUserNamePrenom));
-                                        }
-
-                                    }));
+                            getDeletedTeacherInfos(eb, handler, idsTeacherNotInNeo, idsUserNamePrenom);
                         } else {
                             handler.handle(new Either.Right<>(idsUserNamePrenom));
                         }
                     } else {
                         handler.handle(new Either.Left<>(body.getString("message")));
                         log.error("getUsers : " + body.getString("message"));
+                    }
+
+                }));
+    }
+
+    private static void getDeletedTeacherInfos(EventBus eb, Handler<Either<String, Map<String, JsonObject>>> handler, List<String> idsTeacherNotInNeo, Map<String, JsonObject> idsUserNamePrenom) {
+        JsonObject action2 = new JsonObject()
+                .put(ACTION,"user.getDeletedTeachers")
+                .put("idsTeacher", idsTeacherNotInNeo);
+        eb.send(VIESCO_BUS_ADDRESS, action2, DELIVERY_OPTIONS,
+                handlerToAsyncHandler(event -> {
+                    JsonObject bodyDeletedUsers = event.body();
+                    if(OK.equals(bodyDeletedUsers.getString(STATUS)) &&
+                            bodyDeletedUsers.getJsonArray(RESULTS) != null &&
+                            !bodyDeletedUsers.isEmpty()){
+                        JsonArray deletedUsers = bodyDeletedUsers.getJsonArray(RESULTS);
+
+                        deletedUsers.stream().forEach(   deletedUser -> {
+                            JsonObject o_deletedUser = (JsonObject) deletedUser;
+                            if (!idsUserNamePrenom.containsKey( o_deletedUser.getString("id_user"))) {
+                                idsUserNamePrenom.put(o_deletedUser.getString("id_user"), new JsonObject()
+                                        .put("firstName", o_deletedUser.getString("first_name"))
+                                        .put("name", o_deletedUser.getString("last_name"))
+                                        .put("id", o_deletedUser.getString("id_user"))
+                                        .put("birthDate",o_deletedUser.getString("birth_date")));
+                            }
+                        });
+                        handler.handle(new Either.Right<>(idsUserNamePrenom));
+
+                    }else if(idsUserNamePrenom.isEmpty()){
+                        handler.handle(new Either.Left<>("no User "));
+                        log.error("getUsers : no User");
+                    }else{
+                        handler.handle(new Either.Right<>(idsUserNamePrenom));
                     }
 
                 }));

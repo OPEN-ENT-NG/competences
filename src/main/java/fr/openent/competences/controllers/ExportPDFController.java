@@ -71,27 +71,22 @@ import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIE
  * Created by ledunoiss on 05/08/2016.
  */
 public class ExportPDFController extends ControllerHelper {
-    private String assetsPath = "../..";
-    private Map<String, String> skins = new HashMap<String, String>();
+    private final String assetsPath = "../..";
+    private final Map<String, String> skins = new HashMap<String, String>();
     protected static final Logger log = LoggerFactory.getLogger(ExportPDFController.class);
 
     /**
+     *
      * Déclaration des services
      */
-    private DevoirService devoirService;
-    private UtilsService utilsService;
-    private BFCService bfcService;
-    private DomainesService domaineService;
-    private CompetenceNoteService competenceNoteService;
-    private NoteService noteService;
-    private CompetencesService competencesService;
-    private NiveauDeMaitriseService niveauDeMaitriseService;
-    private ExportService exportService;
-    private BfcSyntheseService bfcSynthseService;
-    private EleveEnseignementComplementService eleveEnseignementComplementService;
-    private DispenseDomaineEleveService dispenseDomaineEleveService;
-    private AppreciationService appreciationService;
-    private ExportBulletinService exportBulletinService;
+    private final DevoirService devoirService;
+    private final UtilsService utilsService;
+    private final BFCService bfcService;
+    private final DomainesService domaineService;
+    private final NoteService noteService;
+    private final ExportService exportService;
+    private final AppreciationService appreciationService;
+    private final ExportBulletinService exportBulletinService;
     private final Storage storage;
 
     public ExportPDFController(EventBus eb, EmailSender notification, Storage storage) {
@@ -99,15 +94,9 @@ public class ExportPDFController extends ControllerHelper {
         utilsService = new DefaultUtilsService(eb);
         bfcService = new DefaultBFCService(eb, storage);
         domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
-        competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
-        competencesService = new DefaultCompetencesService(eb);
-        niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         exportService = new DefaultExportService(eb, storage);
         exportBulletinService = new DefaultExportBulletinService(eb, storage);
-        bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
-        eleveEnseignementComplementService = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
-        dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
         appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE);
         this.storage = storage;
     }
@@ -226,6 +215,8 @@ public class ExportPDFController extends ControllerHelper {
             log.error("getBFCEleve : call with more than 1 parameter type (among idEleve, idClasse and idStructure).");
         }
     }
+
+
 
 
 
@@ -531,6 +522,7 @@ public class ExportPDFController extends ControllerHelper {
         });
 
         Future<JsonArray> servicesFuture = Future.future();
+        log.info("exportpdf controller");
         utilsService.getServices(idEtablissement, new JsonArray().add(idClasse), event -> {
             formate(servicesFuture, event);
         });
@@ -1309,26 +1301,6 @@ public class ExportPDFController extends ControllerHelper {
         }
     }
 
-    @Post("/export/bulletins")
-    @SecuredAction(value = "export.bulletins.periodique", type = ActionType.WORKFLOW)
-    public void exportBulletins(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, params -> {
-            Long idPeriode = params.getLong(ID_PERIODE_KEY);
-            JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
-            String idClasse = params.getString(ID_CLASSE_KEY);
-            String idEtablissement = params.getString(ID_STRUCTURE_KEY);
-            Future<JsonArray> elevesFuture = Future.future();
-            final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
-            final AtomicBoolean answered = new AtomicBoolean();
-
-            final Handler<Either<String, JsonObject>> finalHandler = exportBulletinService
-                    .getFinalBulletinHandler(request, elevesMap, vertx, config, elevesFuture, answered, params);
-
-            exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, params,
-                    elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
-                    finalHandler, null);
-        });
-    }
 
     @Post("/see/bulletins")
     @SecuredAction(value = "", type = ActionType.RESOURCE)

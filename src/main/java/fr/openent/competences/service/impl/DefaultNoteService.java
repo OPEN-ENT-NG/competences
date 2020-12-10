@@ -615,23 +615,23 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
         }
 
-        query.append(" INNER JOIN "+ COMPETENCES_SCHEMA +".rel_devoirs_groupes ON ");
-
-        if(classeId != null ){
-            if(groupIds == null) {
-                query.append("(rel_devoirs_groupes.id_devoir = devoirs.id  AND rel_devoirs_groupes.id_groupe = ? )");
-                values.add(classeId);
-            } else {
-                groupIds.add(classeId);
-                query.append("(rel_devoirs_groupes.id_devoir = devoirs.id  AND rel_devoirs_groupes.id_groupe IN " +
-                        Sql.listPrepared( UtilsConvert.jsonArrayToStringArr(groupIds)) + " )");
-                for (Object groupeId : groupIds) {
-                    values.add(groupeId);
-                }
-            }
-        }else{
-            query.append("rel_devoirs_groupes.id_devoir = devoirs.id");
-        }
+//        query.append(" INNER JOIN "+ COMPETENCES_SCHEMA +".rel_devoirs_groupes ON ");
+//
+//        if(classeId != null ){
+//            if(groupIds == null) {
+//                query.append("(rel_devoirs_groupes.id_devoir = devoirs.id  AND rel_devoirs_groupes.id_groupe = ? )");
+//                values.add(classeId);
+//            } else {
+//                groupIds.add(classeId);
+//                query.append("(rel_devoirs_groupes.id_devoir = devoirs.id  AND rel_devoirs_groupes.id_groupe IN " +
+//                        Sql.listPrepared( UtilsConvert.jsonArrayToStringArr(groupIds)) + " )");
+//                for (Object groupeId : groupIds) {
+//                    values.add(groupeId);
+//                }
+//            }
+//        }else{
+//            query.append("rel_devoirs_groupes.id_devoir = devoirs.id");
+//        }
 
         if (withDomaineInfo) {
             query.append(" INNER JOIN " + COMPETENCES_SCHEMA + ".rel_competences_domaines " + " AS compDom")
@@ -1754,6 +1754,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         futures.add(multiTeachersFuture);
 
         Future<JsonArray> servicesFuture = Future.future();
+        log.info("getMoys");
         utilsService.getServices(idEtablissement, new JsonArray().add(idClasse), event -> {
             formate(servicesFuture, event);
         });

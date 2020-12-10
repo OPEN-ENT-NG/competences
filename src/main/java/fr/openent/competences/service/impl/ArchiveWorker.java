@@ -15,6 +15,7 @@ import static fr.openent.competences.Competences.ID_STRUCTURES_KEY;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
 
+@Deprecated
 public class ArchiveWorker extends BusModBase {
     private Storage storage;
     public static final String ARCHIVE_BULLETIN = "archiveBulletin";

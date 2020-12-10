@@ -10,11 +10,16 @@ import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -22,9 +27,8 @@ import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
@@ -32,6 +36,7 @@ import static fr.openent.competences.utils.ArchiveUtils.generateArchiveBulletin;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class ExportBulletinController extends ControllerHelper {
+    private ExportBulletinService exportBulletinService;
     private UtilsService utilsService;
     private final Storage storage;
     private WorkspaceHelper workspaceHelper;
@@ -41,6 +46,8 @@ public class ExportBulletinController extends ControllerHelper {
         utilsService = new DefaultUtilsService(eb);
         this.storage = storage;
         this.workspaceHelper = new WorkspaceHelper(eb, storage);
+        exportBulletinService = new DefaultExportBulletinService(eb, storage);
+
     }
 
     @Post("/image/bulletins/structure")
@@ -60,6 +67,32 @@ public class ExportBulletinController extends ControllerHelper {
         });
 
     }
+
+
+    @Post("/export/bulletins")
+//    @SecuredAction(value = "export.bulletins.periodique", type = ActionType.WORKFLOW)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessExportBulletinFilter.class)
+    public void exportBulletins(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, params -> {
+            Long idPeriode = params.getLong(ID_PERIODE_KEY);
+            JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
+            String idClasse = params.getString(ID_CLASSE_KEY);
+            String idEtablissement = params.getString(ID_STRUCTURE_KEY);
+            Future<JsonArray> elevesFuture = Future.future();
+            final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
+            final AtomicBoolean answered = new AtomicBoolean();
+
+            final Handler<Either<String, JsonObject>> finalHandler = exportBulletinService
+                    .getFinalBulletinHandler(request, elevesMap, vertx, config, elevesFuture, answered, params);
+
+            exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, params,
+                    elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
+                    finalHandler, null);
+        });
+    }
+
+
 
     @Post("/informations/bulletins/ce")
     @ApiDoc("Retourne tous les types de devoir par etablissement")

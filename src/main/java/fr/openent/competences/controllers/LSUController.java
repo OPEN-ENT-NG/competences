@@ -1662,6 +1662,7 @@ public class LSUController extends ControllerHelper {
     private void getBaliseDisciplines(final Donnees donnees, final String idStructure, final Handler<String> handler) {
 
         Future<Map<String, String>> libelleCourtFuture = Future.future();
+        log.info("CALL LA");
         new DefaultMatiereService().getLibellesCourtsMatieres(false, event -> {
             FormateFutureEvent.formate(libelleCourtFuture, event);
         });

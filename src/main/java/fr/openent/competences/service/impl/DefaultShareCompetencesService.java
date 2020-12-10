@@ -124,6 +124,7 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
 
                     }
                     CompositeFuture.all(futures).setHandler(result -> {
+                        log.info("getRemoveShareHandler end futures");
                         if (result.succeeded()) {
                             jsonArrayBusResultHandler.handle(new Either.Right<>(new JsonArray().add(results.size())));
                         }else{

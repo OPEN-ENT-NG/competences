@@ -39,7 +39,7 @@ public interface ExportBulletinService {
      */
     void getExportBulletin(final AtomicBoolean answered, String idEleve,
                            Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
-                           final JsonObject classe, String host, String acceptLanguage,
+                           final JsonObject classe, String host, String acceptLanguage,JsonArray services,
                            Handler<Either<String, JsonObject>> finalHandler);
 
     /**
@@ -70,9 +70,8 @@ public interface ExportBulletinService {
      * @param params  paramètre d'export
      * @param finalHandler handler servant à la synchronisation des services
      */
-    void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
-                        final JsonObject classe, JsonObject params,
-                        Handler<Either<String, JsonObject>> finalHandler );
+   void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject classe,
+                   JsonObject params,JsonArray services, Handler<Either<String, JsonObject>> finalHandler );
 
     /**
      *  - Ordonne les élèves par classe et  par nom
