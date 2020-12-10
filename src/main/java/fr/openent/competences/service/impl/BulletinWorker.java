@@ -74,7 +74,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
             bulletinsEleves.remove(0);
             return bulletin;
         } else {
-            log.info("end Work");
+            log.info("end Work bulletinWorker");
             isWorking = false;
             return null;
         }
@@ -83,7 +83,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     private void processBulletin(JsonObject paramBulletin ,Handler<Either<String, Boolean>> bulletinHandlerWork) {
         JsonObject bulletinToHandle = HandleStackJsonObject();
         if (bulletinToHandle == null) return;
-        log.info("start Work processBulletin");
+        log.info("start Work processBulletin in Bulletins worker");
         exportBulletinService.runSavePdf(bulletinToHandle, paramBulletin, vertx, config, event -> {
             processBulletin(paramBulletin, bulletinHandlerWork);
             if( event.isLeft()){

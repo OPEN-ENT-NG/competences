@@ -2459,10 +2459,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                     .put("adresseResponsable", responsableOldLibelle.getValue(1))
                                                     .put("codePostalRelative", responsableOldLibelle.getValue(2));
                                         } else {
+
                                             responsableWithDifferentName.put("firstLastName", civiliteResponsable + " " + lastNameResponsable + " et")
-                                                    .put("secondLastName", civiliteResponsableToCheck + " " + lastNameResponsableToCheck)
-                                                    .put("adresseResponsable", responsableOldLibelle.getValue(1))
-                                                    .put("codePostalRelative", responsableOldLibelle.getValue(2));
+                                                    .put("secondLastName", civiliteResponsableToCheck + " " + lastNameResponsableToCheck);
+                                            if (responsableOldLibelle.size() > 1){
+                                                responsableWithDifferentName.put("adresseResponsable", responsableOldLibelle.getValue(1))
+                                                        .put("codePostalRelative", responsableOldLibelle.getValue(2));
+                                            }else{
+                                                responsableWithDifferentName.put("adresseResponsable", "")
+                                                        .put("codePostalRelative", "");
+                                            }
                                         }
 
 
