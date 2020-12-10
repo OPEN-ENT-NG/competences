@@ -1285,7 +1285,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, String id_classe, Handler<Either<String, JsonArray>> handler) {
+    public void getMatiereTeacherForOneEleveByPeriode(String idEleve, String idEtablissement, String idClasse, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         //PK autant de union
@@ -1295,10 +1295,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 " ON (devoirs.id = rel_devoirs_groupes.id_devoir) "+
                 " LEFT JOIN "+ Competences.VSCO_SCHEMA + ".services " +
                 " ON (rel_devoirs_groupes.id_groupe = services.id_groupe AND devoirs.owner = services.id_enseignant " +
-                "                           AND devoirs.id_matiere = services.id_matiere) ";
+                " AND devoirs.id_matiere = services.id_matiere) ";
 
-
-        String footerQuery =   " WHERE devoirs.eval_lib_historise = false AND devoirs.id_etablissement = ? ";
+        String footerQuery = " WHERE devoirs.eval_lib_historise = false AND devoirs.id_etablissement = ? ";
 
         String query = "SELECT * " +
                 " FROM (" +
@@ -1320,24 +1319,22 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 " UNION " + headQuery +
                 " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".appreciation_matiere_periode " +
                 " ON (appreciation_matiere_periode.id_matiere = devoirs.id_matiere " +
-                "           AND appreciation_matiere_periode.id_eleve = ? " +
-                "           AND rel_devoirs_groupes.id_groupe = appreciation_matiere_periode.id_classe ) "+
-
+                " AND appreciation_matiere_periode.id_eleve = ? " +
+                " AND rel_devoirs_groupes.id_groupe = appreciation_matiere_periode.id_classe ) "+
                 footerQuery +
 
                 " UNION SELECT DISTINCT appreciation.id_matiere, raun.user_id_neo as owner, NULL ::boolean AS is_visible, null ::integer as coefficient, appreciation.id_periode" +
                 " FROM "+ Competences.COMPETENCES_SCHEMA + ".appreciation_matiere_periode as appreciation " +
-                "LEFT JOIN notes.rel_appreciations_users_neo AS raun " +
-                "   ON appreciation.id = raun.appreciation_matiere_periode_id " +
+                " LEFT JOIN notes.rel_appreciations_users_neo AS raun " +
+                " ON appreciation.id = raun.appreciation_matiere_periode_id " +
                 " WHERE appreciation.id_eleve = ? AND appreciation.id_classe = ? " +
-
                 " ) AS res " +
                 " ORDER BY res.id_periode,res.id_matiere, coefficient ";
 
-        values.add(id_eleve).add(idEtablissement).add(id_eleve).add(idEtablissement).add(id_eleve)
-                .add(idEtablissement).add(id_eleve).add(idEtablissement).add(id_eleve).add(id_classe);
+        values.add(idEleve).add(idEtablissement).add(idEleve).add(idEtablissement).add(idEleve)
+                .add(idEtablissement).add(idEleve).add(idEtablissement).add(idEleve).add(idClasse);
 
-        sql.prepared(query,values,Competences.DELIVERY_OPTIONS,SqlResult.validResultHandler(handler));
+        sql.prepared(query, values, Competences.DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 
     @Override

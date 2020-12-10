@@ -250,7 +250,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     //TODO A APPELER QU UNE FOIS -> Voir comment précharger
-    public void getSubjectLibelleForSuivi(final String idEtablissement, JsonArray idsMatieres,
+    public void getSubjectLibelleForSuivi(final String idEtablissement,
                                           Future<Map<String,JsonObject>> libelleMatiereFuture){
 
         // Récupération des matières de l'établmissement
@@ -267,7 +267,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                         String error = event.cause().getMessage();
                         log.error("[getSubjectLibelleForSuivi] : " + error);
                         if(error.contains(TIME)){
-                            getSubjectLibelleForSuivi(idEtablissement, idsMatieres, libelleMatiereFuture);
+                            getSubjectLibelleForSuivi(idEtablissement, libelleMatiereFuture);
                         }
                         else {
                             libelleMatiereFuture.fail(error);
@@ -454,7 +454,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
                     // Récupération du libelle des matières et sous Matières
                     Future<Map<String,JsonObject>> libelleMatiereFuture = Future.future();
-                    getSubjectLibelleForSuivi(idEtablissement, idsMatieres, libelleMatiereFuture);
+                    getSubjectLibelleForSuivi(idEtablissement, libelleMatiereFuture);
                     futures.add(libelleMatiereFuture);
 
                     if(!matieresMissingTeachers.isEmpty()){
@@ -512,7 +512,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                             }
                         }
                     });
-                }else{
+                } else {
                     Map<String, JsonObject> teachersInfos = (Map<String, JsonObject>) futures.get(1).result();
                     setSubjectLibelleAndTeachers(idEleve, idClasseGroups, idClasse, idEtablissement, idsGroups,
                             idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, handler);
@@ -535,7 +535,6 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     .put("libelleMatiere", "no libelle");
             log.error("matiere non retrouve sans libelle idMatiere : " + idMatiere);
         }
-
     }
 
     private void setTeacherInfo(JsonObject result, JsonArray idsTeachers, Map<String, JsonObject> teachersInfos){
@@ -555,8 +554,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void setSubjectByCoeficient(String idMatiere, JsonObject result, JsonObject coefObject,
-                                        Map<String, JsonObject> idsMatLibelle,
-                                        Map<String, JsonObject> teachersInfos){
+                                        Map<String, JsonObject> idsMatLibelle, Map<String, JsonObject> teachersInfos){
         if(isNotNull(coefObject)) {
             for(Map.Entry<String, Object> coefEntry : coefObject.getMap().entrySet()) {
                 JsonArray coefIdTeachers = (JsonArray)coefEntry.getValue();
@@ -571,13 +569,12 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         }
     }
 
-    private void setSubjectLibelleAndTeachers (String idEleve,JsonArray idClasseGroups, final String idClasse,
-                                               String idEtablissement, JsonArray idsGroups,
-                                               Map<String,JsonObject> idsMatieresIdsTeachers,
-                                               Map<String, JsonObject> idsMatLibelle,
-                                               Map<String, JsonObject> teachersInfos, Long idPeriod,
-                                               Handler<Either<String, JsonArray>> handler) {
-
+    private void setSubjectLibelleAndTeachers(String idEleve,JsonArray idClasseGroups, final String idClasse,
+                                              String idEtablissement, JsonArray idsGroups,
+                                              Map<String,JsonObject> idsMatieresIdsTeachers,
+                                              Map<String, JsonObject> idsMatLibelle,
+                                              Map<String, JsonObject> teachersInfos, Long idPeriod,
+                                              Handler<Either<String, JsonArray>> handler) {
         if (!(idClasseGroups != null && !idClasseGroups.isEmpty())) {
             idsGroups.add(idClasse);
         } else {
@@ -605,10 +602,9 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             setSubjectByCoeficient(idMatiere, result, coefObject, idsMatLibelle, teachersInfos);
             // Récupération des élements du Programme
             Future<JsonArray> elementsProgFuture = Future.future();
-            elementProgramme.getElementProgrammeClasses(
-                    idPeriod, idMatiere, idsGroups,elementsProgEvent -> {
-                        formate(elementsProgFuture, elementsProgEvent);
-                    });
+            elementProgramme.getElementProgrammeClasses(idPeriod, idMatiere, idsGroups, elementsProgEvent -> {
+                formate(elementsProgFuture, elementsProgEvent);
+            });
 
             // Récupération des appreciation Moyenne Finale et positionnement Finale
             Future<JsonArray> appreciationMoyFinalePosFuture = Future.future();
@@ -928,7 +924,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     // Récupération du libelle des matières et sous Matières
                     Future<Map<String, JsonObject>> libelleMatiereFuture = Future.future();
                     //A check
-                    getSubjectLibelleForSuivi(idEtablissement, idsMatieres, libelleMatiereFuture);
+                    getSubjectLibelleForSuivi(idEtablissement, libelleMatiereFuture);
                     futures.add(libelleMatiereFuture);
 
                     if (!matieresMissingTeachers.isEmpty()) {

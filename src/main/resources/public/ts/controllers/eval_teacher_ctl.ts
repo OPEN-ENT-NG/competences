@@ -818,6 +818,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if ($location.path() === '/devoir/create') {
                     $scope.devoir.id_groupe = $scope.searchOrFirst("classe", evaluations.structure.classes.all).id;
 
+                    $scope.devoir.matiere = undefined;
+                    $scope.setEnseignantMatieres();
+
                     if($scope.devoir.matiere.sousMatieres !== undefined && $scope.devoir.matiere.sousMatieres.all.length > 0) {
                         $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type;
                     }
