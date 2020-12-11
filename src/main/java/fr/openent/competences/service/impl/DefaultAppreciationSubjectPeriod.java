@@ -117,6 +117,7 @@ public class DefaultAppreciationSubjectPeriod extends SqlCrudService implements 
                 "INSERT INTO " + this.schema + this.tableRelation + " " +
                 "(appreciation_matiere_periode_id, user_id_neo, creation_date) " +
                 "VALUES ((SELECT id FROM insert_appreciation_matiere_periode LIMIT 1) , ? , NOW()) " +
+                "ON CONFLICT DO NOTHING " +
                 "RETURNING appreciation_matiere_periode_id, id;";
         String finalQuery = isVisible
                 ? (addRelationHeaderQuery + queryForInsert + addRelationFooterQuery)
