@@ -431,7 +431,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         };
                         $scope.showRechercheBar = false;
                         if (!Utils.isChefEtab()) {
-                            http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
+                            http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id).done(function (res) {
                                 $scope.allMatieresSorted = _.sortBy(res, 'rank');
                                 utils.safeApply($scope);
                             });

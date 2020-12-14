@@ -108,9 +108,9 @@ public class DevoirController extends ControllerHelper {
 
                         final String _STUDENT = "Student";
                         final String _RELATIVE = "Relative";
-                        if (idClasse == null && ! _STUDENT.equals(user.getType())
+                        if (idClasse == null && !_STUDENT.equals(user.getType())
                                 && !_RELATIVE.equals(user.getType()) && !forStudentReleve) {
-                            devoirsService.listDevoirs(user,idEtablissement, handler);
+                            devoirsService.listDevoirs(user, idEtablissement, handler);
                         } else {
                             boolean historise = false;
                             if (request.params().get("historise") != null) {

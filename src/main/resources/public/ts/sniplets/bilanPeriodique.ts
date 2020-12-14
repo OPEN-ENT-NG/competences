@@ -327,8 +327,7 @@ export const bilanPeriodique = {
 
         syncMatieresEnseignant: async function (enseignant) {
             try {
-                let data = await http.get(`/viescolaire/matieres?idEnseignant=${
-                    enseignant.id}&idEtablissement=${evaluations.structure.id}`);
+                let data = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}`);
                 bilanPeriodique.that.options.matieres = data.data;
                 await utils.safeApply(this);
             } catch (e) {

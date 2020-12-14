@@ -45,7 +45,7 @@ export let releveController = ng.controller('ReleveController', [
             } else {
                 id_eleve = $scope.eleve.id;
             }
-            await utils.calculMoyennes($scope.search.periode.id_type,id_eleve,$scope.matieresReleve.all,$scope.dataReleve.devoirs);
+            await utils.calculMoyennes($scope.search.periode.id_type, id_eleve, $scope.matieresReleve.all, $scope.dataReleve.devoirs);
             await utils.safeApply($scope);
         };
         /**

@@ -1306,7 +1306,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 return;
             }
             let id_eleve = $scope.search.eleve.id;
-            await utils.calculMoyennes($scope.search.periode.id_type,id_eleve,$scope.matieresReleve.all,$scope.dataReleve.devoirs);
+            await utils.calculMoyennes($scope.search.periode.id_type, id_eleve, $scope.matieresReleve.all, $scope.dataReleve.devoirs);
             await utils.safeApply($scope);
         };
 

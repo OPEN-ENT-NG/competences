@@ -40,7 +40,7 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
                     {second_teacher_id: idTeacher, subject_id: matiere.id});
 
                 let mainTeacher = service.id_enseignant == idTeacher && service.id_matiere == matiere.id;
-                if (matiere.hasOwnProperty('libelleClasses') && matiere.libelleClasses.isEmpty && classe.externalId) {
+                if (matiere.hasOwnProperty('libelleClasses') && !matiere.libelleClasses.isEmpty && classe.externalId) {
                     mainTeacher = mainTeacher && (matiere.libelleClasses.indexOf(classe.externalId) !== -1)
                 }
 
@@ -55,7 +55,7 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
             if (classe) {
                 return matieres.filter((matiere) => {
                     let evaluables = [];
-                    if (classe.services) {
+                    if (matiere.name != null && matiere.externalId != null && classe.services) {
                         evaluables = getEvaluables(classe, matiere, idTeacher);
                     }
                     return evaluables.length > 0;
@@ -64,10 +64,12 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
             else {
                 return matieres.filter((matiere) => {
                     let evaluables = [];
-                    for(let c of classes.all){
-                        evaluables = getEvaluables(c, matiere, idTeacher);
-                        if(evaluables.length > 0){
-                            break;
+                    if (matiere.name != null && matiere.externalId != null) {
+                        for(let c of classes.all){
+                            evaluables = getEvaluables(c, matiere, idTeacher);
+                            if(evaluables.length > 0){
+                                break;
+                            }
                         }
                     }
                     return evaluables.length > 0;
