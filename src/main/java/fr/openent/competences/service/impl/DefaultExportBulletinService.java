@@ -528,12 +528,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonObject niv = footerArray.getJsonObject(i);
 
                     String lib = niv.getString(LIBELLE);
-                    String id_niv;
+                    Integer id_niv;
+                    Integer id_cycle = niv.getInteger("id_cycle");
                     try{
-                        id_niv  = Integer.toString(niv.getInteger("id_niveau"));
+                        id_niv = niv.getInteger("id_niveau");
+                        if(id_cycle == 2){
+                            id_niv -= 4;
+                        }
                     }catch (NullPointerException e){
-                        id_niv = Integer.toString(niv.getInteger("id_cycle"));
+                        id_niv = id_cycle;
                     }
+
 
                     footer += id_niv + " : " + lib + " - ";
                 }
