@@ -29,24 +29,28 @@ export const getTeacherBySubject:Function = (schoolClasses:Array<any>, schoolCla
                     item.coTeachers.forEach(coTeacher => {
                         if(coTeacher.is_visible){
                             let coTeacherLastName, coTeacherFirstName, coTeacherName;
-                            [coTeacherLastName, coTeacherFirstName] = _.findWhere(teachers,
-                                {id : coTeacher.second_teacher_id}).displayName.split(" ");
-                            coTeacherName = Utils.makeShortName(coTeacherLastName, coTeacherFirstName);
-                            if(!_.contains(teacherBySubject[item.id_matiere].coTeachers, coTeacherName))
-                                teacherBySubject[item.id_matiere].coTeachers.push(coTeacherName);
+                            let coT = _.findWhere(teachers, {id : coTeacher.second_teacher_id});
+                            if(coT != undefined){
+                                [coTeacherLastName, coTeacherFirstName] = coT.displayName.split(" ");
+                                coTeacherName = Utils.makeShortName(coTeacherLastName, coTeacherFirstName);
+                                if(!_.contains(teacherBySubject[item.id_matiere].coTeachers, coTeacherName))
+                                    teacherBySubject[item.id_matiere].coTeachers.push(coTeacherName);
+                            }
                         }
                     });
                     item.substituteTeachers.forEach(substituteTeacher => {
                         if(substituteTeacher.is_visible){
                             let substituteTeacherLastName, substituteTeacherFirstName, substituteTeacherName;
-                            [substituteTeacherLastName, substituteTeacherFirstName] = _.findWhere(teachers,
-                                {id : substituteTeacher.second_teacher_id}).displayName.split(" ");
-                            substituteTeacherName = Utils.makeShortName(substituteTeacherLastName, substituteTeacherFirstName);
-                            let conditionForDate = periode.id != null ?
-                                moment(substituteTeacher.start_date).isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]')
-                                || moment(substituteTeacher.end_date).isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]') : true;
-                            if(!_.contains(teacherBySubject[item.id_matiere].substituteTeachers, substituteTeacherName) && conditionForDate){
-                                teacherBySubject[item.id_matiere].substituteTeachers.push(substituteTeacherName);
+                            let subT = _.findWhere(teachers, {id : substituteTeacher.second_teacher_id});
+                            if(subT != undefined){
+                                [substituteTeacherLastName, substituteTeacherFirstName] = subT.displayName.split(" ");
+                                substituteTeacherName = Utils.makeShortName(substituteTeacherLastName, substituteTeacherFirstName);
+                                let conditionForDate = periode.id != null ?
+                                    moment(substituteTeacher.start_date).isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]')
+                                    || moment(substituteTeacher.end_date).isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]') : true;
+                                if(!_.contains(teacherBySubject[item.id_matiere].substituteTeachers, substituteTeacherName) && conditionForDate){
+                                    teacherBySubject[item.id_matiere].substituteTeachers.push(substituteTeacherName);
+                                }
                             }
                         }
                     });

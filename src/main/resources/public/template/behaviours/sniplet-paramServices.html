@@ -106,8 +106,9 @@
                                       ng-class="{'disabled-eye' : canSwitchMultiTeacherVisibility(service, coTeacher)}">
                                     <i ng-class="{'eye-open-orange': coTeacher.is_visible, 'eye-slash': !coTeacher.is_visible}"></i>
                                 </span>
-
-                                [[coTeacher.displayName]]
+                                <span ng-if="coTeacher.displayName.length > 0">
+                                    [[coTeacher.displayName]]
+                                </span>
                             </div>
                         </div>
                         <div class="[[columns.remplacement.size]] cellTab ellipsis cellTab-center">
@@ -119,6 +120,7 @@
                                     <i ng-class="{'eye-open-orange': substituteTeacher.is_visible, 'eye-slash': !substituteTeacher.is_visible}"></i>
                                 </span>
                                 <span ng-class="{'greyColor' : !filterValidDateSubstituteTeacher(substituteTeacher)}"
+                                      ng-if="substituteTeacher.displayName.length > 0"
                                       tooltip="[[getI18n('evaluation.service.columns.remplacement')]]
                                         [[getI18n('viescolaire.utils.from.date')]]
                                         [[substituteTeacher.start_date | date:'dd/MM/yyyy']]

@@ -218,18 +218,26 @@ export const paramServices = {
 
                 if(coTeachers){
                     _.each(coTeachers , (coTeacher) => {
-                        coTeacher.displayName = (_.findWhere(paramServices.that.columns.enseignant.data,
-                            {id: coTeacher.second_teacher_id}) != undefined)? _.findWhere(paramServices.that.columns.enseignant.data,
-                            {id: coTeacher.second_teacher_id}).displayName : "";
-                        coTeachers_name += coTeacher.displayName + " ";
+                        let coT = _.findWhere(paramServices.that.columns.enseignant.data,
+                            {id: coTeacher.second_teacher_id});
+                        if(coT != undefined) {
+                            coTeacher.displayName = coT.displayName;
+                            coTeachers_name += coTeacher.displayName + " ";
+                        } else {
+                            coTeacher.displayName = "";
+                        }
                     });
                 }
                 if(substituteTeachers){
                     _.each(substituteTeachers , (substituteTeacher) => {
-                        substituteTeacher.displayName = (_.findWhere(paramServices.that.columns.enseignant.data,
-                            {id: substituteTeacher.second_teacher_id}) != undefined)? _.findWhere(paramServices.that.columns.enseignant.data,
-                            {id: substituteTeacher.second_teacher_id}).displayName : "";
-                        substituteTeachers_name += substituteTeacher.displayName + " ";
+                        let subT = _.findWhere(paramServices.that.columns.enseignant.data,
+                            {id: substituteTeacher.second_teacher_id});
+                        if(subT != undefined) {
+                            substituteTeacher.displayName = subT.displayName;
+                            substituteTeachers_name += substituteTeacher.displayName + " ";
+                        } else {
+                            substituteTeacher.displayName = "";
+                        }
                     });
                 }
 
