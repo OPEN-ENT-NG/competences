@@ -7,9 +7,8 @@ export function isValidDevoir (idClasse, id_matiere, classes) {
         //sinon on regarde s'il enseigne sur cette classe ou s'il est coTeacher ou encore remplaçant sur la bonne période
         if (classe && classe.services){
             if(Utils.isChefEtab(classe)){
-                return _.findWhere(classe.services);
-            }
-            else {
+                return true;
+            } else {
                 let evaluables = _.filter(classe.services, service => {
                     let substituteTeacher = _.findWhere(service.substituteTeachers, {second_teacher_id : model.me.userId});
                     let correctDateSubstituteTeacher = substituteTeacher &&
