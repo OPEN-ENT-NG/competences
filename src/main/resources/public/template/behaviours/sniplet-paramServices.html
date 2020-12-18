@@ -102,26 +102,29 @@
                             [[service.nom_enseignant]]
                             <div class='padding-top' ng-if="service.coTeachers.length > 0"
                                  ng-repeat="coTeacher in service.coTeachers">
-                                <span ng-click="switchMultiTeacherVisibility(service, coTeacher)"
-                                      ng-class="{'disabled-eye' : canSwitchMultiTeacherVisibility(service, coTeacher)}">
-                                    <i ng-class="{'eye-open-orange': coTeacher.is_visible, 'eye-slash': !coTeacher.is_visible}"></i>
-                                </span>
-                                <span ng-if="coTeacher.displayName.length > 0">
-                                    [[coTeacher.displayName]]
-                                </span>
+                                <div ng-if="coTeacher.displayName.length > 0">
+                                    <span ng-click="switchMultiTeacherVisibility(service, coTeacher)"
+                                          ng-class="{'disabled-eye' : canSwitchMultiTeacherVisibility(service, coTeacher)}">
+                                        <i ng-class="{'eye-open-orange': coTeacher.is_visible, 'eye-slash': !coTeacher.is_visible}"></i>
+                                    </span>
+                                    <span>
+                                        [[coTeacher.displayName]]
+                                    </span>
+                                </div>
+
                             </div>
                         </div>
                         <div class="[[columns.remplacement.size]] cellTab ellipsis cellTab-center">
                             <div ng-if="service.substituteTeachers.length > 0"
                                  ng-repeat="substituteTeacher in service.substituteTeachers">
-                                <span ng-if="filterValidDateSubstituteTeacher(substituteTeacher)"
+                                <div ng-if="substituteTeacher.displayName.length > 0">
+                                    <span ng-if="filterValidDateSubstituteTeacher(substituteTeacher)"
                                           ng-click="switchMultiTeacherVisibility(service, substituteTeacher)"
                                           ng-class="{'disabled-eye' : canSwitchMultiTeacherVisibility(service, substituteTeacher)}">
-                                    <i ng-class="{'eye-open-orange': substituteTeacher.is_visible, 'eye-slash': !substituteTeacher.is_visible}"></i>
-                                </span>
-                                <span ng-class="{'greyColor' : !filterValidDateSubstituteTeacher(substituteTeacher)}"
-                                      ng-if="substituteTeacher.displayName.length > 0"
-                                      tooltip="[[getI18n('evaluation.service.columns.remplacement')]]
+                                        <i ng-class="{'eye-open-orange': substituteTeacher.is_visible, 'eye-slash': !substituteTeacher.is_visible}"></i>
+                                    </span>
+                                    <span ng-class="{'greyColor' : !filterValidDateSubstituteTeacher(substituteTeacher)}"
+                                          tooltip="[[getI18n('evaluation.service.columns.remplacement')]]
                                         [[getI18n('viescolaire.utils.from.date')]]
                                         [[substituteTeacher.start_date | date:'dd/MM/yyyy']]
                                         [[getI18n('viescolaire.utils.to.date')]]
@@ -130,6 +133,7 @@
                                         [[substituteTeacher.entered_end_date | date:'dd/MM/yyyy']]">
                                             [[substituteTeacher.displayName]]
                                     </span>
+                                </div>
                             </div>
                         </div>
                         <div class="[[columns.coefficient.size]] ellipsis cellTab cellTab-center">
