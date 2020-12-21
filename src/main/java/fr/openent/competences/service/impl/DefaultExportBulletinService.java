@@ -1547,20 +1547,18 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getHeadTeachers( String idEleve, String idClasse, JsonObject eleveObject,
-                                 Handler<Either<String, JsonObject>> finalHandler) {
+    public void getHeadTeachers(String idEleve, String idClasse, JsonObject eleveObject,
+                                Handler<Either<String, JsonObject>> finalHandler) {
         logBegin(GET_HEAD_TEACHERS_METHOD, idEleve);
         if (eleveObject == null) {
             logStudentNotFound(idEleve, GET_HEAD_TEACHERS_METHOD);
             finalHandler.handle(new Either.Right<>(null));
-        }
-        else {
+        } else {
             JsonObject action = new JsonObject();
             if (idClasse == null) {
                 logidClasseNotFound(idEleve, GET_HEAD_TEACHERS_METHOD);
                 finalHandler.handle(new Either.Right<>(null));
-            }
-            else {
+            } else {
                 action.put(ACTION, "classe.getHeadTeachersClasse")
                         .put(ID_CLASSE, idClasse);
 
@@ -1580,25 +1578,30 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                             this, finalHandler, eleveObject,
                                             GET_HEAD_TEACHERS_METHOD);
                                 } else {
-                                    JsonArray headTeachers = body.getJsonArray(RESULTS);
-                                    if (headTeachers != null) {
-                                        for(int i=0; i< headTeachers.size(); i++){
-                                            JsonObject headTeacher =  headTeachers.getJsonObject(i);
+                                    JsonArray res = body.getJsonArray(RESULTS);
+
+                                    if (res != null) {
+                                        JsonArray headTeachers = new JsonArray();
+                                        for(int i=0; i < res.size(); i++){
+                                            JsonObject headTeacher = res.getJsonObject(i);
                                             String firstName = headTeacher.getString(FIRST_NAME_KEY);
                                             String initial = "";
 
                                             if(firstName != null && firstName.length() > 0) {
-                                                initial =   String.valueOf(firstName.charAt(0)) + ". ";
+                                                initial = firstName.charAt(0) + ". ";
                                             }
                                             headTeacher.put("initial", initial);
+
+                                            if(!headTeachers.contains(headTeacher)){
+                                                headTeachers.add(headTeacher);
+                                            }
                                         }
                                         String headTeachersLibelle = getLibelle(
                                                 (headTeachers.size() > 1) ? "headTeachers" : "headTeacher");
                                         eleveObject.put("headTeacherLibelle", headTeachersLibelle + " : ")
                                                 .put("headTeachers", headTeachers);
                                     }
-                                    serviceResponseOK(answer, finalHandler, count, idEleve,
-                                            GET_HEAD_TEACHERS_METHOD);
+                                    serviceResponseOK(answer, finalHandler, count, idEleve, GET_HEAD_TEACHERS_METHOD);
                                 }
                             }
                         }));
