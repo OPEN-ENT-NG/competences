@@ -1488,10 +1488,12 @@ public class DefaultExportService implements ExportService {
                 userJSON = infoEleveBackup.result();
                 isBackup = true;
             }
-
+            String idClass = (!userJSON.containsKey("c"))? userJSON.getString("idClasse") :
+                    userJSON.getJsonObject("c").getJsonObject("data").getString("id");
+                    ;
             Future<JsonArray> multiTeachersFuture = Future.future();
-            utilsService.getMultiTeachersByClass(idEtablissement,
-                    userJSON.getJsonObject("c").getJsonObject("data").getString("id"), idPeriode != null ? idPeriode.intValue() : null,
+            utilsService.getMultiTeachersByClass(idEtablissement, idClass,
+                    idPeriode != null ? idPeriode.intValue() : null,
                     multiTeacherEvent -> {
                         formate(multiTeachersFuture, multiTeacherEvent);
                     });
@@ -1499,7 +1501,7 @@ public class DefaultExportService implements ExportService {
             Future<JsonArray> servicesFuture = Future.future();
             log.info("getDataForExportReleveEleve");
             utilsService.getServices(idEtablissement,
-                    new JsonArray().add(userJSON.getJsonObject("c").getJsonObject("data").getString("id")),
+                    new JsonArray().add(idClass),
                     servicesEvent -> {
                         formate(servicesFuture, servicesEvent);
                     });
