@@ -246,7 +246,7 @@ public class ArchiveUtils {
                 " WHERE id_etablissement = ? AND id_annee = ?";
         JsonArray params = new JsonArray().add(idStructure).add(idYear);
 
-        if(idsPeriode.size() > 0) {
+        if( idsPeriode != null && idsPeriode.size() > 0) {
             query += " AND id_periode IN " + Sql.listPrepared(idsPeriode);
             for(String periode : idsPeriode) {
                 params.add(periode);

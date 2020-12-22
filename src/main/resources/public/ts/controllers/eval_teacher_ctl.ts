@@ -726,31 +726,32 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.syncPeriode = async (idClasse) => {
-            let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
-            let res = await $scope.getCurrentPeriode(classe);
-            if ($location.path() === '/competences/eleve' ) {
-                if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
-                    classe.periodes.all.push({libelle: "cycle", id: null});
+            if(idClasse){
+                let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
+                let res = await $scope.getCurrentPeriode(classe);
+                if ($location.path() === '/competences/eleve' ) {
+                    if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
+                        classe.periodes.all.push({libelle: "cycle", id: null});
+                    }
+                }else {
+                    let cycle = _.findWhere(classe.periodes.all, {libelle: "cycle"});
+                    classe.periodes.all = _.without(classe.periodes.all, cycle);
                 }
-            }else {
-                let cycle = _.findWhere(classe.periodes.all, {libelle: "cycle"});
-                classe.periodes.all = _.without(classe.periodes.all, cycle);
-            }
-            setSearchPeriode(classe, res);
-            if ($location.path() === '/devoir/create' ||
-                ($scope.devoir !== undefined
-                    && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
-                $scope.devoir.id_periode = res.id_type;
-                $scope.controleDate($scope.devoir);
+                setSearchPeriode(classe, res);
+                if ($location.path() === '/devoir/create' ||
+                    ($scope.devoir !== undefined
+                        && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
+                    $scope.devoir.id_periode = res.id_type;
+                    $scope.controleDate($scope.devoir);
+                    utils.safeApply($scope);
+                }
+                if( $location.path() === '/releve') {
+                    $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
+                    $scope.setMatieresFiltered();
+                    $scope.getReleve()
+                }
                 utils.safeApply($scope);
             }
-            if( $location.path() === '/releve') {
-                $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
-                $scope.setMatieresFiltered();
-                $scope.getReleve()
-            }
-            utils.safeApply($scope);
-
         };
 
         $scope.synchronizeStudents = (idClasse): boolean => {
@@ -3673,15 +3674,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (classe && classe.periodes && classe.periodes.length() === 0) {
                 await classe.periodes.sync();
             }
-            $scope.periodes = classe.periodes;
-            $scope.notYearPeriodes = _.filter($scope.periodes.all, (periode) => {
-                return $scope.notYear(periode);
-            });
+            let currentPeriode;
+            if(classe) {
+                $scope.periodes = classe.periodes;
+                $scope.notYearPeriodes = _.filter($scope.periodes.all, (periode) => {
+                    return $scope.notYear(periode);
+                });
 
-            let currentPeriode = _.find(classe.periodes.all, (periode) => {
-                return moment().isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]');
-            });
-
+                currentPeriode = _.find(classe.periodes.all, (periode) => {
+                    return moment().isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]');
+                });
+            }
             return currentPeriode != null ? currentPeriode : -1;
         };
 
