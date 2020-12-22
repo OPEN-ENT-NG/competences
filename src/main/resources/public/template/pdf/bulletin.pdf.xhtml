@@ -17,6 +17,7 @@
         .page {
             page-break-after: always;
         }
+
         .paddingFifty {
             padding-left : 20px;
             padding-right : 20px;
@@ -33,6 +34,7 @@
             margin-left: -2px;
             float:left;
         }
+
         #niveau {
             width: auto;
             height: 90px;
@@ -103,54 +105,54 @@
         td {
             margin: 4px;
             padding: 10px;
-        {{#neutre}}
-        border: solid 1px;
-        {{/neutre}}
+            {{#neutre}}
+                border: solid 1px;
+            {{/neutre}}
         }
 
         table {
             width: 100%;
             font-size: 12px;
             text-align: center;
-        {{#neutre}}
-       border-collapse: collapse;
-
-        {{/neutre}}
-
+            {{#neutre}}
+                border-collapse: collapse;
+            {{/neutre}}
         }
 
         .start { page-break-before : left }
 
-
         table tr:first-child td {
-        {{#neutre}}
-        background-color: #ffffff;
-        {{/neutre}}
-        {{^neutre}}
-            background-color: #e2f3fb;
-        {{/neutre}}
+            {{#neutre}}
+                background-color: #ffffff;
+            {{/neutre}}
+            {{^neutre}}
+                background-color: #e2f3fb;
+            {{/neutre}}
         }
+
         table tr:first-child td:first-child {
             visibility: hidden;
         }
+
         .secondSuivi {
             width: 50%!important;
-        {{#neutre}}
-        padding: 5px !important;
-        text-align: justify !important;
-        {{/neutre}}
+            {{#neutre}}
+                padding: 5px !important;
+                text-align: justify !important;
+            {{/neutre}}
         }
+
         .thirdSuivi {
-        {{#neutre}}
-        padding: 5px !important;
-        text-align: justify !important;
-        {{/neutre}}
-        {{#getProgramElements}}
-        width: 50% !important;
-        {{/getProgramElements}}
-        {{^getProgramElements}}
-        width: 70% !important;
-        {{/getProgramElements}}
+            {{#neutre}}
+                padding: 5px !important;
+                text-align: justify !important;
+            {{/neutre}}
+            {{#getProgramElements}}
+                width: 50% !important;
+            {{/getProgramElements}}
+            {{^getProgramElements}}
+                width: 70% !important;
+            {{/getProgramElements}}
         }
 
         .domaines {
@@ -164,12 +166,12 @@
 
         .eleve {
             padding: 5px;
-        {{#neutre}}
-        background-color: #cccccc;
-        {{/neutre}}
-        {{^neutre}}
-            background-color: #e2f3fb;
-        {{/neutre}}
+            {{#neutre}}
+                background-color: #cccccc;
+            {{/neutre}}
+            {{^neutre}}
+                background-color: #e2f3fb;
+            {{/neutre}}
             min-height : 60px;
             font-size: 14px;
         }
@@ -178,6 +180,7 @@
             margin: 2px 1px;
             text-align: center;
         }
+
         .responsable {
             display:inline-block;
             margin-left: 3px;
@@ -195,6 +198,7 @@
             font-size: 14px;
             text-align: left;
         }
+
         .left-align {
             text-align: left;
             font-weight: normal;
@@ -202,15 +206,16 @@
 
         .synthese {
             margin-top: 10px;
-        {{#neutre}}
-        background-color : #ffffff;
-        {{/neutre}}
-        {{^neutre}}
-            background-color: #ffd0a0 !important;
-        {{/neutre}}
             padding: 10px;
             visibility: visible !important;
+            {{#neutre}}
+                background-color : #ffffff;
+            {{/neutre}}
+            {{^neutre}}
+                background-color: #ffd0a0 !important;
+            {{/neutre}}
         }
+
         .lefCom {
             text-align: left;
             font-weight: normal;
@@ -229,23 +234,23 @@
             width: 67.5% !important;
             height: 45px !important;
         }
+
         .rightCommunication {
             vertical-align: top;
             text-align: right;
-
-        {{#neutre}}
-        background-color : #ffffff;
-        {{/neutre}}
-        {{^neutre}}
-        background-color: #ffd0a0 !important;
-        position: relative;
-        heigth :  45px;
-        {{/neutre}}
+            {{#neutre}}
+                background-color : #ffffff;
+            {{/neutre}}
+            {{^neutre}}
+                background-color: #ffd0a0 !important;
+                position: relative;
+                heigth :  45px;
+            {{/neutre}}
         }
+
         #imgSignature {
             width: 150px;
             height: auto;
-            /*float:right;*/
         }
 
         .imgSignatureSize {
@@ -255,8 +260,8 @@
             overflow : hidden;
             float : right;
             margin-bottom: 20px;
-
         }
+
         .structure {
             max-width : 335px;
             height: 90px;
@@ -264,18 +269,20 @@
             font-family: "Calibri", sans-serif;
             float:left;
         }
+
         .structure > p {
             margin: 4px;
             margin-left : 5px;
             margin-top : 0px;
         }
+
         @page{
             size : A4 ;
             margin-top: 20px;
             margin-left : 1px;
             margin-right : 1px;
-
         }
+
         .firstProjet {
             width: 35%;
             visibility: visible !important;
@@ -284,33 +291,38 @@
             padding-top: 1px;
             overflow: hidden;
         }
+
         .secondProjet {
             text-align:left;
             overflow: hidden;
             padding-bottom: 1px;
             padding-top: 1px;
         }
+
         .projets tr:nth-child(even) td {
-        {{#neutre}}
-        background-color : #ffffff;
-        {{/neutre}}
-        {{^neutre}}
-            background-color: #EFF7FC !important;
-        {{/neutre}}
+            {{#neutre}}
+                background-color : #ffffff;
+            {{/neutre}}
+            {{^neutre}}
+                background-color: #EFF7FC !important;
+            {{/neutre}}
         }
+
         .projets tr:first-child td {
-        {{#neutre}}
-        background-color : #ffffff;
-        {{/neutre}}
-        {{^neutre}}
-            background-color: #e2f3fb !important;
-        {{/neutre}}
+            {{#neutre}}
+                background-color : #ffffff;
+            {{/neutre}}
+            {{^neutre}}
+                background-color: #e2f3fb !important;
+            {{/neutre}}
         }
+
         .header td {
             font-size: x-small;
             padding-left: 2px;
             padding-right: 2px;
         }
+
         .onePadding {
             padding: 1px !important;
             margin: 0 !important;
@@ -318,17 +330,18 @@
             text-overflow: ellipsis;
             vertical-align: middle !important;
         }
+
         .emptyClass {
             padding-top: 1px;
             padding-bottom: 1px;
             padding-right: 2px;
         }
+
         .moyenneGeneral td {
             height: 10px;
             padding-top: 2px;
             padding-bottom: 2px;
         }
-
     </style>
 </head>
 <body>
