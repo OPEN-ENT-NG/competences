@@ -97,14 +97,21 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
 
         $scope.getResponsablesAndClasses = function () {
             $scope.structure = _.findWhere($scope.evaluations.structures.all, {id: $scope.lsu.idStructure});
-            $scope.structure.responsables.sync().then(async function () {
-                if($scope.structure.responsables.length() > 0)
-                    $scope.lsu.responsable = $scope.structure.responsables.all[0].displayName;
-                await utils.safeApply($scope);
-            });
-            $scope.structure.classes.sync().then(async function () {
-                $scope.lsu.classes = $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE});
-            })
+
+            if($scope.structure.responsables.length() === 0){
+                $scope.structure.responsables.sync().then(async function () {
+                    if($scope.structure.responsables.length() > 0)
+                        $scope.lsu.responsable = $scope.structure.responsables.all[0].displayName;
+                    await utils.safeApply($scope);
+                });
+            }
+
+            if($scope.structure.classes.length() === 0){
+                $scope.structure.classes.sync().then(async function () {
+                    $scope.lsu.classes = $scope.structure.classes.where({type_groupe: Classe.type.CLASSE});
+                    await utils.safeApply($scope);
+                });
+            }
         };
         $scope.setParamsContentFile = () => {
             $scope.paramsLSU.stsFile = $scope.selectStsFiles.selected.content;
