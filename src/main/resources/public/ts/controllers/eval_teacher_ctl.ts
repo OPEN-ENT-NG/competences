@@ -1846,7 +1846,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 });
             }
 
-            $scope.cSkilsListData = _.filter($scope.devoir.enseignements.all, (enseignement) => {
+            $scope.cSkillsListData = _.filter($scope.devoir.enseignements.all, (enseignement) => {
                 enseignement.competences.all = _.filter(enseignement.competences.all, (competence) => {
                     competence.competences.all = _.filter(competence.competences.all, (comp) => {
                         return $scope.hideHiddenCompetence(comp)

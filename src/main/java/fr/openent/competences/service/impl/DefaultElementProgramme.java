@@ -37,16 +37,15 @@ public class DefaultElementProgramme implements ElementProgramme {
     public void setElementProgramme(String userId, Long idPeriode, String idMatiere, String idClasse,String texte,
                                     Handler<Either<String, JsonArray>> handler){
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-
+e
         StringBuilder query = new StringBuilder()
-                .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".element_programme ")
-                .append(" (id_periode, id_matiere , id_classe, id_user_create, id_user_update, texte) VALUES ")
-                .append(" (?, ?, ?, ?, ?, ?) ")
-                .append(" ON CONFLICT (id_periode, id_matiere , id_classe) ")
-                .append(" DO UPDATE SET id_user_update = ? , texte = ? ");
+                .append("INSERT INTO ").append(Competences.COMPETENCES_SCHEMA).append(".element_programme ")
+                .append("(id_periode, id_matiere, id_classe, id_user_create, id_user_update, texte) VALUES ")
+                .append("(?, ?, ?, ?, ?, ?) ")
+                .append("ON CONFLICT (id_periode, id_matiere , id_classe) ")
+                .append("DO UPDATE SET id_user_update = ?, texte = ? ");
 
-        values.add(idPeriode).add(idMatiere).add(idClasse).add(userId).add(userId).add(texte);
-        values.add(userId).add(texte);
+        values.add(idPeriode).add(idMatiere).add(idClasse).add(userId).add(userId).add(texte).add(userId).add(texte);
 
         sql.prepared(query.toString(), values, validResultHandler(handler));
     }

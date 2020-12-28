@@ -86,7 +86,7 @@ export class SuiviDesAcquis  {
     }
 
     async saveElementsProgrammeMatierePeriodeEleve() {
-        let _data = _.extend(this.toJson(),{
+        let _data = _.extend(this.toJson(), {
             idClasse: this.idClasse,
             texte: this.elementsProgramme
         });
@@ -183,11 +183,10 @@ export class SuivisDesAcquis extends Model{
             else {
                 subject.hasConflict = false;
             }
-
         })
     }
 
-    async getSuivisDesAcquis ( ){
+    async getSuivisDesAcquis(){
         try{
             await this.getConversionTable();
             let {data} = await http.get(`/competences/bilan/periodique/eleve/${this.idEleve}` +
