@@ -1114,7 +1114,7 @@ public class NoteController extends ControllerHelper {
                     JsonArray idGroups = responseQuerry.right().getValue();
                     //idGroups null si l'eleve n'est pas dans un groupe
                     notesService.getDataGraph(idEleve, idGroups, idEtablissement, idClasse, typeClasse,
-                            idPeriodeString, isNull(idPeriodeString),  arrayResponseHandler(request));
+                            idPeriodeString, isNull(idPeriodeString), arrayResponseHandler(request));
                 }
             }
         });

@@ -792,17 +792,26 @@ public class ExportPDFController extends ControllerHelper {
                 JsonArray data = new JsonArray(
                         moyObject.entrySet().stream().map(entry -> {
                             JsonObject newMoy = new JsonObject();
+
+                            String prof = libTeachers.get(teachers.get(entry.getKey()));
                             newMoy.put("mat", libMatieres.get(entry.getKey().getString("id_matiere")).getString("name"));
                             newMoy.put("rank", libMatieres.get(entry.getKey().getString("id_matiere")).getInteger("rank"));
-                            newMoy.put("prof", libTeachers.get(teachers.get(entry.getKey())));
+                            newMoy.put("prof", prof);
                             newMoy.put("grp", libGrp.get(entry.getKey().getString("id_groupe")));
 
                             if(coTeachers.size() > 0 && coTeachers.get(entry.getKey().getString("id_matiere")) != null){
                                 ArrayList _coTeachers = new ArrayList();
                                 coTeachers.get(entry.getKey().getString("id_matiere")).forEach(coTeacher -> {
-                                    if(!_coTeachers.contains(libTeachers.get(coTeacher))
-                                            && !libTeachers.get(teachers.get(entry.getKey())).equals(libTeachers.get(coTeacher)))
-                                        _coTeachers.add(libTeachers.get(coTeacher));
+                                    String coTeacherName = libTeachers.get(coTeacher);
+                                    if(!_coTeachers.contains(coTeacherName)){
+                                        if(prof != null) {
+                                            if(!prof.equals(coTeacherName)){
+                                                _coTeachers.add(coTeacherName);
+                                            }
+                                        } else {
+                                            _coTeachers.add(coTeacherName);
+                                        }
+                                    }
                                 });
                                 newMoy.put("coT", _coTeachers);
                             }

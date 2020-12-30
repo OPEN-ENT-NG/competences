@@ -608,8 +608,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                         oldElement.avisOrientation.id_avis_conseil_bilan = avisOrientationPeriode.id_avis_conseil_bilan;
                     $scope.oldElementsBilanPeriodique.push(oldElement);
                     if($scope.search.periode.id_type == periode.id_type){
-                        console.log(synthesePeriode);
-                        console.log($scope.elementBilanPeriodique);
                         if(synthesePeriode)
                             $scope.elementBilanPeriodique.syntheseBilanPeriodique.synthese = synthesePeriode.synthese;
                         if(avisConseilPeriode)
