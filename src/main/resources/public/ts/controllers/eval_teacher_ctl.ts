@@ -4898,7 +4898,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.search.classe.id,
                     $scope.structure.enseignants.all,
                     $scope.search.periode);
-                await $scope.releveNoteTotale.export(teacherBySubject, $scope.classes.all, $scope.structure.enseignants.all);
+                await $scope.releveNoteTotale.export(teacherBySubject);
                 await stopLoading();
                 notify.success('evaluations.export.bulletin.success');
             }

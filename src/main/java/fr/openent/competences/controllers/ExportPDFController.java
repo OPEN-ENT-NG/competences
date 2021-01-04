@@ -684,11 +684,11 @@ public class ExportPDFController extends ControllerHelper {
                     });
 
                     JsonObject resultCalc = utilsService.calculMoyenne(matGrpNotes, true, null,false);
-                    if( !resultCalc.getBoolean(HAS_NOTE)){
+                    if(!resultCalc.getBoolean(HAS_NOTE)){
                         moyObject.put("min", "");
                         moyObject.put("max", "");
                         moyObject.put("moy", "NN");
-                    }else if (resultCalc.getDouble("noteMin") > resultCalc.getDouble(MOYENNE)){
+                    } else if (resultCalc.getDouble("noteMin") > resultCalc.getDouble(MOYENNE)){
 
                         moyObject.put("min", "");
                         moyObject.put("max", "");
@@ -1464,7 +1464,7 @@ public class ExportPDFController extends ControllerHelper {
 
                     Integer idPeriode = null;
                     try {
-                        if (request.params().contains("idPeriode") && request.params().get("idPeriode")!= null ) {
+                        if (request.params().contains("idPeriode") && request.params().get("idPeriode") != null) {
                             idPeriode = Integer.parseInt(request.params().get("idPeriode"));
                         }
                     } catch (NumberFormatException err) {

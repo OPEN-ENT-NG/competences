@@ -253,30 +253,37 @@ export class BilanPeriodique extends  Model {
 
     private makerHeaderWithTeachersAndSubjects (data:any, teacherBySubject):Array<any>{
         let matchingDataApi:Array<any> = [];
-        const homeworks:Array<any> = data.homeworks;
-        const statistics:any = data.synthesis.statistiques;
+
+        var ownProps = Object.keys(data.synthesis.statistiques),
+            i = ownProps.length,
+            entries = new Array(i); // preallocate the Array
+        while (i--)
+            entries[i] = [ownProps[i], data.synthesis.statistiques[ownProps[i]]];
+
+        let statistics = [];
+        entries.map(([key, value]) => {
+            value.subjectId = key;
+            if(value.moyenne.moyenne != null && _.values(value.moyenne).every(note => note !== "NN"))
+                statistics.push(value);
+        });
+
         const subjects = data.subjects;
-        for (let subjectId in statistics) {
-            const statistic = statistics[subjectId];
-            for (let k = 0; k < homeworks.length ; k++) {
-                if(homeworks[k].id_matiere === subjectId
-                    && !_.contains(matchingDataApi.map(subject => subject.idSubject), subjectId)
-                    && !(_.values(statistic.moyenne).every(note => note === "NN"))){  //clean column with that "NN"
-                    const subject = _.values(subjects).find(subject => subject.id === homeworks[k].id_matiere);
-                    matchingDataApi.push({
-                        idSubject: subjectId,
-                        average: statistic.moyenne,
-                        teacherId : teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].id : undefined,
-                        teacherName: teacherBySubject && teacherBySubject[subjectId] && teacherBySubject[subjectId].displayName ?
-                            teacherBySubject[subjectId].displayName : undefined,
-                        coTeachers:  teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].coTeachers : undefined,
-                        substituteTeachers:  teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].substituteTeachers : undefined,
-                        subjectName: subject? subject.name : undefined,
-                        subjectShortName:  subject? subject.libelle_court : undefined,
-                        subjectRank:  subject? subject.rank : 0,
-                    });
-                    break;
-                }
+        for (let statistic of statistics) {
+            let subjectId = statistic.subjectId;
+            if(!_.contains(matchingDataApi.map(subject => subject.idSubject), subjectId)){
+                const subject = _.values(subjects).find(subject => subject.id === subjectId);
+                matchingDataApi.push({
+                    idSubject: subjectId,
+                    average: statistic.moyenne,
+                    teacherId : teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].id : undefined,
+                    teacherName: teacherBySubject && teacherBySubject[subjectId] && teacherBySubject[subjectId].displayName ?
+                        teacherBySubject[subjectId].displayName : undefined,
+                    coTeachers: teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].coTeachers : undefined,
+                    substituteTeachers: teacherBySubject && teacherBySubject[subjectId] ? teacherBySubject[subjectId].substituteTeachers : undefined,
+                    subjectName: subject ? subject.name : undefined,
+                    subjectShortName: subject ? subject.libelle_court : undefined,
+                    subjectRank: subject ? subject.rank : 0,
+                });
             }
         }
         return matchingDataApi.sort((subjectOne, subjectTwo) => subjectOne.subjectRank - subjectTwo.subjectRank);

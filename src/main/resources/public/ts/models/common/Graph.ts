@@ -2,11 +2,9 @@ import {Defaultcolors} from "../eval_niveau_comp";
 import {_, angular, http, idiom as lang, Model} from "entcore";
 import {Utils} from "../teacher";
 
-
 declare  let Chart, Color: any;
 
 export class Graph extends Model{
-
     static _metas : any;
 
     static getDataForGraph(that, eleve, forDomaine?, niveauCompetences?, forComparison?): any {
@@ -484,7 +482,7 @@ export class Graph extends Model{
             configMixedChart.optionsNotes = this.buildOption(configMixedChart, forDomaine, eleve, true);
         }
 
-        if( forComparison !== true) {
+        if(forComparison !== true) {
             if (forDomaine === true) {
                 eleve.configRadarChartDomaine = configRadarChart;
                 eleve.configMixedChartDomaine = configMixedChart;

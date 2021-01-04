@@ -43,8 +43,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
     idEtablissement: string;
     exportOptions : any;
     dataByMatiere : any;
-    matiereWithDevoirs : any;
-    matieresId : any;
+    matiereWithNotes : any;
     format:any;
     allMatieres:any;
     idGroups:any;
@@ -65,8 +64,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
         this.classe = new Classe({id: c.id, name: c.name, type_groupe: c.type_groupe, externalId: c.externalId});
         this.periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
         this.dataByMatiere = [];
-        this.matiereWithDevoirs = [];
-        this.matieresId = [];
+        this.matiereWithNotes = [];
         this.idGroups = [];
         this.collection(Devoir, {
             sync: () => {
@@ -76,20 +74,19 @@ export class ReleveNoteTotale extends  Model implements IModel {
 
     toJson() {
         return {
-            idMatieres: this.matieresId,
+            idMatieres: _.pluck(this.allMatieres, 'id'),
             idClasse: this.idClasse,
             idGroups: this.idGroups,
             idEtablissement: this.idEtablissement,
             idPeriode: this.idPeriode,
-            idPeriodes: _.pluck(this.periodes,'idPeriode'),
+            idPeriodes: _.pluck(this.periodes, 'idPeriode'),
             typeClasse: this.classe.type_groupe
         };
     }
 
-    async export (teacherBySubject:Array<any>, classes, teachers) {
+    async export (teacherBySubject:Array<any>) {
         return new Promise(async (resolve, reject) => {
             try {
-                await this.formateHeaderAndColumn(teacherBySubject, classes, teachers);
                 let columnCsv = [];
                 let blob;
                 let addingAllStudents = false;
@@ -102,7 +99,10 @@ export class ReleveNoteTotale extends  Model implements IModel {
                 }else{
                     response = data.data;
                 }
-                _.forEach(this.matiereWithDevoirs, (matiere)=> {
+                await this.formateHeaderAndColumn(teacherBySubject, response.statistiques);
+                console.log(response.statistiques);
+                console.log(this.matiereWithNotes);
+                _.forEach(this.matiereWithNotes, (matiere) => {
                     if (!addingAllStudents) {
                         _.forEach(response.eleves, (line) => {
                             if (this.exportOptions.moyenneMat) {
@@ -121,9 +121,9 @@ export class ReleveNoteTotale extends  Model implements IModel {
                             }
                             if(this.exportOptions.averageFinal && this.periodes.length >0) {
                                 if(line.moyenne_generale != undefined)
-                                    line['moyenne_generale'+lang.translate('viescolaire.utils.annee')] = line.moyenne_generale;
+                                    line['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = line.moyenne_generale;
                                 else
-                                    line['moyenne_generale'+lang.translate('viescolaire.utils.annee')] = "NN"
+                                    line['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = "NN"
                                 for (let periode of this.periodes){
                                     if((responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName).length != 0 &&
                                         (responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName)[0].moyenne_generale != undefined)
@@ -208,23 +208,23 @@ export class ReleveNoteTotale extends  Model implements IModel {
                             }
                             if(this.exportOptions.averageFinal && this.periodes.length >0) {
                                 if(response.statistiques.moyenne_generale != undefined && response.statistiques.moyenne_generale.moyenne != undefined) {
-                                    jsonMoyenneToAdd['moyenne_generale'+lang.translate('viescolaire.utils.annee')] = response.statistiques.moyenne_generale.moyenne;
-                                    jsonMinToAdd['moyenne_generale'+lang.translate('viescolaire.utils.annee')] = response.statistiques.moyenne_generale.minimum;
-                                    jsonMaxToAdd['moyenne_generale'+lang.translate('viescolaire.utils.annee')] = response.statistiques.moyenne_generale.maximum;
+                                    jsonMoyenneToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = response.statistiques.moyenne_generale.moyenne;
+                                    jsonMinToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = response.statistiques.moyenne_generale.minimum;
+                                    jsonMaxToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = response.statistiques.moyenne_generale.maximum;
                                 }else{
-                                    jsonMoyenneToAdd['moyenne_generale'+lang.translate('viescolaire.utils.annee')] = "NN";
-                                    jsonMinToAdd['moyenne_generale'+lang.translate('viescolaire.utils.annee')] = "NN";
-                                    jsonMaxToAdd['moyenne_generale'+lang.translate('viescolaire.utils.annee')] = "NN";
+                                    jsonMoyenneToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = "NN";
+                                    jsonMinToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = "NN";
+                                    jsonMaxToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = "NN";
                                 }
                                 for (let periode of this.periodes) {
                                     if(responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale != undefined && responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.moyenne != undefined) {
-                                        jsonMoyenneToAdd['moyenne_generale'+periode.periodeName] = responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.moyenne;
-                                        jsonMinToAdd['moyenne_generale'+periode.periodeName] = responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.minimum;
-                                        jsonMaxToAdd['moyenne_generale'+periode.periodeName] = responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.maximum;
+                                        jsonMoyenneToAdd['moyenne_generale' + periode.periodeName] = responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.moyenne;
+                                        jsonMinToAdd['moyenne_generale' + periode.periodeName] = responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.minimum;
+                                        jsonMaxToAdd['moyenne_generale' + periode.periodeName] = responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.maximum;
                                     }else{
-                                        jsonMoyenneToAdd['moyenne_generale'+periode.periodeName] = "NN";
-                                        jsonMinToAdd['moyenne_generale'+periode.periodeName] = "NN";
-                                        jsonMaxToAdd['moyenne_generale'+periode.periodeName] = "NN";
+                                        jsonMoyenneToAdd['moyenne_generale' + periode.periodeName] = "NN";
+                                        jsonMinToAdd['moyenne_generale' + periode.periodeName] = "NN";
+                                        jsonMaxToAdd['moyenne_generale' + periode.periodeName] = "NN";
                                     }
                                 }
                             }else if(this.exportOptions.averageFinal) {
@@ -310,7 +310,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
         });
     }
 
-    async formateHeaderAndColumn (teacherBySubject:Array<any>, classes, teachers) {
+    async formateHeaderAndColumn (teacherBySubject:Array<any>, statistics: any) {
         return new Promise(async (resolve, reject) => {
             try {
                 let header = `${lang.translate('evaluations.classe.groupe')} : ${this.classe.name}\r\n${lang.translate('viescolaire.utils.periode')} : ${this.periodeName}\r\n`;
@@ -324,32 +324,35 @@ export class ReleveNoteTotale extends  Model implements IModel {
                     uri += '&idPeriode=' + this.idPeriode;
                 await httpAxios.get(uri).then((data) => {
                     _.forEach(this.allMatieres, matiere => {
-                        let _devoirs = data.data.filter(devoir => devoir.id_matiere == matiere.id);
-                        if (_devoirs.length > 0) {
-                            this.matiereWithDevoirs.push(matiere);
-                            this.matieresId.push(matiere.id);
-                            this.dataByMatiere[matiere.id] = _devoirs;
-                            let enseignantsMatiere = "";
-                            _devoirs.forEach(devoir => {
-                                if(!enseignantsMatiere.includes(devoir.teacher))
-                                    enseignantsMatiere += devoir.teacher + "  "
-                                if(devoir.id_groupe != this.idClasse && !this.idGroups.includes(devoir.id_groupe)) {
-                                    this.idGroups.push(devoir.id_groupe);
-                                    /*teacherBySubject = {...teacherBySubject, ...utils.getTeacherBySubject(classes,
-                                            devoir.id_groupe, teachers) };*/
-                                }
-                            });
-                            teachersBySubjectDevoirs[matiere.id] = enseignantsMatiere;
+                        if(statistics[matiere.id].moyenne.moyenne != null && _.values(statistics[matiere.id].moyenne).every(note => note !== "NN")){
+                            this.matiereWithNotes.push(matiere);
+                            let _devoirs = data.data.filter(devoir => devoir.id_matiere == matiere.id);
+                            if (_devoirs.length > 0) {
+                                this.dataByMatiere[matiere.id] = _devoirs;
+                                let enseignantsMatiere = "";
+                                _devoirs.forEach(devoir => {
+                                    if(!enseignantsMatiere.includes(devoir.teacher))
+                                        enseignantsMatiere += devoir.teacher + "  "
+                                    if(devoir.id_groupe != this.idClasse && !this.idGroups.includes(devoir.id_groupe)) {
+                                        this.idGroups.push(devoir.id_groupe);
+                                    }
+                                });
+                                teachersBySubjectDevoirs[matiere.id] = enseignantsMatiere;
+                            }
                         }
                     });
                 });
                 if(this.idGroups.length != 0)
                     this.idGroups.push(this.idClasse);
-                if (this.matieresId.length == 0)
+                if (this.matiereWithNotes.length == 0)
                     throw "Pas d'évaluations réalisées pour cette classe sur cette période";
-                for (let matiere of this.matiereWithDevoirs) {
+                for (let matiere of this.matiereWithNotes) {
                     let teacher:string;
                     let _devoirs = this.dataByMatiere[matiere.id];
+                    if(_devoirs != null){
+                        this.devoirs.load(_devoirs, null, false);
+                    }
+
                     if (this.exportOptions.moyenneMat) {
                         header += `;${matiere.name}`;
                         column.push(matiere.name + 'Moyenne');
@@ -358,7 +361,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                         header += `;${matiere.name}`;
                         column.push(matiere.name + 'Positionnement');
                     }
-                    this.devoirs.load(_devoirs, null, false);
+
                     this.enseignantsNames = ";";
                     if(teacherBySubject[matiere.id]){
                         teacher = teacherBySubject[matiere.id].displayName;
@@ -415,7 +418,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                     }
                 }
                 header += `\r\n${lang.translate('teachers')}`;
-                for (let j = 0; j < this.matieresId.length; j++) {
+                for (let j = 0; j < this.matiereWithNotes.length; j++) {
                     if (this.exportOptions.moyenneMat)
                         header += `${enseignants[j]}`;
                     if (this.exportOptions.positionnementFinal)
@@ -440,7 +443,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                     }
                 }
                 header += `\r\n${lang.translate('students')};`;
-                for (let i = 0; i < this.matieresId.length; i++) {
+                for (let i = 0; i < this.matiereWithNotes.length; i++) {
                     if (this.exportOptions.moyenneMat) {
                         header += `${lang.translate('average.min')};`;
                     }
