@@ -87,34 +87,36 @@ export class SuiviCompetence extends Model {
         this.collection(Domaine, {
             sync: () => {
                 return new Promise(async (resolve) => {
-                    let urlGetArbreDomaines = `${SuiviCompetence.api.getArbreDomaines + classe.id}&idEleve=${
-                        eleve.id}&idCycle=${cycle.id_cycle}`;
+                    if(cycle.id_cycle != null) {
+                        let urlGetArbreDomaines = `${SuiviCompetence.api.getArbreDomaines + classe.id}&idEleve=${
+                            eleve.id}&idCycle=${cycle.id_cycle}`;
 
-                    let response = await Promise.all([http.get(urlGetArbreDomaines),
-                        this.getCompetencesNotes(eleve, periode)]);
+                        let response = await Promise.all([http.get(urlGetArbreDomaines),
+                            this.getCompetencesNotes(eleve, periode)]);
 
-                    let resDomaines = response[0].data;
-                    let resCompetencesNotes = response[1].data;
-                    let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId,this.classe);
-                    if (resDomaines) {
-                        this.domaines.all.length = 0;
-                        for (let i = 0; i < resDomaines.length; i++) {
-                            let domaine = new Domaine(resDomaines[i], eleve.id);
-                            if (this.bilanFinDeCycles !== undefined && this.bilanFinDeCycles.all.length > 0) {
-                                let tempBFC = _.findWhere(this.bilanFinDeCycles.all, {id_domaine: domaine.id});
-                                if (tempBFC !== undefined) {
-                                    domaine.bfc = tempBFC;
+                        let resDomaines = response[0].data;
+                        let resCompetencesNotes = response[1].data;
+                        let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId, this.classe);
+                        if (resDomaines) {
+                            this.domaines.all.length = 0;
+                            for (let i = 0; i < resDomaines.length; i++) {
+                                let domaine = new Domaine(resDomaines[i], eleve.id);
+                                if (this.bilanFinDeCycles !== undefined && this.bilanFinDeCycles.all.length > 0) {
+                                    let tempBFC = _.findWhere(this.bilanFinDeCycles.all, {id_domaine: domaine.id});
+                                    if (tempBFC !== undefined) {
+                                        domaine.bfc = tempBFC;
+                                    }
                                 }
+                                domaine.id_chef_etablissement = model.me.userId;
+                                domaine.id_etablissement = structure.id;
+                                this.domaines.all.push(domaine);
+                                Utils.setCompetenceNotes(domaine, resCompetencesNotes, this.tableConversions,
+                                    this.domaines, null,undefined , this.isCycle, periode, listTeacher);
                             }
-                            domaine.id_chef_etablissement = model.me.userId;
-                            domaine.id_etablissement = structure.id;
-                            this.domaines.all.push(domaine);
-                            Utils.setCompetenceNotes(domaine, resCompetencesNotes, this.tableConversions, this.domaines, null,
-                               undefined , this.isCycle,periode,listTeacher);
                         }
-                    }
-                    if (resolve && typeof (resolve) === 'function') {
-                        resolve();
+                        if (resolve && typeof (resolve) === 'function') {
+                            resolve();
+                        }
                     }
                 });
             }

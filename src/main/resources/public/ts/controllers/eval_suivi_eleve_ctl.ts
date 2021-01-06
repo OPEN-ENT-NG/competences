@@ -410,14 +410,13 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                         if($scope.selectedCycleRadio !== undefined){
                             if ($scope.selectedCycleRadio !== null) {
                                 idCycle = $scope.selectedCycleRadio.id_cycle;
-                            }
-                            else {
+                            } else {
                                 idCycle = $scope.currentCycle.id_cycle;
                             }
                         }
                         $scope.suiviCompetence.bilanFinDeCycles.all = [];
                         $scope.suiviCompetence.domaines.all = [];
-                        if(idCycle !== undefined) {
+                        if(idCycle != null) {
                             let allPromise = [$scope.suiviCompetence.sync(),
                                 $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id,
                                     idTypePeriode, isCycle, idCycle, evaluations.structure.id, $scope.search.eleve.id),
@@ -443,6 +442,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                             $scope.suiviCompetence.on('refresh-slider', function () {
                                 $scope.baremeBrevet();
                             });
+                        } else {
+                            notify.info('evaluation.suivi.no.cycle');
                         }
                         if ($scope.opened.detailCompetenceSuivi) {
                             if ($scope.detailCompetence !== undefined) {
@@ -456,7 +457,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                 } else {
                                     $scope.backToSuivi();
                                 }
-                            } else $scope.backToSuivi();
+                            } else {
+                                $scope.backToSuivi();
+                            }
                         }
 
                         $scope.informations.eleve.suiviCompetences.push($scope.suiviCompetence);

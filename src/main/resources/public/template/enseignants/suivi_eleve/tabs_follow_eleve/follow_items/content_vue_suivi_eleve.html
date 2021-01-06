@@ -14,9 +14,8 @@
   ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
-<div
-        ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve')"
-        class="cell ng-scope twelve vertical-spacing">
+<div ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve')"
+     class="cell ng-scope twelve vertical-spacing">
     <label class="cell six">
         <div class="cell cell-check expandable-content two-mobile">
             <label class="checkbox">
@@ -47,8 +46,7 @@
     </h2>
 </div>
 
-
-<script type="text/ng-template"  id="tree_item_renderer.html">
+<script type="text/ng-template" id="tree_item_renderer.html">
     <h4 workflow="competences.saveCompetenceNiveauFinal" class="two align-center inline-block marginNiveau"
         ng-if="isMyEvaluations(suiviFilter) && domaine.niveau === 1 && $first
         && (search.periode.id !== null || (!search.periode.id && !search.periode.libelle))">
@@ -137,10 +135,8 @@
                                                  level="(search.eleve.level)? search.eleve.level : search.classe.name"
                                                  trimesters="filteredPeriode"
                                                  is-year="!search.periode.id && !search.periode.libelle">
-
                     </proportion-suivi-competence>
                 </div>
-
             </div>
         </div>
     </div>

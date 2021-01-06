@@ -54,24 +54,20 @@ export class BaremeBrevetEleves {
         return data;
     }
 
-    async sync(idClasse: string,idTypePeriode: number, isCycle: boolean, idCycle: number, idStructure? , idEleve?){
+    async sync(idClasse: string, idTypePeriode: number, isCycle: boolean, idCycle: number, idStructure?, idEleve?){
         return new Promise( async (resolve, reject) => {
-        try{
-            if(Utils.isNull(idStructure) && Utils.isNull(idEleve)) {
-                let {data} = await this.getBaremClasse(idClasse, idTypePeriode, isCycle, idCycle);
-                resolve(data);
+            try{
+                if(Utils.isNull(idStructure) && Utils.isNull(idEleve)) {
+                    let {data} = await this.getBaremClasse(idClasse, idTypePeriode, isCycle, idCycle);
+                    resolve(data);
+                } else {
+                    let {data} = await this.getBaremEleve(idClasse, idTypePeriode, isCycle, idCycle, idStructure, idEleve);
+                    resolve(data);
+                }
+            }catch (e){
+                notify.error('evaluation.bfc.controle.continu.eleves.err');
+                reject(e);
             }
-            else {
-                let {data} = await this.getBaremEleve(idClasse, idTypePeriode, isCycle, idCycle, idStructure, idEleve);
-                resolve(data);
-            }
-        }catch (e){
-            notify.error('evaluation.bfc.controle.continu.eleves.err');
-            reject(e);
-        }
         });
     }
-
-
-
 }
