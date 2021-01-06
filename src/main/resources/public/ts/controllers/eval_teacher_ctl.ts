@@ -216,12 +216,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.cleanRoot();
 
                     // récupération de tous les devoirs sans limite
-                    evaluations.structure.syncDevoirs();
+                    await evaluations.structure.syncDevoirs();
 
                     _.map($scope.devoirs.all, (devoir) => {
                         devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
                     });
-
+                    $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+                        return $scope.filterValidDevoir(devoir);
+                    });
                     let openTemplates =  () => {
                         $scope.search.enseignant = "*";
                         //rajout de la periode Annee
