@@ -1,2 +1,2 @@
-UPDATE notes.domaine_enseignement SET libelle='Enseignement Moral et Civique' WHERE libelle='Enseignement morale et civique'
-UPDATE notes.enseignements SET nom='Enseignement Moral et Civique' WHERE nom='Enseignement morale et civique'
+UPDATE notes.domaine_enseignement SET libelle='Enseignement Moral et Civique' WHERE libelle='Enseignement morale et civique';
+UPDATE notes.enseignements SET nom='Enseignement Moral et Civique' WHERE nom='Enseignement morale et civique';
