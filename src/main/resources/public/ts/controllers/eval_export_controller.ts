@@ -48,6 +48,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                 stsFile: (stsFile !== undefined) ? stsFile : null
             };
 
+            $scope.LSU_TYPE_EXPORT = LSU_TYPE_EXPORT;
             $scope.getYearsAndPeriodes();
             if(typeArchive !== undefined) {
                 $scope.paramsArchive = {

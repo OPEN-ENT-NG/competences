@@ -131,7 +131,7 @@
                 <td ng-init="student.choose = [];">
                     <div>
                         <div>
-                            <div ng-if="params.type === '1'">
+                            <div ng-if="paramsLSU.type === LSU_TYPE_EXPORT.BFC">
                             <div ng-model="student.choose[0]"
                                  ng-init="student.choose[0] = false;"
                                  ng-click="student.choose[0]=!student.choose[0];changeUnheededStudents(student, undefined, null, 0)">
@@ -141,7 +141,7 @@
                                 <span><i18n>viescolaire.utils.cycle</i18n></span>
                             </div>
                             </div>
-                            <div ng-if="params.type === '2'" ng-repeat="periode in filteredPeriodes">
+                            <div ng-if="paramsLSU.type === LSU_TYPE_EXPORT.BILAN_PERIODIQUE" ng-repeat="periode in filteredPeriodes">
                             <div ng-if="periode.selected"
                                  ng-model="student.choose[$index]"
                                  ng-init="student.choose[$index] = false;"
