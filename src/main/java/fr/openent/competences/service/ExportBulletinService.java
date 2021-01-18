@@ -31,16 +31,17 @@ public interface ExportBulletinService {
      * @param idEleve idEleve
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode idPeriode
-     * @param classe Object contenant les information sur la classe
      * @param params paramètres de la requête
+     * @param classe Object contenant les information sur la classe
      * @param host de la request
      * @param acceptLanguage de la request
+     * @param vertx
      * @param finalHandler handler servant à la synchronisation des services
      */
     void getExportBulletin(final AtomicBoolean answered, String idEleve,
                            Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
-                           final JsonObject classe, String host, String acceptLanguage,JsonArray services,
-                           Handler<Either<String, JsonObject>> finalHandler);
+                           final JsonObject classe, String host, String acceptLanguage, JsonArray services,
+                           Vertx vertx, Handler<Either<String, JsonObject>> finalHandler);
 
     /**
      * Rajoute tous les libelles i18n nécessaires pour la génération des bulletins
@@ -230,8 +231,7 @@ public interface ExportBulletinService {
     void setLevel(JsonObject eleve);
 
     /**
-     *
-     * @param answered
+     *  @param answered
      * @param eleves
      * @param elevesMap
      * @param idPeriode
@@ -241,15 +241,15 @@ public interface ExportBulletinService {
      * @param host de la request
      * @param acceptLanguage de la request
      * @param finalHandler
+     * @param vertx
      */
     void buildDataForStudent(final AtomicBoolean answered, JsonArray eleves,
                              Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
                              final JsonObject classe, Boolean showBilanPerDomaines,
-                             String host, String acceptLanguage, Handler<Either<String, JsonObject>> finalHandler);
+                             String host, String acceptLanguage, Handler<Either<String, JsonObject>> finalHandler, Vertx vertx);
 
     /**
-     *
-     * @param idEtablissement
+     *  @param idEtablissement
      * @param idClasse
      * @param idStudents
      * @param idPeriode
@@ -261,11 +261,12 @@ public interface ExportBulletinService {
      * @param acceptLanguage de la request
      * @param finalHandler
      * @param future
+     * @param vertx
      */
     void runExportBulletin(String idEtablissement, String idClasse, JsonArray idStudents, Long idPeriode,
-                           JsonObject params,Future<JsonArray> elevesFuture , final Map<String, JsonObject> elevesMap,
-                           final AtomicBoolean answered,String host, String acceptLanguage,
-                           final Handler<Either<String, JsonObject>> finalHandler, Future<JsonObject> future);
+                           JsonObject params, Future<JsonArray> elevesFuture, final Map<String, JsonObject> elevesMap,
+                           final AtomicBoolean answered, String host, String acceptLanguage,
+                           final Handler<Either<String, JsonObject>> finalHandler, Future<JsonObject> future, Vertx vertx);
 
     /**
      * le Chef etab ou le Prof. principal enregistre les paramètres de l'export afin de permettre la génération du bulletin
