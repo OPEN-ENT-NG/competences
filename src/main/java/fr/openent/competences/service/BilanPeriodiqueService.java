@@ -39,6 +39,4 @@ public interface BilanPeriodiqueService {
                                            final String idClasse,final Integer typeClasse, final String idPeriodeString,
                                            final Handler<Either<String, JsonArray>> handler);
 
-    void getSuiviAcquisWithServicesAndSubjects(String idEtablissement, Long idPeriode, String idEleve, String idClasse,
-                                               JsonArray services, Handler<Either<String, JsonArray>> suiviAcquisHandler);
 }

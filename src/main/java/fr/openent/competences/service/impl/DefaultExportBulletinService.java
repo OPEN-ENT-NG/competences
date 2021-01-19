@@ -14,6 +14,7 @@ import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -45,6 +46,7 @@ import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.RoundingMode;
@@ -572,7 +574,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     @Override
     public void getExportBulletin(final AtomicBoolean answered, String idEleve,
                                   Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
-                                  final JsonObject classe, String host, String acceptLanguage, JsonArray services,
+                                  final JsonObject classe, String host, String acceptLanguage,
                                   Vertx vertx, Handler<Either<String, JsonObject>> finalHandler){
         try {
             if (!answered.get()) {
@@ -580,7 +582,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 String beforeAvisConseil = params.getString("mentionOpinion") + " : ";
                 String beforeAvisOrientation = params.getString("orientationOpinion");
                 List<Future> futures = new ArrayList<>();
-
 
                 Future<JsonObject> getSuiviAcquisFuture = Future.future();
                 Future<JsonObject> putLibelleForExportFuture = Future.future();
@@ -645,7 +646,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     }
                 }
 
-                getSuiviAcquis(idEleve, elevesMap, idPeriode, classe, params,services, futureGetHandler(getSuiviAcquisFuture));
+                getSuiviAcquis(idEleve, elevesMap, idPeriode, classe, params, futureGetHandler(getSuiviAcquisFuture));
                 putLibelleForExport(idEleve, elevesMap, params, futureGetHandler(putLibelleForExportFuture));
                 getEvenements(params.getString("idStructure"), classe.getString(ID_CLASSE),
                         idEleve, elevesMap, idPeriode, futureGetHandler(getEvenementsFuture));
@@ -1955,7 +1956,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     @Override
     public void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject classe,
-                               JsonObject params,JsonArray services, Handler<Either<String, JsonObject>> finalHandler ) {
+                               JsonObject params, Handler<Either<String, JsonObject>> finalHandler ) {
 
         boolean getProgrammeElement = params.getBoolean(GET_PROGRAM_ELEMENT);
 
@@ -1978,16 +1979,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 finalHandler.handle(new Either.Right<>(null));
             }
             else {
-                bilanPeriodiqueService.getSuiviAcquisWithServicesAndSubjects(idEtablissement, idPeriode, idEleve,
-                        idClasse,services,getSuiviAcquisHandler(idEleve, idPeriode, classe, params, finalHandler, getProgrammeElement,
-                                eleveObject, idEtablissement, idClasse,services));
+                bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
+                        idClasse,getSuiviAcquisHandler(idEleve, idPeriode, classe, params, finalHandler, getProgrammeElement,
+                                eleveObject, idEtablissement, idClasse));
             }
         }
     }
 
     private Handler<Either<String, JsonArray>> getSuiviAcquisHandler(String idEleve, Long idPeriode, JsonObject classe, JsonObject params,
                                                                      Handler<Either<String, JsonObject>> finalHandler, boolean getProgrammeElement,
-                                                                     JsonObject eleveObject, String idEtablissement, String idClasse, JsonArray services) {
+                                                                     JsonObject eleveObject, String idEtablissement, String idClasse) {
         return new Handler<Either<String, JsonArray>>() {
             private int count = 1;
             private AtomicBoolean answer = new AtomicBoolean(false);
@@ -1999,8 +2000,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                     if (message.contains(TIME) && !answer.get()) {
                         count ++;
-                        bilanPeriodiqueService.getSuiviAcquisWithServicesAndSubjects(idEtablissement, idPeriode, idEleve,
-                                idClasse,services,this);
+                        bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
+                                idClasse,this);
                     }
                     else {
                         log.error("["+ GET_SUIVI_ACQUIS_METHOD + "] :" + idEleve + " " + message +
@@ -2670,61 +2671,53 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         JsonObject images = params.getJsonObject("images");
         Long typePeriode = params.getLong(TYPE_PERIODE);
-        //essayer d appeler ca en future en plus tot
-        utilsService.getServices(params.getString("idStructure"),new JsonArray().add(classe.getString(ID_CLASSE)),event -> {
-            if (event.isRight()) {
-                JsonArray services = event.right().getValue();
-                List<Future> futures = new ArrayList<>();
+        List<Future> futures = new ArrayList<>();
 
-                for (int i = 0; i < eleves.size(); i++) {
-                    futures.add(Future.future());
-                }
-                for (int i = 0; i < eleves.size(); i++) {
-                    JsonObject eleve = eleves.getJsonObject(i);
-                    eleve.put(TYPE_PERIODE, typePeriode);
-                    eleve.put(ID_PERIODE_KEY, idPeriode);
+        for (int i = 0; i < eleves.size(); i++) {
+            futures.add(Future.future());
+        }
+        for (int i = 0; i < eleves.size(); i++) {
+            JsonObject eleve = eleves.getJsonObject(i);
+            eleve.put(TYPE_PERIODE, typePeriode);
+            eleve.put(ID_PERIODE_KEY, idPeriode);
 
-                    // Mise en forme de la date de naissance
-                    String idEleve = eleve.getString(ID_ELEVE_KEY);
-                    setBirthDate(eleve);
+            // Mise en forme de la date de naissance
+            String idEleve = eleve.getString(ID_ELEVE_KEY);
+            setBirthDate(eleve);
 
-                    // Classe à afficher
-                    setStudentClasseToPrint(eleve, classe);
+            // Classe à afficher
+            setStudentClasseToPrint(eleve, classe);
 
-                    // Ajout de l'image du graphe par domaine
-                    if (showBilanPerDomaines) {
-                        setIdGraphPerDomaine(eleve, images);
-                    }
-
-                    // Ajout du niveau de l'élève
-                    setLevel(eleve);
-
-                    // Ajout de l'idEtablissement pour l'archive
-                    if(isNotNull(params.getString("idStructure")) && (isNull(eleve.getString(ID_ETABLISSEMENT_KEY))
-                            || !eleve.getString(ID_ETABLISSEMENT_KEY).equals(params.getString(ID_ETABLISSEMENT_KEY)))){
-                        eleve.put(ID_ETABLISSEMENT_KEY, params.getString("idStructure"));
-                    }
-
-                    elevesMap.put(idEleve, eleve);
-
-                    //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
-
-                    getExportBulletin(answered, idEleve, elevesMap,idPeriode, params, classe, host, acceptLanguage,services,vertx,
-                            futureGetHandler(futures.get(i)));
-                }
-                CompositeFuture.all(futures).setHandler(compositeEvent ->{
-                    if(compositeEvent.succeeded()){
-                        log.info("end students");
-                        finalHandler.handle(new Either.Right<>(null));
-                    }
-                });
-            }else{
-                log.error("[Competences]DefaultExportBulletinService at buildDataForStudent : Error when getting services");
-                finalHandler.handle(new Either.Left<>("cannot access services"));
+            // Ajout de l'image du graphe par domaine
+            if (showBilanPerDomaines) {
+                setIdGraphPerDomaine(eleve, images);
             }
-        });
+
+            // Ajout du niveau de l'élève
+            setLevel(eleve);
+
+            // Ajout de l'idEtablissement pour l'archive
+            if(isNotNull(params.getString("idStructure")) && (isNull(eleve.getString(ID_ETABLISSEMENT_KEY))
+                    || !eleve.getString(ID_ETABLISSEMENT_KEY).equals(params.getString(ID_ETABLISSEMENT_KEY)))){
+                eleve.put(ID_ETABLISSEMENT_KEY, params.getString("idStructure"));
+            }
+
+            elevesMap.put(idEleve, eleve);
+
+                //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
+
+                getExportBulletin(answered, idEleve, elevesMap,idPeriode, params, classe, host, acceptLanguage,vertx,
+                        futureGetHandler(futures.get(i)));
+            }
+            CompositeFuture.all(futures).setHandler(compositeEvent ->{
+                if(compositeEvent.succeeded()){
+                    log.info("end students");
+                    finalHandler.handle(new Either.Right<>(null));
+                }
+            });
+
     }
-    //TROUVE L APPEL BUS ALLSERVICES - > le faire qu une fois
+
 
 
 
@@ -3597,7 +3590,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         };
     }
 
-    private void handleCreateFile(File pdfFile, OutputStream outStream, JsonObject templateProps, String prefixPdfName, String dateDebut, JsonObject eleve, Handler<Either<String, Boolean>> finalHandler) {
+    private void handleCreateFile(File pdfFile, OutputStream outStream, JsonObject templateProps, String prefixPdfName,
+                                  String dateDebut, JsonObject eleve, Handler<Either<String, Boolean>> finalHandler) {
         Buffer buffer;
         try {
             String sourceDir = pdfFile.getAbsolutePath();
@@ -3638,7 +3632,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             e.printStackTrace();
             log.error("[DefaultExportBulletinService] : " + e.getMessage() + " "
                     + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-            finalHandler.handle(new Either.Left<>(e.getMessage()));}
+            finalHandler.handle(new Either.Left<>(e.getMessage()));
+        }
     }
 
     private void getBase64File(String id,Future<String> future) {

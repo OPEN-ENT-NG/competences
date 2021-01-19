@@ -99,7 +99,7 @@ public class DevoirControllerHelper {
         return new Handler<AsyncResult<Message<JsonObject>>>() {
             @Override
             public void handle(AsyncResult<Message<JsonObject>> event) {
-                JsonArray results = event.result().body().getJsonArray("result");
+                JsonArray results = event.result().body().getJsonArray("results");
                 List<Future> futures = new ArrayList<>();
                 List<String> actions = new ArrayList<String>();
                 actions.add(Competences.DEVOIR_ACTION_UPDATE);

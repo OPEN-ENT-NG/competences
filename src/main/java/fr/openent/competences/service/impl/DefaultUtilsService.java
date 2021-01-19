@@ -128,7 +128,7 @@ public class DefaultUtilsService  implements UtilsService {
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
-    public void getMultiTeachersByClass(String idEtablissement, String idClasse, Integer idPeriode,
+    public void getMultiTeachersByClass(final String idEtablissement, final String idClasse, final Integer idPeriode,
                                         Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "multiTeaching.getMultiTeachersByClass")
@@ -141,22 +141,55 @@ public class DefaultUtilsService  implements UtilsService {
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
                         if (OK.equals(body.getString(STATUS))) {
-                            JsonArray result = body.getJsonArray(RESULT);
+                            JsonArray result = body.getJsonArray(RESULTS);
                             handler.handle(new Either.Right<String, JsonArray>(result));
                         } else {
                             handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                            log.error("getMultiTeachersByClass : " + body.getString("message"));
+                            log.error("[Competences] DefaultUtilsService at getMultiTeachersByClass : " + body.getString("message"));
                         }
                     }
                 }));
     }
 
-    public void getServices(final String idEtablissement, final JsonArray idClasse,
+    @Override
+    public void getMultiTeachers (final String structureId, final JsonArray groupIds, final Integer PeriodeId,
+                                  Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "multiTeaching.getMultiteachers")
+                .put("structureId", structureId)
+                .put("groupIds", groupIds)
+                .put("periodId", PeriodeId != null ? PeriodeId.toString() : null);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        if (OK.equals(body.getString(STATUS))) {
+                            JsonArray result = body.getJsonArray(RESULTS);
+                            handler.handle(new Either.Right<String, JsonArray>(result));
+                        } else {
+                            handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                            log.error("[Competences] DefaultUtilsService at getMultiteachers : "
+                                    + body.getString("message"));
+                        }
+                    }
+                }));
+    }
+
+    /**
+     * get only evaluable sql services
+     * @param structureId
+     * @param idsClass groups or/and classes ids
+     * @param handler request response
+     */
+
+    public void getServices(final String structureId, final JsonArray idsClass,
                             Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "service.getDefaultServices")
-                .put("idEtablissement", idEtablissement)
-                .put("idsGroupe", idClasse);
+                .put("action", "service.getServices")
+                .put("idStructure", structureId)
+                .put("aIdGroupe", idsClass)
+                .put("evaluable", true);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
@@ -168,6 +201,55 @@ public class DefaultUtilsService  implements UtilsService {
             }
         }));
     }
+
+    @Override
+    public void getDefaultServices (final String structureId, final JsonArray groupIds, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "service.getDefaultServices")
+                .put("idEtablissement", structureId)
+                .put("idsGroupe", groupIds);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray results = body.getJsonArray(RESULTS);
+                handler.handle(new Either.Right<String, JsonArray>(results));
+            } else {
+                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                log.error("getDefaultServices : " + body.getString("message"));
+            }
+        }));
+
+    }
+
+    /**
+     * get All Services evaluable or no evaluable, neo and sql with multiTeachers on each service
+     * @param structureId strusure id
+     * @param groupIds all groups or/and classes ids
+     * @param filters JsonObject with boolean parameters :
+     *                evaluable,noEvaluable,classes,groups,manualGroups are true by default,
+     *                compressed is false by default
+     * @param handler return services with fields of serviceModel (class java viesco) each service contains multiTeachers
+     */
+    @Override
+    public void getDefaultServices (final String structureId, final JsonArray groupIds, final JsonObject filters,
+                                   Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "service.getDefaultServices")
+                .put("idEtablissement", structureId)
+                .put("idsGroupe", groupIds)
+                .put("filters",filters);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray results = body.getJsonArray(RESULTS);
+                handler.handle(new Either.Right<String, JsonArray>(results));
+            } else {
+                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                log.error("[Competences] getDefaultServices : " + body.getString("message"));
+            }
+        }));
+    }
+
 
     @Override
     public void listTypesDevoirsParEtablissement(String idEtablissement, Handler<Either<String, JsonArray>> handler) {

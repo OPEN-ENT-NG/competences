@@ -40,8 +40,9 @@ public interface ExportBulletinService {
      */
     void getExportBulletin(final AtomicBoolean answered, String idEleve,
                            Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
-                           final JsonObject classe, String host, String acceptLanguage, JsonArray services,
+                           final JsonObject classe, String host, String acceptLanguage,
                            Vertx vertx, Handler<Either<String, JsonObject>> finalHandler);
+
 
     /**
      * Rajoute tous les libelles i18n nécessaires pour la génération des bulletins
@@ -72,7 +73,7 @@ public interface ExportBulletinService {
      * @param finalHandler handler servant à la synchronisation des services
      */
    void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject classe,
-                   JsonObject params,JsonArray services, Handler<Either<String, JsonObject>> finalHandler );
+                   JsonObject params, Handler<Either<String, JsonObject>> finalHandler );
 
     /**
      *  - Ordonne les élèves par classe et  par nom

@@ -54,10 +54,17 @@ public interface UtilsService {
      */
     void getTitulaires(String psIdRemplacant, String psIdEtablissement, Handler<Either<String, JsonArray>> handler);
 
-    void getMultiTeachersByClass(String idEtablissement, String idClasse, Integer idPeriode,
+    void getMultiTeachersByClass( final String idEtablissement, final String idClasse, final Integer idPeriode,
                                    Handler<Either<String, JsonArray>> handler);
+    void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
+                          Handler<Either<String, JsonArray>> handler);
 
     void getServices(final String idEtablissement, final JsonArray idClasse, Handler<Either<String, JsonArray>> handler);
+
+    void getDefaultServices(final String structureId, final JsonArray groupIds, Handler<Either<String,JsonArray>> handler);
+
+    void getDefaultServices(final String structureId, final JsonArray groupIds, final JsonObject filters,
+                           Handler<Either<String,JsonArray>> handler);
 
     /**
      * Liste les types de devoirs pour un etablissement donné
