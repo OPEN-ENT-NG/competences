@@ -100,8 +100,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                     response = data.data;
                 }
                 await this.formateHeaderAndColumn(teacherBySubject, response.statistiques);
-                console.log(response.statistiques);
-                console.log(this.matiereWithNotes);
+
                 _.forEach(this.matiereWithNotes, (matiere) => {
                     if (!addingAllStudents) {
                         _.forEach(response.eleves, (line) => {
@@ -324,7 +323,8 @@ export class ReleveNoteTotale extends  Model implements IModel {
                     uri += '&idPeriode=' + this.idPeriode;
                 await httpAxios.get(uri).then((data) => {
                     _.forEach(this.allMatieres, matiere => {
-                        if(statistics[matiere.id].moyenne.moyenne != null && _.values(statistics[matiere.id].moyenne).every(note => note !== "NN")){
+                        if((statistics[matiere.id].moyenne.moyenne != null && _.values(statistics[matiere.id].moyenne).every(note => note !== "NN")) ||
+                            statistics[matiere.id].positionnement.moyenne != null && _.values(statistics[matiere.id].positionnement).every(note => note !== "NN")){
                             this.matiereWithNotes.push(matiere);
                             let _devoirs = data.data.filter(devoir => devoir.id_matiere == matiere.id);
                             if (_devoirs.length > 0) {
