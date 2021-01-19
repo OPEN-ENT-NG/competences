@@ -88,7 +88,7 @@ public class ExportBulletinController extends ControllerHelper {
 
             exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, params,
                     elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
-                    finalHandler, null);
+                    finalHandler, null,vertx);
         });
     }
 
