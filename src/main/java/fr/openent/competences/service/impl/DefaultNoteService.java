@@ -1697,14 +1697,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     @Override
-    public void getNotesAndMoyFinaleByClasseAndPeriode(List<String> idsEleve, JsonArray idsGroups, Integer idPeriode, Handler<Either<String, JsonArray>> handler) {
+    public void getNotesAndMoyFinaleByClasseAndPeriode(List<String> idsEleve, JsonArray idsGroups, Integer idPeriode,
+                                                       String idEtablissement, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         String query = "SELECT * FROM " +
                 "(SELECT notes.id_eleve AS id_eleve_notes, devoirs.id, devoirs.id_periode, devoirs.id_matiere, devoirs.owner, rel_devoirs_groupes.id_groupe, " +
                 "rel_devoirs_groupes.type_groupe, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, devoirs.is_evaluated, notes.valeur " +
                 "FROM notes.devoirs LEFT JOIN notes.notes ON (devoirs.id = notes.id_devoir AND " +
-                "notes.id_eleve IN  "+Sql.listPrepared(idsEleve)+" ) " +
+                "notes.id_eleve IN " + Sql.listPrepared(idsEleve) + " ) " +
                 "INNER JOIN notes.rel_devoirs_groupes ON (devoirs.id = rel_devoirs_groupes.id_devoir AND " +
                 "rel_devoirs_groupes.id_groupe IN " + Sql.listPrepared(idsGroups.getList()) + " ) ";
 
@@ -1714,9 +1715,19 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         for (Object idGroupe: idsGroups.getList()) {
             values.add(idGroupe);
         }
+
         if(idPeriode != null){
             query += "WHERE devoirs.id_periode = ?";
             values.add(idPeriode);
+        }
+        if(idEtablissement != null){
+            if(idPeriode != null) {
+                query += " AND ";
+            } else {
+                query += " WHERE ";
+            }
+            query += "devoirs.id_etablissement = ?";
+            values.add(idEtablissement);
         }
 
         query += " ORDER BY notes.id_eleve , devoirs.id_matiere ) AS devoirs_notes " +
@@ -1765,7 +1776,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             if (responseListEleve.isLeft()) {
                                 handler.handle(new Either.Left<>("eleves not found"));
                                 log.error(responseListEleve.left().getValue());
-
                             } else {
                                 List<Eleve> eleves = new ArrayList<>(responseListEleve.right().getValue());
 
@@ -1774,7 +1784,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 } else {
                                     //on récupère les groups de la classe
                                     Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections.JsonArray().add(idClasse),
-                                            getGroupesClasseHandler(eleves, handler, idsEleve, idPeriode, services, multiTeachers,
+                                            getGroupesClasseHandler(eleves, handler, idsEleve, idPeriode,
+                                                    idEtablissement, services, multiTeachers,
                                                     mapAllidMatAndidTeachers, mapIdMatListMoyByEleve));
                                 }
                             }
@@ -1787,6 +1798,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private Handler<Either<String, JsonArray>> getGroupesClasseHandler(List<Eleve> eleves,
                                                                        Handler<Either<String, JsonObject>> handler,
                                                                        List<String> idsEleve, Integer idPeriode,
+                                                                       String idEtablissement,
                                                                        JsonArray services, JsonArray multiTeachers,
                                                                        SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
                                                                        Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve) {
@@ -1810,7 +1822,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         final String idClass = idClasseGroups.getJsonObject(0).getString("id_classe");
 
                         // 2- On récupère les notes des eleves
-                        getNotesAndMoyFinaleByClasseAndPeriode(idsEleve, idsGroups, idPeriode,
+                        getNotesAndMoyFinaleByClasseAndPeriode(idsEleve, idsGroups, idPeriode, idEtablissement,
                                 getNotesAndMoyFinaleByClasseAndPeriodeHandler(nameClasse, idClass, handler, services,
                                         multiTeachers, mapAllidMatAndidTeachers, eleves, mapIdMatListMoyByEleve));
                     }

@@ -1536,7 +1536,6 @@ public class ExportPDFController extends ControllerHelper {
                         }
                     };
 
-
                     Handler<Either<String, JsonObject>> getMoysEleveByMatHandler = event -> {
                         if(!event.isRight()) {
                             leftToResponse(request, event.left());
@@ -1546,7 +1545,6 @@ public class ExportPDFController extends ControllerHelper {
                             noteService.getMatEvaluatedAndStat(mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMatEvaluatedAndStatHandler);
                         }
                     };
-
 
                     if(idPeriode != null){
                         //in this case, in mapIdMatListMoyByEleve, this average is the average of the periode
@@ -1572,7 +1570,6 @@ public class ExportPDFController extends ControllerHelper {
                     }
                 }
             }
-
         });
     }
 
