@@ -2551,6 +2551,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
             address = " ";
+            responsableLibelle.add(address);
         }
 
         responsableLibelle.add(city);
