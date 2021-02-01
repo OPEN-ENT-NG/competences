@@ -2885,7 +2885,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 updateValueToNN(evaluation, isAnnotaion);
                 cleanIdAppreciation(evaluation);
                 // On est dans le cas d'une sauvegarde ou création d'appréciation
-                if (evaluation.oldAppreciation != undefined && evaluation.appreciation != undefined
+                if (evaluation.oldAppreciation !== undefined && evaluation.appreciation !== undefined
                     && isAppreciationChanged && evaluation.appreciation !== '') {
                     evaluation.saveAppreciation().then((res) => {
                         evaluation.oldAppreciation = evaluation.appreciation;
@@ -2917,8 +2917,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             evaluation.id_annotation = annotation.id;
                             $scope.saveAnnotationDevoirEleve(evaluation, $event, eleve, isAnnotaion);
                         } else {
-                            if ((evaluation.oldValeur != undefined && isValueChanged) || evaluation.oldAppreciation != undefined && isAppreciationChanged) {
-                                if (evaluation.valeur != undefined && evaluation.valeur !== "" && reg.test(evaluation.valeur)) {
+                            if ((evaluation.oldValeur !== undefined && isValueChanged) || evaluation.oldAppreciation !== undefined && isAppreciationChanged) {
+                                if (evaluation.valeur !== undefined && evaluation.valeur !== "" && reg.test(evaluation.valeur)) {
                                     let devoir = evaluations.devoirs.findWhere({id: evaluation.id_devoir});
                                     if (devoir !== undefined) {
                                         if (parseFloat(evaluation.valeur) <= devoir.diviseur && parseFloat(evaluation.valeur) >= 0) {

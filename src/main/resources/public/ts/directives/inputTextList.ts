@@ -124,7 +124,8 @@ export let inputTextList = ng.directive('inputTextList', function() {
             */
             $scope.focusMe = function ($event) {
                 $event.target.select();
-                if ($scope.template !== undefined && $scope.templatePath !== undefined && $scope.focusItems !== undefined && $scope.focusItem !== undefined && $scope.focusItemsAttribute !== undefined) {
+                if ($scope.template !== undefined && $scope.templatePath !== undefined && $scope.focusItems !== undefined
+                    && $scope.focusItem !== undefined && $scope.focusItemsAttribute !== undefined) {
                     if (template.isEmpty($scope.template)) template.open($scope.template, $scope.templatePath);
                     $scope.focusItems[$scope.focusItemsAttribute] = $scope.focusItem;
                 }

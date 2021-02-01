@@ -128,8 +128,13 @@ export class Devoir extends Model implements IModel{
                         let _e = that.eleves.findWhere({id: notes[i].id_eleve});
                         if (_e !== undefined) {
                             _e.evaluation = new Evaluation(notes[i]);
-                            _e.evaluation.oldAppreciation =
-                                _e.evaluation.appreciation !== undefined ? _e.evaluation.appreciation : '';
+
+                           if( _e.evaluation.appreciation != undefined) {
+                               _e.evaluation.oldAppreciation = _e.evaluation.appreciation;
+                           } else {
+                               _e.evaluation.oldAppreciation = '';
+                               _e.evaluation.appreciation = '';
+                           }
 
                             if (_e.evaluation.id_annotation === undefined
                                 || _e.evaluation.id_annotation === null) {
