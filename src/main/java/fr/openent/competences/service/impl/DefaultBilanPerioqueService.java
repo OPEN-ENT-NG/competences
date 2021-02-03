@@ -307,20 +307,22 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 Future<JsonArray> subjectFuture = Future.future();
                 // Récupération des matières et des professeurs
                 devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, idEtablissement, idClasseGroups, event -> {
-                    formate(subjectFuture, event);
+                    formate("[Competences] DefaultBilanPeriodique at getSuivi : getMAtiereTeacherOneeleveByPeriode",
+                            subjectFuture, event);
                 });
 
 
                 Future<JsonArray> multiTeachersFuture = Future.future();
                 utilsService.getMultiTeachers(idEtablissement, idClasseGroups, idPeriode != null ? idPeriode.intValue() : null,
                         event -> {
-                            formate(multiTeachersFuture, event);
+                            formate("[Competences] DefaultBilanPeriodique at getSuiviAcqui : getMultiTeachers",
+                                    multiTeachersFuture, event);
                         });
 
                 Future<JsonArray> getServicesFuture = Future.future();
-                log.info("getSuiviAcquis bilan)");
                 utilsService.getServices(idEtablissement, idClasseGroups, event -> {
-                    formate(getServicesFuture, event);
+                    formate("[Competences] DefaultBilanPeriodique at getSuiviAcqui : getServices",
+                            getServicesFuture, event);
                 });
 
                 CompositeFuture.all(subjectFuture, multiTeachersFuture, getServicesFuture).setHandler(event -> {
@@ -354,6 +356,13 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                 });
                                 futures.add(lastNameAndFirstNameFuture);
 
+                                Future<JsonArray> groupsStudentFuture = Future.future();
+                                Utils.getGroupsEleve(eb,idEleve,idEtablissement, responseGroupsStudent-> {
+                                            FormateFutureEvent.formate("[Competences] DefaultBilanPeriodique at getSuiviAcqui :",
+                                                    groupsStudentFuture, responseGroupsStudent);
+                                    });
+                                futures.add(groupsStudentFuture);
+
                                 CompositeFuture.all(futures).setHandler(
                                         setSubjectLibelleAndTeachersHandler(idEtablissement, idPeriode, idEleve, idClasse, handler,
                                                 idsMatieresIdsTeachers, idClasseGroups, futures)
@@ -383,7 +392,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             if(event1.succeeded()) {
                 Map<String, JsonObject> idsMatLibelle = (Map<String, JsonObject>) futures.get(0).result();
                 Map<String, JsonObject> teachersInfos = (Map<String, JsonObject>) futures.get(1).result();
-                setSubjectLibelleAndTeachers(idEleve, idClasseGroups, idClasse, idEtablissement,
+                JsonArray groupsStudent = (JsonArray) futures.get(2).result();
+                setSubjectLibelleAndTeachers(idEleve, idClasseGroups, idClasse, idEtablissement, groupsStudent,
                         idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, handler);
 
             }
@@ -440,7 +450,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void setSubjectLibelleAndTeachers(String idEleve,JsonArray idClasseGroups, final String idClasse,
-                                              String idEtablissement,
+                                              String idEtablissement, JsonArray groupsStudent,
                                               Map<String,JsonObject> idsMatieresIdsTeachers,
                                               Map<String, JsonObject> idsMatLibelle,
                                               Map<String, JsonObject> teachersInfos, Long idPeriod,
@@ -466,8 +476,9 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             setSubjectByCoeficient(idMatiere, result, coefObject, idsMatLibelle, teachersInfos);
             // Récupération des élements du Programme
             Future<JsonArray> elementsProgFuture = Future.future();
-            elementProgramme.getElementProgrammeClasses(idPeriod, idMatiere, idClasseGroups, elementsProgEvent -> {
-                formate(elementsProgFuture, elementsProgEvent);
+            elementProgramme.getElementProgrammeClasses(idPeriod, idMatiere, groupsStudent, elementsProgEvent -> {
+                formate("[Competeces] DefaulteBilanPeriodique at setSubjectLibelleAndTeachers : getElementProgrammeClasses",
+                        elementsProgFuture, elementsProgEvent);
             });
 
             // Récupération des appreciation Moyenne Finale et positionnement Finale
