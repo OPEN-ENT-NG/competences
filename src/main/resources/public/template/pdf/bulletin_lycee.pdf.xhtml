@@ -288,7 +288,7 @@
 <div class="page">
 
     <div style= "height: 130px;" class="paddingFifty">
-        <img id="education" src="{{pathLogoImg}}" alt="Logo"/>
+        <img id="education" src="data:image/png;base64, {{logoData}}" alt="Logo"/>
         <div class="structure">
             {{#structureLibelle}}
             <p style="font-weight: bold">{{academy}}</p>
@@ -303,7 +303,7 @@
 
         {{#hasImgStructure}}
         <div class="imgStructSize">
-            <img id="imgStruct" src="{{imgStructure}}" alt="LogoStructure"/>
+            <img id="imgStruct" src="data:image/png;base64, {{imgStructure}}" alt="LogoStructure"/>
         </div>
         {{/hasImgStructure}}
     </div>
@@ -668,8 +668,8 @@
                     </div>
 
                     {{#hasImgSignature}}
-                    <div class="imgSignatureSize" style="margin: 0 !important; overflow: visible">
-                        <img id="imgSignature" src="{{imgSignature}}" alt="LogoSignature"/>
+                    <div class="imgSignatureSize">
+                        <img id="imgSignature" src="data:image/png;base64, {{imgSignature}}" alt="LogoStructure"/>
                     </div>
                     {{/hasImgSignature}}
 
