@@ -2897,7 +2897,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     });
                 } else {
                     // On est dans le cas d'une suppression d'appréciation
-                    if (evaluation.id_appreciation !== undefined && evaluation.appreciation === "") {
+                    if (evaluation.id_appreciation !== undefined && evaluation.id_appreciation !== null && evaluation.appreciation === "") {
                         evaluation.deleteAppreciation().then((res) => {
                             evaluation.oldAppreciation = evaluation.appreciation;
                             if (res.rows === 1) {
