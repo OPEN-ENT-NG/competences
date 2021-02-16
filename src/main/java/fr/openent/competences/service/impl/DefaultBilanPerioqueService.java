@@ -548,7 +548,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         List<String> subjectsMissingTeachers = new ArrayList<>();
         for (int i = 0; i < responseArray.size(); i++) {
             JsonObject responseObject = responseArray.getJsonObject(i);
-            String idMatiere = responseObject.getString(ID_MATIERE);
+            final String idMatiere = responseObject.getString(ID_MATIERE);
             String owner = responseObject.getString("owner");
             Long id_periode = responseObject.getLong("id_periode");
             Long coefficient = responseObject.getLong(COEFFICIENT);
@@ -563,17 +563,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             JsonArray teachers = matiere.getJsonArray("teachers");
 
             if (idPeriode.equals(id_periode)) {
-                Boolean isVisible = false;
-                checkService (services, owner, idMatiere, isVisible, coefficient);
-                addMultiTeachers (multiTeachers, idMatiere, teachers, idsTeachers);
-
-                if (isVisible && !teachers.contains(owner)) {
-                    addTeachers (teachers, idsTeachers, owner, matiere, coefficient );
-                }
-                if (teachers.isEmpty() && !subjectsMissingTeachers.contains(idMatiere))
-                    subjectsMissingTeachers.add(idMatiere);
-                else if (!teachers.isEmpty())
-                    subjectsMissingTeachers.remove(idMatiere);
+               checkVisibilityAndAddTeachers(services,  owner, idMatiere, coefficient,
+                       multiTeachers,  teachers, idsTeachers,  matiere, subjectsMissingTeachers);
             }
         }
         if (!subjectsMissingTeachers.isEmpty()) {
@@ -623,7 +614,46 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         });
     }
 
-    private void addTeachers (JsonArray teachers, JsonArray idsTeachers, String owner, JsonObject matiere, Long coefficient) {
+    private void checkVisibilityAndAddTeachers (JsonArray services, String owner, final String idMatiere,
+                                              Long coefficient, JsonArray multiTeachers, JsonArray teachers,
+                                              JsonArray idsTeachers, JsonObject matiere,
+                                              List<String> subjectsMissingTeachers){
+        Boolean isVisible = false;
+        for (int j = 0; j < services.size(); j++) {
+            JsonObject service = (JsonObject) services.getJsonObject(j);
+            String serviceIdMatiere = service.getString("id_matiere");
+            String serviceIdTeacher = service.getString("id_enseignant");
+
+            if (isNotNull(owner)) {
+                if (serviceIdMatiere.equals(idMatiere) && serviceIdTeacher.equals(owner)) {
+                    isVisible = service.getBoolean("is_visible");
+                    coefficient = service.getLong(COEFFICIENT);
+                    break;
+                }
+            } else {
+                if (serviceIdMatiere.equals(idMatiere) && service.getBoolean("is_visible")) {
+                    owner = serviceIdTeacher;
+                    isVisible = service.getBoolean("is_visible");
+                    coefficient = service.getLong(COEFFICIENT);
+                    break;
+                }
+            }
+        }
+
+        addMultiTeachers (multiTeachers, idMatiere, teachers, idsTeachers);
+
+        if (isVisible && !teachers.contains(owner)) {
+            addTeachers (teachers, idsTeachers, owner, matiere, coefficient );
+        }
+        if (teachers.isEmpty() && !subjectsMissingTeachers.contains(idMatiere))
+            subjectsMissingTeachers.add(idMatiere);
+        else if (!teachers.isEmpty())
+            subjectsMissingTeachers.remove(idMatiere);
+
+    }
+
+    private void addTeachers (JsonArray teachers, JsonArray idsTeachers, String owner,
+                              JsonObject matiere, Long coefficient) {
 
         teachers.add(owner);
 
@@ -659,28 +689,6 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         result.put("elementsProgramme", elementsProg);
     }
 
-    private void checkService (JsonArray services, String owner, String idMatiere, Boolean isVisible, Long coefficient ) {
-        for (int j = 0; j < services.size(); j++) {
-            JsonObject service = (JsonObject) services.getJsonObject(j);
-            String serviceIdMatiere = service.getString("id_matiere");
-            String serviceIdTeacher = service.getString("id_enseignant");
-
-            if (isNotNull(owner)) {
-                if (serviceIdMatiere.equals(idMatiere) && serviceIdTeacher.equals(owner)) {
-                    isVisible = service.getBoolean("is_visible");
-                    coefficient = service.getLong(COEFFICIENT);
-                    break;
-                }
-            } else {
-                if (serviceIdMatiere.equals(idMatiere) && service.getBoolean("is_visible")) {
-                    owner = serviceIdTeacher;
-                    isVisible = service.getBoolean("is_visible");
-                    coefficient = service.getLong(COEFFICIENT);
-                    break;
-                }
-            }
-        }
-    };
 
     private void  setAppreciationMoyFinalePositionnementEleve(final JsonObject result,
                                                               final JsonArray allAppMoyPosi){
