@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.helpers.DevoirControllerHelper;
 import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessPeriodeFilter;
@@ -41,6 +42,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.events.EventStore;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -72,9 +74,11 @@ public class DevoirController extends ControllerHelper {
     private final DefaultDevoirService devoirsService;
     private final UtilsService utilsService;
     private final CompetencesService competencesService;
+    private EventStore eventStore;
 
-    public DevoirController(EventBus eb) {
+    public DevoirController(EventBus eb, EventStore eventStore) {
         this.eb = eb;
+        this.eventStore = eventStore;
         devoirsService = new DefaultDevoirService(eb);
         utilsService = new DefaultUtilsService();
         competencesService = new DefaultCompetencesService(eb);
@@ -161,6 +165,7 @@ public class DevoirController extends ControllerHelper {
                                     && resource.getLong("type_groupe") > -1){
                                 DevoirControllerHelper.creationDevoir(request, user, resource, pathPrefix,
                                         devoirsService, shareService, eb);
+                                eventStore.createAndStoreEvent(EventStoresCompetences.CREATE_HOMEWORK.name(), request);
                             } else {
                                 checkEleveEvaluable(resource, request, user);
                             }
@@ -567,7 +572,9 @@ public class DevoirController extends ControllerHelper {
                                                             }
                                                             devoir.put("competences", idCompetences);
                                                         }
-                                                        devoirsService.duplicateDevoir(devoir, body.getJsonArray("classes"), user, shareService, request, eb);
+                                                        devoirsService.duplicateDevoir(devoir,
+                                                                body.getJsonArray("classes"), user, shareService, request, eb);
+                                                        eventStore.createAndStoreEvent(EventStoresCompetences.CREATE_HOMEWORK.name(), request);
                                                     } else {
                                                         log.error("An error occured when collecting competences for devoir id " + idDevoir);
                                                         renderError(request);

@@ -30,6 +30,8 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.email.EmailFactory;
+import org.entcore.common.events.EventStore;
+import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.share.impl.SqlShareService;
@@ -108,7 +110,6 @@ public class Competences extends BaseServer {
     public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
     public static final String REL_APPRECIATION_USERS_NEO = "rel_appreciations_users_neo";
 
-
     public static final String STSFILE_TABLE = "sts_file";
     public static final String SYNTHESE_BILAN_PERIODIQUE_TABLE = "synthese_bilan_periodique";
 
@@ -141,7 +142,6 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_AVIS_CONSEIL_BILAN_PERIODIQUE = "eval_createAvisConseil";
     public static final String SCHEMA_AVIS_ORIENTATION_BILAN_PERIODIQUE = "eval_createAvisOrientation";
     public static final String SCHEMA_CREATE_OPINION = "eval_createOpinion";
-
 
     public static final String SCHEMA_APPRECIATIONS_CLASSE = "eval_createOrUpdateAppreciationClasse";
 
@@ -277,15 +277,17 @@ public class Competences extends BaseServer {
         final EventBus eb = getEventBus(vertx);
         final Storage storage = new StorageFactory(vertx).getStorage();
 
+        EventStore eventStore = EventStoreFactory.getFactory().getEventStore(Competences.class.getSimpleName());
+
         // Controller
-        addController(new CompetencesController());
+        addController(new CompetencesController(eventStore));
         addController(new AnnotationController());
         addController(new AppreciationController());
         addController(new BFCController(eb, storage));
         addController(new CompetenceController(eb));
         addController(new CompetenceNoteController(eb));
         addController(new ModaliteController());
-        addController(new ExportBulletinController(eb,storage));
+        addController(new ExportBulletinController(eb,storage,eventStore));
         addController(new DomaineController(eb));
         addController(new EnseignementController(eb));
         addController(new ExportPDFController(eb, notification, storage));
@@ -302,7 +304,7 @@ public class Competences extends BaseServer {
         addController(new YearTransitionController());
         addController(new AppreciationSubjectPeriodController(eb));
         // Devoir Controller
-        DevoirController devoirController = new DevoirController(eb);
+        DevoirController devoirController = new DevoirController(eb, eventStore);
         SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,
                 new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
         devoirController.setCrudService(devoirSqlCrudService);

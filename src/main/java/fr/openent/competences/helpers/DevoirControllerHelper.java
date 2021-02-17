@@ -3,8 +3,6 @@ package fr.openent.competences.helpers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.model.Devoir;
 import fr.openent.competences.service.DevoirService;
-import fr.openent.competences.service.UtilsService;
-import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;

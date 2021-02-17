@@ -17,11 +17,14 @@
 
 package fr.openent.competences.controllers;
 
+import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.enums.EventStoresCompetences;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.I18n;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.events.EventStore;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import io.vertx.core.Handler;
@@ -30,7 +33,11 @@ import io.vertx.core.http.HttpServerRequest;
 
 public class CompetencesController extends ControllerHelper {
 
+    private EventStore eventStore;
     public CompetencesController() {}
+    public CompetencesController(EventStore eventStore){
+        this.eventStore = eventStore;
+    }
 
 	/**
 	 * Displays the home view.
@@ -49,6 +56,7 @@ public class CompetencesController extends ControllerHelper {
                 }else if(user.getType().equals("Student") || user.getType().equals("Relative")){
                     renderView(request, null,  "eval_parents.html", null);
                 }
+                eventStore.createAndStoreEvent(EventStoresCompetences.ACCESS.toString(), request);
             }
         });
 	}

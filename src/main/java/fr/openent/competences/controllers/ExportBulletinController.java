@@ -1,6 +1,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Utils;
+import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.security.AccessExportBulletinFilter;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
@@ -22,6 +23,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.events.EventStore;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.storage.Storage;
@@ -40,11 +42,13 @@ public class ExportBulletinController extends ControllerHelper {
     private UtilsService utilsService;
     private final Storage storage;
     private WorkspaceHelper workspaceHelper;
+    private EventStore eventStore;
 
 
-    public ExportBulletinController(EventBus eb, Storage storage) {
+    public ExportBulletinController(EventBus eb, Storage storage, EventStore eventStore) {
         utilsService = new DefaultUtilsService(eb);
         this.storage = storage;
+        this.eventStore = eventStore;
         this.workspaceHelper = new WorkspaceHelper(eb, storage);
         exportBulletinService = new DefaultExportBulletinService(eb, storage);
 
@@ -89,6 +93,7 @@ public class ExportBulletinController extends ControllerHelper {
             exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, params,
                     elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
                     finalHandler, null,vertx);
+            eventStore.createAndStoreEvent(EventStoresCompetences.CREATE_SCHOOL_REPORT.name(), request);
         });
     }
 
