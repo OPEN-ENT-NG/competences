@@ -100,8 +100,7 @@ public class BFCController extends ControllerHelper {
                         @Override
                         public void handle(JsonObject resource) {
                             bfcService.checkHeadTeacherForBFC(user, resource.getString("id_eleve"),
-                                    resource.getString("id_etablissement"),
-                                    new Handler<Boolean>() {
+                                    resource.getString("id_etablissement"), new Handler<Boolean>() {
                                         @Override
                                         public void handle(Boolean event) {
                                             if(event) {
@@ -122,7 +121,6 @@ public class BFCController extends ControllerHelper {
         });
     }
 
-
     /**
      * Modifie un BFC avec les données passées en PUT
      *
@@ -139,23 +137,23 @@ public class BFCController extends ControllerHelper {
                 if (user != null) {
                     RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_BFC_UPDATE,
                             new Handler<JsonObject>() {
-                        @Override
-                        public void handle(JsonObject resource) {
-                            bfcService.checkHeadTeacherForBFC(user, resource.getString("id_eleve"),
-                                    resource.getString("id_etablissement"),
-                                    new Handler<Boolean>() {
-                                        @Override
-                                        public void handle(Boolean event) {
-                                            if(event) {
-                                                bfcService.updateBFC(resource, user, defaultResponseHandler(request));
-                                            }
-                                            else {
-                                                Renders.unauthorized(request);
-                                            }
-                                        }
-                                    });
-                        }
-                    });
+                                @Override
+                                public void handle(JsonObject resource) {
+                                    bfcService.checkHeadTeacherForBFC(user, resource.getString("id_eleve"),
+                                            resource.getString("id_etablissement"),
+                                            new Handler<Boolean>() {
+                                                @Override
+                                                public void handle(Boolean event) {
+                                                    if(event) {
+                                                        bfcService.updateBFC(resource, user, defaultResponseHandler(request));
+                                                    }
+                                                    else {
+                                                        Renders.unauthorized(request);
+                                                    }
+                                                }
+                                            });
+                                }
+                            });
                 } else {
                     log.debug("User not found in session.");
                     Renders.unauthorized(request);
@@ -216,21 +214,21 @@ public class BFCController extends ControllerHelper {
     @ApiDoc("Retourne les bfcs notes pour un élève.")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getBFCsEleve(final HttpServerRequest request) {
-        if (request.params().contains("idEleve")
-                && request.params().contains("idEtablissement")) {
+        if (request.params().contains("idEleve") && request.params().contains("idEtablissement")) {
             String idEleve = request.params().get("idEleve");
             String idEtablissement = request.params().get("idEtablissement");
-//            final Integer idCycle = Integer.parseInt(request.params().get("idCycle"));
-//            bfcService.getBFCsByEleve(new String[]{idEleve}, idEtablissement, new Long(idCycle), arrayResponseHandler(request));
+
             if (request.params().contains("idCycle") && Utils.isCycleNotNull(request.params().get("idCycle"))) {
-                bfcService.getBFCsByEleve(new String[]{idEleve}, idEtablissement, Long.parseLong(request.params().get("idCycle")), arrayResponseHandler(request));
+                bfcService.getBFCsByEleve(new String[]{idEleve}, idEtablissement,
+                        Long.parseLong(request.params().get("idCycle")), arrayResponseHandler(request));
             } else {
                 syntheseService.getIdCycleWithIdEleve(idEleve, new Handler<Either<String, Integer>>() {
                     @Override
                     public void handle(Either<String, Integer> idCycle) {
                         log.debug("id_cycle : "+idCycle.right().getValue());
                         if (idCycle.isRight()) {
-                            bfcService.getBFCsByEleve(new String[]{idEleve}, idEtablissement, new Long(idCycle.right().getValue()), arrayResponseHandler(request));
+                            bfcService.getBFCsByEleve(new String[]{idEleve}, idEtablissement,
+                                    new Long(idCycle.right().getValue()), arrayResponseHandler(request));
                         } else {
                             log.info("idCycle not found");
                             Renders.badRequest(request);
@@ -288,25 +286,24 @@ public class BFCController extends ControllerHelper {
         });
     }
 
-
     @Get("/BfcSynthese")
     @ApiDoc("récupére une Synthese du BFC pour un élève")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getSynthese(final HttpServerRequest request) {
-
         if (request.params().contains("idEleve")) {
             final String idEleve = request.params().get("idEleve");
-//            final Integer idCycle = Integer.parseInt(request.params().get("idCycle"));
-//            syntheseService.getBfcSyntheseByEleve(idEleve, idCycle, defaultResponseHandler(request));
+
             if (request.params().contains("idCycle") && Utils.isCycleNotNull(request.params().get("idCycle"))) {
-                syntheseService.getBfcSyntheseByEleve(idEleve, Integer.parseInt(request.params().get("idCycle")), defaultResponseHandler(request));
+                syntheseService.getBfcSyntheseByEleve(idEleve, Integer.parseInt(request.params().get("idCycle")),
+                        defaultResponseHandler(request));
             } else {
                 syntheseService.getIdCycleWithIdEleve(idEleve, new Handler<Either<String, Integer>>() {
                     @Override
                     public void handle(Either<String, Integer> idCycle) {
                         log.debug("id_cycle : "+idCycle.right().getValue());
                         if (idCycle.isRight()) {
-                            syntheseService.getBfcSyntheseByEleve(idEleve, idCycle.right().getValue(), defaultResponseHandler(request));
+                            syntheseService.getBfcSyntheseByEleve(idEleve, idCycle.right().getValue(),
+                                    defaultResponseHandler(request));
                         } else {
                             log.info("idCycle not found");
                             Renders.badRequest(request);
@@ -393,15 +390,12 @@ public class BFCController extends ControllerHelper {
             public void handle(UserInfos userInfos) {
                 if(userInfos != null){
                     niveauEnsComplementService.getNiveauEnsComplement(arrayResponseHandler(request));
-
                 }else{
                     Renders.unauthorized(request);
                 }
             }
         });
     }
-
-
 
     @Post("/CreateNiveauEnsCpl")
     @ApiDoc("crée l'enseignement de complement pour un élève")
@@ -465,18 +459,19 @@ public class BFCController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(UserInfos userInfos) {
-                if(userInfos!=null)  {
+                if(userInfos != null)  {
                     final String idEleve = request.params().get("idEleve");
-//                    final Long idCycle = Long.parseLong(request.params().get("idCycle"));
-//                    eleveEnseignementComplement.getNiveauEnsCplByEleve(idEleve, idCycle, defaultResponseHandler(request));
+
                     if(request.params().contains("idCycle") && Utils.isCycleNotNull(request.params().get("idCycle"))){
-                        eleveEnseignementComplement.getNiveauEnsCplByEleve(idEleve, Long.parseLong(request.params().get("idCycle")), defaultResponseHandler(request));
+                        eleveEnseignementComplement.getNiveauEnsCplByEleve(idEleve,
+                                Long.parseLong(request.params().get("idCycle")), defaultResponseHandler(request));
                     } else {
                         syntheseService.getIdCycleWithIdEleve(idEleve, new Handler<Either<String, Integer>>() {
                             @Override
                             public void handle(Either<String, Integer> idCycle) {
                                 if (idCycle.isRight()) {
-                                    eleveEnseignementComplement.getNiveauEnsCplByEleve(idEleve, new Long(idCycle.right().getValue()), defaultResponseHandler(request));
+                                    eleveEnseignementComplement.getNiveauEnsCplByEleve(idEleve,
+                                            new Long(idCycle.right().getValue()), defaultResponseHandler(request));
                                 } else {
                                     log.info("idCycle not found");
                                     Renders.badRequest(request);
@@ -488,7 +483,6 @@ public class BFCController extends ControllerHelper {
             }
         });
     }
-
 
     @Put("/bfc/visibility/structures/:structureId/:idVisibility/:visible")
     @ApiDoc("Défini la visibilité pour un établissement donné de la moyenne calculée sur le BFC")
@@ -520,7 +514,6 @@ public class BFCController extends ControllerHelper {
         });
     }
 
-
     @Get("/bfc/visibility/structures/:structureId/:idVisibility")
     @ApiDoc("Recupere la visibilité un établissement donné de la moyenne calculée sur le BFC")
     @SecuredAction(value="", type=ActionType.AUTHENTICATED)
@@ -536,10 +529,10 @@ public class BFCController extends ControllerHelper {
             public void handle(final UserInfos user) {
                 if(user != null && request.params().contains("structureId")) {
                     final String structureId = request.params().get("structureId");
-                    final Integer idVisibility = (request.params().contains("idVisibility"))?
-                            Integer.valueOf(request.params().get("idVisibility")): null;
+                    final Integer idVisibility = request.params().contains("idVisibility") ?
+                            Integer.valueOf(request.params().get("idVisibility")) : null;
                     Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
-                    bfcService.getVisibility(structureId, idVisibility, user,handler);
+                    bfcService.getVisibility(structureId, idVisibility, user, handler);
                 }else{
                     badRequest(request);
                 }
@@ -565,6 +558,7 @@ public class BFCController extends ControllerHelper {
         }
 
     }
+
     @Get("/bfc/bareme/brevet/:idEleve/:idClasse/:idStructure")
     @ApiDoc("Récupère la moyenne des contrôles continus(obtenue à partir des niveaux du bfc) en fct de la dispense des domaines")
     @SecuredAction(value="",type= ActionType.RESOURCE)
@@ -584,7 +578,6 @@ public class BFCController extends ControllerHelper {
             log.debug("eleves bareme brevet  not found");
             Renders.badRequest(request);
         }
-
     }
 
     @Get("/generate/archive/bfc")
@@ -614,7 +607,7 @@ public class BFCController extends ControllerHelper {
     @Get("/archive/bfc")
     @ApiDoc("télécharge l archive d'un étab")
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
-    public  void getArchiveBulletin(final  HttpServerRequest request){
+    public void getArchiveBulletin(final  HttpServerRequest request){
         String idStructure = request.params().get("idStructure");
         String idYear = request.params().get("idYear");
         ArchiveUtils.getArchiveBFCZip(idStructure, request, eb, storage, vertx);

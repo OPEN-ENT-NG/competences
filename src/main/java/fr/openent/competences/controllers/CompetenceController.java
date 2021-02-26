@@ -125,12 +125,10 @@ public class CompetenceController extends ControllerHelper {
     @ResourceFilter(AccessEvaluationFilter.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void getCompetencesDevoir(final HttpServerRequest request){
-
         Long lIdDevoir;
 
         try {
             lIdDevoir = Long.parseLong(request.params().get("idDevoir"));
-
         } catch(NumberFormatException e) {
             log.error("Error : idDevoir must be a long object", e);
             badRequest(request, e.getMessage());

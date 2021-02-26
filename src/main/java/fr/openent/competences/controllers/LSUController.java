@@ -181,12 +181,11 @@ public class LSUController extends ControllerHelper {
                     break;
                 }
 
-
                 case "get": {
                     JsonArray idPeriodes = body.getJsonArray("idPeriodes");
                     JsonArray idClasses = body.getJsonArray("idClasses");
                     String idStructure = body.getString(ID_STRUCTURE_KEY);
-                    lsuService.getUnheededStudents(idPeriodes, idClasses, idStructure,arrayResponseHandler(request));
+                    lsuService.getUnheededStudents(idPeriodes, idClasses, idStructure, arrayResponseHandler(request));
                     break;
                 }
 
@@ -194,7 +193,6 @@ public class LSUController extends ControllerHelper {
                     badRequest(request);
                     break;
                 }
-
             }
         });
     }

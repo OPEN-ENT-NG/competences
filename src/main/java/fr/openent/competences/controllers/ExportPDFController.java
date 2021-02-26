@@ -112,16 +112,13 @@ public class ExportPDFController extends ControllerHelper {
                 unauthorized(request);
                 return;
             }
-            // parametres de l'url
-            final MultiMap params = request.params();
 
             final Long idPeriode;
-            if (params.get("idPeriode") == null) {
+            if (request.params().get("idPeriode") == null) {
                 idPeriode = null;
-            }
-            else {
+            } else {
                 try {
-                    idPeriode = Long.parseLong(params.get("idPeriode"));
+                    idPeriode = Long.parseLong(request.params().get("idPeriode"));
                 } catch (NumberFormatException e) {
                     log.error("Error : idPeriode must be a long object", e);
                     badRequest(request, e.getMessage());
@@ -129,9 +126,9 @@ public class ExportPDFController extends ControllerHelper {
                 }
             }
 
-            final String idEtablissement = params.get("idEtablissement");
-            final String idUser = params.get("idUser");
-            exportService.getDataForExportReleveEleve(idUser, idEtablissement, idPeriode, params, event -> {
+            final String idEtablissement = request.params().get("idEtablissement");
+            final String idUser = request.params().get("idUser");
+            exportService.getDataForExportReleveEleve(idUser, idEtablissement, idPeriode, request.params(), event -> {
                 if(event.isLeft()){
                     leftToResponse(request, event.left());
                     return;
@@ -165,7 +162,6 @@ public class ExportPDFController extends ControllerHelper {
                         String prefixPdfName = "releve-classe_" +  classeName;
                         exportService.genererPdf(request, templateProps, templateName, prefixPdfName, vertx, config);
                     } );
-
         });
     }
 
@@ -174,7 +170,6 @@ public class ExportPDFController extends ControllerHelper {
      * Ces entites peuvent etre au choix un etablissement, un ou plusieurs classes, un ou plusieurs eleves.
      * Afin de prefixer le fichier PDF cree, appelle {@link DefaultUtilsService#/getNameEntity(String[], Handler)} afin
      * de recuperer le nom de l'entite fournie.
-     *
      * @param request
      */
     @Get("/BFC/pdf")
@@ -216,10 +211,6 @@ public class ExportPDFController extends ControllerHelper {
         }
     }
 
-
-
-
-
     @Get("/devoirs/print/:idDevoir/formsaisie")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getFormsaisi(final HttpServerRequest request) {
@@ -246,7 +237,6 @@ public class ExportPDFController extends ControllerHelper {
                 exportService.genererPdf(request, event.right().getValue() ,"Devoir.saisie.xhtml",
                         "Formulaire_saisie", vertx, config);
             });
-
         } else {
             log.error("Error : idDevoir must be a long object");
             badRequest(request, "Error : idDevoir must be a long object");
@@ -292,7 +282,6 @@ public class ExportPDFController extends ControllerHelper {
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final Boolean usePerso = Boolean.parseBoolean(request.params().get("usePerso"));
-
 
         try {
             idDevoir = Long.parseLong(request.params().get("idDevoir"));
@@ -457,9 +446,7 @@ public class ExportPDFController extends ControllerHelper {
                 }
             }
         });
-
     }
-
 
     @Get("/recapAppreciations/print/:idClasse/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
@@ -851,7 +838,7 @@ public class ExportPDFController extends ControllerHelper {
             if (request.params().contains("idPeriode")) {
                 idPeriode = Long.parseLong(request.params().get("idPeriode"));
             }else{
-                year=true;
+                year = true;
             }
         } catch (NumberFormatException err) {
             badRequest(request, err.getMessage());
@@ -891,10 +878,9 @@ public class ExportPDFController extends ControllerHelper {
                                                 public void handle(final UserInfos user) {
                                                     final boolean isChefEtab;
                                                     if(user != null) {
-                                                        isChefEtab =  new WorkflowActionUtils().hasRight(user,
+                                                        isChefEtab = new WorkflowActionUtils().hasRight(user,
                                                                 WorkflowActions.ADMIN_RIGHT.toString());
-                                                    }
-                                                    else {
+                                                    } else {
                                                         isChefEtab = false;
                                                     }
                                                     WorkflowActionUtils.hasHeadTeacherRight(user,
@@ -1323,11 +1309,8 @@ public class ExportPDFController extends ControllerHelper {
             String idParent = params.getString(ID_PARENT_KEY);
 
             UserUtils.getUserInfos(eb, request, user -> {
-
                 if(user != null && user.getType().equals("Student") || user.getType().equals("Relative")){
-
                     utilsService.getPeriodesClasses(idEtablissement, new JsonArray().add(idClasse), idPeriode, eventvisibility -> {
-
                         if(eventvisibility.isRight()){
                             Boolean visibility = eventvisibility.right().getValue().getJsonObject(0).getBoolean("publication_bulletin");
                             if(visibility) {
@@ -1336,13 +1319,11 @@ public class ExportPDFController extends ControllerHelper {
                                         String idYear = event.right().getValue().getString("start_date").substring(0,4);
                                         BulletinUtils.getBulletin(idEleve, idClasse, idPeriode, idEtablissement, idParent,
                                                 idYear, storage, request);
-                                    }
-                                    else {
+                                    } else {
                                         log.info("[ExportPDFController] :  No bulletin in Storage " + event.left().getValue());
                                         leftToResponse(request, event.left());
                                     }
                                 });
-
                             } else {
                                 log.info("[ExportPDFController] :  No rights for visibility " );
                                 forbidden(request, "No rights for visibility");
@@ -1352,16 +1333,13 @@ public class ExportPDFController extends ControllerHelper {
                             badRequest(request);
                         }
                     });
-
                 } else if( user != null && user.getType().equals("Teacher") || user.getType().equals("Personnel")) {
-
                     utilsService.getYearsAndPeriodes(idEtablissement, true, event -> {
                         if (event.isRight()) {
                             String idYear = event.right().getValue().getString("start_date").substring(0,4);
                             BulletinUtils.getBulletin(idEleve, idClasse, idPeriode, idEtablissement, idParent,
                                     idYear, storage, request);
-                        }
-                        else {
+                        } else {
                             log.info("[ExportPDFController] :  No bulletin in Storage " + event.left().getValue());
                             leftToResponse(request, event.left());
                         }
@@ -1410,29 +1388,26 @@ public class ExportPDFController extends ControllerHelper {
             public void handle(final UserInfos user) {
                 final boolean isChefEtab;
                 if (user != null) {
-                    isChefEtab = new WorkflowActionUtils().hasRight(user,
-                            WorkflowActions.ADMIN_RIGHT.toString());
+                    isChefEtab = new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
                 } else {
                     isChefEtab = false;
                 }
+
                 RequestUtils.bodyToJson(request, params -> {
                     Long idPeriode = params.getLong(ID_PERIODE_KEY);
                     String idStructure = params.getString(ID_STRUCTURE_KEY);
                     JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
                     String idClasse = params.getString(ID_CLASSE_KEY);
 
-                    WorkflowActionUtils.hasHeadTeacherRight(user,
-                            new JsonArray().add(idClasse), null, null,
-                            null, null, null,
-                            new Handler<Either<String, Boolean>>() {
+                    WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse), null,
+                            null,null, null, null, new Handler<Either<String, Boolean>>() {
                                 @Override
                                 public void handle(Either<String, Boolean> event) {
-                                    Boolean isHeadTeacher;
-                                    if (event.isLeft()) {
-                                        isHeadTeacher = false;
-                                    } else {
+                                    Boolean isHeadTeacher = false;
+                                    if (event.isRight()) {
                                         isHeadTeacher = event.right().getValue();
                                     }
+
                                     if (isHeadTeacher || isChefEtab)
                                         exportBulletinService.saveParameters(idStudents, idPeriode, idStructure,
                                                 params.toString(), defaultResponseHandler(request));
@@ -1441,7 +1416,6 @@ public class ExportPDFController extends ControllerHelper {
                                 }
                             });
                 });
-
             }
         });
     }

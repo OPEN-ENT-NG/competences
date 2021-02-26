@@ -55,7 +55,6 @@ public class AnnotationController extends ControllerHelper {
         annotationService = new DefaultAnnotationService(Competences.COMPETENCES_SCHEMA, Competences.ANNOTATIONS);
     }
 
-
     /**
      * Récupère les annotations de l'établissement
      * @param request
@@ -93,11 +92,12 @@ public class AnnotationController extends ControllerHelper {
                     RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_ANNOTATION_UPDATE, new Handler<JsonObject>() {
                         @Override
                         public void handle(JsonObject annotation) {
-                            annotationService.createAnnotationDevoir(annotation.getLong("id_devoir"),annotation.getLong("id_annotation"),annotation.getString("id_eleve"),defaultResponseHandler(request) );
+                            annotationService.createAnnotationDevoir(annotation.getLong("id_devoir"),
+                                    annotation.getLong("id_annotation"), annotation.getString("id_eleve"),
+                                    defaultResponseHandler(request));
                         }
-
                     });
-                }else {
+                } else {
                     log.debug("User not found in session.");
                     Renders.unauthorized(request);
                 }

@@ -101,8 +101,6 @@ public class UtilsController extends ControllerHelper {
         });
     }
 
-
-
     /**
      * Retourne la liste des enfants pour un utilisateur donné
      * @param request
@@ -125,8 +123,7 @@ public class UtilsController extends ControllerHelper {
                                 List<String> vIdClasseList = new ArrayList<String>();
                                 for (int i = 0; i < jsonArrayEnfants.size(); i++) {
                                     JsonObject jsonObjectEnfant = jsonArrayEnfants.getJsonObject(i);
-                                    if (null != jsonObjectEnfant
-                                            && jsonObjectEnfant.containsKey("idClasse")) {
+                                    if (null != jsonObjectEnfant && jsonObjectEnfant.containsKey("idClasse")) {
                                         String idClasse = jsonObjectEnfant.getString("idClasse");
                                         vIdClasseList.add(idClasse);
                                     }
@@ -138,13 +135,11 @@ public class UtilsController extends ControllerHelper {
                                             JsonArray queryResult = event.right().getValue();
                                             for (int i = 0; i < jsonArrayEnfants.size(); i++) {
                                                 JsonObject jsonObjectEnfant = jsonArrayEnfants.getJsonObject(i);
-                                                if (null != jsonObjectEnfant
-                                                        && jsonObjectEnfant.containsKey("idClasse")) {
+                                                if (null != jsonObjectEnfant && jsonObjectEnfant.containsKey("idClasse")) {
                                                     String idClasse = jsonObjectEnfant.getString("idClasse");
                                                     for (int j = 0; j < queryResult.size(); j++) {
                                                         JsonObject jsonObjectClassCycle = queryResult.getJsonObject(j);
-                                                        if (null != jsonObjectClassCycle
-                                                                && jsonObjectClassCycle.containsKey("id_groupe")
+                                                        if (null != jsonObjectClassCycle && jsonObjectClassCycle.containsKey("id_groupe")
                                                                 && jsonObjectClassCycle.getString("id_groupe").equalsIgnoreCase(idClasse)) {
                                                             jsonObjectEnfant.put("id_cycle", jsonObjectClassCycle.getInteger("id_cycle"));
                                                             break;
@@ -152,7 +147,6 @@ public class UtilsController extends ControllerHelper {
                                                     }
                                                     resultJsonArrayEnfants.add(jsonObjectEnfant);
                                                 }
-
                                             }
                                             handler.handle(new Either.Right<String, JsonArray>(resultJsonArrayEnfants));
                                         } else {
@@ -161,7 +155,6 @@ public class UtilsController extends ControllerHelper {
                                         }
                                     }
                                 });
-
                             }
                         }
                     });
@@ -281,7 +274,6 @@ public class UtilsController extends ControllerHelper {
                 } else {
                     badRequest(request, "Format de fichier incorrect");
                 }
-
             });
         });
     }

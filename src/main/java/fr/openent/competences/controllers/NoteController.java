@@ -773,7 +773,6 @@ public class NoteController extends ControllerHelper {
         });
     }
 
-
     @Post("/releve/element/programme")
     @ApiDoc("Ajoute ou modifie un élément du programme")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -798,21 +797,15 @@ public class NoteController extends ControllerHelper {
                                         if (hasAccessToMatiere) {
                                             // Vérification de la date de fin de saisie
                                             new FilterPeriodeUtils(eb, user).validateEndSaisie(request,
-                                                    idClasse, idPeriode.intValue(),
-                                                    new Handler<Boolean>() {
+                                                    idClasse, idPeriode.intValue(), new Handler<Boolean>() {
                                                         @Override
                                                         public void handle(Boolean isUpdatable) {
                                                             //verif date fin de saisie
                                                             if (isUpdatable) {
-                                                                elementProgramme.setElementProgramme(
-                                                                        user.getUserId(),
-                                                                        idPeriode,
-                                                                        idMatiere,
-                                                                        idClasse,
-                                                                        texte,
-                                                                        arrayResponseHandler(request));
-                                                            }
-                                                            else {
+                                                                elementProgramme.setElementProgramme(user.getUserId(),
+                                                                        idPeriode, idMatiere, idClasse,
+                                                                        texte, arrayResponseHandler(request));
+                                                            } else {
                                                                 log.error("Not access to API because of end of saisie");
                                                                 unauthorized(request);
                                                             }
@@ -826,7 +819,6 @@ public class NoteController extends ControllerHelper {
                                 });
                     }
                 });
-
             }
         });
     }
@@ -839,8 +831,6 @@ public class NoteController extends ControllerHelper {
     public void setColonneRelevePeriode(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             RequestUtils.bodyToJson(request, resource -> {
-                final String idClasse = resource.getString("idClasse");
-
                 saveColonneRelevePeriode(request, user, resource);
             });
         });
@@ -855,20 +845,16 @@ public class NoteController extends ControllerHelper {
             RequestUtils.bodyToJson(request, resource -> {
                 final String idClasseSuivi = resource.getString("idClasseSuivi");
                 final String idClasse = isNull(idClasseSuivi)? resource.getString(ID_CLASSE_KEY) : idClasseSuivi;
-                FilterUser.isChefEtabAndHeadTeacher(user, new JsonArray().add(idClasse),
-                        isChefEtabAndHeadTeacher -> {
-                            if (isChefEtabAndHeadTeacher) {
-                                saveColonneRelevePeriode(request, user, resource);
-                            } else {
-                                Renders.unauthorized(request);
-                            }
-                        });
+                FilterUser.isChefEtabAndHeadTeacher(user, new JsonArray().add(idClasse), isChefEtabAndHeadTeacher -> {
+                    if (isChefEtabAndHeadTeacher) {
+                        saveColonneRelevePeriode(request, user, resource);
+                    } else {
+                        Renders.unauthorized(request);
+                    }
+                });
             });
         });
     }
-
-
-
 
     private void saveColonneRelevePeriode (final HttpServerRequest request, final UserInfos user,
                                            final JsonObject resource){
@@ -932,7 +918,6 @@ public class NoteController extends ControllerHelper {
                     });
         });
     }
-
 
     @Get("/releve/annee/classe")
     @ApiDoc("Renvoit  les moyennes , les moyennes finales pour le relevé de notes")

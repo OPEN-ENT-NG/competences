@@ -125,8 +125,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                         });
 
                         Future<JsonArray> getSynthesesFuture = Future.future();
-                        syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(
-                                null,idEleve,idStructure,event -> {
+                        syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(null, idEleve, idStructure, event -> {
                                     formate(getSynthesesFuture, event);
                                 });
 
@@ -134,10 +133,12 @@ public class BilanPeriodiqueController extends ControllerHelper{
                         avisConseilService.getAvisConseil(idEleve,null,idStructure,event -> {
                             formate(getAvisConseilFuture, event);
                         });
+
                         Future<JsonArray> getAvisOrientationFuture = Future.future();
                         avisOrientationService.getAvisOrientation(idEleve,null,idStructure,event -> {
                             formate(getAvisOrientationFuture, event);
                         });
+
                         CompositeFuture.all(libelleAvisFuture, getSynthesesFuture,getAvisConseilFuture,getAvisOrientationFuture).setHandler(event -> {
                             if(event.succeeded()){
                                 JsonArray libelleAvis = libelleAvisFuture.result();
@@ -153,8 +154,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                 result.put("libelleAvis",libelleAvis).put("syntheses",syntheses).put("avisConseil",avisConseil).put("avisOrientation",avisOrientation);
 
                                 Renders.renderJson(request,result);
-                            }
-                            else {
+                            } else {
                                 String error = event.cause().getMessage();
                                 log.error("getSynthesesAvisBilanPeriodique " + error);
                                 Renders.badRequest(request);
@@ -253,17 +253,14 @@ public class BilanPeriodiqueController extends ControllerHelper{
             @Override
             public void handle(final UserInfos user) {
                 if (user != null) {
-                    appreciationCPEService.getAppreciationCPE(
-                            Long.parseLong(request.params().get("id_periode")),
-                            request.params().get("id_eleve"),
-                            defaultResponseHandler(request));
+                    appreciationCPEService.getAppreciationCPE(Long.parseLong(request.params().get("id_periode")),
+                            request.params().get("id_eleve"), defaultResponseHandler(request));
                 } else {
                     badRequest(request);
                 }
             }
         });
     }
-
 
     /**
      * Retourne la liste des avis prédéfinis du conseil de classe du bilan périodique
@@ -437,10 +434,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
             @Override
             public void handle(final UserInfos user) {
                 if (user != null) {
-                    avisConseilService.getAvisConseil(
-                            request.params().get("id_eleve"),
-                            Long.parseLong(request.params().get("id_periode")),
-                            request.params().get("id_structure"),
+                    avisConseilService.getAvisConseil(request.params().get("id_eleve"),
+                            Long.parseLong(request.params().get("id_periode")), request.params().get("id_structure"),
                             arrayResponseHandler(request));
                 } else {
                     badRequest(request);
@@ -508,7 +503,6 @@ public class BilanPeriodiqueController extends ControllerHelper{
         });
     }
 
-
     /**
      * Récupère les orientations du conseil de classe de l'élève
      *
@@ -522,10 +516,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
             @Override
             public void handle(final UserInfos user) {
                 if (user != null) {
-                    avisOrientationService.getAvisOrientation(
-                            request.params().get("id_eleve"),
-                            Long.parseLong(request.params().get("id_periode")),
-                            request.params().get("id_structure"),
+                    avisOrientationService.getAvisOrientation(request.params().get("id_eleve"),
+                            Long.parseLong(request.params().get("id_periode")), request.params().get("id_structure"),
                             arrayResponseHandler(request));
                 } else {
                     badRequest(request);

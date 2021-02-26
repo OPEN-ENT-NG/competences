@@ -72,9 +72,7 @@ public class ExportBulletinController extends ControllerHelper {
 
     }
 
-
     @Post("/export/bulletins")
-//    @SecuredAction(value = "export.bulletins.periodique", type = ActionType.WORKFLOW)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessExportBulletinFilter.class)
     public void exportBulletins(final HttpServerRequest request) {
@@ -96,8 +94,6 @@ public class ExportBulletinController extends ControllerHelper {
             eventStore.createAndStoreEvent(EventStoresCompetences.CREATE_SCHOOL_REPORT.name(), request);
         });
     }
-
-
 
     @Post("/informations/bulletins/ce")
     @ApiDoc("Retourne tous les types de devoir par etablissement")
@@ -130,7 +126,6 @@ public class ExportBulletinController extends ControllerHelper {
             badRequest(request);
         }
     }
-
 
     /**
      * Genere le releve
@@ -196,16 +191,15 @@ public class ExportBulletinController extends ControllerHelper {
     @ApiDoc("télécharge l archive d'un étab")
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
     @ResourceFilter(SuperAdminFilter.class)
-    public void getArchiveBulletin(final  HttpServerRequest request){
+    public void getArchiveBulletin(final HttpServerRequest request){
         String idStructure = request.params().get("idStructure");
         String idYear = request.params().get("idYear");
         List<String> idsPeriode = request.params().contains("idsPeriode") ?
                 Arrays.asList(request.params().get("idsPeriode").split(",")) : null;
         UserUtils.getUserInfos(eb, request, user -> {
-                    ArchiveUtils.getArchiveBulletinZip(idStructure, idYear, idsPeriode, request, eb, storage,
-                            vertx, workspaceHelper, user);
-                });
-
+            ArchiveUtils.getArchiveBulletinZip(idStructure, idYear, idsPeriode, request, eb, storage,
+                    vertx, workspaceHelper, user);
+        });
     }
 
     @Get("/years")

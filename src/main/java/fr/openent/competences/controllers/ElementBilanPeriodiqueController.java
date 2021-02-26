@@ -309,8 +309,6 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
         }
     }
 
-
-
     /**
      * Retourne les éléments du bilan périodique
      * @param request
@@ -333,7 +331,6 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                 }
                 defaultElementBilanPeriodiqueService.getElementsBilanPeriodique( idUser, idClasses,
                         request.params().get("idEtablissement"), arrayResponseHandler(request));
-
             }else{
                 unauthorized(request);
             }

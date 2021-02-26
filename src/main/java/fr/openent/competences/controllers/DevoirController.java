@@ -287,7 +287,6 @@ public class DevoirController extends ControllerHelper {
 
         Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
         devoirsService.getevaluatedDevoirs(idDevoirsArray,handler);
-
     }
 
     /**
@@ -310,8 +309,7 @@ public class DevoirController extends ControllerHelper {
 
                 JsonObject jsonRequest = new JsonObject()
                         .put("headers", new JsonObject()
-                                .put("Accept-Language",
-                                        request.headers().get("Accept-Language")))
+                                .put("Accept-Language", request.headers().get("Accept-Language")))
                         .put("Host", getHost(request));
                 JsonObject action = new JsonObject()
                         .put("action", "periode.getPeriodes")
@@ -356,11 +354,9 @@ public class DevoirController extends ControllerHelper {
                                 isUpdatable = false;
                             }
 
-
                             if (!isUpdatable) {
                                 leftToResponse(request, new Either.Left<String, String>("END OF SAISIE"));
-                            }
-                            else {
+                            } else {
                                 Long[] idDevoirsArray = new Long[idDevoirsList.size()];
 
                                 for (int i = 0; i < idDevoirsList.size(); i++) {
@@ -392,10 +388,8 @@ public class DevoirController extends ControllerHelper {
                                                         + devoir.getJsonArray("competencesAdd").size()
                                                         - devoir.getJsonArray("competencesRem").size())
                                                         <= Competences.MAX_NBR_COMPETENCE)) {
-                                                    devoirsService.updateDevoir(request.params()
-                                                                    .get("idDevoir"),
+                                                    devoirsService.updateDevoir(request.params().get("idDevoir"),
                                                             devoir, arrayResponseHandler(request));
-
                                                 } else {
                                                     leftToResponse(request, event.left());
                                                 }
@@ -411,7 +405,6 @@ public class DevoirController extends ControllerHelper {
                         }
                     }
                 }));
-
             }
         });
     }
@@ -447,7 +440,6 @@ public class DevoirController extends ControllerHelper {
                                     updatePercentWithAnnotationsAndCompetences(null, idDevoir, user, idGroupe,
                                             nbNotesByDevoir, is_evaluated, request, has_competence, nbStudents);
                                 }
-
                             } else {
                                 leftToResponse(request, devoirInfo.left());
                             }

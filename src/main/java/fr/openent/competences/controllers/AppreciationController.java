@@ -81,15 +81,14 @@ public class AppreciationController extends ControllerHelper {
     @Post("/appreciation")
     @ApiDoc("Créer une appreciation")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-	@ResourceFilter(CreateEvaluationWorkflow.class)
+    @ResourceFilter(CreateEvaluationWorkflow.class)
     public void create(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
                 if(user != null){
                     String validator = pathPrefix + Competences.SCHEMA_APPRECIATIONS_CREATE;
-                    RequestUtils.bodyToJson(request, validator,
-                            new Handler<JsonObject>() {
+                    RequestUtils.bodyToJson(request, validator, new Handler<JsonObject>() {
                         @Override
                         public void handle(JsonObject resource) {
                             appreciationService.createAppreciation(resource, user, notEmptyResponseHandler(request));
@@ -176,47 +175,44 @@ public class AppreciationController extends ControllerHelper {
             public void handle(final UserInfos user) {
                 if(user != null){
                     String validator = pathPrefix + Competences.SCHEMA_APPRECIATIONS_CLASSE;
-                    RequestUtils.bodyToJson(request, validator,
-                            new Handler<JsonObject>() {
-                                @Override
-                                public void handle(final JsonObject appreciation) {
+                    RequestUtils.bodyToJson(request, validator, new Handler<JsonObject>() {
+                        @Override
+                        public void handle(final JsonObject appreciation) {
+                            final Integer idPeriode = appreciation.getInteger("id_periode");
+                            final String idMatiere = appreciation.getString("id_matiere");
+                            final String idClasse = appreciation.getString("id_classe");
+                            final String idEtablissement = appreciation.getString("idEtablissement");
 
-                                    final Integer idPeriode = appreciation.getInteger("id_periode");
-                                    final String idMatiere = appreciation.getString("id_matiere");
-                                    final String idClasse = appreciation.getString("id_classe");
-                                    final String idEtablissement = appreciation.getString("idEtablissement");
-
-                                    WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse),
-                                            null,null, null, null, null,
-                                            new Handler<Either<String, Boolean>>() {
-                                                @Override
-                                                public void handle(Either<String, Boolean> event) {
-                                                    Boolean isHeadTeacher;
-                                                    if(event.isLeft()) {
-                                                        isHeadTeacher = false;
-                                                    }
-                                                    else {
-                                                         isHeadTeacher = event.right().getValue();
-                                                    }
-                                                    createOrUpdateAppreciationClasseUtils(request,
+                            WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse),
+                                    null,null, null, null, null,
+                                    new Handler<Either<String, Boolean>>() {
+                                        @Override
+                                        public void handle(Either<String, Boolean> event) {
+                                            Boolean isHeadTeacher;
+                                            if(event.isLeft()) {
+                                                isHeadTeacher = false;
+                                            } else {
+                                                isHeadTeacher = event.right().getValue();
+                                            }
+                                            createOrUpdateAppreciationClasseUtils(request,
                                                     idPeriode,idMatiere, idClasse,idEtablissement, user, appreciation,
-                                                     isHeadTeacher);
-                                                }
-                                            });
-
-                                }
-                            });
-                }else {
+                                                    isHeadTeacher);
+                                        }
+                                    });
+                        }
+                    });
+                } else {
                     log.error("User not found in session.");
                     Renders.unauthorized(request);
                 }
             }
         });
     }
+
     private void createOrUpdateAppreciationClasseUtils(final HttpServerRequest request,
-                                    final Integer idPeriode, final String idMatiere, final String idClasse,
-                                    final String idEtablissement, final UserInfos user, final JsonObject appreciation,
-                                    final Boolean isHeadTeacher) {
+                                                       final Integer idPeriode, final String idMatiere, final String idClasse,
+                                                       final String idEtablissement, final UserInfos user, final JsonObject appreciation,
+                                                       final Boolean isHeadTeacher) {
         // si chef etab ou prof principal sur la classe, on ne fait pas plus de controles (date fin de saisie, matiere)
         if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())
                 || isHeadTeacher) {
@@ -235,22 +231,22 @@ public class AppreciationController extends ControllerHelper {
                     if(isUpdatable) {
                         new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, false,
                                 new Handler<Boolean>() {
-                            @Override
-                            public void handle(final Boolean hasAccessToMatiere) {
-                                // verif possesion matière
-                                if(hasAccessToMatiere) {
-                                    appreciationService.createOrUpdateAppreciationClasse(appreciation
-                                                    .getString("appreciation"),
-                                            idClasse,
-                                            idPeriode,
-                                            idMatiere
-                                            , defaultResponseHandler(request));
-                                } else {
-                                    log.error("hasAccessToMatiere = " + hasAccessToMatiere);
-                                    Renders.unauthorized(request);
-                                }
-                            }
-                        });
+                                    @Override
+                                    public void handle(final Boolean hasAccessToMatiere) {
+                                        // verif possesion matière
+                                        if(hasAccessToMatiere) {
+                                            appreciationService.createOrUpdateAppreciationClasse(appreciation
+                                                            .getString("appreciation"),
+                                                    idClasse,
+                                                    idPeriode,
+                                                    idMatiere
+                                                    , defaultResponseHandler(request));
+                                        } else {
+                                            log.error("hasAccessToMatiere = " + hasAccessToMatiere);
+                                            Renders.unauthorized(request);
+                                        }
+                                    }
+                                });
                     } else {
                         log.error("Date de fin de saisie dépassée : isUpdatable = " + isUpdatable);
                         Renders.unauthorized(request);

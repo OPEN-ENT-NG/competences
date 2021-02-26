@@ -60,9 +60,8 @@ public class ReportModelPrintExportController extends ControllerHelper {
                 newReportModel.setUserId(user.getUserId());
                 reportModelService.getReportModel(newReportModel, defaultResponseHandler(request));
             } catch (Exception errorUpdate) {
-                ManageError.requestFailError(request,
-                        Common.ERROR.getString(), "Error during the GET all report model. ",
-                        errorUpdate.toString());
+                ManageError.requestFailError(request, Common.ERROR.getString(),
+                        "Error during the GET all report model. ", errorUpdate.toString());
             }
         });
     }
@@ -102,9 +101,8 @@ public class ReportModelPrintExportController extends ControllerHelper {
                 newReportModel.setUserId(user.getUserId());
                 reportModelService.getReportModelSelected(newReportModel, defaultResponseHandler(request));
             } catch (Exception errorUpdate) {
-                ManageError.requestFailError(request,
-                        Common.ERROR.getString(), "Error during the GET report model. ",
-                        errorUpdate.toString());
+                ManageError.requestFailError(request, Common.ERROR.getString(),
+                        "Error during the GET report model. ", errorUpdate.toString());
             }
         });
     }

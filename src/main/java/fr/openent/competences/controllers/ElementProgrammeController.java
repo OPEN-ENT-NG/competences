@@ -48,7 +48,6 @@ public class ElementProgrammeController extends ControllerHelper {
         elementProgramme = new DefaultElementProgramme();
     }
 
-
     @Get("/element/programme/domaines")
     @ApiDoc("Récupère les domaines d'enseignement")
     @SecuredAction(value = "", type = ActionType.RESOURCE)

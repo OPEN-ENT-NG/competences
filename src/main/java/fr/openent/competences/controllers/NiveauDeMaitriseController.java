@@ -69,9 +69,9 @@ public class NiveauDeMaitriseController extends ControllerHelper {
                     }
                 }
             }
-
         });
     }
+
     @Get("/maitrise/perso/use/:idUser")
     @ApiDoc("Vérifie si un utilisateur utilise la personnification des couleurs de compétence de son établissement")
     @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
@@ -91,6 +91,7 @@ public class NiveauDeMaitriseController extends ControllerHelper {
             }
         });
     }
+
     /**
      * Créer un niveau de maitrise avec les données passées en POST
      * @param request
@@ -210,7 +211,7 @@ public class NiveauDeMaitriseController extends ControllerHelper {
             public void handle(final UserInfos user) {
                 if(user != null){
                     String idUser = request.params().get("idUser");
-                    niveauDeMaitriseService.deleteUserFromPerso(idUser,defaultResponseHandler(request));
+                    niveauDeMaitriseService.deleteUserFromPerso(idUser, defaultResponseHandler(request));
                 }else{
                     unauthorized(request);
                 }

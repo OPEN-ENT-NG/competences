@@ -68,12 +68,11 @@ public class MatiereController extends ControllerHelper {
 
     @Get("/matieres/models/:idStructure")
     @ApiDoc("Retourne les models de libellé d'un établissement")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type=ActionType.AUTHENTICATED)
     public void getModels(final HttpServerRequest request) {
         String idStructure = request.params().get(ID_STRUCTURE_KEY);
         if(idStructure != null) {
             try {
-
                 matiereService.getModels(idStructure, null, arrayResponseHandler(request));
             }
             catch (Exception e) {

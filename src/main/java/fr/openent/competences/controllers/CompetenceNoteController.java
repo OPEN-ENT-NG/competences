@@ -188,7 +188,6 @@ public class CompetenceNoteController extends ControllerHelper {
     @ResourceFilter(AccessSuiviCompetenceFilter.class)
     public void getCompetenceNotesDevoir (final HttpServerRequest request) {
         if (request.params().contains("devoirId")) {
-
             Long devoirId;
             try {
                 devoirId = Long.parseLong(request.params().get("devoirId"));
@@ -211,7 +210,7 @@ public class CompetenceNoteController extends ControllerHelper {
     public void getCompetenceNoteEleve (final HttpServerRequest request) {
         if (request.params().contains("idEleve") ) {
             String idEleve = request.params().get("idEleve");
-            Long idPeriode;
+            Long idPeriode = null;
             if (request.params().contains("idPeriode")) {
                 try {
                     idPeriode = Long.parseLong(request.params().get("idPeriode"));
@@ -220,10 +219,9 @@ public class CompetenceNoteController extends ControllerHelper {
                     badRequest(request, e.getMessage());
                     return;
                 }
-            } else {
-                idPeriode = null;
             }
-            Long idCycle;
+
+            Long idCycle = null;
             if (request.params().contains("idCycle") && Utils.isCycleNotNull(request.params().get("idCycle"))) {
                 try {
                     idCycle = Long.parseLong(request.params().get("idCycle"));
@@ -232,15 +230,13 @@ public class CompetenceNoteController extends ControllerHelper {
                     badRequest(request, e.getMessage());
                     return;
                 }
-            } else {
-                idCycle = null;
             }
-            boolean isCycle;
+
+            boolean isCycle = false;
             if (request.params().contains("isCycle")) {
                 isCycle = Boolean.parseBoolean(request.params().get("isCycle"));
-            } else {
-                isCycle = false;
             }
+
             competencesNotesService.getCompetencesNotesEleve(idEleve, idPeriode, idCycle, isCycle, arrayResponseHandler(request));
         } else {
             Renders.badRequest(request, "Invalid parameters");
@@ -298,14 +294,12 @@ public class CompetenceNoteController extends ControllerHelper {
     }
 
     @Get("/competence/notes/classe/:idClasse/:typeClasse")
-    @ApiDoc("Retourne les compétences notes pour une classee. " +
-            "Filtre possible sur la période avec l'ajout du paramètre idPeriode")
+    @ApiDoc("Retourne les compétences notes pour une classee. Filtre possible sur la période avec l'ajout du paramètre idPeriode")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessSuiviCompetenceFilter.class)
     public void getCompetenceNoteClasse (final HttpServerRequest request) {
-        final Long idPeriode;
-        if (request.params().contains("idClasse")
-                && request.params().contains("typeClasse")) {
+        Long idPeriode = null;
+        if (request.params().contains("idClasse") && request.params().contains("typeClasse")) {
             final String idClasse = request.params().get("idClasse");
             Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
             if (request.params().contains("idPeriode")) {
@@ -316,11 +310,8 @@ public class CompetenceNoteController extends ControllerHelper {
                     badRequest(request, e.getMessage());
                     return;
                 }
-            } else {
-                idPeriode = null;
             }
-            callGetCompetenceNote(idClasse, idPeriode, typeClasse,   null, request);
-
+            callGetCompetenceNote(idClasse, idPeriode, typeClasse, null, request);
         } else {
             Renders.badRequest(request, "Invalid parameters");
         }
