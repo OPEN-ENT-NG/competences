@@ -21,6 +21,7 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.file.FileSystemException;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -267,10 +268,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
     public void runExportBulletin(String idEtablissement, String idClasse, JsonArray idStudents, Long idPeriode,
                                   JsonObject params, Future<JsonArray> idElevesFuture,
-                                  final Map<String, JsonObject> elevesMap, final AtomicBoolean answered,
-                                  String host, String acceptLanguage,
-                                  final Handler<Either<String, JsonObject>> finalHandler, Future<JsonObject> future, Vertx vertx){
-
+                                  final Map<String, JsonObject> elevesMap, final AtomicBoolean answered, String host,
+                                  String acceptLanguage, final Handler<Either<String, JsonObject>> finalHandler,
+                                  Future<JsonObject> future, Vertx vertx){
         // On récupère les informations basic des élèves (nom, Prenom, niveau, date de naissance,  ...)
         Future<JsonArray> elevesFuture = Future.future();
         if (idStudents != null) {
@@ -283,7 +283,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         // On récupère le tableau de conversion des compétences notes pour Lire le positionnement
         Future<JsonArray> tableauDeConversionFuture = Future.future();
         getConversionNoteCompetence(idEtablissement, idClasse, tableauDeConversionFuture);
-
 
         // Si on doit utiliser un model de libelle, On le récupère
         Future<JsonArray> modelsLibelleFuture = Future.future();
@@ -350,10 +349,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             }
                         }
                     });
-
                 }
-
-
             } else {
                 // S'il y a un problème lors d'une récupération , on stoppe tout
                 String error = "[runExportBulletin] : " + event.cause().getMessage();
@@ -362,9 +358,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         };
     }
 
-    private Handler<AsyncResult<CompositeFuture>> getHandlerGetInfosEleves(String idEtablissement, String idClasse, JsonArray idStudents,
-                                                                           Long idPeriode,
-
+    private Handler<AsyncResult<CompositeFuture>> getHandlerGetInfosEleves(String idEtablissement, String idClasse,
+                                                                           JsonArray idStudents, Long idPeriode,
                                                                            Future<JsonArray> idElevesFuture, Future<JsonObject> future,
                                                                            Future<JsonArray> elevesFuture) {
         return idElevesEvent -> {
@@ -614,13 +609,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     Future<JsonObject> getHeadTeachersFuture = Future.future();
                     futures.add(getHeadTeachersFuture);
                     getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), futureGetHandler(getHeadTeachersFuture));
-
                 }
+
                 if(params.getBoolean(GET_RESPONSABLE)) {
                     Future<JsonObject> getResponsablesFuture = Future.future();
                     futures.add(getResponsablesFuture);
                     getResponsables(idEleve, elevesMap, futureGetHandler(getResponsablesFuture));
                 }
+
                 if(params.getBoolean(SHOW_BILAN_PER_DOMAINE)) {
                     Future<JsonObject> getImageGraphFuture = Future.future();
                     Future<JsonObject> getArbreDomainesFuture = Future.future();
@@ -635,7 +631,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     futures.add(getProjetsFuture);
                     getProjets(idEleve, classe.getString(ID_CLASSE), elevesMap, idPeriode, futureGetHandler(getProjetsFuture));
                 }
-
 
                 if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD) != null){
                     if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
@@ -658,13 +653,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 getCycle(idEleve, classe.getString(ID_CLASSE), elevesMap,idPeriode, params.getLong(TYPE_PERIODE),
                         futureGetHandler(getCycleFuture));
                 getAppreciationCPE(idEleve, elevesMap, idPeriode, futureGetHandler(getAppreciationCPEFuture));
-
                 getAvisConseil(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
                         futureGetHandler(getAvisConseilFuture), beforeAvisConseil);
-
                 getAvisOrientation(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
                         futureGetHandler(getAvisOrientationFuture), beforeAvisOrientation);
-
                 generateImagesFromPath(elevesMap.get(idEleve), vertx,futureGetHandler(getImagesBase64Future) );
 
                 CompositeFuture.all(futures).setHandler(event -> {
@@ -683,7 +675,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         catch (Exception e) {
             log.error(EXPORT_BULLETIN_METHOD, e);
             finalHandler.handle(new Either.Left<>("[Viescolaire]getExportBulletin : " + e.getMessage()));
-
         }
     }
 
@@ -1841,6 +1832,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         fontstyle.put("style", value);
     }
+
     private void setMoyenneAnnuelle(JsonObject eleveObject, JsonArray matieres, JsonObject params){
         if(isNull(matieres) || isNull(eleveObject) || isNull(params)){
             log.error("setMoyenneAnnuelle call with null Object ");
@@ -1848,21 +1840,46 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         Double moy = new Double(0);
         int sumCoef = 0;
-        Object  moyenAnnuelle;
         for(int i=0; i < matieres.size(); i++){
             JsonObject matiere = matieres.getJsonObject(i);
-            Object coefMatiere = matiere.getValue("coef");
-            JsonObject moyAnnuelle = getObjectForPeriode(matiere.getJsonArray(MOYENNES), null, ID_KEY);
-            Object moyMatiere = isNull(moyAnnuelle)? null : moyAnnuelle.getValue(MOYENNE);
-            if(isNotNull(moyMatiere) && isNotNull(coefMatiere) && !moyMatiere.equals(NN)){
+            Object coefMatiere = matiere.getValue("coef", "1");
+
+            final Double[] moyMatiere = {0.0};
+            JsonArray moyennes = matiere.getJsonArray(MOYENNES);
+            JsonArray moyennesFinales = matiere.getJsonArray("moyennesFinales");
+            ArrayList<Long> periodes = new ArrayList<>();
+            moyennesFinales.forEach(moyenneFinale -> {
+                JsonObject moyenneFinaleJson = (JsonObject) moyenneFinale;
+                Long periode = moyenneFinaleJson.getLong("id_periode");
+                if(periode != null && !periodes.contains(periode)){
+                    if(!moyenneFinaleJson.getValue("moyenneFinale").equals(NN)){
+                        moyMatiere[0] += moyenneFinaleJson.getDouble("moyenneFinale");
+                        periodes.add(periode);
+                    }
+                }
+            });
+            moyennes.forEach(moyenne -> {
+                JsonObject moyenneJson = (JsonObject) moyenne;
+                Long periode = moyenneJson.getLong("id");
+                if(periode != null && !periodes.contains(periode)){
+                    if(!moyenneJson.getValue("moyenne").equals(NN)){
+                        moyMatiere[0] += moyenneJson.getDouble("moyenne");
+                        periodes.add(periode);
+                    }
+                }
+            });
+
+            moyMatiere[0] = moyMatiere[0] / periodes.size();
+
+            if(isNotNull(moyMatiere[0]) && isNotNull(coefMatiere) && periodes.size() > 0){
                 coefMatiere = Integer.valueOf(coefMatiere.toString());
                 sumCoef += (int) coefMatiere;
-                moy += ((int)coefMatiere * Double.valueOf(moyMatiere.toString()));
+                moy += ((int)coefMatiere * moyMatiere[0]);
             }
         }
         DecimalFormat decimalFormat = new DecimalFormat("#.00");
         decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
-        moyenAnnuelle = (sumCoef > 0)? decimalFormat.format(moy/sumCoef) : NN;
+        Object moyenAnnuelle = (sumCoef > 0) ? decimalFormat.format(moy / sumCoef) : NN;
 
         eleveObject.put(PRINT_MOYENNE_ANNUELLE, params.getBoolean(MOYENNE_ANNUELLE));
         eleveObject.put(MOYENNE_ANNUELLE, moyenAnnuelle);
@@ -1873,25 +1890,20 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         Map<String, Double> moyMap = new HashMap<>();
         Map<String, Integer> sumCoefMap = new HashMap<>();
 
-
         Double moy = new Double(0);
         int sumCoef = 0;
-        Object  moyenGeneral;
 
         Double moyClass = new Double(0);
-        int sumCoefClass = 0;
-        Object  moyenGeneralClass;
+        int nbEleveClass = 0;
 
         for(int i=0; i < matieres.size(); i++){
             JsonObject matiere = matieres.getJsonObject(i);
             Object moyMatiere = matiere.getValue(MOYENNE_ELEVE);
-            Object moyMatiereClass = matiere.getValue(MOYENNE_CLASSE);
             Object coefMatiere = matiere.getValue("coef", "1");
             JsonObject moyenneMapPeriode = matiere.getJsonObject(NOTES_BY_PERIODE_BY_STUDENT);
 
             // Calcul de la moyenne générale de chacun des élèves évalué sur la matière
-            if(isNotNull(moyenneMapPeriode) && isNotNull(idPeriode)
-                    && moyenneMapPeriode.containsKey(idPeriode.toString())){
+            if(isNotNull(moyenneMapPeriode) && isNotNull(idPeriode) && moyenneMapPeriode.containsKey(idPeriode.toString())){
                 JsonObject matiereMoyenne = moyenneMapPeriode.getJsonObject(idPeriode.toString());
                 for(Map.Entry<String, Object> moyenneEleve : matiereMoyenne.getMap().entrySet()){
                     String idEleve = moyenneEleve.getKey();
@@ -1911,19 +1923,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 sumCoef += (int) coefMatiere;
                 moy += ((int)coefMatiere * Double.valueOf(moyMatiere.toString()));
             }
-            // Calcul de la moyenne Génerale de la classe
-            if(isNotNull(moyMatiereClass) && isNotNull(coefMatiere) && !moyMatiereClass.equals(NN)){
-                coefMatiere = Integer.valueOf(coefMatiere.toString());
-                sumCoefClass += (int) coefMatiere;
-                moyClass += ((int)coefMatiere * Double.valueOf(moyMatiereClass.toString()));
-            }
         }
 
-        DecimalFormat decimalFormat = new DecimalFormat("#.00");
-        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
-        moyenGeneral = (sumCoef > 0)? decimalFormat.format(moy/sumCoef) : NN;
-        moyenGeneralClass = (sumCoefClass > 0)? decimalFormat.format(moyClass/sumCoefClass) : NN;
-        JsonArray moyFinalesEleves = new JsonArray();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse = new HashMap<>();
         notesByDevoirByPeriodeClasse.put(idPeriode, new HashMap<>());
         notesByDevoirByPeriodeClasse.get(idPeriode).put(idPeriode, new ArrayList<>());
@@ -1932,32 +1933,39 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             int sumCo = sumCoefMap.get(idEleve);
             Double moyen = moyenneEleve.getValue();
             if(sumCo > 0) {
-                Double moyCuEl = moyen/sumCo;
+                Double moyCuEl = moyen / sumCo;
                 NoteDevoir noteEleve = new NoteDevoir(moyCuEl, 20.0, false, 1.0, idEleve);
                 notesByDevoirByPeriodeClasse.get(idPeriode).get(idPeriode).add(noteEleve);
-            }
 
+                // Calcul de la moyenne Génerale de la classe
+                moyClass += moyCuEl;
+                nbEleveClass++;
+            }
         }
 
         eleveObject.put(MOYENNE_GENERALE + "Obj", new JsonObject());
-        noteService.setRankAndMinMaxInClasseByPeriode(idPeriode, idEl, notesByDevoirByPeriodeClasse,moyFinalesEleves,
+        noteService.setRankAndMinMaxInClasseByPeriode(idPeriode, idEl, notesByDevoirByPeriodeClasse, new JsonArray(),
                 eleveObject.getJsonObject(MOYENNE_GENERALE + "Obj"));
         eleveObject.put(PRINT_MOYENNE_GENERALE, params.getBoolean(MOYENNE_GENERALE));
+
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
+        Object moyenGeneral = (sumCoef > 0) ? decimalFormat.format(moy / sumCoef) : NN;
+        Object moyenGeneralClass = (nbEleveClass > 0) ? decimalFormat.format(moyClass / nbEleveClass) : NN;
+
         eleveObject.put(MOYENNE_GENERALE, moyenGeneral);
         eleveObject.put(MOYENNE_GENERALE + "Class", moyenGeneralClass);
 
         if(params.getBoolean(NEUTRE, false)){
             eleveObject.put(BACKGROUND_COLOR, "#ffffff");
-        }
-        else{
-            eleveObject.put(BACKGROUND_COLOR, (matieres.size()%2 ==0)? "#E2F0FA" : "#EFF7FC");
+        } else{
+            eleveObject.put(BACKGROUND_COLOR, (matieres.size()%2 == 0) ? "#E2F0FA" : "#EFF7FC");
         }
     }
 
     @Override
     public void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject classe,
-                               JsonObject params, Handler<Either<String, JsonObject>> finalHandler ) {
-
+                               JsonObject params, Handler<Either<String, JsonObject>> finalHandler) {
         boolean getProgrammeElement = params.getBoolean(GET_PROGRAM_ELEMENT);
 
         logBegin(GET_SUIVI_ACQUIS_METHOD, idEleve);
@@ -1965,8 +1973,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         if (eleveObject == null) {
             logStudentNotFound(idEleve, GET_SUIVI_ACQUIS_METHOD);
             finalHandler.handle(new Either.Right<>(null));
-        }
-        else {
+        } else {
             String idEtablissement = eleveObject.getString(ID_ETABLISSEMENT_KEY);
             String idClasse = classe.getString(ID_CLASSE);
             if (idClasse == null || idEtablissement == null) {
@@ -1977,11 +1984,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     logidEtabNotFound(idEleve, GET_SUIVI_ACQUIS_METHOD);
                 }
                 finalHandler.handle(new Either.Right<>(null));
-            }
-            else {
+            } else {
                 bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
-                        idClasse,getSuiviAcquisHandler(idEleve, idPeriode, classe, params, finalHandler, getProgrammeElement,
-                                eleveObject, idEtablissement, idClasse));
+                        idClasse, getSuiviAcquisHandler(idEleve, idPeriode, classe, params, finalHandler,
+                                getProgrammeElement, eleveObject, idEtablissement, idClasse));
             }
         }
     }
@@ -2000,10 +2006,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                     if (message.contains(TIME) && !answer.get()) {
                         count ++;
-                        bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
-                                idClasse,this);
-                    }
-                    else {
+                        bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve, idClasse,this);
+                    } else {
                         log.error("["+ GET_SUIVI_ACQUIS_METHOD + "] :" + idEleve + " " + message +
                                 + count);
                         if (eleveObject.getJsonArray(ERROR) == null) {
@@ -2011,44 +2015,38 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         }
                         JsonArray errors = eleveObject.getJsonArray(ERROR);
                         errors.add(GET_SUIVI_ACQUIS_METHOD);
-                        serviceResponseOK(answer, finalHandler, count, idEleve,
-                                GET_SUIVI_ACQUIS_METHOD);
+                        serviceResponseOK(answer, finalHandler, count, idEleve, GET_SUIVI_ACQUIS_METHOD);
                         try {
                             finalize();
                         } catch (Throwable throwable) {
                             log.error(GET_SUIVI_ACQUIS_METHOD + " :: "+ throwable.getMessage());
                         }
-
                     }
-                }
-                else {
+                } else {
                     JsonArray suiviAcquis = event.right().getValue();
                     JsonArray res = new JsonArray();
-                    // On considèrera qu'on a un suivi des acquis si on affiche au moins une
-                    // matière
-                    for (int i = 0; suiviAcquis != null && i < suiviAcquis.size() ; i++) {
-                        final JsonObject matiere = suiviAcquis.getJsonObject(i);
+                    if(suiviAcquis != null){
+                        // On considèrera qu'on a un suivi des acquis si on affiche au moins une matière
+                        for (int i = 0; i < suiviAcquis.size() ; i++) {
+                            final JsonObject matiere = suiviAcquis.getJsonObject(i);
 
-                        if(params.getBoolean(NEUTRE, false)){
-                            eleveObject.put(BACKGROUND_COLOR, "#ffffff");
-                            matiere.put(BACKGROUND_COLOR, "#ffffff");
+                            if(params.getBoolean(NEUTRE, false)){
+                                eleveObject.put(BACKGROUND_COLOR, "#ffffff");
+                                matiere.put(BACKGROUND_COLOR, "#ffffff");
+                            } else{
+                                matiere.put(BACKGROUND_COLOR, (res.size()%2 ==0)? "#E2F0FA" : "#EFF7FC");
+                            }
+                            // Une matière sera affichée si on a au moins un élement sur la période
+                            buildMatiereForSuiviAcquis(matiere, idPeriode, classe, params);
+                            checkCoefficientConflict(eleveObject, matiere.getJsonObject(COEFFICIENT), params);
+                            if(matiere.getBoolean(PRINT_MATIERE_KEY)) {
+                                res.add(matiere);
+                            }
                         }
-                        else{
-                            matiere.put(BACKGROUND_COLOR, (res.size()%2 ==0)? "#E2F0FA" : "#EFF7FC");
-                        }
-                        // Une matière sera affichée si on a au moins un élement sur la période
-                        final boolean printMatiere = false;
-                        buildMatiereForSuiviAcquis (matiere, printMatiere, idPeriode, classe, params);
-                        checkCoefficientConflict(eleveObject, matiere.getJsonObject(COEFFICIENT),
-                                params);
-                        if(matiere.getBoolean(PRINT_MATIERE_KEY)) {
-                            res.add(matiere);
-                        }
-
+                        setFontSizeOfSuivi(res, getProgrammeElement);
+                        setMoyenneGenerale(eleveObject, suiviAcquis, params, idPeriode, idEleve);
+                        setMoyenneAnnuelle(eleveObject, suiviAcquis, params);
                     }
-                    setFontSizeOfSuivi(res, getProgrammeElement);
-                    setMoyenneGenerale(eleveObject, res, params, idPeriode, idEleve);
-                    setMoyenneAnnuelle(eleveObject, suiviAcquis, params);
 
                     eleveObject.put("suiviAcquis", res).put("hasSuiviAcquis", res.size() > 0);
 
@@ -2056,7 +2054,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     try {
                         finalize();
                     } catch (Throwable throwable) {
-                        log.error(GET_SUIVI_ACQUIS_METHOD + " :: "+ throwable.getMessage());
+                        log.error(GET_SUIVI_ACQUIS_METHOD + " :: " + throwable.getMessage());
                     }
                 }
             }
@@ -2259,18 +2257,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     /**
      *  Calcule et met en forme les colonnes de la matière passée en paramètre
      * @param matiere matière à traiter
-     * @param printMatiere utilisé pour savoir si on affiche la matière ou pas
      * @param idPeriode période sélectionnée
      * @param classe JsonObject contenant les informations de la classe de l'élève dont on contruit le bulletin
      */
-    private  JsonObject buildMatiereForSuiviAcquis (final JsonObject matiere, boolean printMatiere, Long idPeriode,
-                                                    final JsonObject classe, JsonObject params) {
+    private void buildMatiereForSuiviAcquis(final JsonObject matiere, Long idPeriode, final JsonObject classe,
+                                            JsonObject params) {
+        boolean printMatiere = false;
 
         JsonArray models = classe.getJsonArray("models");
         if (models != null && !models.isEmpty()){
             setLibelleMatiere(matiere, models);
         }
-
 
         matiere.put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES));
         setPrintCoefficient(matiere, params);
@@ -2280,31 +2277,28 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 ID_PERIODE);
         JsonObject positionnementFinal = getObjectForPeriode(matiere.getJsonArray("positionnementsFinaux"),
                 idPeriode, ID_PERIODE);
-        JsonObject appreciation = null;
         JsonObject res = getObjectForPeriode(matiere.getJsonArray("appreciations"), idPeriode, ID_PERIODE);
+        JsonObject moyenneFinale = getObjectForPeriode(matiere.getJsonArray("moyennesFinales"), idPeriode,
+                ID_PERIODE);
+        JsonObject appreciation = null;
         JsonArray appreciationByClasse = null;
 
         if (res != null) {
             appreciationByClasse = res.getJsonArray("appreciationByClasse");
         }
-        if (appreciationByClasse != null && appreciationByClasse.size()> 0) {
+        if (appreciationByClasse != null && appreciationByClasse.size() > 0) {
             printMatiere = true;
             appreciation = appreciationByClasse.getJsonObject(0);
         }
-        JsonObject moyenneFinale = getObjectForPeriode(matiere.getJsonArray("moyennesFinales"), idPeriode,
-                ID_PERIODE);
 
         if (moyenneFinale != null) {
             printMatiere = true;
             matiere.put(MOYENNE_ELEVE, moyenneFinale.getValue("moyenneFinale"));
-        }
-        else {
+        } else {
             if (isNotNull(moyenneEleve)) {
                 printMatiere = true;
                 matiere.put(MOYENNE_ELEVE, moyenneEleve.getValue(MOYENNE));
-
-            }
-            else{
+            } else{
                 matiere.put(MOYENNE_ELEVE, NN);
             }
         }
@@ -2316,9 +2310,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             if(posFinal == 0)
                 matiere.put(POSITIONNEMENT, NN);
             else
-                matiere.put(POSITIONNEMENT,posFinal);
-        }
-        else {
+                matiere.put(POSITIONNEMENT, posFinal);
+        } else {
             // On récupère la moyenne des positionements et on la convertie
             // Grâce à l'échelle de conversion du cycle de la classe de l'élève
             if(positionnement != null) {
@@ -2337,8 +2330,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         // Mise Remplissage des données des sousMatières
         buildSousMatieres(matiere, tableauDeconversion, idPeriode , params);
 
-        String elementsProgramme = troncateLibelle(
-                matiere.getString(ELEMENTS_PROGRAMME), MAX_SIZE_LIBELLE);
+        String elementsProgramme = troncateLibelle(matiere.getString(ELEMENTS_PROGRAMME), MAX_SIZE_LIBELLE);
 
         String app = "";
 
@@ -2350,39 +2342,36 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         // Construction des libelles et de leur style.
         matiere.put(ELEMENTS_PROGRAMME, elementsProgramme)
                 .put(MOYENNE_CLASSE, (moyenneClasse != null) ? moyenneClasse.getValue(MOYENNE) : NN)
-                .put(APPRECIATION_KEY,app)
+                .put(APPRECIATION_KEY, app)
                 .put(PRINT_MATIERE_KEY, printMatiere);
 
         JsonArray teachers = matiere.getJsonArray("teachers");
 
         // Rajout de la première lettre du prenom des enseignants
         if (teachers != null && teachers.size() > 0) {
-            for(int j=0; j< teachers.size(); j++) {
+            for(int j=0; j < teachers.size(); j++) {
                 JsonObject teacher = teachers.getJsonObject(j);
                 String initial = teacher.getString(FIRST_NAME_KEY);
-                if( initial == null ) {
+                if(initial == null) {
                     initial = "";
-                }
-                else {
+                } else {
                     initial =  String.valueOf(initial.charAt(0));
                 }
                 teacher.put("initial", initial);
                 String name = teacher.getString(NAME);
-                if( name != null ) {
-                    if(j == teachers.size() -1) {
+                if(name != null) {
+                    if(j == teachers.size() - 1) {
                         name += "";
-                    }
-                    else {
+                    } else {
                         name += ",";
                     }
                     teacher.remove(NAME);
                     teacher.put(NAME, name);
                 }
-
             }
         }
-        return matiere;
     }
+
     @Override
     public JsonArray sortResultByClasseNameAndNameForBulletin(Map<String, JsonObject> mapEleves) {
         List<JsonObject> eleves = new ArrayList<>(mapEleves.values());
@@ -2705,17 +2694,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             elevesMap.put(idEleve, eleve);
 
-                //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
+            //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
 
-                getExportBulletin(answered, idEleve, elevesMap,idPeriode, params, classe, host, acceptLanguage,vertx,
-                        futureGetHandler(futures.get(i)));
+            getExportBulletin(answered, idEleve, elevesMap,idPeriode, params, classe, host, acceptLanguage,vertx,
+                    futureGetHandler(futures.get(i)));
+        }
+        CompositeFuture.all(futures).setHandler(compositeEvent ->{
+            if(compositeEvent.succeeded()){
+                log.info("end students");
+                finalHandler.handle(new Either.Right<>(null));
             }
-            CompositeFuture.all(futures).setHandler(compositeEvent ->{
-                if(compositeEvent.succeeded()){
-                    log.info("end students");
-                    finalHandler.handle(new Either.Right<>(null));
-                }
-            });
+        });
 
     }
 
@@ -3638,16 +3627,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void getBase64File(String id,Future<String> future) {
-            workspaceHelper.readDocument(id, document -> {
-                if (document == null){
-                    log.error("Cannot load image in getBase64File for id : " + id);
-                    future.complete("");
-                }
-                else {
-                    String base64 = Base64.getEncoder().encodeToString(document.getData().getBytes());
-                    future.complete(base64);
-                }
-            });
+        workspaceHelper.readDocument(id, document -> {
+            if (document == null){
+                log.error("Cannot load image in getBase64File for id : " + id);
+                future.complete("");
+            }
+            else {
+                String base64 = Base64.getEncoder().encodeToString(document.getData().getBytes());
+                future.complete(base64);
+            }
+        });
     }
 
     private void generateImagesFromPath(JsonObject eleve, Vertx vertx, Handler<Either<String, JsonObject>> handler) {

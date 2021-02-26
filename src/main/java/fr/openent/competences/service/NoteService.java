@@ -198,18 +198,6 @@ public interface NoteService extends CrudService {
     void getAppreciationMoyFinalePositionnement(String idEleve, String idMatiere, Long idPeriode, JsonArray idGroups,
                                                 Handler<Either<String,JsonArray>> handler);
 
-    /**
-     * calcul la moyenne de la classe pour une période
-     * @param allNotes allNotes
-     * @param moyFinalesElevesByPeriode moyFinalesElevesByPeriode
-     * @param moyFinalesNN  moyFinalesNNElevesByPeriode
-     * @param idPeriode idPeriode
-     * @return la moyenne
-     */
-    Double calculMoyenneClasseByPeriode(ArrayList<NoteDevoir> allNotes,
-                                        Map<Long, Map<String, Double>> moyFinalesElevesByPeriode,
-                                        Map<Long, List<String>> moyFinalesNNElevesByPeriode,
-                                        Long idPeriode);
 
     /**
      * calcul la moyenne de la classe pour toute les périodes où il y a eu une note
