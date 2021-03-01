@@ -3089,14 +3089,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             });
             moyenne = moyenne / nbEleve;
             moyenneFinal = moyenneFinal / nbEleveFinal;
-            if($scope.releveNote._tmp._moyenne_classe.null.moyenne != "NN") {
+            if ($scope.releveNote._tmp._moyenne_classe.null.moyenne != "NN") {
                 $scope.releveNote._tmp._moyenne_classe.null.moyenne = moyenne.toFixed(2);
                 $scope.releveNote._tmp._moyenne_classe.null.min = min;
                 $scope.releveNote._tmp._moyenne_classe.null.max = max;
             }
-            $scope.releveNote._tmp._moyenne_classe.nullFinal.moyenne = moyenneFinal.toFixed(2);
-            $scope.releveNote._tmp._moyenne_classe.nullFinal.min = minFinal;
-            $scope.releveNote._tmp._moyenne_classe.nullFinal.max = maxFinal;
+
+            if (!isNaN(moyenneFinal)) {
+                $scope.releveNote._tmp._moyenne_classe.nullFinal.moyenne = moyenneFinal.toFixed(2);
+                $scope.releveNote._tmp._moyenne_classe.nullFinal.min = minFinal;
+                $scope.releveNote._tmp._moyenne_classe.nullFinal.max = maxFinal;
+            } else {
+                $scope.releveNote._tmp._moyenne_classe.nullFinal.moyenne = "NN";
+                $scope.releveNote._tmp._moyenne_classe.nullFinal.min = "NN";
+                $scope.releveNote._tmp._moyenne_classe.nullFinal.max = "NN"
+            }
+
 
             utils.safeApply($scope);
         }
@@ -4183,18 +4191,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
                 if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
-                    eleve.moyenneFinale === "" || eleve.moyenneFinale === "NN"){
-                    if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) || eleve.oldMoyenneFinale !== eleve.moyenneFinale
-                        || eleve.moyenneFinale !== "") {
+                    eleve.moyenneFinale === "" || eleve.moyenneFinale.toUpperCase() === "NN"){
+                    if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) ||
+                        eleve.oldMoyenneFinale !== eleve.moyenneFinale || eleve.moyenneFinale !== "") {
 
-                        if(eleve.oldMoyenneFinale != parseFloat(eleve.moyenneFinale) || eleve.oldMoyenneFinale !== eleve.moyenneFinale) {
+                        if( eleve.oldMoyenneFinale !== eleve.moyenneFinale) {
                             $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(async () => {
                                 eleve.moyenneFinaleIsSet = true;
                                 eleve.oldMoyenneFinale = eleve.moyenneFinale ;
                                 if (updateHistorique) {
                                     $scope.updateHistorique(eleve, 'moyenneFinale');
                                 }
-                                if (eleve.moyenneFinale === "" && eleve.moyenne !== undefined) {
+                                if ((eleve.moyenneFinale === "" || eleve.moyenneFinale.toUpperCase() === "NN" )
+                                    && eleve.moyenne !== undefined) {
                                     eleve.moyenneFinaleIsSet = false;
                                     eleve.moyenneFinale = eleve.moyenne;
                                     eleve.oldMoyenneFinale = eleve.moyenneFinale;
