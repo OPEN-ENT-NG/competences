@@ -18,12 +18,14 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.model.Devoir;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
@@ -42,14 +44,20 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.returnFailure;
 import static fr.openent.competences.helpers.DevoirControllerHelper.getDuplicationDevoirHandler;
 import static fr.openent.competences.helpers.FormSaisieHelper.*;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 /**
@@ -59,6 +67,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     private DefaultUtilsService utilsService;
     private DefaultNoteService noteService;
+    private DefaultMatiereService matiereService;
+    private DefaultCompetenceNoteService competenceNoteService;
     private final Neo4j neo4j = Neo4j.getInstance();
     private EventBus eb;
     protected static final Logger log = LoggerFactory.getLogger(DefaultDevoirService.class);
@@ -67,6 +77,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         super(Competences.COMPETENCES_SCHEMA, Competences.DEVOIR_TABLE);
         utilsService = new DefaultUtilsService(eb);
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
+        matiereService = new DefaultMatiereService(eb);
+        competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
         this.eb = eb;
     }
 
@@ -679,11 +691,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     @Override
     public void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long idPeriode,
-                            boolean historise, Handler<Either<String, JsonArray>> handler) {
+                            boolean historise, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT devoirs.*, type.nom as _type_libelle, rel_type_periode.type as _periode_type, rel_type_periode.ordre as _periode_ordre, users.username as teacher ");
+        query.append("SELECT devoirs.*, type.nom as _type_libelle, rel_type_periode.type as _periode_type, ")
+                .append("rel_type_periode.ordre as _periode_ordre, users.username as teacher, id_groupe ");
 
         if (idEleve != null) {
             query.append(", notes.valeur as note, COUNT(competences_devoirs.id) as nbcompetences, sum.sum_notes, sum.nbr_eleves ");
@@ -692,21 +705,21 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ")
                 .append("LEFT JOIN ").append(Competences.VSCO_SCHEMA).append(".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type on devoirs.id_type = type.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users on users.id = devoirs.owner ");
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users on users.id = devoirs.owner ")
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ");
 
         if(idClasse != null) {
-            query.append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON " +
-                    "rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ? ");
+            query.append(" ON rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ? ");
             values.add(idClasse);
         }
 
         if (idEleve != null) {
             query.append(" LEFT JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences_devoirs ")
                     .append(" ON devoirs.id = competences_devoirs.id_devoir ")
-                    .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".notes on devoirs.id = notes.id_devoir ")
-                    .append("INNER JOIN ( SELECT devoirs.id, SUM(notes.valeur) as sum_notes, COUNT(notes.valeur) as nbr_eleves " +
-                            "FROM notes.devoirs INNER JOIN notes.notes on devoirs.id = notes.id_devoir " +
-                            "WHERE devoirs.id_etablissement = ? AND date_publication <= Now() ");
+                    .append("LEFT JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".notes ON devoirs.id = notes.id_devoir ")
+                    .append("LEFT JOIN ( SELECT devoirs.id, SUM(notes.valeur) as sum_notes, COUNT(notes.valeur) as nbr_eleves ")
+                    .append("FROM notes.devoirs INNER JOIN notes.notes on devoirs.id = notes.id_devoir ")
+                    .append("WHERE devoirs.id_etablissement = ? AND date_publication <= Now() ");
             values.add(idEtablissement);
             if (idPeriode != null) {
                 query.append("AND devoirs.id_periode = ? ");
@@ -715,8 +728,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             query.append("GROUP BY devoirs.id) sum ON sum.id = devoirs.id ");
         }
 
-        query.append("WHERE devoirs.id_etablissement = ? ");
+        query.append("WHERE devoirs.id_etablissement = ? AND devoirs.eval_lib_historise = ? ");
         values.add(idEtablissement);
+        values.add(historise);
 
         if(idMatiere != null) {
             query.append("AND devoirs.id_matiere = ? ");
@@ -733,16 +747,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             values.add(idPeriode);
         }
 
-        if(historise) {
-            query.append(" AND devoirs.eval_lib_historise = ? ");
-            values.add(historise);
-        }
-
         if (idEleve != null) {
-            query.append(" GROUP BY devoirs.id,rel_type_periode.type , rel_type_periode.ordre, type.nom, notes.valeur, sum_notes, nbr_eleves, users.username ")
-                    .append(" ORDER BY devoirs.date ASC, devoirs.id ASC ");
+            query.append(" GROUP BY devoirs.id, rel_type_periode.type , rel_type_periode.ordre, type.nom, notes.valeur, sum_notes, nbr_eleves, users.username, id_groupe ")
+                    .append(" ORDER BY devoirs.date ASC, devoirs.id ASC");
         } else {
-            query.append("ORDER BY devoirs.date ASC, devoirs.id ASC ");
+            query.append("ORDER BY devoirs.date ASC, devoirs.id ASC");
         }
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
@@ -906,11 +915,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void listDevoirsWithAnnotations(String idEleve, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
+    public void listDevoirsWithAnnotations(String idEleve, Long idPeriode, String idMatiere,
+                                           Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getAnnotations")
                 .put("idEleve", idEleve)
-                .put("idPeriode", idPeriode);
+                .put("idPeriode", idPeriode)
+                .put("idMatiere", idMatiere);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
@@ -919,6 +930,27 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             } else {
                 handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
                 log.error("listDevoirsWithAnnotations : " + body.getString("message"));
+            }
+        }));
+    }
+
+    @Override
+    public void listDevoirsWithCompetences(String idEleve, Long idPeriode, String idMatiere, JsonArray groups,
+                                           Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put(ACTION, "eleve.getCompetences")
+                .put("idEleve", idEleve)
+                .put("idPeriode", idPeriode)
+                .put("idMatiere", idMatiere)
+                .put("idGroups", groups);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray result = body.getJsonArray(RESULTS);
+                handler.handle(new Either.Right<String, JsonArray>(result));
+            } else {
+                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                log.error("listDevoirsWithCompetences : " + body.getString("message"));
             }
         }));
     }
@@ -1557,5 +1589,208 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         Sql.getInstance().prepared(query,params,SqlResult.validResultHandler(handler));
 
 
+    }
+
+    @Override
+    public void getDevoirsEleve(String idEtablissement, String idEleve, String idMatiere, Long idPeriode,
+                                Handler<Either<String, JsonArray>> handler){
+        List<Future> futures = new ArrayList<>();
+
+        Future<JsonArray> devoirsFuture = Future.future();
+        Future<JsonArray> annotationsFuture = Future.future();
+        if (idEtablissement != null && idEleve != null) {
+            listDevoirs(idEleve, idEtablissement, null, idMatiere,
+                    idPeriode, false, devoirsEvent -> formate(devoirsFuture, devoirsEvent)
+            );
+            futures.add(devoirsFuture);
+
+            listDevoirsWithAnnotations(idEleve, idPeriode, idMatiere,
+                    annotationsEvent -> formate(annotationsFuture, annotationsEvent)
+            );
+            futures.add(annotationsFuture);
+        } else {
+            handler.handle(new Either.Left<>("getLastDevoirs : missing idEleve or idEtablissement"));
+        }
+
+        Future<JsonArray> matieresFuture = Future.future();
+        matiereService.getMatieresEtab(idEtablissement,
+                matieresEvent -> formate(matieresFuture, matieresEvent)
+        );
+        futures.add(matieresFuture);
+
+        Future<JsonArray> groupsFuture = Future.future();
+        Utils.getGroupsEleve(eb, idEleve, idEtablissement,
+                groupsEvent -> formate(groupsFuture, groupsEvent)
+        );
+        futures.add(groupsFuture);
+
+        Long finalIdPeriode = idPeriode;
+        CompositeFuture.all(futures).setHandler(futuresEvent -> {
+            if (futuresEvent.failed()) {
+                handler.handle(new Either.Left<>(futuresEvent.cause().getMessage()));
+            } else {
+                JsonArray devoirs = devoirsFuture.result();
+                JsonArray annotations = annotationsFuture.result();
+
+                JsonArray matieres = matieresFuture.result();
+                JsonArray groups = groupsFuture.result();
+
+                JsonArray results = new JsonArray();
+
+                Future<JsonArray> servicesFuture = Future.future();
+                utilsService.getServices(idEtablissement, groups,
+                        servicesEvent -> formate(servicesFuture, servicesEvent)
+                );
+
+                Future<JsonArray> multiTeachersFuture = Future.future();
+                utilsService.getMultiTeachers(idEtablissement, groups, finalIdPeriode != null ? finalIdPeriode.intValue() : null,
+                        multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent)
+                );
+
+                Future<JsonArray> devoirWithCompetencesFuture = Future.future();
+                listDevoirsWithCompetences(idEleve, finalIdPeriode, idMatiere, groups,
+                        devoirsCompetencesEvent -> formate(devoirWithCompetencesFuture, devoirsCompetencesEvent)
+                );
+
+                CompositeFuture.all(servicesFuture, multiTeachersFuture, devoirWithCompetencesFuture).setHandler(teachersEvent -> {
+                    if (teachersEvent.failed()) {
+                        handler.handle(new Either.Left<>(teachersEvent.cause().getMessage()));
+                    } else {
+                        final JsonArray services = servicesFuture.result();
+                        final JsonArray allMultiTeachers = multiTeachersFuture.result();
+                        final JsonArray devoirsWithCompetences = devoirWithCompetencesFuture.result();
+
+                        devoirsWithCompetences.addAll(annotations).forEach(devoirCompetences -> {
+                            JsonObject devoirCompetencesJson = (JsonObject) devoirCompetences;
+
+                            JsonObject devoir = (JsonObject) devoirs.stream()
+                                    .filter(el -> devoirCompetencesJson.getLong("id_devoir").equals(((JsonObject) el).getLong("id")) ||
+                                            devoirCompetencesJson.getLong("id_devoir").equals(((JsonObject) el).getLong("id_devoir")))
+                                    .findFirst().orElse(null);
+                            if(devoir == null)
+                                devoirs.add(devoirCompetencesJson);
+                        });
+
+                        JsonArray orderedDevoirs = Utils.sortJsonArrayDate("date", devoirs);
+                        if(idMatiere == null){
+                            while(orderedDevoirs.size() > 10) {
+                                orderedDevoirs.remove(orderedDevoirs.size() - 1);
+                            }
+                        }
+
+                        ArrayList<Future> resultsFuture = new ArrayList<>();
+                        buildArrayOfHomeworks(orderedDevoirs, matieres, services, allMultiTeachers, idEleve,
+                                results, resultsFuture, handler);
+
+                        CompositeFuture.all(resultsFuture).setHandler(resultEvent -> {
+                            if (resultEvent.failed()) {
+                                handler.handle(new Either.Left<>(resultEvent.cause().getMessage()));
+                            } else {
+                                handler.handle(new Either.Right<>(results));
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    private void buildArrayOfHomeworks(JsonArray orderedDevoirs, JsonArray matieres, JsonArray services,
+                                       JsonArray allMultiTeachers, String idEleve, JsonArray results,
+                                       ArrayList<Future> resultsFuture, Handler<Either<String, JsonArray>> handler) {
+        orderedDevoirs.forEach(devoir -> {
+            JsonObject devoirJson = (JsonObject) devoir;
+            String idMat = devoirJson.getString("id_matiere");
+            String idClasse = devoirJson.getString("id_groupe");
+            Long idDevoir = devoirJson.containsKey("id_devoir") ? devoirJson.getLong("id_devoir") : devoirJson.getLong("id");
+
+            JsonObject matiere = (JsonObject) matieres.stream()
+                    .filter(el -> idMat.equals(((JsonObject) el).getString("id")))
+                    .findFirst().orElse(null);
+
+            JsonObject service = (JsonObject) services.stream()
+                    .filter(el -> idMat.equals(((JsonObject) el).getString("id_matiere")) &&
+                            idClasse.equals(((JsonObject) el).getString("id_groupe")))
+                    .findFirst().orElse(null);
+
+            JsonArray idsTeachers = new JsonArray();
+            if (service != null) {
+                idsTeachers.add(service.getString("id_enseignant"));
+                List<Object> multiTeachers = allMultiTeachers.stream()
+                        .filter(el -> idMat.equals(((JsonObject) el).getString("subject_id")) &&
+                                idClasse.equals(((JsonObject) el).getString("class_or_group_id")))
+                        .collect(Collectors.toList());
+                multiTeachers.forEach(multiTeacher -> {
+                    JsonObject multiTeacherJson = (JsonObject) multiTeacher;
+                    if (multiTeacherJson.getBoolean("is_visible")) {
+                        idsTeachers.add(multiTeacherJson.getString("second_teacher_id"));
+                    }
+                });
+            }
+
+            Future<Map<String, JsonObject>> teacherNamesFuture = Future.future();
+            Utils.getLastNameFirstNameUser(eb, idsTeachers, teacherNameEvent ->
+                    formate(teacherNamesFuture, teacherNameEvent)
+            );
+
+            Future<JsonArray> competencesFuture = Future.future();
+            competenceNoteService.getCompetencesNotesDevoir(idDevoir,
+                    competencesEvent -> formate(competencesFuture, competencesEvent)
+            );
+
+            Future<String> resultFuture = Future.future();
+            resultsFuture.add(resultFuture);
+            CompositeFuture.all(teacherNamesFuture, competencesFuture).setHandler(event -> {
+                if (event.failed()) {
+                    handler.handle(new Either.Left<>(event.cause().getMessage()));
+                } else {
+                    final Map<String, JsonObject> teachersName = teacherNamesFuture.result();
+                    final JsonArray competences = competencesFuture.result();
+
+                    buildObjectForHomework(devoirJson, matiere, idDevoir, idEleve,
+                            teachersName, competences, results, resultFuture);
+                }
+            });
+        });
+    }
+
+    private void buildObjectForHomework(JsonObject devoirJson, JsonObject matiere, Long idDevoir, String idEleve,
+                                        Map<String, JsonObject> teachersName, JsonArray competences, JsonArray results,
+                                        Future<String> resultFuture) {
+        JsonObject result = new JsonObject();
+
+        String teacherLibelle = teachersName.values().stream()
+                .map(t -> t.getString("name") + " " + t.getString("firstName"))
+                .collect(Collectors.joining(", "));
+        result.put("teacher", teacherLibelle);
+
+        String[] date = devoirJson.getString("date")
+                .substring(0, devoirJson.getString("date").indexOf(" ")).split("-");
+        result.put("date", date[2] + '/' + date[1] + '/' + date[0]);
+
+        result.put("title", devoirJson.getString("name"));
+        result.put("matiere", matiere != null ? matiere.getString("name") : "");
+        result.put("diviseur", devoirJson.getLong("diviseur"));
+        result.put("coefficient", devoirJson.getString("coefficient"));
+
+        String note = devoirJson.getString("note");
+        result.put("note", note != null ? note : "NN");
+
+        String sum_notes = devoirJson.getString("sum_notes");
+        Long nbr_eleves = devoirJson.getLong("nbr_eleves");
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
+        String moyenne = sum_notes != null && nbr_eleves != null ?
+                decimalFormat.format(Double.parseDouble(sum_notes) / nbr_eleves) : "NN";
+        result.put("moyenne", moyenne);
+
+        JsonArray competencesDevoirs = new JsonArray(competences.stream()
+                .filter(el -> idDevoir.equals(((JsonObject) el).getLong("id_devoir"))
+                        && idEleve.equals((((JsonObject) el).getString("id_eleve"))))
+                .collect(Collectors.toList()));
+        result.put("competences", competencesDevoirs);
+
+        results.add(result);
+        resultFuture.complete();
     }
 }

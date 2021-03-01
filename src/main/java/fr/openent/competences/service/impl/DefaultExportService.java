@@ -1450,7 +1450,7 @@ public class DefaultExportService implements ExportService {
 
         // Récupération de la liste des devoirs de la personne avec ses notes associées
         Future<JsonArray> annotationsFuture = Future.future();
-        devoirService.listDevoirsWithAnnotations(idUser, idPeriode, event -> formate(annotationsFuture, event));
+        devoirService.listDevoirsWithAnnotations(idUser, idPeriode, null, event -> formate(annotationsFuture, event));
         futures.add(annotationsFuture);
 
         // Récupération des moyennes finales

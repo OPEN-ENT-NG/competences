@@ -1021,4 +1021,30 @@ public class Utils {
         return sortedJsonArray;
     }
 
+    public static JsonArray sortJsonArrayDate(final String KEY_NAME, final JsonArray arrayNoSort) {
+        final List<JsonObject> listOfJsonObjects = new ArrayList<>();
+        for (int i = 0; i < arrayNoSort.size(); i++) {
+            final JsonObject objectNoSorted = arrayNoSort.getJsonObject(i);
+            listOfJsonObjects.add(objectNoSorted);
+        }
+        Collections.sort(listOfJsonObjects, (firstObject, secondeObject) -> {
+            Date firstValue = new Date();
+            Date secondValue = new Date();
+            try {
+                firstValue = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+                        .parse(firstObject.getString(KEY_NAME).split(" ")[0]);
+                secondValue = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+                        .parse(secondeObject.getString(KEY_NAME).split(" ")[0]);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            return firstValue.getTime() > secondValue.getTime() ? -1 : 1;     //descending
+        });
+
+        final JsonArray sortedJsonArray = new JsonArray();
+        for (final JsonObject objectSorted : listOfJsonObjects) {
+            sortedJsonArray.add(objectSorted);
+        }
+        return sortedJsonArray;
+    }
 }

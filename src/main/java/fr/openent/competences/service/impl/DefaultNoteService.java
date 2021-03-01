@@ -553,7 +553,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     public void getCompetencesNotesReleve(String etablissementId, String classeId, JsonArray groupIds, String matiereId,
-                                          Long periodeId,  String eleveId, Integer typeClasse, Boolean withDomaineInfo,
+                                          Long periodeId, String eleveId, Integer typeClasse, Boolean withDomaineInfo,
                                           Boolean isYear, Handler<Either<String, JsonArray>> handler) {
         if(typeClasse == null){
             runGetCompetencesNotesReleve(etablissementId, matiereId, null,

@@ -22,25 +22,29 @@ import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.helpers.DevoirControllerHelper;
 import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessPeriodeFilter;
+import fr.openent.competences.security.AccessStudentParentFilter;
 import fr.openent.competences.security.AccessVisibilityAppreciation;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
+import fr.openent.competences.service.CompetenceNoteService;
 import fr.openent.competences.service.CompetencesService;
+import fr.openent.competences.service.MatiereService;
 import fr.openent.competences.service.UtilsService;
-import fr.openent.competences.service.impl.DefaultCompetencesService;
-import fr.openent.competences.service.impl.DefaultDevoirService;
-import fr.openent.competences.service.impl.DefaultUtilsService;
+import fr.openent.competences.service.impl.*;
 
 import static fr.openent.competences.Competences.NN;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import fr.openent.competences.helpers.FormateFutureEvent;
+import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.json.Json;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -56,10 +60,13 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.Future;
 import io.vertx.core.CompositeFuture;
 
+import java.math.RoundingMode;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
@@ -72,7 +79,6 @@ public class DevoirController extends ControllerHelper {
      * Déclaration des services
      */
     private final DefaultDevoirService devoirsService;
-    private final UtilsService utilsService;
     private final CompetencesService competencesService;
     private EventStore eventStore;
 
@@ -80,7 +86,6 @@ public class DevoirController extends ControllerHelper {
         this.eb = eb;
         this.eventStore = eventStore;
         devoirsService = new DefaultDevoirService(eb);
-        utilsService = new DefaultUtilsService();
         competencesService = new DefaultCompetencesService(eb);
     }
 
@@ -773,12 +778,12 @@ public class DevoirController extends ControllerHelper {
         // On récupère le nombre d'annotations
         Future<JsonArray> nbAnnotationsDevoirsFuture = Future.future();
         devoirsService.getNbAnnotationsDevoirs(user, idEleves, idDevoir,
-                nbsAnnotations -> FormateFutureEvent.formate(nbAnnotationsDevoirsFuture, nbsAnnotations));
+                nbsAnnotations -> formate(nbAnnotationsDevoirsFuture, nbsAnnotations));
 
         // On récupère le nombre de compétences par élèves pour le devoir courant
         Future<JsonArray> nbCompetenceNotesDevoirsFuture = Future.future();
         devoirsService.getNbCompetencesDevoirsByEleve(idEleves, idDevoir,
-                nbCompetenceNotes -> FormateFutureEvent.formate(nbCompetenceNotesDevoirsFuture, nbCompetenceNotes));
+                nbCompetenceNotes -> formate(nbCompetenceNotesDevoirsFuture, nbCompetenceNotes));
 
         CompositeFuture.all(nbAnnotationsDevoirsFuture, nbCompetenceNotesDevoirsFuture).setHandler(
                 event -> {
@@ -885,5 +890,34 @@ public class DevoirController extends ControllerHelper {
         } catch (NumberFormatException err) {
             leftToResponse(request, new Either.Left<>(err.toString()));
         }
+    }
+
+    @Get("/devoirs/eleve")
+    @ApiDoc("Pour l'appli mobile, permet de récupérer les derniers devoirs d'un élève")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessStudentParentFilter.class)
+    public void getDevoirsEleve(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (user != null) {
+                final String idEtablissement = request.params().get("idEtablissement");
+                final String idEleve = request.params().get("idEleve");
+                final String idMatiere = request.params().get("idMatiere");
+                Long idPeriode = null;
+                if (request.params().get("idPeriode") != null) {
+                    idPeriode = testLongFormatParameter("idPeriode", request);
+                }
+
+                devoirsService.getDevoirsEleve(idEtablissement, idEleve, idMatiere, idPeriode, event -> {
+                    if(event.isLeft()){
+                        leftToResponse(request, new Either.Left<>(event.left().getValue()));
+                    } else {
+                        JsonArray result = event.right().getValue();
+                        Renders.renderJson(request, result);
+                    }
+                });
+            } else {
+                unauthorized(request);
+            }
+        });
     }
 }
