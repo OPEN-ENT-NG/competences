@@ -1493,10 +1493,9 @@ public class DefaultExportService implements ExportService {
                     ;
             Future<JsonArray> multiTeachersFuture = Future.future();
             utilsService.getMultiTeachersByClass(idEtablissement, idClass,
-                    idPeriode != null ? idPeriode.intValue() : null,
-                    multiTeacherEvent -> {
-                        formate(multiTeachersFuture, multiTeacherEvent);
-                    });
+                    idPeriode != null ? idPeriode.intValue() : null, multiTeacherEvent -> {
+                formate(multiTeachersFuture, multiTeacherEvent);
+            });
 
             Future<JsonArray> servicesFuture = Future.future();
             log.info("getDataForExportReleveEleve");

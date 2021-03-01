@@ -1021,6 +1021,30 @@ public class Utils {
         return sortedJsonArray;
     }
 
+    public static JsonObject sortJsonObjectIntValue(final String KEY_NAME, final JsonObject objectNoSort) {
+        final JsonObject sortedJsonObject = new JsonObject();
+
+        JsonArray arrayToSort = new JsonArray();
+
+        for (Map.Entry<String, Object> stringObjectEntry : objectNoSort) {
+            String key = stringObjectEntry.getKey();
+            JsonObject jsonObject = objectNoSort.getJsonObject(key);
+            jsonObject.put("key", key);
+            arrayToSort.add(jsonObject);
+        }
+
+        arrayToSort = Utils.sortJsonArrayIntValue(KEY_NAME, arrayToSort);
+
+        for(Object object : arrayToSort) {
+            JsonObject jsonObject = (JsonObject) object;
+            String key = jsonObject.getString("key");
+            jsonObject.remove("key");
+            sortedJsonObject.put(key, jsonObject);
+        }
+
+        return sortedJsonObject;
+    }
+
     public static JsonArray sortJsonArrayDate(final String KEY_NAME, final JsonArray arrayNoSort) {
         final List<JsonObject> listOfJsonObjects = new ArrayList<>();
         for (int i = 0; i < arrayNoSort.size(); i++) {

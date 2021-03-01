@@ -630,13 +630,15 @@ public class ExportPDFController extends ControllerHelper {
 
                     if(!coTeachers.containsKey(key)){
                         ArrayList _coTeachers = new ArrayList();
+                        _coTeachers.add(multiTeacher.getString("second_teacher_id"));
+                        coTeachers.put(key, _coTeachers);
+                    } else {
+                        ArrayList _coTeachers = coTeachers.get(key);
                         String second_teacher_id = multiTeacher.getString("second_teacher_id");
                         if(!_coTeachers.contains(second_teacher_id)){
                             _coTeachers.add(second_teacher_id);
                             coTeachers.put(key, _coTeachers);
                         }
-                    } else {
-                        coTeachers.get(key).add(multiTeacher.getString("second_teacher_id"));
                     }
                 });
             } else {

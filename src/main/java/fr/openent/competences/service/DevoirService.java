@@ -266,4 +266,7 @@ public interface DevoirService extends CrudService {
 
     void getDevoirsEleve(String idEtablissement, String idEleve, String idMatiere, Long idPeriode,
                          Handler<Either<String, JsonArray>> handler);
+
+    void getDevoirsNotes(String idEtablissement, String idEleve, Long idPeriode,
+                         Handler<Either<String, JsonObject>> handler);
 }

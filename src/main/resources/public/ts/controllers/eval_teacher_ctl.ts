@@ -3948,10 +3948,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.errorResult(result);
                     console.error(result);
                     utils.safeApply($scope);
-
                 })
                 .done( async() => {
-
                     delete $scope.releveComp;
                     $scope.releveComp = {
                         textMod: true
@@ -3972,10 +3970,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             await Utils.stopMessageLoader($scope);
                             notify.success('evaluations.export.bulletin.success');
                         }
-
                     });
-
-
                 });
             utils.safeApply($scope);
         };

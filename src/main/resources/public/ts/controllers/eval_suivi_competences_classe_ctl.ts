@@ -354,7 +354,6 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                             utils.safeApply($scope);
                         })
                         .done(async () => {
-
                             delete $scope.releveComp;
                             $scope.releveComp = {
                                 textMod: true
@@ -372,9 +371,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                                 await Utils.stopMessageLoader($scope);
                                 notify.success('evaluations.export.bulletin.success');
                             });
-
                         });
-
                     break;
                 }
                 case 'printTabMoys': {

@@ -18,22 +18,26 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.enums.EventStoresCompetences;
+import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.helpers.DevoirControllerHelper;
-import fr.openent.competences.security.AccessEvaluationFilter;
-import fr.openent.competences.security.AccessPeriodeFilter;
-import fr.openent.competences.security.AccessStudentParentFilter;
+import fr.openent.competences.security.*;
 import fr.openent.competences.security.AccessVisibilityAppreciation;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.CompetenceNoteService;
 import fr.openent.competences.service.CompetencesService;
 import fr.openent.competences.service.MatiereService;
+import fr.openent.competences.service.NoteService;
+import fr.openent.competences.service.MatiereService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.*;
 
 import static fr.openent.competences.Competences.NN;
+import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import fr.openent.competences.helpers.FormateFutureEvent;
@@ -59,6 +63,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.Future;
 import io.vertx.core.CompositeFuture;
+import sun.nio.ch.Util;
 
 import java.math.RoundingMode;
 import java.text.DateFormat;
@@ -915,6 +920,36 @@ public class DevoirController extends ControllerHelper {
                         Renders.renderJson(request, result);
                     }
                 });
+            } else {
+                unauthorized(request);
+            }
+        });
+    }
+
+    @Get("/devoirs/notes")
+    @ApiDoc("Pour l'appli mobile, permet de récupérer l'ensemble des notes d'un élève pour une période")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessStudentParentFilter.class)
+    public void getDevoirsNotes(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            if(user != null){
+                final String idEtablissement = request.params().get("idEtablissement");
+                final String idEleve = request.params().get("idEleve");
+
+                if (idEtablissement != null && idEleve != null) {
+                    Long idPeriode = null;
+                    if (request.params().get("idPeriode") != null) {
+                        idPeriode = testLongFormatParameter("idPeriode", request);
+                    }
+                    devoirsService.getDevoirsNotes(idEtablissement, idEleve, idPeriode, event -> {
+                        if(event.isLeft()){
+                            leftToResponse(request, new Either.Left<>(event.left().getValue()));
+                        } else {
+                            JsonObject result = event.right().getValue();
+                            Renders.renderJson(request, Utils.sortJsonObjectIntValue("matiere_rank", result));
+                        }
+                    });
+                }
             } else {
                 unauthorized(request);
             }
