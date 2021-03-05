@@ -1048,7 +1048,6 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public void getLibelleMatAndTeacher(SortedMap<String, Set<String>> mapIdMatiereIdsTeacher,
                                         Handler<Either<String, SortedMap<String, JsonObject>>> handler) {
-
         JsonArray idsTeacher = new JsonArray();
         JsonArray idsMatiere = new JsonArray();
 
@@ -1072,7 +1071,6 @@ public class DefaultUtilsService  implements UtilsService {
                 handler.handle(new Either.Left<>(erreur));
             }
         });
-
 
         Utils.getLibelleMatiere(eb, idsMatiere, new Handler<Either<String, Map<String, JsonObject>>>() {
             @Override
@@ -1103,7 +1101,6 @@ public class DefaultUtilsService  implements UtilsService {
                                         //matiere = response with libelle,code,libelle_court...
                                         matiere = mapIdMatLibelle.get(idMat);
                                         matiere.remove("data");
-
                                     } else {
                                         matiere.put("id", idMat).put("name", "no libelle").put("libelle_court", "no libelle");
                                         log.error("matiere non retrouvee sans libelle idMatiere : " + idMat);
@@ -1117,7 +1114,6 @@ public class DefaultUtilsService  implements UtilsService {
                                             teachers.add(new JsonObject()
                                                     .put("id_teacher", idTeacher)
                                                     .put("displayName", (displayName.length() <= 10) ? displayName : lastName));
-
                                         } else {
                                             teachers.add(new JsonObject()
                                                     .put("id_teacher", idTeacher)

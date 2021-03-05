@@ -247,7 +247,6 @@ public class ExportPDFController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getCartouche(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-
             if (user != null) {
                 MultiMap params = request.params();
                 final boolean json = Boolean.parseBoolean(request.params().get("json"));
@@ -260,18 +259,15 @@ public class ExportPDFController extends ControllerHelper {
                             Renders.renderJson(request, result);
                         } else {
                             exportService.genererPdf(request, result,"cartouche.pdf.xhtml",
-                                    "Cartouche",vertx, config);
+                                    "Cartouche", vertx, config);
                         }
                     }else{
                         leftToResponse(request, event.left());
                     }
-
                 });
-
             } else {
                 unauthorized(request);
             }
-
         });
     }
 

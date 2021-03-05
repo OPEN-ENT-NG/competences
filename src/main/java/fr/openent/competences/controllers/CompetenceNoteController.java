@@ -102,10 +102,9 @@ public class CompetenceNoteController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             if(user != null){
                 RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE_NOTE_CREATE, resource -> {
-
-                     if( "Personnel".equals(user.getType())) {
-                         Long id_devoir = resource.getLong("id_devoir");
-                         devoirsService.getDevoir(id_devoir, handlerDevoir -> {
+                    if("Personnel".equals(user.getType())) {
+                        Long id_devoir = resource.getLong("id_devoir");
+                        devoirsService.getDevoir(id_devoir, handlerDevoir -> {
                             if( handlerDevoir.isLeft()){
                                 log.debug("devoir not found id : " + id_devoir );
                                 Renders.badRequest(request, handlerDevoir.left().getValue());
@@ -116,8 +115,8 @@ public class CompetenceNoteController extends ControllerHelper {
                             }
                         });
                     } else {
-                         competencesNotesService.createCompetenceNote(resource, user.getUserId(), notEmptyResponseHandler(request));
-                     }
+                        competencesNotesService.createCompetenceNote(resource, user.getUserId(), notEmptyResponseHandler(request));
+                    }
                 });
             }else {
                 log.debug("User not found in session.");
@@ -458,7 +457,7 @@ public class CompetenceNoteController extends ControllerHelper {
     }
 
     private void callGetCompetenceNote(String idClasse, Long idPeriode, Integer typeClasse,  List<String> idDomaines,
-                                      final HttpServerRequest request) {
+                                       final HttpServerRequest request) {
         new DefaultUtilsService(this.eb).studentIdAvailableForPeriode(idClasse,idPeriode, typeClasse,
                 new Handler<Either<String, JsonArray>>() {
                     @Override

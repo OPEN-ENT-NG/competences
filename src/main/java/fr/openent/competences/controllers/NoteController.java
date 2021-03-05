@@ -752,7 +752,7 @@ public class NoteController extends ControllerHelper {
 
     @Get("/eleve/:idEleve/moyenneFinale")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    @ApiDoc("Retourne les moyennes finales de l'élève dont l'id est passé en paramètre, sur la période passée en paramètre")
+    @ApiDoc("Retourne les moyennes finales de l'élève sur la période")
     public void getMoyenneFinaleEleve(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -765,7 +765,6 @@ public class NoteController extends ControllerHelper {
 
                     notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, null, null,
                             "moyenne", arrayResponseHandler(request));
-
                 } else{
                     unauthorized(request);
                 }
