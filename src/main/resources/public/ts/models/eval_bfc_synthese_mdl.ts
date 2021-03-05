@@ -87,7 +87,7 @@ export class BfcSynthese extends Model {
                         this.createBfcSynthese().then((data)=>{
                             resolve(data);
                         });
-                    }else{
+                    }else if(this.id !== undefined){
                         this.updateBfcSynthese().then((data)=>{
                             resolve(data);
                         });
