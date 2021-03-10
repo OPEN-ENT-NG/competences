@@ -619,10 +619,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         const getSubjectsNotesAppraisals = async ():Promise<void> => {
-            const teacherBySubject = utils.getTeacherBySubject($scope.classes.all,
-                $scope.search.classe.id,
-                $scope.structure.enseignants.all,
-                $scope.search.periode);
+            const teacherBySubject = utils.getTeacherBySubject($scope.classes.all, $scope.search.classe.id,
+                $scope.structure.enseignants.all, $scope.search.periode);
             const dataSynthesisAndAppraisals : Array<any> = await bilanPeriodic.synthesisAndAppraisals(initResultPeriodic(), $scope);
             $scope.averagesClasses = await bilanPeriodic.getAverage(dataSynthesisAndAppraisals, teacherBySubject);
         };

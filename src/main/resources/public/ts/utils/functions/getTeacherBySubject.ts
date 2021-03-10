@@ -38,6 +38,7 @@ export const getTeacherBySubject:Function = (schoolClasses:Array<any>, schoolCla
                             }
                         }
                     });
+
                     item.substituteTeachers.forEach(substituteTeacher => {
                         if(substituteTeacher.is_visible){
                             let substituteTeacherLastName, substituteTeacherFirstName, substituteTeacherName;

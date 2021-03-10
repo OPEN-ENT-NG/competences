@@ -317,8 +317,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                 let column = ['displayName'];
                 let enseignants = [];
                 let teachersBySubjectDevoirs = {};
-                let uri = this.api.GET_DEVOIRS
-                    + this.idEtablissement + '&idClasse=' + this.idClasse;
+                let uri = this.api.GET_DEVOIRS + this.idEtablissement + '&idClasse=' + this.idClasse;
                 if(this.idPeriode)
                     uri += '&idPeriode=' + this.idPeriode;
                 await httpAxios.get(uri).then((data) => {

@@ -4900,10 +4900,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     });
                 }
                 $scope.releveNoteTotale = new ReleveNoteTotale(p);
-                const teacherBySubject = utils.getTeacherBySubject($scope.classes.all,
-                    $scope.search.classe.id,
-                    $scope.structure.enseignants.all,
-                    $scope.search.periode);
+                const teacherBySubject = utils.getTeacherBySubject($scope.classes.all, $scope.search.classe.id,
+                    $scope.structure.enseignants.all, $scope.search.periode);
                 await $scope.releveNoteTotale.export(teacherBySubject);
                 await stopLoading();
                 notify.success('evaluations.export.bulletin.success');
