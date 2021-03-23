@@ -44,6 +44,7 @@ import java.math.RoundingMode;
 import java.text.*;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 import static fr.openent.competences.Competences.*;
@@ -218,7 +219,6 @@ public class DefaultUtilsService  implements UtilsService {
                 log.error("getDefaultServices : " + body.getString("message"));
             }
         }));
-
     }
 
     /**
@@ -250,6 +250,37 @@ public class DefaultUtilsService  implements UtilsService {
         }));
     }
 
+    @Override
+    public void hasService(String idEtablissement, JsonArray idClasses, String idMatiere, Long idPeriode,
+                           UserInfos user, Handler<Boolean> handler) {
+        Future<JsonArray> servicesFuture = Future.future();
+        getServices(idEtablissement, idClasses, event -> formate(servicesFuture, event));
+
+        Future<JsonArray> multiTeachersFuture = Future.future();
+        getMultiTeachers(idEtablissement, idClasses, idPeriode != null ? idPeriode.intValue() : null,
+                event -> formate(multiTeachersFuture, event));
+
+        CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(event -> {
+            if(event.failed()) {
+                log.error("[Competences] hasService : " + event.cause().getMessage());
+                handler.handle(false);
+            } else {
+                JsonArray services = servicesFuture.result();
+                JsonArray multiTeachers = multiTeachersFuture.result();
+
+                List<Object> userServices = services.stream()
+                        .filter(el -> user.getUserId().equals(((JsonObject) el).getString("id_enseignant")) &&
+                                idMatiere.equals(((JsonObject) el).getString("id_matiere")))
+                        .collect(Collectors.toList());
+                List<Object> userMultiTeaching = multiTeachers.stream()
+                        .filter(el -> user.getUserId().equals(((JsonObject) el).getString("second_teacher_id")) &&
+                                idMatiere.equals(((JsonObject) el).getString("subject_id")))
+                        .collect(Collectors.toList());
+
+                handler.handle(!userServices.isEmpty() || !userMultiTeaching.isEmpty());
+            }
+        });
+    }
 
     @Override
     public void listTypesDevoirsParEtablissement(String idEtablissement, Handler<Either<String, JsonArray>> handler) {

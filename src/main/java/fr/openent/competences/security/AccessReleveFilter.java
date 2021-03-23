@@ -17,13 +17,16 @@
 
 package fr.openent.competences.security;
 
+import fr.openent.competences.AccessEventBus;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
+import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Binding;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
@@ -38,13 +41,11 @@ import io.vertx.core.logging.LoggerFactory;
  * Created by ledunoiss on 20/10/2016.
  */
 public class AccessReleveFilter implements ResourcesProvider {
-
     protected static final Logger log = LoggerFactory.getLogger(AccessReleveFilter.class);
 
     @Override
     public void authorize(final HttpServerRequest resourceRequest, Binding binding, final UserInfos user,
                           final Handler<Boolean> handler) {
-
         if ("GET".equals(resourceRequest.method().toString())) {
             String idClasse = resourceRequest.params().get("idClasse");
             String idEtablissement = resourceRequest.params().get("idEtablissement");
@@ -61,91 +62,60 @@ public class AccessReleveFilter implements ResourcesProvider {
                     return;
                 }
             }
-            authorizeAccess(resourceRequest,idEtablissement,idClasse,idMatiere,idPeriode,user,handler);
-        }
-        else {
+            authorizeAccess(resourceRequest, user, idEtablissement, idClasse, idMatiere, idPeriode, handler);
+        } else {
             RequestUtils.bodyToJson(resourceRequest, new Handler<JsonObject>() {
                 @Override
                 public void handle(JsonObject resource) {
-                   String idClasse = resource.getString("idClasse");
+                    String idClasse = resource.getString("idClasse");
                     String idEtablissement = resource.getString("idEtablissement");
                     String idMatiere = resource.getString("idMatiere");
                     Long idPeriode = resource.getLong("idPeriode");
-                    authorizeAccess(resourceRequest,idEtablissement,idClasse,idMatiere, idPeriode,user,handler);
+                    authorizeAccess(resourceRequest, user, idEtablissement, idClasse, idMatiere, idPeriode, handler);
                 }
             });
         }
     }
 
-    private  void authorizeAccess(final HttpServerRequest resourceRequest,
-                                  String idEtablissement, String idClasse, String idMatiere, Long idPeriode,
-                                  UserInfos user,final Handler<Boolean> handler) {
-        FilterUserUtils userUtils = new FilterUserUtils(user,null);
-
-        boolean isAdmin = new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
+    private void authorizeAccess(final HttpServerRequest resourceRequest, UserInfos user, String idEtablissement,
+                                 String idClasse, String idMatiere, Long idPeriode, final Handler<Boolean> handler) {
+        boolean isAdmin = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
 
         if(isAdmin) {
             resourceRequest.resume();
             handler.handle(true);
-            return;
-        }
-
-        else if (user.getType().equals("Teacher")) {
+        } else if (user.getType().equals("Teacher")) {
             resourceRequest.pause();
 
-            //On check si tous les paramètres sont bien présents
             if (null == idClasse || null == idMatiere || null == idEtablissement) {
                 resourceRequest.resume();
                 handler.handle(false);
-            }
-            //On check que la classe et l'établissement passé en paramètre soit bien ceux de l'utilisateur
-           else {
-                WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse),
-                        null, null, null, null, null,
-                        new Handler<Either<String, Boolean>>() {
-
+            } else {
+                JsonArray idClasses = new JsonArray().add(idClasse);
+                WorkflowActionUtils.hasHeadTeacherRight(user, idClasses,null, null,null,
+                        null, null, new Handler<Either<String, Boolean>>() {
                             @Override
                             public void handle(Either<String, Boolean> event) {
-                                Boolean isHeadTeacher;
-
-                                if(event.isLeft()) {
-                                    isHeadTeacher = false;
-                                }
-                                else {
-                                    isHeadTeacher = event.right().getValue();
-                                }
-
+                                boolean isHeadTeacher = event.isRight() ? event.right().getValue() : false;
 
                                 // Si on est professeur principal de la classe, on a le droit
                                 if(isHeadTeacher) {
                                     resourceRequest.resume();
                                     handler.handle(true);
-                                }
-                                else if (!userUtils.validateClasse(idClasse) &&
-                                        !userUtils.validateStructure(idEtablissement)) {
-                                    resourceRequest.resume();
-                                    handler.handle(false);
-                                }
-
-                                else {
-                                    new FilterPeriodeUtils().validateStructure(idEtablissement,
-                                            idPeriode, new Handler<Boolean>() {
-                                                @Override
-                                                public void handle(Boolean isValid) {
-                                                    resourceRequest.resume();
-                                                    handler.handle(isValid);
-                                                }
-                                            });
+                                } else {
+                                    //On check que la classe et l'établissement passé en paramètre soit bien ceux de l'utilisateur
+                                    DefaultUtilsService utilsService = new DefaultUtilsService(AccessEventBus.getInstance().getEventBus());
+                                    utilsService.hasService(idEtablissement, idClasses, idMatiere, idPeriode, user, isValid -> {
+                                        resourceRequest.resume();
+                                        handler.handle(isValid);
+                                    });
                                 }
                             }
                         });
-
             }
-        }
-        else {
+        } else {
             resourceRequest.resume();
             handler.handle(false);
         }
     }
-
 }

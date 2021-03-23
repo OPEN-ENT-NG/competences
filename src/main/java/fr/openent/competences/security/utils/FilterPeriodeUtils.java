@@ -46,68 +46,57 @@ public class FilterPeriodeUtils {
 
     protected static final Logger log = LoggerFactory.getLogger(FilterPeriodeUtils.class);
     private UserInfos user;
+    private EventBus eb;
+
     public FilterPeriodeUtils() {
     }
 
     public FilterPeriodeUtils(EventBus eventBus) {
         this.eb = eventBus;
     }
-    private EventBus eb;
+
     public FilterPeriodeUtils(EventBus eventBus, UserInfos user) {
         this.eb = eventBus;
         this.user = user;
     }
 
-
     public void validateEndSaisie(final HttpServerRequest request, final String idClasse,
                                   final Integer idTypePeriode, final Handler<Boolean> handler)  {
         if(user == null) {
             handler.handle(false);
-            return;
-        }
-        else if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
+        } else if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
             handler.handle(true);
-            return;
-        }
-        else {
+        } else {
             WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse), null,
                     null, null, null, null, new Handler<Either<String, Boolean>>() {
                         @Override
                         public void handle(Either<String, Boolean> event) {
-                            Boolean isHeadTeacher;
-                            if (event.isLeft()) {
-                                isHeadTeacher = false;
+                            Boolean isHeadTeacher = false;
+                            if (event.isRight()) {
+                                isHeadTeacher = event.right().getValue();
                             }
-                            else {
-                                isHeadTeacher = true;
-                            }
-
 
                             if (isHeadTeacher) {
                                 handler.handle(true);
-                                return;
-                            }
-                            else {
+                            } else {
                                 validateEndSaisieUtils(request, idClasse, idTypePeriode, handler);
                             }
                         }
                     });
-
         }
     }
 
     private void validateEndSaisieUtils(final HttpServerRequest request, final String idClasse,
                                         final Integer idTypePeriode, final Handler<Boolean> handler)  {
         JsonObject jsonRequest = new JsonObject()
-                .put("headers", new JsonObject()
-                        .put("Accept-Language",
-                                request.headers().get("Accept-Language")))
+                .put("headers", new JsonObject().put("Accept-Language", request.headers().get("Accept-Language")))
                 .put("Host", getHost(request));
+
         JsonObject action = new JsonObject()
                 .put("action", "periode.getPeriodes")
-                //.put("idEtablissement", idEtablissement)
                 .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse))
                 .put("request", jsonRequest);
+
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
@@ -119,15 +108,14 @@ public class FilterPeriodeUtils {
                     // On vérifie que la date de fin de saisie n'est pas dépassée
                     JsonObject periode = null;
                     for (int i = 0; i < periodes.size(); i++) {
-                        if (idTypePeriode.intValue()
-                                == ((JsonObject) periodes.getJsonObject(i)).getInteger("id_type").intValue()) {
-                            periode = (JsonObject) periodes.getJsonObject(i);
+                        if (idTypePeriode.intValue() == (periodes.getJsonObject(i)).getInteger("id_type").intValue()) {
+                            periode = periodes.getJsonObject(i);
                             break;
                         }
                     }
+
                     if (periode != null) {
-                        String dateFinSaisieStr = periode.getString("date_fin_saisie")
-                                .split("T")[0];
+                        String dateFinSaisieStr = periode.getString("date_fin_saisie").split("T")[0];
                         DateFormat formatter = new SimpleDateFormat("yy-MM-dd");
                         try {
                             Date dateFinSaisie = formatter.parse(dateFinSaisieStr);

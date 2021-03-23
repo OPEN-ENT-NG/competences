@@ -279,6 +279,8 @@ public class Competences extends BaseServer {
 
         EventStore eventStore = EventStoreFactory.getFactory().getEventStore(Competences.class.getSimpleName());
 
+        AccessEventBus.getInstance().init(eb);
+
         // Controller
         addController(new CompetencesController(eventStore));
         addController(new AnnotationController());
@@ -341,5 +343,4 @@ public class Competences extends BaseServer {
                         }
                 ));
     }
-
 }

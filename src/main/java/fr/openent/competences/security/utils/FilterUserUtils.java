@@ -46,7 +46,6 @@ import static org.entcore.common.http.response.DefaultResponseHandler.leftToResp
  * Created by ledunoiss on 20/10/2016.
  */
 public class FilterUserUtils {
-
     private UserInfos user;
     private EventBus eb;
     private static final Logger log = LoggerFactory.getLogger(FilterUserUtils.class);
@@ -55,8 +54,6 @@ public class FilterUserUtils {
         this.user = user;
         this.eb = eb;
     }
-
-
 
     public boolean validateUser(String idUser) {
         return user.getUserId().equals(idUser);
@@ -71,7 +68,6 @@ public class FilterUserUtils {
     }
 
     public void validateElement(List<String> idsElements, String idClasse, Handler<Boolean> handler) {
-
         StringBuilder query = new StringBuilder()
                 .append("SELECT id, type_elt_bilan_periodique ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique ")
@@ -95,14 +91,6 @@ public class FilterUserUtils {
                     for(Object o : elements){
                         JsonArray element = (JsonArray)o;
 
-                        /*if(element.getInteger(1) == 3){ // si type = parcours je vérifie si le prof est dans la classe
-                            if(!validateClasse(idClasse)){
-                                handler.handle(false);
-                                return;
-                            }
-                        } else {
-                            idsEPI_AP.add(element.getInteger(0));
-                        }*/
                         if (element.getInteger(1) != 3) {
                             idsEPI_AP.add(element.getInteger(0));
                         } else {
@@ -133,23 +121,14 @@ public class FilterUserUtils {
                                         JsonArray enseignant = (JsonArray)o;
                                         idsEnseignants.add(enseignant.getString(0));
                                     }
-                                    if (idsEnseignants.contains(user.getUserId())) {
-                                        handler.handle(true);
-                                    }
-                                    else {
-                                        handler.handle(false);
-                                    }
+                                    handler.handle(idsEnseignants.contains(user.getUserId()));
                                 } else {
                                     handler.handle(false);
                                 }
                             }
                         });
                     } else {
-                        if (idsParcours.size() > 0) {
-                            handler.handle(true);
-                        } else {
-                            handler.handle(false);
-                        }
+                        handler.handle(idsParcours.size() > 0);
                     }
                 } else {
                     handler.handle(false);
@@ -159,7 +138,6 @@ public class FilterUserUtils {
     }
 
     public void validateEleve(String idEleve, String idClasse, String idEtablissement, Handler<Boolean> handler) {
-
         if(idEleve == null){
             handler.handle(true);
         } else {
@@ -181,12 +159,7 @@ public class FilterUserUtils {
                                 .add(infosEleve.getString("idClasse"))
                                 .addAll(infosEleve.getJsonArray("idManualGroupes"));
 
-                        if(idsGroupes.contains(idClasse)){
-                            handler.handle(true);
-                        }
-                        else {
-                            handler.handle(false);
-                        }
+                        handler.handle(idsGroupes.contains(idClasse));
                     } else {
                         handler.handle(false);
                     }
@@ -196,10 +169,11 @@ public class FilterUserUtils {
         }
     }
 
-    public void validateMatiere(final HttpServerRequest request, final String idEtablissement, final String idMatiere, final Boolean isBilanPeriodique, final Handler<Boolean> handler) {
+    public void validateMatiere(final HttpServerRequest request, final String idEtablissement, final String idMatiere,
+                                final Boolean isBilanPeriodique, final Handler<Boolean> handler) {
         //dans le bilanPériodique le PP peut mettre une appréciation ou un positionnement sur une matière qui n'est pas la sienne
         if(isBilanPeriodique){
-           handler.handle(true);
+            handler.handle(true);
         } else {
             UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
                 @Override
@@ -249,7 +223,6 @@ public class FilterUserUtils {
 
     public static void validateHeadTeacherWithClasses(UserInfos user, JsonArray idsClasse,
                                                       Handler<Either<String, Boolean>> handler) {
-
         StringBuilder query = new StringBuilder();
         JsonObject value = new JsonObject().put("idUser", user.getUserId())
                 .put("idsClasse", idsClasse);
@@ -271,7 +244,7 @@ public class FilterUserUtils {
                     JsonArray result = body.getJsonArray("result");
                     if (result == null || result.size() == 0) {
                         log.debug("[validateHeadTeacherWithClasses] : user " + user.getUsername()
-                        + " is not HeadTeacher ");
+                                + " is not HeadTeacher ");
                         handler.handle(new Either.Right(false));
                     } else {
                         JsonArray headTeacherIdsClass = result.getJsonObject(0).getJsonArray("idsClasse");
@@ -289,13 +262,10 @@ public class FilterUserUtils {
                 }
             }
         });
-
     }
 
-
-    public static void validateHeadTeacherWithEleves(UserInfos user, JsonArray idsEleve,
-                                                     EventBus eb, String idEtablissement,
-                                                     Handler<Either<String, Boolean>> handler) {
+    public static void validateHeadTeacherWithEleves(UserInfos user, JsonArray idsEleve, EventBus eb,
+                                                     String idEtablissement, Handler<Either<String, Boolean>> handler) {
         if (eb == null || idsEleve == null) {
             log.error("[validateHeadTeacherWithEleves | idNull] : user " + user.getUsername());
             handler.handle(new Either.Right<>(false));
@@ -327,46 +297,42 @@ public class FilterUserUtils {
     }
 
     public static void validateHeadTeacherWithRessources(UserInfos user, JsonArray idsRessources, String table,
-                                                     Handler<Either<String, Boolean>> handler) {
+                                                         Handler<Either<String, Boolean>> handler) {
         if(idsRessources == null || table == null) {
             log.error("[validateHeadTeacherWithRessources | idNull] : user " + user.getUsername());
             handler.handle(new Either.Right<>(false));
-        }
-        else {
+        } else {
             StringBuilder query = new StringBuilder();
             JsonArray param = new JsonArray();
-               query.append(" SELECT DISTINCT id_groupe ")
-                        .append(" FROM "+ Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes ")
-                        .append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA + "." + table)
-                        .append(" ON rel_devoirs_groupes.id_devoir = " + table )
-                       .append(Competences.DEVOIR_TABLE.equals(table)? ".id":".id_devoir ")
-                        .append((idsRessources.size() > 0) ? " AND id IN "
-                                + Sql.listPrepared(idsRessources.getList()) : "");
+            query.append(" SELECT DISTINCT id_groupe ")
+                    .append(" FROM "+ Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes ")
+                    .append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA + "." + table)
+                    .append(" ON rel_devoirs_groupes.id_devoir = " + table )
+                    .append(Competences.DEVOIR_TABLE.equals(table)? ".id":".id_devoir ")
+                    .append((idsRessources.size() > 0) ? " AND id IN "
+                            + Sql.listPrepared(idsRessources.getList()) : "");
 
             for (int i = 0; i < idsRessources.size(); i++) {
                 param.add(idsRessources.getValue(i));
             }
-            Sql.getInstance().prepared(query.toString(), param,
-                    new Handler<Message<JsonObject>>() {
-                        @Override
-                        public void handle(Message<JsonObject> message) {
-                            JsonObject body = message.body();
+            Sql.getInstance().prepared(query.toString(), param, new Handler<Message<JsonObject>>() {
+                @Override
+                public void handle(Message<JsonObject> message) {
+                    JsonObject body = message.body();
 
-                            if (!"ok".equals(body.getString("status"))) {
-                                log.error("[validateHeadTeacherWithRessources] : user " + user.getUsername());
-                                handler.handle(new Either.Right(false));
-                            } else {
-                                JsonArray result = body.getJsonArray("results");
-                                if (result == null || result.size() == 0) {
-                                    handler.handle(new Either.Right(false));
-                                } else {
-                                    validateHeadTeacherWithClasses(user, result.getJsonArray(0), handler);
-                                }
-                            }
+                    if (!"ok".equals(body.getString("status"))) {
+                        log.error("[validateHeadTeacherWithRessources] : user " + user.getUsername());
+                        handler.handle(new Either.Right(false));
+                    } else {
+                        JsonArray result = body.getJsonArray("results");
+                        if (result == null || result.size() == 0) {
+                            handler.handle(new Either.Right(false));
+                        } else {
+                            validateHeadTeacherWithClasses(user, result.getJsonArray(0), handler);
                         }
-                    });
+                    }
+                }
+            });
         }
     }
-
-
-    }
+}

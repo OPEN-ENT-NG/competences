@@ -66,26 +66,22 @@ public class DefaultAppreciationSubjectPeriod extends SqlCrudService implements 
                         if(event.isRight()){
                             Boolean isHisSubject = false;
                             JsonArray services = event.right().getValue();
-                            JsonObject service = null;
-                            for(Object s : services) {
-                                JsonObject serviceJson = (JsonObject) s;
-                                if(serviceJson.getString("id_matiere").equals(idMatiere)){
-                                    service = serviceJson;
-                                    break;
-                                }
-                            }
+                            JsonObject service = (JsonObject) services.stream()
+                                    .filter(el -> idMatiere.equals(((JsonObject) el).getString("id_matiere")))
+                                    .findFirst().orElse(null);
+
                             if(service != null) {
                                 isHisSubject = (service.getString("id_enseignant").equals(userInfos.getUserId()));
                             }
                             handler.handle(isHisSubject && !(userInfos.getType().contains(PERSONNEL)));
-                        }
-                        else{
+                        } else{
                             handler.handle(false);
                             log.error("Error : isVisibleForAppreciations");
                         }
                     });
+                } else {
+                    handler.handle(!(userInfos.getType().contains(PERSONNEL)));
                 }
-                handler.handle(!isHeadTeacher && !(userInfos.getType().contains(PERSONNEL)));
             } else {
                 handler.handle(false);
                 log.error("Error : isVisibleForAppreciations");

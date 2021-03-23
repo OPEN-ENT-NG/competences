@@ -63,11 +63,11 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessReleveFilter.class)
     public void deleteAppreciationSubjectPeriod(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, resource -> {
-            AppreciationSubjectPeriodModel appreciationSubjectPeriod = new AppreciationSubjectPeriodModel(resource);
+        UserUtils.getUserInfos(eb, request, user -> {
+            RequestUtils.bodyToJson(request, resource -> {
+                AppreciationSubjectPeriodModel appreciationSubjectPeriod = new AppreciationSubjectPeriodModel(resource);
 
-            RequestUtils.bodyToJson(request, result -> {
-                checkAllAccessAndStartCRUD(request, resource, authorized -> {
+                checkDateOfEndInput(request, user, resource, authorized -> {
                     if (authorized.isRight()) {
                         notesService.deleteColonneReleve(appreciationSubjectPeriod.getIdStudent(),
                                 appreciationSubjectPeriod.getIdPeriod(), appreciationSubjectPeriod.getIdSubject(),
@@ -81,52 +81,26 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
         });
     }
 
-
     private void preparedUpdateOrInsertSqlAppreciationSubjectPeriod(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             RequestUtils.bodyToJson(request, resource -> {
                 AppreciationSubjectPeriodModel appreciationSubjectPeriod = new AppreciationSubjectPeriodModel(resource);
 
-                RequestUtils.bodyToJson(request, result -> {
-                    final String idStructure = resource.getString("idEtablissement");
-                    checkAllAccessAndStartCRUD(request, resource, authorized -> {
-                        if (authorized.isRight()) {
-                            appreciationSubjectPeriodService.updateOrInsertAppreciationSubjectPeriod(appreciationSubjectPeriod,
-                                    user, idStructure, defaultResponseHandler(request));
-                        } else {
-                            unauthorized(request, authorized.left().getValue());
-                        }
-                    });
+                final String idStructure = resource.getString("idEtablissement");
+                checkDateOfEndInput(request, user, resource, authorized -> {
+                    if (authorized.isRight()) {
+                        appreciationSubjectPeriodService.updateOrInsertAppreciationSubjectPeriod(appreciationSubjectPeriod,
+                                user, idStructure, defaultResponseHandler(request));
+                    } else {
+                        unauthorized(request, authorized.left().getValue());
+                    }
                 });
             });
         });
     }
 
-    private void checkAllAccessAndStartCRUD(HttpServerRequest request, JsonObject resource, Handler<Either<String, JsonArray>> handler) {
-        // Vérification de l'accès à la matière
-        UserUtils.getUserInfos(eb, request, user -> {
-            checkAccessToSubject(request, user, resource, handler);
-        });
-    }
-
-    private void checkAccessToSubject(HttpServerRequest request, UserInfos user, JsonObject resource, Handler<Either<String, JsonArray>> handler) {
-        // Vérification de la date de fin de saisie
-        final String idSubject = resource.getString("idMatiere");
-        final String idStructure = resource.getString("idEtablissement");
-        final Boolean isPeriodicReview = (resource.getBoolean("isBilanPeriodique") != null) ?
-                resource.getBoolean("isBilanPeriodique") : false;
-        new FilterUserUtils(user, eb).validateMatiere(request, idStructure, idSubject, isPeriodicReview,
-                hasAccessToSubject -> {
-                    if (!hasAccessToSubject) {
-                        log.error("Not access to Subject");
-                        handler.handle(new Either.Left<>("Not access to Subject"));
-                    } else {
-                        checkDateOfEndInput(request, user, resource, handler);
-                    }
-                });
-    }
-
-    private void checkDateOfEndInput(HttpServerRequest request, UserInfos user, JsonObject resource, Handler<Either<String, JsonArray>> handler) {
+    private void checkDateOfEndInput(HttpServerRequest request, UserInfos user, JsonObject resource,
+                                     Handler<Either<String, JsonArray>> handler) {
         //verif date fin de saisie
         final String idClassSchool = resource.getString("idClasse");
         final Long idPeriod = resource.getLong("idPeriode");

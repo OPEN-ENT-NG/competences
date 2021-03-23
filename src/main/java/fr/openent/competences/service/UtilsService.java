@@ -66,6 +66,10 @@ public interface UtilsService {
     void getDefaultServices(final String structureId, final JsonArray groupIds, final JsonObject filters,
                            Handler<Either<String,JsonArray>> handler);
 
+    void hasService(String idEtablissement, JsonArray idClasses, String idMatiere, Long idPeriode,
+                    UserInfos user, Handler<Boolean> handler);
+
+
     /**
      * Liste les types de devoirs pour un etablissement donné
      *
