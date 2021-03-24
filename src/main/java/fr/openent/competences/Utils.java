@@ -1002,15 +1002,15 @@ public class Utils {
             final JsonObject objectNoSorted = arrayNoSort.getJsonObject(i);
             listOfJsonObjects.add(objectNoSorted);
         }
-        Collections.sort(listOfJsonObjects, (firstObject, secondeObject) -> {
+        listOfJsonObjects.sort((firstObject, secondeObject) -> {
             int firstValue = 0;
             int secondValue = 0;
-            try {
+
+            if (firstObject != null && secondeObject != null) {
                 firstValue = firstObject.getInteger(KEY_NAME);
                 secondValue = secondeObject.getInteger(KEY_NAME);
-            } catch (final Exception error) {
-                log.error("Sort fail when he get integers values key -> " + KEY_NAME + error);
             }
+
             return Integer.compare(firstValue, secondValue);
         });
 
