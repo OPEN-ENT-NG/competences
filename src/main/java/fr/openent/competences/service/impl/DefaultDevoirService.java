@@ -1320,8 +1320,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void getMatiereTeacherForOneEleveByPeriode(String idEleve, String idEtablissement, JsonArray idsClass,
-                                                      Handler<Either<String, JsonArray>> handler) {
+    public void getMatiereTeacherForOneEleve(String idEleve, String idEtablissement, JsonArray idsClass,
+                                             Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder();
         StringBuilder headQuery = new StringBuilder();
