@@ -411,7 +411,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     .put("rank", idsMatLibelle.get(idMatiere).getInteger("rank"));
         } else {
             result.put("id_matiere", idMatiere)
-                    .put("libelleMatiere", "no libelle");
+                    .put("libelleMatiere", "no libelle")
+                    .put("rank", 0);
             log.error("matiere non retrouve sans libelle idMatiere : " + idMatiere);
         }
     }
@@ -517,7 +518,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                             result, idEleve, idPeriod, tableauDeConversionFuture.result());
                     results.add(result);
                     subjectFuture.complete();
-                } else{
+                } else {
                     subjectFuture.fail(event.cause().getMessage());
                 }
             });
