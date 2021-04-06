@@ -307,7 +307,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 Future<JsonArray> subjectEleveFuture = Future.future();
                 // Récupération des matières et des professeurs
                 devoirService.getMatiereTeacherForOneEleve(idEleve, idEtablissement, idClasseGroups, event -> {
-                    formate("[Competences] DefaultBilanPeriodique at getSuivi : getMAtiereTeacherOneeleveByPeriode",
+                    formate("[Competences] DefaultBilanPeriodique at getSuivi : getMatiereTeacherOneEleve",
                             subjectEleveFuture, event);
                 });
                 listOfFutures.add(subjectEleveFuture);
@@ -315,7 +315,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 Future<JsonArray> allSubjectFuture = Future.future();
                 // Récupération des matières et des professeurs
                 devoirService.getMatiereTeacherForOneEleve(null, idEtablissement, idClasseGroups, event -> {
-                    formate("[Competences] DefaultBilanPeriodique at getSuivi : getMAtiereTeacherOneeleveByPeriode",
+                    formate("[Competences] DefaultBilanPeriodique at getSuivi : getMatiereTeacherOneEleve",
                             allSubjectFuture, event);
                 });
                 listOfFutures.add(allSubjectFuture);
