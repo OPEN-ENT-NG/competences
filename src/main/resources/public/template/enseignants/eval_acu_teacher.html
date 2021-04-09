@@ -21,7 +21,10 @@
     <div ng-include="'/competences/public/template/enseignants/menu_teacher.html'"></div>
     <!--  Content (main zone) Enseignant -->
     <div  class="ten cell main-content twelve-mobile">
+
+
         <section class="eleven cell headerAccueil">
+            <!-- Select structure -->
             <div class="twelve cell ">
                 <header>
                     <button class="marginFive right-magnet" ng-if="canCreateEval()" ng-click="openCreateEval()"><i18n>evaluations.evaluation.create</i18n></button>
@@ -30,6 +33,8 @@
                     </label>
                 </header>
             </div>
+
+            <!-- Search student bar -->
             <article class="twelve cell" ng-if="canAccessSuiviEleve()">
                 <h2><i18n>viescolaire.eleve.recherche</i18n></h2>
                 <autocomplete options="eleves.all" ng-change="openSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
