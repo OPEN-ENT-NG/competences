@@ -148,7 +148,11 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
             $scope.goTo(path, idOfpath);
         };
 
-        $scope.changeEtablissementAccueil =  async function(){
+        $scope.changeEtablissementAccueil =  async function() {
+            // Angular 1.7.9 <select> now change the reference of our $scope evaluations.structures
+            // We reassign the $scope with the ng-option element structures.all selected in order to keep the same reference
+            evaluations.structure = $scope.structures.all.find(s => s.id ===  evaluations.structure.id);
+
             let switchEtab = async () => {
                 await $scope.initControler();
                 await $scope.$parent.initReferences();
@@ -167,12 +171,12 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
             };
             if (evaluations.structure === undefined || !evaluations.structure.isSynchronized) {
                 $scope.$parent.opened.displayStructureLoader = true;
-                evaluations.structure.sync().then(async function(){
+                evaluations.structure.sync().then(async function() {
                     await switchEtab();
                     $scope.$parent.opened.displayStructureLoader = false;
                 });
             } else {
-               await  switchEtab();
+               await switchEtab();
             }
         };
 
