@@ -280,7 +280,7 @@ public class DefaultLSUService implements LSUService {
     }
 
     public void getUnheededStudents(JsonArray idPeriodes, JsonArray idClasses,
-                                    final  Handler<Either<String, JsonArray>> handler){
+                                    final Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder().append(" SELECT * ").append(" FROM ")
                 .append(Competences.EVAL_SCHEMA).append(".").append(LSU_UNHEEDED_STUDENTS_TABLE)
                 .append(" WHERE id_classe IN ").append(Sql.listPrepared(idClasses.getList()))
@@ -288,8 +288,7 @@ public class DefaultLSUService implements LSUService {
 
         if(idPeriodes != null && !idPeriodes.isEmpty()) {
             query.append(" IN ").append(Sql.listPrepared(idPeriodes.getList()));
-        }
-        else{
+        } else{
             query.append(" = -1 ");
         }
 
@@ -297,23 +296,21 @@ public class DefaultLSUService implements LSUService {
         if(idPeriodes != null){
             values.addAll(idPeriodes);
         }
+
         Sql.getInstance().prepared(query.toString(), values, Competences.DELIVERY_OPTIONS,
                 SqlResult.validResultHandler(handler));
     }
 
     public void getUnheededStudents(JsonArray idPeriodes, JsonArray idClasses, String idStructure,
                                     final Handler<Either<String, JsonArray>> handler){
-
         getUnheededStudents(idPeriodes, idClasses, response -> {
             if(response.isLeft()){
                 handler.handle(new Either.Left<>(response.left().getValue()));
-            }
-            else {
+            } else {
                 JsonArray unheededStudents = response.right().getValue();
                 if(unheededStudents == null || unheededStudents.isEmpty()) {
                     handler.handle(new Either.Right<>(new JsonArray()));
-                }
-                else {
+                } else {
                     Map<String, List<JsonObject>> ignoredInfos =  ((List<JsonObject>)unheededStudents.getList())
                             .stream().collect(Collectors.groupingBy(  o ->  o.getString("id_eleve")));
 
@@ -326,15 +323,14 @@ public class DefaultLSUService implements LSUService {
                             .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
                             .put("idEleves", new JsonArray(Arrays.asList(ignoredInfos.keySet().toArray())));
 
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                            handlerToAsyncHandler( studentsInfo -> {
-                                JsonObject body = studentsInfo.body();
-                                if (!"ok".equals(body.getString("status"))) {
-                                    handler.handle(new Either.Left<>(body.getString(MESSAGE)));
-                                } else {
-                                    infosElevesIgnores.complete(body.getJsonArray("results"));
-                                }
-                            }));
+                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(studentsInfo -> {
+                        JsonObject body = studentsInfo.body();
+                        if (!"ok".equals(body.getString("status"))) {
+                            handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                        } else {
+                            infosElevesIgnores.complete(body.getJsonArray("results"));
+                        }
+                    }));
                     futures.add(infosElevesIgnores);
 
                     // Récupération des infos sur les classes

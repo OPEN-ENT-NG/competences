@@ -135,23 +135,19 @@ export class LSU {
             let {data} = await http.post('/competences/lsu/unheeded/students', params);
             if(params.action === 'get'){
                 _.forEach(data, (student) => {
-                   if(params.idPeriodes === null){
-                       student.periodes = [{libelle: lang.translate('viescolaire.utils.cycle')}];
-                   }
-                   else{
-                       student.periodes = _.filter(setPeriode, (periode) => {
-                           return _.findWhere(student.ignoredInfos , {id_periode : periode.id_type}) !== undefined;
-                       });
-                   }
+                    if(params.idPeriodes === null){
+                        student.periodes = [{libelle: lang.translate('viescolaire.utils.cycle')}];
+                    } else{
+                        student.periodes = _.filter(setPeriode, (periode) => {
+                            return _.findWhere(student.ignoredInfos, {id_periode : periode.id_type}) !== undefined;
+                        });
+                    }
                 });
                 this.unheededStudents = data;
-
             }
             return data;
-        }
-        catch (e){
+        } catch (e){
             throw e;
         }
     }
-
 }

@@ -123,7 +123,6 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
          * Controle la validité des selections avant l'exportLSU
          */
         $scope.controleExportLSU = function () {
-
             $scope.inProgress = !(
                 ($scope.paramsLSU.type == LSU_TYPE_EXPORT.BFC
                     && $scope.paramsLSU.classes.length > 0
@@ -238,6 +237,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             }
             return allStudentChoose;
         };
+
         $scope.updateFilters = async function (classes) {
             if (!_.isEmpty(classes)) {
                 _.map(classes, (classe) => {
