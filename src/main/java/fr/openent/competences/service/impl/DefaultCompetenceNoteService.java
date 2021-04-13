@@ -225,11 +225,13 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
     @Override
     public void getCompetencesNotesDevoir(Long idDevoir, Handler<Either<String, JsonArray>> handler) {
-        StringBuilder query = new StringBuilder();
-        query.append("SELECT competences.nom, competences_notes.id, competences_notes.id_devoir, competences_notes.id_eleve, competences_notes.id_competence, competences_notes.evaluation " +
-                "FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes , "+ Competences.COMPETENCES_SCHEMA +".competences " +
-                "WHERE competences_notes.id_devoir = ? " +
-                "AND competences.id = competences_notes.id_competence");
+        StringBuilder query = new StringBuilder()
+                .append("SELECT C.nom, CN.id, CN.id_devoir, codification, CN.id_eleve, CN.id_competence, CN.evaluation ")
+                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".competences_notes CN ")
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences C ON CN.id_competence = C.id ")
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_competences_domaines RCD ON RCD.id_competence = C.id ")
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".domaines D ON RCD.id_domaine = D.id ")
+                .append("WHERE CN.id_devoir = ? ");
 
         Sql.getInstance().prepared(query.toString(),
                 new JsonArray().add(idDevoir), DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
