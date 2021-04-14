@@ -22,17 +22,19 @@
     <label class="select" >
         <select ng-model="suiviCompetence.ensCplSelected" ng-change="onChangeEns();saveNiveauEnsCpl();"
                 ng-disabled="!canUpdateNiveauEnsCpl()"
-                ng-options ="ensCpl as ensCpl.libelle for ensCpl in suiviCompetence.ensCpls.all | orderBy:'libelle' track by ensCpl.id">
-            <option class="header-opt" value="" disabled ><i18n>[[translate('viescolaire.utils.enseignements')]]</i18n></option>
+                ng-options="ensCpl as ensCpl.libelle for ensCpl in suiviCompetence.ensCpls.all | orderBy:'libelle' track by ensCpl.id">
+            <option class="header-opt" value="" disabled><i18n>[[translate('viescolaire.utils.enseignements')]]</i18n></option>
         </select>
     </label>
 </section>
 <section ng-if="suiviCompetence.ensCplSelected.libelle !== suiviCompetence.ensCpls.all[0].libelle">
     <label class="select" >
-        <select ng-model="suiviCompetence.niveauEnsCplSelected" ng-change="saveNiveauEnsCpl()" class= "objectifs-enscpl"
-                ng-disabled="!canUpdateNiveauEnsCpl()"
-                ng-options="niveauEnsCpl as niveauEnsCpl.libelle for niveauEnsCpl in suiviCompetence.niveauEnsCpls.all" >
-            <option class="header-opt" value="" disabled ><i18n>[[translate('level')]]</i18n></option>
+        <select ng-model="suiviCompetence.niveauEnsCplSelected"
+                ng-change="setCorrectNiveauEnsCpl();saveNiveauEnsCpl()"
+                class="objectifs-enscpl"
+                ng-disabled="!canUpdateNiveauEnsCpl()"ng-options="niveauEnsCpl as niveauEnsCpl.libelle for niveauEnsCpl in suiviCompetence.niveauEnsCpls.all
+                 track by suiviCompetence.niveauEnsCpls.all.indexOf(niveauEnsCpl)">
+            <option class="header-opt" value="" disabled><i18n>[[translate('level')]]</i18n></option>
         </select>
     </label>
 </section>
@@ -40,8 +42,8 @@
     <label class="select" ng-show="suiviCompetence.ensCplSelected.code === 'LCR' ">
         <select ng-model="suiviCompetence.langueSelected" ng-change="oncChangeLangue();saveNiveauEnsCpl();"
                 ng-disabled="!canUpdateNiveauEnsCpl()"
-                ng-options ="langue as langue.libelle for langue in suiviCompetence.langues.all | orderBy:'libelle' track by langue.id">
-            <option class="header-opt" value="" disabled ><i18n>[[translate('viescolaire.utils.langues.culture.regionale.choix')]]</i18n></option>
+                ng-options="langue as langue.libelle for langue in suiviCompetence.langues.all | orderBy:'libelle' track by langue.id">
+            <option class="header-opt" value="" disabled><i18n>[[translate('viescolaire.utils.langues.culture.regionale.choix')]]</i18n></option>
         </select>
     </label>
 </section>
@@ -50,7 +52,7 @@
         <select ng-model="suiviCompetence.niveauLangueCultRegSelected" ng-change="saveNiveauEnsCpl();"
                 ng-disabled="!canUpdateNiveauEnsCpl()"
                 ng-options="niveauLangueCultReg as niveauLangueCultReg.libelle for niveauLangueCultReg in suiviCompetence.niveauLangueCultRegs.all">
-            <option class="header-opt " value="" disabled ><i18n>[[translate('level')]]</i18n></option>
+            <option class="header-opt " value="" disabled><i18n>[[translate('level')]]</i18n></option>
         </select>
     </label>
 </section>

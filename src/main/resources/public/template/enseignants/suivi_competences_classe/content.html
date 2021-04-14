@@ -14,16 +14,18 @@
   ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
-<div ng-if="search.classe.id_cycle !== null">
+<div ng-if="!search.classe || search.classe.id_cycle !== null">
     <article class="ten card twelve-mobile centered"
-             ng-if="informations.classe === undefined || informations.classe === '' || search.classe === ''|| search.classe === '*'">
+             ng-if="informations.classe === undefined || informations.classe === '' || search.classe === ''|| search.classe === '*'  || search.classe === null">
         <i18n>evaluation.suivi.classe.empty</i18n>
     </article>
 </div>
+
 <article class="ten card twelve-mobile centered"
-         ng-if="search.classe.id_cycle === null">
+         ng-if="search.classe && search.classe.id_cycle === null">
     <i18n>evaluation.suivi.no.cycle</i18n>
 </article>
+
 <lightbox show="opened.recapEval" on-close="opened.recapEval = false; exportRecapEvalObj.errExport = false;">
     <h2><i18n>evaluations.export.file</i18n>&nbsp;:</h2>
     <div class="checkbox-grid">
@@ -236,7 +238,7 @@
 
 <article class="followingClass content-suivi-eleve twelve-mobile twelve card"
          ng-if="search.classe.id_cycle !== null &&
-         search.classe.id_cycle !== undefined &&
+          (search.classe || search.classe.id_cycle !== undefined) &&
           informations.classe !== '' &&
            informations.classe !== undefined &&
             search.classe !== ''">

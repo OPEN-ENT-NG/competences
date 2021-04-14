@@ -20,7 +20,16 @@
  */
 import {ng, template, model, moment, idiom as lang, notify} from "entcore";
 import {
-    SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve, Utils, TypePeriode
+    SuiviCompetence,
+    Devoir,
+    CompetenceNote,
+    evaluations,
+    Structure,
+    Classe,
+    Eleve,
+    Utils,
+    TypePeriode,
+    NiveauEnseignementCpl
 } from "../models/teacher";
 import * as utils from "../utils/teacher";
 import {NiveauLangueCultReg, NiveauLangueCultRegs,BaremeBrevetEleve} from "../models/teacher/index";
@@ -400,7 +409,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     $scope.listTeacher = getTitulairesForRemplacantsCoEnseignant($scope.me.userId, $scope.search.classe);
                     // Récupérer le suivi de l'élève
                     await $scope.getEleveInfo($scope.search.eleve);
-                    let eleveIsEvaluable = $scope.search.eleve.isEvaluable($scope.search.periode);
+                    let eleveIsEvaluable: boolean = $scope.search.eleve ? $scope.search.eleve.isEvaluable($scope.search.periode) : false;
                     if (eleveIsEvaluable) {
                         if($scope.currentCycle === null || $scope.currentCycle === undefined)
                             await $scope.getCyclesEleve();
@@ -436,6 +445,11 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                             if ($scope.searchBilan.parDomaine === 'true') {
                                 allPromise.push($scope.suiviCompetence.domaines.sync());
                             } else {
+                                // Somehow $scope.suiviFilter can be undefined so we encounter :
+                                // TypeError: Cannot set property 'mine' of undefined then handle this error by setting empty object that will be set
+                                if (!$scope.suiviFilter) {
+                                    $scope.suiviFilter.mine = {};
+                                }
                                 $scope.suiviFilter.mine = 'false';
                                 allPromise.push($scope.suiviCompetence.enseignements.sync());
                             }
@@ -523,7 +537,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 }
                 await utils.safeApply($scope);
             } else {
-                $scope.suiviCompetence.niveauEnsCplSelected = $scope.suiviCompetence.eleveEnsCpl;
+                $scope.suiviCompetence.niveauEnsCplSelected = null;
                 await utils.safeApply($scope);
             }
         };
@@ -589,7 +603,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         $scope.initSuivi = async () => {
             return new Promise( async (resolve, reject) => {
                 try {
-                    if ($scope.search.periode.libelle != "cycle")
+                    if ($scope.search.periode && $scope.search.periode.libelle != "cycle")
                         Utils.initFilterMine($scope);
                     $scope.opened.detailCompetenceSuivi = false;
                     $scope.pOFilterEval = {
@@ -632,6 +646,16 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             }
         };
 
+        /**
+         * Angular 1.7.9 <select> manage to make no differences while setting ngModel value with selected ng option
+         * we obtain no data references
+         * We reassign the element (first parameter) with the ng-option (second parameter) in order to keep the same reference
+         */
+        $scope.setCorrectNiveauEnsCpl = (): void => {
+            $scope.suiviCompetence.niveauEnsCplSelected = $scope.suiviCompetence.niveauEnsCpls.all
+                .find((level: NiveauEnseignementCpl) => level.id === $scope.suiviCompetence.niveauEnsCplSelected.id);
+        };
+
         $scope.canUpdateNiveauEnsCpl = () => {
             return Utils.canUpdateNiveauEnsCpl();
         }
@@ -654,7 +678,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 $scope.suiviCompetence.niveauLangueCultRegSelected = new NiveauLangueCultReg(0);
             }
 
-            $scope.suiviCompetence.eleveEnsCpl.setAttributsEleveEnsCpl($scope.suiviCompetence.ensCplSelected.id,
+            $scope.suiviCompetence.eleveEnsCpl.setAttributsEleveEnsCpl(
+                $scope.suiviCompetence.ensCplSelected ? $scope.suiviCompetence.ensCplSelected.id : undefined,
                 $scope.suiviCompetence.niveauEnsCplSelected.id,
                 $scope.suiviCompetence.niveauLangueCultRegSelected.niveau,
                 id_langue).save();
@@ -760,19 +785,27 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 await $scope.syncPeriode($scope.search.classe.id);
                 if($scope.search.classe.eleves.empty())
                     await $scope.search.classe.eleves.sync();
-                let periode = new TypePeriode({id:$scope.search.periode.id_type,ordre:$scope.search.periode.ordre,type:$scope.search.periode.type});
-                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
+                let periode = new TypePeriode({
+                    id: $scope.search.periode ? $scope.search.periode.id_type : undefined,
+                    ordre: $scope.search.periode ? $scope.search.periode.ordre : undefined,
+                    type: $scope.search.periode ? $scope.search.periode.type : undefined
+                });
+                $scope.filteredEleves = $scope.search.classe ? $scope.search.classe.filterEvaluableEleve(periode).eleves : undefined;
             }
             $scope.selected.grey = true;
             if ($scope.search.eleve !== undefined && $scope.search.classe.eleves.empty()) {
                 await $scope.search.classe.eleves.sync();
-                let periode = new TypePeriode({id:$scope.search.periode.id_type,ordre:$scope.search.periode.ordre,type:$scope.search.periode.type});
-                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
+                let periode = new TypePeriode({
+                    id: $scope.search.periode ? $scope.search.periode.id_type : undefined,
+                    ordre: $scope.search.periode ? $scope.search.periode.ordre : undefined,
+                    type: $scope.search.periode ? $scope.search.periode.type : undefined
+                });
+                $scope.filteredEleves = $scope.search.classe ? $scope.search.classe.filterEvaluableEleve(periode).eleves : undefined;
             }
 
             if ($scope.search.eleve !== undefined && $scope.filteredEleves !== undefined &&
-                _.findWhere($scope.filteredEleves.all, {id: $scope.search.eleve.id}) === undefined) {
-                if($scope.search.eleve.id !== undefined){
+                _.findWhere($scope.filteredEleves.all, {id: $scope.search.eleve ? $scope.search.eleve.id : undefined}) === undefined) {
+                if($scope.search.eleve && $scope.search.eleve.id !== undefined){
                     notify.info('evaluations.student.is.no.more.evaluable');
                 }
                 $scope.search.eleve = "";
@@ -787,13 +820,16 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
 
         $scope.changeContent = async function (cycle?) {
             return new Promise(async (resolve) => {
-                if($scope.search.classe != "*"){
-                    if ($scope.search.classe.eleves && $scope.search.classe.eleves.length() === 0) {
+                if ($scope.search.classe && $scope.search.classe != "*") {
+                    if ($scope.search.classe && $scope.search.classe.eleves && $scope.search.classe.eleves.length() === 0) {
                         await $scope.search.classe.eleves.sync();
                     }
-                    if($scope.search.periode != "*"){
-                        let periode = new TypePeriode({id : $scope.search.periode.id_type,
-                            ordre : $scope.search.periode.ordre, type:$scope.search.periode.type});
+                    if($scope.search.periode && $scope.search.periode != "*") {
+                        let periode = new TypePeriode({
+                            id:  $scope.search.periode.id_type,
+                            ordre: $scope.search.periode.ordre,
+                            type: $scope.search.periode.type
+                        });
                         $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
                     }
                 }
@@ -806,7 +842,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
 
                             if (cycle === null || cycle === undefined) {
                                 $scope.selectedCycleRadio = null;
-                                if ($scope.search.periode.libelle === "cycle") {
+                                if ($scope.search.periode && $scope.search.periode.libelle === "cycle") {
                                     $scope.currentCycle = null;
                                     $scope.isCycle = true;
                                     if($location.path() == '/conseil/de/classe')
@@ -814,7 +850,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                     else
                                         $scope.suiviFilter.mine = "false";
                                 } else {
-                                    $scope.currentCycle = {id_cycle: $scope.search.classe.id_cycle};
+                                    $scope.currentCycle = {id_cycle: $scope.search.classe ? $scope.search.classe.id_cycle : undefined};
                                     $scope.isCycle = false;
                                 }
                             } else {

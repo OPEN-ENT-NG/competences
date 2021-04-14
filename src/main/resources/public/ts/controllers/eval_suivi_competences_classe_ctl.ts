@@ -110,7 +110,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 await $scope.syncPeriode($scope.search.classe.id);
                 $scope.listTeacher = getTitulairesForRemplacantsCoEnseignant($scope.me.userId, $scope.search.classe);
             }
-            if ($scope.search.classe.id_cycle === null) {
+            if ($scope.search.classe && $scope.search.classe.id_cycle === null) {
                 await Utils.stopMessageLoader($scope);
                 return;
             }
@@ -134,7 +134,11 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             }
         };
 
-        $scope.switchEtablissementSuivi = () => {
+        $scope.switchEtablissementSuivi = (): void => {
+            // Angular 1.7.9 <select> now change the reference of our $scope evaluations.structure
+            // We reassign the $scope with the ng-option element evaluations.structures.all selected in order to keep the same reference
+            evaluations.structure = $scope.evaluations.structures.all.find(s => s.id ===  evaluations.structure.id);
+
             delete $scope.suiviCompetence;
             delete $scope.informations.classe;
             $scope.changeEtablissement();
@@ -247,7 +251,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 && (index + parseInt(num)) < $scope.classes.all.length) {
                 $scope.search.classe = _.sortBy(_.sortBy($scope.classes.all, 'name'), 'type_groupe_libelle')[index + parseInt(num)];
                 $scope.syncPeriode($scope.search.classe.id);
-                $scope.search.periode = '*';
+                $scope.search.periode = null;
                 $scope.synchronizeStudents($scope.search.classe.id);
                 await $scope.selectSuivi(true);
                 utils.safeApply($scope);
@@ -500,8 +504,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             if ($route.current.params.idClasse !== undefined) {
                 if ($scope.classes !== undefined) {
                     $scope.search.classe = $scope.classes.findWhere({id: $route.current.params.idClasse});
-                }
-                else {
+                } else {
                     $scope.classes.sync();
                     $scope.classes.on('classes-sync', function () {
                         $scope.search.classe = $scope.classes.findWhere({id: $route.current.params.idClasse});
@@ -522,9 +525,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                         });
                     });
                 }
-            }
-            else {
-                $scope.search.classe = "";
+            } else {
+                $scope.search.classe = null;
             }
             delete $scope.informations.eleve;
             $scope.route = $route;

@@ -66,7 +66,8 @@ export class ElementBilanPeriodique extends Model {
         this.idTypePeriode = pIdTypePeriode;
         this.idPeriode = this.idTypePeriode;
         this.typePeriode = pTypePeriode;
-        this.suivisAcquis = new SuivisDesAcquis(this.eleve.id, this.classe.id, this.structure.id,
+        this.suivisAcquis = new SuivisDesAcquis(this.eleve ? this.eleve.id : undefined,
+            this.classe ? this.classe.id : undefined, this.structure ? this.structure.id : undefined,
             this.idTypePeriode, this.typePeriode);
     }
 

@@ -32,7 +32,7 @@ export let selectCycleForView = function ($scope, $location, id_cycle?) {
 
 export let updateColorAndLetterForSkills = function ($scope, $location, cycle?) {
     $scope.niveauCompetences = [];
-    let niveauCompetence = selectCycleForView($scope, $location, cycle ? cycle : $scope.search.classe.id_cycle);
+    let niveauCompetence = selectCycleForView($scope, $location, cycle ? cycle : ($scope.search.classe) ? $scope.search.classe.id_cycle : undefined);
     $scope.mapCouleurs = {"-1": Defaultcolors.unevaluated};
     $scope.mapLettres = {"-1": " "};
     $scope.selected.colors = {

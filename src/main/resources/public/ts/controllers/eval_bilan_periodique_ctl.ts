@@ -484,7 +484,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         };
 
         $scope.hideArrow = function (num) {
-            let index = _.findIndex($scope.search.classe.eleves.all, {id: $scope.search.eleve.id});
+            let index = _.findIndex($scope.search.classe ? $scope.search.classe.eleves.all : undefined,
+                {id: $scope.search.eleve ? $scope.search.eleve.id : undefined});
             return !(index !== -1 && index + parseInt(num) >= 0
                 && index + parseInt(num) < $scope.search.classe.eleves.all.length);
         };
@@ -509,7 +510,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 if (Utils.isNotDefault($scope.search.eleve)) {
                     if(!$scope.search.eleve.isEvaluable(periode)){
                         notify.info('evaluations.student.is.no.more.evaluable');
-                        $scope.search.eleve = '';
+                        $scope.search.eleve = null;
                         $scope.informations.eleve = $scope.search.eleve;
                         $scope.critereIsEmpty = true;
                         await utils.safeApply($scope);
@@ -553,14 +554,19 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.syncAllAvisSyntheses = async function() {
             $scope.oldElementsBilanPeriodique = [];
-            $scope.elementBilanPeriodique.avisConseil = new AvisConseil($scope.informations.eleve.id,
+            $scope.elementBilanPeriodique.avisConseil = new AvisConseil($scope.informations.eleve ? $scope.informations.eleve.id : undefined,
                 $scope.search.periode.id_type, $scope.structure.id);
-            $scope.elementBilanPeriodique.avisOrientation = new AvisOrientation($scope.informations.eleve.id,
+            $scope.elementBilanPeriodique.avisOrientation = new AvisOrientation($scope.informations.eleve ? $scope.informations.eleve.id : undefined,
                 $scope.search.periode.id_type, $scope.structure.id);
-            $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
+            $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve ? $scope.informations.eleve.id : undefined,
                 $scope.search.periode.id_type, $scope.structure.id, $scope.search.classe.id);
 
             const res = await $scope.elementBilanPeriodique.getAllAvisSyntheses();
+            // Somehow $scope.elementBilanPeriodique.avisConseil.avis can be undefined so we encounter:
+            // TypeError: Cannot set property 'avis' of undefined then we handle this error by setting empty object that will be set
+            if (!$scope.elementBilanPeriodique.avisConseil) {
+                $scope.elementBilanPeriodique.avisConseil = {};
+            }
             $scope.elementBilanPeriodique.avisConseil.avis = res.libelleAvis;
 
             for (const periode of $scope.search.classe.periodes.all.sort((a, b) => (a.id_type > b.id_type) ? 1 : -1)) {
@@ -603,8 +609,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         };
 
         $scope.deleteStudent = async function () {
-            $scope.informations.eleve = '';
-            $scope.search.eleve = '';
+            $scope.informations.eleve = null;
+            $scope.search.eleve = null;
             $scope.critereIsEmpty = true;
             await $scope.changeContent();
         };
@@ -653,7 +659,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                         delete $scope.bilanPeriodique;
                     }
                 } else {
-                    $scope.search.periode = "*";
+                    $scope.search.periode = null;
                     delete $scope.bilanPeriodique;
                 }
             } else {
