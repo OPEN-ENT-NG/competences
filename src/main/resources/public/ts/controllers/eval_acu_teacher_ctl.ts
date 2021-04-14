@@ -174,6 +174,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                 evaluations.structure.sync().then(async function() {
                     await switchEtab();
                     $scope.$parent.opened.displayStructureLoader = false;
+                    utils.safeApply($scope);
                 });
             } else {
                await switchEtab();
