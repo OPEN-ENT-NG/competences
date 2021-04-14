@@ -78,9 +78,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             inColor: false,
         };
 
-        $scope.getI18nPeriode = (periode : any) => {
+        $scope.getI18nPeriode = (periode : any): string => {
             let result = lang.translate("viescolaire.utils.annee");
-            if (periode !== undefined) {
+            if (periode) {
                 if (periode.libelle !== null && periode.libelle !== undefined) {
                     if (periode.libelle === ("cycle")) {
                         result = lang.translate("viescolaire.utils.cycle");
@@ -103,14 +103,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.initSearch = () => {
             return {
-                matiere: '*',
-                periode: '*',
-                classe: '*',
-                sousmatiere: '*',
-                type: '*',
-                idEleve: '*',
+                matiere: null,
+                periode: null,
+                classe: null,
+                sousmatiere: null,
+                type: null,
+                idEleve: null,
                 name: '',
-                enseignant: '*',
+                enseignant: null,
                 duplication: ''
             }
         };
@@ -210,6 +210,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
 
             listDevoirs: async function (params) {
+                // Somehow $scope.selected.devoirs can be undefined so we encounter :
+                // TypeError: Cannot set property 'list' of undefined then we handle this error by setting empty object that will be set
+                if (!$scope.selected.devoirs) {
+                    $scope.selected.devoirs = {};
+                }
                 $scope.selected.devoirs.list = [];
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
@@ -224,8 +229,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
                         return $scope.filterValidDevoir(devoir);
                     });
-                    let openTemplates =  () => {
-                        $scope.search.enseignant = "*";
+                    let openTemplates = (): void => {
+                        $scope.search.enseignant = null;
                         //rajout de la periode Annee
                         //await $scope.periodes.sync();
                         //$scope.initPeriodesList();
@@ -453,7 +458,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.search.classe = _.findWhere(evaluations.classes.all, {'id': params.idClasse});
                         $scope.search.eleve = _.findWhere($scope.structure.eleves.all, {'id': params.idEleve});
                         $scope.syncPeriode($scope.search.classe.id);
-                        $scope.search.periode = '*';
+                        $scope.search.periode = null;
                         await Utils.runMessageLoader($scope);
                         await $scope.search.classe.eleves.sync();
                         $scope.search.eleve = _.findWhere($scope.search.classe.eleves.all, {'id': params.idEleve});
@@ -461,7 +466,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.displayFromClass = true;
                         await display();
                     } else {
-                        $scope.syncPeriode($scope.search.classe.id);
+                        $scope.syncPeriode($scope.search.classe ? $scope.search.classe.id : undefined);
                         await display();
                     }
                     template.open('main', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/container');
@@ -562,9 +567,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.displayCycle = false;
                 }
             }
-            if( $scope.search.periode.id !== null ) {
+            if ($scope.search.periode && $scope.search.periode.id !== null) {
                 $scope.isEndSaisieNivFinal = moment($scope.search.periode.date_fin_saisie).isBefore(moment(), "days");
-            }else{
+            } else {
                 $scope.isEndSaisieNivFinal = false;
             }
         }
@@ -689,7 +694,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return $scope.filterValidClasse(classe);
         });
         $scope.search = $scope.initSearch();
-        $scope.matieresFiltered = $filter('getMatiereClasse')($scope.matieres.all, $scope.search.classe.id, $scope.classes, model.me.userId);
+        $scope.matieresFiltered = $filter('getMatiereClasse')($scope.matieres.all, $scope.search.classe ? $scope.search.classe.id : undefined, $scope.classes, model.me.userId);
         $scope.types = evaluations.types;
         $scope.filter = $filter;
         $scope.template = template;
@@ -735,7 +740,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let selectedPeriode = undefined;
                 if ($scope.search.periode !== undefined) {
                     selectedPeriode = _.findWhere(classe.periodes.all,
-                        {id_type: $scope.search.periode.id_type});
+                        {id_type: $scope.search.periode ? $scope.search.periode.id_type : undefined});
                 }
                 if ($scope.search.eleve !== undefined && $scope.search.eleve.deleteDate !== undefined) {
                     // On choisit la periode annee ou la période présélectionnée
@@ -831,6 +836,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.changeEtablissement = async () => {
+            // Angular 1.7.9 <select> now change the reference of our $scope evaluations.structures
+            // We reassign the $scope with the ng-option element structures.all selected in order to keep the same reference
+            evaluations.structure = $scope.evaluations.structures.all.find(s => s.id ===  evaluations.structure.id);
+
             let init = () => {
                 $scope.initReferences();
                 $scope.search = $scope.initSearch();
@@ -2526,10 +2535,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.setMatieresFiltered = () => {
-            $scope.search.matiere = "*";
+            $scope.search.matiere = null;
             if($scope.search.periode != '*' && $scope.search.periode != -1 ){
                 $scope.matieresFiltered = _.unique ($filter('getMatiereClasse')($scope.matieres.all,
-                    $scope.search.classe.id, $scope.classes, model.me.userId), (mat) => {
+                    $scope.search.classe ? $scope.search.classe.id : undefined, $scope.classes, model.me.userId), (mat) => {
                     return mat.id ;}
                 );
 
@@ -4197,8 +4206,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.disabledSaisieNNoutPeriode = () => {
-            if ($scope.search.periode.id === null || $scope.search.periode === "*") {
+        $scope.disabledSaisieNNoutPeriode = (): boolean => {
+            if (!$scope.search.periode || $scope.search.periode.id === null || $scope.search.periode === "*") {
                 return true;
             }
             else {
@@ -4391,7 +4400,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.openEditElementProgramme = function () {
             $scope.disabledSaisieNNoutPeriode = () => {
-                if ($scope.search.periode.id === null || $scope.search.periode === "*") {
+                if (!$scope.search.periode || $scope.search.periode.id === null || $scope.search.periode === "*") {
                     return true;
                 }
                 else {
