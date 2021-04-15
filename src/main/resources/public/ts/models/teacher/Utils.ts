@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {model, idiom as lang, _, Behaviours, template, notify} from 'entcore';
+import {model, idiom as lang, _, Behaviours, template, notify, moment} from 'entcore';
 import * as utils from '../../utils/teacher';
 import {BilanFinDeCycle, Classe, CompetenceNote} from './index';
 import {evaluations} from "./model";
@@ -804,5 +804,12 @@ export class Utils {
         return dataCsv.map((row:Array<any>):string => row.join(';')).join('\n');
     }
 
-
+    static checkDateForSubTeacher (substituteTeacher, periode) {
+        return periode.id != null ?
+            moment(substituteTeacher.start_date).isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]')
+            || moment(substituteTeacher.end_date).isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]')
+            || moment(periode.timestamp_dt).isBetween(moment(substituteTeacher.start_date), moment(substituteTeacher.end_date), 'days', '[]')
+            || moment(periode.timestamp_fn).isBetween(moment(substituteTeacher.start_date), moment(substituteTeacher.end_date), 'days', '[]')
+            : true;
+    }
 }

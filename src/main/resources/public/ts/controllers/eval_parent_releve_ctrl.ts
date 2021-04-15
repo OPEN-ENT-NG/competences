@@ -73,20 +73,15 @@ export let releveController = ng.controller('ReleveController', [
                     if(s.id_matiere === matiere.id){
                         s.coTeachers.forEach(coTeacher => {
                             let teacher = $scope.getTeacherFromEvaluations(coTeacher.second_teacher_id);
-                            if(coTeacher.is_visible && !_.contains(teachers, teacher)){
+                            if(coTeacher.is_visible && teacher != undefined && !_.contains(teachers, teacher)){
                                 matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id})
                                 teachers.push(teacher);
                             }
                         });
                         s.substituteTeachers.forEach(substituteTeacher => {
                             let teacher = $scope.getTeacherFromEvaluations(substituteTeacher.second_teacher_id);
-                            let conditionForDate = $scope.search.periode.id != null ?
-                                moment(substituteTeacher.start_date).isBetween(moment($scope.search.periode.timestamp_dt), moment($scope.search.periode.timestamp_fn), 'days', '[]')
-                                || moment(substituteTeacher.end_date).isBetween(moment($scope.search.periode.timestamp_dt), moment($scope.search.periode.timestamp_fn), 'days', '[]')
-                                || moment($scope.search.periode.timestamp_dt).isBetween(moment(substituteTeacher.start_date), moment(substituteTeacher.end_date), 'days', '[]')
-                                || moment($scope.search.periode.timestamp_fn).isBetween(moment(substituteTeacher.start_date), moment(substituteTeacher.end_date), 'days', '[]')
-                                : true;
-                            if(substituteTeacher.is_visible && !_.contains(teachers, teacher) && conditionForDate){
+                            let conditionForDate = Utils.checkDateForSubTeacher(substituteTeacher, $scope.searchReleve.periode);
+                            if(substituteTeacher.is_visible && teacher != undefined && !_.contains(teachers, teacher) && conditionForDate){
                                 matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id})
                                 teachers.push(teacher);
                             }

@@ -393,10 +393,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.getTeacherFromEvaluations = function (owner) {
-            let enseignant = _.findWhere(evaluations.enseignants.all, {id: owner});
-            if (enseignant !== undefined) {
-                return enseignant;
-            }
+            return _.findWhere(evaluations.enseignants.all, {id: owner});
         };
 
         /**
