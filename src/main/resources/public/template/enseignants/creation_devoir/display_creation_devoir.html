@@ -18,8 +18,8 @@
 <article ng-show="hideCreation" class="row center twelve">
     <i18n>evaluation.no.service.evaluable</i18n>
 </article>
-<div ng-hide="hideCreation"
-     class="addDevoir row twelve cell">
+
+<div ng-hide="hideCreation" class="addDevoir row twelve cell">
     <div class="eight cell twelve-mobile">
         <div class="pannel-in-cell">
             <tabs>
@@ -149,7 +149,7 @@
 
                                 </section>
 
-                                <div class="separator" />
+                                <div class="separator"></div>
 
                                 <!-- Titre -->
                                 <section class="row twelve-mobile">
@@ -176,11 +176,11 @@
                                     </div>
                                 </section>
 
-                                <div class="separator" />
+                                <div class="separator"></div>
 
                                 <!-- Activer l'évaluation numérique ? -->
                                 <section class="row twelve-mobile">
-                                    <div class="three cell addDevoirTable__libelle pointer two-mobile" ng-click="devoir.is_evaluated = !devoir.is_evaluated">
+                                    <div class="three cell addDevoirTable__libelle pointer two-mobile">
                                         <label class="checkbox">
                                             <input type="checkbox" ng-model="devoir.is_evaluated">
                                             <span></span>
@@ -233,7 +233,7 @@
                                     </section>
                                 </div>
 
-                                <div class="separator" />
+                                <div class="separator"></div>
                                 <section ng-if="endSaisie" class="row twelve-mobile">
                                     <div class="warning">
                                         <i18n>end.saisie</i18n>
@@ -297,7 +297,7 @@
                                     </div>
                                 </section>
 
-                                <div class="separator"/>
+                                <div class="separator"></div>
 
                                 <section class="row twelve-mobile">
                                     <div class="three cell two-mobile" style="text-align: right; padding-right: 10px;">
