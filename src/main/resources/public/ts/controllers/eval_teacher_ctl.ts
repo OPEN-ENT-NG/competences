@@ -1347,8 +1347,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.toMuchCompetences = function () {
-            return $scope.evaluations.competencesDevoir.length > $scope.MAX_NBR_COMPETENCE;
+        $scope.toMuchCompetences = function (): boolean {
+            // checking existence competencesDevoir (case its undefined we set 0 as default value)
+            return ($scope.evaluations.competencesDevoir ? $scope.evaluations.competencesDevoir.length : 0) > $scope.MAX_NBR_COMPETENCE;
         }
 
         /**
@@ -3643,10 +3644,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.endSaisie = null;
             $scope.errDateDevoir = null;
             let classe = _.findWhere($scope.structure.classes.all, {id: devoir.id_groupe});
-            if ( classe.periodes.length() === 0 ) {
+            if (classe && classe.periodes.length() === 0) {
                 await classe.periodes.sync();
             }
-            let current_periode = _.findWhere(classe.periodes.all, {id_type: parseInt(devoir.id_periode)});
+            let current_periode = _.findWhere(classe ? classe.periodes.all : undefined, {id_type: parseInt(devoir.id_periode)});
             if (current_periode !== undefined) {
                 let start_datePeriode = current_periode.timestamp_dt;
                 let end_datePeriode = current_periode.timestamp_fn;
