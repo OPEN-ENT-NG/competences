@@ -312,14 +312,6 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 });
                 listOfFutures.add(subjectEleveFuture);
 
-                Future<JsonArray> allSubjectFuture = Future.future();
-                // Récupération des matières et des professeurs
-                devoirService.getMatiereTeacherForOneEleve(null, idEtablissement, idClasseGroups, event -> {
-                    formate("[Competences] DefaultBilanPeriodique at getSuivi : getMatiereTeacherOneEleve",
-                            allSubjectFuture, event);
-                });
-                listOfFutures.add(allSubjectFuture);
-
                 Future<JsonArray> multiTeachersFuture = Future.future();
                 utilsService.getMultiTeachers(idEtablissement, idClasseGroups, idPeriode != null ? idPeriode.intValue() : null, event -> {
                     formate("[Competences] DefaultBilanPeriodique at getSuiviAcqui : getMultiTeachers",
@@ -339,14 +331,13 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                         Map<String, JsonObject> idsMatieresIdsTeachers = new HashMap<>();
                         JsonArray idsTeachers = new fr.wseduc.webutils.collections.JsonArray();
                         JsonArray responseArray = subjectEleveFuture.result();
-                        JsonArray allSubjectsArray = allSubjectFuture.result();
                         JsonArray multiTeachersArray = multiTeachersFuture.result();
                         JsonArray services = servicesFuture.result();
 
                         if (responseArray == null || responseArray.isEmpty()) {
                             handler.handle(new Either.Right<>(new JsonArray()));
                         } else {
-                            buildSubjectForSuivi(idsMatieresIdsTeachers, idsTeachers, responseArray, allSubjectsArray,
+                            buildSubjectForSuivi(idsMatieresIdsTeachers, idsTeachers, responseArray,
                                     idPeriode, multiTeachersArray, services);
 
                             List<Future> futures = new ArrayList<>();
@@ -536,7 +527,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void buildSubjectForSuivi(Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray idsTeachers,
-                                      JsonArray responseArray, JsonArray allSubjects, final Long idPeriode,
+                                      JsonArray responseArray, final Long idPeriode,
                                       JsonArray multiTeachers, JsonArray services) {
         List<String> subjectsMissingTeachers = new ArrayList<>();
 
@@ -561,8 +552,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         }
 
         // Ajoute les matieres manquantes pour un calcul correct de la moyenne général
-        for (int i = 0; i < allSubjects.size(); i++) {
-            final String idMatiere = allSubjects.getJsonObject(i).getString(ID_MATIERE);
+        for (int i = 0; i < services.size(); i++) {
+            final String idMatiere = services.getJsonObject(i).getString(ID_MATIERE);
 
             if (!idsMatieresIdsTeachers.containsKey(idMatiere)) {
                 idsMatieresIdsTeachers.put(idMatiere, new JsonObject()
