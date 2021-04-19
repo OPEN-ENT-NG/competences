@@ -346,10 +346,9 @@ export const bilanPeriodique = {
         },
 
         pushData: function (teacher, dataElem, subject?) {
-            if(subject)
+            if (subject) {
                 utils.pushData(teacher,dataElem,subject);
-            else
-                utils.pushData(teacher,dataElem);
+            }
         },
 
 

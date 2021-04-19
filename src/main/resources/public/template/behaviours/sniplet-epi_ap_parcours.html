@@ -311,6 +311,7 @@
                         <i18n>evaluations.elements.subject.appear.two.times</i18n>
                     </div>
                 </section>
+                <!-- select teacher area -->
                 <div class="five cell twelve-mobile">
                     <label class="select">
                         <select ng-model="search.enseignant"
@@ -321,6 +322,8 @@
                         </select>
                     </label>
                 </div>
+
+                <!-- select subject area -->
                 <div class="five cell twelve-mobile marginLeft">
                     <label class="select"
                            ng-class="{disabled : search.enseignant == null || search.enseignant == undefined}">
@@ -328,16 +331,15 @@
                                 ng-change="pushData(search.enseignant, dataELem.ens_mat, search.matiere)"
                                 ng-options="matiere.name for matiere in (filteredSubjects = (options.matieres | filter:notYetSelected()))"
                                 ng-disabled="search.enseignant == null">
-                            <option class="header-opt" disabled value="">[[translate('viescolaire.utils.subject')]]
-                            </option>
+                            <option class="header-opt" disabled value="">[[translate('viescolaire.utils.subject')]]</option>
                         </select>
                     </label>
                 </div>
+
+                <!-- tagged results -->
                 <div class="row">
-                    <label ng-repeat="ens_mat in dataELem.ens_mat" class="chip multiselect all"
-                           ng-click="tryDeleteEnseignantMatiere(ens_mat);">
+                    <label ng-repeat="ens_mat in dataELem.ens_mat" class="chip multiselect all" ng-click="tryDeleteEnseignantMatiere(ens_mat);">
                         <span>[[ens_mat.intervenant.displayName]] / [[ens_mat.matiere.name]]</span>
-                        <input type="checkbox" ng-model="ens_mat.selected"/>
                     </label>
                 </div>
             </div>
