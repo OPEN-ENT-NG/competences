@@ -302,17 +302,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         let momentCurrPeriodeFin = moment(moment(periodes.all[i].timestamp_fn).format(formatStr),
                             formatStr);
 
-
                         if ($scope.searchBilan.periode !== undefined && !foundedPeriode
                             && $location.path() === "/competences/eleve"){
                             $scope.periode = periodes.findWhere({id_type: $scope.searchBilan.periode.id_type});
                             foundedPeriode = true;
-                        }
-                        else if ($scope.search.periode !== undefined && !foundedPeriode){
+                        } else if ($scope.search.periode !== undefined && !foundedPeriode){
                             $scope.periode = periodes.findWhere({id_type: $scope.search.periode.id_type});
                             foundedPeriode = true;
-                        }
-                        else if(!foundedPeriode){
+                        } else if(!foundedPeriode){
                             if (momentCurrPeriodeDebut.diff(momentCurrDate) <= 0
                                 && momentCurrDate.diff(momentCurrPeriodeFin) <= 0) {
                                 $scope.periode = periodes.findWhere({id: periodes.all[i].id});

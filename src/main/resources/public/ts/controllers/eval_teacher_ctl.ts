@@ -3692,7 +3692,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 });
 
                 currentPeriode = _.find(classe.periodes.all, (periode) => {
-                    return moment().isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]');
+                    return periode.timestamp_dt != undefined && periode.timestamp_fn != undefined ?
+                        moment().isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]')
+                        : false;
                 });
             }
             return currentPeriode != null ? currentPeriode : -1;
