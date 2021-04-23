@@ -713,45 +713,49 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT DISTINCT " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.* ";
+        StringBuilder query = new StringBuilder();
+        query.append( "SELECT DISTINCT appEltBPeleve.* ");
 
         if (idElements == null) {
-            query += ", rel_groupe_appreciation_elt_eleve.id_groupe , thematiqueBP.code, elBP.type_elt_bilan_periodique ";
+            query.append(", rGpeAppEleve.id_groupe , thematiqueBP.code, elBP.type_elt_bilan_periodique ");
         }
-        query += "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve ";
+        query.append("FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve AS appEltBPeleve");
 
         if(idsClasses != null && idsClasses.size() > 0){
-            query += " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_appreciation_elt_eleve " +
-                    " ON rel_groupe_appreciation_elt_eleve.id_groupe IN " + Sql.listPrepared(idsClasses);
+            query.append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_appreciation_elt_eleve AS rGpeAppEleve")
+                    .append(" ON rGpeAppEleve.id_groupe IN " + Sql.listPrepared(idsClasses));
             for (int i = 0; i < idsClasses.size(); i++) {
                 params.add(idsClasses.get(i));
             }
         }
 
         if(idElements != null) {
-            query += " WHERE " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.id_elt_bilan_periodique IN " + Sql.listPrepared(idElements);
+            query.append(" WHERE appEltBPeleve.id_elt_bilan_periodique IN " + Sql.listPrepared(idElements));
             for (int i = 0; i < idElements.size(); i++) {
                 params.add(idElements.get(i));
             }
         }
         else {
-            query += " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique AS elBP ON elBP.id =  "+ Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.id_elt_bilan_periodique ";
-            query += " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique AS thematiqueBP ON thematiqueBP.id = elBP.id_thematique ";
+            query.append(" AND rGpeAppEleve.id_elt_bilan_periodique = appEltBPeleve.id_elt_bilan_periodique")
+                    .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique AS elBP")
+                    .append(" ON elBP.id = appEltBPeleve.id_elt_bilan_periodique" )
+                    .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique AS thematiqueBP")
+                    .append(" ON thematiqueBP.id = elBP.id_thematique");
         }
 
         if(idPeriode != null){
-            query += idElements == null ? " WHERE " : " AND ";
-            query += Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.id_periode = ? ";
+            query.append(idElements == null ? " WHERE " : " AND ")
+                    .append("appEltBPeleve.id_periode = ? ");
             params.add(idPeriode);
         }
 
         if(idEleve != null){
-            query += idElements == null && idPeriode == null ? " WHERE " : " AND ";
-            query += Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.id_eleve = ? ";
+            query.append( idElements == null && idPeriode == null ? " WHERE " : " AND ")
+                    .append("appEltBPeleve.id_eleve = ? ");
             params.add(idEleve);
         }
 
-        Sql.getInstance().prepared(query, params,
+        Sql.getInstance().prepared(query.toString(), params,
                 new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
                         .getInteger("timeout-transaction") * 1000L),
                 SqlResult.validResultHandler(handler));

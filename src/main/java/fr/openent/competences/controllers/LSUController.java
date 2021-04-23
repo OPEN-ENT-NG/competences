@@ -2550,24 +2550,26 @@ public class LSUController extends ControllerHelper {
                                 }
 
                                 private void addApEleve(JsonObject element) {
+                                    if(donnees.getAccPersosGroupes() != null){
+                                        List<AccPersoGroupe> listAccPersoGroupe = donnees.getAccPersosGroupes().getAccPersoGroupe();
+                                        if (listAccPersoGroupe != null && listAccPersoGroupe.size() > 0) {
+                                            AccPersoGroupe accGroupe = listAccPersoGroupe.stream()
+                                                    .filter(accG -> accG.getId().equals(ACC_GROUPE + element.getInteger("id_elt_bilan_periodique").toString()))
+                                                    .findFirst()
+                                                    .orElse(null);
 
-                                    List<AccPersoGroupe> listAccPersoGroupe = donnees.getAccPersosGroupes().getAccPersoGroupe();
-                                    if (listAccPersoGroupe != null && listAccPersoGroupe.size() > 0) {
-                                        AccPersoGroupe accGroupe = listAccPersoGroupe.stream()
-                                                .filter(accG -> accG.getId().equals(ACC_GROUPE + element.getInteger("id_elt_bilan_periodique").toString()))
-                                                .findFirst()
-                                                .orElse(null);
-
-                                        if (accGroupe != null) {
-                                            AccPersoEleve accEleve = objectFactory.createAccPersoEleve();
-                                            accEleve.setCommentaire(element.getString("commentaire"));
-                                            accEleve.setAccPersoGroupeRef(accGroupe);
-                                            if (bilanPeriodique.getAccPersosEleve() == null || bilanPeriodique.getAccPersosEleve().getAccPersoEleve() == null) {
-                                                bilanPeriodique.setAccPersosEleve(objectFactory.createBilanPeriodiqueAccPersosEleve());
+                                            if (accGroupe != null) {
+                                                AccPersoEleve accEleve = objectFactory.createAccPersoEleve();
+                                                accEleve.setCommentaire(element.getString("commentaire"));
+                                                accEleve.setAccPersoGroupeRef(accGroupe);
+                                                if (bilanPeriodique.getAccPersosEleve() == null || bilanPeriodique.getAccPersosEleve().getAccPersoEleve() == null) {
+                                                    bilanPeriodique.setAccPersosEleve(objectFactory.createBilanPeriodiqueAccPersosEleve());
+                                                }
+                                                bilanPeriodique.getAccPersosEleve().getAccPersoEleve().add(accEleve);
                                             }
-                                            bilanPeriodique.getAccPersosEleve().getAccPersoEleve().add(accEleve);
                                         }
                                     }
+
                                 }
 
                                 private void addEpiEleve(JsonObject element) {
