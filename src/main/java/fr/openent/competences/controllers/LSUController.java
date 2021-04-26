@@ -944,24 +944,31 @@ public class LSUController extends ControllerHelper {
     private void setBaliseResponsableAndAdress (JsonObject student, Eleve eleve){
         Adresse adresse = null;
         Responsable responsable = null;
-
         String adress = student.getString("address");
-        String codePostal =  student.getString("zipCode");
         String commune = student.getString("city");
+        String codePostal ;
+        try {
+            adress = (adress == null || adress.isEmpty()) ? "inconnue" : adress;
+            commune = (commune == null || commune.isEmpty()) ? "inconnue" : commune;
+            if(commune.length() > 100){
+                commune = commune.substring(0,100);
+            }
+            codePostal =  student.getString("zipCode");
 
-        // gestion données non renseignées
-        adress = (adress == null || adress.isEmpty()) ? "inconnue" : adress;
-        codePostal = (codePostal == null || codePostal.isEmpty()) ? "inconnu" : codePostal;
-        commune = (commune == null || commune.isEmpty()) ? "inconnue" : commune;
+            codePostal = (codePostal == null || codePostal.isEmpty()) ? "inconnu" : codePostal;
 
-        if(codePostal.length() > 10){
-            codePostal = codePostal.substring(0,10);
+            if(codePostal.length() > 10){
+                codePostal = codePostal.substring(0,10);
+            }
+
+        }catch (ClassCastException e) {
+            codePostal = String.valueOf(student.getInteger("zipCode"));
+            if (codePostal == null) {
+                codePostal = "inconnu";
+            }
         }
-        if(commune.length() > 100){
-            commune = commune.substring(0,100);
-        }
+
         adresse = objectFactory.createAdresse(adress, codePostal, commune);
-
 
         if (student.getString("externalIdRelative")!= null && student.getString("lastNameRelative") != null &&
                 student.getString("firstNameRelative")!= null && student.getJsonArray("relative").size() > 0 ) {
