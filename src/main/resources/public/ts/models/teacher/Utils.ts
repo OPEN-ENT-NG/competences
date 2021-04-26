@@ -34,14 +34,17 @@ export class Utils {
                 evaluations.structure.detailsUser.headTeacherManual), classe.externalId);
     }
 
-    static isChefEtab (classe?) {
+    static isChefEtabOrHeadTeacher (classe?) {
         let isAdmin = model.me.hasWorkflow(Behaviours.applicationsBehaviours.viescolaire.rights.workflow.adminChefEtab);
         if(classe === undefined || classe === null || classe === "" || classe === "*") {
             return isAdmin;
-        }
-        else {
+        } else {
             return isAdmin || this.isHeadTeacher(classe);
         }
+    }
+
+    static isPersEducNat () {
+        return model.me.type === "PERSEDUCNAT";
     }
 
     static async rightsChefEtabHeadTeacherOnBilanPeriodique (classe, nameWorkFlow){
@@ -49,10 +52,6 @@ export class Utils {
             hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow[nameWorkFlow]))
             || (model.me.type === 'ENSEIGNANT' && this.isHeadTeacher(classe) && model.me.
             hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow[nameWorkFlow]));
-    }
-
-    static canSaisieProjet () {
-        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.accessProjets);
     }
 
     static canCreateElementBilanPeriodique () {
@@ -63,16 +62,37 @@ export class Utils {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canSaisiAppreciationCPE);
     }
 
-    static canUpdateBFCSynthese () {
-        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateBFCSynthese);
-    }
     static canSaveCompetenceNiveauFinal () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.saveCompetenceNiveauFinal);
     }
+
+    static canSaisieProjet () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.accessProjets);
+    }
+
     static canExportLSU () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.exportLSU);
     }
 
+    static canSaisiSyntheseBilanPeriodique () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canSaisiSyntheseBilanPeriodique);
+    }
+
+    static canSaveAppMatierePosiBilanPeriodique () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canSaveAppMatierePosiBilanPeriodique);
+    }
+
+    static canUpdateAvisConseilOrientation () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateAvisConseilOrientation);
+    }
+
+    static canUpdateBFCSynthese () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateBFCSynthese);
+    }
+
+    static canUpdateNiveauEnsCpl () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateNiveauEnsCpl);
+    }
     /**
      * Méthode récursive de l'affichage des sous domaines d'un domaine
      *
@@ -251,7 +271,7 @@ export class Utils {
         // Chefs d'établissement
 
         //Si l'utilisateur n'est pas un chef d'établissement il ne peut pas modifier le slider
-        if(!this.isChefEtab(classe)){
+        if(!this.isChefEtabOrHeadTeacher(classe)){
             poDomaine.slider.options.readOnly = true;
         }
     }
@@ -562,7 +582,7 @@ export class Utils {
 
     static initFilterMine ($scope){
         $scope.suiviFilter = {
-            mine: (!Utils.isChefEtab()).toString()
+            mine: (!(Utils.isChefEtabOrHeadTeacher() || Utils.isPersEducNat())).toString()
         };
     }
 

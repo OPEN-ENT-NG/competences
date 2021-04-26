@@ -139,8 +139,7 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_PARCOURS_BILAN_PERIODIQUE = "eval_createParcoursBilanPeriodique";
     public static final String SCHEMA_SYNTHESE_CREATE = "eval_createSynthese";
     public static final String SCHEMA_APPRECIATION_CPE_CREATE = "eval_createAppreciationCPE";
-    public static final String SCHEMA_AVIS_CONSEIL_BILAN_PERIODIQUE = "eval_createAvisConseil";
-    public static final String SCHEMA_AVIS_ORIENTATION_BILAN_PERIODIQUE = "eval_createAvisOrientation";
+    public static final String SCHEMA_AVIS_CONSEIL_ORIENTATION_BILAN_PERIODIQUE = "eval_setAvisConseilOrientation";
     public static final String SCHEMA_CREATE_OPINION = "eval_createOpinion";
 
     public static final String SCHEMA_APPRECIATIONS_CLASSE = "eval_createOrUpdateAppreciationClasse";
@@ -169,7 +168,6 @@ public class Competences extends BaseServer {
     public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
     public static final String PARAM_COMPETENCE_RIGHT = "competences.paramCompetences";
     public static final String PARAM_SERVICES_RIGHT = "viesco.paramServices";
-    public static final String CAN_UPDATE_BFC_SYNTHESE_RIGHT = "competences.canUpdateBFCSynthese";
     public static final String PARAM_LINK_GROUP_CYCLE_RIGHT = "competences.paramLinkGroupCycle";
     public static final String CAN_UPDATE_RETARDS_AND_ABSENCES = "competences.canUpdateRetardsAndAbsences";
     public static final String CAN_ACCESS_EXPORT_BULLETIN = "export.bulletins.periodique";

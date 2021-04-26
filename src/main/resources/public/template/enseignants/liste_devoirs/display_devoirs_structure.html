@@ -24,7 +24,7 @@
             <i class="show-cards" ng-class="{ selected: template.contains('evaluations', 'enseignants/liste_devoirs/icon_view') }"
                ng-click="template.open('evaluations', 'enseignants/liste_devoirs/icon_view')"></i>
         </div>
-        <button workflow="competences.canCreateDevoir" class="marginFive" ng-click="goTo('/devoir/create');"><i18n>evaluations.test.new</i18n></button>
+        <button ng-if="canCreateEval()" class="marginFive" ng-click="goTo('/devoir/create');"><i18n>evaluations.test.new</i18n></button>
         <div class="microbox-wrapper zero">
             <div class="microbox-content">
                 <i class="close-2x"></i>
@@ -90,7 +90,7 @@
                         </label>
                     </section>
 
-                    <section ng-show="isChefEtab()">
+                    <section ng-show="isChefEtabOrHeadTeacher()">
                         <label class="select">
                             <select ng-model="search.enseignant" ng-options="enseignant.displayName for enseignant in enseignants.all">
                                 <option class="header-opt" value="">[[translate('viescolaire.utils.teacher')]]</option>
@@ -120,9 +120,7 @@
     <div class="toggle">
         <div class="row">
             <button ng-show="selected.devoirs.list.length === 1 &&
-            ( (!isChefEtab() && !checkEndSaisie(selected.devoirs.list[0]))
-               || isChefEtab()
-            )"
+            ((!isChefEtabOrHeadTeacher() && !checkEndSaisie(selected.devoirs.list[0])) || isChefEtabOrHeadTeacher())"
                     class="cell ng-scope"
                     ng-click="goTo('/devoir/' + selected.devoirs.list[0].id + '/edit')">
                 <i18n><span class="no-style">evaluations.test.edit</span></i18n>

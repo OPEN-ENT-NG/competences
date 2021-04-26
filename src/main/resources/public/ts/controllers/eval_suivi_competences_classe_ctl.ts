@@ -57,7 +57,6 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         async function endSelectSuivi() {
-
             return new Promise(async (resolve) => {
                 updateColorAndLetterForSkills($scope, $location);
 

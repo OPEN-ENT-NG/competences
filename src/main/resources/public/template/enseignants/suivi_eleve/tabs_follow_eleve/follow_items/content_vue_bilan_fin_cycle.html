@@ -14,48 +14,46 @@
   ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
-<script type="text/ng-template"  id="tree_item_renderer.html">
+<script type="text/ng-template" id="tree_item_renderer.html">
     <div ng-repeat="domaine in domaine.domaines.all" ng-include="'tree_item_renderer.html'" ng-init="parent = $parent.$parent.domaine">
     </div>
     <div ng-if="domaine.evaluated && (parent.evaluated == null || parent.evaluated === false)"
          class="domaine-line">
-        <div class="cell four twelve-mobile domaine-display" >
-            <div ng-class="{disabled: domaine.dispense_eleve, whiteSpaceNormal: domaine.hovering}" ng-mouseenter="showIt(domaine)" ng-mouseleave="hideIt(domaine)"  class="eleven cell text-overflow">
+        <div class="cell four twelve-mobile domaine-display">
+            <div ng-class="{disabled: domaine.dispense_eleve, whiteSpaceNormal: domaine.hovering}"
+                 ng-mouseenter="showIt(domaine)" ng-mouseleave="hideIt(domaine)" class="eleven cell text-overflow">
                 [[domaine.codification]] - [[domaine.libelle]]
             </div>
-            <div ng-if="( (isChefEtab(search.classe) && evaluations.structure.moyenneVisible===1)
-                            || evaluations.structure.moyenneVisible===2 )"
-                 class="domaine-maitrise" ng-class = "{disabled : domaine.dispense_eleve}">
+            <div ng-if="((isChefEtabOrHeadTeacher(search.classe) && evaluations.structure.moyenneVisible === 1)
+                            || evaluations.structure.moyenneVisible === 2)"
+                 class="domaine-maitrise" ng-class="{disabled : domaine.dispense_eleve}">
                 <label>
-                    <div class="maitrise-bfc" ng-repeat ="Conversion in suiviCompetence.tableConversions.all track by $index ">
-                        <div ng-if = " hasValueInConversionTable(domaine, Conversion, $index) ">
-                            <div ng-if = " isChefEtab(search.classe) && domaine.bfc !== undefined">
+                    <div class="maitrise-bfc" ng-repeat="Conversion in suiviCompetence.tableConversions.all track by $index">
+                        <div ng-if="hasValueInConversionTable(domaine, Conversion, $index)">
+                            <div ng-if="isChefEtabOrHeadTeacher(search.classe) && domaine.bfc !== undefined">
                                 <i class="reset" aria-hidden="true" ng-click="deleteBFC()" ng-if="domaine.moyenne !== -1"
                                    tooltip="<i18n>evaluation.domaine.average.refresh</i18n>[[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])"></i>
                                 <i class="reset" aria-hidden="true" ng-click="deleteBFC()" ng-if="domaine.moyenne === -1"
-                                   tooltip=" <i18n>evaluation.domaine.niveau.bfc.manuel</i18n>"></i>
+                                   tooltip="<i18n>evaluation.domaine.niveau.bfc.manuel</i18n>"></i>
                             </div>
-                            <div ng-if = "domaine.moyenne !== -1 && ((!isChefEtab(search.classe) && domaine.bfc !== undefined) || domaine.bfc === undefined)">
+                            <div ng-if="domaine.moyenne !== -1 && ((!isChefEtabOrHeadTeacher(search.classe) && domaine.bfc !== undefined) || domaine.bfc === undefined)">
                                 [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
                             </div>
-                            <div ng-if = "domaine.moyenne === -1 &&  domaine.bfc !== undefined && !isChefEtab(search.classe)">
+                            <div ng-if="domaine.moyenne === -1 && domaine.bfc !== undefined && !isChefEtabOrHeadTeacher(search.classe)">
                                 [[Conversion.libelle]] <i18n>évaluation.domaine.bfc.nonevalue</i18n>
                             </div>
                         </div>
-
                     </div>
                 </label>
             </div>
-            <button workflow="competences.createDispenseDomaineEleve"
-                    ng-model ="domaine.dispense_eleve"
+            <button ng-if="cancreateDispenseDomaineEleve()" ng-model="domaine.dispense_eleve"
                     ng-click="saveDispenseEleve(domaine)" ng-show="domaine.dispensable">
                 <span ng-if="domaine.dispense_eleve"><i18n >evaluation.not.dispense.eleve</i18n></span>
-                <span  ng-if="!domaine.dispense_eleve"><i18n>evaluation.dispense.eleve</i18n></span>
+                <span ng-if="!domaine.dispense_eleve"><i18n>evaluation.dispense.eleve</i18n></span>
             </button>
         </div>
-        <div class="cell eight twelve-mobile" >
-            <rzslider
-                    rz-slider-model="domaine.slider.value"
+        <div class="cell eight twelve-mobile">
+            <rzslider rz-slider-model="domaine.slider.value"
                     rz-slider-options="domaine.slider.options"></rzslider>
         </div>
     </div>
@@ -63,7 +61,7 @@
 
 <div class="content-bilan-fin-cycle">
     <h2><i18n>evaluations.bilan.fin.cycle.title</i18n>
-        <dropdown-buttons data-ng-click="removeBottomClass()" id='bfc_dropdowns'class="right-magnet right">
+        <dropdown-buttons data-ng-click="removeBottomClass()" id='bfc_dropdowns' class="right-magnet right">
             <open class="opener"><i class="download"></i></open>
             <options>
                 <bt ng-click="exportBFC(search.eleve, search.periode)"><i18n>evaluation.bfc.export.button.eleve</i18n></bt>
@@ -84,22 +82,21 @@
              ng-init="parent = tree_item_renderer.html">
         </div>
     </div>
-    <div class= "twelve cell" >
+    <div class="twelve cell">
         <div ng-if="((search.classe.id_cycle === 1) && (selectedCycleRadio.id_cycle !== '2' || selectedCycleRadio.id_cycle === 2)
-        && ((isChefEtab(search.classe) && evaluations.structure.baremeDNBvisible===1) || evaluations.structure.baremeDNBvisible===2))" class="twelve cell">
-            <span class= "right-magnet bareme-brevet" ><i18n>evaluation.bfc.controle.continu</i18n>
+        && ((isChefEtabOrHeadTeacher(search.classe) && evaluations.structure.baremeDNBvisible === 1) || evaluations.structure.baremeDNBvisible === 2))" class="twelve cell">
+            <span class="right-magnet bareme-brevet"><i18n>evaluation.bfc.controle.continu</i18n>
             [[suiviCompetence.baremeBrevetEleve.controlesContinus_brevet]] / [[suiviCompetence.baremeBrevetEleve.totalMaxBaremeBrevet]]</span></div>
         <h2><i18n>evaluations.bilan.fin.cycle.tilte.synthese</i18n></h2>
         <ng-form name="synthesBfcForm">
-            <textarea name = "syntheseBFC"
-                      ng-disabled="!canUpdateBFCSynthese" row="4" type="text"
-                      ng-maxlength = "MAX_CHAR_SYNTHESE_BFC_LENGTH" maxlength = "MAX_CHAR_SYNTHESE_BFC_LENGTH"
+            <textarea name="syntheseBFC"
+                      ng-disabled="!canUpdateBFCSynthese()" row="4" type="text"
+                      ng-maxlength="MAX_CHAR_SYNTHESE_BFC_LENGTH" maxlength="MAX_CHAR_SYNTHESE_BFC_LENGTH"
                       i18n-placeholder="evaluation.bilan.fin.cycle.placeholder.synthese"
                       ng-model="suiviCompetence.bfcSynthese.texte" ng-blur="suiviCompetence.bfcSynthese.saveBfcSynthese()"></textarea>
-            <div ng-if="synthesBfcForm.syntheseBFC.$error.maxlength" class = "warning">
+            <div ng-if="synthesBfcForm.syntheseBFC.$error.maxlength" class="warning">
                 <i18n>evaluation.bilan.fin.cycle.synthes.max.length</i18n>
             </div>
-
         </ng-form>
     </div>
 </div>

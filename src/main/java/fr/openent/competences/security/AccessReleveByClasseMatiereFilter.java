@@ -18,20 +18,16 @@
 package fr.openent.competences.security;
 
 import fr.openent.competences.AccessEventBus;
-import fr.openent.competences.security.utils.FilterPeriodeUtils;
-import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Binding;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -40,8 +36,8 @@ import io.vertx.core.logging.LoggerFactory;
 /**
  * Created by ledunoiss on 20/10/2016.
  */
-public class AccessReleveFilter implements ResourcesProvider {
-    protected static final Logger log = LoggerFactory.getLogger(AccessReleveFilter.class);
+public class AccessReleveByClasseMatiereFilter implements ResourcesProvider {
+    protected static final Logger log = LoggerFactory.getLogger(AccessReleveByClasseMatiereFilter.class);
 
     @Override
     public void authorize(final HttpServerRequest resourceRequest, Binding binding, final UserInfos user,

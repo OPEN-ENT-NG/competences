@@ -234,7 +234,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         utils.safeApply($scope);
                     };
 
-                    if (Utils.isChefEtab()) {
+                    if (Utils.isChefEtabOrHeadTeacher()) {
                         $scope.modificationDevoir = false;
                         if (!$scope.structure.synchronized.classes) {
                             $scope.structure.classes.sync();
@@ -252,7 +252,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             viewNotesDevoir: async function (params) {
                 try {
-
                     await Utils.runMessageLoader($scope);
                     $scope.opened.lightbox = false;
                     if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
@@ -432,7 +431,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             textMod: true
                         };
                         $scope.showRechercheBar = false;
-                        if (!Utils.isChefEtab()) {
+                        if (!Utils.isChefEtabOrHeadTeacher()) {
                             http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id).done(function (res) {
                                 $scope.allMatieresSorted = _.sortBy(res, 'rank');
                                 utils.safeApply($scope);
@@ -499,7 +498,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         template.open('main', 'enseignants/suivi_competences_classe/container');
                         await utils.safeApply($scope);
                     };
-                    if (!Utils.isChefEtab()) {
+                    if (!Utils.isChefEtabOrHeadTeacher()) {
                         http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id)
                             .done(async function (res) {
                                 $scope.allMatieresSorted = _.sortBy(res, 'rank');
@@ -628,20 +627,48 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             releveNoteTotaleChoice : "moyPos"
         };
 
-        $scope.isChefEtab = (classe?) => {
-            return Utils.isChefEtab(classe);
+        $scope.isChefEtabOrHeadTeacher = (classe?) => {
+            return Utils.isChefEtabOrHeadTeacher(classe);
         };
 
-        $scope.canExport = () => {
-            return Utils.isChefEtab() || Utils.canExportLSU();
+        $scope.isPersEducNat = () => {
+            return Utils.isPersEducNat();
+        }
+
+        $scope.canAccessReleve = () => {
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.accessReleve);
+        }
+
+        $scope.canAccessSuiviEleve = () => {
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.accessSuiviEleve);
+        }
+
+        $scope.canAccessSuiviClasse = () => {
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.accessSuiviClasse);
+        }
+
+        $scope.canAccessProjets = () => {
+            return Utils.canSaisieProjet();
+        }
+
+        $scope.canAccessConseil = () => {
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.accessConseil);
+        }
+
+        $scope.canAccessExport = () => {
+            return Utils.canExportLSU();
         }
 
         $scope.canAccessBulletin = () => {
             return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.exportBulletins);
         }
 
-        $scope.canAccessProjets = () => {
-            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.accessProjets);
+        $scope.canCreateEval = () => {
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canCreateEval);
+        }
+
+        $scope.cancreateDispenseDomaineEleve = () => {
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.createDispenseDomaineEleve);
         }
 
         $scope.evaluations = evaluations;
@@ -1034,7 +1061,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.confirmSuppression = function () {
             if ($scope.selected.devoirs.list.length > 0) {
                 $scope.devoirsUncancelable = [];
-                if (!Utils.isChefEtab()) {
+                if (!Utils.isChefEtabOrHeadTeacher()) {
                     _.map($scope.selected.devoirs.list, async function (devoir) {
                         let isEndSaisieDevoir = await $scope.checkEndSaisieSeul(devoir);
                         let isHeadTeacher = Utils.isHeadTeacher(
@@ -1221,7 +1248,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 id_etablissement: $scope.evaluations.structure.id,
                 ramener_sur: false,
                 id_etat: 1,
-                owner: ($scope.isChefEtab())?undefined:model.me.userId,
+                owner: $scope.isChefEtabOrHeadTeacher() ? undefined :model.me.userId,
                 matieresByClassByTeacher: [],
                 teachersByClass : [],
                 controlledDate: true,
@@ -1350,7 +1377,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 && ($scope.devoir.is_evaluated
                     || $scope.evaluations.competencesDevoir.length > 0)
                 && $scope.evaluations.competencesDevoir.length <= $scope.MAX_NBR_COMPETENCE
-                && (($scope.devoir.owner && $scope.isChefEtab()) || !$scope.isChefEtab())
+                && (($scope.devoir.owner && $scope.isChefEtabOrHeadTeacher()) || !$scope.isChefEtabOrHeadTeacher())
             );
         };
 
@@ -2062,7 +2089,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.setClasseEnseignants = function (search ?) {
             //si c'est un chef étab on va chercher les enseignants
-            if(Utils.isChefEtab()) {
+            if(Utils.isChefEtabOrHeadTeacher()) {
                 $scope.devoir.teachersByClass = $filter('getEnseignantClasse')($scope.structure.enseignants.all,
                     $scope.devoir.id_groupe, $scope.classes);
                 if ($scope.devoir.owner === undefined && search !== undefined && search.matiere !== undefined
@@ -3304,9 +3331,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return isValidDevoir(item.id_groupe, item.id_matiere, $scope.classes.all);
         };
 
-        $scope.filterHeadTeacher = () => {
+        $scope.filterHeadTeacherOrPersEducNat = () => {
             return (item) => {
-                return Utils.isChefEtab(item);
+                return Utils.isChefEtabOrHeadTeacher(item) || Utils.isPersEducNat();
             }
         };
 
@@ -3378,7 +3405,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     textMod: true
                 };
                 $scope.showRechercheBar = false;
-                if (!Utils.isChefEtab()) {
+                if (!Utils.isChefEtabOrHeadTeacher()) {
                     http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
                         $scope.allMatieresSorted = _.sortBy(res, 'rank');
                         utils.safeApply($scope);
@@ -3633,7 +3660,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     moment(start_datePeriode), moment(end_datePeriode), 'days', '[]'));
                 $scope.endSaisie = (moment($scope.devoir.dateDevoir).isAfter(
                     moment(date_saisie), 'days', '[') || moment(new Date()).isAfter(
-                    moment(date_saisie), 'days', '[')) && !$scope.isChefEtab();
+                    moment(date_saisie), 'days', '[')) && !$scope.isChefEtabOrHeadTeacher();
 
                 $scope.devoir.controlledDate = !$scope.errDatePubli && !$scope.errDateDevoir && !$scope.endSaisie;
             }
@@ -3657,7 +3684,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             let date_fin_saisie = _.findWhere(classe.periodes.all, {id_type: devoir.id_periode}).date_fin_saisie;
 
             return !(moment(date_fin_saisie).isAfter(moment(), "days")
-                || Utils.isChefEtab(_.findWhere(evaluations.structure.classes.all, {id: devoir.id_groupe})));
+                || Utils.isChefEtabOrHeadTeacher(_.findWhere(evaluations.structure.classes.all, {id: devoir.id_groupe})));
         };
 
         /**
@@ -4101,7 +4128,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.openedRecapEval = () => {
-            //$scope.isChefEtabAndHeadTeacher = Utils.isChefEtab($scope.search.classe);
             if ($scope.releveNoteTotale !== undefined) {
                 delete $scope.releveNoteTotale;
             }
@@ -4145,7 +4171,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.isEndSaisie = function() {
             let classe = ($scope.releveNote !== undefined)? $scope.releveNote.classe : undefined;
-            if (Utils.isChefEtab(classe)) {
+            if (Utils.isChefEtabOrHeadTeacher(classe)) {
                 return false;
             }
             else {

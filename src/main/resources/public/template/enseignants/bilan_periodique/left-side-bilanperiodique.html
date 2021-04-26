@@ -76,7 +76,7 @@
                         ng-options="avis.libelle for avis in elementBilanPeriodique.avisConseil.avis
                         | filter:filterAvis([0, 1])"
                         ng-change="changeClassOpinion()"
-                        ng-disabled="!canUpdateBFCSynthese">
+                        ng-disabled="!canUpdateAvisConseilOrientation()">
                     <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.conseil')]]</option>
                 </select>
             </label>
@@ -87,7 +87,7 @@
                         ng-options="avis.libelle for avis in elementBilanPeriodique.avisConseil.avis
                         | filter:filterAvis([0, 2])"
                         ng-change="changeOrientationOpinion()"
-                        ng-disabled="!canUpdateBFCSynthese">
+                        ng-disabled="!canUpdateAvisConseilOrientation()">
                     <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.orientation')]]</option>
                 </select>
             </label>

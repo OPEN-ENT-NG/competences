@@ -24,13 +24,13 @@
         <section class="eleven cell headerAccueil">
             <div class="twelve cell ">
                 <header>
-                    <button ng-if="!isChefEtab()" class="marginFive right-magnet" ng-click="openCreateEval()"><i18n>evaluations.evaluation.create</i18n></button>
+                    <button class="marginFive right-magnet" ng-if="canCreateEval()" ng-click="openCreateEval()"><i18n>evaluations.evaluation.create</i18n></button>
                     <label class="select right-magnet" ng-if="evaluations.structures.all.length > 1">
                         <select ng-model="evaluations.structure" ng-options="structure.libelle for structure in structures.all track by structure.id"  ng-change="changeEtablissementAccueil()"></select>
                     </label>
                 </header>
             </div>
-            <article class="twelve cell ">
+            <article class="twelve cell" ng-if="canAccessSuiviEleve()">
                 <h2><i18n>viescolaire.eleve.recherche</i18n></h2>
                 <autocomplete options="eleves.all" ng-change="openSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
             </article>
@@ -38,13 +38,13 @@
 
 
         <section>
-            <article class="five cell box-accueil twelve-mobile">
+            <article class="five cell box-accueil twelve-mobile" ng-if="canCreateEval()">
                 <div class="content-box-accueil">
                     <div class="titre-widget">
-                        <h2 class="inline-block " ng-if="!isChefEtab()">
+                        <h2 class="inline-block " ng-if="!isChefEtabOrHeadTeacher()">
                             <i18n>evaluations.mes.evaluations.par.classe</i18n>&nbsp;:
                         </h2>
-                        <h2 class="inline-block " ng-if="isChefEtab()">
+                        <h2 class="inline-block " ng-if="isChefEtabOrHeadTeacher()">
                             <i18n>evaluations.evaluations.par.classe</i18n>&nbsp;:
                         </h2>
                         <label class="select right-magnet">
@@ -96,12 +96,12 @@
         </section>
 
         <section>
-            <article class="five cell box-accueil twelve-mobile">
+            <article class="five cell box-accueil twelve-mobile" ng-if="canCreateEval()">
                 <div class="content-box-accueil">
-                    <h2 ng-if="!isChefEtab()">
+                    <h2 ng-if="!isChefEtabOrHeadTeacher()">
                         <i18n>evaluations.mes.evaluations.non.terminees</i18n>
                     </h2>
-                    <h2 ng-if="isChefEtab()">
+                    <h2 ng-if="isChefEtabOrHeadTeacher()">
                         <i18n>evaluations.evaluations.non.terminees</i18n>
                     </h2>
                     <div class="content-box-accueil--table alignTablewithOtherWidget">
@@ -139,10 +139,10 @@
         <section ng-if="false">
             <article class="five cell box-accueil twelve-mobile">
                 <div class="titre-widget">
-                    <h2 ng-if="!isChefEtab()" class="inline-block">
+                    <h2 ng-if="!isChefEtabOrHeadTeacher()" class="inline-block">
                         <i18n>evaluations.mes.evaluations.non.terminees.par.classe</i18n>&nbsp;:
                     </h2>
-                    <h2 ng-if="isChefEtab()" class="inline-block">
+                    <h2 ng-if="isChefEtabOrHeadTeacher()" class="inline-block">
                         <i18n>evaluations.evaluations.non.terminees.par.classe</i18n>&nbsp;:
                     </h2>
                     <label class="select right-magnet">

@@ -17,7 +17,6 @@
 
 package fr.openent.competences.security;
 
-import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.Either;
@@ -31,58 +30,35 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import java.util.List;
-
-public class AccessControleContinuFilter implements ResourcesProvider{
-
-    protected static final Logger log = LoggerFactory.getLogger(AccessControleContinuFilter.class);
+public class AccessAdminHeadTeacherFilter implements ResourcesProvider{
+    protected static final Logger log = LoggerFactory.getLogger(AccessAdminHeadTeacherFilter.class);
 
     @Override
     public void authorize(HttpServerRequest resourceRequest, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        boolean isAdmin = new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
+        boolean isAdmin = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
 
-        if(isAdmin){
+        if(isAdmin || "Personnel".equals(user.getType())){
             resourceRequest.resume();
             handler.handle(true);
-            return;
-        }
-
-        if(user.getType().equals("Teacher")){
+        } else if("Teacher".equals(user.getType())){
             resourceRequest.pause();
             MultiMap params = resourceRequest.params();
-            if(!(params.contains("idClasse") )){
+            if(!params.contains("idClasse")){
                 resourceRequest.resume();
                 handler.handle(false);
-                return;
-            }
-
-            else {
-                WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(params.get("idClasse")),
-                        null,null, null, null, null,
-                        new Handler<Either<String, Boolean>>() {
+            } else {
+                JsonArray idClasses = new JsonArray().add(params.get("idClasse"));
+                WorkflowActionUtils.hasHeadTeacherRight(user, idClasses,null,null, null,
+                        null, null, new Handler<Either<String, Boolean>>() {
                             @Override
                             public void handle(Either<String, Boolean> event) {
-                                Boolean isHeadTeacher;
-                                if(event.isLeft()) {
-                                    isHeadTeacher = false;
-                                }
-                                else {
-                                    isHeadTeacher = event.right().getValue();
-                                }
-                                if (!new FilterUserUtils(user, null).validateClasse(params.get("idClasse"))) {
-                                    resourceRequest.resume();
-                                    handler.handle(false || isHeadTeacher);
-                                    return;
-                                }
-                                resourceRequest.resume();
-                                handler.handle(true || isHeadTeacher);
+                                Boolean isHeadTeacher = event.isRight() ? event.right().getValue() : false;
+                                handler.handle(isHeadTeacher);
                             }
                         });
-
             }
-        }else{
+        } else {
             handler.handle(false);
         }
-
     }
 }

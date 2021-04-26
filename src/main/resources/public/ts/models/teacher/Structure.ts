@@ -128,7 +128,7 @@ export class Structure extends Model {
             enseignements: false,
             niveauCompetences: false
         };
-        if (Utils.isChefEtab()) {
+        if (Utils.isChefEtabOrHeadTeacher()) {
             this.synchronized.enseignants = false;
         }
         let that: Structure = this;
@@ -352,10 +352,10 @@ export class Structure extends Model {
                         this.classes.addRange(castClasses(res));
                         this.eleves.sync().then(() => {
                             model.trigger('apply');
-                            if (Utils.isChefEtab())
+                            if (Utils.isChefEtabOrHeadTeacher())
                                 resolve();
                         });
-                    if (!Utils.isChefEtab()) {
+                    if (!Utils.isChefEtabOrHeadTeacher()) {
                         this.syncRemplacement().then(() => {
                             model.trigger('apply');
                         });
@@ -390,10 +390,9 @@ export class Structure extends Model {
                     this.synchronized.classes &&
                     this.synchronized.annotations &&
                     this.synchronized.niveauCompetences &&
-                    this.synchronized.devoirs &&
                     this.synchronized.typePeriodes &&
                     this.synchronized.detailsUser;
-                if (Utils.isChefEtab()) {
+                if (Utils.isChefEtabOrHeadTeacher()) {
                     b = b && this.synchronized.enseignants;
                 }
 
@@ -416,14 +415,18 @@ export class Structure extends Model {
                 this.niveauCompetences.sync(useDefautTheme).then(isSynced);
             });*/
             this.niveauCompetences.sync().then(isSynced);
+
             this.syncDevoirs(25).then(isSynced);
+
             this.getDetailsOfUser().then(isSynced);
             this.syncEnseignants().then(isSynced);
 
             this.typePeriodes.sync().then(isSynced);
+
             if (Utils.canCreateElementBilanPeriodique() || Utils.canSaisieProjet()) {
                 this.syncClassesBilanPeriodique().then(isSynced);
             }
+
             this.syncTypeSousMatieres().then(isSynced);
         });
     }

@@ -620,6 +620,14 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             }
         };
 
+        $scope.canUpdateNiveauEnsCpl = () => {
+            return Utils.canUpdateNiveauEnsCpl();
+        }
+
+        $scope.canUpdateBFCSynthese = () => {
+            return Utils.canUpdateBFCSynthese() || Utils.isChefEtabOrHeadTeacher($scope.search.classe)
+        }
+
         $scope.saveNiveauEnsCpl = async () => {
             let id_langue;
             if ($scope.suiviCompetence.langueSelected !== undefined) {
@@ -736,8 +744,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     $scope.search.eleve = "";
                     delete $scope.informations.eleve;
                 }
-                $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-                    "canUpdateBFCSynthese");
+
                 await $scope.syncPeriode($scope.search.classe.id);
                 if($scope.search.classe.eleves.empty())
                     await $scope.search.classe.eleves.sync();
@@ -805,6 +812,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                             if($scope.suiviCompetence === undefined && $location.path() != '/conseil/de/classe') {
                                 await $scope.initSuivi();
                             }
+
                             $scope.template.close('suivi-competence-content');
                             $scope.template.open('suivi-competence-content', content);
                         }
@@ -861,8 +869,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                         await $scope.suiviCompetence.domaines.sync();
                         await $scope.initSliderBFC();
                     }
-                    $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-                        "canUpdateBFCSynthese");
+
                     $scope.showRechercheBarFunction(false);
                     await $scope.suiviCompetence.setMoyenneCompetences();
                     template.open('suivi-competence-content',
@@ -1417,13 +1424,17 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             parDomaine: 'true'
         };
         $scope.loadingTab = false;
-        $scope.displayFollowEleve = "followItems";
-        openTemplateFollowCompetence('follow_items/follow_items');
+
         if($location.path() === '/competences/eleve') {
             template.open('container', 'layouts/2_10_layout');
             template.open('left-side', 'enseignants/suivi_eleve/left_side');
             template.open('content', 'enseignants/suivi_eleve/content');
+            template.close('suivi-competence-content');
+            await utils.safeApply($scope);
             template.open('suivi-competence-content', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_suivi_eleve');
+
+            $scope.displayFollowEleve = "followItems";
+            openTemplateFollowCompetence('follow_items/follow_items');
 
             $scope.route = $route;
             $scope.lang = lang;

@@ -20,6 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.security.AccessAdminHeadTeacherFilter;
 import fr.openent.competences.security.AccessBulletinChildrenParentCEFilter;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
@@ -1379,42 +1380,16 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Post("/save/bulletin/parameters")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ResourceFilter(AccessAdminHeadTeacherFilter.class)
+    @SecuredAction(value = "", type=ActionType.RESOURCE)
     public void saveParameters(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                final boolean isChefEtab;
-                if (user != null) {
-                    isChefEtab = new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
-                } else {
-                    isChefEtab = false;
-                }
+        RequestUtils.bodyToJson(request, params -> {
+            Long idPeriode = params.getLong(ID_PERIODE_KEY);
+            String idStructure = params.getString(ID_STRUCTURE_KEY);
+            JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
 
-                RequestUtils.bodyToJson(request, params -> {
-                    Long idPeriode = params.getLong(ID_PERIODE_KEY);
-                    String idStructure = params.getString(ID_STRUCTURE_KEY);
-                    JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
-                    String idClasse = params.getString(ID_CLASSE_KEY);
-
-                    WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse), null,
-                            null,null, null, null, new Handler<Either<String, Boolean>>() {
-                                @Override
-                                public void handle(Either<String, Boolean> event) {
-                                    Boolean isHeadTeacher = false;
-                                    if (event.isRight()) {
-                                        isHeadTeacher = event.right().getValue();
-                                    }
-
-                                    if (isHeadTeacher || isChefEtab)
-                                        exportBulletinService.saveParameters(idStudents, idPeriode, idStructure,
-                                                params.toString(), defaultResponseHandler(request));
-                                    else
-                                        unauthorized(request);
-                                }
-                            });
-                });
-            }
+            exportBulletinService.saveParameters(idStudents, idPeriode, idStructure, params.toString(),
+                    defaultResponseHandler(request));
         });
     }
 

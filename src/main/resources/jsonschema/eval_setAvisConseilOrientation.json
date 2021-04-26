@@ -19,6 +19,7 @@
   "required": [
     "id_periode",
     "id_eleve",
-    "id_avis_conseil_bilan"
+    "id_avis_conseil_bilan",
+    "id_structure"
   ]
 }

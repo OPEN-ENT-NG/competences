@@ -3633,13 +3633,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    private void getBase64File(String id,Future<String> future) {
+    private void getBase64File(String id, Future<String> future) {
         workspaceHelper.readDocument(id, document -> {
             if (document == null){
                 log.error("Cannot load image in getBase64File for id : " + id);
                 future.complete("");
-            }
-            else {
+            } else {
                 String base64 = Base64.getEncoder().encodeToString(document.getData().getBytes());
                 future.complete(base64);
             }
@@ -3647,7 +3646,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void generateImagesFromPath(JsonObject eleve, Vertx vertx, Handler<Either<String, JsonObject>> handler) {
-
         List<Future> futureList = new ArrayList<>();
         Future<String> imgStructureFuture = Future.future();
         Future<String> imgSignatureFuture = Future.future();
@@ -3663,28 +3661,28 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 String imgStructureEncoded = imgStructureFuture.result();
                 String imgSignatureEncoded = imgSignatureFuture.result();
                 String logoEncoded = logoFuture.result();
-                eleve.put(IMG_SIGNATURE,imgSignatureEncoded);
-                eleve.put(IMG_STRUCTURE,imgStructureEncoded);
+
+                eleve.put(IMG_SIGNATURE, imgSignatureEncoded);
+                eleve.put(IMG_STRUCTURE, imgStructureEncoded);
                 eleve.put("logoData",logoEncoded);
                 handler.handle(new Either.Right<>(new JsonObject()));
             }
         });
         String[] structureLogoString =  eleve.getString(IMG_STRUCTURE).split("/");
-        String  structureLogoId =  structureLogoString[structureLogoString.length -1];
-        String[] signatureSplit =  eleve.getString("imgSignature").split("/");
-        String  signatureLogoId =  signatureSplit[signatureSplit.length -1];
+        String structureLogoId = structureLogoString[structureLogoString.length - 1];
+        getBase64File(structureLogoId, imgStructureFuture);
 
-        getBase64File( structureLogoId,imgStructureFuture);
-        getBase64File( signatureLogoId,imgSignatureFuture);
+        String[] signatureSplit = eleve.getString("imgSignature").split("/");
+        String signatureLogoId = signatureSplit[signatureSplit.length - 1];
+        getBase64File(signatureLogoId, imgSignatureFuture);
+
         generatesImage(eleve, vertx, LOGO_PATH, logoFuture);
-        eleve.put("hasImgLoaded",true);
+        eleve.put("hasImgLoaded", true);
     }
 
-
-    private void generatesImage(JsonObject eleve, Vertx vertx, String path,  Future<String> logoFuture) {
+    private void generatesImage(JsonObject eleve, Vertx vertx, String path, Future<String> logoFuture) {
         String image = "public/" + eleve.getString(path);
         try {
-
             final String imagePath = FileResolver.absolutePath(image);
             Buffer imageBuffer = vertx.fileSystem().readFileBlocking(imagePath);
             String encodedImage = "";

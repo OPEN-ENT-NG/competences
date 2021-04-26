@@ -20,11 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.security.AccessEvaluationFilter;
-import fr.openent.competences.security.AccessNoteFilter;
-import fr.openent.competences.security.AccessReleveFilter;
-import fr.openent.competences.security.CreateEvaluationWorkflow;
-import fr.openent.competences.security.utils.FilterUser;
+import fr.openent.competences.security.*;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.service.DevoirService;
@@ -251,8 +247,7 @@ public class NoteController extends ControllerHelper {
      */
     @Get("/releve")
     @ApiDoc("Récupère les notes, les moyennes finales pour le relevé de notes")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @SecuredAction(value="access.releve", type=ActionType.WORKFLOW)
     public void getNoteElevePeriode(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -296,7 +291,7 @@ public class NoteController extends ControllerHelper {
     @Post("/releve/export")
     @ApiDoc("Exporte un relevé périodique")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
     public void exportRelevePeriodique(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, param -> {
             if(param.getString("fileType").equals("pdf")) {
@@ -782,7 +777,7 @@ public class NoteController extends ControllerHelper {
     @Post("/releve/element/programme")
     @ApiDoc("Ajoute ou modifie un élément du programme")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
     public void setElementProgramme(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -833,7 +828,7 @@ public class NoteController extends ControllerHelper {
     @ApiDoc("Créé, met à jour ou supprime une donnée du relevé périodique pour un élève. Les données traitées ici sont:"
             +" - moyenne finale, - appréciation, -positionnement ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
     public void setColonneRelevePeriode(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             RequestUtils.bodyToJson(request, resource -> {
@@ -842,71 +837,68 @@ public class NoteController extends ControllerHelper {
         });
     }
 
+    @Post("/bilanPeriodiqueWorkflow")
+    @ApiDoc("Méthode crée uniquement pour gérer le droit workflow pour la méthode suivante : createOrUpdateSyntheseBilanPeriodique")
+    @SecuredAction(value = "bilan.periodique.save.appMatiere.positionnement", type = ActionType.WORKFLOW)
+    public void saveAppreciationMatiereAndPositionnementWorfklow(final HttpServerRequest request) {
+        badRequest(request);
+    }
+
+
     @Post("/bilan/periodique")
-    @ApiDoc("Créé, met à jour ou supprime une donnée du relevé périodique pour un élève. Les données traitées ici sont:"
+    @ApiDoc("Créé, met à jour ou supprime une donnée du relevé périodique pour un élève. Les données traitées ici sont :"
             +" - moyenne finale, - appréciation, -positionnement ")
-    @SecuredAction(value="bilan.periodique.save.appMatiere.positionnement",type = ActionType.WORKFLOW)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SaveAppreciationBilanPeriodiqueFilter.class)
     public void saveAppreciationMatiereAndPositionnement(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             RequestUtils.bodyToJson(request, resource -> {
-                final String idClasseSuivi = resource.getString("idClasseSuivi");
-                final String idClasse = isNull(idClasseSuivi)? resource.getString(ID_CLASSE_KEY) : idClasseSuivi;
-                FilterUser.isChefEtabAndHeadTeacher(user, new JsonArray().add(idClasse), isChefEtabAndHeadTeacher -> {
-                    if (isChefEtabAndHeadTeacher) {
-                        saveColonneRelevePeriode(request, user, resource);
-                    } else {
-                        Renders.unauthorized(request);
-                    }
-                });
+                saveColonneRelevePeriode(request, user, resource);
             });
         });
     }
 
-    private void saveColonneRelevePeriode (final HttpServerRequest request, final UserInfos user,
-                                           final JsonObject resource){
-
+    private void saveColonneRelevePeriode(final HttpServerRequest request, final UserInfos user, final JsonObject resource){
         final String idClasse = resource.getString("idClasse");
         final String idMatiere = resource.getString("idMatiere");
         final String idEleve = resource.getString("idEleve");
         final String table = resource.getString("colonne");
         final Long idPeriode = resource.getLong("idPeriode");
         final String idEtablissement = resource.getString("idEtablissement");
-        final Boolean isBilanPeriodique = (resource.getBoolean("isBilanPeriodique")!=null)?
+        final Boolean isBilanPeriodique = resource.getBoolean("isBilanPeriodique") != null ?
                 resource.getBoolean("isBilanPeriodique") : false;
 
         // Vérification de l'accès à la matière
-        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,isBilanPeriodique,
-                hasAccessToMatiere -> {
-                    if (hasAccessToMatiere) {
-                        // Vérification de la date de fin de saisie
-                        new FilterPeriodeUtils(eb, user).validateEndSaisie(request, idClasse, idPeriode.intValue(),
-                                isUpdatable -> {
-                                    //verif date fin de saisie
-                                    if (isUpdatable) {
-                                        if (resource.getBoolean("delete")) {
-                                            notesService.deleteColonneReleve(idEleve, idPeriode, idMatiere,
-                                                    idClasse, table, arrayResponseHandler(request));
-                                        } else {
-                                            notesService.setColonneReleve( idEleve, idPeriode, idMatiere,
-                                                    idClasse, resource, table, user.getUserId(), arrayResponseHandler(request));
-                                        }
-                                    } else {
-                                        log.error("Not access to API because of end of saisie");
-                                        unauthorized(request);
-                                    }
-                                });
+        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, isBilanPeriodique, hasAccessToMatiere -> {
+            if (hasAccessToMatiere) {
+                // Vérification de la date de fin de saisie
+                new FilterPeriodeUtils(eb, user).validateEndSaisie(request, idClasse, idPeriode.intValue(), isUpdatable -> {
+                    //verif date fin de saisie
+                    if (isUpdatable) {
+                        if (resource.getBoolean("delete")) {
+                            notesService.deleteColonneReleve(idEleve, idPeriode, idMatiere,
+                                    idClasse, table, arrayResponseHandler(request));
+                        } else {
+                            notesService.setColonneReleve( idEleve, idPeriode, idMatiere,
+                                    idClasse, resource, table, user.getUserId(), arrayResponseHandler(request));
+                        }
                     } else {
-                        log.error("Not access to Matiere");
+                        log.error("Not access to API because of end of saisie");
                         unauthorized(request);
                     }
                 });
+            } else {
+                log.error("Not access to Matiere");
+                unauthorized(request);
+            }
+        });
     }
 
 
     @Get("/releve/informations/eleve/:idEleve")
     @ApiDoc("Renvoit  les moyennes , les moyennes finales pour le relevé de notes")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
     public void getInfosEleve(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request,  user -> {
             final String idEtablissement = request.params().get("idEtablissement");
@@ -928,7 +920,7 @@ public class NoteController extends ControllerHelper {
     @Get("/releve/annee/classe")
     @ApiDoc("Renvoit  les moyennes , les moyennes finales pour le relevé de notes")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
     public void getReleveAnne(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -1133,7 +1125,7 @@ public class NoteController extends ControllerHelper {
     @Get("/releve/datas/graph")
     @ApiDoc("Récupère les données pour construire les graphs du relevé de notes")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
     public void getReleveDataForGraph(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
         final String idEtablissement = request.params().get("idEtablissement");
@@ -1152,7 +1144,7 @@ public class NoteController extends ControllerHelper {
     @Get("/releve/datas/graph/domaine")
     @ApiDoc("Récupère les données pour construire les graphs du relevé de notes")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
     public void getReleveDataDomaineForGraph(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
         final String idEtablissement = request.params().get("idEtablissement");

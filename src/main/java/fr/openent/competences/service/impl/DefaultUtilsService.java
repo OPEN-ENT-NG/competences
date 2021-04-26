@@ -269,12 +269,12 @@ public class DefaultUtilsService  implements UtilsService {
                 JsonArray multiTeachers = multiTeachersFuture.result();
 
                 List<Object> userServices = services.stream()
-                        .filter(el -> user.getUserId().equals(((JsonObject) el).getString("id_enseignant")) &&
-                                idMatiere.equals(((JsonObject) el).getString("id_matiere")))
+                        .filter(el -> !user.getUserId().equals(((JsonObject) el).getString("id_enseignant")) ||
+                                idMatiere == null || idMatiere.equals(((JsonObject) el).getString("id_matiere")))
                         .collect(Collectors.toList());
                 List<Object> userMultiTeaching = multiTeachers.stream()
-                        .filter(el -> user.getUserId().equals(((JsonObject) el).getString("second_teacher_id")) &&
-                                idMatiere.equals(((JsonObject) el).getString("subject_id")))
+                        .filter(el -> !user.getUserId().equals(((JsonObject) el).getString("second_teacher_id")) ||
+                                idMatiere == null || idMatiere.equals(((JsonObject) el).getString("subject_id")))
                         .collect(Collectors.toList());
 
                 handler.handle(!userServices.isEmpty() || !userMultiTeaching.isEmpty());

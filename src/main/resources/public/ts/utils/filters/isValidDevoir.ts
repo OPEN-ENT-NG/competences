@@ -6,7 +6,7 @@ export function isValidDevoir (idClasse, id_matiere, classes) {
         let classe = _.findWhere(classes, {id: idClasse});
         //sinon on regarde s'il enseigne sur cette classe ou s'il est coTeacher ou encore remplaçant sur la bonne période
         if (classe && classe.services){
-            if(Utils.isChefEtab(classe)){
+            if(Utils.isChefEtabOrHeadTeacher(classe)){
                 return true;
             } else {
                 let evaluables = _.filter(classe.services, service => {

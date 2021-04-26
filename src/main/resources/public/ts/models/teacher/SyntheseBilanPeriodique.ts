@@ -6,6 +6,7 @@ export class SyntheseBilanPeriodique extends Model {
     id_typePeriode : number;
     synthese : string;
     id_structure : string;
+    id_classe : string;
 
     get api () {
         return {
@@ -13,11 +14,12 @@ export class SyntheseBilanPeriodique extends Model {
         };
     }
 
-    constructor (idEleve:string, idTypePeriode:number, idStructure:string) {
+    constructor (idEleve:string, idTypePeriode:number, idStructure:string, idClasse:string) {
         super();
         this.id_eleve = idEleve;
         this.id_typePeriode = idTypePeriode;
         this.id_structure = idStructure;
+        this.id_classe = idClasse;
     }
 
     async syncSynthese() {
@@ -37,6 +39,7 @@ export class SyntheseBilanPeriodique extends Model {
             id_eleve: this.id_eleve,
             id_typePeriode: this.id_typePeriode,
             id_structure: this.id_structure,
+            id_classe: this.id_classe,
         }
     }
 

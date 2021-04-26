@@ -78,7 +78,7 @@
                     </td>
                     <td data-label="[[translate('bilan.perodique.elements.programme.travailles')]]">
                         <ng-form name="elementsProgrammeMatiereForm">
-                                <textarea ng-show="canSaveAppMatierePosiBilanPeriodique"
+                                <textarea ng-show="canSaveAppMatierePosiBilanPeriodique()"
                                           name="elementProgramme"
                                           type="text"
                                           ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
@@ -86,7 +86,7 @@
                                           ng-model="suiviDesAcquis.elementsProgramme"
                                           ng-blur="suiviDesAcquis.saveElementsProgrammeMatierePeriodeEleve()">
                                 </textarea>
-                            <div class ="twelve element" ng-show="!canSaveAppMatierePosiBilanPeriodique"
+                            <div class ="twelve element" ng-show="!canSaveAppMatierePosiBilanPeriodique()"
                                  ng-bind="suiviDesAcquis.elementsProgramme">
                             </div>
                             <div ng-if="elementsProgrammeMatiereForm.elementProgramme.$error.maxlength" class="warning">
@@ -96,7 +96,7 @@
                     </td>
                     <td data-label="[[translate('appreciation')]]">
                         <ng-form name="appreciationMatiereForm">
-                                <textarea ng-show="canSaveAppMatierePosiBilanPeriodique "
+                                <textarea ng-show="canSaveAppMatierePosiBilanPeriodique()"
                                           name="appreciation"
                                           type ="text"
                                           ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
@@ -106,7 +106,7 @@
                                           ng-focus="setPreviousAppreciationSubject(suiviDesAcquis)"
                                 >
                                 </textarea>
-                            <div class ="twelve element" ng-show="!canSaveAppMatierePosiBilanPeriodique"
+                            <div class ="twelve element" ng-show="!canSaveAppMatierePosiBilanPeriodique()"
                                  ng-bind="suiviDesAcquis.appreciationByClasse.appreciation">
                             </div>
                             <div ng-if="appreciationMatiereForm.appreciation.$error.maxlength" class="warning">
@@ -161,8 +161,7 @@
                         <div>
                             <ul class="selectable-list twelve"
                                 ng-init="suiviDesAcquis.initPositionnement()"
-                                ng-if="canSaveAppMatierePosiBilanPeriodique" >
-
+                                ng-if="canSaveAppMatierePosiBilanPeriodique()">
                                 <li class="cell"
                                     ng-if="$index === 0"
                                     style="margin: 0;padding-left: 2px;padding-right: 2px;font-size: x-small;"
@@ -188,7 +187,7 @@
                                 </li>
 
                             </ul>
-                            <ul class="selectable-list twelve" ng-if="!canSaveAppMatierePosiBilanPeriodique" >
+                            <ul class="selectable-list twelve" ng-if="!canSaveAppMatierePosiBilanPeriodique()">
                                 <li class="cell"
                                     ng-if="$index === 0"
                                     style="margin: 0;padding-left: 2px;padding-right: 2px;font-size: x-small;"

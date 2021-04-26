@@ -40,27 +40,19 @@ public class WorkflowActionUtils {
 		return false;
 	}
 
-	public static void hasHeadTeacherRight (UserInfos user, JsonArray idsClasse,
-                                            JsonArray idsRessource, String table,
-											JsonArray idsEleve, final EventBus eb, String idStructure,
+	public static void hasHeadTeacherRight(UserInfos user, JsonArray idsClasse, JsonArray idsRessource, String table,
+										   JsonArray idsEleve, final EventBus eb, String idStructure,
 										   final Handler<Either<String, Boolean>> handler) {
-
-		if (!hasRight(user, Competences.CAN_UPDATE_BFC_SYNTHESE_RIGHT)) {
-			handler.handle(new Either.Right<>(false));
+		// Si les classes sont renseignées, on check directement si l'utilisateur est profprincipal sur les classes
+		// passées en paramètre
+		if (idsClasse != null) {
+			FilterUserUtils.validateHeadTeacherWithClasses(user, idsClasse, handler);
 		}
-		else {
-			// Si les classes sont renseignées, on check directement si l'utilisateur est profprincipal sur les classes
-			// passées en paramètre
-			if (idsClasse != null) {
-				FilterUserUtils.validateHeadTeacherWithClasses(user, idsClasse, handler);
-			}
-			else if (idsEleve != null) {
-                FilterUserUtils.validateHeadTeacherWithEleves(user,idsEleve, eb, idStructure,handler);
-			}
-            else if (idsRessource != null) {
-                FilterUserUtils.validateHeadTeacherWithRessources(user, idsRessource, table, handler);
-            }
+		else if (idsEleve != null) {
+			FilterUserUtils.validateHeadTeacherWithEleves(user, idsEleve, eb, idStructure, handler);
 		}
-
+		else if (idsRessource != null) {
+			FilterUserUtils.validateHeadTeacherWithRessources(user, idsRessource, table, handler);
+		}
 	}
 }

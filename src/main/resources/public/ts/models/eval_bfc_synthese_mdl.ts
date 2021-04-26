@@ -23,6 +23,7 @@ export class BfcSynthese extends Model {
     id_classe : string;
     id_cycle: string;
     texte: string;
+    id_structure: string;
 
     get api() {
         return {
@@ -32,18 +33,20 @@ export class BfcSynthese extends Model {
         }
     }
 
-    constructor(id_eleve : string, id_cycle : string) {
+    constructor(id_eleve : string, id_cycle : string, id_structure : string) {
         super();
         this.texte = "";
         this.id_eleve = id_eleve;
         this.id_cycle = id_cycle;
+        this.id_structure = id_structure;
     }
 
     toJSON() {
         return {
             id_eleve: this.id_eleve,
             id_cycle : this.id_cycle,
-            texte: this.texte
+            texte: this.texte,
+            id_structure : this.id_structure
         }
     }
 
@@ -63,9 +66,10 @@ export class BfcSynthese extends Model {
                 });
         });
     }
+
     updateBfcSynthese(): Promise<BfcSynthese> {
         return new Promise((resolve,reject)=>{
-            http().putJson(this.api.update,this.toJSON())
+            http().putJson(this.api.update, this.toJSON())
                 .done((data)=>{
                     if(resolve&&(typeof(resolve)==='function')){
                         resolve(data);
@@ -101,7 +105,6 @@ export class BfcSynthese extends Model {
             }else{
                 notify.error('evaluation.bilan.fin.cycle.synthes.max.length');
             }
-
         });
     }
 

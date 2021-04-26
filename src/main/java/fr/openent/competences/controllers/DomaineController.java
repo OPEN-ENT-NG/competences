@@ -252,22 +252,17 @@ public class DomaineController extends ControllerHelper {
                 }
             }
         });
-
-
     }
+
     @Post("/domaine/dispense/eleve")
     @ApiDoc("Create an exemption for a domain and a student")
-    @SecuredAction(value= "create.dispense.domaine.eleve",type= ActionType.WORKFLOW)
+    @SecuredAction(value="create.dispense.domaine.eleve", type=ActionType.WORKFLOW)
     public void createDispenseDomaineEleve(final HttpServerRequest request){
         RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_DISPENSEDOMAINE_ELEVE_CREATE, new Handler<JsonObject>() {
             @Override
             public void handle(JsonObject dispenseDomaineEleve) {
-                dispenseDomaineEleveService.createDispenseDomaineEleve(dispenseDomaineEleve,defaultResponseHandler(request));
-
+                dispenseDomaineEleveService.createDispenseDomaineEleve(dispenseDomaineEleve, defaultResponseHandler(request));
             }
-
         });
-
     }
-
 }

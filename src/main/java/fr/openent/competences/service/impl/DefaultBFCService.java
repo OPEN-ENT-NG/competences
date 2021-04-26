@@ -657,13 +657,12 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
-    private void runMoyenneControleContinue( final JsonArray moyControlesContinusEleves, final Integer maxBareme,
-                                             Map<String, Map<Long, Boolean>> dispensesDomainesEleves,
-                                             final Integer nbDomainesRacines , final JsonObject resultsElevesByDomaine,
-                                             final Map<Integer, Integer> mapOrdreBaremeBrevet,
-                                             final Map.Entry<String, List<String>> classe,
-                                             final Handler<Either<String, JsonArray>> handler){
-
+    private void runMoyenneControleContinue(final JsonArray moyControlesContinusEleves, final Integer maxBareme,
+                                            Map<String, Map<Long, Boolean>> dispensesDomainesEleves,
+                                            final Integer nbDomainesRacines , final JsonObject resultsElevesByDomaine,
+                                            final Map<Integer, Integer> mapOrdreBaremeBrevet,
+                                            final Map.Entry<String, List<String>> classe,
+                                            final Handler<Either<String, JsonArray>> handler){
         for (String idEleve : classe.getValue()) {
             Integer sommeBareme = 0;
             Integer totalMaxBareme = 0;
@@ -789,44 +788,43 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         //On récupère la valeur max du barèmebrevet et map des ordres(=niveau ds le JsonObject du buildBFC)/bareme
         Future<Map<Integer, Map<Integer, Integer>>> maxBaremFuture = Future.future();
-        competenceNoteService.getMaxBaremeMapOrderBaremeBrevet(idStructure, idClasse, max ->
-                formate(maxBaremFuture, max));
+        competenceNoteService.getMaxBaremeMapOrderBaremeBrevet(idStructure, idClasse, event ->
+                formate(maxBaremFuture, event));
 
         //On récupère le nb de DomainesRacines
         Future<JsonArray> domainesRacineFuture = Future.future();
-        domaineService.getDomainesRacines(idClasse, null, event -> formate(domainesRacineFuture, event));
+        domaineService.getDomainesRacines(idClasse, null, event ->
+                formate(domainesRacineFuture, event));
 
         //On récupère les élèves qui sont dispensés pour un domaine racine
         Future<Map<String, Map<Long, Boolean>>> dispDomaineFuture = Future.future();
-        dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(idsEleves, event -> formate(dispDomaineFuture, event));
+        dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(idsEleves, event ->
+                formate(dispDomaineFuture, event));
 
         //On récupère pour tous les élèves de la classe leurs résultats pour chaque domainesRacines évalué
         Future<JsonObject> bfcFuture = Future.future();
-        String[] el = new String[1];
-        el[0] = idEleve;
-        buildBFC(false, el, idClasse, idStructure, idPeriode, idCycle, false, event-> formate(bfcFuture, event));
+        buildBFC(false, new String[]{idEleve}, idClasse, idStructure, idPeriode, idCycle, false,
+                event -> formate(bfcFuture, event));
 
-        CompositeFuture.all(maxBaremFuture, domainesRacineFuture, dispDomaineFuture, bfcFuture)
-                .setHandler(event -> {
-                    if(event.failed()){
-                        returnFailure("getMoyenneControlesContinusBrevet", event, handler);
-                        return;
-                    }
-                    Map<String, Map<Long, Boolean>> dispensesDomainesEleves = dispDomaineFuture.result();
-                    final Integer nbDomainesRacines = domainesRacineFuture.result().size();
-                    final JsonObject resultsElevesByDomaine = bfcFuture.result();
-                    final Integer maxBareme = maxBaremFuture.result().entrySet().iterator().next().getKey();
-                    final Map<Integer, Integer> mapOrdreBaremeBrevet =
-                            maxBaremFuture.result().entrySet().iterator().next().getValue();
-                    Map<String, List<String>> classe = new HashMap<>();
-                    classe.put(idClasse, new ArrayList<>());
-                    classe.get(idClasse).add(idEleve);
-                    for(Map.Entry<String, List<String>> c :  classe.entrySet()) {
-                        runMoyenneControleContinue(moyControlesContinusEleves, maxBareme,
-                                dispensesDomainesEleves, nbDomainesRacines, resultsElevesByDomaine,
-                                mapOrdreBaremeBrevet, c, handler);
-                    }
-                });
+        CompositeFuture.all(maxBaremFuture, domainesRacineFuture, dispDomaineFuture, bfcFuture).setHandler(event -> {
+            if(event.failed()){
+                returnFailure("getMoyenneControlesContinusBrevet", event, handler);
+                return;
+            }
+            Map<String, Map<Long, Boolean>> dispensesDomainesEleves = dispDomaineFuture.result();
+            final Integer nbDomainesRacines = domainesRacineFuture.result().size();
+            final JsonObject resultsElevesByDomaine = bfcFuture.result();
+            final Integer maxBareme = maxBaremFuture.result().entrySet().iterator().next().getKey();
+            final Map<Integer, Integer> mapOrdreBaremeBrevet = maxBaremFuture.result().entrySet().iterator().next().getValue();
+
+            Map<String, List<String>> classe = new HashMap<>();
+            classe.put(idClasse, new ArrayList<>());
+            classe.get(idClasse).add(idEleve);
+            for(Map.Entry<String, List<String>> c :  classe.entrySet()) {
+                runMoyenneControleContinue(moyControlesContinusEleves, maxBareme, dispensesDomainesEleves,
+                        nbDomainesRacines, resultsElevesByDomaine, mapOrdreBaremeBrevet, c, handler);
+            }
+        });
     }
 
     //récupérer les paramètres nécessaire pour les méthodes

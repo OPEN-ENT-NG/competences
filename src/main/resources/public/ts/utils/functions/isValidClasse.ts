@@ -26,10 +26,9 @@ export function isValidClasse (idClasse, id_matiere, classes) {
         let classe = _.findWhere(classes, {id: idClasse});
         //sinon on regarde s'il enseigne sur cette classe ou s'il est coTeacher ou encore remplaçant sur la bonne période
         if (classe && classe.services){
-            if(Utils.isChefEtab(classe)){
+            if(Utils.isChefEtabOrHeadTeacher(classe) || Utils.isPersEducNat()){
                 return _.findWhere(classe.services, {evaluable:true});
-            }
-            else {
+            } else {
                 let evaluables = _.filter(classe.services, service => {
                     let substituteTeacher = _.findWhere(service.substituteTeachers, {second_teacher_id : model.me.userId});
                     let correctDateSubstituteTeacher = substituteTeacher &&

@@ -49,7 +49,7 @@
             <span><i18n>evaluation.releve.classe</i18n></span>
         </label>
         <div class="checkbox-grid"
-             ng-if="isChefEtab(informations.classe)">
+             ng-if="isChefEtabOrHeadTeacher(informations.classe) || isPersEducNat()">
             <br/>
             <h4><i18n>evaluations.export.format.csv</i18n>&nbsp;:</h4>
             <label>

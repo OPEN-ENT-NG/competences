@@ -116,16 +116,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
             $scope.syncPeriodesBilanPeriodique();
 
-            if (model.me.type === 'PERSRELELEVE') {
-                $scope.canSaveAppMatierePosiBilanPeriodique = false;
-                $scope.canSaisiSyntheseBilanPeriodique = false;
-            } else {
-                $scope.canSaveAppMatierePosiBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-                    "canSaveAppMatierePosiBilanPeriodique") && finSaisieBilan;
-                $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-                    "canSaisiSyntheseBilanPeriodique") && finSaisieBilan;
-            }
-
             if($scope.elementBilanPeriodique === undefined){
                 $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
                     $scope.search.periode.id_type, $scope.structure, $scope.filteredPeriode);
@@ -137,6 +127,20 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
             await utils.safeApply($scope);
         };
+
+        $scope.canSaisiSyntheseBilanPeriodique = () => {
+            return (Utils.canSaisiSyntheseBilanPeriodique() || Utils.isChefEtabOrHeadTeacher($scope.search.classe))
+                && finSaisieBilan;
+        }
+
+        $scope.canSaveAppMatierePosiBilanPeriodique = () => {
+            return (Utils.canSaveAppMatierePosiBilanPeriodique() || Utils.isChefEtabOrHeadTeacher($scope.search.classe))
+                && finSaisieBilan;
+        }
+
+        $scope.canUpdateAvisConseilOrientation = () => {
+            return Utils.canUpdateAvisConseilOrientation() || Utils.isChefEtabOrHeadTeacher($scope.search.classe)
+        }
 
         $scope.translateAvis = (avis) => {
             if(avis && $scope.elementBilanPeriodique.avisConseil){
@@ -216,11 +220,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.syncPeriodesBilanPeriodique();
 
                 await Utils.runMessageLoader($scope);
-                $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique(
-                    $scope.search.classe, "canSaisiSyntheseBilanPeriodique") && finSaisieBilan;
                 if($scope.elementBilanPeriodique.syntheseBilanPeriodique === undefined){
                     $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique(
-                        $scope.informations.eleve.id, $scope.search.periode.id_type, $scope.structure.id);
+                        $scope.informations.eleve.id, $scope.search.periode.id_type, $scope.structure.id, $scope.search.classe.id);
                     await $scope.elementBilanPeriodique.syntheseBilanPeriodique.syncSynthese();
                 }
                 await utils.safeApply($scope);
@@ -526,9 +528,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     allPromise.push($scope.openGraphique());
                 }
 
-                $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-                    "canUpdateBFCSynthese");
-
                 if ($scope.selected.suiviAcquis) {
                     await $scope.openSuiviAcquis();
                 }
@@ -559,7 +558,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.elementBilanPeriodique.avisOrientation = new AvisOrientation($scope.informations.eleve.id,
                 $scope.search.periode.id_type, $scope.structure.id);
             $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
-                $scope.search.periode.id_type, $scope.structure.id);
+                $scope.search.periode.id_type, $scope.structure.id, $scope.search.classe.id);
 
             const res = await $scope.elementBilanPeriodique.getAllAvisSyntheses();
             $scope.elementBilanPeriodique.avisConseil.avis = res.libelleAvis;
@@ -569,7 +568,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     let oldElement = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
                         periode, $scope.structure, $scope.filteredPeriode);
                     oldElement.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
-                        periode, $scope.structure.id);
+                        periode, $scope.structure.id, $scope.search.classe.id);
                     oldElement.avisConseil = new AvisConseil($scope.informations.eleve.id,
                         periode, $scope.structure.id);
                     oldElement.avisOrientation = new AvisOrientation($scope.informations.eleve.id,

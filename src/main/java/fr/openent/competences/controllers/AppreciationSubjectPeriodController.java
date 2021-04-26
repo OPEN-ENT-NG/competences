@@ -2,9 +2,8 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.model.AppreciationSubjectPeriodModel;
-import fr.openent.competences.security.AccessReleveFilter;
+import fr.openent.competences.security.AccessReleveByClasseMatiereFilter;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
-import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.service.AppreciationSubjectPeriodService;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.impl.DefaultAppreciationSubjectPeriod;
@@ -45,7 +44,7 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
     @Post(URL)
     @ApiDoc("Create an appreciation in table appreciation_matière_periode")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
     public void createAppreciationSubjectPeriod(final HttpServerRequest request) {
         preparedUpdateOrInsertSqlAppreciationSubjectPeriod(request);
     }
@@ -53,7 +52,7 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
     @Put(URL)
     @ApiDoc("Update an appreciation in table appreciation_matière_periode")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
     public void updateAppreciationSubjectPeriod(final HttpServerRequest request) {
         preparedUpdateOrInsertSqlAppreciationSubjectPeriod(request);
     }
@@ -61,7 +60,7 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
     @Delete(URL)
     @ApiDoc("Delete an appreciation in table appreciation_matière_periode")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
     public void deleteAppreciationSubjectPeriod(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             RequestUtils.bodyToJson(request, resource -> {

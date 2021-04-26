@@ -532,9 +532,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             $scope.competences, $scope.currentCycle.id_cycle);
                         await evaluations.enseignements.sync(evaluations.eleve.idClasse, $scope.competences,
                             $scope.currentCycle.id_cycle);
-                    }  else {
+                    } else {
                         // On récupère les devoirs de l'année
-
                         await evaluations.devoirs.sync(this.eleve.idStructure, this.eleve.id, undefined, undefined,
                             undefined, historise);
                         $scope.getCompetences(evaluations);
@@ -544,9 +543,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
 
-            }
-            else {
-
+            } else {
                 await evaluations.devoirs.sync(this.eleve.idStructure, this.eleve.id, undefined, undefined,
                     cycle.id_cycle, true);
                 $scope.getCompetences(evaluations);

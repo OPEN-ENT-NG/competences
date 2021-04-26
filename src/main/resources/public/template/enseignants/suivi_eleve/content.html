@@ -159,13 +159,15 @@
                     <a class="button twelve-mobile"
                        ng-disabled="(search.periode.id == undefined || detailCompetence.masque)
                        && (!search.eleve.isEvaluable(search.periode))"
-                       ng-show="!isChefEtab()" ng-click="createEvaluationLibre();" >
+                       ng-if="canCreateEval()"
+                       ng-show="!isChefEtabOrHeadTeacher()" ng-click="createEvaluationLibre();" >
                         <i18n>evaluations.evaluation.libre.add</i18n>
                     </a>
                     <a class="button twelve-mobile"
                        ng-disabled="(search.periode.id == undefined || detailCompetence.masque)
                        && (!search.eleve.isEvaluable(search.periode))"
-                       ng-show=" isChefEtab()" ng-click="displayInConstruction();">
+                       ng-if="canCreateEval()"
+                       ng-show="isChefEtabOrHeadTeacher()" ng-click="displayInConstruction();">
                         <i18n>evaluations.evaluation.libre.add</i18n>
                     </a>
                 </div>

@@ -1,6 +1,9 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.security.CanUpdateBFCSyntheseRight;
+import fr.openent.competences.security.CreateSyntheseBilanPeriodiqueFilter;
+import fr.openent.competences.security.SetAvisConseilFilter;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
@@ -22,6 +25,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 
+import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -52,26 +56,25 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Get("/bilan/periodique/eleve/:idEleve")
     @ApiDoc("renvoit tous les éléments pour le bilan périodique d'un élève")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value="access.conseil.de.classe", type=ActionType.WORKFLOW)
     public void getSuiviDesAcquisEleve(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(UserInfos userInfos) {
                 final String idEtablissement = request.params().get("idEtablissement");
                 final String idPeriodeString = request.params().get("idPeriode");
-                final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
+                final Long idPeriode = (idPeriodeString != null) ? Long.parseLong(idPeriodeString) : null;
                 final String idEleve = request.params().get("idEleve");
                 final String idClasse = request.params().get("idClasse");
                 bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve, idClasse,
                         arrayResponseHandler(request));
             }
         });
-
     }
 
     @Get("/eleve/evenements/:idEleve")
     @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
-    public void getAbsencesAndRetards (final HttpServerRequest request) {
+    public void getAbsencesAndRetards(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
         final String idStructure = request.params().get("idEtablissement");
         final String idClasse = request.params().get("idClasse");
@@ -85,7 +88,6 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @Get("/syntheseBilanPeriodique")
     @ApiDoc("Récupère la synthèse d'un élève pour une période donnée")
     @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
-//    @ResourceFilter(AccessAppreciationClasseFilter.class)
     public void getSyntheseBilanPeriodique(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
             @Override
@@ -126,8 +128,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
                         Future<JsonArray> getSynthesesFuture = Future.future();
                         syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(null, idEleve, idStructure, event -> {
-                                    formate(getSynthesesFuture, event);
-                                });
+                            formate(getSynthesesFuture, event);
+                        });
 
                         Future<JsonArray> getAvisConseilFuture = Future.future();
                         avisConseilService.getAvisConseil(idEleve,null,idStructure,event -> {
@@ -172,6 +174,13 @@ public class BilanPeriodiqueController extends ControllerHelper{
         });
     }
 
+    @Post("/syntheseBilanPeriodiqueWorkflow")
+    @ApiDoc("Méthode crée uniquement pour gérer le droit workflow pour la méthode suivante : createOrUpdateSyntheseBilanPeriodique")
+    @SecuredAction(value = "create.synthese.bilan.periodique", type = ActionType.WORKFLOW)
+    public void syntheseBilanPeriodiqueWorkflow(final HttpServerRequest request) {
+        badRequest(request);
+    }
+
     /**
      * Créer une synthese avec les données passées en POST
      *
@@ -179,7 +188,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
      */
     @Post("/syntheseBilanPeriodique")
     @ApiDoc("Créer ou mettre à jour une synthèse du bilan périodique d'un élève pour une période donnée")
-    @SecuredAction(value = "create.synthese.bilan.periodique", type = ActionType.WORKFLOW)
+    @ResourceFilter(CreateSyntheseBilanPeriodiqueFilter.class)
     public void createOrUpdateSyntheseBilanPeriodique(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -212,7 +221,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
      */
     @Post("/appreciation/CPE/bilan/periodique")
     @ApiDoc("Créer ou mettre à jour une appreciation CPE du bilan périodique d'un élève pour une période donnée")
-    @SecuredAction(value = "create.appreciation.CPE.bilan.periodique", type = ActionType.WORKFLOW)
+    @SecuredAction(value="create.appreciation.CPE.bilan.periodique", type=ActionType.WORKFLOW)
     public void createOrUpdateAppreciationCPE(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -293,7 +302,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Post("/avis/bilan/periodique")
     @ApiDoc("Créer un avis de conseil de classe")
-    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type = ActionType.AUTHENTICATED) // TODO : WORKFLOW mais en AUTHENTICATED ?
     public void createOpinion(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -361,65 +370,12 @@ public class BilanPeriodiqueController extends ControllerHelper{
         });
     }
 
-    /**
-     * Ajoute un avis du conseil de classe avec les données passées en POST
-     *
-     * @param request
-     */
-    @Post("/avis/conseil")
-    @ApiDoc("Créer ou mettre à jour un avis du bilan périodique d'un élève pour une période donnée")
-    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type = ActionType.AUTHENTICATED)
-    public void createOrUpdateAvisConseil(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                if (user != null) {
-                    String validator = pathPrefix + Competences.SCHEMA_AVIS_CONSEIL_BILAN_PERIODIQUE;
-                    RequestUtils.bodyToJson(request, validator,
-                            new Handler<JsonObject>() {
-                                @Override
-                                public void handle(JsonObject idAvisClasse) {
-                                    final Long idPeriode = idAvisClasse.getLong("id_periode");
-                                    final String idEleve = idAvisClasse.getString("id_eleve");
-                                    final Long idAvis = idAvisClasse.getLong("id_avis_conseil_bilan");
-                                    final String idStructure = idAvisClasse.getString("id_structure");
-                                    avisConseilService.createOrUpdateAvisConseil(
-                                            idEleve,
-                                            idPeriode,
-                                            idAvis,
-                                            idStructure,
-                                            DefaultResponseHandler.defaultResponseHandler(request));
-                                }
-                            });
-                } else {
-                    log.debug("User not found in session.");
-                    Renders.unauthorized(request);
-                }
-            }
-        });
+    @Post("/setAvisWorfklow")
+    @ApiDoc("Méthode crée uniquement pour gérer le droit workflow pour la méthode suivante : setAvisConseil / setAvisOrientation")
+    @SecuredAction(value = "set.avis.conseil.orientation.bilan.periodique", type = ActionType.WORKFLOW)
+    public void setAvisWorfklow(final HttpServerRequest request) {
+        badRequest(request);
     }
-
-    @Delete("/avis/conseil")
-    @ApiDoc("Supprimer un avis du conseil de classe")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
-    public void deleteAvisConseil(final HttpServerRequest request){
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                if(user != null){
-                    avisConseilService.deleteAvisConseil(
-                            Long.parseLong(request.params().get("id_periode")),
-                            request.params().get("id_eleve"),
-                            request.params().get("id_structure"),
-                            defaultResponseHandler(request));
-                }else {
-                    log.debug("User not found in session.");
-                    Renders.unauthorized(request);
-                }
-            }
-        });
-    }
-
 
     /**
      * Récupère les avis de conseil de classe de l'élève
@@ -427,7 +383,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
      * @param request
      */
     @Get("/avis/conseil")
-    @ApiDoc("Récupère l'avis du bilan périodique d'un élève pour une période donnée")
+    @ApiDoc("Récupère l'avis de conseil d'un élève pour une période donnée")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getAvisConseil(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
@@ -449,56 +405,39 @@ public class BilanPeriodiqueController extends ControllerHelper{
      *
      * @param request
      */
-    @Post("/avis/orientation")
-    @ApiDoc("Créer ou mettre à jour un avis d'orientation périodique d'un élève pour une période donnée")
-    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type = ActionType.AUTHENTICATED)
-    public void createOrUpdateAvisOrientation(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+    @Post("/avis/conseil")
+    @ApiDoc("Créer ou mettre à jour un avis de conseil d'un élève pour une période donnée")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SetAvisConseilFilter.class)
+    public void setAvisConseil(final HttpServerRequest request) {
+        String validator = pathPrefix + Competences.SCHEMA_AVIS_CONSEIL_ORIENTATION_BILAN_PERIODIQUE;
+        RequestUtils.bodyToJson(request, validator, new Handler<JsonObject>() {
             @Override
-            public void handle(final UserInfos user) {
-                if (user != null) {
-                    String validator = pathPrefix + Competences.SCHEMA_AVIS_ORIENTATION_BILAN_PERIODIQUE;
-                    RequestUtils.bodyToJson(request, validator,
-                            new Handler<JsonObject>() {
-                                @Override
-                                public void handle(JsonObject idAvisClasse) {
-                                    final Long idPeriode = idAvisClasse.getLong("id_periode");
-                                    final String idEleve = idAvisClasse.getString("id_eleve");
-                                    final Long idAvis = idAvisClasse.getLong("id_avis_conseil_bilan");
-                                    final String idStructure = idAvisClasse.getString("id_structure");
-                                    avisOrientationService.createOrUpdateAvisOrientation(
-                                            idEleve,
-                                            idPeriode,
-                                            idAvis,
-                                            idStructure,
-                                            DefaultResponseHandler.defaultResponseHandler(request));
-                                }
-                            });
-                } else {
-                    log.debug("User not found in session.");
-                    Renders.unauthorized(request);
-                }
+            public void handle(JsonObject idAvisClasse) {
+                final Long idPeriode = idAvisClasse.getLong("id_periode");
+                final String idEleve = idAvisClasse.getString("id_eleve");
+                final Long idAvis = idAvisClasse.getLong("id_avis_conseil_bilan");
+                final String idStructure = idAvisClasse.getString("id_structure");
+                avisConseilService.createOrUpdateAvisConseil(idEleve, idPeriode, idAvis, idStructure,
+                        defaultResponseHandler(request));
             }
         });
     }
 
-    @Delete("/avis/orientation")
-    @ApiDoc("Supprimer un avis d'orientation du conseil de classe")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
-    public void deleteAvisOrientation(final HttpServerRequest request){
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+    @Delete("/avis/conseil")
+    @ApiDoc("Supprimer un avis de conseil d'un élève")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SetAvisConseilFilter.class)
+    public void deleteAvisConseil(final HttpServerRequest request){
+        String validator = pathPrefix + Competences.SCHEMA_AVIS_CONSEIL_ORIENTATION_BILAN_PERIODIQUE;
+        RequestUtils.bodyToJson(request, validator, new Handler<JsonObject>() {
             @Override
-            public void handle(final UserInfos user) {
-                if(user != null){
-                    avisOrientationService.deleteAvisOrientation(
-                            Long.parseLong(request.params().get("id_periode")),
-                            request.params().get("id_eleve"),
-                            request.params().get("id_structure"),
-                            defaultResponseHandler(request));
-                }else {
-                    log.debug("User not found in session.");
-                    Renders.unauthorized(request);
-                }
+            public void handle(JsonObject idAvisClasse) {
+                final Long idPeriode = idAvisClasse.getLong("id_periode");
+                final String idEleve = idAvisClasse.getString("id_eleve");
+                final String idStructure = idAvisClasse.getString("id_structure");
+                avisConseilService.deleteAvisConseil(idPeriode, idEleve, idStructure,
+                        defaultResponseHandler(request));
             }
         });
     }
@@ -522,6 +461,48 @@ public class BilanPeriodiqueController extends ControllerHelper{
                 } else {
                     badRequest(request);
                 }
+            }
+        });
+    }
+
+    /**
+     * Ajoute un avis du conseil de classe avec les données passées en POST
+     *
+     * @param request
+     */
+    @Post("/avis/orientation")
+    @ApiDoc("Créer ou mettre à jour un avis d'orientation d'un élève pour une période donnée")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SetAvisConseilFilter.class)
+    public void setAvisOrientation(final HttpServerRequest request) {
+        String validator = pathPrefix + Competences.SCHEMA_AVIS_CONSEIL_ORIENTATION_BILAN_PERIODIQUE;
+        RequestUtils.bodyToJson(request, validator, new Handler<JsonObject>() {
+            @Override
+            public void handle(JsonObject idAvisClasse) {
+                final Long idPeriode = idAvisClasse.getLong("id_periode");
+                final String idEleve = idAvisClasse.getString("id_eleve");
+                final Long idAvis = idAvisClasse.getLong("id_avis_conseil_bilan");
+                final String idStructure = idAvisClasse.getString("id_structure");
+                avisOrientationService.createOrUpdateAvisOrientation(idEleve, idPeriode, idAvis, idStructure,
+                        defaultResponseHandler(request));
+            }
+        });
+    }
+
+    @Delete("/avis/orientation")
+    @ApiDoc("Supprimer un avis d'orientation d'un élève")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SetAvisConseilFilter.class)
+    public void deleteAvisOrientation(final HttpServerRequest request){
+        String validator = pathPrefix + Competences.SCHEMA_AVIS_CONSEIL_ORIENTATION_BILAN_PERIODIQUE;
+        RequestUtils.bodyToJson(request, validator, new Handler<JsonObject>() {
+            @Override
+            public void handle(JsonObject idAvisClasse) {
+                final Long idPeriode = idAvisClasse.getLong("id_periode");
+                final String idEleve = idAvisClasse.getString("id_eleve");
+                final String idStructure = idAvisClasse.getString("id_structure");
+                avisOrientationService.deleteAvisOrientation(idPeriode, idEleve, idStructure,
+                        defaultResponseHandler(request));
             }
         });
     }

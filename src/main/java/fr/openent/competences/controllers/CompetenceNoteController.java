@@ -204,9 +204,8 @@ public class CompetenceNoteController extends ControllerHelper {
 
     @Get("/competence/notes/eleve/:idEleve")
     @ApiDoc("Retourne les compétences notes pour un élève. Filtre possible sur la période avec l'ajout du paramètre idPeriode")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessSuiviCompetenceFilter.class)
-    public void getCompetenceNoteEleve (final HttpServerRequest request) {
+    @SecuredAction(value="access.suivi.eleve", type=ActionType.WORKFLOW)
+    public void getCompetenceNoteEleve(final HttpServerRequest request) {
         if (request.params().contains("idEleve") ) {
             String idEleve = request.params().get("idEleve");
             Long idPeriode = null;
@@ -294,9 +293,8 @@ public class CompetenceNoteController extends ControllerHelper {
 
     @Get("/competence/notes/classe/:idClasse/:typeClasse")
     @ApiDoc("Retourne les compétences notes pour une classee. Filtre possible sur la période avec l'ajout du paramètre idPeriode")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessSuiviCompetenceFilter.class)
-    public void getCompetenceNoteClasse (final HttpServerRequest request) {
+    @SecuredAction(value="access.suivi.classe", type=ActionType.WORKFLOW)
+    public void getCompetenceNoteClasse(final HttpServerRequest request) {
         Long idPeriode = null;
         if (request.params().contains("idClasse") && request.params().contains("typeClasse")) {
             final String idClasse = request.params().get("idClasse");

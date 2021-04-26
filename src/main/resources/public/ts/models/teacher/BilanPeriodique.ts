@@ -152,7 +152,7 @@ export class BilanPeriodique extends  Model {
         }
 
 
-        if(Utils.isChefEtab()){
+        if(Utils.isChefEtabOrHeadTeacher()){
             this.endSaisie = false;
         }
         else {

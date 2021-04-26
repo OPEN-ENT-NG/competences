@@ -27,7 +27,11 @@ public enum WorkflowActions {
 	CREATE_ELEMENT_BILAN_PERIODIQUE ("create.element.bilan.periodique"),
 	SAVE_COMPETENCE_NIVEAU_FINAL ("save.competence.niveau.final"),
 	SAVE_APPMATIERE_POSITIONNEMENT_BILAN_PERIODIQUE("bilan.periodique.save.appMatiere.positionnement"),
-	EXPORT_LSU ("competences.lsun.export");
+	EXPORT_LSU ("competences.lsun.export"),
+	CREATE_SYNTHESE_BILAN_PERIODIQUE("create.synthese.bilan.periodique"),
+	SAVE_APPRECIATION_BILAN_PERIODIQUE("bilan.periodique.save.appMatiere.positionnement"),
+	CAN_UPDATE_BFC_SYNTHESE("competences.canUpdateBFCSynthese"),
+	SET_AVIS_CONSEIL("set.avis.conseil.orientation.bilan.periodique");
 	private final String actionName;
 
 	WorkflowActions(String actionName) {

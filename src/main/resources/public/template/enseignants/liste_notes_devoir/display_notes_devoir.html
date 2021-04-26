@@ -128,12 +128,12 @@
                 <i class="download"></i>
             </button>
             <input type="button" ng-click="goTo('/devoir/' + currentDevoir.id + '/edit')" i18n-value="evaluations.test.edit"
-                   ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
+                   ng-disabled="currentDevoir.endSaisie && !isChefEtabOrHeadTeacher()"
                    ng-class="{'button-evaluation-devoir' : currentDevoir.competences.all.length > 0,
                                             'button-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
         </div>
 
-        <section ng-if="currentDevoir.endSaisie && !isChefEtab()" class="row twelve-mobile ng-scope">
+        <section ng-if="currentDevoir.endSaisie && !isChefEtabOrHeadTeacher()" class="row twelve-mobile ng-scope">
             <div class="six warning">
                 <i18n>evaluations.devoir.uncancelable</i18n>
             </div>
@@ -156,7 +156,7 @@
                         <section ng-if="currentDevoir.libelle !== null">
                             <label><i18n class="bold">viescolaire.utils.description</i18n> : [[::currentDevoir.libelle]]</label>
                         </section>
-                        <section ng-if="isChefEtab()">
+                        <section ng-if="isChefEtabOrHeadTeacher()">
                             <span class="bold"><i18n>evaluations.test.teacher</i18n></span> : [[::currentDevoir.teacher]]
                         </section>
                         <section><span class="bold"><i18n>viescolaire.utils.class</i18n></span> : [[::getClasseData(currentDevoir.id_groupe, 'name')]]</section>
@@ -233,7 +233,7 @@
                             <div class="align-center">
                                 <c-skills-color-page devoir="currentDevoir" selected-competences="selected.competences.list"
                                                      selected-eleves="selected.eleves" ng-if="currentDevoir.competences.all.length > 0"
-                                                     niveau-competences="niveauCompetences" has-right="isChefEtab()"
+                                                     niveau-competences="niveauCompetences" has-right="isChefEtabOrHeadTeacher()"
                                 ></c-skills-color-page>
                             </div>
                             <div ng-if="currentDevoir.competences.all.length > 0" class="one inline-block  cell coche-case">
@@ -329,7 +329,7 @@
                                                              display-attribute-list="libelle"
                                                              display-attribute-input="libelle_court"
                                                              is-evaluated="currentDevoir.is_evaluated"
-                                                             has-right="isChefEtab()"
+                                                             has-right="isChefEtabOrHeadTeacher()"
                                                              end-saisie="currentDevoir.endSaisie"
                                                              model="eleve.evaluation"
                                                              model-attribute="valeur"
@@ -360,7 +360,7 @@
                                                                          eleves="currentDevoir.eleves.all",
                                                                          blur="highlightCompetence"
                                                                          current-devoir="currentDevoir"
-                                                                         has-right="isChefEtab()"
+                                                                         has-right="isChefEtabOrHeadTeacher()"
                                                                          nb-eleve="currentDevoir.eleves.all.length"
                                                                          nb-competences-devoir="currentDevoir.competences.all.length"
                                                                          competence="competence"
@@ -397,7 +397,7 @@
                                         <div ng-class="{nine : currentDevoir.competences.all.length === 0, four : currentDevoir.competences.all.length > 0}"
                                              class="cell cell-input " ng-if="currentDevoir.competences.all.length < 8">
                                             <input type="text" class="eleven input-appreciation" name="appreciation"
-                                                   ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
+                                                   ng-disabled="currentDevoir.endSaisie && !isChefEtabOrHeadTeacher()"
                                                    ng-model="eleve.evaluation.appreciation" ng-blur="saveNoteDevoirEleve(eleve.evaluation, $event)"
                                                    ng-focus="focusMe($event);getEleveInfo(eleve);expandNote($index, false)">
                                         </div>
@@ -415,7 +415,7 @@
                                                    ng-model="eleve.evaluation.appreciation"
                                                    ng-blur="saveNoteDevoirEleve(eleve.evaluation, $event);expandAppreciation($index, true, $event);"
                                                    ng-focus="getEleveInfo(eleve);expandAppreciation($index, false);"
-                                                   ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
+                                                   ng-disabled="currentDevoir.endSaisie && !isChefEtabOrHeadTeacher()"
                                                    style="font-style: oblique;">
                                         </div>
                                     </div>

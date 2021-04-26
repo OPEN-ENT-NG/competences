@@ -23,7 +23,7 @@ import {Utils} from "../../models/teacher";
 
 export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
     function getEvaluables(classe, matiere, idTeacher) {
-        if (Utils.isChefEtab() && idTeacher == model.me.userId) {
+        if (Utils.isChefEtabOrHeadTeacher() && idTeacher == model.me.userId) {
             return _.where(classe.services, {
                 id_matiere: matiere.id,
                 evaluable: true

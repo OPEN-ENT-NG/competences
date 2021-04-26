@@ -113,8 +113,7 @@ public class DevoirController extends ControllerHelper {
                         String limit = request.params().get("limit");
                         Integer iLimit = (limit==null) ? null : Integer.valueOf(limit);
                         devoirsService.listDevoirsEtab(user, iLimit, handler);
-                    }
-                    else{
+                    } else{
                         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
                         String idEtablissement = request.params().get("idEtablissement");
                         String idClasse = request.params().get("idClasse");
@@ -148,7 +147,6 @@ public class DevoirController extends ControllerHelper {
                             }
                         }
                     }
-
                 }else{
                     unauthorized(request);
                 }

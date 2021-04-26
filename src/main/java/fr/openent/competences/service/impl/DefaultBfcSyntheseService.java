@@ -65,17 +65,19 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
     }
 
     @Override
-    public void getBfcSyntheseByEleve(String idEleve,Integer idCycle, Handler<Either<String, JsonObject>> handler) {
+    public void getBfcSyntheseByEleve(String idEleve, Integer idCycle, Handler<Either<String, JsonObject>> handler) {
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
-                .append("SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".bfc_synthese WHERE id_eleve = ?");
+                .append("SELECT * FROM ").append(Competences.COMPETENCES_SCHEMA)
+                .append(".bfc_synthese WHERE id_eleve = ?");
         values.add(idEleve);
+
         if(idCycle != null) {
-            query.append(" AND id_cycle = ? ;");
+            query.append(" AND id_cycle = ?;");
             values.add(idCycle);
         }
 
-        Sql.getInstance().prepared(query.toString(),values , SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
