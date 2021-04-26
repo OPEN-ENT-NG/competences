@@ -472,6 +472,8 @@ public class LSUController extends ControllerHelper {
         final Map<String, JsonArray> tableConversionByClass= new HashMap<>();
         final Map<String, JsonArray> periodesByClass = new HashMap<>();
         final Map<String, JsonArray> mapIdClassHeadTeachers = new HashMap<>();
+        Map<Long, JsonObject> periodeUnheededStudents = new HashMap<>();
+        List<String> idsGroupsClasses = new ArrayList<>();
         lsuService.initIdsEvaluatedDiscipline();
         fakeCode = 10;
         donnees.setEnseignants(objectFactory.createDonneesEnseignants());
@@ -492,10 +494,9 @@ public class LSUController extends ControllerHelper {
             }
         };
 
-        Map<Long, JsonObject> periodeUnheededStudents = new HashMap<>();
         Handler<String> getApEpiParcoursHandler = event -> {
-            if (event.equals("success")) {
-                this.getBaliseBilansPeriodiques(donnees, idStructure, periodesByClass, epiGroupAdded,
+            if (event.equals("success")) { //on va avoir des classes et groupe pour récupérer le APEpiParcours des élèves
+                this.getBaliseBilansPeriodiques(donnees, idStructure,idsGroupsClasses, periodesByClass, epiGroupAdded,
                         tableConversionByClass, enseignantFromSts, mapIdClassHeadTeachers, periodeUnheededStudents,
                         getBilansPeriodiquesHandler);
             } else {
@@ -505,6 +506,20 @@ public class LSUController extends ControllerHelper {
         };
 
         List<Future> listGetFuture = new ArrayList<Future>();
+
+        Future getClassGroupsFuture = Future.future();
+        listGetFuture.add(getClassGroupsFuture);
+        Handler<String> getGroupsClassHandler = event -> {
+            if (event.equals("success")) {
+                log.info("getGroupsClass");
+                getClassGroupsFuture.complete();
+            } else {
+                badRequest(request,"getXML : getGroupsClass " + event);
+                log.error("getXML : getGroupsClass " + event);
+            }
+        };
+        getGroupsClass(idsClasse, idsGroupsClasses, getGroupsClassHandler);
+
         Future getHeadTeachersFuture = Future.future();
         listGetFuture.add(getHeadTeachersFuture);
         Handler<String> getHeadTeachersHandler = event -> {
@@ -519,7 +534,6 @@ public class LSUController extends ControllerHelper {
             }
         };
         getHeadTeachers(idsClasse,mapIdClassHeadTeachers,getHeadTeachersHandler);
-
 
         Future<JsonObject> getTableConversionFuture = Future.future();
         listGetFuture.add(getTableConversionFuture);
@@ -600,7 +614,7 @@ public class LSUController extends ControllerHelper {
                                 log.info("out future 1 ");
                                 if (eventFuture.succeeded()) {
                                     log.info("getApEpiParcoursBalises");
-                                    getApEpiParcoursBalises(donnees, idsClasse, idStructure, epiGroupAdded, enseignantFromSts,
+                                    getApEpiParcoursBalises(donnees, idsGroupsClasses, idStructure, epiGroupAdded, enseignantFromSts,
                                             getApEpiParcoursHandler);
                                 }
                                 else{
@@ -1660,7 +1674,6 @@ public class LSUController extends ControllerHelper {
     private void getBaliseDisciplines(final Donnees donnees, final String idStructure, final Handler<String> handler) {
 
         Future<Map<String, String>> libelleCourtFuture = Future.future();
-        log.info("CALL LA");
         new DefaultMatiereService().getLibellesCourtsMatieres(false, event -> {
             FormateFutureEvent.formate(libelleCourtFuture, event);
         });
@@ -1791,6 +1804,57 @@ public class LSUController extends ControllerHelper {
                 }
             }
         });
+    }
+
+    private void getGroupsClass( List<String> idsClasses,List<String> idsGroupsClasses, final Handler<String> handler){
+        JsonObject action = new JsonObject()
+                .put(ACTION, "classe.getGroupesClasse")
+                .put("idClasses", idsClasses);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                    int count = 0;
+                    AtomicBoolean answer = new AtomicBoolean(false);
+                    final String thread = "idsClasses -> " + idsClasses;
+                    final String method = "getGroupsClass";
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        if ("ok".equals(body.getString("status")) && !body.getJsonArray("results").isEmpty()) {
+                            // log for time-out
+                            answer.set(true);
+                            lsuService.serviceResponseOK(answer, count, thread, method);
+                            JsonArray groupsClassResult = body.getJsonArray(RESULTS);
+
+                            if (groupsClassResult != null && !groupsClassResult.isEmpty()) {
+                                for(int i= 0; i < groupsClassResult.size() ; i++){
+                                    String idClass = groupsClassResult.getJsonObject(i).getString("id_classe");
+                                    JsonArray idsGroup = groupsClassResult.getJsonObject(i).getJsonArray("id_groupes");
+
+                                    idsGroupsClasses.add(idClass);
+                                    if (idsGroup!= null && !idsGroup.isEmpty()) {
+                                        idsGroupsClasses.addAll(idsGroup.getList());
+                                    }
+                                }
+
+                                handler.handle("success");
+                            } else {
+                                idsGroupsClasses.addAll(idsClasses);
+                            }
+                        } else {
+                            String error = body.getString(MESSAGE);
+                            count ++;
+                            if(error!=null && error.contains(TIME)){
+                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                                        handlerToAsyncHandler(this));
+                            }
+                            else {
+                                handler.handle("method getGroupsClass : error when collecting Groups  " + error);
+                                log.error("An error occured when collecting Groups for " + idsClasses + " Classes");
+                            }
+                            lsuService.serviceResponseOK(answer, count, thread, method);
+                        }
+                    }
+                }));
     }
 
     private void getHeadTeachers( List<String> idsClasse,
@@ -1973,14 +2037,14 @@ public class LSUController extends ControllerHelper {
         }
         return existing;
     };
-    private void getApEpiParcoursBalises(final Donnees donnees, final List<String> idsClass, final String idStructure,
+    private void getApEpiParcoursBalises(final Donnees donnees, final List<String> groupsClass, final String idStructure,
                                          JsonObject epiGroupAdded, final JsonArray enseignantFromSts,
                                          final Handler<String> handler) {
-        elementBilanPeriodiqueService.getElementsBilanPeriodique(null, idsClass, idStructure,
+        elementBilanPeriodiqueService.getElementsBilanPeriodique(null, groupsClass, idStructure,
                 new Handler<Either<String, JsonArray>>() {
                     AtomicBoolean answer = new AtomicBoolean(false);
                     AtomicInteger count = new AtomicInteger(0);
-                    final String thread = "(" + idStructure + ", " + idsClass.toString() + ")";
+                    final String thread = "(" + idStructure + ", " + groupsClass.toString() + ")";
                     final String method = "getApEpiParcoursBalises";
                     @Override
                     public void handle(Either<String, JsonArray> event) {
@@ -2018,7 +2082,7 @@ public class LSUController extends ControllerHelper {
                         else {
                             String error = event.left().getValue();
                             if(error!=null && error.contains(TIME)){
-                                elementBilanPeriodiqueService.getElementsBilanPeriodique(null, idsClass,
+                                elementBilanPeriodiqueService.getElementsBilanPeriodique(null, groupsClass,
                                         idStructure, this);
                             }
                             else {
@@ -2263,7 +2327,7 @@ public class LSUController extends ControllerHelper {
      * @param handler
      */
 
-    private void getBaliseBilansPeriodiques(final Donnees donnees, final String idStructure,
+    private void getBaliseBilansPeriodiques(final Donnees donnees, final String idStructure, final List<String> idsGroupsClass,
                                             final Map<String, JsonArray> periodesByClasse,final JsonObject epiGroupAdded,
                                             final Map<String, JsonArray> tableConversionByClasse, final JsonArray enseignantFromSts,
                                             final  Map<String, JsonArray> mapIdClassHeadTeachers, Map<Long, JsonObject> periodeUnheededStudents,
@@ -2503,7 +2567,7 @@ public class LSUController extends ControllerHelper {
                                 }
                             });
 
-                    elementBilanPeriodiqueService.getApprecBilanPerEleve(Collections.singletonList(currentEleve.getId_Class()),
+                    elementBilanPeriodiqueService.getApprecBilanPerEleve(idsGroupsClass,
                             new Integer(currentPeriode.getTypePeriode()).toString(), null, currentEleve.getIdNeo4j(),
                             new Handler<Either<String, JsonArray>>() {
                                 AtomicBoolean answer = new AtomicBoolean(false);
