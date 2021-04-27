@@ -1922,10 +1922,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .collect(Collectors.joining(", "));
         result.put("teacher", teacherLibelle);
 
-        String[] date = devoirJson.getString("date")
-                .substring(0, devoirJson.getString("date").indexOf(" ")).split("-");
-        result.put("date", date[2] + '/' + date[1] + '/' + date[0]);
-
+        result.put("date", devoirJson.getString("date"));
         result.put("title", devoirJson.getString("name"));
         result.put("matiere", matiere != null ? matiere.getString("name") : "");
         result.put("diviseur", devoirJson.getLong("diviseur"));
