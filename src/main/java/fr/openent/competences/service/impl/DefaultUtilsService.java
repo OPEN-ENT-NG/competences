@@ -487,7 +487,7 @@ public class DefaultUtilsService  implements UtilsService {
         try {
             moyenne = Double.valueOf(df.format(moyenne));
         } catch (NumberFormatException e) {
-            log.error("Moyenne : " + String.valueOf(moyenne), e);
+            log.error("Moyenne : " + moyenne, e);
         }
         JsonObject r = new JsonObject().put("moyenne", moyenne);
         if (statistiques) {

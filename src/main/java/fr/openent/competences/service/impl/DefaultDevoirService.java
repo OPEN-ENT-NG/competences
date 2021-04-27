@@ -1984,7 +1984,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 if(moyenneFinale != null) {
                     matiere.put("moyenne", moyenneFinale.getString("moyenne"));
                 } else if (listNoteDevoir != null && !listNoteDevoir.isEmpty()) {
-                    Double moy = utilsService.calculMoyenneParDiviseur(listNoteDevoir,false).getDouble("moyenne");
+                    Double moy = utilsService.calculMoyenne(listNoteDevoir,false, 20, false).getDouble("moyenne");
                     matiere.put("moyenne", moy.toString());
                 } else {
                     matiere.put("moyenne", NN);
@@ -2005,7 +2005,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                             .filter(el -> periode.equals(((JsonObject) el).getLong("id_periode")))
                             .findFirst().orElse(null);
                     if(moyenneFinaleExists == null) {
-                        moyAnnuel[0] += utilsService.calculMoyenneParDiviseur(notes,false).getDouble("moyenne");
+                        moyAnnuel[0] += utilsService.calculMoyenne(notes,false, 20, false).getDouble("moyenne");
                         countPeriode[0]++;
                     }
                 });
