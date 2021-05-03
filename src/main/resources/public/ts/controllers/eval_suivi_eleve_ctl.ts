@@ -872,6 +872,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
 
                     $scope.showRechercheBarFunction(false);
                     await $scope.suiviCompetence.setMoyenneCompetences();
+                    $scope.displayFollowEleve = "followItems";
+                    template.open('followEleve',
+                        'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/follow_items')
                     template.open('suivi-competence-content',
                         'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle');
                     await Utils.stopMessageLoader($scope);
