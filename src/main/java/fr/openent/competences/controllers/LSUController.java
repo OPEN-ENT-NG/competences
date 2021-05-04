@@ -2085,6 +2085,7 @@ public class LSUController extends ControllerHelper {
                         }
                         futureEltBilanPeriodique.complete();
                     }
+
                     private void addEpiGroup(JsonObject element, JsonObject epiGroupAdded, Future futureEltBilanPeriodique) {
                         if (element != null
                                 && !element.isEmpty()
@@ -2097,13 +2098,12 @@ public class LSUController extends ControllerHelper {
                                 && element.getJsonArray("intervenantsMatieres").size() > 0
                                 && element.getJsonArray("groupes").size() > 0) {
 
-
                             Epi epi = objectFactory.createEpi();
                             EpiThematique epiThematique = objectFactory.createEpiThematique();;
                             EpiGroupe epiGroupe = objectFactory.createEpiGroupe();
                             JsonObject theme = element.getJsonObject("theme");
 
-                            epi.setId("EPI_" + theme.getInteger("id"));
+                            epi.setId("EPI_" + element.getInteger("id"));
                             epi.setIntitule(theme.getString("libelle"));
                             epi.setDescription(element.getString("description"));
 
@@ -2144,10 +2144,10 @@ public class LSUController extends ControllerHelper {
                                     if(!errorsExport.containsKey(errorEPITeachersKey)){
                                         errorsExport.put(errorEPITeachersKey, new JsonArray());
                                     }
-                                    errorsExport.getJsonArray(errorEPITeachersKey).add(
-                                            new JsonObject().put(NAME,libelle)
-                                                    .put("groupes", groupes)
-                                                    .put("intervenantsMatieres", intervenantsMatieres));
+                                    errorsExport.getJsonArray(errorEPITeachersKey).add(new JsonObject()
+                                            .put(NAME,libelle)
+                                            .put("groupes", groupes)
+                                            .put("intervenantsMatieres", intervenantsMatieres));
                                     futureEltBilanPeriodique.complete();
                                     return;
                                 }
@@ -2157,26 +2157,78 @@ public class LSUController extends ControllerHelper {
                                     epiGroupAdded.put(currentClass.getString("id"), epiGroupe.getId());
                                 }
 
-
                                 if(epiThematique.getCode() != null){
                                     if(donnees.getEpisThematiques() == null){
                                         donnees.setEpisThematiques(objectFactory.createEpisThematiques());
                                     }
                                     donnees.getEpisThematiques().getEpiThematique().add(epiThematique);
                                 }
-                                if(donnees.getEpis() == null ){
+
+                                if(donnees.getEpis() == null){
                                     donnees.setEpis(objectFactory.createDonneesEpis());
                                 }
-                                if(donnees.getEpisGroupes() == null ){
+                                if(!donnees.getEpis().contains(epi)){
+                                    donnees.getEpis().getEpi().add(epi);
+                                }
+
+                                if(donnees.getEpisGroupes() == null){
                                     donnees.setEpisGroupes(objectFactory.createDonneesEpisGroupes());
                                 }
-                                if(donnees.getEpis() != null  && !donnees.getEpis().contains(epi)) donnees.getEpis().getEpi().add(epi);
-
                                 donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
-                                futureEltBilanPeriodique.complete();
 
+                                futureEltBilanPeriodique.complete();
                             });
                         }
+                    }
+
+                    private void addEnseignantDiscipline(JsonObject currentIntervenantMatiere,
+                                                         List<EnseignantDiscipline> enseignantDiscipline,
+                                                         List<Object> disciplineRefs, final Donnees donnees,
+                                                         final JsonArray enseignantFromSts, final Future<JsonObject> resp1FutureComposite) {
+                        Discipline currentSubj = getDisciplineInXML(currentIntervenantMatiere.getJsonObject("matiere").getString("id"), donnees);
+                        if (currentSubj != null) {
+                            Enseignant currentEnseignant = getEnseignantInXML(
+                                    currentIntervenantMatiere.getJsonObject("intervenant").getString("id"),
+                                    donnees);
+                            if (currentEnseignant == null) {
+                                getBaliseEnseignantFromId(donnees,
+                                        currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), enseignantFromSts,
+                                        (String event) -> {
+                                            if (event.equals("success")) {
+                                                Enseignant newEnseignant = getEnseignantInXML(
+                                                        currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
+                                                finalInsertAddEnseignantDiscipline(enseignantDiscipline, disciplineRefs,
+                                                        resp1FutureComposite, currentSubj, newEnseignant);
+                                            }
+                                        });
+                            }else {
+                                finalInsertAddEnseignantDiscipline(enseignantDiscipline, disciplineRefs, resp1FutureComposite, currentSubj, currentEnseignant);
+                            }
+                            lsuService.addIdsEvaluatedDiscipline(currentSubj.getId().replaceAll(DISCIPLINE_KEY, ""));
+                        } else {
+                            log.info("addEnseignantDiscipline no completed " + currentIntervenantMatiere.getJsonObject("intervenant").getString("displayName"));
+                            resp1FutureComposite.complete();
+                        }
+                    }
+
+                    private void finalInsertAddEnseignantDiscipline(List<EnseignantDiscipline> enseignantDiscipline, List<Object> disciplineRefs,
+                                                                    final Future<JsonObject> resp1FutureComposite, Discipline currentSubj,
+                                                                    Enseignant currentEnseignant) {
+                        if (currentEnseignant != null) {
+                            EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
+                            currentEnseignantDiscipline.setDisciplineRef(currentSubj);
+                            currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
+                            boolean hasDiscipline = enseignantDiscipline.stream().anyMatch((teacher) ->
+                                    ((Discipline)teacher.getDisciplineRef()).getId().equals(currentSubj.getId()));
+                            if(!hasDiscipline) {
+                                enseignantDiscipline.add(currentEnseignantDiscipline);
+                            }
+                            // ajout sans doublon sinon rejet de LSU
+                            if(!disciplineRefs.contains(currentSubj)) {
+                                disciplineRefs.add(currentSubj);
+                            }
+                        }
+                        resp1FutureComposite.complete();
                     }
 
                     private void addAccGroup(JsonObject element, Future futureEltBilanPeriodique) {
@@ -2234,57 +2286,6 @@ public class LSUController extends ControllerHelper {
 
                 });
     }
-
-    private void addEnseignantDiscipline(JsonObject currentIntervenantMatiere,
-                                         List<EnseignantDiscipline> enseignantDiscipline,
-                                         List<Object> disciplineRefs, final Donnees donnees,
-                                         final JsonArray enseignantFromSts, final Future<JsonObject> resp1FutureComposite) {
-        Discipline currentSubj = getDisciplineInXML(currentIntervenantMatiere.getJsonObject("matiere").getString("id"), donnees);
-        if (currentSubj != null) {
-            Enseignant currentEnseignant = getEnseignantInXML(
-                    currentIntervenantMatiere.getJsonObject("intervenant").getString("id"),
-                    donnees);
-            if (currentEnseignant == null) {
-                getBaliseEnseignantFromId(donnees,
-                        currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), enseignantFromSts,
-                        (String event) -> {
-                            if (event.equals("success")) {
-                                Enseignant newEnseignant = getEnseignantInXML(
-                                        currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
-                                finalInsertAddEnseignantDiscipline(enseignantDiscipline, disciplineRefs,
-                                        resp1FutureComposite, currentSubj, newEnseignant);
-                            }
-                        });
-            }else {
-                finalInsertAddEnseignantDiscipline(enseignantDiscipline, disciplineRefs, resp1FutureComposite, currentSubj, currentEnseignant);
-            }
-            lsuService.addIdsEvaluatedDiscipline(currentSubj.getId().replaceAll(DISCIPLINE_KEY, ""));
-        } else {
-            log.info("addEnseignantDiscipline no completed " + currentIntervenantMatiere.getJsonObject("intervenant").getString("displayName"));
-            resp1FutureComposite.complete();
-        }
-    }
-
-    private void finalInsertAddEnseignantDiscipline(List<EnseignantDiscipline> enseignantDiscipline, List<Object> disciplineRefs,
-                                                    final Future<JsonObject> resp1FutureComposite, Discipline currentSubj,
-                                                    Enseignant currentEnseignant) {
-        if (currentEnseignant != null) {
-            EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
-            currentEnseignantDiscipline.setDisciplineRef(currentSubj);
-            currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
-            boolean hasDiscipline = enseignantDiscipline.stream().anyMatch((teacher) ->
-                    ((Discipline)teacher.getDisciplineRef()).getId().equals(currentSubj.getId()));
-            if(!hasDiscipline) {
-                enseignantDiscipline.add(currentEnseignantDiscipline);
-            }
-            // ajout sans doublon sinon rejet de LSU
-            if(!disciplineRefs.contains(currentSubj)) {
-                disciplineRefs.add(currentSubj);
-            }
-        }
-        resp1FutureComposite.complete();
-    }
-
 
     /**
      * permet de completer tous les attributs de la balise BilansPeriodiques et de la setter à donnees
