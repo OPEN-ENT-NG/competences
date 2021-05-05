@@ -9,17 +9,17 @@ export class AppreciationSubjectPeriodStudent {
     private idSchoolClass:String;
     private idPeriod:String;
     private idStructure:String;
-    private URL_API="/competences/appreciation-subject-period";
+    private URL_API = "/competences/appreciation-subject-period";
 
     constructor(appreciationSubjectPeriodStudent = undefined) {
         if(appreciationSubjectPeriodStudent){
-        this.id = appreciationSubjectPeriodStudent.id;
-        this.idStudent = appreciationSubjectPeriodStudent.idStudent;
-        this.appreciation = appreciationSubjectPeriodStudent.appreciation;
-        this.idSubject = appreciationSubjectPeriodStudent.idSubject;
-        this.idSchoolClass = appreciationSubjectPeriodStudent.idSchoolClass;
-        this.idPeriod = appreciationSubjectPeriodStudent.idPeriod;
-        this.idStructure = appreciationSubjectPeriodStudent.idStructure;
+            this.id = appreciationSubjectPeriodStudent.id;
+            this.idStudent = appreciationSubjectPeriodStudent.idStudent;
+            this.appreciation = appreciationSubjectPeriodStudent.appreciation;
+            this.idSubject = appreciationSubjectPeriodStudent.idSubject;
+            this.idSchoolClass = appreciationSubjectPeriodStudent.idSchoolClass;
+            this.idPeriod = appreciationSubjectPeriodStudent.idPeriod;
+            this.idStructure = appreciationSubjectPeriodStudent.idStructure;
         }
     }
 
@@ -30,7 +30,7 @@ export class AppreciationSubjectPeriodStudent {
     public async put():Promise<void>{
         await http().putJson(this.URL_API, this.toJSON())
     }
-    
+
     public async delete():Promise<void>{
         if(this.appreciation.length === 0) this.isDeleted = true;
         await http().deleteJson(this.URL_API, this.toJSON());

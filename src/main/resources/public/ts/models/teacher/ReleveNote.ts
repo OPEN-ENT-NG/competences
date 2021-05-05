@@ -62,9 +62,6 @@ export class ReleveNote extends  Model implements IModel {
                 this.idMatiere}&typeClasse=${this.classe.type_groupe}`,
             GET_MOYENNE_ANNEE: `/competences/releve/annee/classe?idEtablissement=${this.structure.id}&idClasse=${
                 this.idClasse}&idMatiere=${this.idMatiere}&typeClasse=${this.classe.type_groupe}`,
-            GET_INFO_PERIODIQUE: `/competences/releve/periodique?idEtablissement=${this.structure.id}&idClasse=${
-                this.idClasse}&idMatiere=${this.idMatiere}&idPeriode=${this.idPeriode}&typeClasse=${
-                this.classe.type_groupe}`,
             GET_ELEMENT_PROGRAMME_DOMAINES: `/competences/element/programme/domaines?idCycle=`,
             GET_ELEMENT_PROGRAMME_SOUS_DOMAINES: `/competences/element/programme/sous/domaines?idDomaine=`,
             GET_ELEMENT_PROGRAMME_PROPOSITIONS: `/competences/element/programme/propositions?idEtablissement=${
@@ -72,7 +69,6 @@ export class ReleveNote extends  Model implements IModel {
             GET_CONVERSION_TABLE: `/competences/competence/notes/bilan/conversion?idEtab=${
                 this.idEtablissement}&idClasse=${this.idClasse}`,
             GET_ARBRE_DOMAINE: `/competences/domaines?idClasse=${this.idClasse}`,
-
             POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`,
             POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`,
             GET_DATA_FOR_GRAPH: `/competences/releve/datas/graph?idEtablissement=${this.structure.id}&idClasse=${
@@ -80,7 +76,6 @@ export class ReleveNote extends  Model implements IModel {
             GET_DATA_FOR_GRAPH_DOMAINE: `/competences/releve/datas/graph/domaine?idEtablissement=${
                 this.structure.id}&idClasse=${this.idClasse}&idMatiere=${this.idMatiere}&typeClasse=${
                 this.classe.type_groupe}`,
-
             EXPORT: `/competences/releve/export`
         }
     }
@@ -260,56 +255,6 @@ export class ReleveNote extends  Model implements IModel {
                 console.error(res);
                 reject();
             });
-        });
-    }
-
-    syncMoyenneFinale(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            if (this.idPeriode !== null) {
-                http().getJson(this.api.GET_INFO_PERIODIQUE + '&colonne=moyenne')
-                    .done((res) => {
-                        console.log(res);
-                        _.forEach(this.classe.eleves.all, (eleve) => {
-                            let _eleve = _.findWhere(res, {id_eleve: eleve.id});
-                            if (_eleve !== undefined && _eleve.moyenne !== null) {
-                                eleve.moyenneFinale = _eleve.moyenne;
-                            }
-                        });
-                        resolve();
-                    })
-                    .error((res) => {
-                        console.error(res);
-                        reject();
-                    })
-            }
-            else {
-                resolve();
-            }
-        });
-    }
-
-    syncPositionnement(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            if (this.idPeriode !== null) {
-                http().getJson(this.api.GET_INFO_PERIODIQUE + '&colonne=positionnement')
-                    .done((res) => {
-                        console.log(res);
-                        _.forEach(this.classe.eleves.all, (eleve) => {
-                            let _eleve = _.findWhere(res, {id_eleve: eleve.id});
-                            if (_eleve !== undefined && _eleve.positionnement !== null) {
-                                eleve.positionnement = _eleve.positionnement;
-                            }
-                        });
-                        resolve();
-                    })
-                    .error((res) => {
-                        console.error(res);
-                        reject();
-                    })
-            }
-            else {
-                resolve();
-            }
         });
     }
 

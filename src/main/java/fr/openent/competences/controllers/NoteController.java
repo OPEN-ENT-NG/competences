@@ -774,10 +774,17 @@ public class NoteController extends ControllerHelper {
         });
     }
 
+    @Post("/bilanPeriodiqueWorkflow")
+    @ApiDoc("Méthode crée uniquement pour gérer le droit workflow pour la méthode suivante : setElementProgramme / createAppreciationSubjectPeriod")
+    @SecuredAction(value = "bilan.periodique.save.appMatiere.positionnement", type = ActionType.WORKFLOW)
+    public void saveAppreciationMatiereAndPositionnementWorfklow(final HttpServerRequest request) {
+        badRequest(request);
+    }
+
     @Post("/releve/element/programme")
     @ApiDoc("Ajoute ou modifie un élément du programme")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
+    @ResourceFilter(SaveAppreciationBilanPeriodiqueFilter.class)
     public void setElementProgramme(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -789,35 +796,18 @@ public class NoteController extends ControllerHelper {
                         final String idMatiere = resource.getString("idMatiere");
                         final Long idPeriode = resource.getLong("idPeriode");
                         final String texte = resource.getString("texte");
-                        final String idEtablissement = resource.getString("idEtablissement");
-                        // Vérification de l'accès à la matière
-                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,false,
-                                new Handler<Boolean>() {
-                                    @Override
-                                    public void handle(final Boolean hasAccessToMatiere) {
-                                        if (hasAccessToMatiere) {
-                                            // Vérification de la date de fin de saisie
-                                            new FilterPeriodeUtils(eb, user).validateEndSaisie(request,
-                                                    idClasse, idPeriode.intValue(), new Handler<Boolean>() {
-                                                        @Override
-                                                        public void handle(Boolean isUpdatable) {
-                                                            //verif date fin de saisie
-                                                            if (isUpdatable) {
-                                                                elementProgramme.setElementProgramme(user.getUserId(),
-                                                                        idPeriode, idMatiere, idClasse,
-                                                                        texte, arrayResponseHandler(request));
-                                                            } else {
-                                                                log.error("Not access to API because of end of saisie");
-                                                                unauthorized(request);
-                                                            }
-                                                        }
-                                                    });
-                                        } else {
-                                            log.error("Not access to Matiere");
-                                            unauthorized(request);
-                                        }
-                                    }
-                                });
+
+                        // Vérification de la date de fin de saisie
+                        new FilterPeriodeUtils(eb, user).validateEndSaisie(request, idClasse, idPeriode.intValue(), isUpdatable -> {
+                            //verif date fin de saisie
+                            if (isUpdatable) {
+                                elementProgramme.setElementProgramme(user.getUserId(), idPeriode, idMatiere,
+                                        idClasse, texte, arrayResponseHandler(request));
+                            } else {
+                                log.error("Not access to API because of end of saisie");
+                                unauthorized(request);
+                            }
+                        });
                     }
                 });
             }
@@ -826,31 +816,10 @@ public class NoteController extends ControllerHelper {
 
     @Post("/releve/periodique")
     @ApiDoc("Créé, met à jour ou supprime une donnée du relevé périodique pour un élève. Les données traitées ici sont:"
-            +" - moyenne finale, - appréciation, -positionnement ")
+            +" - moyenne finale, -positionnement ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
     public void setColonneRelevePeriode(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            RequestUtils.bodyToJson(request, resource -> {
-                saveColonneRelevePeriode(request, user, resource);
-            });
-        });
-    }
-
-    @Post("/bilanPeriodiqueWorkflow")
-    @ApiDoc("Méthode crée uniquement pour gérer le droit workflow pour la méthode suivante : createOrUpdateSyntheseBilanPeriodique")
-    @SecuredAction(value = "bilan.periodique.save.appMatiere.positionnement", type = ActionType.WORKFLOW)
-    public void saveAppreciationMatiereAndPositionnementWorfklow(final HttpServerRequest request) {
-        badRequest(request);
-    }
-
-
-    @Post("/bilan/periodique")
-    @ApiDoc("Créé, met à jour ou supprime une donnée du relevé périodique pour un élève. Les données traitées ici sont :"
-            +" - moyenne finale, - appréciation, -positionnement ")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(SaveAppreciationBilanPeriodiqueFilter.class)
-    public void saveAppreciationMatiereAndPositionnement(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             RequestUtils.bodyToJson(request, resource -> {
                 saveColonneRelevePeriode(request, user, resource);
@@ -864,36 +833,23 @@ public class NoteController extends ControllerHelper {
         final String idEleve = resource.getString("idEleve");
         final String table = resource.getString("colonne");
         final Long idPeriode = resource.getLong("idPeriode");
-        final String idEtablissement = resource.getString("idEtablissement");
-        final Boolean isBilanPeriodique = resource.getBoolean("isBilanPeriodique") != null ?
-                resource.getBoolean("isBilanPeriodique") : false;
 
-        // Vérification de l'accès à la matière
-        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, isBilanPeriodique, hasAccessToMatiere -> {
-            if (hasAccessToMatiere) {
-                // Vérification de la date de fin de saisie
-                new FilterPeriodeUtils(eb, user).validateEndSaisie(request, idClasse, idPeriode.intValue(), isUpdatable -> {
-                    //verif date fin de saisie
-                    if (isUpdatable) {
-                        if (resource.getBoolean("delete")) {
-                            notesService.deleteColonneReleve(idEleve, idPeriode, idMatiere,
-                                    idClasse, table, arrayResponseHandler(request));
-                        } else {
-                            notesService.setColonneReleve( idEleve, idPeriode, idMatiere,
-                                    idClasse, resource, table, user.getUserId(), arrayResponseHandler(request));
-                        }
-                    } else {
-                        log.error("Not access to API because of end of saisie");
-                        unauthorized(request);
-                    }
-                });
+        new FilterPeriodeUtils(eb, user).validateEndSaisie(request, idClasse, idPeriode.intValue(), isUpdatable -> {
+            //verif date fin de saisie
+            if (isUpdatable) {
+                if (resource.getBoolean("delete")) {
+                    notesService.deleteColonneReleve(idEleve, idPeriode, idMatiere, idClasse, table,
+                            arrayResponseHandler(request));
+                } else {
+                    notesService.setColonneReleve(idEleve, idPeriode, idMatiere, idClasse, resource, table,
+                            user.getUserId(), arrayResponseHandler(request));
+                }
             } else {
-                log.error("Not access to Matiere");
+                log.error("Not access to API because of end of saisie");
                 unauthorized(request);
             }
         });
     }
-
 
     @Get("/releve/informations/eleve/:idEleve")
     @ApiDoc("Renvoit  les moyennes , les moyennes finales pour le relevé de notes")

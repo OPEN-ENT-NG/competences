@@ -3,6 +3,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.model.AppreciationSubjectPeriodModel;
 import fr.openent.competences.security.AccessReleveByClasseMatiereFilter;
+import fr.openent.competences.security.SaveAppreciationBilanPeriodiqueFilter;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.service.AppreciationSubjectPeriodService;
 import fr.openent.competences.service.NoteService;
@@ -37,14 +38,14 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
     public AppreciationSubjectPeriodController(EventBus eb) {
         this.eb = eb;
         notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
-        appreciationSubjectPeriodService = new DefaultAppreciationSubjectPeriod( Competences.COMPETENCES_SCHEMA,
+        appreciationSubjectPeriodService = new DefaultAppreciationSubjectPeriod(Competences.COMPETENCES_SCHEMA,
                 Competences.APPRECIATION_MATIERE_PERIODE_TABLE, Competences.REL_APPRECIATION_USERS_NEO, eb);
     }
 
     @Post(URL)
     @ApiDoc("Create an appreciation in table appreciation_matière_periode")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
+    @ResourceFilter(SaveAppreciationBilanPeriodiqueFilter.class)
     public void createAppreciationSubjectPeriod(final HttpServerRequest request) {
         preparedUpdateOrInsertSqlAppreciationSubjectPeriod(request);
     }
@@ -52,7 +53,7 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
     @Put(URL)
     @ApiDoc("Update an appreciation in table appreciation_matière_periode")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
+    @ResourceFilter(SaveAppreciationBilanPeriodiqueFilter.class)
     public void updateAppreciationSubjectPeriod(final HttpServerRequest request) {
         preparedUpdateOrInsertSqlAppreciationSubjectPeriod(request);
     }
@@ -60,7 +61,7 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
     @Delete(URL)
     @ApiDoc("Delete an appreciation in table appreciation_matière_periode")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveByClasseMatiereFilter.class)
+    @ResourceFilter(SaveAppreciationBilanPeriodiqueFilter.class)
     public void deleteAppreciationSubjectPeriod(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             RequestUtils.bodyToJson(request, resource -> {

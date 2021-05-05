@@ -40,7 +40,7 @@ export class SuiviDesAcquis  {
 
     get api(){
         return{
-            POST_DATA_RELEVE_PERIODIQUE: `/competences/bilan/periodique`,
+            POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`,
             POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`,
         }
     }
@@ -60,29 +60,6 @@ export class SuiviDesAcquis  {
 
     goBackAppreciation () {
         this.appreciationByClasse.appreciation = this.previousAppreciationMatiere;
-    }
-
-    async saveAppreciationMatierePeriodeEleve(isDeleted = false) {
-        if (this.appreciationByClasse !== undefined) {
-            if (this.appreciationByClasse.appreciation.length > 0 || isDeleted) {
-                let _data = _.extend(this.toJson(), {
-                    idClasse: this.appreciationByClasse.idClasse,
-                    idClasseSuivi: this.idClasse,
-                    appreciation_matiere_periode: this.appreciationByClasse.appreciation,
-                    colonne: 'appreciation_matiere_periode',
-                    delete: isDeleted,
-                    isBilanPeriodique: true
-                });
-                try {
-                    return await http.post(this.api.POST_DATA_RELEVE_PERIODIQUE, _data);
-                } catch (e) {
-                    notify.error('evaluations.releve.appreciation.classe.save.error');
-                    console.error(e);
-                }
-            }
-        } else {
-            notify.error('evaluations.releve.appreciation.classe.max.length');
-        }
     }
 
     async saveElementsProgrammeMatierePeriodeEleve() {

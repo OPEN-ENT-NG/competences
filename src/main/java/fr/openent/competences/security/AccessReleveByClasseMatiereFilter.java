@@ -89,23 +89,20 @@ public class AccessReleveByClasseMatiereFilter implements ResourcesProvider {
             } else {
                 JsonArray idClasses = new JsonArray().add(idClasse);
                 WorkflowActionUtils.hasHeadTeacherRight(user, idClasses,null, null,null,
-                        null, null, new Handler<Either<String, Boolean>>() {
-                            @Override
-                            public void handle(Either<String, Boolean> event) {
-                                boolean isHeadTeacher = event.isRight() ? event.right().getValue() : false;
+                        null, null, event -> {
+                            boolean isHeadTeacher = event.isRight() ? event.right().getValue() : false;
 
-                                // Si on est professeur principal de la classe, on a le droit
-                                if(isHeadTeacher) {
+                            // Si on est professeur principal de la classe, on a le droit
+                            if(isHeadTeacher) {
+                                resourceRequest.resume();
+                                handler.handle(true);
+                            } else {
+                                //On check que la classe et l'établissement passé en paramètre soit bien ceux de l'utilisateur
+                                DefaultUtilsService utilsService = new DefaultUtilsService(AccessEventBus.getInstance().getEventBus());
+                                utilsService.hasService(idEtablissement, idClasses, idMatiere, idPeriode, user, isValid -> {
                                     resourceRequest.resume();
-                                    handler.handle(true);
-                                } else {
-                                    //On check que la classe et l'établissement passé en paramètre soit bien ceux de l'utilisateur
-                                    DefaultUtilsService utilsService = new DefaultUtilsService(AccessEventBus.getInstance().getEventBus());
-                                    utilsService.hasService(idEtablissement, idClasses, idMatiere, idPeriode, user, isValid -> {
-                                        resourceRequest.resume();
-                                        handler.handle(isValid);
-                                    });
-                                }
+                                    handler.handle(isValid);
+                                });
                             }
                         });
             }
