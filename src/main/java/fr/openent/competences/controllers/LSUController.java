@@ -2579,18 +2579,30 @@ public class LSUController extends ControllerHelper {
                                                     .orElse(null);
 
                                             if (accGroupe != null) {
-                                                AccPersoEleve accEleve = objectFactory.createAccPersoEleve();
-                                                accEleve.setCommentaire(element.getString("commentaire"));
-                                                accEleve.setAccPersoGroupeRef(accGroupe);
+
                                                 if (bilanPeriodique.getAccPersosEleve() == null ||
                                                         bilanPeriodique.getAccPersosEleve().getAccPersoEleve() == null) {
                                                     bilanPeriodique.setAccPersosEleve(objectFactory.createBilanPeriodiqueAccPersosEleve());
                                                 }
-                                                bilanPeriodique.getAccPersosEleve().getAccPersoEleve().add(accEleve);
+                                                if (!containsAccPersoEleve(bilanPeriodique.getAccPersosEleve().getAccPersoEleve(),
+                                                        accGroupe)) {
+                                                    AccPersoEleve accEleve = objectFactory.createAccPersoEleve();
+                                                    accEleve.setCommentaire(element.getString("commentaire"));
+                                                    accEleve.setAccPersoGroupeRef(accGroupe);
+                                                    bilanPeriodique.getAccPersosEleve().getAccPersoEleve().add(accEleve);
+                                                }
                                             }
                                         }
                                     }
 
+                                }
+                                private boolean containsAccPersoEleve (List<AccPersoEleve> listAccPersoEleve, Object accPersoGroupeRef){
+                                    if (listAccPersoEleve != null && !listAccPersoEleve.isEmpty()){
+                                        for(AccPersoEleve ape : listAccPersoEleve){
+                                            if(ape.getAccPersoGroupeRef().equals(accPersoGroupeRef) ) return true;
+                                        }
+                                    }
+                                    return false;
                                 }
 
                                 private void addEpiEleve(JsonObject element) {
@@ -2599,30 +2611,58 @@ public class LSUController extends ControllerHelper {
                                         List<EpiGroupe> listEpiGroupe = donnees.getEpisGroupes().getEpiGroupe();
                                         if (listEpiGroupe != null && listEpiGroupe.size() > 0) {
                                             EpiGroupe epiGroupe = listEpiGroupe.stream()
-                                                    .filter(epiG -> epiG.getId().equals(EPI_GROUPE + element.getInteger("id_elt_bilan_periodique").toString()))
+                                                    .filter(epiG -> epiG.getId().equals(EPI_GROUPE +
+                                                            element.getInteger("id_elt_bilan_periodique").toString()))
                                                     .findFirst()
                                                     .orElse(null);
                                             if (epiGroupe != null) {//epi
+
+                                                if (bilanPeriodique.getEpisEleve() == null ||
+                                                        bilanPeriodique.getEpisEleve().getEpiEleve() == null) {
+                                                    bilanPeriodique.setEpisEleve(objectFactory.createBilanPeriodiqueEpisEleve());
+                                                }
+                                                if (!containsEpiEleve(bilanPeriodique.getEpisEleve().getEpiEleve(),epiGroupe)){
                                                 EpiEleve epiEleve = objectFactory.createEpiEleve();
                                                 epiEleve.setCommentaire(element.getString("commentaire"));
                                                 epiEleve.setEpiGroupeRef(epiGroupe);
-                                                if (bilanPeriodique.getEpisEleve() == null || bilanPeriodique.getEpisEleve().getEpiEleve() == null) {
-                                                    bilanPeriodique.setEpisEleve(objectFactory.createBilanPeriodiqueEpisEleve());
-                                                }
                                                 bilanPeriodique.getEpisEleve().getEpiEleve().add(epiEleve);
+                                                }
                                             }
                                         }
                                     }
                                 }
 
+                                private boolean containsEpiEleve (List<EpiEleve> listEpiElve, Object epiGroupe){
+                                    if (listEpiElve != null && !listEpiElve.isEmpty()){
+                                        for(EpiEleve ee: listEpiElve){
+                                            if( ee.getEpiGroupeRef().equals(epiGroupe)) return true;
+                                        }
+                                    }
+                                    return false;
+                                }
+
                                 private void addParcoursEleve(JsonObject app) {
-                                    Parcours parcoursEleve = objectFactory.createParcours();
-                                    parcoursEleve.setValue(app.getString("commentaire"));
-                                    parcoursEleve.setCode(CodeParcours.fromValue(app.getString("code")));
                                     if (bilanPeriodique.getListeParcours() == null || bilanPeriodique.getListeParcours().getParcours() == null) {
                                         bilanPeriodique.setListeParcours(objectFactory.createBilanPeriodiqueListeParcours());
                                     }
-                                    bilanPeriodique.getListeParcours().getParcours().add(parcoursEleve);
+                                    if(!containsParcours(bilanPeriodique.getListeParcours().getParcours(),
+                                            app.getString("code"))){
+                                        Parcours parcoursEleve = objectFactory.createParcours();
+                                        parcoursEleve.setValue(app.getString("commentaire"));
+                                        parcoursEleve.setCode(CodeParcours.fromValue(app.getString("code")));
+                                        bilanPeriodique.getListeParcours().getParcours().add(parcoursEleve);
+                                    }
+                                }
+
+                                private boolean containsParcours (List<Parcours> listParcours, String codeValue){
+                                    if(listParcours != null && !listParcours.isEmpty()){
+                                        for(Parcours p  : listParcours){
+                                            if (p.getCode().value().equals(codeValue)) {
+                                                return true;
+                                            }
+                                        }
+                                    }
+                                    return false;
                                 }
                             });
 
