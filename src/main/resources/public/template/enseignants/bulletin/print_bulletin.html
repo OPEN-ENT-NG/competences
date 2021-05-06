@@ -12,8 +12,8 @@
          ng-include="'/competences/public/template/enseignants/bulletin/lightbox-select-report-model.html'">
     </div>
 
-    <div    ng-init="initBulletin()"
-            class="ten cell card main-content twelve-mobile">
+    <div ng-init="initBulletin()"
+         class="ten cell card main-content twelve-mobile">
         <aside class="two cell twelve-mobile left">
             <div class="criterion">
                 <div class="header"
@@ -26,7 +26,7 @@
                     <label class="select">
                         <select ng-model="evaluations.structure"
                                 ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"
-                                ng-change="changeEtablissement(); initBulletin();"></select>
+                                ng-change="changeEtablissementBulletin();"></select>
                     </label>
                 </section>
                 <div class="lsu">

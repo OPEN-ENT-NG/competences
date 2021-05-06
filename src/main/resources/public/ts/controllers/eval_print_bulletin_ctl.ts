@@ -35,7 +35,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
         };
 
         // Fonction d'initialisation de la vue de l'export des bulletins
-        $scope.initBulletin = async function ( ) {
+        $scope.initBulletin = async function () {
             await runMessageLoader();
 
             // Initialisation des classes sélectionnables
@@ -53,8 +53,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             $scope.error = {};
             if(Utils.isNotNull($scope.opened)) {
                 $scope.opened.coefficientConflict = false;
-            }
-            else{
+            } else {
                 $scope.opened = {
                     coefficientConflict : false
                 };
@@ -62,7 +61,6 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
 
             // Récupération du logo de l'établissement, de la signature et du nom du CE
             try {
-
                 let models = await http.get(`/competences/matieres/models/${$scope.structure.id}`);
                 $scope.models = {
                     all: models.data
@@ -81,10 +79,25 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             };
             $scope.lang = lang;
 
-
-
             await stopMessageLoader();
         };
+
+        $scope.changeEtablissementBulletin = () => {
+            let init = () => {
+                $scope.initReferences();
+                $scope.initBulletin();
+
+                utils.safeApply($scope);
+            };
+
+            if (!evaluations.structure.isSynchronized) {
+                evaluations.structure.sync().then(() => {
+                    init();
+                });
+            } else {
+                init();
+            }
+        }
 
         $scope.setImageStructure = async () => {
             await ExportBulletins.setImageStructure($scope.structure.id, $scope.print.imgStructure);

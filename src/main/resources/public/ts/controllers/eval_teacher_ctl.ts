@@ -829,14 +829,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 utils.safeApply($scope);
             }
         };
-        /**
-         * Changement établissemnt : réinitial
-         */
 
         $scope.changeEtablissement = async () => {
             let init = () => {
                 $scope.initReferences();
                 $scope.search = $scope.initSearch();
+
                 utils.safeApply($scope);
             };
 
