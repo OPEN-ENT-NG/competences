@@ -183,7 +183,6 @@ public class ExportPDFController extends ControllerHelper {
                 Long.valueOf(request.params().get("idCycle")) : null;
         final Long idPeriode = isNull(request.params().get(ID_PERIODE_KEY)) ? null :
                 Long.valueOf(request.params().get(ID_PERIODE_KEY));
-
         // paramètre pour l'export des élèves
         final String idEtablissement = isNull(idStructure) ? request.params().get(ID_ETABLISSEMENT_KEY) : idStructure;
 
@@ -205,6 +204,25 @@ public class ExportPDFController extends ControllerHelper {
                 String prefixPdfName = "BFC_" + fileNamePrefix + periodeName;
                 String templateName = "BFC.pdf.xhtml";
                 exportService.genererPdf(request, result, templateName, prefixPdfName, vertx, config);
+                //appel le worker
+                JsonObject jsonRequest = new JsonObject()
+                        .put("headers", new JsonObject()
+                                .put("Accept-Language", request.headers().get("Accept-Language")))
+                        .put("Host", getHost(request));
+
+
+                if(idCycle != null){
+                    result.put("idCycle" ,idCycle);
+                    if(idClasses.size() == 1)
+                        result.put("idClasse" , idClasses.get(0));
+                    JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
+                            .put("request", jsonRequest)
+                            .put("resultFinal", result)
+                            .put("template", templateName)
+                            .put("title", prefixPdfName);
+
+                    eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+                }
             });
         } else {
             leftToResponse(request, new Either.Left<>("Un seul parametre autre que la periode doit être specifie."));

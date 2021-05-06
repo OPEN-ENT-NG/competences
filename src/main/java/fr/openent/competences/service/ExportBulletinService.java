@@ -289,10 +289,12 @@ public interface ExportBulletinService {
     void getParameters(String idStudent, Long idPeriode, String idStructure, 
                        final Handler<Either<String, JsonObject>> finalHandler);
 
-    void savePdfInStorage(String name, Buffer file, final String idEleve, final String idClasse,
-                                 final String externalIdClasse, final String idEtablissement, final Long idPeriode,
-                                 final String idParent, Handler<Either<String, JsonObject>> handler);
+    void savePdfInStorage(JsonObject eleve, Buffer file, Handler<Either<String, JsonObject>> handler);
 
     void runSavePdf(JsonObject bulletinEleve, JsonObject bulletin, Vertx vertx, JsonObject config,
                     Handler<Either<String, Boolean>> bulletinHandlerWork);
+
+    void generateAndSavePdf(HttpServerRequest request, JsonObject resultFinal, String templateName,
+                            String prefixPdfName, JsonObject eleve, Vertx vertx, JsonObject config,
+                            Handler<Either<String, Boolean>> finalHandler);
 }
