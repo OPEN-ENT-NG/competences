@@ -1901,10 +1901,8 @@ public class LSUController extends ControllerHelper {
                                         && tableConversion.getString("id_groupe") != null) {
                                     if( !tableConversionByClass.containsKey(tableConversion.getString("id_groupe"))){
                                         tableConversionByClass.put(tableConversion.getString("id_groupe"),
-                                                new JsonArray());
+                                                new JsonArray(tableConversion.getString("table_conversion")));
                                     }
-                                    tableConversionByClass.get(tableConversion.getString("id_groupe")).
-                                            add(tableConversion.getString("table_conversion"));
                                 }
                                 futureTable.complete();
                             }
