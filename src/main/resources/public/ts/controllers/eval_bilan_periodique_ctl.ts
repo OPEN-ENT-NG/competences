@@ -728,7 +728,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 if (element.appreciationClasse[$scope.search.periode.id][$scope.search.classe.id] !== undefined) {
                     if (element.appreciationClasse[$scope.search.periode.id][$scope.search.classe.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
                         $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, null,
-                            $scope.search.classe, $scope.bilanPeriodique, isBilanPeriodique);
+                            $scope.search.classe, isBilanPeriodique);
                     }
                     else {
                         notify.error(lang.translate("error.char.outbound") +

@@ -21,6 +21,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.sql.SqlStatementsBuilder;
 
 import java.util.List;
 
@@ -115,14 +116,16 @@ public interface ElementBilanPeriodiqueService {
 
     /**
      * Enregistrement d'une appreciation pour un élève.
-     * @param idEleve id élève
-     * @param idEltBilanPeriodique id élément bilan périodique
-     * @param idPeriode id période
-     * @param commentaire appréciation laissée par le professeur
-     * @param handler Handler de retour
+     * @param idEleve idEleve
+     * @param idClasse idClasse
+     * @param externalidClasse externalidClasse
+     * @param idPeriode idPeriode
+     * @param idEltBilanPeriodique idEltBilanPeriodique
+     * @param commentaire appreciation
+     * @param handler retour
      */
    void insertOrUpdateAppreciationElement (String idEleve, String idClasse, String externalidClasse, Long idPeriode, Long idEltBilanPeriodique,
-                                           String commentaire, JsonArray groupes, Handler<Either<String, JsonObject>> handler);
+                                            String commentaire, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Mise à jour d'un élément EPI, AP ou parcours.
@@ -161,24 +164,14 @@ public interface ElementBilanPeriodiqueService {
 
     /**
      * Suppression des appréciations d'élève d'un élément EPI, AP ou parcours.
-     * @param idEltBilanPeriodique id de l'élément
-     * @param handler Handler de retour
+     * @param idEleve
+     * @param idPeriode
+     * @param idEltBilanPeriodique
+     * @param idClasse
+     * @param handler
      */
-   void deleteAppreciationElement (String idEleve, Long idPeriode,
-                                           Long idEltBilanPeriodique,
-                                           String idClasse, List<String> groupes,
-                                           Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Mise à jour d'une appreciation pour un élève ou une classe.
-     * @param idAppreciation id de l'appréciation à mettre à jour
-     * @param commentaire nouvelle appréciation laissée par le professeur
-     * @param type eleve ou classe
-     * @param handler Handler de retour
-     */
-   void updateAppreciationBilanPeriodique (Long idAppreciation, String commentaire, String type,
-                                                   Handler<Either<String, JsonObject>> handler);
-
+   void deleteAppreciationElement (String idEleve, Long idPeriode, Long idEltBilanPeriodique, String idClasse,
+                                     Handler<Either<String, JsonObject>> handler);
 
     /**
      * Récupère les externalIds de classe des parcours, AP et EPI de l'enseignant en paramètre

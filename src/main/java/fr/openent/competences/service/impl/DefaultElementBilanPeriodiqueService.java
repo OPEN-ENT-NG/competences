@@ -60,7 +60,7 @@ import static org.entcore.common.mongodb.MongoDbResult.validResultHandler;
 public class DefaultElementBilanPeriodiqueService extends SqlCrudService implements ElementBilanPeriodiqueService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultElementBilanPeriodiqueService.class);
-    private EventBus eb;
+    private final EventBus eb;
 
     public DefaultElementBilanPeriodiqueService(EventBus eb) {
         super(Competences.COMPETENCES_SCHEMA, null);
@@ -77,34 +77,32 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         final String queryIdSeq =
                 "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique_id_seq') as id";
 
-        sql.raw(queryIdSeq, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                if (event.isRight()) {
-                    Long idThematique = event.right().getValue().getLong("id");
-                    String code = thematique.getString("code");
-                    // dans le cas des themes manuels, on genere un code à partir de l'id
-                    // de la thematique (necessaire pour l'export LSU ensuite)
-                    if(code == null) {
-                        code = "THE_"+idThematique;
-                    }
-
-                    SqlStatementsBuilder statements = new SqlStatementsBuilder();
-                    String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique" +
-                            "(id, libelle, code, type_elt_bilan_periodique, id_etablissement , personnalise) VALUES (?, ?, ?, ?, ?,?);";
-
-                    JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                            .add(idThematique)
-                            .add(thematique.getString("libelle"))
-                            .add(code)
-                            .add(thematique.getInteger("type"))
-                            .add(thematique.getString("idEtablissement"))
-                            .add(true);
-
-                    statements.prepared(query, params);
-                    Sql.getInstance().prepared(query.toString(), params, validResultHandler(handler));
+        sql.raw(queryIdSeq, SqlResult.validUniqueResultHandler( event -> {
+            if (event.isRight()) {
+                Long idThematique = event.right().getValue().getLong("id");
+                String code = thematique.getString("code");
+                // dans le cas des themes manuels, on genere un code à partir de l'id
+                // de la thematique (necessaire pour l'export LSU ensuite)
+                if(code == null) {
+                    code = "THE_"+idThematique;
                 }
+
+                SqlStatementsBuilder statements = new SqlStatementsBuilder();
+                String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique" +
+                        "(id, libelle, code, type_elt_bilan_periodique, id_etablissement , personnalise) VALUES (?, ?, ?, ?, ?,?);";
+
+                JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                        .add(idThematique)
+                        .add(thematique.getString("libelle"))
+                        .add(code)
+                        .add(thematique.getInteger("type"))
+                        .add(thematique.getString("idEtablissement"))
+                        .add(true);
+
+                statements.prepared(query, params);
+                Sql.getInstance().prepared(query, params, validResultHandler(handler));
             }
+
         }));
     }
 
@@ -116,49 +114,46 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         final String queryElement =
                 "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique_id_seq') as id";
 
-        sql.raw(queryElement, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                if (event.isRight()) {
-                    Long idElement = event.right().getValue().getLong("id");
+        sql.raw(queryElement, SqlResult.validUniqueResultHandler( event -> {
+            if (event.isRight()) {
+                Long idElement = event.right().getValue().getLong("id");
 
-                    String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique(" +
-                            "id, type_elt_bilan_periodique, id_etablissement ";
+                String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique(" +
+                        "id, type_elt_bilan_periodique, id_etablissement ";
 
-                    if(element.getInteger("type") == 1 || element.getInteger("type") == 2){
-                        query += ", intitule, description";
-                    }
-                    if(element.getInteger("type") == 1 || element.getInteger("type") == 3){
-                        query += ", id_thematique";
-                    }
-
-                    query += ") VALUES (?, ?, ?";
-                    JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                            .add(idElement)
-                            .add(element.getInteger("type"))
-                            .add(element.getString("idEtablissement"));
-
-                    if(element.getInteger("type") == 1 || element.getInteger("type") == 2){
-                        query += ", ?, ?";
-                        params.add(element.getString("libelle"))
-                                .add(element.getString("description"));
-                    }
-                    if(element.getInteger("type") == 1 || element.getInteger("type") == 3){
-                        query += ", ?";
-                        params.add(element.getInteger("id_theme"));
-                    }
-
-                    query += ") RETURNING *;";
-
-                    statements.prepared(query, params);
-                    int type = element.getInteger("type");
-                    if(type == 1 || type == 2){
-                        insertRelEltIntervenantMatiere(element.getJsonArray("ens_mat"), idElement, statements);
-                    }
-                    insertRelEltgroupe(element.getJsonArray("classes"), idElement, statements);
+                if(element.getInteger("type") == 1 || element.getInteger("type") == 2){
+                    query += ", intitule, description";
                 }
-                Sql.getInstance().transaction(statements.build(), SqlResult.validRowsResultHandler(handler));
+                if(element.getInteger("type") == 1 || element.getInteger("type") == 3){
+                    query += ", id_thematique";
+                }
+
+                query += ") VALUES (?, ?, ?";
+                JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                        .add(idElement)
+                        .add(element.getInteger("type"))
+                        .add(element.getString("idEtablissement"));
+
+                if(element.getInteger("type") == 1 || element.getInteger("type") == 2){
+                    query += ", ?, ?";
+                    params.add(element.getString("libelle"))
+                            .add(element.getString("description"));
+                }
+                if(element.getInteger("type") == 1 || element.getInteger("type") == 3){
+                    query += ", ?";
+                    params.add(element.getInteger("id_theme"));
+                }
+
+                query += ") RETURNING *;";
+
+                statements.prepared(query, params);
+                int type = element.getInteger("type");
+                if(type == 1 || type == 2){
+                    insertRelEltIntervenantMatiere(element.getJsonArray("ens_mat"), idElement, statements);
+                }
+                insertRelEltgroupe(element.getJsonArray("classes"), idElement, statements);
             }
+            Sql.getInstance().transaction(statements.build(), SqlResult.validRowsResultHandler(handler));
         }));
     }
 
@@ -214,8 +209,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         StringBuilder query = new StringBuilder();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT id, libelle, code, personnalise ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique ")
+        query.append("SELECT id, libelle, code, personnalise FROM ").append(Competences.COMPETENCES_SCHEMA)
+                .append(".thematique_bilan_periodique ")
                 .append("WHERE type_elt_bilan_periodique = ? AND (id_etablissement = ? OR id_etablissement IS NULL) ");
 
         params.add(typeElement);
@@ -231,42 +226,42 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         query.append("(SELECT elt_bilan_periodique.*, thematique_bilan_periodique.libelle, thematique_bilan_periodique.code, string_agg(DISTINCT id_groupe, ',') AS groupes,")
                 .append(" array_agg(distinct CONCAT(id_intervenant, ',', id_matiere)) AS intervenants_matieres")
-                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique")
-                .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe ")
+                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append( ".elt_bilan_periodique")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_groupe ")
                 .append(" ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ");
 
         if(listIdClasses != null){
-            query.append(" AND rel_elt_bilan_periodique_groupe.id_groupe IN " + Sql.listPrepared(listIdClasses));
+            query.append(" AND rel_elt_bilan_periodique_groupe.id_groupe IN ").append( Sql.listPrepared(listIdClasses));
             for(String c : listIdClasses){
                 params.add(c);
             }
         }
 
-        query.append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
+        query.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_intervenant_matiere ")
                 .append(" ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = elt_bilan_periodique.id ");
 
         if(idEnseignant != null){
             query.append(" AND rel_elt_bilan_periodique_intervenant_matiere.id_intervenant = ? ");
             params.add(idEnseignant);
         }
-        query.append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique ")
+        query.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".thematique_bilan_periodique ")
                 .append(" ON elt_bilan_periodique.id_thematique = thematique_bilan_periodique.id ")
                 .append(" WHERE elt_bilan_periodique.id_etablissement = ? ")
                 .append(" GROUP BY elt_bilan_periodique.id, thematique_bilan_periodique.libelle, thematique_bilan_periodique.code) ");
         params.add(idEtablissement);
         query.append(" UNION ")
                 .append(" (SELECT elt_bilan_periodique.*, thematique_bilan_periodique.libelle, thematique_bilan_periodique.code, string_agg(DISTINCT id_groupe, ',') AS groupes, null ")
-                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique ")
-                .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe ")
+                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".elt_bilan_periodique ")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_groupe ")
                 .append(" ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ");
 
         if(listIdClasses != null){
-            query.append(" AND rel_elt_bilan_periodique_groupe.id_groupe IN " + Sql.listPrepared(listIdClasses));
+            query.append(" AND rel_elt_bilan_periodique_groupe.id_groupe IN ").append(Sql.listPrepared(listIdClasses));
             for(String c : listIdClasses){
                 params.add(c);
             }
         }
-        query.append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique ")
+        query.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".thematique_bilan_periodique ")
                 .append(" ON elt_bilan_periodique.id_thematique = thematique_bilan_periodique.id ")
                 .append(" WHERE elt_bilan_periodique.id_etablissement = ? ")
                 .append(" AND intitule is null ")
@@ -276,18 +271,18 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         query.append(" UNION ")
                 .append(" (SELECT elt_bilan_periodique.*, null, null, string_agg(DISTINCT id_groupe, ',') AS groupes, ")
                 .append(" array_agg(distinct CONCAT(id_intervenant, ',', id_matiere)) AS intervenants_matieres")
-                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique ")
-                .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe ")
+                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".elt_bilan_periodique ")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_groupe ")
                 .append(" ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ");
 
         if(listIdClasses != null){
-            query.append(" AND rel_elt_bilan_periodique_groupe.id_groupe IN "  + Sql.listPrepared(listIdClasses));
+            query.append(" AND rel_elt_bilan_periodique_groupe.id_groupe IN ").append(Sql.listPrepared(listIdClasses));
             for(String c : listIdClasses){
                 params.add(c);
             }
         }
 
-        query.append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
+        query.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_intervenant_matiere ")
                 .append(" ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = elt_bilan_periodique.id ");
 
         if(idEnseignant != null){
@@ -365,7 +360,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
                     if ("ok".equals(body.getString("status"))) {
                         JsonArray matieres = body.getJsonArray("results");
-                        Map<String, String> matieresMap = new HashMap<String, String>();
+                        Map<String, String> matieresMap = new HashMap<>();
 
                         for(Object o : matieres){
                             JsonObject matiere = (JsonObject)o;
@@ -400,9 +395,9 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                     if ("ok".equals(body.getString("status"))) {
                         JsonArray classes = body.getJsonArray("results");
                         Map<String, String> classesNameMap =
-                                new HashMap<String, String>();
+                                new HashMap<>();
                         Map<String, String> classesExternalIdMap =
-                                new HashMap<String, String>();
+                                new HashMap<>();
                         for(Object o : classes){
                             JsonObject classe = (JsonObject)o;
                             classesNameMap.put(classe.getString("id"),
@@ -441,7 +436,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                     if ("ok".equals(body
                             .getString("status"))) {
                         JsonArray users = body.getJsonArray("results");
-                        Map<String, String> usersMap = new HashMap<String, String>();
+                        Map<String, String> usersMap = new HashMap<>();
                         for(Object o : users){
                             JsonObject user = (JsonObject)o;
                             usersMap.put(user.getString("id"),user.getString("displayName"));
@@ -520,11 +515,11 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT id_elt_bilan_periodique, id_intervenant, id_matiere ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
-                .append("WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idElements));
+                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_intervenant_matiere ")
+                .append("WHERE id_elt_bilan_periodique IN ").append(Sql.listPrepared(idElements));
 
-        for (int i = 0; i < idElements.size(); i++) {
-            params.add(idElements.get(i));
+        for (String idElement : idElements) {
+            params.add(idElement);
         }
 
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
@@ -580,7 +575,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     }
     public void getClasseProjets (String idStructure, UserInfos user, Handler<Either<String, JsonArray>> handler){
         Future<JsonArray> classesElemFuture = Future.future();
-        if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())){
+        if(WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())){
             getClassesElementsBilanPeriodique(idStructure, event -> formate(classesElemFuture, event));
         }
         else{
@@ -647,7 +642,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT id_groupe, externalid_groupe ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe ")
+                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_groupe ")
                 .append("WHERE id_elt_bilan_periodique = ? ");
         params.add(idElement);
 
@@ -661,7 +656,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT id_intervenant, id_matiere ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
+                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_intervenant_matiere ")
                 .append("WHERE id_elt_bilan_periodique = ? ");
         params.add(idElement);
 
@@ -678,8 +673,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         query += " WHERE " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe.id_elt_bilan_periodique IN " + Sql.listPrepared(idElements);
 
-        for (int i = 0; i < idElements.size(); i++) {
-            params.add(idElements.get(i));
+        for (String idElement : idElements) {
+            params.add(idElement);
         }
 
         if(idPeriode != null){
@@ -689,8 +684,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         if(idsClasses != null && idsClasses.size() > 0){
             query += " AND " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe.id_groupe IN " + Sql.listPrepared(idsClasses);
-            for (int i = 0; i < idsClasses.size(); i++) {
-                params.add(idsClasses.get(i));
+            for (String idsClass : idsClasses) {
+                params.add(idsClass);
             }
         }
 
@@ -702,10 +697,10 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
     /**
      *
-     * @param idsClasses
-     * @param idPeriode
+     * @param idsClasses idsClass
+     * @param idPeriode idPeriode
      * @param idElements id des élèments du bilan périodique, si null on ramène tous les ID et on considère que le code thematique est necessaire
-     * @param idEleve
+     * @param idEleve idEleve
      * @param handler Handler de retour
      */
     @Override
@@ -719,27 +714,27 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         if (idElements == null) {
             query.append(", rGpeAppEleve.id_groupe , thematiqueBP.code, elBP.type_elt_bilan_periodique ");
         }
-        query.append("FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve AS appEltBPeleve");
+        query.append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".appreciation_elt_bilan_periodique_eleve AS appEltBPeleve");
 
         if(idsClasses != null && idsClasses.size() > 0){
-            query.append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_appreciation_elt_eleve AS rGpeAppEleve")
-                    .append(" ON rGpeAppEleve.id_groupe IN " + Sql.listPrepared(idsClasses));
-            for (int i = 0; i < idsClasses.size(); i++) {
-                params.add(idsClasses.get(i));
+            query.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_groupe_appreciation_elt_eleve AS rGpeAppEleve")
+                    .append(" ON rGpeAppEleve.id_groupe IN ").append(Sql.listPrepared(idsClasses));
+            for (String idsClass : idsClasses) {
+                params.add(idsClass);
             }
         }
 
         if(idElements != null) {
-            query.append(" WHERE appEltBPeleve.id_elt_bilan_periodique IN " + Sql.listPrepared(idElements));
+            query.append(" WHERE appEltBPeleve.id_elt_bilan_periodique IN ").append(Sql.listPrepared(idElements));
             for (int i = 0; i < idElements.size(); i++) {
                 params.add(idElements.get(i));
             }
         }
         else {
             query.append(" AND rGpeAppEleve.id_elt_bilan_periodique = appEltBPeleve.id_elt_bilan_periodique")
-                    .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique AS elBP")
+                    .append(" LEFT JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".elt_bilan_periodique AS elBP")
                     .append(" ON elBP.id = appEltBPeleve.id_elt_bilan_periodique" )
-                    .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique AS thematiqueBP")
+                    .append(" LEFT JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".thematique_bilan_periodique AS thematiqueBP")
                     .append(" ON thematiqueBP.id = elBP.id_thematique");
         }
 
@@ -762,20 +757,15 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     }
 
     @Override
-    public void insertOrUpdateAppreciationElement (String idEleve, String idClasse, String externalidClasse, Long idPeriode, Long idEltBilanPeriodique,
-                                                   String commentaire, JsonArray groupes, Handler<Either<String, JsonObject>> handler){
+    public void insertOrUpdateAppreciationElement (String idEleve, String idClasse, String externalidClasse, Long idPeriode,
+                                                   Long idEltBilanPeriodique, String commentaire, Handler<Either<String, JsonObject>> handler) {
         if(commentaire.length() == 0){
-            List<String> idGroupes = new ArrayList<String>();
-            for(Object o : groupes){
-                JsonObject groupe = (JsonObject) o;
-                idGroupes.add(groupe.getString("id_groupe"));
-            }
-            deleteAppreciationElement(idEleve, idPeriode, idEltBilanPeriodique, idClasse, idGroupes, handler);
+            deleteAppreciationElement(idEleve, idPeriode, idEltBilanPeriodique, idClasse, handler);
         }
         else {
             SqlStatementsBuilder statements = new SqlStatementsBuilder();
 
-            String queryAppreciation = "";
+            String queryAppreciation;
             if(idEleve != null){
                 queryAppreciation = "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve_id_seq') as id";
             }
@@ -783,93 +773,100 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 queryAppreciation = "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe_id_seq') as id";
             }
 
-            sql.raw(queryAppreciation, SqlResult.validUniqueResultHandler(
-                    new Handler<Either<String, JsonObject>>() {
-                        @Override
-                        public void handle(Either<String, JsonObject> event) {
-                            if (event.isRight()) {
-                                Long idAppreciation = event.right().getValue().getLong("id");
-                                String query = "";
-                                JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+            sql.raw(queryAppreciation, SqlResult.validUniqueResultHandler(event -> {
+                if (event.isRight()) {
+                    Long idAppreciation = event.right().getValue().getLong("id");
+                    String query ;
+                    JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
-                                params.add(idAppreciation);
-                                if(idEleve != null){
-                                    query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve" +
-                                            "(id, id_eleve, id_elt_bilan_periodique, id_periode, commentaire) VALUES (?, ?, ?, ?, ?)" +
-                                            " ON CONFLICT (id_elt_bilan_periodique, id_eleve, id_periode) DO UPDATE SET commentaire = ?";
-                                    params.add(idEleve);
-                                } else {
-                                    query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe" +
-                                            "(id, id_groupe, externalid_groupe, id_elt_bilan_periodique, id_periode, commentaire) VALUES (?, ?, ?, ?, ?, ?)" +
-                                            " ON CONFLICT (id_elt_bilan_periodique, id_periode, id_groupe) DO UPDATE SET commentaire = ?";
-                                    params.add(idClasse)
-                                            .add(externalidClasse);
-                                }
-                                params.add(idEltBilanPeriodique)
-                                        .add(idPeriode)
-                                        .add(commentaire)
-                                        .add(commentaire);
+                    params.add(idAppreciation);
+                    if(idEleve != null){
+                        query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve" +
+                                "(id, id_eleve, id_elt_bilan_periodique, id_periode, commentaire) VALUES (?, ?, ?, ?, ?)" +
+                                " ON CONFLICT (id_elt_bilan_periodique, id_eleve, id_periode) DO UPDATE SET commentaire = ?";
+                        params.add(idEleve);
+                    } else {
+                        query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe" +
+                                "(id, id_groupe, externalid_groupe, id_elt_bilan_periodique, id_periode, commentaire) VALUES (?, ?, ?, ?, ?, ?)" +
+                                " ON CONFLICT (id_elt_bilan_periodique, id_periode, id_groupe) DO UPDATE SET commentaire = ?";
+                        params.add(idClasse)
+                                .add(externalidClasse);
+                    }
+                    params.add(idEltBilanPeriodique)
+                            .add(idPeriode)
+                            .add(commentaire)
+                            .add(commentaire);
 
-                                statements.prepared(query, params);
+                    statements.prepared(query, params);
 
-                                if(idEleve != null) {
-                                    insertRelGroupeApprecEleve(groupes, idEleve, idPeriode, idEltBilanPeriodique, statements);
-                                }
+                    if(idEleve != null) {
+                        insertRelGroupeApprecEleve( idClasse, externalidClasse, idEleve,
+                                idPeriode, idEltBilanPeriodique, statements);
+                    }
 
-                            }
-                            Sql.getInstance().transaction(statements.build(), SqlResult.validRowsResultHandler(handler));
-                        }
-                    }));
+                }
+                Sql.getInstance().transaction(statements.build(), SqlResult.validRowsResultHandler(handler));
+
+            }));
         }
     }
 
-    private void insertRelGroupeApprecEleve(JsonArray groupes,
+
+    private void insertRelGroupeApprecEleve(String id_class, String externalId,
                                             String idEleve, Long idPeriode, Long idEltBilanPeriodique,
                                             SqlStatementsBuilder statements){
-        for (Object o : groupes) {
-            JsonObject group = (JsonObject) o;
-            String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
-                    ".rel_groupe_appreciation_elt_eleve(id_groupe, externalid_groupe, id_eleve, id_periode, id_elt_bilan_periodique) " +
-                    "VALUES (?, ?, ?, ?, ?) " +
-                    "ON CONFLICT (id_groupe, id_elt_bilan_periodique, id_periode, id_eleve) DO NOTHING;";
-            JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                    .add(group.getString("id_groupe"))
-                    .add(group.getString("externalid_groupe"))
-                    .add(idEleve)
-                    .add(idPeriode)
-                    .add(idEltBilanPeriodique);
-            statements.prepared(query, params);
-        }
-    }
 
-    private void insertRelGroupeApprecGroupe(String idClasse, String externalidClasse, Long idPeriode,
-                                             Long idEltBilanPeriodique, SqlStatementsBuilder statements){
-        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
-                ".rel_groupe_appreciation_elt_classe(id_groupe, externalid_groupe, id_periode, id_elt_bilan_periodique) " +
-                "VALUES (?, ?, ?, ?) " +
-                "ON CONFLICT (id_elt_bilan_periodique, id_periode, id_groupe) DO NOTHING;";
+
+        StringBuilder query = new StringBuilder().append("INSERT INTO ").append(Competences.COMPETENCES_SCHEMA)
+                .append(".rel_groupe_appreciation_elt_eleve(id_groupe, externalid_groupe, id_eleve, id_periode, id_elt_bilan_periodique) ")
+                .append("VALUES (?, ?, ?, ?, ?) ")
+                .append("ON CONFLICT (id_groupe, id_elt_bilan_periodique, id_periode, id_eleve) DO NOTHING;");
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(idClasse)
-                .add(externalidClasse)
+                .add(id_class)
+                .add(externalId)
+                .add(idEleve)
                 .add(idPeriode)
                 .add(idEltBilanPeriodique);
-        statements.prepared(query, params);
+        statements.prepared(query.toString(), params);
+
     }
 
     @Override
-    public void deleteAppreciationElement (String idEleve, Long idPeriode, Long idEltBilanPeriodique, String idClasse,
-                                           List<String> groupes, Handler<Either<String, JsonObject>> handler){
-
+    public void deleteAppreciationElement (String idEleve, Long idPeriode, Long idEltBilanPeriodique, String idClasse, Handler<Either<String, JsonObject>> handler) {
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
-        deleteAppreciation(idEleve, idPeriode, idEltBilanPeriodique, idClasse, groupes,statements);
+        deleteAppreciation(idEleve,idPeriode,idEltBilanPeriodique,idClasse,statements);
+
         Sql.getInstance().transaction(statements.build(), SqlResult.validRowsResultHandler(handler));
+    }
+
+    private void deleteAppreciation (String idEleve, Long idPeriode, Long idEltBilanPeriodique,
+                                     String idClasse, SqlStatementsBuilder statements){
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        StringBuilder query = new StringBuilder();
+        if(idEleve != null){
+            query.append("DELETE FROM ").append(Competences.COMPETENCES_SCHEMA).append(".appreciation_elt_bilan_periodique_eleve ")
+                    .append(" WHERE id_eleve = ? AND id_elt_bilan_periodique = ? AND id_periode = ? ");
+            params.add(idEleve);
+        }
+        else {
+            query.append("DELETE FROM ").append(Competences.COMPETENCES_SCHEMA).append(".appreciation_elt_bilan_periodique_classe")
+                    .append(" WHERE id_groupe = ? AND id_elt_bilan_periodique = ? AND id_periode = ? ");
+            params.add(idClasse);
+        }
+        params.add(idEltBilanPeriodique)
+                .add(idPeriode);
+
+        statements.prepared(query.toString(), params);
+        if(idEleve != null) {
+            deleteRelGroupeApprecEleve(idEleve, idPeriode, idEltBilanPeriodique, idClasse, statements);
+        }
     }
 
     private void deleteAppreciation (String idEleve, Long idPeriode, Long idEltBilanPeriodique,
                                      String idClasse, List<String> groupes, SqlStatementsBuilder statements){
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "";
+        String query ;
 
         if(idEleve != null){
             query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve " +
@@ -893,6 +890,23 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         if(idEleve != null) {
             deleteRelGroupeApprecEleve(idEleve, idPeriode, idEltBilanPeriodique, groupes, statements);
         }
+    }
+
+    private void deleteRelGroupeApprecEleve(String idEleve, Long idPeriode, Long idEltBilanPeriodique,
+                                            String class_id, SqlStatementsBuilder statements){
+        StringBuilder query = new StringBuilder();
+        query.append("DELETE FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_groupe_appreciation_elt_eleve ")
+                .append("WHERE id_eleve = ?")
+                .append(" AND id_periode = ? ")
+                .append(" AND id_elt_bilan_periodique = ? " )
+                .append(" AND id_groupe = ? ");
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(idEleve)
+                .add(idPeriode)
+                .add(idEltBilanPeriodique)
+                .add(class_id);
+        statements.prepared(query.toString(), params);
+
     }
 
     private void deleteRelGroupeApprecEleve(String idEleve, Long idPeriode, Long idEltBilanPeriodique,
@@ -1039,19 +1053,19 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique WHERE id IN " + Sql.listPrepared(idsEltBilanPeriodique);
 
         statements.add(new JsonObject()
-                .put("statement", queryDelAppEleve.toString())
+                .put("statement", queryDelAppEleve)
                 .put("values", params)
                 .put("action", "prepared"));
         statements.add(new JsonObject()
-                .put("statement", queryDelRelAppEleveGroup.toString())
+                .put("statement", queryDelRelAppEleveGroup)
                 .put("values", params)
                 .put("action", "prepared"));
         statements.add(new JsonObject()
-                .put("statement", queryDelAppClasse.toString())
+                .put("statement", queryDelAppClasse)
                 .put("values", params)
                 .put("action", "prepared"));
         statements.add(new JsonObject()
-                .put("statement", query.toString())
+                .put("statement", query)
                 .put("values", params)
                 .put("action", "prepared"));
         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
@@ -1094,61 +1108,35 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
-    @Override
-    public void updateAppreciationBilanPeriodique (Long idAppreciation, String commentaire, String type,
-                                                   Handler<Either<String, JsonObject>> handler){
-
-        String query = "";
-        if("eleve".equals(type)){
-            query = "UPDATE notes.appreciation_elt_bilan_periodique_eleve " +
-                    "SET commentaire = ? WHERE id = ?";
-        } else {
-            query = "UPDATE notes.appreciation_elt_bilan_periodique_classe " +
-                    "SET commentaire = ? WHERE id = ?";
-        }
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(commentaire)
-                .add(idAppreciation);
-
-        Sql.getInstance().prepared(query, params, SqlResult.validRowsResultHandler(handler));
-    }
 
     @Override
     public void getAppreciations (List<String> idsClasses, String idPeriode, List<String> idElements, String idEleve,
                                   Handler<Either<String, JsonArray>> handler) {
 
-        getApprecBilanPerClasse(idsClasses, idPeriode, idElements,
-                new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if(event.isRight()){
-                            JsonArray apprecClasses = event.right().getValue();
-                            getApprecBilanPerEleve(idsClasses, idPeriode,idElements,idEleve,
-                                    new Handler<Either<String, JsonArray>>() {
-                                        @Override
-                                        public void handle(Either<String, JsonArray> event) {
-                                            if(event.isRight()){
-                                                JsonArray apprecEleves = event.right().getValue();
-                                                handler.handle(new Either.Right<>(apprecClasses.addAll(apprecEleves)));
-                                            } else {
-                                                String error = "error while retreiving students appreciations";
-                                                log.error(error);
-                                                handler.handle(new Either.Left<>(error));
-                                            }
-                                        }
-                                    });
-                        } else {
-                            String error = "error while retreiving classes appreciations";
-                            log.error(error);
-                            handler.handle(new Either.Left<>(error));
-                        }
-
+        getApprecBilanPerClasse(idsClasses, idPeriode, idElements, event ->  {
+            if(event.isRight()){
+                JsonArray apprecClasses = event.right().getValue();
+                getApprecBilanPerEleve(idsClasses, idPeriode,idElements,idEleve, eventAppEleve ->{
+                    if(event.isRight()){
+                        JsonArray apprecEleves = eventAppEleve.right().getValue();
+                        handler.handle(new Either.Right<>(apprecClasses.addAll(apprecEleves)));
+                    } else {
+                        String error = "error while retreiving students appreciations";
+                        log.error(error);
+                        handler.handle(new Either.Left<>(error));
                     }
+
                 });
+            } else {
+                String error = "error while retreiving classes appreciations";
+                log.error(error);
+                handler.handle(new Either.Left<>(error));
+            }
+        });
     }
 
     public  String getElementSchema(String type){
-        String schema= "";
+        String schema;
         switch (type) {
             case "1" :
                 schema = Competences.SCHEMA_EPI_BILAN_PERIODIQUE;
@@ -1186,7 +1174,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                         final String idEleve = resource.getString("id_eleve");
                         final String idClasse = resource.getString("id_classe");
                         final String idEtablissement = resource.getString("id_etablissement");
-                        final Boolean isAdmin = new WorkflowActionUtils().hasRight(user,
+                        final boolean isAdmin = WorkflowActionUtils.hasRight(user,
                                 WorkflowActions.ADMIN_RIGHT.toString());
 
                         Future<Boolean> validateElement = Future.future();
@@ -1208,10 +1196,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                                     isValid -> validateEleve.complete(isValid));
                         }
 
-                        Future<JsonArray> groupesElemBilanP =  Future.future();
-                        getGroupesElementBilanPeriodique(resource.getInteger("id_element").toString(),
-                        event -> formate(groupesElemBilanP, event));
-                        CompositeFuture.all(validateElement, validateEleve, groupesElemBilanP).setHandler(
+                        CompositeFuture.all(validateElement, validateEleve).setHandler(
                                 event -> {
                                    if(event.failed()){
                                        String error = event.cause().getMessage();
@@ -1234,7 +1219,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                                                new Long(resource.getInteger("id_periode")),
                                                new Long(resource.getInteger("id_element")),
                                                resource.getString("appreciation"),
-                                               groupesElemBilanP.result(),
                                                defaultResponseHandler(request));
                                    }
 

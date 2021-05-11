@@ -169,8 +169,10 @@ export class BilanPeriodique extends  Model {
             id_element : element.id,
             id_etablissement : structure.id
         };
-        eleve ? _.extend(data, {id_eleve : eleve.id, appreciation : eleve.appreciations[periode.id][element.id], id_classe : classe.id})
-            :  _.extend(data, {appreciation : element.appreciationClasse[periode.id][classe.id], id_classe : classe.id, externalid_classe : classe.externalId});
+        eleve ? _.extend(data, {id_eleve : eleve.id, appreciation : eleve.appreciations[periode.id][element.id],
+                id_classe : classe.id, externalid_classe : classe.externalId})
+            :  _.extend(data, {appreciation : element.appreciationClasse[periode.id][classe.id],
+                id_classe : classe.id, externalid_classe : classe.externalId});
 
         return data;
     }
