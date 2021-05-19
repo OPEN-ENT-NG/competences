@@ -33,7 +33,7 @@ public interface ElementProgramme {
      * @param texte
      * @param handler
      */
-    public void setElementProgramme(String userId, Long idPeriode, String idMatiere, String idClasse,String texte, Handler<Either<String, JsonArray>> handler);
+    void setElementProgramme(String userId, Long idPeriode, String idMatiere, String idClasse,String texte, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère un élément du programme
@@ -42,7 +42,7 @@ public interface ElementProgramme {
      * @param idClasse
      * @param handler
      */
-    public void getElementProgramme(Long idPeriode, String idMatiere, String idClasse, Handler<Either<String, JsonObject>> handler);
+    void getElementProgramme(Long idPeriode, String idMatiere, String idClasse, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Get element Programme for many class
@@ -51,36 +51,36 @@ public interface ElementProgramme {
      * @param idsClasse
      * @param handler
      */
-    public void getElementProgrammeClasses(Long idPeriode, String idMatiere, JsonArray idsClasse, Handler<Either<String, JsonArray>> handler);
+    void getElementProgrammeClasses(Long idPeriode, String idMatiere, JsonArray idsClasse, Handler<Either<String, JsonArray>> handler);
 
     /**
      * @param handler
      */
-    public void getDomainesEnseignement(String idCycle, Handler<Either<String, JsonArray>> handler);
+    void getDomainesEnseignement(String idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * @param handler
      */
-    public void getSousDomainesEnseignement(String idDomaine, Handler<Either<String, JsonArray>> handler);
+    void getSousDomainesEnseignement(String idDomaine, Handler<Either<String, JsonArray>> handler);
 
     /**
      * @param handler
      */
-    public void getPropositions(String idStructure, Long idSousDomaine, Handler<Either<String, JsonArray>> handler);
+    void getPropositions(String idStructure, Long idSousDomaine, Handler<Either<String, JsonArray>> handler);
 
     /**
      * @param handler
      */
-    public void createProposition(String idStructure, String libelle, Long idSousDomaine, Handler<Either<String, JsonArray>> handler);
+    void createProposition(String idStructure, String libelle, Long idSousDomaine, Handler<Either<String, JsonArray>> handler);
 
     /**
      * @param handler
      */
-    public void editProposition(Long idProposition, String libelle, Handler<Either<String, JsonArray>> handler);
+    void editProposition(Long idProposition, String libelle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * @param handler
      */
-    public void deleteProposition(Long idProposition, Handler<Either<String, JsonArray>> handler);
+    void deleteProposition(Long idProposition, Handler<Either<String, JsonArray>> handler);
 
 }

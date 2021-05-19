@@ -286,7 +286,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     public void getSuiviAcquis(final String idEtablissement, final Long idPeriode, final String idEleve,
                                final String idClasse, Handler<Either<String, JsonArray>> handler) {
-        // Récupération des groupes de l'élève
+        // Récupération des groupes de la classe
         Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), responseGroupsClass -> {
             if(responseGroupsClass.isLeft()){
                 String error = responseGroupsClass.left().getValue();
@@ -503,10 +503,12 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             CompositeFuture.all(elementsProgFuture, appreciationMoyFinalePosFuture, notesFuture, compNotesFuture,
                     moyenneFinaleFuture, tableauDeConversionFuture).setHandler(event -> {
                 if(event.succeeded()){
-                    setElementProgramme(result, elementsProgFuture.result());
-                    setAppreciationMoyFinalePositionnementEleve(result, appreciationMoyFinalePosFuture.result());
+                    List<String> idsClassWithNoteAppCompNoteStudent = new ArrayList<>();
+                    setAppreciationMoyFinalePositionnementEleve(result, appreciationMoyFinalePosFuture.result(),
+                            idsClassWithNoteAppCompNoteStudent);
                     setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(), moyenneFinaleFuture.result(),
-                            result, idEleve, idPeriod, tableauDeConversionFuture.result());
+                            result, idEleve, idPeriod, tableauDeConversionFuture.result(), idsClassWithNoteAppCompNoteStudent);
+                    setElementProgramme(result, elementsProgFuture.result(), idsClassWithNoteAppCompNoteStudent);
                     results.add(result);
                     subjectFuture.complete();
                 } else {
@@ -536,6 +538,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             final String idMatiere = responseObject.getString(ID_MATIERE);
             String owner = responseObject.getString("owner");
             Long id_periode = responseObject.getLong("id_periode");
+            String id_groupe = responseObject.getString("id_groupe");
             Long coefficient = isNull(responseObject.getLong(COEFFICIENT)) ? 1L : responseObject.getLong(COEFFICIENT);
 
             if (!idsMatieresIdsTeachers.containsKey(idMatiere)) {
@@ -546,7 +549,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             JsonArray teachers = matiere.getJsonArray("teachers");
 
             if (idPeriode.equals(id_periode)) {
-                checkVisibilityAndAddTeachers(services,  owner, idMatiere, coefficient,
+                checkVisibilityAndAddTeachers(services,  owner, idMatiere, coefficient, id_groupe,
                         multiTeachers, teachers, idsTeachers,  matiere, subjectsMissingTeachers);
             }
         }
@@ -609,23 +612,24 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void checkVisibilityAndAddTeachers(JsonArray services, String owner, final String idMatiere,
-                                               Long coefficient, JsonArray multiTeachers, JsonArray teachers,
-                                               JsonArray idsTeachers, JsonObject matiere,
+                                               Long coefficient, String id_groupe, JsonArray multiTeachers,
+                                               JsonArray teachers, JsonArray idsTeachers, JsonObject matiere,
                                                List<String> subjectsMissingTeachers){
         Boolean isVisible = false;
         for (int j = 0; j < services.size(); j++) {
             JsonObject service = services.getJsonObject(j);
             String serviceIdMatiere = service.getString("id_matiere");
             String serviceIdTeacher = service.getString("id_enseignant");
+            String serviceIdGroup = service.getString("id_groupe");
 
             if (isNotNull(owner)) {
-                if (serviceIdMatiere.equals(idMatiere) && serviceIdTeacher.equals(owner)) {
+                if (serviceIdMatiere.equals(idMatiere) && serviceIdTeacher.equals(owner) && serviceIdGroup.equals(id_groupe)) {
                     isVisible = service.getBoolean("is_visible");
                     coefficient = service.getLong(COEFFICIENT);
                     break;
                 }
             } else {
-                if (serviceIdMatiere.equals(idMatiere) && service.getBoolean("is_visible")) {
+                if (serviceIdMatiere.equals(idMatiere) && service.getBoolean("is_visible") && serviceIdGroup.equals(id_groupe)) {
                     owner = serviceIdTeacher;
                     isVisible = service.getBoolean("is_visible");
                     coefficient = service.getLong(COEFFICIENT);
@@ -663,7 +667,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         }
     }
 
-    private void setElementProgramme(final JsonObject result, final JsonArray eltsProg) {
+    private void setElementProgramme(final JsonObject result, final JsonArray eltsProg,
+                                     List<String> IdsClassWithNoteAppCompNoteStudent) {
         String elementsProg = "";
         if (isNotNull(eltsProg) && eltsProg.size() > 0) {
             for (int i = 0; i < eltsProg.size(); i++) {
@@ -672,9 +677,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 if (isNull(element.getString("texte"))) {
                     element.put("texte", "");
                 }
-                if (elementsProg.isEmpty()) {
+                if (elementsProg.isEmpty() && element.getString("id_classe") != null &&
+                        IdsClassWithNoteAppCompNoteStudent.contains(element.getString("id_classe"))) {
                     elementsProg = element.getString("texte");
-                } else {
+                } else if(element.getString("id_classe") != null &&
+                        IdsClassWithNoteAppCompNoteStudent.contains(element.getString("id_classe")) ){
                     elementsProg += " " + element.getString("texte");
                 }
             }
@@ -684,7 +691,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
 
     private void  setAppreciationMoyFinalePositionnementEleve(final JsonObject result,
-                                                              final JsonArray allAppMoyPosi){
+                                                              final JsonArray allAppMoyPosi,
+                                                              List<String> idsClassWithNoteAppCompNoteStudent){
         JsonArray appreciations = new fr.wseduc.webutils.collections.JsonArray();
         JsonArray moyennesFinales = new fr.wseduc.webutils.collections.JsonArray();
         JsonArray positionnements = new fr.wseduc.webutils.collections.JsonArray();
@@ -704,13 +712,16 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                                 appMoyPosi.getString("id_classe_appreciation"))
                                                 .put("appreciation",
                                                         appMoyPosi.getString("appreciation_matiere_periode"))));
-
+                        if(!idsClassWithNoteAppCompNoteStudent.contains(appMoyPosi.getString("id_classe_appreciation")))
+                            idsClassWithNoteAppCompNoteStudent.add(appMoyPosi.getString("id_classe_appreciation"));
                     }else {
                         Integer idPeriode = appMoyPosi.getInteger("id_periode_appreciation");
                         JsonArray appreciationsByIdPeriode = mapIdPeriodeAppreciations.get(idPeriode);
                         JsonObject appResponse = new JsonObject().put("idClasse",
                                 appMoyPosi.getString("id_classe_appreciation"))
                                 .put("appreciation",appMoyPosi.getString("appreciation_matiere_periode"));
+                        if(!idsClassWithNoteAppCompNoteStudent.contains(appMoyPosi.getString("id_classe_appreciation")))
+                            idsClassWithNoteAppCompNoteStudent.add(appMoyPosi.getString("id_classe_appreciation"));
 
                         if(!appreciationsByIdPeriode.contains(appResponse)){
 
@@ -731,6 +742,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
                             .put("moyenneFinale",
                                     Double.valueOf(appMoyPosi.getString("moyenne_finale")));
+                    if(!idsClassWithNoteAppCompNoteStudent.contains(appMoyPosi.getString("id_classe_moyfinale")))
+                        idsClassWithNoteAppCompNoteStudent.add(appMoyPosi.getString("id_classe_moyfinale"));
                 }else if(isNotNull(appMoyPosi.getValue("id_periode_moyenne_finale"))){
                     moyenne_finale.put("id_periode",
                             appMoyPosi.getInteger("id_periode_moyenne_finale"))
@@ -771,12 +784,14 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     private void setMoyAndPosForSuivi(JsonArray notes, JsonArray compNotes, JsonArray moyFinalesEleves,
                                       JsonObject result, String idEleve, Long idPeriodAsked,
-                                      JsonArray tableauConversion) {
+                                      JsonArray tableauConversion, List<String> idsClassWithNoteAppCompNoteStudent) {
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
-                noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves);
+                noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves,
+                        idsClassWithNoteAppCompNoteStudent, idPeriodAsked);
         noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves);
-        noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false, tableauConversion);
+        noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false, tableauConversion,
+                idsClassWithNoteAppCompNoteStudent, idPeriodAsked );
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
         noteService.setRankAndMinMaxInClasseByPeriode(idPeriodAsked, idEleve, notesByDevoirByPeriodeClasse, moyFinalesEleves, result);
     }

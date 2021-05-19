@@ -137,8 +137,8 @@ public interface NoteService extends CrudService {
      * @param idEleve identifiant de l'eleve
      * @param idPeriode identifiant de la période
      * @param idMatiere identifiant de la matière
-     * @param idClasse
-     * @param handler
+     * @param idClasse idClasse
+     * @param handler handler
      */
     void deleteColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse,
                              String colonne,   Handler<Either<String, JsonArray>> handler);
@@ -147,13 +147,13 @@ public interface NoteService extends CrudService {
                            String colonne, Handler<Either<String, JsonArray>> handler);
     /**
      * Met à jour la moyennes finale d'un élève pour une période, une matiere et une classe
-     * @param idEleve
+     * @param idEleve idEleve
      * @param idPeriode identifiant de la période
      * @param idMatiere identifiant de la matière
-     * @param idClasse
+     * @param idClasse idClasse
      * @param field (moyenne, positionnement)
-     * @param userId
-     * @param handler
+     * @param userId userId
+     * @param handler handler
      */
     void setColonneReleve(String idEleve,
                           Long idPeriode,
@@ -166,12 +166,11 @@ public interface NoteService extends CrudService {
 
     /**
      * Regroupe les notes des matières par coefficient puis effectue le calcul par matière
-     * @param moyFinalesEleves
+     * @param moyFinalesEleves moyFinalesEleves
      * @param listNotes notes de tous les élèves
      * @param result JsonObject of result
-     * @param idEleve
+     * @param idEleve idEleve
      * @param idEleves id des Eleves ayant une note dans la lisNotes
-     * @return retourne rien
      */
     void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes, final JsonObject result,
                                           String idEleve, JsonArray idEleves);
@@ -179,14 +178,18 @@ public interface NoteService extends CrudService {
      *Calcul la moyenne d'un eleve a
      * @param listNotes response of request
      * @param result JsonObject of result
-     * @param idEleve
+     * @param idEleve idEleve
      * @param idEleves id des Eleves ayant une note dans la lisNotes
+     * @param idsClassWithNoteAppCompNoteStudent idsClassWithNoteAppCompNoteStudent
+     * @param idPriodeAsked idPriodeAsked
      * @return retourne une map avec
      */
     HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> calculMoyennesEleveByPeriode (JsonArray listNotes,
                                                                                       final JsonObject result,
                                                                                       String idEleve,
-                                                                                      JsonArray idEleves);
+                                                                                      JsonArray idEleves,
+                                                                                      List<String> idsClassWithNoteAppCompNoteStudent,
+                                                                                      Long idPriodeAsked);
 
     /**
      * Récupère toutes les appreciations, les moyennes finales et les positionnement pour un eleve, une matiere, une periode
@@ -206,25 +209,30 @@ public interface NoteService extends CrudService {
      * @param result JsonObject sur lequel est ajouté les moyennes de la classe
      */
     void calculAndSetMoyenneClasseByPeriode(final JsonArray moyFinalesEleves,
-                                            final HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
+                                            final HashMap<Long, HashMap<Long,
+                                                    ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
                                             final JsonObject result);
 
     /**
-     * @param idPeriod
-     * @param idEleve
-     * @param notesByDevoirByPeriodeClasse
-     * @param moyFinalesEleves
-     * @param result
+     * @param idPeriod idPeriod
+     * @param idEleve idEleve
+     * @param notesByDevoirByPeriodeClasse notesByDevoirByPeriodeClasse
+     * @param moyFinalesEleves moyFinalesEleves
+     * @param result result
      */
     void setRankAndMinMaxInClasseByPeriode(final Long idPeriod,
                                            final String idEleve,
-                                           final HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
+                                           final HashMap<Long, HashMap<Long,
+                                                   ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
                                            final JsonArray moyFinalesEleves,
                                            final JsonObject result);
 
-    void calculPositionnementAutoByEleveByMatiere(JsonArray listNotes, JsonObject result, Boolean annual, JsonArray tableauConversion);
+    void calculPositionnementAutoByEleveByMatiere(JsonArray listNotes, JsonObject result, Boolean annual,
+                                                  JsonArray tableauConversion,
+                                                  List<String> idsClassWithNoteAppCompNoteStudent, Long idPeriodAsked);
 
-    void getMoyennesFinal(String[] idEleves, Integer idPeriode, String[] idMatieres, String[] idClasses, Handler<Either<String, JsonArray>> handler);
+    void getMoyennesFinal(String[] idEleves, Integer idPeriode, String[] idMatieres, String[] idClasses,
+                          Handler<Either<String, JsonArray>> handler);
 
     /**
      * get all notes of a student by  matiere ,idGroup
@@ -239,8 +247,8 @@ public interface NoteService extends CrudService {
      * get eleve moy By matiere By class
      * @param idClasse idClasse
      * @param idPeriode idPeriode
-     * @param mapAllidMatAndidTeachers
-     * @param mapIdMatListMoyByEleve
+     * @param mapAllidMatAndidTeachers mapAllidMatAndidTeachers
+     * @param mapIdMatListMoyByEleve mapIdMatListMoyByEleve
      * @param handler response
      */
     void getMoysEleveByMatByPeriode(String idClasse, Integer idPeriode, String idEtablissement,
@@ -250,9 +258,9 @@ public interface NoteService extends CrudService {
 
     /**
      * get eleve moy By matiere and By year
-     * @param periodes
-     * @param mapAllidMatAndidTeachers
-     * @param handler
+     * @param periodes periodes
+     * @param mapAllidMatAndidTeachers mapAllidMatAndidTeachers
+     * @param handler JsonObject
      */
     void getMoysEleveByMatByYear(String idEtablissement, JsonArray periodes,
                                  SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
@@ -260,10 +268,10 @@ public interface NoteService extends CrudService {
                                  Handler<Either<String,JsonObject>> handler);
 
     /**
-     * @param
-     * @param mapAllidMatAndidTeachers
-     * @param mapIdMatListMoyByEleve
-     * @param handler
+     *
+     * @param mapAllidMatAndidTeachers  mapAllidMatAndidTeachers
+     * @param mapIdMatListMoyByEleve mapIdMatListMoyByEleve
+     * @param handler response JsonObject
      */
     void getMatEvaluatedAndStat(SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
                                 Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
@@ -287,31 +295,31 @@ public interface NoteService extends CrudService {
 
     /**
      * Renseigne les libéllés et paramètre ne nécessaire à ll'xport
-     * @param resultFinal
-     * @param params
+     * @param resultFinal resultFinal
+     * @param params params
      */
     void putLibelleAndParamsForExportReleve(JsonObject resultFinal, JsonObject params);
 
     /**
      * Permet de réaliser l'export PDF d'un relevé périodique
-     * @param param
-     * @param request
-     * @param vertx
-     * @param config
+     * @param param param
+     * @param request request
+     * @param vertx vertx
+     * @param config config
      */
     void exportPDFRelevePeriodique(JsonObject param, final HttpServerRequest request, Vertx vertx,
                                    JsonObject config );
 
     /**
      * Récupère les données pour un graph par domaine
-     * @param idEleve
-     * @param groupIds
-     * @param idEtablissement
-     * @param idClasse
-     * @param typeClasse
-     * @param idPeriodeString
-     * @param isYear
-     * @param handler
+     * @param idEleve idEleve
+     * @param groupIds groupIds
+     * @param idEtablissement idEtablissement
+     * @param idClasse idClasse
+     * @param typeClasse typeClasse
+     * @param idPeriodeString idPeriodeString
+     * @param isYear isYear
+     * @param handler handler
      */
     void getDataGraphDomaine(final String idEleve, JsonArray groupIds, final String idEtablissement ,
                              final String idClasse, final Integer typeClasse, final String idPeriodeString,
@@ -319,14 +327,14 @@ public interface NoteService extends CrudService {
 
     /**
      * Récupère les donnée pour un graph par matière
-     * @param idEleve
-     * @param groupIds
-     * @param idEtablissement
-     * @param idClasse
-     * @param typeClasse
-     * @param idPeriodeString
-     * @param isYear
-     * @param handler
+     * @param idEleve idEleve
+     * @param groupIds groupIds
+     * @param idEtablissement idEtablissement
+     * @param idClasse idClasse
+     * @param typeClasse typeClasse
+     * @param idPeriodeString idPeriodeString
+     * @param isYear isYear
+     * @param handler handler
      */
     void getDataGraph(final String idEleve, JsonArray groupIds, final String idEtablissement ,
                              final String idClasse,final Integer typeClasse, final String idPeriodeString,
@@ -334,11 +342,11 @@ public interface NoteService extends CrudService {
 
     /**
      *
-     * @param idEleve
-     * @param idClasse
-     * @param idMatiere
-     * @param idEtablissement
-     * @param request
+     * @param idEleve idEleve
+     * @param idClasse idClasse
+     * @param idMatiere idMatiere
+     * @param idEtablissement idEtablissement
+     * @param request request
      */
     void getDetailsReleve(final String idEleve, final String idClasse, final String idMatiere,
                           final String idEtablissement, final HttpServerRequest request);

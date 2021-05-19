@@ -1326,7 +1326,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         StringBuilder query = new StringBuilder()
                 .append("WITH res AS ( ")
-                .append("SELECT devoirs.id, devoirs.id_matiere, devoirs.owner, services.is_visible, services.coefficient, devoirs.id_periode, rel_devoirs_groupes.id_groupe ")
+                .append("SELECT devoirs.id, devoirs.id_matiere, devoirs.owner, services.is_visible, services.coefficient,")
+                .append(" devoirs.id_periode, rel_devoirs_groupes.id_groupe ")
                 .append("FROM notes.devoirs ")
                 .append("INNER JOIN notes.rel_devoirs_groupes ON (devoirs.id = rel_devoirs_groupes.id_devoir) ")
                 .append("LEFT JOIN viesco.services ON (rel_devoirs_groupes.id_groupe = services.id_groupe ")
@@ -1336,70 +1337,54 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append(") ");
         values.add(idEtablissement).add(idEtablissement);
 
-        query.append("SELECT res.id_matiere, res.owner, res.is_visible, res.coefficient, res.id_periode ")
+        query.append("SELECT res.id_matiere, res.owner, res.is_visible, res.coefficient, res.id_periode, res.id_groupe ")
                 .append("FROM res ")
-                .append("INNER JOIN notes.rel_annotations_devoirs ON (res.id = rel_annotations_devoirs.id_devoir) ");
-        if(idEleve != null) {
-            query.append("WHERE rel_annotations_devoirs.id_eleve = ? ");
+                .append("INNER JOIN notes.notes ON (notes.id_devoir = res.id) ")
+                .append("WHERE notes.id_eleve = ? ");
             values.add(idEleve);
-        }
 
         query.append("UNION ");
 
-        query.append("SELECT res.id_matiere, res.owner, res.is_visible, res.coefficient, res.id_periode ")
+        query.append("SELECT res.id_matiere, res.owner, res.is_visible, res.coefficient, res.id_periode, res.id_groupe ")
                 .append("FROM res ")
-                .append("INNER JOIN notes.notes ON (notes.id_devoir = res.id) ");
-        if(idEleve != null) {
-            query.append("WHERE notes.id_eleve = ? ");
+                .append("INNER JOIN notes.competences_notes ON (competences_notes.id_devoir = res.id) ")
+                .append("WHERE competences_notes.id_eleve = ? ");
             values.add(idEleve);
-        }
 
         query.append("UNION ");
 
-        query.append("SELECT res.id_matiere, res.owner, res.is_visible, res.coefficient, res.id_periode ")
-                .append("FROM res ")
-                .append("INNER JOIN notes.competences_notes ON (competences_notes.id_devoir = res.id) ");
-        if(idEleve != null) {
-            query.append("WHERE competences_notes.id_eleve = ? ");
-            values.add(idEleve);
-        }
-
-        query.append("UNION ");
-
-        query.append("SELECT res.id_matiere, res.owner, res.is_visible, res.coefficient, res.id_periode ")
+        query.append("SELECT res.id_matiere, res.owner, res.is_visible, res.coefficient, res.id_periode, res.id_groupe ")
                 .append("FROM res ")
                 .append("INNER JOIN notes.appreciation_matiere_periode ON (appreciation_matiere_periode.id_matiere = res.id_matiere ")
-                .append("AND res.id_groupe = appreciation_matiere_periode.id_classe) ");
-        if(idEleve != null) {
-            query.append("WHERE appreciation_matiere_periode.id_eleve = ? ");
+                .append("AND res.id_groupe = appreciation_matiere_periode.id_classe) ")
+                .append("WHERE appreciation_matiere_periode.id_eleve = ? ");
             values.add(idEleve);
-        }
 
         query.append("UNION ");
 
-        query.append("SELECT DISTINCT moyenne_finale.id_matiere, services.id_enseignant, services.is_visible, services.coefficient, moyenne_finale.id_periode ")
+        query.append("SELECT DISTINCT moyenne_finale.id_matiere, services.id_enseignant, services.is_visible, services.coefficient,")
+                .append("moyenne_finale.id_periode, services.id_groupe ")
                 .append("FROM notes.moyenne_finale ")
                 .append("LEFT JOIN viesco.services ON (moyenne_finale.id_classe = services.id_groupe ")
                 .append("AND moyenne_finale.id_matiere = services.id_matiere ")
                 .append("AND services.id_etablissement = ?) ")
                 .append("WHERE services.id_etablissement = ? ");
         values.add(idEtablissement).add(idEtablissement);
-        if(idEleve != null) {
-            query.append("AND moyenne_finale.id_eleve = ? ");
-            values.add(idEleve);
-        }
+
+        query.append("AND moyenne_finale.id_eleve = ? ");
+        values.add(idEleve);
 
         query.append("UNION ");
 
-        query.append("SELECT DISTINCT appreciation.id_matiere, raun.user_id_neo AS OWNER, NULL ::boolean AS is_visible, NULL ::integer AS coefficient, appreciation.id_periode ")
+        query.append("SELECT DISTINCT appreciation.id_matiere, raun.user_id_neo AS OWNER, NULL ::boolean AS is_visible, ")
+                .append("NULL ::integer AS coefficient, appreciation.id_periode, appreciation.id_classe AS id_groupe ")
                 .append("FROM notes.appreciation_matiere_periode AS appreciation ")
                 .append("LEFT JOIN notes.rel_appreciations_users_neo AS raun ON appreciation.id = raun.appreciation_matiere_periode_id ")
                 .append("WHERE appreciation.id_classe IN ").append(Sql.listPrepared(idsClass));
         for(int i= 0; i < idsClass.size(); i++) values.add(idsClass.getString(i));
-        if(idEleve != null) {
-            query.append(" AND appreciation.id_eleve = ? ");
-            values.add(idEleve);
-        }
+
+        query.append(" AND appreciation.id_eleve = ? ");
+        values.add(idEleve);
 
         query.append("ORDER BY id_periode, id_matiere, coefficient ");
 

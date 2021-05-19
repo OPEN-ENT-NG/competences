@@ -75,7 +75,7 @@ public class DefaultElementProgramme implements ElementProgramme {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT element_programme.texte ")
+        query.append("SELECT texte, id_classe ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA +".element_programme ")
                 .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_classe IN " + Sql.listPrepared(idsClasse.getList()))
                 .append("AND "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_periode = ? ")
