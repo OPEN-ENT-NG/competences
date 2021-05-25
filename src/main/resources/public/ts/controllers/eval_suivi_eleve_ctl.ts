@@ -364,11 +364,23 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             try {
                 await $scope.search.eleve.getCycles();
                 if ($scope.search.eleve.cycles.length == 0) {
-                    $scope.currentCycle = {id_cycle: undefined, libelle: "Pas de cycle évalué"};
-                    $scope.selectedCycleRadio = {id_cycle: undefined};
+                    if( $scope.search.classe.id_cycle !== null){
+                        $scope.currentCycle = { id_cycle : $scope.search.classe.id_cycle,
+                            libelle : $scope.search.classe.libelle_cycle};
+                        $scope.search.eleve.cycles.push($scope.currentCycle);
+                        $scope.selectedCycleRadio = {id_cycle: $scope.currentCycle.id_cycle};
+                    } else {
+                        $scope.currentCycle = {id_cycle: undefined, libelle: "Pas de cycle évalué"};
+                        $scope.selectedCycleRadio = {id_cycle: undefined};
+                    }
                 } else {
                     $scope.currentCycle = _.findWhere($scope.search.eleve.cycles, {id_cycle: $scope.search.classe.id_cycle});
                     if (Utils.isNotNull($scope.currentCycle)) {
+                        $scope.selectedCycleRadio = {id_cycle: $scope.currentCycle.id_cycle};
+                    }else {
+                        $scope.currentCycle = { id_cycle : $scope.search.classe.id_cycle,
+                            libelle : $scope.search.classe.libelle_cycle};
+                        $scope.search.eleve.cycles.push($scope.currentCycle);
                         $scope.selectedCycleRadio = {id_cycle: $scope.currentCycle.id_cycle};
                     }
                 }
