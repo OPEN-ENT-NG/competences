@@ -858,7 +858,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     if (init === true) {
                         Utils.initFilterMine($scope);
                         $scope.isCycle = (periode.isCycle !== undefined)? periode.isCycle : false;
-                        await $scope.search.eleve.getCycles();
+                        await $scope.getCyclesEleve();
                         $scope.currentCycle = _.findWhere($scope.search.eleve.cycles,
                             {id_cycle: $scope.search.classe.id_cycle});
                         $scope.selectedCycleRadio = $scope.currentCycle;
