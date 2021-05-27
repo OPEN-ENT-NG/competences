@@ -73,7 +73,7 @@ export class SuiviCompetence extends Model {
         this.classe = classe;
         this.cycle = cycle;
         this.isCycle = isCycle;
-        this.bfcSynthese = new BfcSynthese(eleve.id, cycle.id_cycle, structure.id);
+        this.bfcSynthese = new BfcSynthese(eleve.id, cycle.id_cycle);
         this.bfcSynthese.syncBfcSynthese();
         this.ensCpls = new EnsCpls();
         this.langues = new LanguesCultRegs();

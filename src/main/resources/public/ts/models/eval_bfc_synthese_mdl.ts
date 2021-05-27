@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {model, http, IModel, Model, notify} from 'entcore';
+import {http, Model, notify} from 'entcore';
 
 export class BfcSynthese extends Model {
     id: number;
@@ -23,7 +23,6 @@ export class BfcSynthese extends Model {
     id_classe : string;
     id_cycle: string;
     texte: string;
-    id_structure: string;
 
     get api() {
         return {
@@ -33,20 +32,18 @@ export class BfcSynthese extends Model {
         }
     }
 
-    constructor(id_eleve : string, id_cycle : string, id_structure : string) {
+    constructor(id_eleve : string, id_cycle : string) {
         super();
         this.texte = "";
         this.id_eleve = id_eleve;
         this.id_cycle = id_cycle;
-        this.id_structure = id_structure;
     }
 
     toJSON() {
         return {
             id_eleve: this.id_eleve,
             id_cycle : this.id_cycle,
-            texte: this.texte,
-            id_structure : this.id_structure
+            texte: this.texte
         }
     }
 
@@ -61,6 +58,7 @@ export class BfcSynthese extends Model {
                 })
                 .error(()=> {
                     if (reject && typeof reject === 'function') {
+                        notify.error('evaluation.bilan.fin.cycle.synthese.save.error')
                         reject();
                     }
                 });
@@ -71,19 +69,20 @@ export class BfcSynthese extends Model {
         return new Promise((resolve,reject)=>{
             http().putJson(this.api.update, this.toJSON())
                 .done((data)=>{
-                    if(resolve&&(typeof(resolve)==='function')){
+                    if(resolve&&(typeof(resolve) === 'function')){
                         resolve(data);
                     }
                 })
                 .error(()=> {
                     if (reject && typeof reject === 'function') {
+                        notify.error('evaluation.bilan.fin.cycle.synthese.save.error')
                         reject();
                     }
                 });
         })
     }
 
-    saveBfcSynthese():Promise<BfcSynthese> {
+    saveBfcSynthese() : Promise<BfcSynthese> {
         return new Promise((resolve, reject) => {
             if(this.texte != undefined){
                 try{
@@ -93,6 +92,9 @@ export class BfcSynthese extends Model {
                         });
                     }else if(this.id !== undefined){
                         this.updateBfcSynthese().then((data)=>{
+                            if(this.texte.length === 0) {
+                                this.id = null;
+                            }
                             resolve(data);
                         });
                     }
@@ -101,7 +103,6 @@ export class BfcSynthese extends Model {
                     console.error(e);
                     reject(e);
                 }
-
             }else{
                 notify.error('evaluation.bilan.fin.cycle.synthes.max.length');
             }

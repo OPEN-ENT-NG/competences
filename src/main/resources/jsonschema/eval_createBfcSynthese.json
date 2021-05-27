@@ -17,14 +17,10 @@
     },
     "texte":{
       "type": "string"
-    },
-    "id_structure": {
-      "type" : "string"
     }
   },
   "required":[
     "id_eleve",
-    "texte",
-    "id_structure"
+    "texte"
   ]
 }

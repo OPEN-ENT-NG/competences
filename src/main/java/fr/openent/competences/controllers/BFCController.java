@@ -279,35 +279,30 @@ public class BFCController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(CanUpdateBFCSyntheseRight.class)
     public void createSynthese(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                if (user != null) {
-                    RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_BFCSYNTHESE_CREATE, new Handler<JsonObject>() {
-                        @Override
-                        public void handle(final JsonObject synthese) {
-                            syntheseService.getIdCycleWithIdEleve(synthese.getString("id_eleve"), new Handler<Either<String, Integer>>() {
-                                @Override
-                                public void handle(Either<String, Integer> idCycle) {
-                                    if (idCycle.isRight()) {
-                                        JsonObject syntheseCycle = new JsonObject()
-                                                .put("id_eleve", synthese.getString("id_eleve"))
-                                                .put("owner", user.getUserId())
-                                                .put("id_cycle", idCycle.right().getValue())
-                                                .put("texte", synthese.getString("texte"));
-                                        syntheseService.createBfcSynthese(syntheseCycle, user, notEmptyResponseHandler(request));
-                                    } else {
-                                        log.debug("idCycle not found");
-                                        Renders.badRequest(request);
-                                    }
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (user != null) {
+                RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_BFCSYNTHESE_CREATE, new Handler<JsonObject>() {
+                    @Override
+                    public void handle(final JsonObject synthese) {
+                        synthese.put("owner", user.getUserId());
+                        if(synthese.containsKey("id_cycle") && Utils.isCycleNotNull(String.valueOf(synthese.getInteger("id_cycle")))) {
+                            syntheseService.createBfcSynthese(synthese, user, notEmptyResponseHandler(request));
+                        } else {
+                            syntheseService.getIdCycleWithIdEleve(synthese.getString("id_eleve"), cycle -> {
+                                if (cycle.isRight()) {
+                                    synthese.put("id_cycle", cycle.right().getValue());
+                                    syntheseService.createBfcSynthese(synthese, user, notEmptyResponseHandler(request));
+                                } else {
+                                    log.debug(cycle.left().getValue());
+                                    Renders.badRequest(request);
                                 }
-                            } );
+                            });
                         }
-                    });
-                } else {
-                    log.debug("User not found in session.");
-                    Renders.unauthorized(request);
-                }
+                    }
+                });
+            } else {
+                log.debug("User not found in session.");
+                Renders.unauthorized(request);
             }
         });
     }
@@ -321,10 +316,6 @@ public class BFCController extends ControllerHelper {
             RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_BFCSYNTHESE_CREATE, new Handler<JsonObject>() {
                 @Override
                 public void handle(JsonObject synthese) {
-                    if(synthese.containsKey("id_structure")){
-                        synthese.remove("id_structure");
-                    }
-
                     if(synthese.getString("texte").isEmpty()) {
                         syntheseService.deleteBfcSynthese(request.params().get("id"), notEmptyResponseHandler(request));
                     } else {
