@@ -78,22 +78,18 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         };
 
         $scope.togglePeriode = async function (periode_type) {
-            if (periode_type.selected) {
-                let idx = $scope.paramsLSU.periodes_type.indexOf(periode_type);
-                if (idx > -1) {
-                    $scope.paramsLSU.periodes_type.splice(idx, 1);
-                    await utils.safeApply($scope);
-                } else {
-                    $scope.paramsLSU.periodes_type.push(periode_type);
-                    await utils.safeApply($scope);
-                }
-                if (periode_type.libelle === undefined) {
-                    periode_type.libelle = $scope.getI18nPeriode(periode_type.periode);
-                }
-            } else {
-                $scope.paramsLSU.periodes_type = _.without($scope.paramsLSU.periodes_type,
-                    _.findWhere($scope.paramsLSU.periodes_type, {id_type : _.propertyOf(periode_type)('id_type')})) ;
+            if (periode_type.libelle === undefined) {
+                periode_type.libelle = $scope.getI18nPeriode(periode_type.periode);
             }
+
+            let idx = $scope.paramsLSU.periodes_type.indexOf(_.findWhere($scope.paramsLSU.periodes_type,
+                {id_type : periode_type.id_type}));
+            if (idx > -1) {
+                $scope.paramsLSU.periodes_type.splice(idx, 1);
+            } else {
+                $scope.paramsLSU.periodes_type.push(periode_type);
+            }
+            await utils.safeApply($scope);
         };
 
         $scope.getResponsablesAndClasses = function () {
@@ -129,7 +125,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                     && $scope.paramsLSU.responsables.length > 0
                     && $scope.paramsLSU.stsFile !== null)
                 || ($scope.paramsLSU.type == LSU_TYPE_EXPORT.BILAN_PERIODIQUE
-                    && $scope.paramsLSU.contentStsFile !== null
+                    && $scope.paramsLSU.stsFile !== null
                     && $scope.paramsLSU.periodes_type.length > 0
                     && $scope.paramsLSU.classes.length > 0
                     && $scope.paramsLSU.responsables.length > 0)
@@ -198,9 +194,10 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                             if (_.contains($scope.lsu.errorsLSU.errorMessageBadRequest, "getEleves : no student")) {
                                 $scope.noStudent = true;
                                 notify.info('evaluation.lsu.error.getEleves.no.student');
+                            }else {
+                                $scope.errorResponse = true;
                             }
-                            console.error(error);
-                            $scope.errorResponse = true;
+                            console.log(error);
                         }
                     }
                     await Utils.stopMessageLoader($scope);
