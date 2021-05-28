@@ -2100,9 +2100,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if(Utils.isChefEtabOrHeadTeacher()) {
                 $scope.devoir.teachersByClass = $filter('getEnseignantClasse')($scope.structure.enseignants.all,
                     $scope.devoir.id_groupe, $scope.classes);
-                if ($scope.devoir.owner === undefined && search !== undefined && search.matiere !== undefined
-                    && search.matiere !== "*" && $scope.search.classe != '*') {
-                    if (search.enseignant != undefined && search.enseignant !== "*") {
+                if ($scope.devoir.owner === undefined && search !== undefined &&
+                    search.matiere != null && search.classe != null) {
+                    if (search.enseignant != null) {
                         $scope.devoir.owner = search.enseignant.id;
                     } else {
                         let teacher = _.findWhere(search.classe.services,
