@@ -2,7 +2,7 @@ import {Classe} from "../../models/teacher";
 import {_} from "entcore";
 import {safeApply} from "./safeApply";
 
-export function updateFilters ($scope, withStudent) {
+export function updateFilters($scope, withStudent) {
     return new Promise(async (resolve, reject) => {
         try {
             let selectedClasses = _.where($scope.printClasses.all, {selected: true});
@@ -43,7 +43,8 @@ export function updateFilters ($scope, withStudent) {
                                 id_type: periode.id_type,
                                 type: periode.type,
                                 periode: periode,
-                                classes: classe
+                                classes: classe,
+                                selected: false
                             });
                         } else {
                             periodeToset.classes.push(periode.id_classe);
