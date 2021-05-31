@@ -232,7 +232,7 @@ public class DefaultUtilsService  implements UtilsService {
      */
     @Override
     public void getDefaultServices (final String structureId, final JsonArray groupIds, final JsonObject filters,
-                                   Handler<Either<String, JsonArray>> handler) {
+                                    Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "service.getDefaultServices")
                 .put("idEtablissement", structureId)
@@ -1031,10 +1031,8 @@ public class DefaultUtilsService  implements UtilsService {
                                  Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder()
                 .append(" INSERT INTO " + Competences.VSCO_SCHEMA + ".nom_et_signature_CE ")
-                .append(" (id_etablissement, path, name) VALUES ")
-                .append(" ( ?, ?, ?) ")
-                .append(" ON CONFLICT (id_etablissement) ")
-                .append(" DO UPDATE SET path = ? , name = ? ");
+                .append(" (id_etablissement, path, name) VALUES ( ?, ?, ?) ")
+                .append(" ON CONFLICT (id_etablissement) DO UPDATE SET path = ?, name = ? ");
 
         JsonArray params = new JsonArray().add(idStructure).add(path).add(name).add(path).add(name);
 
@@ -1063,17 +1061,16 @@ public class DefaultUtilsService  implements UtilsService {
             }
         });
 
-        CompositeFuture.all(infosCEFuture, imageStructureFuture).setHandler(
-                event -> {
-                    if (event.succeeded()) {
-                        JsonObject result = new JsonObject();
-                        result.put("imgStructure", imageStructureFuture.result());
-                        result.put("nameAndBrad", infosCEFuture.result());
-                        handler.handle(new Either.Right<>(result));
-                    } else {
-                        handler.handle(new Either.Left<>(event.cause().getMessage()));
-                    }
-                });
+        CompositeFuture.all(infosCEFuture, imageStructureFuture).setHandler(event -> {
+            if (event.succeeded()) {
+                JsonObject result = new JsonObject();
+                result.put("imgStructure", imageStructureFuture.result());
+                result.put("nameAndBrad", infosCEFuture.result());
+                handler.handle(new Either.Right<>(result));
+            } else {
+                handler.handle(new Either.Left<>(event.cause().getMessage()));
+            }
+        });
     }
 
     @Override

@@ -1,17 +1,11 @@
 import {} from 'entcore';
 
 export class ElementProgramme {
+    texte : string;
+    id_classe : string;
 
-        id : number;
-        texte : string;
-        id_classe : string;
-        id_eleve : string;
-        id_periode : number;
-        id_matiere : string;
-
-    constructor(p? : any) {
-
+    constructor(texte, id_classe) {
+        this.texte = texte;
+        this.id_classe = id_classe;
     }
-
-
 }

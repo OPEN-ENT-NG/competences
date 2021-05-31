@@ -71,7 +71,8 @@ public class DefaultElementProgramme implements ElementProgramme {
     }
 
     @Override
-    public void getElementProgrammeClasses(Long idPeriode, String idMatiere, JsonArray idsClasse, Handler<Either<String, JsonArray>> handler) {
+    public void getElementProgrammeClasses(Long idPeriode, String idMatiere, JsonArray idsClasse,
+                                           Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 

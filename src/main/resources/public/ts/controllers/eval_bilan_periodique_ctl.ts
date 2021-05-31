@@ -795,6 +795,26 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.safeApply($scope);
         };
 
+        $scope.openUpdateElementProgramme = (suiviDesAcquis) => {
+            $scope.opened.lightboxUpdateElementProgramme = true;
+            $scope.suiviDesAcquis = suiviDesAcquis;
+            utils.safeApply($scope);
+        }
+
+        $scope.saveElementsProgramme = (elementProgrammeByClasse?) => {
+            if($scope.suiviDesAcquis.elementsProgramme.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH){
+                if(elementProgrammeByClasse != undefined) {
+                    $scope.suiviDesAcquis.saveElementProgrammeByClasse(elementProgrammeByClasse);
+                } else {
+                    $scope.suiviDesAcquis.saveElementsProgramme();
+                }
+            }
+        }
+
+        $scope.getClasseLibelle = (idClasse) => {
+            return _.find($scope.classes.all, {id: idClasse}).name;
+        }
+
         $scope.setColonne = async function (colonne) {
             await $scope.search.eleve.setColonne(colonne, $scope.search.periode.id_type);
             await $scope.setHistoriqueEvenement();

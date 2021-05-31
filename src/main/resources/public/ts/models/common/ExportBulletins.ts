@@ -348,11 +348,11 @@ export class ExportBulletins {
         }
     }
 
-    public static async setInformationsCE (idStructure, path, name) {
+    public static async setInformationsCE(idStructure, path, name) {
         try {
             let data = {idStructure: idStructure,
-                path: (path !== undefined)? path : "/img/illustrations/image-default.svg",
-                name: (name !== undefined)? name : "" };
+                path: (path !== undefined) ? path : "/img/illustrations/image-default.svg",
+                name: (name !== undefined) ? name : "" };
             await http.post(`/competences/informations/bulletins/ce`, data);
         }
 

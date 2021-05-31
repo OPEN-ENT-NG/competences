@@ -7,7 +7,7 @@
         </content>
     </section>
     <article ng-if="elementBilanPeriodique.suivisAcquis.hasCoefficientConflict === true" class="twelve ">
-        <div class=" warning">
+        <div class="warning">
             <i18n>evaluations.coefficient.conflict.warning</i18n>
         </div>
         <div class="row">
@@ -19,7 +19,7 @@
     <article class="twelve cell" ng-if="elementBilanPeriodique.suivisAcquis.all.length !== 0">
         <div class="columns-popup-wrapper right-magnet">
             <div ng-click="showPopUpColumns = !showPopUpColumns" class="right-magnet columns-popup-button"
-                  tooltip="[['conseil.acquis.moyenne.showColumns']]">
+                 tooltip="[['conseil.acquis.moyenne.showColumns']]">
                 <span ng-show="showPopUpColumns === true">&#x25B2;</span>
                 <span ng-hide="showPopUpColumns === true">&#x25BC;</span>
             </div>
@@ -54,7 +54,7 @@
                 </thead>
                 <tbody>
                 <tr ng-repeat="suiviDesAcquis in elementBilanPeriodique.suivisAcquis.all">
-                    <td colspan="2" ng-if="suiviDesAcquis.sousMatieres === undefined || suiviDesAcquis.sousMatieres.length == 0 ">
+                    <td colspan="2" ng-if="suiviDesAcquis.sousMatieres === undefined || suiviDesAcquis.sousMatieres.length == 0">
                         <span class="matiere">[[suiviDesAcquis.libelleMatiere]]</span>
                         <ul>
                             <li ng-repeat="teacher in suiviDesAcquis.teachers">[[teacher.firstName[0] + '.' + teacher.name]]</li>
@@ -77,22 +77,15 @@
                         </div>
                     </td>
                     <td data-label="[[translate('bilan.perodique.elements.programme.travailles')]]">
-                        <ng-form name="elementsProgrammeMatiereForm">
-                                <textarea ng-show="canSaveAppMatierePosiBilanPeriodique()"
-                                          name="elementProgramme"
-                                          type="text"
-                                          ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
-                                          maxlength="MAX_CHAR_APPRECIATION_LENGTH"
-                                          ng-model="suiviDesAcquis.elementsProgramme"
-                                          ng-blur="suiviDesAcquis.saveElementsProgrammeMatierePeriodeEleve()">
-                                </textarea>
-                            <div class ="twelve element" ng-show="!canSaveAppMatierePosiBilanPeriodique()"
-                                 ng-bind="suiviDesAcquis.elementsProgramme">
-                            </div>
-                            <div ng-if="elementsProgrammeMatiereForm.elementProgramme.$error.maxlength" class="warning">
-                                <i18n>evaluations.releve.elementProgramme.classe.max.length</i18n>
-                            </div>
-                        </ng-form>
+                        <div class="twelve element"
+                             style="overflow-wrap: anywhere"
+                             ng-bind="suiviDesAcquis.elementsProgramme">
+                        </div>
+                        <div class="right-magnet">
+                            <i ng-click="openUpdateElementProgramme(suiviDesAcquis)"
+                               ng-show="canSaveAppMatierePosiBilanPeriodique()"
+                               class="edit"></i>
+                        </div>
                     </td>
                     <td data-label="[[translate('appreciation')]]">
                         <ng-form name="appreciationMatiereForm">
@@ -103,10 +96,9 @@
                                           maxlength="MAX_CHAR_APPRECIATION_LENGTH"
                                           ng-model="suiviDesAcquis.appreciationByClasse.appreciation"
                                           ng-blur="appreciationBlurCheck(suiviDesAcquis)"
-                                          ng-focus="setPreviousAppreciationSubject(suiviDesAcquis)"
-                                >
+                                          ng-focus="setPreviousAppreciationSubject(suiviDesAcquis)">
                                 </textarea>
-                            <div class ="twelve element" ng-show="!canSaveAppMatierePosiBilanPeriodique()"
+                            <div class="twelve element" ng-show="!canSaveAppMatierePosiBilanPeriodique()"
                                  ng-bind="suiviDesAcquis.appreciationByClasse.appreciation">
                             </div>
                             <div ng-if="appreciationMatiereForm.appreciation.$error.maxlength" class="warning">
@@ -152,8 +144,7 @@
                                 </li>
                                 <li class="cell"
                                     style="margin: 0; border: 1px solid #2a9cc8;"
-                                    ng-class="{ positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === sousMat.posi}"
-                                >
+                                    ng-class="{ positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === sousMat.posi}">
                                     <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
                                 </li>
                             </ul>
@@ -168,7 +159,7 @@
                                     ng-class="{ selected:  $index === suiviDesAcquis.positionnement_final}"
                                     data-ng-click="savePositionnementEleve(suiviDesAcquis, $index);"
                                     ng-repeat-start="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
-                                    <label   ng-bind-html="'NN'"></label>
+                                    <label ng-bind-html="'NN'"></label>
                                 </li>
                                 <li class="cell"
                                     ng-if="$index !== 0"
@@ -181,11 +172,9 @@
                                 <li class="cell"
                                     style="margin: 0"
                                     ng-class="{ selected: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.positionnement_final}"
-                                    data-ng-click="savePositionnementEleve(suiviDesAcquis, structure.cycle.niveauCompetencesArray.length);"
-                                >
+                                    data-ng-click="savePositionnementEleve(suiviDesAcquis, structure.cycle.niveauCompetencesArray.length);">
                                     <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
                                 </li>
-
                             </ul>
                             <ul class="selectable-list twelve" ng-if="!canSaveAppMatierePosiBilanPeriodique()">
                                 <li class="cell"
@@ -205,13 +194,11 @@
                                 </li>
                                 <li class="cell"
                                     style="margin: 0"
-                                    ng-class="{ positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.getPositionnementDefinitif()}"
-                                >
+                                    ng-class="{ positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.getPositionnementDefinitif()}">
                                     <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
                                 </li>
                             </ul>
                         </div>
-
                     </td>
                 </tr>
 
@@ -235,6 +222,66 @@
     <section>
         <container template="synthese"></container>
     </section>
+
+    <lightbox show="opened.lightboxUpdateElementProgramme" on-close="opened.lightboxUpdateElementProgramme = false">
+        <div class="header">
+            <h2>
+                <i18n>evaluations.add.element.programme.title</i18n>
+            </h2>
+        </div>
+        <div class="twelve">
+            <ng-form name="elementsProgrammeMatiereForm">
+                <div ng-if="suiviDesAcquis.elementsProgrammeByClasse.length > 1"
+                     ng-repeat="elementProgrammeByClasse in suiviDesAcquis.elementsProgrammeByClasse">
+                    <div class="row">
+                        <div class="twelve cell twelve-mobile">
+                            <label><i18n class="bold three cell">evaluations.classe.groupe</i18n></label>
+                            <label class="elements-programme-rappels">[[getClasseLibelle(elementProgrammeByClasse.id_classe)]]</label>
+                        </div>
+                    </div>
+                    <textarea name="elementProgrammeByClasse"
+                              type="text"
+                              rows="4"
+                              ng-model="elementProgrammeByClasse.texte"
+                              ng-change="suiviDesAcquis.setElementsProgramme()"
+                              ng-blur="saveElementsProgramme(elementProgrammeByClasse)">
+                    </textarea>
+                </div>
+                <div ng-if="suiviDesAcquis.elementsProgrammeByClasse.length > 1"
+                     class="separator"></div>
+                <div class="row">
+                    <div class="twelve cell twelve-mobile">
+                        <label><i18n class="bold three cell">viescolaire.utils.subject</i18n></label>
+                        <label class="elements-programme-rappels">[[suiviDesAcquis.libelleMatiere]]</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="twelve cell twelve-mobile">
+                        <label><i18n class="bold three cell">evaluations.classe.groupe</i18n></label>
+                        <label ng-if = "suiviDesAcquis.elementsProgrammeByClasse.length === 1"
+                               class="elements-programme-rappels">[[getClasseLibelle(suiviDesAcquis.elementsProgrammeByClasse[0].id_classe)]]
+                        </label>
+                        <label ng-if = "suiviDesAcquis.elementsProgrammeByClasse.length > 1"
+                               class="elements-programme-rappels">[[search.classe.name]]
+                        </label>
+                    </div>
+                </div>
+                <textarea name="elementProgramme"
+                          type="text"
+                          rows="4"
+                          maxlength="MAX_CHAR_APPRECIATION_LENGTH"
+                          ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
+                          ng-disabled="suiviDesAcquis.elementsProgrammeByClasse.length > 1"
+                          ng-model="suiviDesAcquis.elementsProgramme"
+                          ng-blur="saveElementsProgramme()">
+                </textarea>
+
+                <div ng-if="elementsProgrammeMatiereForm.elementProgramme.$error.maxlength" class="warning">
+                    <i18n>evaluations.releve.elementProgramme.classe.max.length</i18n>
+                </div>
+            </ng-form>
+        </div>
+    </lightbox>
 </div>
 
 <div ng-include="'/competences/public/template/enseignants/bilan_periodique/Ligthbox_conflict_coefficient.html'"></div>

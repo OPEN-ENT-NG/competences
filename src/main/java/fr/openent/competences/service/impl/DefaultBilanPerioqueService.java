@@ -360,6 +360,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                         groupsStudentFuture, responseGroupsStudent);
                             });
                             futures.add(groupsStudentFuture);
+
                             CompositeFuture.all(futures).setHandler(
                                     setSubjectLibelleAndTeachersHandler(idEtablissement, idPeriode, idEleve, idClasse,
                                             handler, idsMatieresIdsTeachers, idClasseGroups, futures)
@@ -670,25 +671,32 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private void setElementProgramme(final JsonObject result, final JsonArray eltsProg,
                                      List<String> IdsClassWithNoteAppCompNoteStudent) {
         String elementsProg = "";
-        if (isNotNull(eltsProg) && eltsProg.size() > 0) {
+        JsonArray elementsProgByClasse = new JsonArray();
+        if(isNotNull(eltsProg) && eltsProg.size() > 0) {
             for (int i = 0; i < eltsProg.size(); i++) {
-                JsonObject element;
-                element = eltsProg.getJsonObject(i);
-                if (isNull(element.getString("texte"))) {
+                JsonObject element = eltsProg.getJsonObject(i);
+                String texte = element.getString("texte");
+                String idClasse = element.getString("id_classe");
+
+                if (isNull(texte)) {
                     element.put("texte", "");
                 }
-                if (elementsProg.isEmpty() && element.getString("id_classe") != null &&
-                        IdsClassWithNoteAppCompNoteStudent.contains(element.getString("id_classe"))) {
-                    elementsProg = element.getString("texte");
-                } else if(element.getString("id_classe") != null &&
-                        IdsClassWithNoteAppCompNoteStudent.contains(element.getString("id_classe")) ){
-                    elementsProg += " " + element.getString("texte");
+
+                if(idClasse != null && IdsClassWithNoteAppCompNoteStudent.contains(idClasse)) {
+                    if(elementsProg.isEmpty()) {
+                        elementsProg = texte;
+                    } else {
+                        elementsProg += " " + texte;
+                    }
+                    elementsProgByClasse.add(new JsonObject()
+                            .put("id_classe", idClasse)
+                            .put("texte", texte));
                 }
             }
         }
         result.put("elementsProgramme", elementsProg);
+        result.put("elementsProgrammeByClasse", elementsProgByClasse);
     }
-
 
     private void  setAppreciationMoyFinalePositionnementEleve(final JsonObject result,
                                                               final JsonArray allAppMoyPosi,

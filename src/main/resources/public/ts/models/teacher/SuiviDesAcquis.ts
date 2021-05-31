@@ -6,13 +6,12 @@ import {notify, _, Collection, Model, http as httpEntcore} from "entcore";
 import {Historique} from "../common/Historique";
 import {getNN} from "../../utils/functions/utilsNN";
 
-
 export class SuiviDesAcquis  {
-
     id_matiere : string;
     libelleMatiere : string;
     teachers : Enseignant[];
     elementsProgramme : string;
+    elementsProgrammeByClasse: ElementProgramme[];
     appreciationByClasse : AppreciationMatiere;
     moyenne_finale : number ;
     positionnement_final : any ;
@@ -62,10 +61,10 @@ export class SuiviDesAcquis  {
         this.appreciationByClasse.appreciation = this.previousAppreciationMatiere;
     }
 
-    async saveElementsProgrammeMatierePeriodeEleve() {
+    async saveElementsProgramme(idClasse?, texte?) {
         let _data = _.extend(this.toJson(), {
-            idClasse: this.idClasse,
-            texte: this.elementsProgramme
+            idClasse: idClasse ? idClasse : this.elementsProgrammeByClasse[0].id_classe,
+            texte: texte ? texte : this.elementsProgramme
         });
 
         try{
@@ -74,6 +73,24 @@ export class SuiviDesAcquis  {
             notify.error('evaluations.releve.elementProgramme.classe.save.error');
             console.log(e);
         }
+    }
+
+    setElementsProgramme() {
+        let elementsProgramme = ""
+
+        this.elementsProgrammeByClasse.forEach(element => {
+            if(elementsProgramme.length === 0) {
+                elementsProgramme = element.texte;
+            } else {
+                elementsProgramme += " " + element.texte;
+            }
+        });
+
+        this.elementsProgramme = elementsProgramme;
+    }
+
+    async saveElementProgrammeByClasse(elementProgrammeByClasse){
+        this.saveElementsProgramme(elementProgrammeByClasse.id_classe, elementProgrammeByClasse.texte);
     }
 
     async savePositionnementEleve(positionnement) {
@@ -193,8 +210,7 @@ export class SuivisDesAcquis extends Model{
                     if (suiviDesAcquis.moyennesFinales !== null && suiviDesAcquis.moyennesFinales !== undefined
                         && _.find(suiviDesAcquis.moyennesFinales, {id_periode: suiviDesAcquis.idPeriode}) !== undefined) {
                         suiviDesAcquis.moyenneEleve = _.find(suiviDesAcquis.moyennesFinales,{id_periode : suiviDesAcquis.idPeriode}).moyenneFinale;
-                    }
-                    else if (suiviDesAcquis.moyennes !== null && suiviDesAcquis.moyennes !== undefined &&
+                    } else if (suiviDesAcquis.moyennes !== null && suiviDesAcquis.moyennes !== undefined &&
                         _.find(suiviDesAcquis.moyennes, {id: suiviDesAcquis.idPeriode}) !== undefined) {
                         suiviDesAcquis.moyenneEleve = _.find(suiviDesAcquis.moyennes, {id : suiviDesAcquis.idPeriode}).moyenne;
                     } else {
@@ -252,6 +268,8 @@ export class SuivisDesAcquis extends Model{
                         && suiviDesAcquis.positionnement_auto === 0 && suiviDesAcquis.positionnement_final === 0) {
                         suiviDesAcquisToRemove.push(suiviDesAcquis)
                     }
+
+                    suiviDesAcquis.elementsProgrammeByClasse = Mix.castArrayAs(ElementProgramme, suiviDesAcquis.elementsProgrammeByClasse);
                 });
 
                 //supprime le suiviDesAcquis si pas de donnée pour l'élève pour la période sélectionnée

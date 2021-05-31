@@ -96,7 +96,7 @@ public class ExportBulletinController extends ControllerHelper {
     }
 
     @Post("/informations/bulletins/ce")
-    @ApiDoc("Retourne tous les types de devoir par etablissement")
+    @ApiDoc("Enregistre les informations du Chef d'Etablissement (nom + path)")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessExportBulletinFilter.class)
     public void setInformationCE(final HttpServerRequest request) {
@@ -106,8 +106,7 @@ public class ExportBulletinController extends ControllerHelper {
             String name = ressource.getString("name");
             if(idStructure != null) {
                 utilsService.setInformationCE(idStructure, path, name, defaultResponseHandler(request));
-            }
-            else {
+            } else {
                 badRequest(request);
             }
         });
