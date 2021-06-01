@@ -1345,7 +1345,7 @@ public class LSUController extends ControllerHelper {
      */
     private void getResultsElevesByDomaine( List<String> listIdsEleve, String idClass, String idStructure, Long idCycle,
                                             Handler <Either<String,  Map<String, Map<Long, Integer>>>> handler){
-        final Map<String, Map<Long, Integer>> resultatsEleves = new HashMap<>();
+        Map<String, Map<Long, Integer>> resultatsEleves = new HashMap<>();
         final String[] idsEleve = listIdsEleve.toArray(new String[listIdsEleve.size()]);
         AtomicBoolean answer = new AtomicBoolean(false);
         AtomicInteger count = new AtomicInteger(0);
@@ -1777,7 +1777,7 @@ public class LSUController extends ControllerHelper {
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     int count = 0;
-                    final AtomicBoolean answer = new AtomicBoolean(false);
+                    AtomicBoolean answer = new AtomicBoolean(false);
                     final String thread = "idsClasses -> " + idsClasses;
                     final String method = "getGroupsClass";
                     @Override
@@ -1831,8 +1831,8 @@ public class LSUController extends ControllerHelper {
             JsonObject action = new JsonObject();
             action.put("action","classe.getHeadTeachersClasse").put("idClasse", idClass);
             eb.send(Competences.VIESCO_BUS_ADDRESS,action,Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                final AtomicBoolean answer = new AtomicBoolean(false);
-                final AtomicInteger count = new AtomicInteger(0);
+                AtomicBoolean answer = new AtomicBoolean(false);
+                AtomicInteger count = new AtomicInteger(0);
                 final String thread = "( "  + idClass + " )";
                 final String method = "getHeadTeachers";
 
@@ -1877,8 +1877,8 @@ public class LSUController extends ControllerHelper {
                                     final Map<String, JsonArray> tableConversionByClass,final Handler<String> handler){
         competenceNoteService.getConversionTableByClass(idStructure, idsClasses, true,
                 new Handler<Either<String, JsonArray>>() {
-                    final AtomicBoolean answer = new AtomicBoolean(false);
-                    final AtomicInteger count = new AtomicInteger(0);
+                    AtomicBoolean answer = new AtomicBoolean(false);
+                    AtomicInteger count = new AtomicInteger(0);
                     final String thread = "(" + idStructure + ", " + idsClasses.toString() + " )";
                     final String method = "getTableConversion";
 
@@ -1929,7 +1929,8 @@ public class LSUController extends ControllerHelper {
     }
 
 
-    private void getBaliseEnseignantFromId(final Donnees donnees, String idEnseignant,final JsonArray enseignantFromSts, final Handler<String> handler) {
+    private void getBaliseEnseignantFromId(final Donnees donnees, String idEnseignant,final JsonArray enseignantFromSts,
+                                           final Handler<String> handler) {
         final JsonArray ids = new JsonArray().add(idEnseignant);
 
         Utils.getLastNameFirstNameUser(eb, ids, mapResponseTeacher -> {
@@ -2001,8 +2002,8 @@ public class LSUController extends ControllerHelper {
                                          final Handler<String> handler) {
         elementBilanPeriodiqueService.getElementsBilanPeriodique(null, groupsClass, idStructure,
                 new Handler<Either<String, JsonArray>>() {
-                    final AtomicBoolean answer = new AtomicBoolean(false);
-                    final AtomicInteger count = new AtomicInteger(0);
+                    AtomicBoolean answer = new AtomicBoolean(false);
+                    AtomicInteger count = new AtomicInteger(0);
                     final String thread = "(" + idStructure + ", " + groupsClass.toString() + ")";
                     final String method = "getApEpiParcoursBalises";
                     @Override
@@ -2524,8 +2525,8 @@ public class LSUController extends ControllerHelper {
                     elementBilanPeriodiqueService.getApprecBilanPerEleve(idsGroupsClass,
                             Integer.toString(currentPeriode.getTypePeriode()), null, currentEleve.getIdNeo4j(),
                             new Handler<Either<String, JsonArray>>() {
-                                final AtomicBoolean answer = new AtomicBoolean(false);
-                                final AtomicInteger count = new AtomicInteger(0);
+                                AtomicBoolean answer = new AtomicBoolean(false);
+                                AtomicInteger count = new AtomicInteger(0);
                                 final String thread = "(" + currentEleve.getNom() + " " + currentEleve.getPrenom() + " )";
                                 final String method = "getBaliseBilansPeriodiques | getApprecBilanPerEleve ";
 
@@ -2667,8 +2668,8 @@ public class LSUController extends ControllerHelper {
                     bilanPeriodiqueService.getSuiviAcquis(idStructure, (long) currentPeriode.getTypePeriode(),
                             currentEleve.getIdNeo4j(), currentEleve.getId_Class(),
                             new Handler<Either<String, JsonArray>>() {
-                                final AtomicBoolean answer = new AtomicBoolean(false);
-                                final AtomicInteger count = new AtomicInteger(0);
+                                AtomicBoolean answer = new AtomicBoolean(false);
+                                AtomicInteger count = new AtomicInteger(0);
                                 final String thread = "(" + currentEleve.getNom() + " " + currentEleve.getPrenom() + " )";
                                 final String method = "getBaliseBilansPeriodiques | getSuiviAcquis ";
 
