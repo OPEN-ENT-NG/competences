@@ -416,7 +416,7 @@ public class NoteController extends ControllerHelper {
                                                         eleveAutrePeriode.containsKey("moyenne_generale") && eleveAutrePeriode.getValue("moyenne_generale") != null &&
                                                         !(eleveAutrePeriode.getValue("moyenne_generale").equals(NN) || eleveAutrePeriode.getValue("moyenne_generale").equals(""))) {
                                                     if (eleve.getValue("moyenne_generale").equals(NN) || eleve.getValue("moyenne_generale").equals("")) {
-                                                        eleve.put("moyenne_generale", decimalFormat.format(Double.valueOf(eleveAutrePeriode.getValue("moyenne_generale").toString())));
+                                                        eleve.put("moyenne_generale", decimalFormat.format(Double.valueOf(eleveAutrePeriode.getValue("moyenne_generale").toString().replace(",","."))));
                                                         if (!eleve.containsKey("nbPeriodesMoyenne"))
                                                             eleve.put("nbPeriodesMoyenne", 1);
                                                     }else {
@@ -430,12 +430,12 @@ public class NoteController extends ControllerHelper {
                                                     }
                                                 }else if(eleveAutrePeriode.containsKey("moyenne_generale") && eleveAutrePeriode.getValue("moyenne_generale") != null &&
                                                         !(eleveAutrePeriode.getValue("moyenne_generale").equals(NN) || eleveAutrePeriode.getValue("moyenne_generale").equals(""))){
-                                                    eleve.put("moyenne_generale", decimalFormat.format(Double.valueOf(eleveAutrePeriode.getValue("moyenne_generale").toString())));
+                                                    eleve.put("moyenne_generale", decimalFormat.format(Double.valueOf(eleveAutrePeriode.getValue("moyenne_generale").toString().replace(",","."))));
                                                     if (!eleve.containsKey("nbPeriodesMoyenne"))
                                                         eleve.put("nbPeriodesMoyenne", 1);
                                                 }else if(eleve.containsKey("moyenne_generale") && eleve.getValue("moyenne_generale") != null &&
                                                         !(eleve.getValue("moyenne_generale").equals(NN) || eleve.getValue("moyenne_generale").equals(""))){
-                                                    eleve.put("moyenne_generale", decimalFormat.format(Double.valueOf(eleve.getValue("moyenne_generale").toString())));
+                                                    eleve.put("moyenne_generale", decimalFormat.format(Double.valueOf(eleve.getValue("moyenne_generale").toString().replace(",","."))));
                                                     if (!eleve.containsKey("nbPeriodesMoyenne"))
                                                         eleve.put("nbPeriodesMoyenne", 1);
                                                 }
