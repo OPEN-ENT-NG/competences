@@ -396,65 +396,52 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                Integer typeClasse, Boolean withMoyenneFinale, JsonArray idsGroup,
                                Handler<Either<String, JsonArray>> handler) {
 
-        new DefaultUtilsService(this.eb).studentIdAvailableForPeriode(classeId,periodeId, typeClasse,
-                event -> {
-                    if (event.isRight()) {
-                        JsonArray queryResult = event.right().getValue();
-                        getNotesReleveEleves(queryResult, etablissementId, classeId, matiereId,
-                                periodeId, withMoyenneFinale, idsGroup,null, handler);
-                    } else {
-                        handler.handle(new Either.Left<>("Error While getting Available student "));
-                    }
-                });
+        new DefaultUtilsService(this.eb).studentIdAvailableForPeriode(classeId, periodeId, typeClasse, event -> {
+            if (event.isRight()) {
+                JsonArray queryResult = event.right().getValue();
+                getNotesReleveEleves(queryResult, etablissementId, classeId, periodeId, withMoyenneFinale,
+                        idsGroup, matiereId != null ? new JsonArray().add(matiereId) : null, handler);
+            } else {
+                handler.handle(new Either.Left<>("Error While getting Available student "));
+            }
+        });
 
     }
 
-    private void getNotesReleveEleves(JsonArray ids, String etablissementId, String classeId, String matiereId,
+    private void getNotesReleveEleves(JsonArray idsEleve, String etablissementId, String classeId,
                                       Long periodeId, Boolean withMoyenneFinale, JsonArray idsGroup,
-                                      JsonArray matiereIds, Handler<Either<String, JsonArray>> handler) {
-        List<String> idEleves = new ArrayList<String>();
+                                      JsonArray idsMatiere, Handler<Either<String, JsonArray>> handler) {
+        List<String> idEleves = idsEleve.getList();
 
-        if (ids != null) {
-            for (int i = 0; i < ids.size(); i++) {
-                idEleves.add(ids.getString(i));
-            }
+        List<String> idMatieres = null;
+        if(idsMatiere != null) {
+            idMatieres = idsMatiere.getList();
         }
 
-        List<String> idMatieres = new ArrayList<String>();
-
-        if(matiereIds != null) {
-            for (int i = 0; i < matiereIds.size(); i++) {
-                idMatieres.add(matiereIds.getString(i));
-            }
-        }else{
-            idMatieres = null;
+        List<String> idGroupes = null;
+        if(idsGroup != null) {
+            idGroupes = idsGroup.getList();
         }
 
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        //Construction de la requête
         query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient,")
                 .append(" devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, devoirs.id_periode , notes.id_eleve,")
                 .append(" devoirs.is_evaluated, null as annotation, devoirs.id_matiere, devoirs.id_sousmatiere ")
                 .append(" FROM ").append(COMPETENCES_SCHEMA).append(".devoirs")
                 .append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".notes")
-                .append(" ON ( devoirs.id = notes.id_devoir  ")
-                .append(( null != idsGroup)? ")" : "AND notes.id_eleve IN " + Sql.listPrepared(idEleves) + ")")
+                .append(" ON ( devoirs.id = notes.id_devoir ")
+                .append((null != idGroupes) ? ")" : ("AND notes.id_eleve IN " + Sql.listPrepared(idEleves) + ")"))
                 .append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON ")
                 .append("(rel_devoirs_groupes.id_devoir = devoirs.id AND ")
-                .append((null != idsGroup)? "rel_devoirs_groupes.id_groupe IN "+
-                        Sql.listPrepared(idsGroup.getList())+")" : "rel_devoirs_groupes.id_groupe = ?)")
+                .append((null != idGroupes) ? ("rel_devoirs_groupes.id_groupe IN " +
+                        Sql.listPrepared(idGroupes) + ")") : "rel_devoirs_groupes.id_groupe = ?)")
                 .append(" WHERE devoirs.id_etablissement = ? ")
-                .append((matiereIds != null || matiereId != null)?"AND devoirs.id_matiere IN "+
-                        ((matiereIds != null)?Sql.listPrepared(idMatieres):"(?)")+" ": " ");
+                .append((null != idMatieres) ? ("AND devoirs.id_matiere IN " + Sql.listPrepared(idMatieres)) : " ")
+                .append((null != periodeId) ? "AND devoirs.id_periode = ? " : "");
 
-        setParamGetNotesReleve(idsGroup, idEleves, classeId, idMatieres, matiereId, etablissementId, values);
-
-        if (periodeId != null) {
-            query.append("AND devoirs.id_periode = ? ");
-            values.add(periodeId);
-        }
+        setParamGetNotesReleve(idGroupes, idEleves, classeId, idMatieres, etablissementId, periodeId, values);
 
         query.append(" UNION ")
                 .append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient,")
@@ -464,61 +451,49 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append(" FROM ").append(COMPETENCES_SCHEMA).append(".devoirs")
                 .append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".rel_annotations_devoirs")
                 .append(" ON (devoirs.id = rel_annotations_devoirs.id_devoir ")
-                .append((null != idsGroup)? ")": " AND rel_annotations_devoirs.id_eleve IN " + Sql.listPrepared(idEleves) + ")")
+                .append((null != idGroupes) ? ")" : (" AND rel_annotations_devoirs.id_eleve IN " + Sql.listPrepared(idEleves) + ")"))
                 .append(" INNER JOIN " + COMPETENCES_SCHEMA + ".rel_devoirs_groupes")
                 .append(" ON (rel_devoirs_groupes.id_devoir = devoirs.id ")
-                .append((null != idsGroup)? "AND rel_devoirs_groupes.id_groupe IN "+
-                Sql.listPrepared(idsGroup.getList())+")": "AND rel_devoirs_groupes.id_groupe = ?) ")
-                .append(" WHERE devoirs.id_etablissement = ? " +
-                        ((matiereIds != null || matiereId != null)?"AND devoirs.id_matiere IN "
-                                +((matiereIds != null)?Sql.listPrepared(idMatieres):"(?)")+" ": " "));
+                .append((null != idGroupes) ? ("AND rel_devoirs_groupes.id_groupe IN " +
+                        Sql.listPrepared(idGroupes) + ")") : "AND rel_devoirs_groupes.id_groupe = ?) ")
+                .append(" WHERE devoirs.id_etablissement = ? ")
+                .append((null != idMatieres) ? ("AND devoirs.id_matiere IN " + Sql.listPrepared(idMatieres)) : " ")
+                .append((null != periodeId) ? "AND devoirs.id_periode = ? " : "")
+                .append("ORDER BY date ASC ");
 
-        setParamGetNotesReleve(idsGroup, idEleves, classeId, idMatieres, matiereId, etablissementId, values);
+        setParamGetNotesReleve(idGroupes, idEleves, classeId, idMatieres, etablissementId, periodeId, values);
 
-        if (periodeId != null) {
-            query.append("AND devoirs.id_periode = ? ");
-            values.add(periodeId);
-        }
-        query.append("ORDER BY date ASC ");
-
-        String queryWithMoyF = "";
         if (withMoyenneFinale) {
-            queryWithMoyF = ("SELECT * FROM ( " + query + ") AS devoirs_notes_annotation " +
-                    "FULL JOIN ( SELECT moyenne_finale.id_matiere AS id_matiere_moyf, " +
-                    "moyenne_finale.id_eleve AS id_eleve_moyenne_finale, COALESCE(moyenne_finale.moyenne, -100) AS moyenne, " +
-                    "moyenne_finale.id_periode AS id_periode_moyenne_finale " +
-                    "FROM notes.moyenne_finale WHERE "+
-                    ((null != idsGroup)? "moyenne_finale.id_classe IN "+ Sql.listPrepared(idsGroup.getList()):
-                            " moyenne_finale.id_eleve IN " +  Sql.listPrepared(idEleves) +
-                                    " AND moyenne_finale.id_classe = ? " )+
-                    ((matiereIds != null || matiereId != null)?"AND devoirs.id_matiere IN "+((matiereIds != null)?Sql.listPrepared(idMatieres):"(?)")+" ":"") +
-                    ((null != periodeId)? "AND moyenne_finale.id_periode = ? " :"") +
-                    ") AS moyf ON ( moyf.id_eleve_moyenne_finale = devoirs_notes_annotation.id_eleve "+
-                    " AND moyf.id_matiere_moyf = devoirs_notes_annotation.id_matiere " +
-                    " AND moyf.id_periode_moyenne_finale = devoirs_notes_annotation.id_periode )");
+            query = new StringBuilder().append("SELECT * FROM ( ").append(query).append(") AS devoirs_notes_annotation ")
+                    .append("FULL JOIN ( SELECT moyenne_finale.id_matiere AS id_matiere_moyf, ")
+                    .append("moyenne_finale.id_eleve AS id_eleve_moyenne_finale, COALESCE(moyenne_finale.moyenne, -100) AS moyenne, ")
+                    .append("moyenne_finale.id_periode AS id_periode_moyenne_finale ")
+                    .append("FROM notes.moyenne_finale WHERE ")
+                    .append((null != idGroupes) ? ("moyenne_finale.id_classe IN " + Sql.listPrepared(idGroupes)) :
+                            (" moyenne_finale.id_eleve IN " + Sql.listPrepared(idEleves) + " AND moyenne_finale.id_classe = ? "))
+                    .append((null != idMatieres) ? ("AND devoirs.id_matiere IN " + Sql.listPrepared(idMatieres)) : " ")
+                    .append((null != periodeId) ? "AND moyenne_finale.id_periode = ? " : "")
+                    .append(") AS moyf ON ( moyf.id_eleve_moyenne_finale = devoirs_notes_annotation.id_eleve ")
+                    .append(" AND moyf.id_matiere_moyf = devoirs_notes_annotation.id_matiere ")
+                    .append(" AND moyf.id_periode_moyenne_finale = devoirs_notes_annotation.id_periode )");
 
-            setParamGetNotesReleve(idsGroup, idEleves, classeId, idMatieres, matiereId, null, values);
-
-            if (periodeId != null) {
-                values.add(periodeId);
-            }
+            setParamGetNotesReleve(idGroupes, idEleves, classeId, idMatieres,null, periodeId, values);
         }
 
-        Sql.getInstance().prepared(withMoyenneFinale ? queryWithMoyF : query.toString(), values,
-                Competences.DELIVERY_OPTIONS, validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values, Competences.DELIVERY_OPTIONS, validResultHandler(handler));
     }
 
-    private void setParamGetNotesReleve(JsonArray idsGroup, List<String> idEleves, String classeId,
-                                        List<String> matiereIds, String matiereId, String etablissementId,
+    private void setParamGetNotesReleve(List<String> idGroupes, List<String> idEleves, String classeId,
+                                        List<String> matiereIds, String etablissementId, Long periodeId,
                                         JsonArray values){
-        if(null == idsGroup){
+        if(null == idGroupes){
             for (String eleve : idEleves) {
                 values.add(eleve);
             }
             values.add(classeId);
-        }else {
-            for (int i = 0; i < idsGroup.size(); i++) {
-                values.add(idsGroup.getString(i));
+        } else {
+            for (String groupe : idGroupes) {
+                values.add(groupe);
             }
         }
 
@@ -526,12 +501,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             values.add(etablissementId);
         }
 
-        if(null == matiereIds && matiereId != null){
-            values.add(matiereId);
-        }else if(null != matiereIds){
-            for (String matiereIdToAdd : matiereIds) {
-                values.add(matiereIdToAdd);
+        if(null != matiereIds) {
+            for (String matiere : matiereIds) {
+                values.add(matiere);
             }
+        }
+
+        if(periodeId != null) {
+            values.add(periodeId);
         }
     }
 
@@ -1004,7 +981,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(note.getString("valeur")),
                         Double.valueOf(note.getLong("diviseur")), note.getBoolean("ramener_sur"),
                         Double.valueOf(note.getString("coefficient")), note.getString("id_eleve"),
-                       id_periode);
+                        id_periode);
 
                 //ajouter la note à la période correspondante et à l'année pour l'élève
                 if (note.getString("id_eleve").equals(idEleve)) {
@@ -2312,8 +2289,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 Future<JsonArray> notesFuture = Future.future();
                 Boolean hasEvaluatedHomeWork = (nbEvaluatedHomeWork.result().getLong("nb") > 0);
                 if(idEleve == null && hasEvaluatedHomeWork) {
-                    getNotesReleveEleves(idEleves, idEtablissement, idClasse, idMatiere, idPeriode,
-                            false, null, null,
+                    getNotesReleveEleves(idEleves, idEtablissement, idClasse, idPeriode, false,
+                            null, idMatiere != null ? new JsonArray().add(idMatiere) : null,
                             notesEvent -> formate(notesFuture, notesEvent));
                 } else {
                     if (!hasEvaluatedHomeWork) {
@@ -2435,9 +2412,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                                 // Récupération des Notes du Relevé
                                 Future<JsonArray> notesFuture = Future.future();
-                                getNotesReleveEleves(idEleves, idEtablissement, idClasse, null, idPeriode,
-                                        false, idGroups, idMatieres,
-                                        notesEvent -> formate(notesFuture, notesEvent));
+                                getNotesReleveEleves(idEleves, idEtablissement, idClasse, idPeriode, false,
+                                        idGroups, idMatieres, notesEvent -> formate(notesFuture, notesEvent));
 
                                 // Récupération des Compétences-Notes du Relevé
                                 Future<JsonArray> compNotesFuture = Future.future();
