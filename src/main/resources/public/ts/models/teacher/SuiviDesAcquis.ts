@@ -194,6 +194,7 @@ export class SuivisDesAcquis extends Model{
                 // pour chaque suiviDesAcquis setter
                 // l'appréciation de toutes les classes et groupes
                 _.each(this.all, (suiviDesAcquis) => {
+                    console.log(suiviDesAcquis);
                     suiviDesAcquis.idEleve = this.idEleve;
                     suiviDesAcquis.idClasse = this.idClasse;
                     suiviDesAcquis.idEtablissement = this.idEtablissement;
@@ -203,7 +204,7 @@ export class SuivisDesAcquis extends Model{
                         && _.find(suiviDesAcquis.appreciations,{id_periode : suiviDesAcquis.idPeriode}) !== undefined){
                         suiviDesAcquis.appreciationByClasse = _.find(suiviDesAcquis.appreciations, {id_periode : suiviDesAcquis.idPeriode}).appreciationByClasse[0];
                     } else {
-                        suiviDesAcquis.appreciationByClasse = new AppreciationMatiere( suiviDesAcquis.idClasse);
+                        suiviDesAcquis.appreciationByClasse = new AppreciationMatiere(suiviDesAcquis.idClasse);
                     }
 
                     // la moyenneEleve pour chaque période et chaque matiere

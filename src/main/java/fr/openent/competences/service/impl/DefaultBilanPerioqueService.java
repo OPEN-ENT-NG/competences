@@ -672,15 +672,18 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                      List<String> IdsClassWithNoteAppCompNoteStudent) {
         String elementsProg = "";
         JsonArray elementsProgByClasse = new JsonArray();
+
+        IdsClassWithNoteAppCompNoteStudent.forEach(idClasse -> {
+            elementsProgByClasse.add(new JsonObject()
+                    .put("id_classe", idClasse)
+                    .put("texte", ""));
+        });
+
         if(isNotNull(eltsProg) && eltsProg.size() > 0) {
             for (int i = 0; i < eltsProg.size(); i++) {
                 JsonObject element = eltsProg.getJsonObject(i);
                 String texte = element.getString("texte");
                 String idClasse = element.getString("id_classe");
-
-                if (isNull(texte)) {
-                    element.put("texte", "");
-                }
 
                 if(idClasse != null && IdsClassWithNoteAppCompNoteStudent.contains(idClasse)) {
                     if(elementsProg.isEmpty()) {
@@ -688,12 +691,17 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     } else {
                         elementsProg += " " + texte;
                     }
-                    elementsProgByClasse.add(new JsonObject()
-                            .put("id_classe", idClasse)
-                            .put("texte", texte));
+
+                    JsonObject elementFounded = (JsonObject) elementsProgByClasse.stream()
+                            .filter(e -> ((JsonObject) e).getString("id_classe").equals(idClasse))
+                            .findFirst().orElse(null);
+                    if(elementFounded != null){
+                        elementFounded.put("texte", texte);
+                    }
                 }
             }
         }
+
         result.put("elementsProgramme", elementsProg);
         result.put("elementsProgrammeByClasse", elementsProgByClasse);
     }
