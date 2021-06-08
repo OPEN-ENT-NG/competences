@@ -132,6 +132,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                     && $scope.paramsLSU.contentStsFile !== null
                     && $scope.paramsLSU.periodes_type.length > 0
                     && $scope.paramsLSU.classes.length > 0
+                    //&& $scope.paramsLSU.classes.length < 4
                     && $scope.paramsLSU.responsables.length > 0)
             );
             utils.safeApply($scope);
@@ -166,45 +167,50 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         };
 
         $scope.exportLSU = async function (getUnheededStudents) {
-            await Utils.runMessageLoader($scope);
-            $scope.inProgress = true;
-            $scope.paramsLSU.type = "" + $scope.paramsLSU.type;
-            $scope.noStudent = false;
-            $scope.lsu.export($scope.paramsLSU, getUnheededStudents)
-                .then(async function (res) {
-                    if (!$scope.lsu.hasUnheededStudents) {
-                        let blob = new Blob([res.data]);
-                        let link = document.createElement('a');
-                        link.href = window.URL.createObjectURL(blob);
-                        link.download = res.headers['content-disposition'].split('filename=')[1];
-                        document.body.appendChild(link);
-                        link.click();
-                        $scope.errorResponse = null;
-                    }
-                    await Utils.stopMessageLoader($scope);
-                })
-
-                .catch(async (error) => {
-                    if ($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
-                        && ($scope.lsu.errorsLSU.all.length > 0
-                            || $scope.lsu.errorsLSU.errorCode.length > 0
-                            || $scope.lsu.errorsLSU.emptyDiscipline
-                            || $scope.lsu.errorsLSU.errorEPITeachers.length > 0)
-                    ) {
-                        $scope.opened.lightboxErrorsLSU = true;
-                    } else {
-                        if ($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
-                            && !_.isEmpty($scope.lsu.errorsLSU.errorMessageBadRequest)) {
-                            if (_.contains($scope.lsu.errorsLSU.errorMessageBadRequest, "getEleves : no student")) {
-                                $scope.noStudent = true;
-                                notify.info('evaluation.lsu.error.getEleves.no.student');
-                            }
-                            console.error(error);
-                            $scope.errorResponse = true;
+            if( $scope.paramsLSU.classes.length > 3) {
+                notify.info("Veuillez sélectionner trois classes maximum");
+            } else {
+                await Utils.runMessageLoader($scope);
+                $scope.inProgress = true;
+                $scope.paramsLSU.type = "" + $scope.paramsLSU.type;
+                $scope.noStudent = false;
+                $scope.lsu.export($scope.paramsLSU, getUnheededStudents)
+                    .then(async function (res) {
+                        if (!$scope.lsu.hasUnheededStudents) {
+                            let blob = new Blob([res.data]);
+                            let link = document.createElement('a');
+                            link.href = window.URL.createObjectURL(blob);
+                            link.download = res.headers['content-disposition'].split('filename=')[1];
+                            document.body.appendChild(link);
+                            link.click();
+                            $scope.errorResponse = null;
                         }
-                    }
-                    await Utils.stopMessageLoader($scope);
-                });
+                        await Utils.stopMessageLoader($scope);
+                    })
+
+                    .catch(async (error) => {
+                        if ($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
+                            && ($scope.lsu.errorsLSU.all.length > 0
+                                || $scope.lsu.errorsLSU.errorCode.length > 0
+                                || $scope.lsu.errorsLSU.emptyDiscipline
+                                || $scope.lsu.errorsLSU.errorEPITeachers.length > 0)
+                        ) {
+                            $scope.opened.lightboxErrorsLSU = true;
+                        } else {
+                            if ($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
+                                && !_.isEmpty($scope.lsu.errorsLSU.errorMessageBadRequest)) {
+                                if (_.contains($scope.lsu.errorsLSU.errorMessageBadRequest, "getEleves : no student")) {
+                                    $scope.noStudent = true;
+                                    notify.info('evaluation.lsu.error.getEleves.no.student');
+                                }
+                                console.error(error);
+                                $scope.errorResponse = true;
+                            }
+                        }
+                        await Utils.stopMessageLoader($scope);
+                    });
+            }
+
         };
 
         $scope.chooseClasse = async function (classe) {
