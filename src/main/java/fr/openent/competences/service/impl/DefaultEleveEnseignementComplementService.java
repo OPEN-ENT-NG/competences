@@ -47,26 +47,30 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
     }
 
     public void createEnsCplByELeve(JsonObject data, UserInfos user, Handler<Either<String, JsonObject>> handler){
-        super.create(data,user,handler);
+        super.create(data, user, handler);
     }
 
     @Override
     public void updateEnsCpl(Integer id, JsonObject data, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "UPDATE "+ Competences.COMPETENCES_SCHEMA+".eleve_enseignement_complement SET id_enscpl = ?, id_niveau = ?, id_langue = ?, niveau_lcr = ?"
-                +" WHERE id = ?";
+
+        String query = "UPDATE " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement " +
+                "SET id_enscpl = ?, id_niveau = ?, id_langue = ?, niveau_lcr = ? " +
+                "WHERE id = ?";
+
         values.add(data.getLong("id_enscpl"));
         values.add(data.getLong("id_niveau"));
         values.add(data.getLong("id_langue"));
         values.add(data.getLong("niveau_lcr"));
         values.add(id);
-        Sql.getInstance().prepared(query,values, SqlResult.validUniqueResultHandler(handler));
+
+        Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
     public void getNiveauEnsCplByEleve(String idEleve, Long idCycle, Handler<Either<String, JsonObject>> handler) {
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
-        String query ="SELECT eleve_enseignement_complement.*, enseignement_complement.libelle " +
+        String query = "SELECT eleve_enseignement_complement.*, enseignement_complement.libelle " +
                 "FROM " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement " +
                 "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".enseignement_complement ON enseignement_complement.id = eleve_enseignement_complement.id_enscpl " +
                 "WHERE id_eleve = ?" ;
@@ -76,7 +80,6 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
             query = query + " AND id_cycle = ?";
             values.add(idCycle);
         }
-
 
         Sql.getInstance().prepared(query,values, Competences.DELIVERY_OPTIONS,
                 SqlResult.validUniqueResultHandler(handler));

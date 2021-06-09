@@ -384,31 +384,38 @@ public class BFCController extends ControllerHelper {
     @ApiDoc("crée l'enseignement de complement pour un élève")
     @SecuredAction(value="",type=ActionType.AUTHENTICATED)
     public void createNiveauEnsCpl(final HttpServerRequest request){
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos userInfos) {
-//                if(userInfos!=null && userInfos.getFunctions().containsKey("ENS")){
-                RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NIVEAUENSCPL_CREATE, new Handler<JsonObject>() {
-                    @Override
-                    public void handle(JsonObject data) {
-                        syntheseService.getIdCycleWithIdEleve(data.getString("id_eleve"), new Handler<Either<String, Integer>>() {
-                            @Override
-                            public void handle(Either<String, Integer> idCycle) {
-                                if (idCycle.isRight()) {
-                                    data.put("id_cycle", idCycle.right().getValue());
-                                    eleveEnseignementComplement.createEnsCplByELeve(data, userInfos, notEmptyResponseHandler(request));
-                                } else {
-                                    log.info("idCycle not found");
-                                    Renders.badRequest(request);
-                                }
-                            }
-                        });
+        UserUtils.getUserInfos(eb, request, userInfos -> {
+            RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NIVEAUENSCPL_CREATE, data -> {
+                String idEleve = data.getString("id_eleve");
+
+                if(request.params().contains("id_cycle") && Utils.isCycleNotNull(request.params().get("id_cycle"))){
+                    Long idCycle = Long.parseLong(request.params().get("id_cycle"));
+                    if(idCycle != 2) {
+                        eleveEnseignementComplement.createEnsCplByELeve(data, userInfos, notEmptyResponseHandler(request));
+                    } else {
+                        log.info("idCycle either null or not cycle 4, actual value : " + idCycle);
+                        Renders.badRequest(request, "Les enseignements de complement ne peuvent être " +
+                                "renseignés que pour les élèves du cycle 4");
                     }
-                });
-//                }else{
-//                    Renders.unauthorized(request);
-//                }
-            }
+                } else {
+                    syntheseService.getIdCycleWithIdEleve(idEleve, cycleEvent -> {
+                        if (cycleEvent.isRight()) {
+                            Integer idCycle = cycleEvent.right().getValue();
+                            if(idCycle != null && idCycle != 2) {
+                                data.put("id_cycle", idCycle);
+                                eleveEnseignementComplement.createEnsCplByELeve(data, userInfos, notEmptyResponseHandler(request));
+                            } else {
+                                log.info("idCycle either null or not cycle 4, actual value : " + idCycle);
+                                Renders.badRequest(request, "Les enseignements de complement ne peuvent être " +
+                                        "renseignés que pour les élèves du cycle 4");
+                            }
+                        } else {
+                            log.info("idCycle not found");
+                            Renders.badRequest(request);
+                        }
+                    });
+                }
+            });
         });
     }
 
@@ -437,16 +444,13 @@ public class BFCController extends ControllerHelper {
                         eleveEnseignementComplement.getNiveauEnsCplByEleve(idEleve,
                                 Long.parseLong(request.params().get("idCycle")), defaultResponseHandler(request));
                     } else {
-                        syntheseService.getIdCycleWithIdEleve(idEleve, new Handler<Either<String, Integer>>() {
-                            @Override
-                            public void handle(Either<String, Integer> idCycle) {
-                                if (idCycle.isRight()) {
-                                    eleveEnseignementComplement.getNiveauEnsCplByEleve(idEleve,
-                                            new Long(idCycle.right().getValue()), defaultResponseHandler(request));
-                                } else {
-                                    log.info("idCycle not found");
-                                    Renders.badRequest(request);
-                                }
+                        syntheseService.getIdCycleWithIdEleve(idEleve, idCycle -> {
+                            if (idCycle.isRight()) {
+                                eleveEnseignementComplement.getNiveauEnsCplByEleve(idEleve,
+                                        new Long(idCycle.right().getValue()), defaultResponseHandler(request));
+                            } else {
+                                log.info("idCycle not found");
+                                Renders.badRequest(request);
                             }
                         });
                     }

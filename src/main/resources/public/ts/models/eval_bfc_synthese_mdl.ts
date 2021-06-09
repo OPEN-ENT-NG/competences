@@ -21,7 +21,7 @@ export class BfcSynthese extends Model {
     id: number;
     id_eleve: string;
     id_classe : string;
-    id_cycle: string;
+    id_cycle: number;
     texte: string;
 
     get api() {
@@ -32,7 +32,7 @@ export class BfcSynthese extends Model {
         }
     }
 
-    constructor(id_eleve : string, id_cycle : string) {
+    constructor(id_eleve : string, id_cycle : number) {
         super();
         this.texte = "";
         this.id_eleve = id_eleve;

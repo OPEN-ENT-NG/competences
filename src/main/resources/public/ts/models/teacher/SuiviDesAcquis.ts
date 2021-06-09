@@ -194,7 +194,6 @@ export class SuivisDesAcquis extends Model{
                 // pour chaque suiviDesAcquis setter
                 // l'appréciation de toutes les classes et groupes
                 _.each(this.all, (suiviDesAcquis) => {
-                    console.log(suiviDesAcquis);
                     suiviDesAcquis.idEleve = this.idEleve;
                     suiviDesAcquis.idClasse = this.idClasse;
                     suiviDesAcquis.idEtablissement = this.idEtablissement;

@@ -11,6 +11,9 @@
     },
     "id_niveau": {
       "type" : "number"
+    },
+    "id_cycle": {
+      "type" : "number"
     }
   },
   "required" : [

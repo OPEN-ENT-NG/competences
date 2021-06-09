@@ -31,7 +31,6 @@ export class EnsCpl extends Model  {
     }
 }
 
-
 export class EnsCpls extends Model implements IModel{
     all : EnsCpl[];
 
@@ -53,7 +52,6 @@ export class EnsCpls extends Model implements IModel{
         });
     }
 }
-
 
 export class NiveauEnseignementCpl extends Model  {
     id : number;
@@ -87,7 +85,7 @@ export class NiveauEnseignementCpls extends Model {
 export class EleveEnseignementCpl extends Model implements IModel{
     id : number;
     id_eleve : string;
-    id_cycle : string;
+    id_cycle : number;
     id_enscpl : number;
     id_langue : number;
     id_niveau : number;
@@ -96,14 +94,14 @@ export class EleveEnseignementCpl extends Model implements IModel{
     niveau_lcr : number;
     libelle_lcr : string;
 
-
-    constructor(id_eleve : string, id_cycle : string){
+    constructor(id_eleve : string, id_cycle : number){
         super();
         this.id_eleve = id_eleve;
         this.id_cycle = id_cycle;
         this.niveau = 0;
     }
-    setAttributsEleveEnsCpl (id_enscpl : number,id_niveau : number,niveau_lcr : number, id_langue : number)  {
+
+    setAttributsEleveEnsCpl(id_enscpl : number, id_niveau : number, niveau_lcr : number, id_langue : number)  {
         this.id_enscpl = id_enscpl;
         this.id_niveau = id_niveau;
         this.id_langue = id_langue;
@@ -118,31 +116,33 @@ export class EleveEnseignementCpl extends Model implements IModel{
             get :`/competences/GetNiveauEnsCpl?idEleve=${this.id_eleve}`
         }
     }
+
     toJSON(){
+        console.log(this);
         return{
             id_eleve : this.id_eleve,
             id_enscpl : this.id_enscpl,
             id_langue : this.id_langue,
             id_niveau : this.id_niveau,
-            niveau_lcr : this.niveau_lcr
+            niveau_lcr : this.niveau_lcr,
+            id_cycle : this.id_cycle
         }
     }
 
     async create (): Promise<number> {
         try {
             let res = await http.post(this.api.create, this.toJSON());
-            this.id = res.data.id ;
+            this.id = res.data.id;
             return this.id;
-
         } catch (e) {
-            //TODO NOTIFIER
-            notify.error('Problème lors de la création');
-            console.error('Problème lors de la création');
+            notify.error(e);
+            console.error(e);
             throw e;
         }
     }
+
     async update (): Promise<void> {
-        await http.put(this.api.update,this.toJSON());
+        await http.put(this.api.update, this.toJSON());
     }
 
     async save() {
@@ -159,8 +159,13 @@ export class EleveEnseignementCpl extends Model implements IModel{
             if(this.id_cycle !== null && this.id_cycle !== undefined){
                 url = url + `&idCycle=${this.id_cycle}`
             }
-            let { data } = await  http.get(url);
-            Mix.extend(this,Mix.castAs(EleveEnseignementCpl,data));
+            let {data} = await http.get(url);
+
+            if(data.id != undefined){
+                console.log(data);
+                Mix.extend(this, Mix.castAs(EleveEnseignementCpl, data));
+            }
+
             resolve(data);
         });
     }
