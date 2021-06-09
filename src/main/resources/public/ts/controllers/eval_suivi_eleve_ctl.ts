@@ -626,7 +626,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             $scope.suiviCompetence.domaines.all.forEach(domaine =>{
                 sumAverage += domaine.moyenne;
             });
-            if(sumAverage > -5) {
+            if(sumAverage > -5 && $scope.suiviCompetence.isCycle === false || $scope.suiviCompetence.isCycle === true ) {
                 let url = "/competences/BFC/pdf?";
                 if (object instanceof Structure) {
                     url += "idStructure=" + object.id;
