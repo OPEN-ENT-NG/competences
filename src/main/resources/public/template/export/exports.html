@@ -36,11 +36,11 @@
                     </div>
                     <div class="three cell horizontal-spacing">
                         <label>
-                            <input type="radio" ng-model="paramsLSU.type" ng-value="1">
+                            <input type="radio" ng-model="paramsLSU.type" ng-value= "LSU_TYPE_EXPORT.BFC">
                             <i18n>evaluations.bilan.fin.cycle.title</i18n>
                         </label><br/>
                         <label>
-                            <input type="radio" ng-model="paramsLSU.type" value="2">
+                            <input type="radio" ng-model="paramsLSU.type" ng-value= "LSU_TYPE_EXPORT.BILAN_PERIODIQUE">
                             <i18n>evaluations.bilan.periodique</i18n>
                         </label>
                     </div>
@@ -70,7 +70,7 @@
                         <div class="row display-inline-block">
                             <multi-combo
                                     class="twelve"
-                                    title="Selection de trois classe(s) maximum"
+                                    title="Selection de classe(s) "
                                     id="classes-list"
                                     combo-model="lsu.classes"
                                     search-on="name"

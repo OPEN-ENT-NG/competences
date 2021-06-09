@@ -163,7 +163,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         };
 
         $scope.exportLSU = async function (getUnheededStudents) {
-            if( $scope.paramsLSU.classes.length > 3) {
+            if( $scope.paramsLSU.classes.length > 3 && $scope.paramsLSU.type === $scope.LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
                 notify.info("Veuillez sélectionner trois classes maximum");
             } else {
                 await Utils.runMessageLoader($scope);
