@@ -237,7 +237,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             if ($scope.suiviFilter.mine === 'false' || $scope.suiviFilter.mine === false) {
                 return true;
             }
-            return _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
+            return _.findWhere($scope.listTeacher, {id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
         };
 
         /**

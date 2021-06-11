@@ -359,7 +359,7 @@ export class Evaluations extends Model {
         location.replace(uri);
     }
     setCompetenceNotes(poDomaine, poCompetencesNotes, tableauConversion) {
-        let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId,this.eleve.classe);
+        let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId, this.eleve.classe);
         Utils.setCompetenceNotes(poDomaine, poCompetencesNotes,tableauConversion, undefined,undefined,
             undefined,undefined,listTeacher);
     }

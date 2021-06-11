@@ -97,11 +97,11 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 id_classe: null,
                 id_periode: $scope.search.periode.id_type,
                 id_type: 1, // TODO modifier en optional foreign key
-                id_matiere: "",
+                id_matiere: null,
                 id_sousmatiere: null,
                 competences: [],
                 controlledDate: true,
-                matieres: [_.findWhere(evaluations.matieres.all, {idEtablissement: $scope.evaluations.structure.id})],
+                matieres: $filter('getMatiereClasse')(evaluations.matieres.all, $scope.search.classe.id, $scope.classes, model.me.userId),
                 sousmatiere: [],
             });
 
@@ -116,7 +116,6 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
 
             return evaluationLibre;
         };
-
 
         /**
          * Ouvre la fenêtre de création d'une évaluation libre
@@ -697,8 +696,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
 
             if (detail !== undefined) {
                 template.open("suivi-competence-detail", detail);
-            }
-            else {
+            } else {
                 template.open("suivi-competence-detail",
                     "enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_graph");
             }
@@ -727,7 +725,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             if ($scope.suiviFilter.mine === 'false' || $scope.suiviFilter.mine === false) {
                 return true;
             }
-            return _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
+            return _.findWhere($scope.listTeacher, {id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
         };
 
         $scope.EvaluationExiste = function (list) {

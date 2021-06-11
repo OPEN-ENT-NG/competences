@@ -48,9 +48,11 @@
         </thead>
         <tbody>
 
-        <tr ng-repeat="evaluation in detailCompetence.competencesEvaluations|filter:filterOwnerSuivi | orderBy:sortType:sortReverse">
-            <td ng-if="!evaluation.formative">[[evaluation.evaluation_libelle]]</td>
-            <td ng-if="evaluation.formative">[[evaluation.evaluation_libelle]] (F)</td>
+        <tr ng-repeat="evaluation in detailCompetence.competencesEvaluations | filter:filterOwnerSuivi | orderBy:sortType:sortReverse">
+            <td>
+                [[evaluation.evaluation_libelle]]
+                <span ng-if="evaluation.formative"> (F)</span>
+            </td>
             <td class="titre-widget ten centered enseignantCycle">[[evaluation.owner_name]]</td>
             <td>[[getDateFormated(evaluation.evaluation_date)]]</td>
             <td>

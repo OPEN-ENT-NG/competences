@@ -55,7 +55,6 @@
 
         <div class="separator"/>
 
-
         <section class="row twelve-mobile">
             <!-- Matiére -->
             <div class="three cell addDevoirTable__libelle twelve-mobile">
@@ -66,9 +65,8 @@
             <div class="nine cell twelve-mobile">
                 <label class="select eleven twelve-mobile">
                     <select ng-model="evaluationLibre.id_matiere"
-                            ng-options="matiere.id as matiere.name for matiere in evaluationLibre.matieres ">
-                        <option  value="" >[[translate('viescolaire.utils.subject')]]
-                        </option>
+                            ng-options="matiere.id as matiere.name for matiere in evaluationLibre.matieres">
+                        <option value="" disabled>[[translate('viescolaire.utils.subject')]]</option>
                     </select>
                 </label>
             </div>
@@ -96,6 +94,7 @@
         </section>
 
         <div class="separator"/>
+
         <!-- Compétence évaluée -->
         <section class="row twelve-mobile">
             <div class="three cell addDevoirTable__libelle twelve-mobile">
@@ -104,19 +103,17 @@
             </div>
 
             <div class="inline-block align-center align-top">
-
                 <c-skills-bubble classes="'competence-eval pointer alignVertical'"
                                  color="(mapCouleurs[evaluationLibre.competenceEvaluee.evaluation])"
                                  text="(mapLettres[evaluationLibre.competenceEvaluee.evaluation])"
                                  on-click="switchColor"
                                  is-disabled="false"
                 ></c-skills-bubble>
-
             </div>
         </section>
 
-
         <div class="separator"/>
+
         <section ng-if="endSaisieFree" class="row twelve-mobile">
             <div class="warning">
                 <i18n>end.saisie</i18n>
@@ -158,7 +155,9 @@
             </div>
 
             <div class="nine cell twelve-mobile">
-                <date-picker style="margin: 10px 0;" ng-model="evaluationLibre.dateDevoir" class="four" ng-change="showDate = true; controleDate(evaluationLibre)"></date-picker>
+                <date-picker style="margin: 10px 0;" ng-model="evaluationLibre.date" class="four"
+                             ng-change="showDate = true; controleDate(evaluationLibre)">
+                </date-picker>
             </div>
         </section>
 
@@ -175,7 +174,9 @@
             </div>
 
             <div class="nine cell twelve-mobile">
-                <date-picker style="margin: 10px 0;" ng-model="evaluationLibre.datePublication" class="four" ng-change="showDate = true; controleDate(evaluationLibre)"></date-picker>
+                <date-picker style="margin: 10px 0;" ng-model="evaluationLibre.date_publication" class="four"
+                             ng-change="showDate = true; controleDate(evaluationLibre)">
+                </date-picker>
             </div>
         </section>
         <div class="twelve cell">

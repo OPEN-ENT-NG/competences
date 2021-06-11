@@ -505,7 +505,7 @@ export class Utils {
      * @returns {any}
      */
     static getCompetenceEvaluations(classe, competence,competencesEvaluations, tableConversion,isYear?) {
-        let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId,classe);
+        let listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId, classe);
         for (let i = 0; i < classe.eleves.all.length; i++) {
             let currentIdEleve = classe.eleves.all[i].id;
             let commpetenceEvaluationsEleve = _.where(competencesEvaluations, {id_eleve: currentIdEleve});

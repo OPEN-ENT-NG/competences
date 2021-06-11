@@ -20,7 +20,7 @@
  */
 import {_, model, moment} from 'entcore';
 
-export function getTitulairesForRemplacantsCoEnseignant (meUserId, classe, justTitulaires?) {
+export function getTitulairesForRemplacantsCoEnseignant(meUserId, classe) {
     let listTeacher = [];
     if(classe && classe.services) {
         classe.services.forEach(service => {
@@ -32,21 +32,19 @@ export function getTitulairesForRemplacantsCoEnseignant (meUserId, classe, justT
 
                 listTeacher.push({id_enseignant : service.id_enseignant, id_matiere : service.id_matiere});
 
-                if(!justTitulaires) {
-                    service.coTeachers.forEach(coTeacher => {
-                        listTeacher.push({
-                            id_enseignant: coTeacher.second_teacher_id,
-                            id_matiere: coTeacher.subject_id
-                        });
+                service.coTeachers.forEach(coTeacher => {
+                    listTeacher.push({
+                        id_enseignant: coTeacher.second_teacher_id,
+                        id_matiere: coTeacher.subject_id
                     });
+                });
 
-                    service.substituteTeachers.forEach(substituteTeacher => {
-                        listTeacher.push({
-                            id_enseignant: substituteTeacher.second_teacher_id,
-                            id_matiere: substituteTeacher.subject_id
-                        });
+                service.substituteTeachers.forEach(substituteTeacher => {
+                    listTeacher.push({
+                        id_enseignant: substituteTeacher.second_teacher_id,
+                        id_matiere: substituteTeacher.subject_id
                     });
-                }
+                });
             }
         });
     }

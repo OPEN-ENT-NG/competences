@@ -118,7 +118,6 @@ export class EleveEnseignementCpl extends Model implements IModel{
     }
 
     toJSON(){
-        console.log(this);
         return{
             id_eleve : this.id_eleve,
             id_enscpl : this.id_enscpl,
@@ -162,7 +161,6 @@ export class EleveEnseignementCpl extends Model implements IModel{
             let {data} = await http.get(url);
 
             if(data.id != undefined){
-                console.log(data);
                 Mix.extend(this, Mix.castAs(EleveEnseignementCpl, data));
             }
 
