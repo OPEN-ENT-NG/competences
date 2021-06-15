@@ -1011,7 +1011,6 @@ public class LSUController extends ControllerHelper {
      */
 
     private void getBaliseEleves(final Donnees donnees, final List<String> classids, final Handler<String> handler) {
-
         AtomicInteger count = new AtomicInteger(0);
         AtomicBoolean answer = new AtomicBoolean(false);
         final String thread = "idsResponsable -> " + classids.toString();
@@ -1026,27 +1025,25 @@ public class LSUController extends ControllerHelper {
         lsuService.getUnheededStudents(new JsonArray(), new JsonArray(classids),
                 unheededStudents -> FormateFutureEvent.formate(ignoredStudentFuture, unheededStudents));
 
-
         CompositeFuture.all(studentsFuture, ignoredStudentFuture).setHandler( event -> {
             if(event.failed()) {
                 handler. handle(event.cause().getMessage());
             }
             else {
-                JsonArray allStudents = studentsFuture.result().body ().getJsonArray("results");
+                JsonArray allStudents = studentsFuture.result().body().getJsonArray("results");
                 JsonArray ignoratedStudents = ignoredStudentFuture.result();
 
                 // Suppression des élèves ignorés de la liste des élèves récupérés
                 JsonArray jsonElevesRelatives = lsuService.filterUnheededStrudentsForBfc(allStudents,
                         ignoratedStudents);
                 Eleve eleve = null;
-                Adresse adresse = null;
                 Donnees.Eleves eleves = objectFactory.createDonneesEleves();
                 for (int i = 0; i < jsonElevesRelatives.size(); i++) {
                     JsonObject o = jsonElevesRelatives.getJsonObject(i);
                     Responsable responsable = null;
                     String idEleve = o.getString("idNeo4j");
                     if (!eleves.containIdEleve(idEleve)) {
-                        String[] externalIdClass ;
+                        String[] externalIdClass;
                         String className;
                         if (o.getString("externalIdClass") != null) {
                             externalIdClass = o.getString("externalIdClass").split("\\$");
@@ -1057,8 +1054,9 @@ public class LSUController extends ControllerHelper {
                                 eleves.add(eleve);
                             } catch (Exception e) {
                                 if(e instanceof NumberFormatException){
-                                    log.error(" method getBaliseEleve : creationEleve " + e.getMessage() +"new BigInteger(attachmentId) is impossible attachmentId : "+o.getString("attachmentId"));
-                                }else {
+                                    log.error(" method getBaliseEleve : creationEleve " + e.getMessage() +
+                                            "new BigInteger(attachmentId) is impossible attachmentId : " + o.getString("attachmentId"));
+                                } else {
                                     // log for time-out
                                     answer.set(true);
                                     lsuService.serviceResponseOK(answer, count.get(), thread, method);
@@ -1066,37 +1064,39 @@ public class LSUController extends ControllerHelper {
                                     log.error(" method getBaliseEleve : creationEleve " + e.getMessage());
                                 }
                             }
-                        }else {
-
+                        } else {
                             log.info("[EXPORT LSU]: remove " + o.getString("name")
                                     + o.getString("firstName"));
-
                         }
                     } else {
                         eleve = eleves.getEleveById(idEleve);
                     }
 
+                    String codePostal = null, adress = null, commune = null;
+                    try{
+                        adress = o.getString("address");
+                        commune = o.getString("city");
+                        codePostal = o.getString("zipCode");
+                    } catch (ClassCastException e) {
+                        codePostal = String.valueOf(o.getInteger("zipCode"));
+                    }
 
-                    String adress = o.getString("address");
-                    String codePostal =  o.getString("zipCode");
-                    String commune = o.getString("city");
-
-                    // gestion données non renseignées
                     adress = (adress == null || adress.isEmpty()) ? "inconnue" : adress;
-                    codePostal = (codePostal == null || codePostal.isEmpty()) ? "inconnu" : codePostal;
                     commune = (commune == null || commune.isEmpty()) ? "inconnue" : commune;
+                    codePostal = (codePostal == null || codePostal.isEmpty()) ? "inconnu" : codePostal;
 
                     if(codePostal.length() > 10){
-                        codePostal = codePostal.substring(0,10);
+                        codePostal = codePostal.substring(0, 10);
                     }
-                    if(commune.length() > 100){
-                        commune = commune.substring(0,100);
-                    }
-                    adresse = objectFactory.createAdresse(adress, codePostal, commune);
 
+                    if(commune.length() > 100){
+                        commune = commune.substring(0, 100);
+                    }
+
+                    Adresse adresse = objectFactory.createAdresse(adress, codePostal, commune);
 
                     if (o.getString("externalIdRelative")!= null && o.getString("lastNameRelative") !=null &&
-                            o.getString("firstNameRelative")!= null && o.getJsonArray("relative").size() > 0 ) {
+                            o.getString("firstNameRelative")!= null && o.getJsonArray("relative").size() > 0) {
                         JsonArray relatives = o.getJsonArray("relative");
 
                         String civilite = o.getString("civilite");

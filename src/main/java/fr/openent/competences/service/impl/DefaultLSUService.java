@@ -409,7 +409,6 @@ public class DefaultLSUService implements LSUService {
 
     public void getStudents(final List<String> classids, Future<Message<JsonObject>> studentsFuture,
                             AtomicInteger count, AtomicBoolean answer, final String thread, final String method){
-
         JsonObject action = new JsonObject()
                 .put("action", "user.getElevesRelatives")
                 .put("idsClass", new fr.wseduc.webutils.collections.JsonArray(classids));
@@ -432,8 +431,7 @@ public class DefaultLSUService implements LSUService {
                                 studentsFuture.fail(failure);
                                 log.error("method getBaliseEleves an error occured when collecting Eleves " + error);
                             }
-                        }
-                        else {
+                        } else {
                             studentsFuture.complete(message);
                         }
                     }
