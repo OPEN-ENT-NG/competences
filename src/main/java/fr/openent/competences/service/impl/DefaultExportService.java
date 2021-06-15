@@ -1298,10 +1298,8 @@ public class DefaultExportService implements ExportService {
                                 }));
                     }
                 });
-
             }
         });
-
     }
 
     public void getMatiereExportReleveComp(final JsonArray idMatieres, Handler<Either<String, String>> handler) {

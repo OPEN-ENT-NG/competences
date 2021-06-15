@@ -566,6 +566,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 } else {
                     $scope.displayCycle = false;
                 }
+            } else {
+                $scope.displayCycle = false;
             }
             if ($scope.search.periode && $scope.search.periode.id !== null) {
                 $scope.isEndSaisieNivFinal = moment($scope.search.periode.date_fin_saisie).isBefore(moment(), "days");

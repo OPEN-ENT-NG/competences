@@ -154,7 +154,7 @@ public class ExportBulletinController extends ControllerHelper {
         String idClasse = request.params().get(ID_CLASSE_KEY);
         Long idPeriode = Long.valueOf(request.params().get(ID_PERIODE_KEY));
         Boolean isCycle = false;
-        ArchiveUtils.getArchiveBulletin(idEleve, idClasse, idPeriode, storage, ARCHIVE_BULLETIN_TABLE, isCycle, request);
+        ArchiveUtils.getArchive(idEleve, idClasse, idPeriode, storage, ARCHIVE_BULLETIN_TABLE, isCycle, request);
     }
 
     @Get("/delete/archive/bulletin")

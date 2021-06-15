@@ -620,29 +620,36 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             });
         };
 
-        $scope.exportBFC = (object, periode?) => {
-            let sumAverage = 0;
+        $scope.exportBFC = (object) => {
+            let sumSlider = 0;
+            let nbDomaine = $scope.suiviCompetence.domaines.all.length;
             $scope.suiviCompetence.domaines.all.forEach(domaine =>{
-                sumAverage += domaine.moyenne;
+                nbDomaine += domaine.domaines.all.length;
+                sumSlider += domaine.slider.value;
+                domaine.domaines.all.forEach( sousdomaine => {
+                    sumSlider += sousdomaine.slider.value;
+                });
             });
-            if(sumAverage > -5 && $scope.suiviCompetence.isCycle === false || $scope.suiviCompetence.isCycle === true ) {
-                let url = "/competences/BFC/pdf?";
-                if (object instanceof Structure) {
-                    url += "idStructure=" + object.id;
-                } else if (object instanceof Classe) {
-                    url += "idClasse=" + object.id;
-                } else if (object instanceof Eleve) {
-                    url += "idEleve=" + object.id + "&idEtablissement=" + $scope.structure.id;
-                }
-                if (periode && periode !== "*" && periode.id_type && periode.id_type > -1) {
-                    url += "&idPeriode=" + periode.id_type;
-                } else if ($scope.suiviCompetence.isCycle === true) {
+
+            if ($scope.suiviCompetence.isCycle === true) {
+                if( sumSlider > - nbDomaine ) {
+                    let url = "/competences/BFC/pdf?";
+                    if (object instanceof Structure) {
+                        url += "idStructure=" + object.id;
+                    } else if (object instanceof Classe) {
+                        url += "idClasse=" + object.id;
+                    } else if (object instanceof Eleve) {
+                        url += "idEleve=" + object.id + "&idEtablissement=" + $scope.structure.id;
+                    }
                     url += "&idCycle=" + $scope.suiviCompetence.cycle.id_cycle;
+                    location.replace(url);
+                } else {
+                    notify.info('evaluations.export.empty.student');
                 }
-                location.replace(url);
             }else{
-                notify.info('evaluations.export.empty.student');
+                notify.info('evaluations.export.bfc.no.cycle');
             }
+
         };
 
         /**

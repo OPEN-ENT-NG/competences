@@ -23,27 +23,43 @@ public class BulletinUtils {
     public static final String STORAGE_BULLETIN_TABLE = "archive_bulletins";
     private static final Logger log = LoggerFactory.getLogger(BulletinUtils.class);
 
-    public static void saveIdBulletin(String idEleve, String idClasse, String externalIdClasse,
-                                      String idEtablissement, Long idPeriode, String idFile, String name,
-                                      String idParent, String idYear, Handler<Either<String, JsonObject>> handler){
+    public static void saveIdBulletin( Storage storage,String idEleve, String idClasse, String externalIdClasse,
+                                       String idEtablissement, Long idPeriode, String idFile, String name,
+                                       String idParent, String idYear, Handler<Either<String, JsonObject>> handler){
         JsonArray values = new JsonArray().add(idClasse).add(idEleve).add(idEtablissement).add(externalIdClasse)
-                .add(idPeriode).add(idFile).add(name).add(idParent != null ? idParent : "NULL").add(idYear).add(idFile);
+                .add(idPeriode).add(idFile).add(name).add(idParent != null ? idParent : "NULL").add(idYear).add(idFile)
+                .add(idClasse).add(idEleve).add(idEtablissement).add(externalIdClasse).add(idPeriode).add(idParent != null ? idParent : "NULL").add(idYear);
 
         String query = "INSERT INTO " + COMPETENCES_SCHEMA + "." + STORAGE_BULLETIN_TABLE +
                 " (id_classe, id_eleve, id_etablissement, external_id_classe, id_periode, id_file, file_name, id_parent, id_annee)" +
                 " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)" +
                 " ON CONFLICT (id_classe, id_eleve, id_etablissement, external_id_classe, id_periode, id_parent, id_annee)" +
-                " DO UPDATE SET id_file = ?;";
+                " DO UPDATE SET id_file = ?  "+
+                "  RETURNING ( SELECT id_file from " + COMPETENCES_SCHEMA + ". " + STORAGE_BULLETIN_TABLE +
+                " WHERE id_classe = ?  AND id_eleve = ?  AND id_etablissement = ?  AND external_id_classe = ?  AND id_periode = ?  AND " +
+                "id_parent = ?  AND id_annee = ? );";
+        Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS,      SqlResult.validResultHandler(new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle(Either<String, JsonArray> event) {
+                if(event.isRight()){
+                    String idToDelete = event.right().getValue().getJsonObject(0).getString("id_file");
+                    if(idToDelete != null ){
+                        storage.removeFile(idToDelete, new Handler<JsonObject>() {
+                            @Override
+                            public void handle(JsonObject event) {
+                                handler.handle(new Either.Right<>(new JsonObject()));
+                            }
+                        });
+                    }else{
+                        handler.handle(new Either.Right<>(new JsonObject()));
 
-        Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS, result -> {
-            JsonObject body = result.body();
-            if (!"ok".equals(body.getString(STATUS))) {
-                handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                    }
+                }else{
+                    handler.handle(new Either.Left<>("error when putting data in sql bfc_archive"));
+
+                }
             }
-            else{
-                handler.handle(new Either.Right<>(body));
-            }
-        });
+        }));
     }
 
     public static Handler<Either<String, JsonObject>> saveBulletinHandler(final String idEleve, final String idClasse,

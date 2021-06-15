@@ -192,7 +192,8 @@
 <div class="page">
 
     <div style= "height: 150px;">
-        <img id="education" src="img/education_nationale.png" alt="Logo"/>
+        <img id="education"  src="data:image/png;base64, {{logoData}}"
+        alt="Logo"/>
         <div class="structure">
             {{#structureLibelle}}
             <p style="font-weight: bold">{{academy}}</p>
@@ -207,13 +208,13 @@
 
         {{#hasImgStructure}}
         <div class="imgStructSize">
-            <img id="imgStruct" src="{{imgStructure}}" alt="LogoStructure"/>
+            <img id="imgStruct" src="data:image/png;base64, {{imgStructure}}" alt="LogoStructure"/>
         </div>
         {{/hasImgStructure}}
 
         {{#hasLevel}}
         <div class="imgStructSize">
-            <img id="niveau" src="img/niveau/niveau_{{level}}.png" alt="LogoLevel"/>
+            <img id="niveau" src="{{imgLevel}}" alt="LogoLevel"/>
         </div>
         {{/hasLevel}}
     </div>
@@ -324,7 +325,7 @@
                         <span style="float: left;  display : block; margin-left: 5px; margin-top: 5px !important;font-size: small;">Le {{today}}</span>
                         <span style="float: left;  display : block; margin-left: 5px; margin-top: 5px !important;font-size: small;">{{signatureSample}} :</span>
                         <div style=" margin-top: 65px" class="imgSignatureSize">
-                            <img id="imgSignature" src="{{signatureCE}}" alt="LogoSignature"/>
+                            <img id="imgSignature" src="data:image/png;base64, {{imgSignature}}" alt="LogoSignature"/>
                         </div>
                         {{/hasNameAndBrad}}
                     </td>

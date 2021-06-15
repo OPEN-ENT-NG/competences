@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.security.AccessAdminHeadTeacherFilter;
 import fr.openent.competences.security.AccessBulletinChildrenParentCEFilter;
@@ -61,6 +62,7 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.utils.UtilsConvert.strIdGroupesToJsonArray;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
@@ -198,6 +200,7 @@ public class ExportPDFController extends ControllerHelper {
                     leftToResponse(request, new Either.Left<>(event.cause().getMessage()));
                     return;
                 }
+
                 JsonObject result = exportResult.result();
                 String periodeName = periodeNameFuture.result();
                 String fileNamePrefix = result.getString(NAME);
@@ -210,23 +213,75 @@ public class ExportPDFController extends ControllerHelper {
                                 .put("Accept-Language", request.headers().get("Accept-Language")))
                         .put("Host", getHost(request));
 
-
-                if(idCycle != null){
-                    result.put("idCycle" ,idCycle);
-                    if(idClasses.size() == 1)
-                        result.put("idClasse" , idClasses.get(0));
-                    JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
-                            .put("request", jsonRequest)
-                            .put("resultFinal", result)
-                            .put("template", templateName)
-                            .put("title", prefixPdfName);
-
-                    eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+                List<String> idClassesCheckCurrentCycle = new ArrayList<>();
+                if(!idClasses.isEmpty()) {
+                    idClassesCheckCurrentCycle = idClasses;
+                } else {
+                    idClassesCheckCurrentCycle.add(result.getJsonArray("classes").getJsonObject(0)
+                            .getJsonArray("eleves").getJsonObject(0).getString("idClasse"));
                 }
+                utilsService.getCycle(idClassesCheckCurrentCycle, cycleEvent -> {
+                    Long currentIdCycle = null;
+
+                    if (cycleEvent.isRight()) {
+                        JsonArray queryResult = cycleEvent.right().getValue();
+                        for (int i = 0; i < queryResult.size(); i++) {
+                            JsonObject cycle = queryResult.getJsonObject(i);
+                            Long cycleId = cycle.getLong("id_cycle");
+                            if(currentIdCycle == null) {
+                                currentIdCycle = cycleId;
+                            } else if (!currentIdCycle.equals(cycleId)) {
+                                log.error("getBFCEleve : cycles are not sames");
+                            }
+                        }
+
+                        if(idCycle != null && idCycle.equals(currentIdCycle)){
+                            saveBfcWorker(idClasses, idCycle, result, prefixPdfName, templateName, jsonRequest);
+                        }
+                    } else {
+                        String error = cycleEvent.left().getValue();
+                        log.error("getBFCEleve : getCycle : " + error);
+                    }
+                });
             });
         } else {
             leftToResponse(request, new Either.Left<>("Un seul parametre autre que la periode doit être specifie."));
             log.error("getBFCEleve : call with more than 1 parameter type (among idEleve, idClasse and idStructure).");
+        }
+    }
+
+    private void saveBfcWorker(List<String> idClasses, Long idCycle, JsonObject result, String prefixPdfName,
+                               String templateName, JsonObject jsonRequest) {
+        if(idCycle != null){
+            result.put("idCycle", idCycle);
+            if(idClasses.size() > 0) {
+                JsonObject actionClass = new JsonObject()
+                        .put(ACTION, "classe.getClasseInfo")
+                        .put(ID_CLASSE_KEY, idClasses.get(0));
+
+                eb.send(Competences.VIESCO_BUS_ADDRESS, actionClass, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+                    JsonObject body = message.body();
+                    if(body.getJsonObject("result").getJsonObject("c").
+                            getJsonObject("metadata").getJsonArray("labels").contains("Class")){
+                        result.put("idClasse" , idClasses.get(0));
+                        JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
+                                .put("request", jsonRequest)
+                                .put("resultFinal", result)
+                                .put("template", templateName)
+                                .put("title", prefixPdfName);
+
+                        eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+                    }
+                }));
+            }else{
+                JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
+                        .put("request", jsonRequest)
+                        .put("resultFinal", result)
+                        .put("template", templateName)
+                        .put("title", prefixPdfName);
+
+                eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+            }
         }
     }
 
@@ -1337,7 +1392,7 @@ public class ExportPDFController extends ControllerHelper {
                                         BulletinUtils.getBulletin(idEleve, idClasse, idPeriode, idEtablissement, idParent,
                                                 idYear, storage, request);
                                     } else {
-                                        log.info("[ExportPDFController] :  No bulletin in Storage " + event.left().getValue());
+                                        log.info("[seeBulletins] : Can't get year " + event.left().getValue());
                                         leftToResponse(request, event.left());
                                     }
                                 });

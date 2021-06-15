@@ -51,7 +51,7 @@ public class ArchiveUtils {
 
     private static void getIdFileArchive(String idEleve, String idClasse, Long idPeriode, String table, Boolean isCycle,
                                          Handler<Either<String,JsonObject>> handler){
-        String query = " SELECT id_file " +
+        String query = "SELECT id_file " +
                 " FROM notes." + table +
                 " WHERE id_eleve = ? AND id_classe = ? AND " + (isCycle ? "id_cycle = ? " : " id_periode = ? ") +
                 " ORDER by created  DESC limit 1;";
@@ -100,9 +100,9 @@ public class ArchiveUtils {
                 handler.handle(new JsonObject().put(RESULT, "NO files archived "));
                 return;
             }
+
             JsonArray removesFiles = new JsonArray();
-            results.stream().forEach(
-                    files -> removesFiles.add(((JsonArray)files).getValue(1)));
+            results.stream().forEach(files -> removesFiles.add(((JsonArray)files).getValue(1)));
 
             if(idFileFuture.failed() ||  removesFiles == null) {
                 String error = (removesFiles == null) ? idFileFuture.cause().getMessage() : " no result";
@@ -110,6 +110,7 @@ public class ArchiveUtils {
                 handler.handle(new JsonObject().put(ERROR, error));
                 return;
             }
+
             storage.removeFiles(removesFiles, remove -> {
                 log.info(" [Remove Archives " + table + "] " + remove.encode());
                 clearArchiveTable(removesFiles, table, deleteEvent -> {
@@ -121,17 +122,15 @@ public class ArchiveUtils {
                         handler.handle(response.put("deleteKO", deleteEvent.left().getValue()));
                     }
                 });
-
             });
         });
     }
 
-    private static void getArchiveBulletin(final String idEleve, final String idClasse, final Long idPeriode,
-                                           Storage storage, String table, Boolean isCycle,
-                                           Handler<Either<String, Buffer>> bufferEither){
-
+    private static void getArchive(final String idEleve, final String idClasse, final Long idPeriode,
+                                   Storage storage, String table, Boolean isCycle,
+                                   Handler<Either<String, Buffer>> bufferEither){
         Future<JsonObject> idFileFuture = Future.future();
-        getIdFileArchive(idEleve, idClasse, idPeriode,table, isCycle, event -> {
+        getIdFileArchive(idEleve, idClasse, idPeriode, table, isCycle, event -> {
             FormateFutureEvent.formate(idFileFuture, event);
             JsonObject result = idFileFuture.result();
             if(idFileFuture.failed() ||  result == null){
@@ -145,14 +144,12 @@ public class ArchiveUtils {
                 bufferEither.handle(new Either.Right<>(fileBuffer));
             });
         });
-
     }
 
-    public static void getArchiveBulletin(final String idEleve, final String idClasse, final Long idPeriode,
-                                          Storage storage, String table, Boolean isCycle,
-                                          final HttpServerRequest request) {
-
-        getArchiveBulletin(idEleve, idClasse, idPeriode, storage, table, isCycle, bufferEither -> {
+    public static void getArchive(final String idEleve, final String idClasse, final Long idPeriode,
+                                  Storage storage, String table, Boolean isCycle,
+                                  final HttpServerRequest request) {
+        getArchive(idEleve, idClasse, idPeriode, storage, table, isCycle, bufferEither -> {
             if (bufferEither.isLeft()) {
                 Renders.notFound(request, bufferEither.left().getValue());
             } else {
@@ -219,11 +216,10 @@ public class ArchiveUtils {
         });
     }
 
-    public static void getArchiveBFCZip(String idStructure, HttpServerRequest request, EventBus eb, Storage storage, Vertx vertx) {
-        getListToDownloadBFCSQL(idStructure,eb,storage, vertx,request);
+    public static void getArchiveBFCZip(String idStructure, String idYear, HttpServerRequest request, EventBus eb,
+                                        Storage storage, Vertx vertx) {
+        getListToDownloadBFCSQL(idStructure, idYear, eb, storage, vertx,request);
     }
-
-
 
     public static void getArchiveBulletinZip(String idStructure, String idYear, List<String> idsPeriode,
                                              HttpServerRequest request, EventBus eb, Storage storage, Vertx vertx,
@@ -231,22 +227,24 @@ public class ArchiveUtils {
         getListToDownloadSQL(idStructure, idYear, idsPeriode, eb, storage, vertx, request, user, workspaceHelper);
     }
 
-    private static void getListToDownloadBFCSQL(String idStructure, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request) {
+    private static void getListToDownloadBFCSQL(String idStructure, String idYear, EventBus eb, Storage storage,
+                                                Vertx vertx, HttpServerRequest request) {
         String query = "SELECT id_classe, id_etablissement, id_eleve, id_file, file_name as name" +
-                " FROM " + COMPETENCES_SCHEMA + ".archive_bfc WHERE id_etablissement = ?";
-        JsonArray params = new JsonArray().add(idStructure);
+                " FROM " + COMPETENCES_SCHEMA + ".archive_bfc" +
+                " WHERE id_etablissement = ? AND id_annee = ?;";
+        JsonArray params = new JsonArray().add(idStructure).add(idYear);
         executeSqlRequest(eb, storage, vertx, request, query, params, null, null);
     }
 
     private static void getListToDownloadSQL(String idStructure, String idYear, List<String> idsPeriode,
                                              EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request,
-                UserInfos user, WorkspaceHelper workspaceHelper) {
+                                             UserInfos user, WorkspaceHelper workspaceHelper) {
         String query = "SELECT id_classe, id_etablissement, id_eleve, id_file, file_name as name" +
                 " FROM " + COMPETENCES_SCHEMA + "." + ARCHIVE_BULLETIN_TABLE +
                 " WHERE id_etablissement = ? AND id_annee = ?";
         JsonArray params = new JsonArray().add(idStructure).add(idYear);
 
-        if( idsPeriode != null && idsPeriode.size() > 0) {
+        if(idsPeriode != null && idsPeriode.size() > 0) {
             query += " AND id_periode IN " + Sql.listPrepared(idsPeriode);
             for(String periode : idsPeriode) {
                 params.add(periode);
@@ -259,26 +257,27 @@ public class ArchiveUtils {
     private static void executeSqlRequest(EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request,
                                           String query, JsonArray params, UserInfos user, WorkspaceHelper workspaceHelper) {
         List<PdfFile> listPdf = new ArrayList<>();
-        Sql.getInstance().prepared(query, params, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                JsonArray results =  event.body().getJsonArray("results");
-                for(int i = 0 ; i < results.size() ; i ++ ){
+        Sql.getInstance().prepared(query, params, event -> {
+            JsonArray results = event.body().getJsonArray("results");
+            if(results != null) {
+                for (int i = 0; i < results.size(); i++) {
                     JsonArray result = results.getJsonArray(i);
                     PdfFile bpdf = new PdfFile(result.getString(0), result.getString(1),
                             result.getString(2), result.getString(3), result.getString(4));
                     listPdf.add(bpdf);
                 }
-                if(listPdf.size() > 0 ) {
-                    createFolders(listPdf, eb, storage, vertx, request, user, workspaceHelper);
-                }else{
-                    request.response().setStatusCode(204).setStatusMessage("No data to export").end();
-                }
+            }
+
+            if(listPdf.size() > 0) {
+                createFolders(listPdf, eb, storage, vertx, request, user, workspaceHelper);
+            } else {
+                request.response().setStatusCode(204).setStatusMessage("No data to export").end();
             }
         });
     }
 
-    private static void createFolders(List<PdfFile> listBulletin, EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request, UserInfos user, WorkspaceHelper workspaceHelper) {
+    private static void createFolders(List<PdfFile> listBulletin, EventBus eb, Storage storage, Vertx vertx,
+                                      HttpServerRequest request, UserInfos user, WorkspaceHelper workspaceHelper) {
         String idStructure = listBulletin.get(0).getId_structure();
         String query = "MATCH (s:Structure{id:{idStructure} }) RETURN s.name as name";
         Neo4j.getInstance().execute(query, new JsonObject().put(ID_STRUCTURE_KEY, idStructure), new Handler<Message<JsonObject>>() {

@@ -88,8 +88,8 @@
             <div ng-repeat="cycle in search.eleve.cycles">
                 <label>
                     <input type="radio" ng-click="initSuiviCompetences(); changeContent(cycle);"
-                           ng-model="$parent.selectedCycleRadio.id_cycle"
-                           value="[[::cycle.id_cycle]]">
+                           ng-model="selectedCycleRadio.id_cycle"
+                           ng-value="[[::cycle.id_cycle]]">
                     [[::cycle.libelle]]
                 </label>
             </div>

@@ -291,6 +291,7 @@ public class Eleve implements Comparable<Eleve>{
 
         result.put("lastName", this.lastName);
         result.put("firstName", this.firstName);
+        result.put("idClasse", this.idClasse);
         result.put("nomClasse", this.nomClasse);
         result.put("cycle", this.cycle);
         result.put("level", this.level);

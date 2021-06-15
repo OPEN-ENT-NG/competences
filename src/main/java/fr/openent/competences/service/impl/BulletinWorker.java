@@ -1,6 +1,6 @@
 package fr.openent.competences.service.impl;
 
-import fr.openent.competences.Competences;
+
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.service.ExportBulletinService;
 import fr.wseduc.webutils.Either;
@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class BulletinWorker extends BusModBase implements Handler<Message<JsonObject>>{
     private Storage storage;
@@ -45,10 +44,10 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     public void handle(Message<JsonObject> message) {
         JsonObject params = message.body();
         final String action = params.getString(ACTION, "");
-        JsonArray bulletins;
+
         switch (action) {
             case SAVE_BULLETIN :
-                bulletins = params.getJsonObject("resultFinal").getJsonArray("eleves");
+                JsonArray bulletins = params.getJsonObject("resultFinal").getJsonArray("eleves");
                 params.getJsonObject("resultFinal").remove("eleves");
                 stackBulletin(bulletins);
                 if(!isWorking){
@@ -60,7 +59,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
                     }).start();
                 }
                 break;
-            case  SAVE_BFC:
+            case SAVE_BFC:
                 JsonObject datas = params.getJsonObject("resultFinal");
                 JsonArray eleves = datas.getJsonArray("classes").getJsonObject(0).getJsonArray("eleves");
                 stackBfc(eleves);
@@ -94,7 +93,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
         }
     }
 
-    private  JsonObject HandleStackJsonObject(List<JsonObject> list){
+    private JsonObject HandleStackJsonObject(List<JsonObject> list){
         if (list.size() != 0) {
             JsonObject bulletin = list.get(0);
             list.remove(0);
@@ -112,50 +111,32 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
         return HandleStackJsonObject(bfcs);
     }
 
-    private void processBFC(JsonObject paramBulletin ,Handler<Either<String, Boolean>> bulletinHandlerWork) {
-        JsonObject bulletinToHandle = HandleStackJsonObjectBFC();
-        if (bulletinToHandle == null) return;
-        JsonObject params = paramBulletin.copy();
-        bulletinToHandle.put("typeExport", TypePDF.BFC);
-        params.getJsonObject("resultFinal").getJsonArray("classes").getJsonObject(0).getJsonArray("eleves").add(bulletinToHandle);
-        if(!params.getJsonObject("resultFinal").containsKey("idClasse")){
-            JsonObject actionClasse = new JsonObject().put("action","classe.getClasseIdByEleve")
-                    .put("idEleve",bulletinToHandle.getString("idEleve"));
-            eb.send(Competences.VIESCO_BUS_ADDRESS, actionClasse, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                @Override
-                public void handle(Message<JsonObject> event) {
-                    bulletinToHandle.put("idClasse",event.body().getJsonObject("result").
-                            getJsonObject("c").getJsonObject("data").getValue("id"));
-                    bulletinToHandle.put("externalId",event.body().getJsonObject("result").
-                            getJsonObject("c").getJsonObject("data").getValue("externalId"));
-                    launchProcess(bulletinToHandle, params, paramBulletin, bulletinHandlerWork);
-                }
-            }));
-        }else {
-            bulletinToHandle.put("idClasse",params.getJsonObject("resultFinal").getValue("idClasse"));
-            launchProcess(bulletinToHandle, params, paramBulletin, bulletinHandlerWork);
-        }
-    }
-
-    private void launchProcess(JsonObject bulletinToHandle, JsonObject params, JsonObject paramBulletin, Handler<Either<String, Boolean>> bulletinHandlerWork) {
-        bulletinToHandle.put("idCycle", params.getJsonObject("resultFinal").getValue("idCycle"));
-        exportBulletinService.runSavePdf(bulletinToHandle, params, vertx, config, event -> {
-            processBFC(paramBulletin, bulletinHandlerWork);
+    private void processBFC(JsonObject paramBfc ,Handler<Either<String, Boolean>> bfcHandler) {
+        JsonObject bfcToHandle = HandleStackJsonObjectBFC();
+        if (bfcToHandle == null) return;
+        log.info("start Work processBFC in Bulletins worker");
+        JsonObject params = paramBfc.copy();
+        bfcToHandle.put("typeExport", TypePDF.BFC.toString());
+        params.getJsonObject("resultFinal").getJsonArray("classes").getJsonObject(0).put("eleves",
+                 new JsonArray().add(bfcToHandle));
+        bfcToHandle.put("idCycle", params.getJsonObject("resultFinal").getValue("idCycle"));
+        exportBulletinService.runSavePdf(bfcToHandle, params, vertx, config, event -> {
+            processBFC(paramBfc, bfcHandler);
             if (event.isLeft()) {
-                log.error("[BulletinWorker] : " + event.left().getValue());
+                log.error("[BulletinWorker| processBFC ] : " + event.left().getValue());
             }
         });
     }
 
-    private void processBulletin(JsonObject paramBulletin ,Handler<Either<String, Boolean>> bulletinHandlerWork) {
+    private void processBulletin(JsonObject paramBulletin, Handler<Either<String, Boolean>> bulletinHandlerWork) {
         JsonObject bulletinToHandle = HandleStackJsonObjectBulletins();
         if (bulletinToHandle == null) return;
         log.info("start Work processBulletin in Bulletins worker");
-        paramBulletin.put("typeExport", TypePDF.BULLETIN);
+        bulletinToHandle.put("typeExport", TypePDF.BULLETIN.toString());
         exportBulletinService.runSavePdf(bulletinToHandle, paramBulletin, vertx, config, event -> {
             processBulletin(paramBulletin, bulletinHandlerWork);
-            if( event.isLeft()){
-                log.error("[BulletinWorker] : " + event.left().getValue());
+            if(event.isLeft()){
+                log.error("[BulletinWorker | processBulletin] : " + event.left().getValue());
             }
         });
     }

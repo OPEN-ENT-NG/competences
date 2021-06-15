@@ -633,9 +633,9 @@ public class DefaultUtilsService  implements UtilsService {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT id_groupe, id_cycle, libelle, value_cycle ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle,  ")
-                .append(Competences.COMPETENCES_SCHEMA + ".cycle ")
-                .append("WHERE id_groupe IN " + Sql.listPrepared(idClasse.toArray()))
+                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_groupe_cycle, ")
+                .append(Competences.COMPETENCES_SCHEMA).append(".cycle ")
+                .append("WHERE id_groupe IN ").append(Sql.listPrepared(idClasse.toArray()))
                 .append(" AND id_cycle = cycle.id");
 
         for (String id : idClasse) {
@@ -667,12 +667,12 @@ public class DefaultUtilsService  implements UtilsService {
     }
 
 
-    private  Handler<Message<JsonObject>> nameHandler (String[] name, String field,
-                                                       Handler<Either<String, JsonArray>> handler){
+    private Handler<Message<JsonObject>> nameHandler(String[] name, String field,
+                                                     Handler<Either<String, JsonArray>> handler){
         return event -> {
             if (!OK.equals(( event.body()).getString(STATUS))) {
                 String error = event.body().getString(MESSAGE);
-                log.error(error);
+                log.error("nameHandler : " + error);
                 if(error.contains(CONNECTION_WAS_CLOSED) || error.contains(TIME)){
                     log.info("RESTART "+ name);
                     getNameEntity(name, field, handler);

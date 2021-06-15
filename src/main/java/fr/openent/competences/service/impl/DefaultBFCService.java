@@ -58,6 +58,7 @@ import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getScheme;
+import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
 /**
@@ -876,7 +877,6 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
     private void getNameEntity(String[] name, String fieldUsed, Long idPeriode, JsonObject result,
                                Handler<Either<String, JsonObject>> handler){
-
         utilsService.getNameEntity(name, fieldUsed, nameEvent -> {
             if (nameEvent.isRight()) {
                 final String structureName = nameEvent.right().getValue().getJsonObject(0)
@@ -891,12 +891,12 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     }
 
     public void generateBFC(final String idStructure, final JsonArray idClassesArray, final JsonArray idElevesArray,
-                            final Long idCycle, final Long idPeriode, final Handler<Either<String, JsonObject>>handler){
+                            final Long idCycle, final Long idPeriode, Vertx vertx, final Handler<Either<String, JsonObject>> handler){
         final List<String> idClasses = idClassesArray.getList();
         final List<String> idEleves = idElevesArray.getList();
 
         try {
-            getParamBFC(idStructure, idClasses, idEleves, idPeriode, event -> {
+            getParamBFC(idStructure, idClasses, idEleves, idPeriode, idCycle, event -> {
                 if (event.isLeft()) {
                     handler.handle(new Either.Left(event.left()));
                     log.error("getParamBFC : Unable to gather parameters, parameter unknown.");
@@ -906,7 +906,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 final String idStructureGot = event.right().getValue().entrySet().iterator().next().getKey();
                 final Map<String, List<Eleve>> classes = event.right().getValue().entrySet().iterator().next().getValue();
 
-                getBFCParClasse(classes, idStructureGot, idPeriode, idCycle, bfcEnvent -> {
+                getBFCParClasse(classes, idStructureGot, idPeriode, idCycle, vertx, bfcEnvent -> {
                     if (bfcEnvent.isLeft()) {
                         handler.handle(new Either.Left(bfcEnvent.left()));
                         log.error("getBFC : Unable to get BFC for the specified parameters.");
@@ -916,15 +916,12 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
                     if (idStructure != null) {
                         getNameEntity(new String[]{idStructureGot}, ID_STRUCTURE_KEY, idPeriode, result, handler);
-                    }
-                    else if (!idClasses.isEmpty()) {
+                    } else if (!idClasses.isEmpty()) {
                         getNameEntity(classes.keySet().toArray(new String[1]), ID_CLASSE_KEY, idPeriode, result,
                                 handler);
-                    }
-                    else {
+                    } else {
                         getNameEntity(idEleves.toArray(new String[1]), ID_ELEVE_KEY, idPeriode, result, handler);
                     }
-
                 });
             });
         }
@@ -937,8 +934,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * Se charge d'appeler les methodes permettant la recuperation des parametres manquants en fonction du parametre
      * fournit.
      * Appelle  getParamStruct(String,Long, Handler)} si seul l'identifiant de la structure est fourni.
-     * Appelle {@link #getParamClasses(List, Long, Handler)} si seuls les identifiants de classes sont fournis.
-     * Appelle {@link #getParamEleves(List, String, Handler)} si seuls les identifiants d'eleves sont fournis.
+     * Appelle {@link #getParamEleves(List, String,Long, Handler)} si seuls les identifiants d'eleves sont fournis.
      *
      * @param idStructure Identifiant de la structure dont on souhaite generer le BFC.
      * @param idClasses   Identifiants des classes dont on souhaite generer le BFC.
@@ -946,11 +942,11 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @param handler     Handler contenant les listes des eleves, indexees par classes.
      */
     private void getParamBFC(final String idStructure, final List<String> idClasses, final List<String> idEleves,
-                             final Long idPeriode,
+                             final Long idPeriode, Long idCycle,
                              final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
 
         if (idStructure != null && (idEleves == null || idEleves.isEmpty()) ) {
-            getParamStruct(idStructure, idPeriode,  event -> {
+            getParamStruct(idStructure, idPeriode, event -> {
                 if (event.isRight()) {
                     handler.handle(new Either.Right<>(event.right().getValue()));
                 } else {
@@ -960,8 +956,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
             });
             return;
         }
+
         if (!idClasses.isEmpty()) {
-            getParamClasses(idClasses, idPeriode, event -> {
+            getParamClasses(idClasses, idPeriode, idCycle, event -> {
                 if (event.isRight()) {
                     handler.handle(new Either.Right<>(event.right().getValue()));
                 } else {
@@ -971,8 +968,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
             });
             return;
         }
+
         if (!idEleves.isEmpty()) {
-            getParamEleves(idEleves, idStructure, event -> {
+            getParamEleves(idEleves, idStructure, idCycle, event -> {
                 if (event.isRight()) {
                     handler.handle(new Either.Right<>(event.right().getValue()));
                 } else {
@@ -980,8 +978,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     log.error("getParamEleves : failed to get related idStructure and/or idClasses.");
                 }
             });
-        }
-        else {
+        } else {
             handler.handle(new Either.Left<>("Aucun parametre renseigne."));
             log.error("getParamBFC : called with more than one null parameter.");
         }
@@ -1021,9 +1018,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                   final JsonArray idEleves, final Long idCycle,
                                   final String host, final String acceptLanguage, Vertx vertx, JsonObject config,
                                   Future<JsonObject> exportResult, Future<String> periodeNameResult){
-
         getPrefixPdfNameResult(idPeriode, host, acceptLanguage, periodeNameResult);
-        generateBFC(idStructure, idClasses, idEleves, idCycle, idPeriode, exportResultEvent ->
+        generateBFC(idStructure, idClasses, idEleves, idCycle, idPeriode, vertx, exportResultEvent ->
                 formate(exportResult, exportResultEvent));
     }
 
@@ -1047,11 +1043,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @param idEleves Identifiants des eleves dont on souhaite generer le BFC.
      * @param handler  Handler contenant les listes des eleves, indexees par classes.
      */
-    private void getParamEleves(final List<String> idEleves, String idEtablissement,
+    private void getParamEleves(final List<String> idEleves, String idEtablissement, Long idCycle,
                                 final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
-
-        Utils.getInfoEleve(eb, idEleves.toArray(new String[1]), idEtablissement, infoEvent -> {
+        Utils.getInfoEleve(eb, idEleves.toArray(new String[1]), idCycle, idEtablissement, infoEvent -> {
             if (infoEvent.isRight()) {
                 final Map<String, List<Eleve>> classes = new LinkedHashMap<>();
                 for (Eleve e : infoEvent.right().getValue()) {
@@ -1172,7 +1167,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     private void buildBFCParClasse(final List<String> idEleves,
                                    final String idStructure,final Long idPeriode,final Long idCycle,
                                    Map.Entry<String, List<Eleve>> classe, final Map<String, JsonObject> result,
-                                   final Map<String, Map<Long, Integer>> resultatsEleves,
+                                   final Map<String, Map<Long, Integer>> resultatsEleves, Vertx vertx,
                                    final Handler<Either<String, JsonArray>> handler){
 
         final Map<Integer, String> libelleEchelle = new HashMap<>();
@@ -1198,10 +1193,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         bfcSynthseService.getBfcSyntheseByIdsEleveAndClasse(idEleves.toArray(new String[1]), classe.getKey(),
                 repSynthese -> formate(syntheseFuture, repSynthese));
 
-
         CompositeFuture.all(buildBfcFuture, listCplByEleveFuture, syntheseFuture, conversionNoteFuture,
-                domaineRacineFuture).setHandler(
-                event -> {
+                domaineRacineFuture).setHandler(event -> {
                     if(event.failed()){
                         String error = classe.getValue().get(0).getNomClasse() + ";\n" + event.cause().getMessage();
                         collectBFCEleve(classe.getKey(), new JsonObject().put(ERROR, error), result, handler);
@@ -1263,7 +1256,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     classe.getValue().removeAll(elevesNonEvalues);
 
                     JsonArray eleves = formatBFC(classe.getValue());
-                    final JsonArray classeResult = Utils.sortElevesByDisplayName(eleves);
+                    final JsonArray classeResult = sortElevesByDisplayName(eleves);
                     if(classe.getValue().size() != 0) {
                         final String idClasse = classe.getValue().get(0).getIdClasse();
                         if (classeResult != null) {
@@ -1294,9 +1287,11 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                     log.error("getBFC: buildBFC (Array of idEleves, " + classe.getKey() + ", "
                                             + idStructure + ") : " + event.toString());
                                 } else {
+                                    List<Future> futures = new ArrayList<>();
                                     for (Object eleve : classeResult) {
                                         JsonObject eleveJson = ((JsonObject) eleve);
                                         JsonObject imgStructure = imageStructureFuture.result();
+                                        eleveJson.put("pathLogoImg", "img/education_nationale.png");
                                         if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
                                             eleveJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
                                                     .getValue(PATH));
@@ -1305,13 +1300,23 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                         if (imgStructure != null && imgStructure.containsKey("nameAndBrad")) {
                                             eleveJson.put("nameCE", imgStructure.getJsonObject("nameAndBrad")
                                                     .getValue(NAME));
-                                            eleveJson.put("signatureCE", imgStructure.getJsonObject("nameAndBrad")
-                                                    .getValue(PATH));
+                                            eleveJson.put("imgSignature", imgStructure.getJsonObject("nameAndBrad")
+                                                   .getValue(PATH));
                                             eleveJson.put("hasNameAndBrad", true);
                                         }
+                                        Future<JsonObject> getImagesBase64Future = Future.future();
+                                        futures.add(getImagesBase64Future);
+                                        exportBulletinService.generateImagesFromPathForBulletin(eleveJson, vertx,
+                                                eventImage -> {
+                                            formate(getImagesBase64Future, eventImage);
+                                        } );
                                     }
-                                    collectBFCEleve(classe.getKey(), new JsonObject().put(ELEVES, classeResult), result,
-                                            handler);
+                                    CompositeFuture.all(futures).setHandler(eventFutureStudent -> {
+
+                                        collectBFCEleve(classe.getKey(), new JsonObject().put(ELEVES, classeResult), result,
+                                                handler);
+                                            });
+
                                 }
                             });
                         }
@@ -1399,8 +1404,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @see Eleve
      */
     private void getBFCParClasse(final Map<String, List<Eleve>> classes, final String idStructure, Long idPeriode,
-                                 Long idCycle, final Handler<Either<String, JsonArray>> handler) {
-
+                                 Long idCycle, Vertx vertx, final Handler<Either<String, JsonArray>> handler) {
         // Contient toutes les classes sous forme JsonObject, indexant en fontion de l'identifiant de la classe
         // correspondante.
 
@@ -1429,12 +1433,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 idEleves.add(e.getIdEleve());
             }
 
-            buildBFCParClasse(idEleves, idStructure, idPeriode, idCycle, classe, result, resultatsEleves, handler);
+            buildBFCParClasse(idEleves, idStructure, idPeriode, idCycle, classe, result, resultatsEleves, vertx, handler);
         }
     }
-
-
-
 
     /**
      * Recupere les parametres manquant afin de pouvoir generer le BFC dans le cas ou seul l'identifiant de la
@@ -1450,15 +1451,15 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
         population.put(idStructure, new LinkedHashMap());
 
-        Utils.getClassesStruct(eb,idStructure, ClassesEvent -> {
+        Utils.getClassesStruct(eb, idStructure, ClassesEvent -> {
             if (ClassesEvent.isRight()) {
                 final List<String> classes = ClassesEvent.right().getValue();
                 Utils.getElevesClasses(eb, classes.toArray(new String[0]), idPeriode, ElevesEvent -> {
                     if (ElevesEvent.isRight()) {
                         for (final Map.Entry<String, List<String>> classe : ElevesEvent.right().getValue().entrySet()){
                             population.get(idStructure).put(classe.getKey(), null);
-                            Utils.getInfoEleve(eb, classe.getValue().toArray(new String[0]),
-                                    idStructure,  event -> {
+                            Utils.getInfoEleve(eb, classe.getValue().toArray(new String[0]),null,
+                                    idStructure, event -> {
                                         if (event.isRight()) {
                                             population.get(idStructure).put(classe.getKey(), event.right().getValue());
                                             // Si population.get(idStructure).values() contient une valeur null,
@@ -1487,31 +1488,30 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     private void getInfoEleveForClasses(String[] idStudents, String idStructure, String idClasse,
                                         Map<String, Map<String, List<Eleve>>> population,
                                         final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
-        Utils.getInfoEleve(eb, idStudents, idStructure,
-                info -> {
-                    if (info.isRight()) {
-                        if(isNull(idStructure)){
-                            log.error(" getInfoEleveForClasses null ");
-                        }
-                        population.get(idStructure).put(idClasse, info.right().getValue());
-                        // Si population.get(idStructure).values() contient une valeur null,
-                        // cela signifie qu'une classe n'a pas encore recupere sa liste d'eleves
-                        if (!population.get(idStructure).values().contains(null)) {
-                            handler.handle(new Either.Right(population));
-                        } else {
-                            log.error(" not get yet population ");
-                            handler.handle(new Either.Right(population));
-                        }
-                    } else {
-                        String error = info.left().getValue();
-                        log.error("getParamClasses : getInfoEleve : " + error);
-                        if(error.contains(TIME)){
-                            getInfoEleveForClasses(idStudents, idStructure, idClasse, population, handler);
-                            return;
-                        }
-                        handler.handle(new Either.Left<>(error));
-                    }
-                });
+        Utils.getInfoEleve(eb, idStudents,null, idStructure, info -> {
+            if (info.isRight()) {
+                if(isNull(idStructure)){
+                    log.error(" getInfoEleveForClasses null ");
+                }
+                population.get(idStructure).put(idClasse, info.right().getValue());
+                // Si population.get(idStructure).values() contient une valeur null,
+                // cela signifie qu'une classe n'a pas encore recupere sa liste d'eleves
+                if (!population.get(idStructure).values().contains(null)) {
+                    handler.handle(new Either.Right(population));
+                } else {
+                    log.error(" not get yet population ");
+                    handler.handle(new Either.Right(population));
+                }
+            } else {
+                String error = info.left().getValue();
+                log.error("getParamClasses : getInfoEleve : " + error);
+                if(error.contains(TIME)){
+                    getInfoEleveForClasses(idStudents, idStructure, idClasse, population, handler);
+                    return;
+                }
+                handler.handle(new Either.Left<>(error));
+            }
+        });
     }
 
     /**
@@ -1521,9 +1521,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @param idClasses Identifiants des classes dont on souhaite generer le BFC.
      * @param handler   Handler contenant les listes des eleves, indexees par classes.
      */
-    private void  getParamClasses(final List<String> idClasses, final Long idPeriode,
-                                  final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
-
+    private void getParamClasses(final List<String> idClasses, final Long idPeriode, final Long idCycle,
+                                 final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
         // Récupération de l'idStructure  de la classe
         Future<String> structureFucture = Future.future();
         Utils.getStructClasses(eb, idClasses.toArray(new String[0]),
@@ -1534,47 +1533,38 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         getClassesEleves(eb, idClasses.toArray(new String[0]), idPeriode,
                 event -> formate(studentsFuture, event));
 
-        // Récupération du cycle
-        Future<JsonArray> cycleFuture = Future.future();
-        utilsService.getCycle(idClasses, event -> formate(cycleFuture, event));
-
-        CompositeFuture.all(structureFucture, studentsFuture,cycleFuture).setHandler(event -> {
-
+        CompositeFuture.all(structureFucture, studentsFuture).setHandler(event -> {
             if (event.failed()) {
                 String error = event.cause().getMessage();
-                log.error(error);
+                log.error("getParamClasses : " + error);
                 handler.handle(new Either.Left<>(error));
                 return;
-            }
-            // Construction de la Map des libelle de cycle <idClasse, libelle>
-            Map<String, String> mapCycleLibelle = new HashMap<>();
-            JsonArray cycleResult = cycleFuture.result();
-            for (int i = 0; i < cycleResult.size(); i++) {
-                JsonObject cycle = cycleResult.getJsonObject(i);
-                String idClasse = cycle.getString("id_groupe");
-                String libelleCycle = cycle.getString(LIBELLE);
-                if(!mapCycleLibelle.containsKey(idClasse)){
-                    mapCycleLibelle.put(idClasse, libelleCycle);
-                }
             }
 
             final String idStructure = structureFucture.result();
             final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
             population.put(idStructure, new LinkedHashMap());
 
-            Map<String, JsonArray> mapEleves =  studentsFuture.result();
+            Map<String, JsonArray> mapEleves = studentsFuture.result();
             if(mapEleves.isEmpty()){
                 log.info("getParamClasses  NO student ");
                 handler.handle(new Either.Right(population));
                 return;
             }
+
             for (Map.Entry<String, JsonArray> classe : mapEleves.entrySet()) {
                 final String idClasse = classe.getKey();
                 JsonArray eleves = classe.getValue();
+
                 population.get(idStructure).put(idClasse, null);
-                List<Eleve> eleveList = toListEleve(eleves, mapCycleLibelle);
+                List<Eleve> eleveList = toListEleve(eleves);
+                Utils.getCycleElevesForBfcCycle(mapEleves.keySet(), idCycle, eleveList, cycle -> {
+
+                });
+
                 population.get(idStructure).put(idClasse, eleveList);
             }
+
             // Si population.get(idStructure).values() contient une valeur null,
             // cela signifie qu'une classe n'a pas encore recupere sa liste d'eleves
             if (!population.get(idStructure).values().contains(null)) {
@@ -1773,7 +1763,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         new DefaultUtilsService(eb).getActivesStructure(eb, structuresEvent -> {
             if(structuresEvent.isLeft()){
-                log.error(structuresEvent.left().getValue());
+                log.error("archiveBFC : " + structuresEvent.left().getValue());
                 return;
             }
             JsonArray structures = structuresEvent.right().getValue();
@@ -1807,7 +1797,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         CompositeFuture.all(exportResult, periodeNameFuture).setHandler(event -> {
             if (event.failed()) {
                 String error = event.cause().getMessage();
-                log.error(error);
+                log.error("buildBFCClasse : " + error);
                 if (error.contains(TIME)) {
                     buildBFCClasse(idCycle, idClasse, idStructure, path, host, scheme, forwardedFor, acceptLanguage,
                             vertx, config, classeFuture);
@@ -1854,7 +1844,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
                 CompositeFuture.all(futureList).setHandler(allStudents -> {
                     if (allStudents.failed()) {
-                        log.error(allStudents.cause().getMessage());
+                        log.error("buildBFCClasse : " + allStudents.cause().getMessage());
                     }
                     log.info(">>>> " + indexClasse.incrementAndGet() + " END ARCHIVE  (Classe: " + idClasse + "), " +
                             "(Cycle: " + idCycle + ")");
@@ -1876,29 +1866,27 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 log.debug("bfc stored: (eleve: " + idEleve + ", classe: " + idClasse + ", cycle: " + idCycle + ") ");
             }
             else{
-                log.error(noFileStored);
+                log.error("saveHandler : " + noFileStored);
             }
             handler.handle(new Either.Right<>(new JsonObject()));
         };
     }
 
-    private void endSave(String message,Handler<Either<String, JsonObject>> handler){
-        log.error(message);
+    private void endSave(String message, Handler<Either<String, JsonObject>> handler){
+        log.error("endSave : " + message);
         handler.handle(new Either.Right<>(new JsonObject()));
     }
 
     private void saveArchivePdf(String name, Buffer file, final String idEleve, final String idClasse,
                                 final String externalIdClasse, final String idEtablissement, final Long idCycle,
                                 Handler<Either<String, JsonObject>> handler){
-
         this.storage.writeBuffer(file, "application/pdf", name,  uploaded -> {
             String idFile = uploaded.getString("_id");
             if (!OK.equals(uploaded.getString(STATUS)) || idFile ==  null) {
                 String error = "save archive BFC pdf  : " + uploaded.getString(MESSAGE);
                 if(error.contains(TIME)){
                     saveArchivePdf(name, file, idEleve, idClasse, externalIdClasse, idEtablissement, idCycle, handler);
-                }
-                else {
+                } else {
                     endSave(error, handler);
                 }
                 return;
@@ -1906,66 +1894,67 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
             if(!(isNotNull(idEleve) && isNotNull(idClasse) && isNotNull(idEtablissement) && isNotNull(idCycle))) {
                 endSave("save archive BFC pdf  : null parameter ", handler);
-            }
-            else{
+            } else{
                 Handler<Either<String, JsonObject>> saveHandler = saveHandler(idEleve, idClasse, externalIdClasse,
                         idEtablissement, idCycle, handler);
 
-                if(isNotNull(externalIdClasse)){
-                    saveIdArchive(idEleve, idClasse, externalIdClasse, idEtablissement, idCycle, idFile, name,
-                            saveHandler);
-                }
-                else {
-                    getExternalIdClasse(idClasse, event -> {
-                        if(event.isLeft()){
-                            String error = "save archive BFC pdf  : " + event.left().getValue();
-                            log.error(error);
-                            if(error.contains(TIME)){
-                                saveArchivePdf(name, file, idEleve, idClasse, externalIdClasse, idEtablissement,
-                                        idCycle, saveHandler);
-                            }
-                            else {
-                                endSave(error, handler );
-                            }
+                utilsService.getYearsAndPeriodes(idEtablissement, true, yearEvent -> {
+                    if (yearEvent.isRight()) {
+                        String idYear = yearEvent.right().getValue().getString("start_date").substring(0,4);
+                        if(isNotNull(externalIdClasse)){
+                            saveIdArchive(idEleve, idClasse, externalIdClasse, idEtablissement, idCycle, idYear,
+                                    idFile, name, saveHandler);
+                        } else {
+                            getExternalIdClasse(idClasse, event -> {
+                                if(event.isLeft()){
+                                    String error = "save archive BFC pdf  : " + event.left().getValue();
+                                    log.error(error);
+                                    if(error.contains(TIME)){
+                                        saveArchivePdf(name, file, idEleve, idClasse, externalIdClasse, idEtablissement,
+                                                idCycle, saveHandler);
+                                    } else {
+                                        endSave(error, handler);
+                                    }
+                                } else {
+                                    JsonObject result = event.right().getValue();
+                                    if(result == null){
+                                        endSave("null EXternalID ", handler);
+                                    } else {
+                                        String externalId = result.getString(EXTERNAL_ID_KEY);
+                                        saveIdArchive(idEleve, idClasse, externalId, idEtablissement, idCycle, idYear,
+                                                idFile, name, saveHandler);
+                                    }
+                                }
+                            });
                         }
-                        else {
-                            JsonObject result = event.right().getValue();
-                            if(result == null){
-                                endSave("null EXternalID ", handler );
-                            }
-                            else {
-                                String externalId = result.getString(EXTERNAL_ID_KEY);
-                                saveIdArchive(idEleve, idClasse, externalId, idEtablissement, idCycle, idFile,
-                                        name, saveHandler);
-                            }
-                        }
-                    });
-                }
+                    } else {
+                        String error = "[saveArchivePdf] : Can't get year " + yearEvent.left().getValue();
+                        log.error(error);
+                        endSave(error, handler);
+                    }
+                });
             }
-
         });
     }
 
-    private void saveIdArchive(String idEleve, String idClasse, String externalIdClasse,
-                               String idEtablissement, Long idCycle, String idFile, String name,
+    private void saveIdArchive(String idEleve, String idClasse, String externalIdClasse, String idEtablissement,
+                               Long idCycle, String idYear, String idFile, String name,
                                Handler<Either<String, JsonObject>> handler){
+        String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".archive_bfc " +
+                " (id_classe, id_eleve, id_etablissement, external_id_classe, id_cycle, id_annee, id_file, file_name) " +
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 
-        String query = " INSERT INTO " + COMPETENCES_SCHEMA + ".archive_bfc " +
-                " (id_classe, id_eleve, id_etablissement, external_id_classe, id_cycle,  id_file, file_name) " +
-                " VALUES (?, ?, ?, ?, ?, ?, ?);";
-        JsonArray values = new JsonArray().add(idClasse).add( idEleve).add( idEtablissement).add( externalIdClasse)
-                .add(idCycle).add( idFile).add(name);
+        JsonArray values = new JsonArray().add(idClasse).add(idEleve).add(idEtablissement).add(externalIdClasse)
+                .add(idCycle).add(idYear).add(idFile).add(name);
 
-        Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS,
-                result -> {
-                    JsonObject body = result.body();
-                    if (!OK.equals(body.getString(STATUS))) {
-                        handler.handle(new Either.Left<>(body.getString(MESSAGE)));
-                    }
-                    else{
-                        handler.handle(new Either.Right<>(body));
-                    }
-                });
+        Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS, result -> {
+            JsonObject body = result.body();
+            if (!OK.equals(body.getString(STATUS))) {
+                handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+            } else{
+                handler.handle(new Either.Right<>(body));
+            }
+        });
     }
 
     private void generateBfcByStudent(JsonObject studentTemplate, final String idClasse, final Long idCycle,

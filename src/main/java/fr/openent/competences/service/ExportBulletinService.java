@@ -297,4 +297,6 @@ public interface ExportBulletinService {
     void generateAndSavePdf(HttpServerRequest request, JsonObject resultFinal, String templateName,
                             String prefixPdfName, JsonObject eleve, Vertx vertx, JsonObject config,
                             Handler<Either<String, Boolean>> finalHandler);
+
+    void generateImagesFromPathForBulletin (JsonObject eleve, Vertx vertx, Handler<Either<String, JsonObject>> handler);
 }

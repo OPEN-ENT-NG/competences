@@ -571,7 +571,7 @@ public class BFCController extends ControllerHelper {
         String idClasse = request.params().get(ID_CLASSE_KEY);
         Long idCycle = Utils.isCycleNotNull(request.params().get("idCycle")) ? Long.valueOf(request.params().get("idCycle")) : null;
         Boolean isCycle = true;
-        ArchiveUtils.getArchiveBulletin(idEleve, idClasse, idCycle, storage, ARCHIVE_BFC_TABLE, isCycle, request);
+        ArchiveUtils.getArchive(idEleve, idClasse, idCycle, storage, ARCHIVE_BFC_TABLE, isCycle, request);
     }
 
     @Get("/delete/archive/bfc")
@@ -583,9 +583,9 @@ public class BFCController extends ControllerHelper {
     @Get("/archive/bfc")
     @ApiDoc("télécharge l archive d'un étab")
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
-    public void getArchiveBulletin(final  HttpServerRequest request){
+    public void getArchiveBfc(final  HttpServerRequest request){
         String idStructure = request.params().get("idStructure");
         String idYear = request.params().get("idYear");
-        ArchiveUtils.getArchiveBFCZip(idStructure, request, eb, storage, vertx);
+        ArchiveUtils.getArchiveBFCZip(idStructure, idYear, request, eb, storage, vertx);
     }
 }
