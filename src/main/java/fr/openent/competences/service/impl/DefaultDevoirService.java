@@ -1593,7 +1593,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 groupsEvent -> formate(groupsFuture, groupsEvent));
         futures.add(groupsFuture);
 
-        Long finalIdPeriode = idPeriode;
         CompositeFuture.all(futures).setHandler(futuresEvent -> {
             if (futuresEvent.failed()) {
                 handler.handle(new Either.Left<>(futuresEvent.cause().getMessage()));
@@ -1612,7 +1611,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 );
 
                 Future<JsonArray> multiTeachersFuture = Future.future();
-                utilsService.getMultiTeachers(idEtablissement, groups, finalIdPeriode != null ? finalIdPeriode.intValue() : null,
+                utilsService.getMultiTeachers(idEtablissement, groups, idPeriode != null ? idPeriode.intValue() : null,
                         multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent)
                 );
 
@@ -1632,7 +1631,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                             if (resultEvent.failed()) {
                                 handler.handle(new Either.Left<>(resultEvent.cause().getMessage()));
                             } else {
-                                setAverageOfSubjects(result, finalIdPeriode);
+                                setAverageOfSubjects(result, idPeriode);
                                 handler.handle(new Either.Right<>(result));
                             }
                         });
@@ -1767,7 +1766,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         );
         futures.add(groupsFuture);
 
-        Long finalIdPeriode = idPeriode;
         CompositeFuture.all(futures).setHandler(futuresEvent -> {
             if (futuresEvent.failed()) {
                 handler.handle(new Either.Left<>(futuresEvent.cause().getMessage()));
@@ -1786,12 +1784,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 );
 
                 Future<JsonArray> multiTeachersFuture = Future.future();
-                utilsService.getMultiTeachers(idEtablissement, groups, finalIdPeriode != null ? finalIdPeriode.intValue() : null,
+                utilsService.getMultiTeachers(idEtablissement, groups, idPeriode != null ? idPeriode.intValue() : null,
                         multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent)
                 );
 
                 Future<JsonArray> devoirWithCompetencesFuture = Future.future();
-                listDevoirsWithCompetences(idEleve, finalIdPeriode, idMatiere, groups,
+                listDevoirsWithCompetences(idEleve, idPeriode, idMatiere, groups,
                         devoirsCompetencesEvent -> formate(devoirWithCompetencesFuture, devoirsCompetencesEvent)
                 );
 
@@ -1937,66 +1935,37 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     private void setAverageOfSubjects(JsonObject result, Long idPeriod) {
         for(Map.Entry<String, Object> resultEntry : result.getMap().entrySet()) {
             JsonObject matiere = (JsonObject) resultEntry.getValue();
-            Map<Long, List<NoteDevoir>> notesByPeriode = new LinkedHashMap<>();
+            List<NoteDevoir> notes = new ArrayList<>();
             JsonArray moyennesFinales = matiere.containsKey("moyennes") ? matiere.getJsonArray("moyennes") : new JsonArray();
 
             if(matiere.containsKey("devoirs")){
                 JsonArray matiereDevoirs = matiere.getJsonArray("devoirs");
                 matiereDevoirs.forEach(matiereDevoir -> {
                     JsonObject matiereDevoirJson = (JsonObject) matiereDevoir;
-                    Long idP = matiereDevoirJson.getLong("id_periode");
                     if(matiereDevoirJson.containsKey("note")){
                         NoteDevoir note = new NoteDevoir(Double.parseDouble(matiereDevoirJson.getString("note")),
                                 matiereDevoirJson.getLong("diviseur").doubleValue(),
                                 matiereDevoirJson.getBoolean("ramener_sur"),
                                 Double.parseDouble(matiereDevoirJson.getString(COEFFICIENT)));
-                        if(!notesByPeriode.containsKey(idP)) {
-                            notesByPeriode.put(idP, new ArrayList<>());
-                        }
-                        notesByPeriode.get(idP).add(note);
+                        notes.add(note);
                     }
                 });
             }
 
+            JsonObject moyenneFinale = null;
             if(idPeriod != null) {
-                List<NoteDevoir> listNoteDevoir = notesByPeriode.get(idPeriod);
-                JsonObject moyenneFinale = (JsonObject) moyennesFinales.stream()
+                 moyenneFinale = (JsonObject) moyennesFinales.stream()
                         .filter(el -> idPeriod.equals(((JsonObject) el).getLong("id_periode")))
                         .findFirst().orElse(null);
-                if(moyenneFinale != null) {
-                    matiere.put("moyenne", moyenneFinale.getString("moyenne"));
-                } else if (listNoteDevoir != null && !listNoteDevoir.isEmpty()) {
-                    Double moy = utilsService.calculMoyenne(listNoteDevoir,false, 20, false).getDouble("moyenne");
-                    matiere.put("moyenne", moy.toString());
-                } else {
-                    matiere.put("moyenne", NN);
-                }
+            }
+
+            if(moyenneFinale != null) {
+                matiere.put("moyenne", moyenneFinale.getString("moyenne"));
+            } else if (!notes.isEmpty()) {
+                Double moy = utilsService.calculMoyenne(notes,false, 20, false).getDouble("moyenne");
+                matiere.put("moyenne", moy.toString());
             } else {
-                final Double[] moyAnnuel = {0.0};
-                final int[] countPeriode = {0};
-
-                moyennesFinales.forEach(moyenneFinale -> {
-                    JsonObject moyenneFinaleJson = (JsonObject) moyenneFinale;
-
-                    moyAnnuel[0] += Double.parseDouble(moyenneFinaleJson.getString("moyenne"));
-                    countPeriode[0]++;
-                });
-
-                notesByPeriode.forEach((periode, notes) -> {
-                    JsonObject moyenneFinaleExists = (JsonObject) moyennesFinales.stream()
-                            .filter(el -> periode.equals(((JsonObject) el).getLong("id_periode")))
-                            .findFirst().orElse(null);
-                    if(moyenneFinaleExists == null) {
-                        moyAnnuel[0] += utilsService.calculMoyenne(notes,false, 20, false).getDouble("moyenne");
-                        countPeriode[0]++;
-                    }
-                });
-
-                if(countPeriode[0] > 0) {
-                    matiere.put("moyenne", String.valueOf(moyAnnuel[0] / countPeriode[0]));
-                } else {
-                    matiere.put("moyenne", NN);
-                }
+                matiere.put("moyenne", NN);
             }
             matiere.remove("moyennes");
         }
