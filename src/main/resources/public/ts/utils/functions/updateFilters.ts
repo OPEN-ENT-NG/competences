@@ -52,7 +52,7 @@ export function updateFilters($scope, withStudent) {
                     }
                 });
 
-                if ($scope.selected.periode !== undefined) {
+                if ($scope.selected.periode !== undefined && $scope.selected.periode !== null) {
                     $scope.selected.periode = _.findWhere($scope.filteredPeriodes, {
                         id_type: $scope.selected.periode.id_type
                     });
