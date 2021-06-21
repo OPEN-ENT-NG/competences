@@ -1159,7 +1159,9 @@ public class DefaultExportService implements ExportService {
         vertx.fileSystem().readFile(templatePath + templateName, new Handler<AsyncResult<Buffer>>() {
             @Override
             public void handle(AsyncResult<Buffer> result) {
+                log.info(" result vertx.fileSystem" );
                 if (!result.succeeded()) {
+                    log.info("Error while reading template : " + templatePath + templateName);
                     badRequest(request, "Error while reading template : " + templatePath
                             + templateName);
                     log.error("Error while reading template : " + templatePath + templateName);
@@ -1170,8 +1172,11 @@ public class DefaultExportService implements ExportService {
                 render.processTemplate(request, templateProps, templateName, reader, new Handler<Writer>() {
                     @Override
                     public void handle(Writer writer) {
+                        log.info("write render.processTemplate");
                         String processedTemplate = ((StringWriter) writer).getBuffer().toString();
                         if (processedTemplate == null) {
+                            log.info("processing error : \ntemplateProps : " + templateProps.toString()
+                                    + "\ntemplateName : " + templateName);
                             badRequest(request, "Error while processing.");
                             if (templateProps != null) {
                                 log.error("processing error : \ntemplateProps : " + templateProps.toString()
@@ -1196,8 +1201,10 @@ public class DefaultExportService implements ExportService {
                                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                     @Override
                                     public void handle(Message<JsonObject> reply) {
+                                        log.info("response entcore.pdf.generator");
                                         JsonObject pdfResponse = reply.body();
                                         if (!"ok".equals(pdfResponse.getString("status"))) {
+                                            log.info(" response entcore.pdf.generator status ko : " + pdfResponse.getString("message"));
                                             badRequest(request, pdfResponse.getString("message"));
                                             return;
                                         }
@@ -1277,6 +1284,7 @@ public class DefaultExportService implements ExportService {
                                                     .format(new Date().getTime())
                                                     + " -> Fin Generation Image du template " + templateName);
                                         } else {
+                                            log.info(" response final ");
                                             request.response()
                                                     .putHeader("Content-Type", "application/pdf");
                                             request.response().putHeader("Content-Disposition",
