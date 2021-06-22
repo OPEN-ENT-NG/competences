@@ -788,8 +788,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 let periodeSelected = _.findWhere($scope.filteredPeriode,
                     {id_type: $scope.search.periode.id_type});
                 if ($scope.search.periode === undefined || $scope.search.periode === "*" || periodeSelected === undefined) {
-                    $scope.getCurrentPeriode($scope.search.classe).then((res) => {
-                        $scope.search.periode = _.findWhere($scope.filteredPeriode, {id_type: res.id_type});
+                    $scope.getCurrentPeriode($scope.search.classe).then((currentPeriode) => {
+                        $scope.search.periode = currentPeriode !== null ? _.findWhere($scope.filteredPeriode,
+                            {id_type: currentPeriode.id_type}) : null;
                         utils.safeApply($scope);
                     });
                 }

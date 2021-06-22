@@ -60,8 +60,7 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
                     }
                     return evaluables.length > 0;
                 });
-            }
-            else {
+            } else {
                 return matieres.filter((matiere) => {
                     let evaluables = [];
                     if (matiere.name != null && matiere.externalId != null) {
