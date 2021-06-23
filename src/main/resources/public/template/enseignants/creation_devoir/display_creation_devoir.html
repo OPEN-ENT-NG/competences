@@ -365,12 +365,11 @@
                                     </div>
                                 </div>
                                 <div ng-hide="!displayFilterDomaine">
-                                    <label class="chip multiselect margin-left">
+                                    <label class="chip multiselect margin-left"
+                                           ng-class="{ selected: selectAllDomaines }">
                                         <span><i18n>viescolaire.utils.all.none</i18n></span>
                                         <input type="checkbox"
-                                               ng-model="bSelectAllDomaines"
-                                               ng-change="showHideDomaines()"
-                                               ng-class="{ selected: bSelectAllDomaines }"/>
+                                               ng-click="showHideDomaines()"/>
                                     </label>
                                     <label class="chip margin-left checkbox-domaine"
                                            ng-repeat="domaine in domaines" ng-class="{ selected : showCompetencesDomaine[domaine.id] }">

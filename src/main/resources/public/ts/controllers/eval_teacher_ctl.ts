@@ -686,7 +686,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         });
         $scope.enseignements = evaluations.enseignements;
         $scope.bSelectAllEnseignements = false;
-        $scope.bSelectAllDomaines = false;
+        $scope.selectAllDomaines = true;
         $scope.matieres = evaluations.matieres;
         $scope.releveNotes = evaluations.releveNotes;
         $scope.releveNote = null;
@@ -1615,22 +1615,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.checkDomainesSelected = function (idDomaine) {
             $scope.showCompetencesDomaine[idDomaine] = !$scope.showCompetencesDomaine[idDomaine];
             let isAllDomainesSelected = true;
-            let isAllDomainesUnSelected = true;
             for (let i = 0; i < $scope.domaines.length; i++) {
-                if ($scope.showCompetencesDomaine[$scope.domaines[i].id]) {
-                    isAllDomainesUnSelected = false;
-                } else {
+                if(!$scope.showCompetencesDomaine[$scope.domaines[i].id]) {
                     isAllDomainesSelected = false;
                 }
             }
-
-            if (isAllDomainesSelected) {
-                $scope.bSelectAllDomaines = false;
-            }
-
-            if (isAllDomainesUnSelected) {
-                $scope.bSelectAllDomaines = true;
-            }
+            $scope.selectAllDomaines = isAllDomainesSelected;
+            $scope.setCSkillsList(false, false);
         }
 
         /**
@@ -1698,20 +1689,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          *
          * @param pbIsSelected booleen pour afficher ou masquer les compétences.
          */
-        $scope.showDomaine = function (pbIsSelected) {
+        $scope.showHideDomaines = function () {
+            $scope.selectAllDomaines = !$scope.selectAllDomaines;
             for (let i = 0; i < $scope.domaines.length; i++) {
                 let currdomaine = $scope.domaines[i];
-                $scope.showCompetencesDomaine[currdomaine.id] = pbIsSelected;
+                $scope.showCompetencesDomaine[currdomaine.id] = $scope.selectAllDomaines;
             }
-        };
-
-        /**
-         * affiche/masque tous les domaines lors de la création d'un devoir.
-         *
-         */
-        $scope.showHideDomaines = function () {
-            $scope.showDomaine($scope.bSelectAllDomaines);
-            $scope.bSelectAllDomaines = !$scope.bSelectAllDomaines;
+            $scope.setCSkillsList(false, false);
         };
 
         /**
@@ -1885,7 +1869,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 });
             }
 
-            $scope.cSkillsListData = _.filter($scope.devoir.enseignements.all, (enseignement) => {
+            let enseignements = angular.copy($scope.devoir.enseignements.all); // Variable intermédiaire pour ne pas réécraser les compétences avec les filtres ci-dessous
+            $scope.cSkillsListData = _.filter(enseignements, (enseignement) => {
                 enseignement.competences.all = _.filter(enseignement.competences.all, (competence) => {
                     competence.competences.all = _.filter(competence.competences.all, (comp) => {
                         return $scope.hideHiddenCompetence(comp)
@@ -1894,11 +1879,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     return $scope.hideHiddenCompetence(competence)
                         && $scope.competencesByDomainesFilterFunction(competence);
                 });
+
                 if(searchChanged) {
                     return $scope.enseignementsSearchFunction(enseignement, $scope.search.keyword)
                         && $scope.enseignementsFilterFunction(enseignement);
-                }
-                else {
+                } else {
                     return $scope.enseignementsFilterFunction(enseignement);
                 }
             });
