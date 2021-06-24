@@ -37,12 +37,14 @@
     <nav class="cell vertical menu-accueil mobile-navigation vsco_navigation" side-nav>
         <ul>
             <li><a href="#/"><i18n>home</i18n></a></li>
-            <li><a href="#/devoir/create"><i18n>evaluations.evaluation.create</i18n></a></li>
-            <li><a href="#/devoirs/list"><i18n>evaluations.test.list</i18n></a></li>
-            <li><a href="#/releve"><i18n>evaluations.releve.title</i18n></a></li>
-            <li><a href="#/competences/eleve"><i18n>evaluations.suivi.eleve.title</i18n></a></li>
-            <li ><a href="#/competences/classe"><i18n>evaluations.suivi.classe.title</i18n></a></li>
-            <li ><a href="#/projets"><i18n>evaluations.saisie.projets.title</i18n></a></li>
+            <li ng-if="canCreateEval()"><a href="#/devoirs/list"><i18n>evaluations.test.list</i18n></a></li>
+            <li ng-if="canAccessReleve()"><a href="#/releve"><i18n>evaluations.releve.title</i18n></a></li>
+            <li ng-if="canAccessSuiviEleve()"><a href="#/competences/eleve"><i18n>evaluations.suivi.eleve.title</i18n></a></li>
+            <li ng-if="canAccessSuiviClasse()"><a href="#/competences/classe"><i18n>evaluations.suivi.classe.title</i18n></a></li>
+            <li ng-if="canAccessProjets()"><a href="#/projets"><i18n>evaluations.saisie.projets.title</i18n></a></li>
+            <li ng-if="canAccessConseil()"><a href="#/conseil/de/classe"><i18n>evaluations.conseil.de.classe</i18n></a></li>
+            <li ng-if="canAccessExport()"><a href="#/export"><i18n>evaluations.exports</i18n></a></li>
+            <li ng-if="canAccessBulletin()"><a href="#/bulletin"><i18n>evaluations.bulletin</i18n></a></li>
         </ul>
     </nav>
     <structure-loader display="opened.displayStructureLoader"
