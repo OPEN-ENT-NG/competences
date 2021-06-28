@@ -238,7 +238,7 @@
   "evaluation.bilan.fin.cycle.synthes.max.length": "La saisie est limitée à 1500 caractères. La synthèse n'a pas été enregistrée.",
   "evaluation.bilan.fin.cycle.synthese.save.error": "Une erreur est survenue lors de l'enregistrement de la synthèse",
   "evaluation.bfc.controle.continu":"contrôle continu : ",
-  "evaluation.bfc.controle.continu.eleves.err":"Erreur lors de la récupération du contrôle continu des élèves  de la classe",
+  "evaluation.bfc.controle.continu.eleves.err":"Erreur lors de la récupération du contrôle continu des élèves de la classe",
   "evaluation.bfc.controle.continu.eleve.err": "Erreur lors de la récupération du contrôle continu de l'élève",
   "evaluation.synthese.bilan.periodique.save.error" : "Une erreur est survenue lors de l'enregistrement de la synthèse",
   "evaluation.synthese.bilan.periodique.get.error":"Une erreur est survenue lors de la récupération de la synthèse",
