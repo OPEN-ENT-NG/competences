@@ -11,6 +11,8 @@ import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Pers
 import {ComparisonGraph} from "../models/common/ComparisonGraph";
 import {conseilGraphiques, conseilColumns, PreferencesUtils} from "../utils/preferences";
 import {AppreciationSubjectPeriodStudent} from "../models/teacher/AppreciationSubjectPeriodStudent";
+import {LengthLimit,Common} from "../constants";
+import {DigitalSkills} from "../models/teacher/digital_skills/DigitalSkills";
 
 
 declare let _: any;
@@ -26,6 +28,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         template.close('graphMatiere');
         template.close('graphDomaine');
         template.close('synthese');
+        template.close('digital-skills');
         utils.safeApply($scope);
 
         let finSaisieBilan: boolean;
@@ -38,7 +41,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.opened.ensCplt = true;
         $scope.showGraphMatLoader = false;
         $scope.showGraphDomLoader = false;
-        $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false, bfc: false};
+        $scope.showDigitalSkills = false;
+        $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false,
+            bfc: false, digitalSkills: false};
         $scope.graphDom = {opened: false, comparison: false, darkness: true, infoGrouped: false};
         $scope.graphMat = {opened: false, comparison: false, darkness: true, infoGrouped: false};
         $scope.opened.bfcPeriode = undefined;
@@ -53,6 +58,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         if(PreferencesUtils.isNotEmpty(conseilColumns)){
             $scope.showColumns = PreferencesUtils.getPreferences(conseilColumns);
         }
+        $scope.MAX_LENGTH_600 = LengthLimit.MAX_600;
+        $scope.MAX_LENGTH_300 = LengthLimit.MAX_300;
 
         $scope.showPopUpColumn = false;
         $scope.displayBilanPeriodique = () => {
@@ -69,6 +76,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.canLoadStudent = isNotEmptyClasse && isNotEmptyPeriode && isNotEmptyStudent;
                 $scope.critereIsEmpty = !(isNotEmptyClasse && isNotEmptyPeriode && isNotEmptyStudent);
             }
+            let isClassAndCycle3 = isNotEmptyClasse ? $scope.search.classe.type_groupe === Common.TYPE_GROUP &&
+                $scope.search.classe.id_cycle === Common.CYCLE_3 : false;
+            let isLastPeriod = isNotEmptyPeriode ? $scope.search.periode.ordre === $scope.search.periode.type : false;
+            $scope.showDigitalSkills = !$scope.critereIsEmpty && isClassAndCycle3 && isLastPeriod;
         };
 
         if (model.me.type === 'PERSRELELEVE') {
@@ -83,12 +94,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             return item.id_type > -1 || $scope.selected.bfc === true;
         };
 
-        $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH = 600;
-        $scope.MAX_CHAR_APPRECIATION_LENGTH = 300;
-
         let closeTemplateButNot = (notThis) => {
             let allTemplate = ['suivi-acquis', 'vie-scolaire', 'graphique',
-                'synthese', 'projet', 'bfc'];
+                'synthese', 'projet', 'bfc', 'digital-skills'];
 
             _.forEach(allTemplate, (_template) => {
                 if (notThis instanceof Array) {
@@ -281,12 +289,26 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
         };
 
+        $scope.openDigitalSkills = async () => {
+            $scope.selected = {digitalSkills: true};
+            closeTemplateButNot('digital-skills');
+
+            await $scope.syncPeriodesBilanPeriodique();
+
+            $scope.canSaveDigitalSkills = Utils.canSaveDigitalSkils() && finSaisieBilan;
+            $scope.digitalSkills = new DigitalSkills($scope.search, $scope.structure);
+            await $scope.digitalSkills.sync();
+
+            template.open('digital-skills', 'enseignants/bilan_periodique/diplay_digital_skills');
+            await utils.safeApply($scope);
+        }
+
         $scope.switchOpenMatiere = async function () {
             $scope.graphMat.opened = !$scope.graphMat.opened;
             if($scope.graphMat.opened){
                 $scope.openMatiere();
             }
-        };
+        }
 
         $scope.savePreferences = function () {
             let arrayKeys = [], datasArray = [];
@@ -544,6 +566,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     await $scope.openBFC($scope.search.periode);
                 }
 
+                if ($scope.selected.digitalSkills){
+                    await $scope.openDigitalSkills();
+                }
+
                 await Utils.awaitAndDisplay(allPromise, $scope, undefined, $scope.selected.bfc);
 
                 await $scope.syncAllAvisSyntheses();
@@ -721,24 +747,24 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 if (Utils.isNotNull(eleve.appreciations) &&
                     Utils.isNotNull(eleve.appreciations[$scope.search.periode.id])) {
                     if (eleve.appreciations[$scope.search.periode.id][element.id] !== undefined) {
-                        if (eleve.appreciations[$scope.search.periode.id][element.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
+                        if (eleve.appreciations[$scope.search.periode.id][element.id].length <= $scope.MAX_LENGTH_600) {
                             $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, eleve, $scope.search.classe, isBilanPeriodique);
                         }
                         else {
                             notify.error(lang.translate("error.char.outbound") +
-                                $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH);
+                                $scope.MAX_LENGTH_600);
                         }
                     }
                 }
             } else {
                 if (element.appreciationClasse[$scope.search.periode.id][$scope.search.classe.id] !== undefined) {
-                    if (element.appreciationClasse[$scope.search.periode.id][$scope.search.classe.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
+                    if (element.appreciationClasse[$scope.search.periode.id][$scope.search.classe.id].length <= $scope.MAX_LENGTH_600) {
                         $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, null,
                             $scope.search.classe, isBilanPeriodique);
                     }
                     else {
                         notify.error(lang.translate("error.char.outbound") +
-                            $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH);
+                            $scope.MAX_LENGTH_600);
                     }
                 }
             }
@@ -785,8 +811,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.filteredPeriode = _.filter($scope.filteredPeriode, (periode) => {
                     return $scope.filterTrimestres(periode);
                 });
-                let periodeSelected = _.findWhere($scope.filteredPeriode,
-                    {id_type: $scope.search.periode.id_type});
+                let periodeSelected = $scope.search.periode != null ?_.findWhere($scope.filteredPeriode,
+                    {id_type: $scope.search.periode.id_type}) : undefined;
                 if ($scope.search.periode === undefined || $scope.search.periode === "*" || periodeSelected === undefined) {
                     $scope.getCurrentPeriode($scope.search.classe).then((currentPeriode) => {
                         $scope.search.periode = currentPeriode !== null ? _.findWhere($scope.filteredPeriode,

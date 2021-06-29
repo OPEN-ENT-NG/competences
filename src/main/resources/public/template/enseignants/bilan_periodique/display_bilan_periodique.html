@@ -74,6 +74,13 @@
                                     <span><i18n><span class="no-style ng-scope">evaluations.bilan.fin.cycle.title</span></i18n></span>
                                 </div>
                             </header>
+                            <header ng-class="{selected : selected.digitalSkills}"
+                                    ng-if="showDigitalSkills"
+                                    class="horizontal-spacing-twice" ng-click="openDigitalSkills()">
+                                <div class="horizontal-spacing">
+                                    <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.digital.skills</span></i18n></span>
+                                </div>
+                            </header>
                         </div>
                         <div class="twelve">
                             <container template="suivi-acquis"></container>
@@ -81,8 +88,8 @@
                             <container template="vie-scolaire"></container>
                             <container template="graphique"></container>
                             <container class="twelve" ng-if="selected.bfc" template="bfc" ng-init="refreshAndOpenBFC(true, true,opened.bfcPeriode)"
-                                         ng-controller="EvalSuiviEleveCtl">
-                            </container>
+                                         ng-controller="EvalSuiviEleveCtl"></container>
+                            <container template = "digital-skills" ng-if="showDigitalSkills"></container>
                         </div>
 
                     </div>

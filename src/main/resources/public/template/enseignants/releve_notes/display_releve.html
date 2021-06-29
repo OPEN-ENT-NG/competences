@@ -223,8 +223,8 @@
                                       ng-model="releveNote.appreciationClasse.appreciation"
                                       class="twelve"
                                       ng-class="{appreciationTextarea : opened.appreciation === true}"
-                                      ng-maxlength="300"
-                                      maxlength="300"
+                                      ng-maxlength="MAX_LENGTH_300"
+                                      maxlength="[[MAX_LENGTH_300]]"
                                       ng-blur="releveNote.appreciationClasse.save()"
                                       ng-disabled="releveNote.appreciationClasse.endSaisie && !isChefEtabOrHeadTeacher(search.classe)"
                                       name="appreciationClasse"
@@ -365,8 +365,8 @@
                                                   ng-model="eleve.appreciation_matiere_periode"
                                                   ng-disabled = "disabledSaisieNNoutPeriode()"
                                                   ng-blur="saveAppreciationMatierePeriodeEleve(eleve, true)"
-                                                  ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
-                                                  maxlength="[[MAX_CHAR_APPRECIATION_LENGTH]]"
+                                                  ng-maxlength="MAX_LENGTH_300"
+                                                  maxlength="[[MAX_LENGTH_300]]"
                                                   ng-focus="focusMe($event);getEleveInfo(eleve);
                                                   setPreviousAppreciationMatiere(eleve);">
                                         </textarea>

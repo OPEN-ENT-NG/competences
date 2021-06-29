@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id_digital_skill": {
+      "type": "integer"
+    },
+    "id_student": {
+      "type" : "string"
+    },
+    "id_structure": {
+      "type" : "string"
+    },
+    "id_type_period": {
+      "type": "integer"
+    },
+    "level": {
+      "type" : "integer"
+    }
+
+  },
+  "required": [
+    "id_digital_skill",
+    "id_student",
+    "id_structure",
+    "id_type_period",
+    "level"
+  ]
+}

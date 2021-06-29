@@ -42,7 +42,8 @@ export class AppreciationClasse  {
 
     async sync() {
         try {
-            let {data} = await http.get(`/competences/appreciation/classe?id_matiere=${this.id_matiere}&id_classe=${this.id_classe}&id_periode=${this.id_periode}`);
+            let {data} = await http.get(`/competences/appreciation/classe?id_matiere=${this.id_matiere}
+            &id_classe=${this.id_classe}&id_periode=${this.id_periode}`);
             // Mix.extend(this, Mix.castAs(AppreciationClasse, data) );
             if(data.appreciation !== undefined) {
                 this.appreciation = data.appreciation;

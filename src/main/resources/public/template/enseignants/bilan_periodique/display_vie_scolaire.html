@@ -15,8 +15,8 @@
                     [[ search.eleve.evenement.retard ]]
             </span>
         </label>
-    </div>
-    <div class="twelve cell">
+        </div>
+        <div class="twelve cell">
                     <span>
                         <i18n>viescolaire.abs.justified</i18n>:&nbsp;
                     </span>
@@ -54,7 +54,7 @@
                     </span>
         <label  class="bold">
              <span ng-if="canUpdateRetardAndAbscence">
-                    <input id="abs_totale_heure"type="number" min="0" ng-model="search.eleve.evenement.abs_totale_heure"
+                    <input id="abs_totale_heure" type="number" min="0" ng-model="search.eleve.evenement.abs_totale_heure"
                            ng-disabled="!canUpdateRetardAndAbscence" ng-change="setColonne('abs_totale_heure')"
                            ng-click="focusMe($event);">
                 </span>
@@ -70,8 +70,8 @@
                    rows="5" type="text"
                    ng-model="elementBilanPeriodique.appreciationCPE.appreciation"
                    class="twelve"
-                   ng-maxlength="600"
-                   maxlength="600"
+                   ng-maxlength="MAX_LENGTH_600"
+                   maxlength="[[MAX_LENGTH_600]]"
                    ng-disabled="!canSaisiAppreciationCPE"
                    ng-disabled="!canUpdateRetardAndAbscence" ng-blur="elementBilanPeriodique.appreciationCPE.saveAppreciationCPE();">
          </textarea>

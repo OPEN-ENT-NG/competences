@@ -54,7 +54,8 @@ Behaviours.register('competences', {
             accessSuiviEleve: "fr.openent.competences.controllers.CompetenceNoteController|getCompetenceNoteEleve",
             accessSuiviClasse: "fr.openent.competences.controllers.CompetenceNoteController|getCompetenceNoteClasse",
             accessConseil: "fr.openent.competences.controllers.BilanPeriodiqueController|getSuiviDesAcquisEleve",
-            exportBulletins:"fr.openent.competences.controllers.ExportPDFController|exportBulletins"
+            exportBulletins: "fr.openent.competences.controllers.ExportPDFController|exportBulletins",
+            canSaveDigitalSkills: "fr.openent.competences.controllers.DigitalSkillsController|createOrUpdateLevelDigitalSkills",
         },
         resource: {}
     },

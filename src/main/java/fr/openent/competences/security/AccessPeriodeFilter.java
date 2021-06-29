@@ -36,7 +36,6 @@ import io.vertx.core.logging.LoggerFactory;
 public class AccessPeriodeFilter implements ResourcesProvider {
 
     protected static final Logger log = LoggerFactory.getLogger(AccessPeriodeFilter.class);
-
     @Override
     public void authorize(final HttpServerRequest resourceRequest, Binding binding, UserInfos user,
                           final Handler<Boolean> handler) {

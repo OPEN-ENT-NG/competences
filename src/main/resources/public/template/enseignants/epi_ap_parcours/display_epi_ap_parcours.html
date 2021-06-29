@@ -148,6 +148,7 @@
                                                         class="ten cell cell cell-input nav-input">
                                                     <input type="text" class="eleven input-appreciation navigable-cell"
                                                            name="appreciation"
+                                                           maxlength="[[MAX_LENGTH_600]]"
                                                            ng-model="eleve.appreciations[search.periode.id][element.id]"
                                                            ng-blur="saveAppElement(element, false, eleve)"
                                                            ng-disabled="bilanPeriodique.endSaisie && !hasRight()"
@@ -167,8 +168,8 @@
                                       rows="5" type="text"
                                       ng-model="element.appreciationClasse[search.periode.id][search.classe.id]"
                                       class="twelve"
-                                      ng-maxlength="600"
-                                      maxlength="600"
+                                      ng-maxlength="MAX_LENGTH_600"
+                                      maxlength="[[MAX_LENGTH_600]]"
                                       ng-blur="saveAppElement(element, false)"
                                       name="appreciationClasse"
                                       ng-disabled="bilanPeriodique.endSaisie && !hasRight()">

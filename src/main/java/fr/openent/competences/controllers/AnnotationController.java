@@ -121,7 +121,9 @@ public class AnnotationController extends ControllerHelper {
                     RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_ANNOTATION_UPDATE, new Handler<JsonObject>() {
                         @Override
                         public void handle(JsonObject annotation) {
-                            annotationService.updateAnnotationDevoir(annotation.getLong("id_devoir"),annotation.getLong("id_annotation"),annotation.getString("id_eleve"),defaultResponseHandler(request) );
+                            annotationService.updateAnnotationDevoir(annotation.getLong("id_devoir"),
+                                    annotation.getLong("id_annotation"),annotation.getString("id_eleve"),
+                                    defaultResponseHandler(request) );
                         }
                     });
                 }else {

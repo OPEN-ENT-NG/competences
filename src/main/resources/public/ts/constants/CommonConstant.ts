@@ -4,4 +4,6 @@ export enum Common {
     UP = "up",
     DRAG_DOWN = "dragDown",
     DRAG_UP = "dragUp",
+    CYCLE_3 = 2,
+    TYPE_GROUP = 0,
 }

@@ -63,24 +63,6 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
-    /*public void createCompetenceNote(final JsonObject competenceNote, final UserInfos user, final Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT id FROM " +  Competences.COMPETENCES_SCHEMA +".competences_notes " +
-                "WHERE id_competence = ? AND id_devoir = ? AND id_eleve = ?;";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(competenceNote.getInteger("id_competence"))
-                .add(competenceNote.getLong("id_devoir"))
-                .add(competenceNote.getString("id_eleve"));
-        Sql.getInstance().prepared(query, params, new Handler<Message<JsonObject>>() {
-            public void handle(Message<JsonObject> result) {
-                JsonArray values = result.body().getJsonArray("results");
-                if (values.size() == 0) {
-                    add(competenceNote, user, handler);
-                } else {
-                    update(competenceNote, handler);
-                }
-            }
-        });
-    }*/
     private void add(JsonObject competenceNote, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         super.create(competenceNote, user, handler);
     }

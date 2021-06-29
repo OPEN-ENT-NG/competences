@@ -34,8 +34,8 @@
               ng-model="elementBilanPeriodique.syntheseBilanPeriodique.synthese"
               ng-blur="elementBilanPeriodique.syntheseBilanPeriodique.saveSynthese();"
               ng-disabled="!canSaisiSyntheseBilanPeriodique()"
-              ng-maxlength="600"
-              maxlength="600">
+              ng-maxlength="MAX_LENGTH_600"
+              maxlength="[[MAX_LENGTH_600]]">
     </textarea>
 </article>
 <lightbox show="showHistorise" on-close="showHistorise = false;">

@@ -11,7 +11,7 @@ public class FormateFutureEvent {
     public static <T> void formate(String errorMessage, Future<T> future, Either<String, T> event) {
         if(event.isLeft()) {
             String error = event.left().getValue();
-            log.info(errorMessage);
+            log.info(errorMessage + error);
             future.fail(error);
         }
         else {

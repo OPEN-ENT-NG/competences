@@ -38,6 +38,7 @@ import {
     PreferencesUtils
 } from "../utils/preferences";
 import {ShortTermAnnotation} from "../constants/ShortTermAnnotation";
+import { LengthLimit} from "../constants/ConstantCommonLength"
 import {isValidClasse} from "../utils/functions/isValidClasse";
 import {isValidDevoir} from "../utils/filters/isValidDevoir";
 import {AppreciationSubjectPeriodStudent} from "../models/teacher/AppreciationSubjectPeriodStudent";
@@ -590,7 +591,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
         $scope.lightboxChampsObligatoire = false;
         $scope.MAX_NBR_COMPETENCE = 12;
-        $scope.MAX_CHAR_APPRECIATION_LENGTH = 300;
+        $scope.MAX_LENGTH_300 = LengthLimit.MAX_300;
         $scope.exportRecapEvalObj = {
             errExport: false
         };
@@ -3245,7 +3246,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             template.close('leftSide-userInfo');
             await utils.safeApply($scope);
             let idPeriode = (Utils.isNotNull($scope.search.periode)?$scope.search.periode.id_type: null);
-            if(!eleve.idClasse)
+            if(eleve != "" && !eleve.idClasse)
                 eleve.idClasse = $scope.search.classe.id;
             let allPromise = [eleve.getEvenements($scope.structure.id), $scope.getAvatar(eleve)];
             if(Utils.isNotNull(idPeriode)) {
@@ -4295,7 +4296,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (student.appreciation_matiere_periode === undefined
                 || $scope.opened.lightboxConfirmCleanAppreciation) return;
             $scope.appreciationSubjectPeriod = preparedDataForAppreciation(student);
-            if (student.appreciation_matiere_periode.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
+            if (student.appreciation_matiere_periode.length <= $scope.MAX_LENGTH_300) {
                 if (student.appreciation_matiere_periode.length > 0) {
                     if($scope.previousAppreciationMatiere) {
                         await $scope.appreciationSubjectPeriod.put();
@@ -4314,7 +4315,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.opened.lightboxConfirmCleanAppreciation = true;
                 }
             } else {
-                notify.error(lang.translate("error.char.outbound") + $scope.MAX_CHAR_APPRECIATION_LENGTH);
+                notify.error(lang.translate("error.char.outbound") + $scope.MAX_LENGTH_300);
             }
             utils.safeApply($scope);
         };
@@ -4367,7 +4368,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.saveElementProgramme = function (texte) {
             if (texte !== undefined) {
-                if (texte.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
+                if (texte.length <= $scope.MAX_LENGTH_300) {
                     $scope.releveNote.saveElementProgramme(texte).then(() => {
                         $scope.elementProgrammeDisplay = $scope.releveNote.elementProgramme.texte;
                         template.close('lightboxContainer');
@@ -4378,7 +4379,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
                 else {
                     notify.error(lang.translate("error.char.outbound") +
-                        $scope.MAX_CHAR_APPRECIATION_LENGTH);
+                        $scope.MAX_LENGTH_300);
                 }
             }
             utils.safeApply($scope);

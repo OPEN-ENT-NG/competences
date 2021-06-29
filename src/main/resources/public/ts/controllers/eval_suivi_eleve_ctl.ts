@@ -38,7 +38,7 @@ import {FilterNotEvaluatedEnseignement} from "../utils/filters/filterNotEvaluate
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 import http from "axios";
 import { evaluations as evaluationsParentFormat } from '../models/eval_parent_mdl';
-import {ExportBulletins} from "../models/common/ExportBulletins";
+import {LengthLimit} from "../constants";
 import {getTitulairesForRemplacantsCoEnseignant} from "../utils/teacher";
 declare let _: any;
 declare let Chart: any;
@@ -76,8 +76,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         $scope.canSaveCompetenceNiveauFinal = () => {
             return Utils.canSaveCompetenceNiveauFinal();
         };
-
-        $scope.MAX_CHAR_SYNTHESE_BFC_LENGTH = 1500;
+        $scope.LENGTH_MAX_1500 = LengthLimit.MAX_1500;
 
         /**
          * Initialise d'une évaluation libre.

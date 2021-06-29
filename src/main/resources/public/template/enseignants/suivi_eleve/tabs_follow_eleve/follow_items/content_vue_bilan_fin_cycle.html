@@ -32,11 +32,13 @@
                         <div ng-if="hasValueInConversionTable(domaine, Conversion, $index)">
                             <div ng-if="isChefEtabOrHeadTeacher(search.classe) && domaine.bfc !== undefined">
                                 <i class="reset" aria-hidden="true" ng-click="deleteBFC()" ng-if="domaine.moyenne !== -1"
-                                   tooltip="<i18n>evaluation.domaine.average.refresh</i18n>[[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])"></i>
+                                   tooltip="<i18n>evaluation.domaine.average.refresh</i18n>
+                                   [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])"></i>
                                 <i class="reset" aria-hidden="true" ng-click="deleteBFC()" ng-if="domaine.moyenne === -1"
                                    tooltip="<i18n>evaluation.domaine.niveau.bfc.manuel</i18n>"></i>
                             </div>
-                            <div ng-if="domaine.moyenne !== -1 && ((!isChefEtabOrHeadTeacher(search.classe) && domaine.bfc !== undefined) || domaine.bfc === undefined)">
+                            <div ng-if="domaine.moyenne !== -1 && ((!isChefEtabOrHeadTeacher(search.classe) &&
+                             domaine.bfc !== undefined) || domaine.bfc === undefined)">
                                 [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
                             </div>
                             <div ng-if="domaine.moyenne === -1 && domaine.bfc !== undefined && !isChefEtabOrHeadTeacher(search.classe)">
@@ -69,13 +71,6 @@
             </options>
         </dropdown-buttons>
     </h2>
-    <!--<div class="twelve" ng-init="source.idStructure = evaluations.structure.id;">-->
-    <!--<sniplet-->
-    <!--template="averageBFC"-->
-    <!--application="competences"-->
-    <!--source="source"-->
-    <!--&gt;</sniplet>-->
-    <!--</div>-->
     <div class="domaine-display-marginTop twelve cell">
         <div ng-repeat="domaine in suiviCompetence.domaines.all"
              ng-include="'tree_item_renderer.html'"

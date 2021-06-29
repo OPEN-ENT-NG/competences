@@ -19,6 +19,7 @@ import {notify, _, $,http as HTTP} from 'entcore';
 import http from "axios";
 import {Classe, evaluations} from '../models/teacher';
 import * as utils from '../utils/teacher';
+import {LengthLimit} from "../constants";
 
 
 export const bilanPeriodique = {
@@ -66,6 +67,7 @@ export const bilanPeriodique = {
             bilanPeriodique.that.epiAp = {
                 classesSelected:[]
             };
+            bilanPeriodique.that.LENGTH_MAX_600 = LengthLimit.MAX_600;
             await utils.safeApply(this);
         },
 

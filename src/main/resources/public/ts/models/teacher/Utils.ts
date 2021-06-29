@@ -26,9 +26,7 @@ import {getTitulairesForRemplacantsCoEnseignant} from "../../utils/teacher";
 
 export class Utils {
     static isHeadTeacher (classe) {
-        /*if (evaluations.structure.detailsUser === undefined) {
-            await evaluations.structure.getDetailsOfUser();
-        }*/
+
         return _.contains(
             _.union(evaluations.structure.detailsUser.headTeacher,
                 evaluations.structure.detailsUser.headTeacherManual), classe.externalId);
@@ -93,6 +91,11 @@ export class Utils {
     static canUpdateNiveauEnsCpl () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateNiveauEnsCpl);
     }
+
+    static canSaveDigitalSkils (){
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canSaveDigitalSkills)
+    }
+
     /**
      * Méthode récursive de l'affichage des sous domaines d'un domaine
      *

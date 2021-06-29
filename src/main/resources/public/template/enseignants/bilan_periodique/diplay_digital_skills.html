@@ -1,0 +1,93 @@
+<div ng-show="selected.digitalSkills" class="twelve cell">
+    <article>
+        <table
+               class="list-view">
+            <thead>
+            <th></th>
+            <th class="center"><i18n>not.evaluated</i18n></th>
+            <th class="center"><i18n>level</i18n> 1</th>
+            <th class="center"><i18n>level</i18n> 2</th>
+            <th class="center"><i18n>level</i18n> 3</th>
+            </thead>
+            <tbody ng-repeat="domaine in digitalSkills.digitalSkillsByDomaine">
+            <tr class="no-border">
+                <td>
+                    <h2>[[domaine.libelle]]</h2>
+                </td>
+            </tr>
+            <tr ng-repeat="digitalSkill in domaine.digitalSkills"
+                class="no-border" >
+                <td>[[digitalSkill.libelle]]</td>
+                <td class="center">
+                    <label>
+                        <input type="radio"
+                               ng-model="digitalSkill.level"
+                               ng-change="digitalSkill.onLevelChange()"
+                               ng-disabled="!canSaveDigitalSkills"
+                               ng-value="0">
+                        <span></span>
+                    </label>
+                </td>
+                <td class="center">
+                    <label>
+                        <input type="radio"
+                               ng-model="digitalSkill.level"
+                               ng-change="digitalSkill.onLevelChange()"
+                               ng-disabled="!canSaveDigitalSkills"
+                               ng-value="1">
+                        <span></span>
+                    </label>
+                </td>
+                <td class="center">
+                    <label>
+                        <input type="radio"
+                               ng-model="digitalSkill.level"
+                               ng-change="digitalSkill.onLevelChange()"
+                               ng-disabled="!canSaveDigitalSkills"
+                               ng-value="2">
+                        <span></span>
+                    </label>
+                </td>
+                <td class="center">
+                    <label>
+                        <input type="radio"
+                               ng-model="digitalSkill.level"
+                               ng-change="digitalSkill.onLevelChange()"
+                               ng-disabled="!canSaveDigitalSkills"
+                               ng-value="3">
+                        <span></span>
+                    </label>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
+    <article>
+        <label for="appreciationStudent"><i18n>evaluation.bilan.periodique.digital.skills.appreciation.student</i18n></label>
+        <textarea name="appreciationStudent"
+                  id="appreciationStudent"
+                  class="twelve input-appreciation"
+                  rows="4"
+                  type="text"
+                  ng-disabled="!canSaveDigitalSkills"
+                  ng-model="digitalSkills.studentAppreciation.appreciation"
+                  ng-blur="digitalSkills.studentAppreciation.save();"
+                  ng-maxlength="MAX_LENGTH_600"
+                  maxlength="[[MAX_LENGTH_600]]">
+        </textarea>
+    </article>
+    <article>
+        <label for="appreciationStudent"><i18n>evaluation.bilan.periodique.digital.skills.appreciation.class</i18n></label>
+        <textarea name="appreciationClass"
+                  id = "appreciationClass"
+                  class="twelve input-appreciation"
+                  rows="4"
+                  type="text"
+                  ng-disabled="!canSaveDigitalSkills"
+                  ng-model="digitalSkills.classAppreciation.appreciation"
+                  ng-blur="digitalSkills.classAppreciation.save();"
+                  ng-maxlength="MAX_LENGTH_600"
+                  maxlength="[[MAX_LENGTH_600]]">
+        </textarea>
+    </article>
+</div>

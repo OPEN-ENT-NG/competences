@@ -66,6 +66,7 @@ public class Competences extends BaseServer {
 
     public static final String BULLETIN_PARAMETERS_TABLE ="bulletin_parameters";
 
+    public static final String CLASS_APPRECIATION_DIGITAL_SKILLS = "class_appreciation_digital_skills";
     public static final String COMPETENCE_NIVEAU_FINAL = "competence_niveau_final";
     public static final String COMPETENCE_NIVEAU_FINAL_ANNUEL = "competence_niveau_final_annuel";
     public static final String COMPETENCES_TABLE = "competences";
@@ -75,6 +76,8 @@ public class Competences extends BaseServer {
 
     public static final String DEVOIR_TABLE = "devoirs";
     public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
+    public static final String DIGITAL_SKILLS_TABLE = "digital_skills";
+    public static final String DOMAINE_DIGITAL_SKILLS_TABLE = "domaines_digital_skills";
     public static final String DISPENSE_DOMAINE_ELEVE = "dispense_domaine_eleve";
     public static final String DOMAINES_TABLE = "domaines";
 
@@ -110,6 +113,8 @@ public class Competences extends BaseServer {
     public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
     public static final String REL_APPRECIATION_USERS_NEO = "rel_appreciations_users_neo";
 
+    public static final String STUDENT_APPRECIATION_DIGITAL_SKILLS = "student_appreciation_digital_skills";
+    public static final String STUDENT_DIGITAL_SKILLS_TABLE = "student_digital_skills";
     public static final String STSFILE_TABLE = "sts_file";
     public static final String SYNTHESE_BILAN_PERIODIQUE_TABLE = "synthese_bilan_periodique";
 
@@ -163,6 +168,9 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_DISPENSEDOMAINE_ELEVE_CREATE = "eval_createDispenseDomaineEleve";
     public static final String SCHEMA_CREATE_COMPETENCE_NIVEAU_FINAL = "eval_createCompetenceNiveauFinal";
     public static final String SCHEMA_CREATE_STSFILE = "eval_createSTSFile";
+    public static final String SCHEMA_CLASS_APPRECIATION_DIGITAL_SKILLS = "eval_createClassAppreciationDigitalSkills";
+    public static final String SCHEMA_STUDENT_APPRECIATION_DIGITAL_SKILLS = "eval_createStudentAppreciationDigitalSkills";
+    public static final String SCHEMA_LEVEL_DIGITAL_SKILLS = "eval_createLevelDigitalSkills";
 
     // droits
     public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
@@ -303,6 +311,7 @@ public class Competences extends BaseServer {
         addController(new ReportModelPrintExportController());
         addController(new YearTransitionController());
         addController(new AppreciationSubjectPeriodController(eb));
+        addController(new DigitalSkillsController());
         // Devoir Controller
         DevoirController devoirController = new DevoirController(eb, eventStore);
         SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,

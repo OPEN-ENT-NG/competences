@@ -31,6 +31,7 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
+import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
@@ -61,7 +62,7 @@ import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 /**
  * Created by ledunoiss on 05/08/2016.
  */
-public class DefaultUtilsService  implements UtilsService {
+public class DefaultUtilsService implements UtilsService {
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultUtilsService.class);
     protected EventBus eb;
@@ -73,7 +74,6 @@ public class DefaultUtilsService  implements UtilsService {
 
     public DefaultUtilsService() {
     }
-
 
     @Override
     /**

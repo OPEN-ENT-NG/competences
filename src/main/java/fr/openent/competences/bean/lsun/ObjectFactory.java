@@ -25,7 +25,6 @@
 
 package fr.openent.competences.bean.lsun;
 
-import io.vertx.core.json.JsonArray;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlElementDecl;
@@ -60,38 +59,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link AccPersoGroupe }
-     * 
-     */
-    public AccPersoGroupe createAccPersoGroupe() {
-        return new AccPersoGroupe();
-    }
-
-    /**
-     * Create an instance of {@link Donnees }
-     * 
-     */
-    public Donnees createDonnees() {
-        return new Donnees();
-    }
-
-    /**
-     * Create an instance of {@link Donnees.ParcoursCommuns }
-     * 
-     */
-    public Donnees.ParcoursCommuns createDonneesParcoursCommuns() {
-        return new Donnees.ParcoursCommuns();
-    }
-
-    /**
-     * Create an instance of {@link BilanPeriodique }
-     * 
-     */
-    public BilanPeriodique createBilanPeriodique() {
-        return new BilanPeriodique();
-    }
-
-    /**
      * Create an instance of {@link BilanCycle }
      * 
      */
@@ -106,6 +73,39 @@ public class ObjectFactory {
     public EpiGroupe createEpiGroupe() {
         return new EpiGroupe();
     }
+
+    /**
+     * Create an instance of {@link BilanPeriodique }
+     *
+     */
+    public BilanPeriodique createBilanPeriodique() {
+        return new BilanPeriodique();
+    }
+
+    /**
+     * Create an instance of {@link Donnees }
+     *
+     */
+    public Donnees createDonnees() {
+        return new Donnees();
+    }
+
+    /**
+     * Create an instance of {@link Donnees.ParcoursCommuns }
+     *
+     */
+    public Donnees.ParcoursCommuns createDonneesParcoursCommuns() {
+        return new Donnees.ParcoursCommuns();
+    }
+
+    /**
+     * Create an instance of {@link AccPersoGroupe }
+     *
+     */
+    public AccPersoGroupe createAccPersoGroupe() {
+        return new AccPersoGroupe();
+    }
+
 
     /**
      * Create an instance of {@link LsunBilans }
@@ -197,11 +197,35 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link CompetencesNumeriquesCommun }
+     *
+     */
+    public CompetencesNumeriquesCommun createCompetencesNumeriquesCommun() {
+        return new CompetencesNumeriquesCommun();
+    }
+
+    /**
      * Create an instance of {@link Discipline }
      * 
      */
     public Discipline createDiscipline() {
         return new Discipline();
+    }
+
+    /**
+     * Create an instance of {@link CompetenceNumeriqueNiveau }
+     *
+     */
+    public CompetenceNumeriqueNiveau createCompetenceNumeriqueNiveau() {
+        return new CompetenceNumeriqueNiveau();
+    }
+
+    /**
+     * Create an instance of {@link LangueCultureRegionale }
+     *
+     */
+    public LangueCultureRegionale createLangueCultureRegionale() {
+        return new LangueCultureRegionale();
     }
 
     /**
@@ -249,6 +273,14 @@ public class ObjectFactory {
     }
     public Responsable createResponsable(String externalId, String nom, String prenom, String relative){
         return new Responsable( externalId, nom,  prenom, relative);
+    }
+
+    /**
+     * Create an instance of {@link Structure }
+     *
+     */
+    public Structure createStructure() {
+        return new Structure();
     }
 
     /**
@@ -305,9 +337,6 @@ public class ObjectFactory {
     public Entete createEntete(String editeur, String application, String etablissement) {
         return new Entete(editeur, application, etablissement);
     }
-   /*public Entete Entete() {
-        return new Entete();
-    }*/
     /**
      * Create an instance of {@link Acquis }
      * 
@@ -370,6 +399,14 @@ public class ObjectFactory {
      */
     public Donnees.ElementsProgramme createDonneesElementsProgramme() {
         return new Donnees.ElementsProgramme();
+    }
+
+    /**
+     * Create an instance of {@link Donnees.CompetencesNumeriquesCommuns }
+     *
+     */
+    public Donnees.CompetencesNumeriquesCommuns createDonneesCompetencesNumeriquesCommuns() {
+        return new Donnees.CompetencesNumeriquesCommuns();
     }
 
     /**
@@ -449,6 +486,14 @@ public class ObjectFactory {
      */
     public BilanPeriodique.ListeAcquis createBilanPeriodiqueListeAcquis() {
         return new BilanPeriodique.ListeAcquis();
+    }
+
+    /**
+     * Create an instance of {@link BilanPeriodique.CompetencesNumeriques }
+     *
+     */
+    public BilanPeriodique.CompetencesNumeriques createBilanPeriodiqueCompetencesNumeriques() {
+        return new BilanPeriodique.CompetencesNumeriques();
     }
 
     /**

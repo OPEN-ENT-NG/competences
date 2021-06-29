@@ -33,7 +33,6 @@ import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 
 import fr.openent.competences.message.MessageResponseHandler;
 
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 

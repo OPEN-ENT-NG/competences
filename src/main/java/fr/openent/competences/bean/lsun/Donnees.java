@@ -111,6 +111,17 @@ import java.util.Map;
  *             &lt;/complexContent>
  *           &lt;/complexType>
  *         &lt;/element>
+ *         &lt;element name="competences-numeriques-communs" minOccurs="0">
+ *           &lt;complexType>
+ *              &lt;complexContent>
+ *                &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *                  &lt;sequence maxOccurs="unbounded">
+ *                    &lt;element name="competences-numeriques-commun" type="{urn:fr:edu:scolarite:lsun:bilans:import}CompetencesNumeriquesCommun"/>
+ *                  &lt;/sequence>
+ *                &lt;/restriction>
+ *              &lt;/complexContent>
+ *            &lt;/complexType>
+ *          &lt;/element>
  *         &lt;element name="parcours-communs" minOccurs="0">
  *           &lt;complexType>
  *             &lt;complexContent>
@@ -145,6 +156,17 @@ import java.util.Map;
  *             &lt;/complexContent>
  *           &lt;/complexType>
  *         &lt;/element>
+ *         &lt;element name="epis-thematiques" minOccurs="0">
+ *           &lt;complexType>
+ *              &lt;complexContent>
+ *                &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *                  &lt;sequence maxOccurs="unbounded">
+ *                    &lt;element name="epi-thematique" type="{urn:fr:edu:scolarite:lsun:bilans:import}EpiThematique"/>
+ *                   &lt;/sequence>
+ *                 &lt;/restriction>
+ *               &lt;/complexContent>
+ *             &lt;/complexType>
+ *           &lt;/element>
  *         &lt;element name="epis" minOccurs="0">
  *           &lt;complexType>
  *             &lt;complexContent>
@@ -227,6 +249,7 @@ import java.util.Map;
         "disciplines",
         "enseignants",
         "elementsProgramme",
+        "competencesNumeriquesCommuns",
         "parcoursCommuns",
         "viesScolairesCommuns",
         "episThematiques",
@@ -240,41 +263,43 @@ import java.util.Map;
 public class Donnees {
 
     @XmlElement(name = "responsables-etab", required = true)
-    protected ResponsablesEtab responsablesEtab;
+    protected Donnees.ResponsablesEtab responsablesEtab;
     @XmlElement(required = true)
-    protected Eleves eleves;
-    protected Periodes periodes;
-    protected Disciplines disciplines;
-    protected Enseignants enseignants;
+    protected Donnees.Eleves eleves;
+    protected Donnees.Periodes periodes;
+    protected Donnees.Disciplines disciplines;
+    protected Donnees.Enseignants enseignants;
     @XmlElement(name = "elements-programme")
-    protected ElementsProgramme elementsProgramme;
+    protected Donnees.ElementsProgramme elementsProgramme;
+    @XmlElement(name = "competences-numeriques-communs")
+    protected Donnees.CompetencesNumeriquesCommuns competencesNumeriquesCommuns;
     @XmlElement(name = "parcours-communs")
-    protected ParcoursCommuns parcoursCommuns;
+    protected Donnees.ParcoursCommuns parcoursCommuns;
     @XmlElement(name = "vies-scolaires-communs")
-    protected ViesScolairesCommuns viesScolairesCommuns;
+    protected Donnees.ViesScolairesCommuns viesScolairesCommuns;
     @XmlElement(name = "epis-thematiques")
-    protected EpisThematiques episThematiques;
-    protected Epis epis;
+    protected Donnees.EpisThematiques episThematiques;
+    protected Donnees.Epis epis;
     @XmlElement(name = "epis-groupes")
-    protected EpisGroupes episGroupes;
+    protected Donnees.EpisGroupes episGroupes;
     @XmlElement(name = "acc-persos")
-    protected AccPersos accPersos;
+    protected Donnees.AccPersos accPersos;
     @XmlElement(name = "acc-persos-groupes")
-    protected AccPersosGroupes accPersosGroupes;
+    protected Donnees.AccPersosGroupes accPersosGroupes;
     @XmlElement(name = "bilans-periodiques")
-    protected BilansPeriodiques bilansPeriodiques;
+    protected Donnees.BilansPeriodiques bilansPeriodiques;
     @XmlElement(name = "bilans-cycle")
-    protected BilansCycle bilansCycle;
+    protected Donnees.BilansCycle bilansCycle;
 
     /**
      * Gets the value of the responsablesEtab property.
      *
      * @return
      *     possible object is
-     *     {@link ResponsablesEtab }
+     *     {@link Donnees.ResponsablesEtab }
      *
      */
-    public ResponsablesEtab getResponsablesEtab() {
+    public Donnees.ResponsablesEtab getResponsablesEtab() {
         return responsablesEtab;
     }
 
@@ -286,7 +311,7 @@ public class Donnees {
      *     {@link ResponsablesEtab }
      *
      */
-    public void setResponsablesEtab(ResponsablesEtab value) {
+    public void setResponsablesEtab(Donnees.ResponsablesEtab value) {
         this.responsablesEtab = value;
     }
 
@@ -295,10 +320,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link Eleves }
+     *     {@link Donnees.Eleves }
      *
      */
-    public Eleves getEleves() {
+    public Donnees.Eleves getEleves() {
         return eleves;
     }
 
@@ -307,10 +332,10 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link Eleves }
+     *     {@link Donnees.Eleves }
      *
      */
-    public void setEleves(Eleves value) {
+    public void setEleves(Donnees.Eleves value) {
         this.eleves = value;
     }
 
@@ -319,10 +344,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link Periodes }
+     *     {@link Donnees.Periodes }
      *
      */
-    public Periodes getPeriodes() {
+    public Donnees.Periodes getPeriodes() {
         return periodes;
     }
 
@@ -331,10 +356,10 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link Periodes }
+     *     {@link Donnees.Periodes }
      *
      */
-    public void setPeriodes(Periodes value) {
+    public void setPeriodes(Donnees.Periodes value) {
         this.periodes = value;
     }
 
@@ -343,10 +368,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link Disciplines }
+     *     {@link Donnees.Disciplines }
      *
      */
-    public Disciplines getDisciplines() {
+    public Donnees.Disciplines getDisciplines() {
         return disciplines;
     }
 
@@ -355,10 +380,10 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link Disciplines }
+     *     {@link Donnees.Disciplines }
      *
      */
-    public void setDisciplines(Disciplines value) {
+    public void setDisciplines(Donnees.Disciplines value) {
         this.disciplines = value;
     }
 
@@ -367,10 +392,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link Enseignants }
+     *     {@link Donnees.Enseignants }
      *
      */
-    public Enseignants getEnseignants() {
+    public Donnees.Enseignants getEnseignants() {
         return enseignants;
     }
 
@@ -379,10 +404,10 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link Enseignants }
+     *     {@link Donnees.Enseignants }
      *
      */
-    public void setEnseignants(Enseignants value) {
+    public void setEnseignants(Donnees.Enseignants value) {
         this.enseignants = value;
     }
 
@@ -391,10 +416,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link ElementsProgramme }
+     *     {@link Donnees.ElementsProgramme }
      *
      */
-    public ElementsProgramme getElementsProgramme() {
+    public Donnees.ElementsProgramme getElementsProgramme() {
         return elementsProgramme;
     }
 
@@ -403,22 +428,47 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link ElementsProgramme }
+     *     {@link Donnees.ElementsProgramme }
      *
      */
-    public void setElementsProgramme(ElementsProgramme value) {
+    public void setElementsProgramme(Donnees.ElementsProgramme value) {
         this.elementsProgramme = value;
     }
+
+    /**
+     * Obtient la valeur de la propriété competencesNumeriquesCommuns.
+     *
+     * @return
+     *     possible object is
+     *     {@link Donnees.CompetencesNumeriquesCommuns }
+     *
+     */
+    public Donnees.CompetencesNumeriquesCommuns getCompetencesNumeriquesCommuns() {
+        return competencesNumeriquesCommuns;
+    }
+
+    /**
+     * Définit la valeur de la propriété competencesNumeriquesCommuns.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link Donnees.CompetencesNumeriquesCommuns }
+     *
+     */
+    public void setCompetencesNumeriquesCommuns(Donnees.CompetencesNumeriquesCommuns value) {
+        this.competencesNumeriquesCommuns = value;
+    }
+
 
     /**
      * Gets the value of the parcoursCommuns property.
      *
      * @return
      *     possible object is
-     *     {@link ParcoursCommuns }
+     *     {@link Donnees.ParcoursCommuns }
      *
      */
-    public ParcoursCommuns getParcoursCommuns() {
+    public Donnees.ParcoursCommuns getParcoursCommuns() {
         return parcoursCommuns;
     }
 
@@ -427,10 +477,10 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link ParcoursCommuns }
+     *     {@link Donnees.ParcoursCommuns }
      *
      */
-    public void setParcoursCommuns(ParcoursCommuns value) {
+    public void setParcoursCommuns(Donnees.ParcoursCommuns value) {
         this.parcoursCommuns = value;
     }
 
@@ -439,10 +489,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link ViesScolairesCommuns }
+     *     {@link Donnees.ViesScolairesCommuns }
      *
      */
-    public ViesScolairesCommuns getViesScolairesCommuns() {
+    public Donnees.ViesScolairesCommuns getViesScolairesCommuns() {
         return viesScolairesCommuns;
     }
 
@@ -451,18 +501,18 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link ViesScolairesCommuns }
+     *     {@link Donnees.ViesScolairesCommuns }
      *
      */
-    public void setViesScolairesCommuns(ViesScolairesCommuns value) {
+    public void setViesScolairesCommuns(Donnees.ViesScolairesCommuns value) {
         this.viesScolairesCommuns = value;
     }
 
-    public EpisThematiques getEpisThematiques(){
+    public Donnees.EpisThematiques getEpisThematiques(){
         return episThematiques;
     }
 
-    public void setEpisThematiques(EpisThematiques value){
+    public void setEpisThematiques(Donnees.EpisThematiques value){
         this.episThematiques = value;
     }
     /**
@@ -470,10 +520,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link Epis }
+     *     {@link Donnees.Epis }
      *
      */
-    public Epis getEpis() {
+    public Donnees.Epis getEpis() {
         return epis;
     }
 
@@ -482,10 +532,10 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link Epis }
+     *     {@link Donnees.Epis }
      *
      */
-    public void setEpis(Epis value) {
+    public void setEpis(Donnees.Epis value) {
         this.epis = value;
     }
 
@@ -494,10 +544,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link EpisGroupes }
+     *     {@link Donnees.EpisGroupes }
      *
      */
-    public EpisGroupes getEpisGroupes() {
+    public Donnees.EpisGroupes getEpisGroupes() {
         return episGroupes;
     }
 
@@ -506,10 +556,10 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link EpisGroupes }
+     *     {@link Donnees.EpisGroupes }
      *
      */
-    public void setEpisGroupes(EpisGroupes value) {
+    public void setEpisGroupes(Donnees.EpisGroupes value) {
         this.episGroupes = value;
     }
 
@@ -518,10 +568,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link AccPersos }
+     *     {@link Donnees.AccPersos }
      *
      */
-    public AccPersos getAccPersos() {
+    public Donnees.AccPersos getAccPersos() {
         return accPersos;
     }
 
@@ -530,7 +580,7 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link AccPersos }
+     *     {@link Donnees.AccPersos }
      *
      */
     public void setAccPersos(AccPersos value) {
@@ -542,10 +592,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link AccPersosGroupes }
+     *     {@link Donnees.AccPersosGroupes }
      *
      */
-    public AccPersosGroupes getAccPersosGroupes() {
+    public Donnees.AccPersosGroupes getAccPersosGroupes() {
         return accPersosGroupes;
     }
 
@@ -554,10 +604,10 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link AccPersosGroupes }
+     *     {@link Donnees.AccPersosGroupes }
      *
      */
-    public void setAccPersosGroupes(AccPersosGroupes value) {
+    public void setAccPersosGroupes(Donnees.AccPersosGroupes value) {
         this.accPersosGroupes = value;
     }
 
@@ -566,10 +616,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link BilansPeriodiques }
+     *     {@link Donnees.BilansPeriodiques }
      *
      */
-    public BilansPeriodiques getBilansPeriodiques() {
+    public Donnees.BilansPeriodiques getBilansPeriodiques() {
         return bilansPeriodiques;
     }
 
@@ -578,10 +628,10 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link BilansPeriodiques }
+     *     {@link Donnees.BilansPeriodiques }
      *
      */
-    public void setBilansPeriodiques(BilansPeriodiques value) {
+    public void setBilansPeriodiques(Donnees.BilansPeriodiques value) {
         this.bilansPeriodiques = value;
     }
 
@@ -590,10 +640,10 @@ public class Donnees {
      *
      * @return
      *     possible object is
-     *     {@link BilansCycle }
+     *     {@link Donnees.BilansCycle }
      *
      */
-    public BilansCycle getBilansCycle() {
+    public Donnees.BilansCycle getBilansCycle() {
         return bilansCycle;
     }
 
@@ -602,10 +652,10 @@ public class Donnees {
      *
      * @param value
      *     allowed object is
-     *     {@link BilansCycle }
+     *     {@link Donnees.BilansCycle }
      *
      */
-    public void setBilansCycle(BilansCycle value) {
+    public void setBilansCycle(Donnees.BilansCycle value) {
         this.bilansCycle = value;
     }
 
@@ -850,6 +900,66 @@ public class Donnees {
 
 
     /**
+     * <p>Classe Java pour anonymous complex type.
+     *
+     * <p>Le fragment de schéma suivant indique le contenu attendu figurant dans cette classe.
+     *
+     * <pre>
+     * &lt;complexType>
+     *   &lt;complexContent>
+     *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+     *       &lt;sequence maxOccurs="unbounded">
+     *         &lt;element name="competences-numeriques-commun" type="{urn:fr:edu:scolarite:lsun:bilans:import}CompetencesNumeriquesCommun"/>
+     *       &lt;/sequence>
+     *     &lt;/restriction>
+     *   &lt;/complexContent>
+     * &lt;/complexType>
+     * </pre>
+     *
+     *
+     */
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = "", propOrder = {
+            "competencesNumeriquesCommun"
+    })
+    public static class CompetencesNumeriquesCommuns {
+
+        @XmlElement(name = "competences-numeriques-commun", required = true)
+        protected List<CompetencesNumeriquesCommun> competencesNumeriquesCommun;
+
+        /**
+         * Gets the value of the competencesNumeriquesCommun property.
+         *
+         * <p>
+         * This accessor method returns a reference to the live list,
+         * not a snapshot. Therefore any modification you make to the
+         * returned list will be present inside the JAXB object.
+         * This is why there is not a <CODE>set</CODE> method for the competencesNumeriquesCommun property.
+         *
+         * <p>
+         * For example, to add a new item, do as follows:
+         * <pre>
+         *    getCompetencesNumeriquesCommun().add(newItem);
+         * </pre>
+         *
+         *
+         * <p>
+         * Objects of the following type(s) are allowed in the list
+         * {@link CompetencesNumeriquesCommun }
+         *
+         *
+         */
+        public List<CompetencesNumeriquesCommun> getCompetencesNumeriquesCommun() {
+            if (competencesNumeriquesCommun == null) {
+                competencesNumeriquesCommun = new ArrayList<CompetencesNumeriquesCommun>();
+            }
+            return this.competencesNumeriquesCommun;
+        }
+
+    }
+
+
+    /**
      * <p>Java class for anonymous complex type.
      *
      * <p>The following schema fragment specifies the expected content contained within this class.
@@ -996,8 +1106,9 @@ public class Donnees {
 
         @XmlElement(required = true)
         protected List<Eleve> eleve;
-        public Eleves(){
-            eleve = new ArrayList<Eleve>();
+
+        public Eleves (){
+            eleve = new ArrayList<>();
         }
         /**
          * Gets the value of the eleve property.
@@ -1023,21 +1134,19 @@ public class Donnees {
          */
 
         public List<Eleve> getEleve() {
-
+            if (eleve == null) {
+                eleve = new ArrayList<Eleve>();
+            }
             return this.eleve;
         }
 
-        public void add (Eleve e) {
-
-            this.eleve.add(e);
-        }
         public boolean containIdEleve(String idNeo4j){
 
-            for(Eleve el: eleve){
-                if( el.getIdNeo4j().equals(idNeo4j)){
-                    return true;
+                for(Eleve el: eleve){
+                    if( el.getIdNeo4j().equals(idNeo4j)){
+                        return true;
+                    }
                 }
-            }
             return false;
         }
         public Eleve getEleveById(String idNeo4j){
@@ -1134,25 +1243,6 @@ public class Donnees {
                 enseignant = new ArrayList<Enseignant>();
             }
             return this.enseignant;
-        }
-
-    }
-    @XmlAccessorType(XmlAccessType.FIELD)
-    @XmlType(name = "", propOrder = {
-            "epiThematique"
-    })
-    public static class EpisThematiques {
-
-        @XmlElement(name = "epi-thematique", required = true)
-
-        protected List<EpiThematique> epiThematique;
-
-
-        public List<EpiThematique> getEpiThematique() {
-            if (epiThematique == null) {
-                epiThematique = new ArrayList<EpiThematique>();
-            }
-            return this.epiThematique;
         }
 
     }
@@ -1284,7 +1374,44 @@ public class Donnees {
         }
 
     }
+    /**
+     * <p>Classe Java pour anonymous complex type.
+     *
+     * <p>Le fragment de schéma suivant indique le contenu attendu figurant dans cette classe.
+     *
+     * <pre>
+     * &lt;complexType>
+     *   &lt;complexContent>
+     *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+     *       &lt;sequence maxOccurs="unbounded">
+     *         &lt;element name="epi-thematique" type="{urn:fr:edu:scolarite:lsun:bilans:import}EpiThematique"/>
+     *       &lt;/sequence>
+     *     &lt;/restriction>
+     *   &lt;/complexContent>
+     * &lt;/complexType>
+     * </pre>
+     *
+     *
+     */
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = "", propOrder = {
+            "epiThematique"
+    })
+    public static class EpisThematiques {
 
+        @XmlElement(name = "epi-thematique", required = true)
+
+        protected List<EpiThematique> epiThematique;
+
+
+        public List<EpiThematique> getEpiThematique() {
+            if (epiThematique == null) {
+                epiThematique = new ArrayList<EpiThematique>();
+            }
+            return this.epiThematique;
+        }
+
+    }
 
     /**
      * <p>Java class for anonymous complex type.
@@ -1324,7 +1451,7 @@ public class Donnees {
     public static class ParcoursCommuns {
 
         @XmlElement(name = "parcours-commun", required = true)
-        protected List<ParcoursCommun> parcoursCommun;
+        protected List<Donnees.ParcoursCommuns.ParcoursCommun> parcoursCommun;
 
         /**
          * Gets the value of the parcoursCommun property.
@@ -1344,18 +1471,18 @@ public class Donnees {
          *
          * <p>
          * Objects of the following type(s) are allowed in the list
-         * {@link ParcoursCommun }
+         * {@link Donnees.ParcoursCommuns.ParcoursCommun }
          *
          *
          */
-        public List<ParcoursCommun> getParcoursCommun() {
+        public List<Donnees.ParcoursCommuns.ParcoursCommun> getParcoursCommun() {
             if (parcoursCommun == null) {
-                parcoursCommun = new ArrayList<ParcoursCommun>();
+                parcoursCommun = new ArrayList<Donnees.ParcoursCommuns.ParcoursCommun>();
             }
             return this.parcoursCommun;
         }
 
-        public ParcoursCommun getParcoursCommunInList(Object periode, String codeDivision){
+        public Donnees.ParcoursCommuns.ParcoursCommun getParcoursCommunInList(Object periode, String codeDivision){
 
             ParcoursCommun parcoursCommun = null;
             if(this.parcoursCommun != null) {

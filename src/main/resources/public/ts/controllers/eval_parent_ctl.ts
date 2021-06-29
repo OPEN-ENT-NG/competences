@@ -99,9 +99,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 template.close('menu');
                 template.close('main');
                 if (evaluations !== undefined ) {
-                    //$scope.cleanRoot();
-                    //$scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
-                    // delete $scope.informations.eleve;
                     utils.safeApply($scope);
                     template.open('main', 'enseignants/bilan_periodique/display_bilan_periodique');
 

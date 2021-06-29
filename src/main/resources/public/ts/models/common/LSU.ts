@@ -91,6 +91,8 @@ export class LSU {
                                 this.errorsLSU.setErrorsLSU(data.response.data);
                             }
                             reject();
+                            if(data.response.data.byteLength === 0)
+                            notify.error('evaluation.lsu.export.error');
                         });}
             }
             catch (e){
