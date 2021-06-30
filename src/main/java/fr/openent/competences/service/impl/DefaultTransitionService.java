@@ -520,8 +520,12 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.CLASS_APPRECIATION_DIGITAL_SKILLS + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.STUDENT_APPRECIATION_DIGITAL_SKILLS + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Competences.STUDENT_DIGITAL_SKILLS_TABLE + ", " +
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_ABSENCES_ET_RETARDS + ", " +
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_PERIODE + ", " +
+                Competences.VSCO_SCHEMA + "." + Competences.VSCO_MULTI_TEACHING + ", " +
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_SERVICES_TABLE;
         Sql.getInstance().prepared(query, new JsonArray(),new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
                 getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
@@ -562,14 +566,26 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     public JsonArray createStatements(final String currentYear){
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
+        StringBuilder queryForClone = new StringBuilder()
+                .append("SELECT function_clone_schema_with_sequences(?::text, ?::text, TRUE)");
+
+        statements.add(new JsonObject()
+                .put("statement", "ALTER SCHEMA " + Competences.VSCO_SCHEMA + " RENAME TO " + Competences.VSCO_SCHEMA + "_" + currentYear)
+                .put("values", new fr.wseduc.webutils.collections.JsonArray())
+                .put("action", "prepared"));
+
+        JsonArray valuesForCloneVieSco = new fr.wseduc.webutils.collections.JsonArray()
+                .add(Competences.VSCO_SCHEMA + "_" + currentYear).add(Competences.VSCO_SCHEMA);
+
+        statements.add(new JsonObject()
+                .put("statement", queryForClone.toString())
+                .put("values", valuesForCloneVieSco)
+                .put("action", "prepared"));
+
         statements.add(new JsonObject()
                 .put("statement", "ALTER SCHEMA " + Competences.COMPETENCES_SCHEMA + " RENAME TO " + Competences.COMPETENCES_SCHEMA + "_" + currentYear)
                 .put("values", new fr.wseduc.webutils.collections.JsonArray())
                 .put("action", "prepared"));
-
-
-        StringBuilder queryForClone = new StringBuilder()
-                .append("SELECT function_clone_schema_with_sequences(?::text, ?::text, TRUE)");
 
         JsonArray valuesForCloneNotes = new fr.wseduc.webutils.collections.JsonArray()
                 .add(Competences.COMPETENCES_SCHEMA + "_" + currentYear).add(Competences.COMPETENCES_SCHEMA);
@@ -580,17 +596,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put("action", "prepared"));
 
         statements.add(new JsonObject()
-                .put("statement", "ALTER SCHEMA " + Competences.VSCO_SCHEMA + " RENAME TO " + Competences.VSCO_SCHEMA + "_" + currentYear)
+                .put("statement", "SELECT " + Competences.COMPETENCES_SCHEMA + ".function_renameConstraintFromViescoAfterClonning() ")
                 .put("values", new fr.wseduc.webutils.collections.JsonArray())
-                .put("action", "prepared"));
-
-
-        JsonArray valuesForCloneVieSco = new fr.wseduc.webutils.collections.JsonArray()
-                .add(Competences.VSCO_SCHEMA + "_" + currentYear).add(Competences.VSCO_SCHEMA);
-
-        statements.add(new JsonObject()
-                .put("statement", queryForClone.toString())
-                .put("values", valuesForCloneVieSco)
                 .put("action", "prepared"));
 
         return statements;

@@ -48,7 +48,7 @@ public class YearTransitionController extends ControllerHelper {
     }
 
     @Post("/transition/after")
-    @ApiDoc("processing after transition")
+    @ApiDoc("processing after transition and alimentation")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SuperAdminFilter.class)
     public void afterTransition(final HttpServerRequest request){

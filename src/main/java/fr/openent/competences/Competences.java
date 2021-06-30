@@ -127,8 +127,9 @@ public class Competences extends BaseServer {
 
     public static final String VSCO_ABSENCES_ET_RETARDS = "absences_et_retards";
     public static final String VSCO_PERIODE = "periode";
-    public final static String VSCO_MATIERE_LIBELLE_TABLE = "subject_libelle";
+        public final static String VSCO_MATIERE_LIBELLE_TABLE = "subject_libelle";
     public final static String VSCO_MODEL_MATIERE_LIBELLE_TABLE = "model_subject_libelle";
+    public static final String VSCO_MULTI_TEACHING = "multi_teaching";
     public final static String VSCO_MATIERE_TABLE = "matiere";
     public final static String VSCO_SOUS_MATIERE_TABLE = "sousmatiere";
     public final static String VSCO_SERVICES_TABLE = "services";
