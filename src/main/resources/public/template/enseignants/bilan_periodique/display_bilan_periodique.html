@@ -43,40 +43,34 @@
                             </h2>
                         </article>
 
-                        <div class="twelve tabs vertical-spacing-twice heading-tabs">
-                            <header ng-class="{selected : selected.suiviAcquis}"
-                                    class="horizontal-spacing-twice ng-scope">
-                                <div class="horizontal-spacing" ng-click="openSuiviAcquis()">
+                        <div class="row tabs vertical-spacing-twice heading-tabs">
+                            <header ng-class="{selected : selected.suiviAcquis}" ng-click="openSuiviAcquis()">
+                                <div class="horizontal-spacing">
                                     <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.suivi.acquis</span></i18n></span>
                                 </div>
                             </header>
-                            <header ng-class="{selected : selected.projet}"
-                                    class="horizontal-spacing-twice ng-scope">
-                                <div class="horizontal-spacing" ng-click="openProjet()">
+                            <header ng-class="{selected : selected.projet}" ng-click="openProjet()">
+                                <div class="horizontal-spacing">
                                     <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.projets</span></i18n></span>
                                 </div>
                             </header>
-                            <header ng-class="{selected : selected.vieScolaire}"
-                                    class="horizontal-spacing-twice ng-scope" ng-click="openVieScolaire()">
+                            <header ng-class="{selected : selected.vieScolaire}" ng-click="openVieScolaire()">
                                 <div class="horizontal-spacing">
                                     <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.vie.scolaire</span></i18n></span>
                                 </div>
                             </header>
-                            <header ng-class="{selected : selected.graphique}"
-                                    class="horizontal-spacing-twice ng-scope" ng-click="openGraphique()">
+                            <header ng-class="{selected : selected.graphique}" ng-click="openGraphique()">
                                 <div class="horizontal-spacing">
                                     <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.graphiques</span></i18n></span>
                                 </div>
                             </header>
-                            <header ng-class="{selected : selected.bfc}"
-                                    class="horizontal-spacing-twice ng-scope" ng-click="openBFC()">
+                            <header ng-class="{selected : selected.bfc}" ng-click="openBFC()">
                                 <div class="horizontal-spacing">
                                     <span><i18n><span class="no-style ng-scope">evaluations.bilan.fin.cycle.title</span></i18n></span>
                                 </div>
                             </header>
-                            <header ng-class="{selected : selected.digitalSkills}"
-                                    ng-if="showDigitalSkills"
-                                    class="horizontal-spacing-twice" ng-click="openDigitalSkills()">
+                            <header ng-class="{selected : selected.digitalSkills}" ng-click="openDigitalSkills()"
+                                    ng-if="showDigitalSkills">
                                 <div class="horizontal-spacing">
                                     <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.digital.skills</span></i18n></span>
                                 </div>
