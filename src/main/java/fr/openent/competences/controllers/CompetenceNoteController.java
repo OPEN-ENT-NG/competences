@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.AccessCompetenceNoteFilter;
 import fr.openent.competences.security.AccessSuiviCompetenceFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
@@ -243,7 +244,8 @@ public class CompetenceNoteController extends ControllerHelper {
 
     @Get("/cycles/eleve/:idEleve")
     @ApiDoc("Récupère les cycles des groupes sur lequels un élève a des devoirs avec compétences notées")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getCyclesEleve (final HttpServerRequest request) {
         if (request.params().contains("idEleve")) {
             String idEleve = request.params().get("idEleve");
@@ -255,7 +257,8 @@ public class CompetenceNoteController extends ControllerHelper {
 
     @Get("/cycle/eleve/:idEleve")
     @ApiDoc("Retourne l'id du cycle courant à partir d'un idEleve.")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getCycleEleve(final HttpServerRequest request) {
         if (request.params().contains("idEleve")) {
             String idEleve = request.params().get("idEleve");

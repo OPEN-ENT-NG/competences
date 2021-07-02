@@ -685,7 +685,8 @@ public class NoteController extends ControllerHelper {
     }
 
     @Get("/eleve/:idEleve/moyenne")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     @ApiDoc("Retourne la moyenne de l'élève dont l'id est passé en paramètre, sur les devoirs passés en paramètre")
     public void getMoyenneEleve(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
@@ -753,7 +754,8 @@ public class NoteController extends ControllerHelper {
     }
 
     @Get("/eleve/:idEleve/moyenneFinale")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     @ApiDoc("Retourne les moyennes finales de l'élève sur la période")
     public void getMoyenneFinaleEleve(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
@@ -1034,8 +1036,8 @@ public class NoteController extends ControllerHelper {
      */
     @Get("/bilan/periodique/datas/graph")
     @ApiDoc("Récupère les données pour construire les graphs du bilan periodique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    //@ResourceFilter(AccessReleveFilter.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getBilanPeriodiqueDataForGraph(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
         final String idEtablissement = request.params().get(Competences.ID_ETABLISSEMENT_KEY);
@@ -1061,8 +1063,8 @@ public class NoteController extends ControllerHelper {
 
     @Get("/bilan/periodique/datas/graph/domaine")
     @ApiDoc("Récupère les données pour construire les graphs du bilan periodique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    //@ResourceFilter(AccessReleveFilter.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getBilanPeriodiqueDomaineForGraph(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
         final String idEtablissement = request.params().get(Competences.ID_ETABLISSEMENT_KEY);

@@ -343,9 +343,9 @@ export class Evaluations extends Model {
         });
     }
 
-    getReleve (idPeriode, idUser, idTypePeriode, ordrePeriode) {
+    getReleve (idPeriode, idEleve, idTypePeriode, ordrePeriode) {
         let uri = '/competences/releve/pdf?idEtablissement=' +
-            model.me.structures[0] + '&idUser=' + idUser;
+            model.me.structures[0] + '&idEleve=' + idEleve;
         if (idPeriode !== undefined && idPeriode !== null) {
             uri += '&idPeriode=' + idPeriode;
             if (idTypePeriode !== undefined) {

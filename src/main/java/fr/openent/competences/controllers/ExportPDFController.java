@@ -19,10 +19,9 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
-import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.security.AccessAdminHeadTeacherFilter;
-import fr.openent.competences.security.AccessBulletinChildrenParentCEFilter;
+import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
@@ -62,7 +61,6 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.utils.UtilsConvert.strIdGroupesToJsonArray;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
@@ -108,7 +106,8 @@ public class ExportPDFController extends ControllerHelper {
      * Genere le releve d'un eleve sous forme de PDF
      */
     @Get("/releve/pdf")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getReleveEleve(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (user == null) {
@@ -130,8 +129,8 @@ public class ExportPDFController extends ControllerHelper {
             }
 
             final String idEtablissement = request.params().get("idEtablissement");
-            final String idUser = request.params().get("idUser");
-            exportService.getDataForExportReleveEleve(idUser, idEtablissement, idPeriode, request.params(), event -> {
+            final String idEleve = request.params().get("idEleve");
+            exportService.getDataForExportReleveEleve(idEleve, idEtablissement, idPeriode, request.params(), event -> {
                 if(event.isLeft()){
                     leftToResponse(request, event.left());
                     return;
@@ -176,7 +175,8 @@ public class ExportPDFController extends ControllerHelper {
      * @param request
      */
     @Get("/BFC/pdf")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getBFCEleve(final HttpServerRequest request) {
         final String idStructure = request.params().get("idStructure");
         final List<String> idClasses = request.params().getAll("idClasse");
@@ -400,7 +400,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/releveComp/print/export")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getExportReleveComp(final HttpServerRequest request) {
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean usePerso = Boolean.parseBoolean(request.params().get("usePerso"));
@@ -1378,7 +1379,7 @@ public class ExportPDFController extends ControllerHelper {
 
     @Post("/see/bulletins")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessBulletinChildrenParentCEFilter.class)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void seeBulletins(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, params -> {
             Long idPeriode = params.getLong(ID_PERIODE_KEY);

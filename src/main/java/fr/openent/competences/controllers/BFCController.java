@@ -20,6 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.security.AccessBFCFilter;
+import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.AccessControleByClassFilter;
 import fr.openent.competences.security.CanUpdateBFCSyntheseRight;
 import fr.openent.competences.service.*;
@@ -200,7 +201,8 @@ public class BFCController extends ControllerHelper {
 
     @Get("/bfc/eleve/:idEleve")
     @ApiDoc("Retourne les bfcs notes pour un élève.")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getBFCsEleve(final HttpServerRequest request) {
         if (request.params().contains("idEleve") && request.params().contains("idEtablissement")) {
             String idEleve = request.params().get("idEleve");
@@ -233,7 +235,8 @@ public class BFCController extends ControllerHelper {
 
     @Get("/BfcSynthese")
     @ApiDoc("récupére une Synthese du BFC pour un élève")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getSynthese(final HttpServerRequest request) {
         if (request.params().contains("idEleve")) {
             final String idEleve = request.params().get("idEleve");
@@ -432,7 +435,8 @@ public class BFCController extends ControllerHelper {
 
     @Get("/GetNiveauEnsCpl")
     @ApiDoc("Récupère l'enseignement de complément pour un élève")
-    @SecuredAction(value="", type=ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getNiveauEnsCplByEleve(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override

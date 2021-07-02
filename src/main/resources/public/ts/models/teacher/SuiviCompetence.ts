@@ -202,8 +202,8 @@ export class SuiviCompetence extends Model {
         });
     }
 
-    getReleve (idPeriode, idUser, idTypePeriode, ordrePeriode, idStructure) {
-        let uri = `/competences/releve/pdf?idEtablissement=${idStructure}&idUser=${idUser}`;
+    getReleve (idPeriode, idEleve, idTypePeriode, ordrePeriode, idStructure) {
+        let uri = `/competences/releve/pdf?idEtablissement=${idStructure}&idEleve=${idEleve}`;
 
         if (idPeriode !== undefined && idPeriode !== null) {
             uri += '&idPeriode=' + idPeriode;

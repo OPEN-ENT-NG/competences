@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.CreateDispenseDomaineEleveFilter;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;

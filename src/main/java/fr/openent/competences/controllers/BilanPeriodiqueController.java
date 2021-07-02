@@ -1,6 +1,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.CanUpdateBFCSyntheseRight;
 import fr.openent.competences.security.CreateSyntheseBilanPeriodiqueFilter;
 import fr.openent.competences.security.SetAvisConseilFilter;
@@ -73,7 +74,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
     }
 
     @Get("/eleve/evenements/:idEleve")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getAbsencesAndRetards(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
         final String idStructure = request.params().get("idEtablissement");
@@ -112,7 +114,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
      */
     @Get("/bilan/periodique/datas/avis/synthses")
     @ApiDoc("Récupère les synthèses et avis de l'élève sur l'année")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilter.class)
     public void getSynthesesAvisBilanPeriodique(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
             @Override
