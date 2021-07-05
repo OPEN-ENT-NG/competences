@@ -569,38 +569,38 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, rel_devoirs_groupes.type_groupe , devoirs.is_evaluated,")
-                .append("devoirs.id_sousmatiere,devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
+        query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, rel_devoirs_groupes.type_groupe, devoirs.is_evaluated,")
+                .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
                 .append("devoirs.id_etat, devoirs.date_publication, devoirs.id_matiere, devoirs.coefficient, devoirs.ramener_sur, devoirs.percent, ")
                 .append("type_sousmatiere.libelle as _sousmatiere_libelle, devoirs.date, devoirs.apprec_visible, ")
                 .append("type.nom as _type_libelle, COUNT(competences_devoirs.id) as nbcompetences, users.username as teacher ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs ")
-                .append("inner join "+ Competences.COMPETENCES_SCHEMA +".type on devoirs.id_type = type.id ")
-                .append("left join "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs on devoirs.id = competences_devoirs.id_devoir ")
-                .append("left join "+ Competences.VSCO_SCHEMA +".sousmatiere  on devoirs.id_sousmatiere = sousmatiere.id ")
-                .append("left join "+ Competences.VSCO_SCHEMA +".type_sousmatiere on sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
-                .append("left join "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ")
-                .append("inner join "+ Competences.COMPETENCES_SCHEMA + ".users ON users.id = devoirs.owner ")
+                .append("FROM ").append(COMPETENCES_SCHEMA).append(".devoirs ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".type ON devoirs.id_type = type.id ")
+                .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".competences_devoirs ON devoirs.id = competences_devoirs.id_devoir ")
+                .append("LEFT JOIN ").append(VSCO_SCHEMA).append(".sousmatiere ON devoirs.id_sousmatiere = sousmatiere.id ")
+                .append("LEFT JOIN ").append(VSCO_SCHEMA).append(".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
+                .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".users ON users.id = devoirs.owner ")
                 .append("WHERE (rel_devoirs_groupes.id_devoir = devoirs.id) ")
-                .append("AND (devoirs.id_etablissement = ? ) ")
-                .append("AND (devoirs.eval_lib_historise = false ) ")
+                .append("AND (devoirs.id_etablissement = ?) ")
+                .append("AND (devoirs.eval_lib_historise = false) ")
                 .append("AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
                 .append("devoirs.owner IN (SELECT DISTINCT main_teacher_id ") // ou dont l'un de mes titulaires le sont (de l'établissement passé en paramètre)
-                .append("FROM "+ Competences.VSCO_SCHEMA +".multi_teaching ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = multi_teaching.structure_id  ")
-                .append("WHERE second_teacher_id = ? AND multi_teaching.structure_id = ? AND ")
-                .append("( (start_date <= current_date AND current_date <= entered_end_date AND NOT is_coteaching) OR is_coteaching ) ")
-                .append(") OR ")
-                .append("? IN (SELECT member_id ") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares ")
+                .append("FROM ").append(VSCO_SCHEMA).append(".multi_teaching ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".devoirs ON devoirs.id_matiere = multi_teaching.subject_id ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON devoirs.id = rel_devoirs_groupes.id_devoir ")
+                .append("AND multi_teaching.class_or_group_id = rel_devoirs_groupes.id_groupe ")
+                .append("WHERE second_teacher_id = ? AND multi_teaching.structure_id = ? ")
+                .append("AND ((start_date <= current_date AND current_date <= entered_end_date AND NOT is_coteaching) OR is_coteaching)) ")
+                .append("OR ? IN (SELECT member_id ") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
+                .append("FROM ").append(COMPETENCES_SCHEMA).append(".devoirs_shares ")
                 .append("WHERE resource_id = devoirs.id ")
-                .append("AND action = '" + Competences.DEVOIR_ACTION_UPDATE+"')")
-                .append(") ")
+                .append("AND action = '").append(DEVOIR_ACTION_UPDATE).append("')) ")
                 .append("GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, devoirs.is_evaluated, users.username, ")
-                .append("devoirs.id_sousmatiere,devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
-                .append("devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, rel_devoirs_groupes.type_groupe , devoirs.coefficient, devoirs.ramener_sur, type_sousmatiere.libelle , type.nom ")
+                .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
+                .append("devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, rel_devoirs_groupes.type_groupe, ")
+                .append("devoirs.coefficient, devoirs.ramener_sur, type_sousmatiere.libelle, type.nom ")
                 .append("ORDER BY devoirs.date DESC;");
-
 
         // Ajout des params pour les devoirs dont on est le propriétaire sur l'établissement
         values.add(idEtablissement);
@@ -1341,7 +1341,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("FROM res ")
                 .append("INNER JOIN notes.notes ON (notes.id_devoir = res.id) ")
                 .append("WHERE notes.id_eleve = ? ");
-            values.add(idEleve);
+        values.add(idEleve);
 
         query.append("UNION ");
 
@@ -1349,7 +1349,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("FROM res ")
                 .append("INNER JOIN notes.competences_notes ON (competences_notes.id_devoir = res.id) ")
                 .append("WHERE competences_notes.id_eleve = ? ");
-            values.add(idEleve);
+        values.add(idEleve);
 
         query.append("UNION ");
 
@@ -1358,7 +1358,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("INNER JOIN notes.appreciation_matiere_periode ON (appreciation_matiere_periode.id_matiere = res.id_matiere ")
                 .append("AND res.id_groupe = appreciation_matiere_periode.id_classe) ")
                 .append("WHERE appreciation_matiere_periode.id_eleve = ? ");
-            values.add(idEleve);
+        values.add(idEleve);
 
         query.append("UNION ");
 
@@ -1954,7 +1954,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
             JsonObject moyenneFinale = null;
             if(idPeriod != null) {
-                 moyenneFinale = (JsonObject) moyennesFinales.stream()
+                moyenneFinale = (JsonObject) moyennesFinales.stream()
                         .filter(el -> idPeriod.equals(((JsonObject) el).getLong("id_periode")))
                         .findFirst().orElse(null);
             }
