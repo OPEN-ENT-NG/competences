@@ -1401,7 +1401,7 @@ public class DefaultExportService implements ExportService {
                             eleves = Utils.sortElevesByDisplayName(eleves);
                             final String[] idEleves = new String[eleves.size()];
 
-                            log.info("eleves");
+                            log.info("[getElevesExportReleveComp] eleves " + finalIdClasse);
                             for (int i = 0; i < eleves.size(); i++) {
                                 JsonObject eleve = eleves.getJsonObject(i);
                                 log.info(eleve.getString(ID_KEY));
@@ -1410,7 +1410,7 @@ public class DefaultExportService implements ExportService {
                                 idEleves[i] = eleve.getString(ID_KEY);
                             }
                             log.info("---------------");
-                            log.info("elevesMap");
+                            log.info("[getElevesExportReleveComp] elevesMap " + finalIdClasse);
                             log.info(elevesMap);
 
                             JsonObject infosAction = new JsonObject()
