@@ -73,7 +73,6 @@ export class Structure extends Model {
     get api() {
         return {
             getEnseignants: '/competences/user/list?profile=Teacher&structureId=',
-            getDevoirs: '/competences/etab/devoirs/',
             getClasses: '/viescolaire/classes?idEtablissement=' + this.id,
             getClassesBilanPeriodique: '/competences/elementsBilanPeriodique/classes?idStructure=' + this.id,
             TYPE: {

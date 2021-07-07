@@ -99,7 +99,7 @@ public interface DevoirService extends CrudService {
      * @param user utilisateur l'utilisateur connecté
      * @param handler handler portant le résultat de la requête
      */
-    void listDevoirs(UserInfos user, String idEtablissement, Handler<Either<String, JsonArray>> handler);
+    void listDevoirs(UserInfos user, String idEtablissement, Integer limit, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Liste des devoirs (avec ou sans note) pour un établissement, une classe, une matière et une période donnée.
@@ -175,7 +175,7 @@ public interface DevoirService extends CrudService {
      * @param limit
      * @param handler
      */
-    void listDevoirsEtab(UserInfos user, Integer limit, Handler<Either<String, JsonArray>> handler);
+    void listDevoirsChefEtab(UserInfos user, String idEtablissement, Integer limit, Handler<Either<String, JsonArray>> handler);
 
 
     /**

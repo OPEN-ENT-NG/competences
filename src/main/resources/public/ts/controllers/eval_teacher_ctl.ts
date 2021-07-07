@@ -125,23 +125,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         });
 
         function endAccueil() {
-            utils.safeApply($scope);
             $scope.opened.lightbox = false;
             template.open('main', 'enseignants/eval_acu_teacher');
             utils.safeApply($scope);
         }
+
         let routesActions = {
-            accueil: function (params) {
+            accueil: function () {
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
                     $scope.search = $scope.initSearch();
                     $scope.displayCycles($scope.search.periode);
-                    evaluations.structure.syncDevoirs(25).then(() => {
-                        endAccueil();
-                    });
-                } else {
-                    endAccueil();
+                    if(evaluations.structure.devoirs.length() == 0) {
+                        evaluations.structure.syncDevoirs(25);
+                    }
                 }
+                endAccueil();
             },
 
             listRemplacements: function () {

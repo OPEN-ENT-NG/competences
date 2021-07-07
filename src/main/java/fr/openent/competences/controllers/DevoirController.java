@@ -83,58 +83,55 @@ public class DevoirController extends ControllerHelper {
     @ApiDoc("Récupère les devoirs d'un utilisateur")
     @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     public void getDevoirs(final HttpServerRequest request){
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                if(user != null){
-                    String forStudentReleveString = request.params().get("forStudentReleve");
-                    final String _TRUE = "true";
-                    boolean forStudentReleve = false;
-                    if(forStudentReleveString != null)
-                        forStudentReleve = forStudentReleveString.equals(_TRUE);
-                    // si l'utilisateur a la fonction d'admin
-                    if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString()) && !forStudentReleve) {
-                        final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
-                        String limit = request.params().get("limit");
-                        Integer iLimit = (limit==null) ? null : Integer.valueOf(limit);
-                        devoirsService.listDevoirsEtab(user, iLimit, handler);
-                    } else{
-                        final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
-                        String idEtablissement = request.params().get("idEtablissement");
-                        String idClasse = request.params().get("idClasse");
-                        String idMatiere = request.params().get("idMatiere");
+        UserUtils.getUserInfos(eb, request, user -> {
+            if(user != null){
+                String forStudentReleveString = request.params().get("forStudentReleve");
+                boolean forStudentReleve = false;
+                if(forStudentReleveString != null)
+                    forStudentReleve = forStudentReleveString.equals("true");
 
-                        final String _STUDENT = "Student";
-                        final String _RELATIVE = "Relative";
-                        if (idClasse == null && !_STUDENT.equals(user.getType())
-                                && !_RELATIVE.equals(user.getType()) && !forStudentReleve) {
-                            devoirsService.listDevoirs(user, idEtablissement, handler);
+                String idEtablissement = request.params().get("idEtablissement");
+
+                String limit = request.params().get("limit");
+                Integer iLimit = limit == null ? null : Integer.valueOf(limit);
+
+                // si l'utilisateur a la fonction d'admin
+                if(WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString()) && !forStudentReleve) {
+                    devoirsService.listDevoirsChefEtab(user, idEtablissement, iLimit, arrayResponseHandler(request));
+                } else {
+                    String idClasse = request.params().get("idClasse");
+                    String idMatiere = request.params().get("idMatiere");
+
+                    final String _STUDENT = "Student";
+                    final String _RELATIVE = "Relative";
+                    if (idClasse == null && !_STUDENT.equals(user.getType())
+                            && !_RELATIVE.equals(user.getType()) && !forStudentReleve) {
+                        devoirsService.listDevoirs(user, idEtablissement, iLimit, arrayResponseHandler(request));
+                    } else {
+                        boolean historise = false;
+                        if (request.params().get("historise") != null) {
+                            historise = Boolean.parseBoolean(request.params().get("historise"));
+                        }
+                        Long idPeriode = null;
+                        if (request.params().get("idPeriode") != null) {
+                            idPeriode = testLongFormatParameter("idPeriode", request);
+                        }
+
+                        if(_STUDENT.equals(user.getType()) || _RELATIVE.equals(user.getType()) || forStudentReleve){
+                            String idEleve = request.params().get("idEleve");
+                            devoirsService.listDevoirs(idEleve, idEtablissement, idClasse, null,
+                                    idPeriode, historise, arrayResponseHandler(request));
+                        } else if (!idEtablissement.equals("undefined") && !idClasse.equals("undefined")
+                                && !idMatiere.equals("undefined") && !request.params().get("idPeriode").equals("undefined")) {
+                            devoirsService.listDevoirs(null, idEtablissement, idClasse, idMatiere,
+                                    idPeriode, historise, arrayResponseHandler(request));
                         } else {
-                            boolean historise = false;
-                            if (request.params().get("historise") != null) {
-                                historise = Boolean.parseBoolean(request.params().get("historise"));
-                            }
-                            Long idPeriode = null;
-                            if (request.params().get("idPeriode") != null) {
-                                idPeriode = testLongFormatParameter("idPeriode", request);
-                            }
-
-                            if(_STUDENT.equals(user.getType()) || _RELATIVE.equals(user.getType()) || forStudentReleve){
-                                String idEleve = request.params().get("idEleve");
-                                devoirsService.listDevoirs(idEleve, idEtablissement, idClasse, null,
-                                        idPeriode, historise, handler);
-                            } else if (idEtablissement != "undefined" && idClasse != "undefined"
-                                    && idMatiere != "undefined" && request.params().get("idPeriode") != "undefined") {
-                                devoirsService.listDevoirs(null, idEtablissement, idClasse, idMatiere,
-                                        idPeriode, historise, handler);
-                            } else {
-                                Renders.badRequest(request, "Invalid parameters");
-                            }
+                            Renders.badRequest(request, "Invalid parameters");
                         }
                     }
-                }else{
-                    unauthorized(request);
                 }
+            } else {
+                unauthorized(request);
             }
         });
     }

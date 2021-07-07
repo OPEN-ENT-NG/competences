@@ -565,11 +565,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
      * @param user utilisateur l'utilisateur connecté
      * @param handler handler portant le résultat de la requête
      */
-    public void listDevoirs(UserInfos user, String idEtablissement, Handler<Either<String, JsonArray>> handler) {
+    public void listDevoirs(UserInfos user, String idEtablissement, Integer limit,
+                            Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        JsonArray values = new JsonArray();
 
-        query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, rel_devoirs_groupes.type_groupe, devoirs.is_evaluated,")
+        query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, rel_devoirs_groupes.type_groupe, devoirs.is_evaluated, ")
                 .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
                 .append("devoirs.id_etat, devoirs.date_publication, devoirs.id_matiere, devoirs.coefficient, devoirs.ramener_sur, devoirs.percent, ")
                 .append("type_sousmatiere.libelle as _sousmatiere_libelle, devoirs.date, devoirs.apprec_visible, ")
@@ -581,10 +582,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("LEFT JOIN ").append(VSCO_SCHEMA).append(".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
                 .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ")
                 .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".users ON users.id = devoirs.owner ")
-                .append("WHERE (rel_devoirs_groupes.id_devoir = devoirs.id) ")
-                .append("AND (devoirs.id_etablissement = ?) ")
-                .append("AND (devoirs.eval_lib_historise = false) ")
-                .append("AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
+                .append("WHERE rel_devoirs_groupes.id_devoir = devoirs.id AND devoirs.id_etablissement = ? ")
+                .append("AND devoirs.eval_lib_historise = false AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
                 .append("devoirs.owner IN (SELECT DISTINCT main_teacher_id ") // ou dont l'un de mes titulaires le sont (de l'établissement passé en paramètre)
                 .append("FROM ").append(VSCO_SCHEMA).append(".multi_teaching ")
                 .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".devoirs ON devoirs.id_matiere = multi_teaching.subject_id ")
@@ -600,7 +599,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
                 .append("devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, rel_devoirs_groupes.type_groupe, ")
                 .append("devoirs.coefficient, devoirs.ramener_sur, type_sousmatiere.libelle, type.nom ")
-                .append("ORDER BY devoirs.date DESC;");
+                .append("ORDER BY devoirs.date DESC ");
 
         // Ajout des params pour les devoirs dont on est le propriétaire sur l'établissement
         values.add(idEtablissement);
@@ -613,82 +612,48 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         // Ajout des params pour les devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
         values.add(user.getUserId());
 
+        if(limit != null && limit > 0) {
+            query.append("LIMIT ?");
+            values.add(limit);
+        }
+
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
     @Override
-    public void listDevoirsEtab(UserInfos user, Integer limit, Handler<Either<String, JsonArray>> handler){
-        boolean limitResult = limit != null && limit.intValue() > 0;
+    public void listDevoirsChefEtab(UserInfos user, String idEtablissement, Integer limit,
+                                    Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new JsonArray();
 
-        StringBuilder mainQuery = new StringBuilder();
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        mainQuery.append(" SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe , rel_devoirs_groupes.type_groupe , devoirs.is_evaluated, " )
-                .append("   devoirs.id_sousmatiere,devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, devoirs.percent, ")
-                .append("   devoirs.id_etat, devoirs.date_publication, devoirs.id_matiere, devoirs.coefficient, devoirs.ramener_sur,  ")
-                .append("   type_sousmatiere.libelle as _sousmatiere_libelle, devoirs.date,  ")
-                .append("   type.nom as _type_libelle, COUNT(competences_devoirs.id) as nbcompetences, users.username as teacher ")
-                .append("   FROM notes.devoirs  ")
-                .append("   inner join notes.type on devoirs.id_type = type.id  ")
-                .append("   left join notes.competences_devoirs on devoirs.id = competences_devoirs.id_devoir  ")
-                .append("   left join viesco.sousmatiere  on devoirs.id_sousmatiere = sousmatiere.id  ")
-                .append("   left join viesco.type_sousmatiere on sousmatiere.id_type_sousmatiere = type_sousmatiere.id  ")
-                .append("   left join notes.rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id  ")
-                .append("   inner join notes.users on users.id = devoirs.owner")
-                .append("   where devoirs.id_etablissement IN "+ Sql.listPrepared(user.getStructures().toArray()) +" ")
-                .append("   and devoirs.eval_lib_historise = false ")
-                .append("   and id_groupe is not null ");
+        query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, rel_devoirs_groupes.type_groupe, devoirs.is_evaluated, ")
+                .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
+                .append("devoirs.id_etat, devoirs.date_publication, devoirs.id_matiere, devoirs.coefficient, devoirs.ramener_sur, devoirs.percent, ")
+                .append("type_sousmatiere.libelle as _sousmatiere_libelle, devoirs.date, devoirs.apprec_visible,")
+                .append("type.nom as _type_libelle, COUNT(competences_devoirs.id) as nbcompetences, users.username as teacher ")
+                .append("FROM notes.devoirs ")
+                .append("INNER JOIN notes.type on devoirs.id_type = type.id ")
+                .append("LEFT JOIN notes.competences_devoirs on devoirs.id = competences_devoirs.id_devoir ")
+                .append("LEFT JOIN viesco.sousmatiere  on devoirs.id_sousmatiere = sousmatiere.id ")
+                .append("LEFT JOIN viesco.type_sousmatiere on sousmatiere.id_type_sousmatiere = type_sousmatiere.id  ")
+                .append("LEFT JOIN notes.rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ")
+                .append("INNER JOIN notes.users on users.id = devoirs.owner ")
+                .append("WHERE devoirs.id_etablissement = ? ")
+                .append("AND devoirs.eval_lib_historise = false AND id_groupe IS NOT NULL ")
+                .append("GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, devoirs.is_evaluated, users.username, ")
+                .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
+                .append("devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, rel_devoirs_groupes.type_groupe, ")
+                .append("devoirs.coefficient, devoirs.ramener_sur, type_sousmatiere.libelle, type.nom ")
+                .append("ORDER BY devoirs.date DESC ");
 
-        StringBuilder endMainQuery = new StringBuilder();
-        endMainQuery.append("   GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, devoirs.is_evaluated, users.username,  ")
-                .append("   devoirs.id_sousmatiere,devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur,  ")
-                .append("   devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, rel_devoirs_groupes.type_groupe , devoirs.coefficient, devoirs.ramener_sur, type_sousmatiere.libelle, type.nom  ");
+        values.add(idEtablissement);
 
-
-        StringBuilder orderByQuery = new StringBuilder();
-        orderByQuery.append("   ORDER BY date DESC; ");
-
-
-
-        StringBuilder globalQuery = new StringBuilder();
-        if(limitResult) {
-            StringBuilder limitQuery = new StringBuilder();
-            limitQuery.append("LIMIT ?");
-
-            globalQuery.append("(")
-                    .append(mainQuery)
-                    .append("AND devoirs.percent < 100 ")
-                    .append(endMainQuery)
-                    .append(limitQuery)
-                    .append(") UNION ( ")
-                    .append(mainQuery)
-                    .append("AND devoirs.percent = 100 ")
-                    .append(endMainQuery)
-                    .append(limitQuery)
-                    .append(")")
-                    .append(orderByQuery);
-
-            // params requete 1
-            for (int i = 0; i < user.getStructures().size(); i++) {
-                values.add(user.getStructures().get(i));
-            }
+        if(limit != null && limit > 0) {
+            query.append("LIMIT ?");
             values.add(limit);
-
-            // params requete 2
-            for (int i = 0; i < user.getStructures().size(); i++) {
-                values.add(user.getStructures().get(i));
-            }
-            values.add(limit);
-
-        } else {
-            globalQuery.append(mainQuery).append(endMainQuery).append(orderByQuery);
-
-            for (int i = 0; i < user.getStructures().size(); i++) {
-                values.add(user.getStructures().get(i));
-            }
         }
 
-
-        Sql.getInstance().prepared(globalQuery.toString(), values, validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
 

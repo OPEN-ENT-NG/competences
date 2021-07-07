@@ -38,8 +38,9 @@ export class DevoirsCollection {
             return new Promise((resolve) => {
                 let urlGet = this.api.get;
                 if(limit !== undefined) {
-                    urlGet += "&limit="+limit;
+                    urlGet += "&limit=" + limit;
                 }
+
                 http().getJson(urlGet).done(function (res) {
                     this.load(res);
                     if (evaluations.synchronized.matieres) {
