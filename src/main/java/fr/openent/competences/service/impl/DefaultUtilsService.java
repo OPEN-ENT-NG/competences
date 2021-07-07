@@ -880,31 +880,21 @@ public class DefaultUtilsService implements UtilsService {
     public void getPeriodes(JsonArray idClasse, String idEtablissement, Handler<Either<String,JsonArray>> handler){
         getPeriodes((List<String>)idClasse.getList(), idEtablissement, handler);
     }
-    public void getPeriodes(List<String> idClasse, String idEtablissement, Handler<Either<String,JsonArray>> handler){
-
+    public void getPeriodes(List<String> idClasses, String idEtablissement, Handler<Either<String,JsonArray>> handler){
         JsonObject action = new JsonObject()
                 .put("action", "periode.getPeriodes")
-                .put("idGroupes", idClasse)
+                .put("idGroupes", idClasses)
                 .put("idEtablissement", idEtablissement);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-                        JsonObject body = message.body();
-                        JsonArray periodes = body.getJsonArray("result");
-                        if ("ok".equals(body.getString("status"))) {
-                            handler.handle(new Either.Right<String,JsonArray>(periodes) );
-                        }else{
-                            handler.handle(new Either.Left<String,JsonArray>("no periode for this class : " + body.getString("message")) );
-                        }
-
-                    }
-                })
-
-        );
-
-
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            JsonArray periodes = body.getJsonArray("result");
+            if ("ok".equals(body.getString("status"))) {
+                handler.handle(new Either.Right<>(periodes));
+            } else {
+                handler.handle(new Either.Left<>("no periode for this class : " + body.getString("message")) );
+            }
+        }));
     }
 
     protected void calculAvailableId(String idClasse, Integer typeClasse, Long idPeriode,
@@ -1403,31 +1393,30 @@ public class DefaultUtilsService implements UtilsService {
         Future<JsonObject> activationFuture = Future.future();
         isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
 
-        CompositeFuture.all(configFuture, activationFuture).setHandler(
-                event -> {
-                    if(event.failed()){
-                        String error = event.cause().getMessage();
-                        log.error("[getRetardsAndAbsences-config] : " + error);
-                    } else{
-                        JsonObject configVieScolaire = configFuture.result();
-                        JsonObject activationStructure = activationFuture.result();
-                        JsonObject result = new JsonObject();
-                        result.put("installed",configVieScolaire.getBoolean("presences"));
-                        if(!activationStructure.isEmpty() && activationStructure.getBoolean("actif"))
-                            result.put("activate",true);
-                        else
-                            result.put("activate",false);
+        CompositeFuture.all(configFuture, activationFuture).setHandler(event -> {
+            if(event.failed()){
+                String error = event.cause().getMessage();
+                log.error("[getRetardsAndAbsences-config] : " + error);
+            } else{
+                JsonObject configVieScolaire = configFuture.result();
+                JsonObject activationStructure = activationFuture.result();
+                JsonObject result = new JsonObject();
+                result.put("installed",configVieScolaire.getBoolean("presences"));
+                if(!activationStructure.isEmpty() && activationStructure.getBoolean("actif"))
+                    result.put("activate",true);
+                else
+                    result.put("activate",false);
 
-                        handler.handle(new Either.Right<>(result));
-                    }
-                });
+                handler.handle(new Either.Right<>(result));
+            }
+        });
     }
 
     public void getSyncStatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler){
         JsonArray params = new JsonArray().add(idStructure);
 
-        String query = " SELECT presences_sync " +
-                " FROM "+ Competences.COMPETENCES_SCHEMA +".structure_options " +
+        String query = "SELECT presences_sync " +
+                " FROM " + Competences.COMPETENCES_SCHEMA + ".structure_options " +
                 " WHERE id_structure = ? ";
         Sql.getInstance().prepared(query, params, Competences.DELIVERY_OPTIONS, validUniqueResultHandler(eitherHandler));
 

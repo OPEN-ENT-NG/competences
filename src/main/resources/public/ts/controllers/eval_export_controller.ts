@@ -163,34 +163,30 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         };
 
         $scope.exportLSU = async function (getUnheededStudents) {
-            if( $scope.paramsLSU.classes.length > 3 && $scope.paramsLSU.type === $scope.LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
+            /*if( $scope.paramsLSU.classes.length > 3 && $scope.paramsLSU.type === $scope.LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
                 notify.info("Veuillez sélectionner trois classes maximum");
-            } else {
+            } else {*/
                 await Utils.runMessageLoader($scope);
                 $scope.inProgress = true;
                 $scope.paramsLSU.type = "" + $scope.paramsLSU.type;
                 $scope.noStudent = false;
-                $scope.lsu.export($scope.paramsLSU, getUnheededStudents)
-                    .then(async function (res) {
-                        if (!$scope.lsu.hasUnheededStudents) {
-                            let blob = new Blob([res.data]);
-                            let link = document.createElement('a');
-                            link.href = window.URL.createObjectURL(blob);
-                            link.download = res.headers['content-disposition'].split('filename=')[1];
-                            document.body.appendChild(link);
-                            link.click();
-                            $scope.errorResponse = null;
-                        }
-                        await Utils.stopMessageLoader($scope);
-                    })
-
-                .catch(async (error) => {
+                $scope.lsu.export($scope.paramsLSU, getUnheededStudents).then(async function (res) {
+                    if (!$scope.lsu.hasUnheededStudents) {
+                        let blob = new Blob([res.data]);
+                        let link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = res.headers['content-disposition'].split('filename=')[1];
+                        document.body.appendChild(link);
+                        link.click();
+                        $scope.errorResponse = null;
+                    }
+                    await Utils.stopMessageLoader($scope);
+                }).catch(async (error) => {
                     if ($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
                         && ($scope.lsu.errorsLSU.all.length > 0
                             || $scope.lsu.errorsLSU.errorCode.length > 0
                             || $scope.lsu.errorsLSU.emptyDiscipline
-                            || $scope.lsu.errorsLSU.errorEPITeachers.length > 0)
-                    ) {
+                            || $scope.lsu.errorsLSU.errorEPITeachers.length > 0)) {
                         $scope.opened.lightboxErrorsLSU = true;
                     } else {
                         if ($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
@@ -202,11 +198,11 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                                 $scope.errorResponse = true;
                             }
                             console.log(error);
-                            }
                         }
-                        await Utils.stopMessageLoader($scope);
-                    });
-            }
+                    }
+                    await Utils.stopMessageLoader($scope);
+                });
+            //}
         };
 
         $scope.chooseClasse = async function (classe) {

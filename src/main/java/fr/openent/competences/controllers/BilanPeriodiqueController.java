@@ -32,6 +32,8 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 
+import java.util.Collections;
+
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
@@ -80,7 +82,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
         final String idEleve = request.params().get("idEleve");
         final String idStructure = request.params().get("idEtablissement");
         final String idClasse = request.params().get("idClasse");
-        bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idClasse, idEleve, arrayResponseHandler(request));
+        bilanPeriodiqueService.getRetardsAndAbsences(idStructure, Collections.singletonList(idEleve),
+                Collections.singletonList(idClasse), arrayResponseHandler(request));
     }
 
     /**
