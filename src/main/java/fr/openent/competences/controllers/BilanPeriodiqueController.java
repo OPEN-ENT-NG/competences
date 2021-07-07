@@ -80,7 +80,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
         final String idEleve = request.params().get("idEleve");
         final String idStructure = request.params().get("idEtablissement");
         final String idClasse = request.params().get("idClasse");
-        bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idClasse, idEleve, arrayResponseHandler(request));
+        bilanPeriodiqueService.getRetardsAndAbsencesEleve(idStructure, idClasse, idEleve, arrayResponseHandler(request));
     }
 
     /**

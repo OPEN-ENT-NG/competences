@@ -1392,7 +1392,7 @@ public class DefaultUtilsService implements UtilsService {
                     JsonObject queryResult = body.getJsonObject(RESULT);
                     configFuture.complete(queryResult);
                 } else {
-                    log.error("getRetardsAndAbsences-getconfigVieScolaire failed : " + body.getString("message"));
+                    log.error("getRetardsAndAbsencesEleve-getconfigVieScolaire failed : " + body.getString("message"));
                     configFuture.fail(body.getString("message"));
 
                 }
@@ -1403,24 +1403,23 @@ public class DefaultUtilsService implements UtilsService {
         Future<JsonObject> activationFuture = Future.future();
         isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
 
-        CompositeFuture.all(configFuture, activationFuture).setHandler(
-                event -> {
-                    if(event.failed()){
-                        String error = event.cause().getMessage();
-                        log.error("[getRetardsAndAbsences-config] : " + error);
-                    } else{
-                        JsonObject configVieScolaire = configFuture.result();
-                        JsonObject activationStructure = activationFuture.result();
-                        JsonObject result = new JsonObject();
-                        result.put("installed",configVieScolaire.getBoolean("presences"));
-                        if(!activationStructure.isEmpty() && activationStructure.getBoolean("actif"))
-                            result.put("activate",true);
-                        else
-                            result.put("activate",false);
+        CompositeFuture.all(configFuture, activationFuture).setHandler(event -> {
+            if(event.failed()){
+                String error = event.cause().getMessage();
+                log.error("[getRetardsAndAbsencesEleve-config] : " + error);
+            } else{
+                JsonObject configVieScolaire = configFuture.result();
+                JsonObject activationStructure = activationFuture.result();
+                JsonObject result = new JsonObject();
+                result.put("installed",configVieScolaire.getBoolean("presences"));
+                if(!activationStructure.isEmpty() && activationStructure.getBoolean("actif"))
+                    result.put("activate",true);
+                else
+                    result.put("activate",false);
 
-                        handler.handle(new Either.Right<>(result));
-                    }
-                });
+                handler.handle(new Either.Right<>(result));
+            }
+        });
     }
 
     public void getSyncStatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler){

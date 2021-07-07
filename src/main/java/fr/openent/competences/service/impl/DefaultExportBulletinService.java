@@ -1639,9 +1639,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getEvenements(String idStructure, String idClasse, String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
-                              Handler<Either<String, JsonObject>> finalHandler ) {
-
+    public void getEvenements(String idStructure, String idClasse, String idEleve, Map<String, JsonObject> elevesMap,
+                              Long idPeriode, Handler<Either<String, JsonObject>> finalHandler) {
         logBegin(GET_EVENEMENT_METHOD, idEleve);
         JsonObject eleveObject = elevesMap.get(idEleve);
         if (eleveObject == null || idStructure == null || idClasse == null) {
@@ -1652,9 +1651,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             else
                 logidClasseNotFound(idEleve,GET_EVENEMENT_METHOD);
             finalHandler.handle(new Either.Right<>(null));
-        }
-        else {
-            bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idClasse, idEleve, new Handler<Either<String, JsonArray>>() {
+        } else {
+            bilanPeriodiqueService.getRetardsAndAbsencesEleve(idStructure, idClasse, idEleve, new Handler<Either<String, JsonArray>>() {
                 private int count = 1;
                 private AtomicBoolean answer = new AtomicBoolean(false);
 
@@ -1665,10 +1663,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                         if (message.contains(TIME) && !answer.get()) {
                             count++;
-                            bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idClasse, idEleve, this);
-
-                        }
-                        else {
+                            bilanPeriodiqueService.getRetardsAndAbsencesEleve(idStructure, idClasse, idEleve, this);
+                        } else {
                             if (eleveObject.getJsonArray(ERROR) == null) {
                                 eleveObject.put(ERROR, new JsonArray());
                             }
@@ -1676,8 +1672,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             errors.add(GET_EVENEMENT_METHOD);
                             serviceResponseOK(answer,finalHandler, count, idEleve, GET_EVENEMENT_METHOD);
                         }
-                    }
-                    else {
+                    } else {
                         JsonArray evenements = event.right().getValue();
                         if (eleveObject != null) {
 

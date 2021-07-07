@@ -2449,24 +2449,19 @@ public class LSUController extends ControllerHelper {
         final AtomicInteger originalSize = new AtomicInteger();
         final AtomicInteger idElementProgramme = new AtomicInteger();
 
-        Handler getOut = new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> suiviAcquisResponse) {
-                originalSize.getAndDecrement();
-                if (originalSize.get() == 0) {
-                    log.info("Get OUTTTTT (nb of BP) " + bilansPeriodiques.getBilanPeriodique().size()
-                            + " + " + nbIgnoratedStudents.get() + " ignorated  ==  "
-                            + eleves.getEleve().size() + " (nf of student) * "
-                            +  periodes.getPeriode().size() + " periodes" );
-                    donnees.setBilansPeriodiques(bilansPeriodiques);
-                    handler.handle(new Either.Right<String, JsonObject>(suiviAcquisResponse.right().getValue()));
-                } else {
-                    //log.info("waiting all child done");
-                }
+        Handler getOut = (Handler<Either<String, JsonObject>>) suiviAcquisResponse -> {
+            originalSize.getAndDecrement();
+            if (originalSize.get() == 0) {
+                log.info("Get OUTTTTT (nb of BP) " + bilansPeriodiques.getBilanPeriodique().size()
+                        + " + " + nbIgnoratedStudents.get() + " ignorated  ==  "
+                        + eleves.getEleve().size() + " (nf of student) * "
+                        +  periodes.getPeriode().size() + " periodes" );
+                donnees.setBilansPeriodiques(bilansPeriodiques);
+                handler.handle(new Either.Right<>(suiviAcquisResponse.right().getValue()));
             }
         };
 
-        if( !(eleves.getEleve().size() > 0) || !(periodes.getPeriode().size() > 0)){
+        if(!(eleves.getEleve().size() > 0) || !(periodes.getPeriode().size() > 0)){
             handler.handle(new Either.Right<String, JsonObject>(new JsonObject().put("error",
                     "getBaliseBilansPeriodiques : Eleves or Periodes are empty")));
             return;
@@ -2590,18 +2585,18 @@ public class LSUController extends ControllerHelper {
                         }
                     });
 
-                    bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idClasse, idEleve, new Handler<Either<String, JsonArray>>() {
+                    bilanPeriodiqueService.getRetardsAndAbsencesEleve(idStructure, idClasse, idEleve, new Handler<Either<String, JsonArray>>() {
                         AtomicBoolean answer = new AtomicBoolean(false);
                         AtomicInteger count = new AtomicInteger(0);
                         final String thread = "(" + currentEleve.getNom() + " " + currentEleve.getPrenom() + " )";
-                        final String method = "getBaliseBilansPeriodiques | getRetardsAndAbsences ";
+                        final String method = "getBaliseBilansPeriodiques | getRetardsAndAbsencesEleve ";
                         @Override
                         public void handle(Either<String, JsonArray> eventViesco) {
                             if(eventViesco.isLeft()) {
                                 String error = eventViesco.left().getValue();
                                 if(error != null && error.contains(TIME)){
                                     if(!getRetardsAndAbsencesFuture.isComplete()) {
-                                        bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idClasse, idEleve,this);
+                                        bilanPeriodiqueService.getRetardsAndAbsencesEleve(idStructure, idClasse, idEleve,this);
                                     } else {
                                         return;
                                     }
@@ -2652,9 +2647,9 @@ public class LSUController extends ControllerHelper {
                             }
                             else {
                                 response.put("status", 400);
-                                response.put(MESSAGE, "VieScolaire, leftResponse bilanPeriodiqueService.getRetardsAndAbsences  : " +
+                                response.put(MESSAGE, "VieScolaire, leftResponse bilanPeriodiqueService.getRetardsAndAbsencesEleve  : " +
                                         currentEleve.getIdNeo4j() + " " + currentEleve.getNom() + " periode : " + currentPeriode.getId());
-                                log.error("getBaliseBilansPeriodiques : bilanPeriodiqueService.getRetardsAndAbsences  " + eventViesco);
+                                log.error("getBaliseBilansPeriodiques : bilanPeriodiqueService.getRetardsAndAbsencesEleve  " + eventViesco);
                             }
                         }
                     });

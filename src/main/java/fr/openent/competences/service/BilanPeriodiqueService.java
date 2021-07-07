@@ -13,7 +13,7 @@ public interface BilanPeriodiqueService {
      * @param idClasse
      * @param eitherHandler
      */
-    void getRetardsAndAbsences(String idStructure, String idClasse, String idEleve, Handler<Either<String, JsonArray>> eitherHandler);
+    void getRetardsAndAbsencesEleve(String idStructure, String idClasse, String idEleve, Handler<Either<String, JsonArray>> eitherHandler);
 
     /**
      * Récupères les données pour le suivi des acquis d'un élève
