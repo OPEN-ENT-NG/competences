@@ -1392,7 +1392,7 @@ public class DefaultUtilsService implements UtilsService {
                     JsonObject queryResult = body.getJsonObject(RESULT);
                     configFuture.complete(queryResult);
                 } else {
-                    log.error("getRetardsAndAbsencesEleve-getconfigVieScolaire failed : " + body.getString("message"));
+                    log.error("getRetardsAndAbsences-getconfigVieScolaire failed : " + body.getString("message"));
                     configFuture.fail(body.getString("message"));
 
                 }
@@ -1406,7 +1406,7 @@ public class DefaultUtilsService implements UtilsService {
         CompositeFuture.all(configFuture, activationFuture).setHandler(event -> {
             if(event.failed()){
                 String error = event.cause().getMessage();
-                log.error("[getRetardsAndAbsencesEleve-config] : " + error);
+                log.error("[getRetardsAndAbsences-config] : " + error);
             } else{
                 JsonObject configVieScolaire = configFuture.result();
                 JsonObject activationStructure = activationFuture.result();

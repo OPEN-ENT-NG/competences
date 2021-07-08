@@ -1652,7 +1652,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 logidClasseNotFound(idEleve,GET_EVENEMENT_METHOD);
             finalHandler.handle(new Either.Right<>(null));
         } else {
-            bilanPeriodiqueService.getRetardsAndAbsencesEleve(idStructure, idClasse, idEleve, new Handler<Either<String, JsonArray>>() {
+            bilanPeriodiqueService.getRetardsAndAbsences(idStructure, Collections.singletonList(idClasse),
+                    Collections.singletonList(idEleve), new Handler<Either<String, JsonArray>>() {
                 private int count = 1;
                 private AtomicBoolean answer = new AtomicBoolean(false);
 
@@ -1663,7 +1664,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                         if (message.contains(TIME) && !answer.get()) {
                             count++;
-                            bilanPeriodiqueService.getRetardsAndAbsencesEleve(idStructure, idClasse, idEleve, this);
+                            bilanPeriodiqueService.getRetardsAndAbsences(idStructure,
+                                    Collections.singletonList(idClasse), Collections.singletonList(idEleve), this);
                         } else {
                             if (eleveObject.getJsonArray(ERROR) == null) {
                                 eleveObject.put(ERROR, new JsonArray());

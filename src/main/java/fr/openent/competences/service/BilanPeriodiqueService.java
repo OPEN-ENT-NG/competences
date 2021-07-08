@@ -5,6 +5,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.List;
+
 public interface BilanPeriodiqueService {
     /**
      * Récupère les retards et absences d'un élève
@@ -13,7 +15,7 @@ public interface BilanPeriodiqueService {
      * @param idClasse
      * @param eitherHandler
      */
-    void getRetardsAndAbsencesEleve(String idStructure, String idClasse, String idEleve, Handler<Either<String, JsonArray>> eitherHandler);
+    void getRetardsAndAbsences(String structureId, List<String> idEleves, List<String> idClasses, Handler<Either<String, JsonArray>> eitherHandler);
 
     /**
      * Récupères les données pour le suivi des acquis d'un élève

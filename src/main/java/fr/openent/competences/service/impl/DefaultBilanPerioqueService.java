@@ -58,8 +58,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     @Override
-    public void getRetardsAndAbsencesEleve(String structureId, String idClasse, String idEleve,
-                                           Handler<Either<String, JsonArray>> eitherHandler){
+    public void getRetardsAndAbsences(String structureId, List<String> idEleves, List<String> idClasses,
+                                      Handler<Either<String, JsonArray>> eitherHandler){
         // Récupération de l'état d'activation du module présences de l'établissement
         Future<JsonObject> activationFuture = Future.future();
         utilsService.getActiveStatePresences(structureId, event -> formate(activationFuture, event));
@@ -72,25 +72,15 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             if(event.failed()){
                 String error = event.cause().getMessage();
                 log.error("[initRecuperationAbsencesRetardsFromPresences] : " + error);
-                eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsencesEleve-config] Failed"));
+                eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-config] Failed"));
             } else {
                 JsonObject activationState = activationFuture.result();
                 JsonObject syncState = syncFuture.result();
                 if(activationState.getBoolean("installed") && activationState.getBoolean("activate") &&
                         syncState.containsKey("presences_sync") && syncState.getBoolean("presences_sync")){
-                    getRetardsAndAbsencesFromPresences(structureId, idClasse, Collections.singletonList(idEleve), handler -> {
-                        Map<String, JsonArray> retardsAndAbsences = handler.right().getValue();
-                        eitherHandler.handle(new Either.Right<>(retardsAndAbsences.get(idEleve)));
-                    });
+                    getRetardsAndAbsencesFromPresences(structureId, idEleves, idClasses, eitherHandler);
                 } else {
-                    getRetardsAndAbsencesFromCompetences(Collections.singletonList(idEleve), handler -> {
-                        JsonArray retardsAndAbsences = handler.right().getValue();
-
-                        JsonArray retardsAndAbsencesEleve = new JsonArray(retardsAndAbsences.stream()
-                                .filter(el -> idEleve.equals(((JsonObject) el).getString("id_eleve")))
-                                .collect(Collectors.toList()));
-                        eitherHandler.handle(new Either.Right<>(retardsAndAbsencesEleve));
-                    });
+                    getRetardsAndAbsencesFromCompetences(idEleves, eitherHandler);
                 }
             }
         });
@@ -107,10 +97,10 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         sql.prepared(query, params, Competences.DELIVERY_OPTIONS, validResultHandler(eitherHandler));
     }
 
-    private void getRetardsAndAbsencesFromPresences(String structureId, String idClasse, List<String> idEleves,
-                                                    Handler<Either<String, Map<String, JsonArray>>> handler) {
+    private void getRetardsAndAbsencesFromPresences(String structureId, List<String> idEleves, List<String> idClasses,
+                                                    Handler<Either<String, JsonArray>> handler) {
         Future<JsonArray> periodesFuture = Future.future();
-        utilsService.getPeriodes(Collections.singletonList(idClasse), structureId, event -> formate(periodesFuture, event));
+        utilsService.getPeriodes(idClasses, structureId, event -> formate(periodesFuture, event));
 
         Future<JsonArray> reasonsFuture = Future.future();
         utilsService.getPresencesReasonsId(structureId, event -> formate(reasonsFuture, event));
@@ -149,16 +139,15 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     if (event.failed()) {
                         String message = event.cause().getMessage();
                         log.error("[getRetardsAndAbsencesFromPresences-getEventsStudent] : " + message);
-                        handler.handle(new Either.Left<>("[getRetardsAndAbsencesEleve-getEventsStudent] Future Failed"));
+                        handler.handle(new Either.Left<>("[getRetardsAndAbsences-getEventsStudent] Future Failed"));
                     } else {
-                        Map<String, JsonArray> result = new HashMap<>();
+                        JsonArray result = new JsonArray();
 
                         JsonArray absencesRegularizedArray = absencesRegularizedFuture.result();
                         JsonArray absencesNotRegularizedArray = absencesUnregularizedFuture.result();
                         JsonArray retardsArray = retardsFuture.result();
 
                         for(String idEleve : idEleves) {
-                            JsonArray datas = new JsonArray();
                             for (Object periode : periodes) {
                                 JsonObject periodeJson = (JsonObject) periode;
 
@@ -240,9 +229,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                         .put("retard", nbrRetards)
                                         .put("from_presences", true);
 
-                                datas.add(dataForPeriode);
+                                result.add(dataForPeriode);
                             }
-                            result.put(idEleve, datas);
                         }
 
                         handler.handle(new Either.Right<>(result));
