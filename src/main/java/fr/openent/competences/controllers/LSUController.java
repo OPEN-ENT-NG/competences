@@ -486,8 +486,6 @@ public class LSUController extends ControllerHelper {
             }
         };
 
-
-
         List<Future> listGetFuture = new ArrayList<>();
 
         Future getClassGroupsFuture = Future.future();
@@ -630,9 +628,11 @@ public class LSUController extends ControllerHelper {
                             }
 
                             Future<JsonArray> getAbsencesAndRetardsFuture = Future.future();
-                            listGetProjectAndCompNum.add(futureCompNumCommun);
-                            List<String> idEleves = donnees.getEleves().getEleve().stream().map(Eleve::getId).collect(Collectors.toList());
-                            bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idEleves, idsGroupsClasses,
+                            listGetProjectAndCompNum.add(getAbsencesAndRetardsFuture);
+                            List<String> idEleves = donnees.getEleves().getEleve().stream()
+                                    .map(Eleve::getIdNeo4j)
+                                    .collect(Collectors.toList());
+                            bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idEleves, idsClasse,
                                     absencesEvent -> formate(getAbsencesAndRetardsFuture, absencesEvent));
 
                             CompositeFuture.all(listGetProjectAndCompNum).setHandler(eventProjectCompNum -> {
@@ -645,9 +645,7 @@ public class LSUController extends ControllerHelper {
                                     log.error("getXML : listGetProjectAndCompNum " + eventProjectCompNum);
                                     badRequest(request, "getXML : listGetProjectAndCompNum "+ eventProjectCompNum);
                                 }
-
                             });
-
                         } else{
                             badRequest(request, eventFuture.cause().getMessage());
                             log.error("getXML : listGetFuture " + eventFuture);

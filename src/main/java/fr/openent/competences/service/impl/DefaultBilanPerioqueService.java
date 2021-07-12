@@ -86,8 +86,13 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         });
     }
 
-    private void getRetardsAndAbsencesFromCompetences(List<String> idEleves, Handler<Either<String, JsonArray>> eitherHandler){
-        String query = "SELECT * FROM viesco.absences_et_retards WHERE id_eleve IN " + Sql.listPrepared(idEleves);
+    private void getRetardsAndAbsencesFromCompetences(List<String> idEleves,
+                                                      Handler<Either<String, JsonArray>> eitherHandler){
+        String query = "SELECT id_periode, id_eleve, coalesce(abs_just, 0) as abs_just, coalesce(abs_just_heure, 0) as abs_just_heure, " +
+                "coalesce(abs_non_just, 0) as abs_non_just, coalesce(abs_non_just_heure, 0) as abs_non_just_heure, " +
+                "coalesce(abs_totale, 0) as abs_totale, coalesce(abs_totale_heure, 0) as abs_totale_heure, " +
+                "coalesce(retard, 0) as retard " +
+                "FROM " + VSCO_SCHEMA + ".absences_et_retards WHERE id_eleve IN " + Sql.listPrepared(idEleves);
 
         JsonArray params = new JsonArray();
         for(String idEleve : idEleves) {
@@ -157,20 +162,20 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
                                 int nbrRetards = 0;
                                 int nbrAbsenceJustificated = 0;
-                                int minutesAbsenceJustificated = 0;
+                                int hoursAbsenceJustificated = 0;
                                 int nbrAbsenceUnjustificated = 0;
-                                int minutesAbsenceUnjustificated = 0;
+                                int hoursAbsenceUnjustificated = 0;
 
                                 JsonArray absencesRegularizedEleve = new JsonArray(absencesRegularizedArray.stream()
-                                        .filter(el -> idEleve.equals(((JsonObject) el).getString("id_eleve")))
+                                        .filter(el -> idEleve.equals(((JsonObject) el).getString("student_id")))
                                         .collect(Collectors.toList()));
 
                                 JsonArray absencesNotRegularizedEleve = new JsonArray(absencesNotRegularizedArray.stream()
-                                        .filter(el -> idEleve.equals(((JsonObject) el).getString("id_eleve")))
+                                        .filter(el -> idEleve.equals(((JsonObject) el).getString("student_id")))
                                         .collect(Collectors.toList()));
 
                                 JsonArray retardsEleve = new JsonArray(retardsArray.stream()
-                                        .filter(el -> idEleve.equals(((JsonObject) el).getString("id_eleve")))
+                                        .filter(el -> idEleve.equals(((JsonObject) el).getString("student_id")))
                                         .collect(Collectors.toList()));
 
                                 for (Object eventType : absencesRegularizedEleve) {
@@ -178,13 +183,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
                                     LocalDateTime eventStartDate = LocalDateTime.parse(eventTypeJson.getString("start_date").replace(" ", "T").substring(0, 19));
                                     if (eventStartDate.isAfter(beginningDatePeriode) && eventStartDate.isBefore(endDatePeriode)) {
-                                        for (Object eventAbsences : eventTypeJson.getJsonArray("events")) {
-                                            JsonObject eventJson = (JsonObject) eventAbsences;
-
-                                            eventStartDate = LocalDateTime.parse(eventJson.getString("start_date"));
-                                            LocalDateTime eventEndDate = LocalDateTime.parse(eventJson.getString("end_date"));
-                                            minutesAbsenceJustificated += ChronoUnit.MINUTES.between(eventStartDate, eventEndDate);
-                                        }
+                                        hoursAbsenceJustificated += eventTypeJson.getJsonArray("events").size();
                                         nbrAbsenceJustificated++;
                                     }
                                 }
@@ -194,13 +193,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
                                     LocalDateTime eventStartDate = LocalDateTime.parse(eventTypeJson.getString("start_date").replace(" ", "T").substring(0, 19));
                                     if (eventStartDate.isAfter(beginningDatePeriode) && eventStartDate.isBefore(endDatePeriode)) {
-                                        for (Object eventAbsences : eventTypeJson.getJsonArray("events")) {
-                                            JsonObject eventJson = (JsonObject) eventAbsences;
-
-                                            eventStartDate = LocalDateTime.parse(eventJson.getString("start_date"));
-                                            LocalDateTime eventEndDate = LocalDateTime.parse(eventJson.getString("end_date"));
-                                            minutesAbsenceUnjustificated += ChronoUnit.MINUTES.between(eventStartDate, eventEndDate);
-                                        }
+                                        hoursAbsenceUnjustificated += eventTypeJson.getJsonArray("events").size();
                                         nbrAbsenceUnjustificated++;
                                     }
                                 }
@@ -213,9 +206,6 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                         nbrRetards++;
                                     }
                                 }
-
-                                int hoursAbsenceJustificated = (int) Math.round((long) minutesAbsenceJustificated / 60.0);
-                                int hoursAbsenceUnjustificated = (int) Math.round((long) minutesAbsenceUnjustificated / 60.0);
 
                                 JsonObject dataForPeriode = new JsonObject()
                                         .put("id_periode", idPeriode)

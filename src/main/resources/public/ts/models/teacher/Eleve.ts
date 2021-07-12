@@ -32,7 +32,7 @@ export class Eleve extends DefaultEleve  {
     cycles : any;
     deleteDate : any;
     elementBilanPeriodique : ElementBilanPeriodique[];
-    evenements : any ;
+    evenements : any;
     evenement : any;
     selected : boolean;
     classeName : string;
@@ -134,31 +134,27 @@ export class Eleve extends DefaultEleve  {
 
     getEvenements (idStructure:string) {
         return new Promise( ((resolve) => {
-            httpCore().getJson(this.api.GET_RETARDS_AND_ABSENCES+`?idEtablissement=${idStructure}&idClasse=${this.idClasse}`).done( (res) => {
+            httpCore().getJson(this.api.GET_RETARDS_AND_ABSENCES+`?idEtablissement=${idStructure}&idClasse=${this.idClasse}`).done((res) => {
                 if (!res.error) {
                     this.evenements = res;
-                    resolve ();
+                    resolve();
                 }
             });
         }))
     }
 
-    async setColonne( colonne , idPeriode) {
+    async setColonne(colonne, idPeriode) {
         let data = {
             idEleve: this.id,
             colonne : colonne,
             idPeriode: idPeriode,
             value: this.evenement[colonne]
         };
-        console.dir(data);
+
         try {
-            let res = await http.post(this.api.POST_RETARDS_OR_ABSENCES, data);
-            console.dir(res);
-        }
-        catch (e) {
+            await http.post(this.api.POST_RETARDS_OR_ABSENCES, data);
+        } catch (e) {
             notify.error(e);
         }
-
-
     }
 }
