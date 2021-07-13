@@ -257,7 +257,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                           Map<String,String> vMapGroupesATraiter, Map<String,Long> vMapGroupesIdsDevoirATraiter,
                                           String idStructureATraiter, Handler<Either<String, JsonArray>> handler) {
 
-        log.info("DEBUT : transactions pour la transition année id Etablissement : " + idStructureATraiter);
+        log.info("DEBUT : transactions pour la transition année id Etablissement [transitionAnneeStructure] : " + idStructureATraiter);
         if (vListIdsGroupesATraiter != null && vListIdsGroupesATraiter.size()>0) {
             //BCP de logs, illisible
             //log.info("INFO : transactions pour la transition année vListIdsGroupesATraiter  : " + vListIdsGroupesATraiter.toString());
@@ -265,24 +265,13 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             log.warn("WARN : transactions pour la transition année vListIdsGroupesATraiter : Aucun groupe ");
         }
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
-
-        // normalement inutile car changement de pré transition
-        // Sauvegarde BDD : Si le schéma n'existe pas : sera fait à part
-        //        String queryCloneNotes ="SELECT notes.clone_schema('notes','notes_2017_2018')";
-        //        statements.add(new JsonObject().put("statement", queryCloneNotes).put("values", values).put("action", "prepared"));
-        //        String queryCloneVieSCo ="SELECT notes.clone_schema('viesco','viesco_2017_2018')";
-        //        statements.add(new JsonObject().put("statement", queryCloneVieSCo).put("values", values).put("action", "prepared"));
-
+        
         // Suppresssion : Conservation des  compétences max par l'élève, suppresion des devoirs
         manageDevoirsAndCompetences(idStructureATraiter, vMapGroupesATraiter, vMapGroupesIdsDevoirATraiter,
                 classeIdsEleves, statements);
 
         // Suppresion des notes.users, rel_group_cycle
         deleteUsersGroups(statements);
-
-        // Conservation des  compétences max par l'élève
-        manageDevoirsAndCompetences(idStructureATraiter, vMapGroupesATraiter, vMapGroupesIdsDevoirATraiter,
-                classeIdsEleves, statements);
 
         // Transition pour l'établissement effectué
         JsonArray valuesTransition = new fr.wseduc.webutils.collections.JsonArray();
@@ -292,8 +281,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         Sql.getInstance().transaction(statements,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
                 SqlResult.validResultHandler(handler));
-
-        log.info("FIN : transactions pour la transition année id Etablissement : " + idStructureATraiter);
     }
 
     /**
