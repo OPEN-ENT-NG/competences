@@ -493,12 +493,12 @@ public class ExportPDFController extends ControllerHelper {
                         _iGroupesdArr, idEtablissementEl, listIdMatieres, finalIdPeriode, isCycle, finalHandler);
             } else {
                 JsonArray eleves = (JsonArray) elevesFuture.result();
-                eleves = Utils.sortElevesByDisplayName(eleves);
+
                 final AtomicBoolean answered = new AtomicBoolean();
                 JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
                 final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap,
                         nomGroupes, matieres, libellePeriode, json, answered, resultFinal);
-                log.info(" nb eleves : "+eleves.size());
+
                 for (int i = 0; i < eleves.size(); i++) {
                     JsonObject eleve = eleves.getJsonObject(i);
                     String idEleveEl = eleve.getString(ID_ELEVE_KEY);
@@ -1240,7 +1240,6 @@ public class ExportPDFController extends ControllerHelper {
                             }
 
                             if (elevesDone.addAndGet(1) == elevesMap.size()) {
-                                log.info("nb eleves map : " +elevesMap.size());
                                 answered.set(true);
                                 JsonObject resultFinal = new JsonObject();
                                 resultFinal.put("eleves", sortJsonArrayByName(result));
@@ -1268,13 +1267,10 @@ public class ExportPDFController extends ControllerHelper {
                                             + err.getMessage()));
                         }
                     } else {
-                        log.info(" getReleveCompetences : ExportPDFContoller");
                         leftToResponse(request, stringJsonArrayEither.left());
                     }
                 } else {
-                    log.info( "value answered : "+answered.toString());
                     answered.set(true);
-                    log.info(" answered  is true, left response ");
                     leftToResponse(request, stringJsonArrayEither.left());
                 }
             }
