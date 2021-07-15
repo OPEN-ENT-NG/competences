@@ -486,13 +486,15 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
     @Override
     public void clearTablePostTransition(Handler<Either<String, JsonArray>> handler) {
-        String query = "TRUNCATE TABLE " +
+        JsonArray params = new JsonArray();
+        SqlStatementsBuilder statements = new SqlStatementsBuilder();
+
+        String queryTruncate = "TRUNCATE TABLE " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATIONS_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CLASSE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CPE_BILAN_PERIODIQUE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_MATIERE_PERIODE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_DE_CLASSE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_ORIENTATION_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.BULLETIN_PARAMETERS_TABLE + ", " +
@@ -514,8 +516,16 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_PERIODE + ", " +
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_MULTI_TEACHING + ", " +
                 Competences.VSCO_SCHEMA + "." + Competences.VSCO_SERVICES_TABLE;
-        Sql.getInstance().prepared(query, new JsonArray(),new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
-                getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
+
+        statements.prepared(queryTruncate, params);
+        String queryTruncateCascade = "TRUNCATE TABLE " + Competences.COMPETENCES_SCHEMA + "."
+                + Competences.APPRECIATION_MATIERE_PERIODE_TABLE + " CASCADE ";
+        statements.prepared(queryTruncateCascade, params);
+
+        Sql.getInstance().transaction(statements.build() ,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
+                getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler)
+        );
+
     }
 
     @Override
@@ -770,7 +780,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         }
         statements.add(new JsonObject()
                 .put("statement", query.toString())
-                .put("values", new fr.wseduc.webutils.collections.JsonArray())
+                .put("values", values)
                 .put("action", "prepared"));
     }
 
@@ -778,7 +788,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         String query = "UPDATE " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle r " +
                 "SET id_groupe = m.new_class_id " +
                 "FROM " + Competences.COMPETENCES_SCHEMA + ".match_class_id_transition m " +
-                "WHERE m.old_class_id = r.id_groupe;";
+                "WHERE m.old_class_id = r.id_groupe AND new_class_id IS NOT NULL;";
 
         statements.add(new JsonObject()
                 .put("statement", query)
@@ -786,12 +796,22 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put("action", "prepared"));
     }
 
+    private void deleteRelationGroupCycleWhitoutNewIdClass(JsonArray statements){
+        String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_groupe_cycle r WHERE r.id_groupe = " +
+                "(SELECT old_class_id FROM "+ Competences.COMPETENCES_SCHEMA +".match_class_id_transition m " +
+                "WHERE m.old_class_id = r.id_groupe AND m.new_class_id IS NULL);";
+        statements.add(new JsonObject()
+                .put("statement", query)
+                .put("values", new fr.wseduc.webutils.collections.JsonArray())
+                .put("action", "prepared"));
+    };
+
     public void updateTablesTransition(JsonArray classesFromNeo, final Handler<Either<String,JsonArray>> handler) {
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
         updateNewIdClassTransition(statements, classesFromNeo);
         updateRelationGroupeCycle(statements);
-
+        deleteRelationGroupCycleWhitoutNewIdClass(statements);
         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
     }
 
