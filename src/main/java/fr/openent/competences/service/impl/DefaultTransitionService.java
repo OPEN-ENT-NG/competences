@@ -363,9 +363,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             List<String> vListEleves = classeIdsEleves.get(idClasse);
             if(null != vListEleves && vListEleves.size() > 0) {
                 JsonArray valuesMaxCompetence = new fr.wseduc.webutils.collections.JsonArray();
-                for (String idEleve : vListEleves) {
-                    valuesMaxCompetence.add(idEleve);
-                }
+
 
                 String queryMaxCompNoteNiveauFinalByPeriode = "(SELECT competences_notes.id_competence, " +
                         "competences_notes.id_eleve, devoirs.id_periode, devoirs.id_matiere, CASE " +
@@ -401,7 +399,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 String queryMaxCompNoteMat = "(SELECT id_competence, MAX(max_comp), id_eleve, id_matiere FROM " + queryMaxCompNoteNiveauFinalByPeriode +
                         " AS max_mat GROUP BY id_competence, id_eleve, id_matiere)";
 
-                String queryAverageMaxCompNoteMat = "(SELECT id_competence, ROUND(AVG(max)+1,2), id_eleve FROM " + queryMaxCompNoteMat +
+                String queryAverageMaxCompNoteMat = "(SELECT id_competence, ROUND(AVG(max)+1,2) AS round, id_eleve FROM " + queryMaxCompNoteMat +
                         " AS avg GROUP BY id_competence, id_eleve)";
 
                 String queryConversionAverage = "WITH table_conversion as (SELECT valmin, valmax, ordre FROM notes.niveau_competences AS niv " +
@@ -421,7 +419,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         ",'" + _id_user_transition_annee + "', id_eleve FROM " + queryAverageMaxCompNoteMat + "as conversion_max_mats GROUP BY id_competence, id_eleve, round";
 
                 valuesMaxCompetence.add(idClasse).add(idStructureATraiter);
-
+                for (String idEleve : vListEleves) {
+                    valuesMaxCompetence.add(idEleve);
+                }
                 // Ajout du max des compétences ou du niveau final pour chaque élève
                 //Cette requête fait peur
                 String queryInsertMaxCompetenceNoteG = "" +
