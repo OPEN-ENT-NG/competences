@@ -59,7 +59,7 @@
   "competences.manager": "Gestion",
   "competences.contrib": "Contribution",
   "competences.read": "Lecture",
-  "competences.root": "Mes compétencess",
+  "competences.root": "Mes compétences",
   "competences.create": "Créer un Compétences",
   "competences.acquired": "Acquis scolaires",
   "competences.on.periode": "Sur la période",
@@ -69,7 +69,7 @@
 
   "search.groups": "Rechercher une classe ou un groupe d'enseignement...",
 
-  "list.title": "Mes compétencess",
+  "list.title": "Mes compétences",
   "folder.trash": "Corbeille",
   "show": "Afficher",
   "show.more": "voir plus",
