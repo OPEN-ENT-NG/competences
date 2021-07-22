@@ -408,13 +408,13 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "AND cc.id_groupe = ? AND echelle.id_structure = ? ) " +
                         "SELECT " + vMapGroupesIdsDevoirATraiter.get(idClasse) + ", id_competence, CASE " +
                         "WHEN round >= (SELECT valmin FROM table_conversion where ordre = 1) AND round < (SELECT valmax FROM table_conversion where ordre = 1) " +
-                        "THEN 1 " +
+                        "THEN 0 " +
                         "WHEN round >= (SELECT valmin FROM table_conversion where ordre = 2) AND round < (SELECT valmax FROM table_conversion where ordre = 2) " +
-                        "THEN 2 " +
+                        "THEN 1 " +
                         "WHEN round >= (SELECT valmin FROM table_conversion where ordre = 3) AND round < (SELECT valmax FROM table_conversion where ordre = 3) " +
-                        "THEN 3 " +
+                        "THEN 2 " +
                         "WHEN round >= (SELECT valmin FROM table_conversion where ordre = 4) AND round <= (SELECT valmax FROM table_conversion where ordre = 4) " +
-                        "THEN 4 " +
+                        "THEN 3 " +
                         "END " +
                         ",'" + _id_user_transition_annee + "', id_eleve FROM " + queryAverageMaxCompNoteMat + "as conversion_max_mats GROUP BY id_competence, id_eleve, round";
 
