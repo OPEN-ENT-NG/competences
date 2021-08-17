@@ -1371,23 +1371,37 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             if (idPeriode != null) {
                 moyennePeriodeClasse.put("id", idPeriode);
                 ArrayList<NoteDevoir> allNotes = notesByPeriode.getValue().get(idPeriode);
-
-                moyennePeriodeClasse.put("moyenne",
-                        calculMoyenneByElevesByPeriode(result, allNotes, moyFinales, moyFinalesNN, idPeriode));
+                Double classAverage =  calculMoyenneByElevesByPeriode(result, allNotes, moyFinales, moyFinalesNN, idPeriode);
+                JsonObject averageStudentCurrentPeriode = result.getJsonObject(NOTES_BY_PERIODE_BY_STUDENT).getJsonObject(idPeriode.toString());
+                //cas : tous les élèves notés ont une moyenne finale NN
+                if (classAverage == 0 && averageStudentCurrentPeriode != null && averageStudentCurrentPeriode.isEmpty()) {
+                    moyennePeriodeClasse.put("moyenne", "NN");
+                } else {
+                    moyennePeriodeClasse.put("moyenne", classAverage);
+                }
                 moyennesClasses.add(moyennePeriodeClasse);
             }
         }
 
-        //si moyennesClasses.size()> 0 c'est qu'il y a eu soit des moyennees finales soit des notes sur au moins un trimestre
+        //si moyennesClasses.size()> 0 c'est qu'il y a eu soit des moyennees finales (NN ou number) soit des notes sur au moins un trimestre
         // alors on peut calculer la moyenne de la classe pour l'année
         if (moyennesClasses.size() > 0) {
+            int nbPeriode = moyennesClasses.size();
             Double sumMoyPeriode = 0.0;
             for (int i = 0; i < moyennesClasses.size(); i++) {
-                sumMoyPeriode += moyennesClasses.getJsonObject(i).getDouble("moyenne");
+                try {
+                    sumMoyPeriode += moyennesClasses.getJsonObject(i).getDouble("moyenne");
+                } catch (ClassCastException c) {
+                    nbPeriode --;
+                }
             }
             JsonObject moyennePeriodeClasse = new JsonObject();
-            moyennePeriodeClasse.put("id", (JsonObject) null).put("moyenne",
-                    (double) Math.round((sumMoyPeriode / moyennesClasses.size()) * 100) / 100);
+            if(nbPeriode != 0) {
+                moyennePeriodeClasse.put("id", (JsonObject) null).put("moyenne",
+                        (double) Math.round((sumMoyPeriode / moyennesClasses.size()) * 100) / 100);
+            } else {
+                moyennePeriodeClasse.put("id", (JsonObject) null).put("moyenne", "NN");
+            }
             moyennesClasses.add(moyennePeriodeClasse);
         }
         result.put(MOYENNES_CLASSE, moyennesClasses);
@@ -2942,7 +2956,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                         notePeriode = notePeriode.stream()
                                                 .filter(line -> !(line.getIdPeriode().equals(periode)))
                                                 .collect(Collectors.toList());
-                                        sumMoy += Double.valueOf(moyFin.getString(MOYENNE));
+                                        if (moyFin.getString(MOYENNE) != null) sumMoy += Double.valueOf(moyFin.getString(MOYENNE));
                                     }
                                     if (!notePeriode.isEmpty()) {
                                         ++nbMoy;
@@ -2956,9 +2970,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     JsonObject moyObj = utilsService.getObjectForPeriode(moyennesFinales,
                                             entry.getKey(), ID_PERIODE);
                                     if (moyObj != null) {
-                                        Double moy = Double.valueOf(moyObj.getString(MOYENNE));
                                         moyenne.remove(MOYENNE);
-                                        moyenne.put(MOYENNE, moy);
+                                        if ((moyObj.getString(MOYENNE) != null)) {
+                                            moyenne.put(MOYENNE, moyObj.getString(MOYENNE));
+                                        } else {
+                                            moyenne.put(MOYENNE, "NN");
+                                        }
                                         isFinale = true;
                                     }
                                 }

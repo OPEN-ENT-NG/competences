@@ -4158,7 +4158,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }else{
                 if(eleve.moyenneFinale === null)
                     eleve.moyenneFinale = "NN";
-                (eleve.moyenneFinale === "NN") ? eleve.moyenneFinaleIsSet = false : eleve.moyenneFinaleIsSet = true;
+                eleve.moyenneFinaleIsSet = (eleve.moyenneFinale === "NN" && eleve.moyenne === eleve.moyenneFinale ) ? false :true;
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
             }
         };
@@ -4207,20 +4207,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     eleve.moyenneFinale = eleve.moyenneFinale.replace(",",".");
                 }
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
+                if(eleve.moyenneFinale.toUpperCase() === "NN") eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
                 if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
-                    eleve.moyenneFinale === "" || eleve.moyenneFinale.toUpperCase() === "NN"){
+                    eleve.moyenneFinale === "" || eleve.moyenneFinale === "NN"){
                     if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) ||
                         eleve.oldMoyenneFinale !== eleve.moyenneFinale || eleve.moyenneFinale !== "") {
 
-                        if( eleve.oldMoyenneFinale !== eleve.moyenneFinale) {
+                        if( eleve.oldMoyenneFinale !== eleve.moyenneFinale ) {
                             $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(async () => {
                                 eleve.moyenneFinaleIsSet = true;
                                 eleve.oldMoyenneFinale = eleve.moyenneFinale ;
                                 if (updateHistorique) {
                                     $scope.updateHistorique(eleve, 'moyenneFinale');
                                 }
-                                if ((eleve.moyenneFinale === "" || eleve.moyenneFinale.toUpperCase() === "NN" )
-                                    && eleve.moyenne !== undefined) {
+                                if (eleve.moyenneFinale === "" && eleve.moyenne !== undefined ||
+                                    eleve.moyenne === eleve.moyenneFinale || eleve.moyenne === parseFloat(eleve.moyenneFinale)) {
                                     eleve.moyenneFinaleIsSet = false;
                                     eleve.moyenneFinale = eleve.moyenne;
                                     eleve.oldMoyenneFinale = eleve.moyenneFinale;
@@ -4455,7 +4456,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     _.extend(evaluation, devoir);
                 });
 
-                eleve.historiques = [];
                 try {
                     await eleve.getDetails($scope.releveNote.idEtablissement,
                         $scope.releveNote.idClasse, $scope.releveNote.idMatiere);
@@ -4487,14 +4487,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let details_moyennes = _.findWhere(eleve.details.moyennes, {
                         id: (idPeriode !== null) ? parseInt(idPeriode) : null
                     });
-                    let moyenne = (details_moyennes !== undefined) ? details_moyennes.moyenne : "";
+                    let moyenne = (details_moyennes !== undefined) ? details_moyennes.moyenne : "NN";
 
                     // get moyenne classe
                     let details_moyennes_classe = _.findWhere(eleve.details.moyennesClasse, {
                         id:
                             (idPeriode !== null) ? parseInt(idPeriode) : null
                     });
-                    let moyenneClasse = (details_moyennes_classe !== undefined) ? details_moyennes_classe.moyenne : "";
+                    let moyenneClasse = (details_moyennes_classe !== undefined) ? details_moyennes_classe.moyenne : "NN";
                     if ($scope.releveNote.idPeriode === idPeriode) {
                         eleve.moyenneClasse = moyenneClasse;
                     }
@@ -4573,9 +4573,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
 
                     // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
-                    if (idPeriode !== null && (details_moyennes_finales !== undefined || details_moyennes !== undefined)) {
+                    if (idPeriode !== null && (details_moyennes_finales !== undefined|| details_moyennes !== undefined) && moyenneFinale !== null ) {
                         nbMoyenneAnnee++;
-                        if (details_moyennes_finales !== undefined) {
+                        if (details_moyennes_finales !== undefined ) {
                             isMoyenneFinaleAnnee = true;
                             moyenneAnnee += parseFloat(moyenneFinale);
                         } else {
@@ -4602,7 +4602,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             periode: $scope.getI18nPeriode(periode),
                             moyenneClasse: moyenneClasse,
                             moyenne: moyenne,
-                            moyenneFinale: moyenneFinale,
+                            moyenneFinale: (moyenneFinale === null)? utils.getNN(): moyenneFinale,
                             positionnement: (positionnement > 0)? positionnement : utils.getNN(),
                             positionnementFinal: ((positionnementFinal === 0)? utils.getNN() : positionnementFinal),
                             appreciation: appreciation,
@@ -4630,7 +4630,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (nbMoyenneAnnee !== 0) {
                     moyenneFinaleAnnee = (moyenneAnnee / nbMoyenneAnnee).toFixed(2);
                 } else {
-                    moyenneFinaleAnnee = "";
+                    moyenneFinaleAnnee = "NN";
                 }
 
 // On calcule le positionnement à l'année

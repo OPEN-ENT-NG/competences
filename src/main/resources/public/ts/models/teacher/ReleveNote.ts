@@ -424,7 +424,7 @@ export class ReleveNote extends  Model implements IModel {
                 idEleve: eleve.id,
                 colonne: 'moyenne',
                 moyenne: parseFloat(eleve.moyenneFinale),
-                delete: eleve.moyenneFinale === "" || eleve.moyenneFinale.toUpperCase() === "NN"
+                delete: eleve.moyenneFinale === "" || eleve.moyenne === eleve.moyenneFinale || eleve.moyenne === parseFloat(eleve.moyenneFinale)
             });
 
             http().postJson(this.api.POST_DATA_RELEVE_PERIODIQUE, _data)

@@ -207,8 +207,11 @@ export class SuivisDesAcquis extends Model{
                     }
 
                     // la moyenneEleve pour chaque période et chaque matiere
-                    if (suiviDesAcquis.moyennesFinales !== null && suiviDesAcquis.moyennesFinales !== undefined
-                        && _.find(suiviDesAcquis.moyennesFinales, {id_periode: suiviDesAcquis.idPeriode}) !== undefined) {
+
+
+                    let finalAverage = (suiviDesAcquis.moyennesFinales !== null && suiviDesAcquis.moyennesFinales !== undefined) ?
+                        _.find(suiviDesAcquis.moyennesFinales, {id_periode: suiviDesAcquis.idPeriode}) : undefined;
+                    if(finalAverage !== undefined){
                         suiviDesAcquis.moyenneEleve = _.find(suiviDesAcquis.moyennesFinales,{id_periode : suiviDesAcquis.idPeriode}).moyenneFinale;
                     } else if (suiviDesAcquis.moyennes !== null && suiviDesAcquis.moyennes !== undefined &&
                         _.find(suiviDesAcquis.moyennes, {id: suiviDesAcquis.idPeriode}) !== undefined) {
@@ -265,6 +268,7 @@ export class SuivisDesAcquis extends Model{
                     });
 
                     if (suiviDesAcquis.appreciationByClasse.appreciation === "" && suiviDesAcquis.moyenneEleve === "NN"
+                        && finalAverage === undefined
                         && suiviDesAcquis.positionnement_auto === 0 && suiviDesAcquis.positionnement_final === 0) {
                         suiviDesAcquisToRemove.push(suiviDesAcquis)
                     }
