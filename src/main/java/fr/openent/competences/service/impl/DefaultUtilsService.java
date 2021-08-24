@@ -136,45 +136,36 @@ public class DefaultUtilsService implements UtilsService {
                 .put("structureId", idEtablissement)
                 .put("groupId", idClasse)
                 .put("periodId", idPeriode != null ? idPeriode.toString() : null);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
-                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-                        JsonObject body = message.body();
-                        if (OK.equals(body.getString(STATUS))) {
-                            JsonArray result = body.getJsonArray(RESULTS);
-                            handler.handle(new Either.Right<String, JsonArray>(result));
-                        } else {
-                            handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                            log.error("[Competences] DefaultUtilsService at getMultiTeachersByClass : " + body.getString("message"));
-                        }
-                    }
-                }));
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray result = body.getJsonArray(RESULTS);
+                handler.handle(new Either.Right<>(result));
+            } else {
+                handler.handle(new Either.Left<>(body.getString("message")));
+                log.error("[Competences] DefaultUtilsService at getMultiTeachersByClass : " + body.getString("message"));
+            }
+        }));
     }
 
     @Override
-    public void getMultiTeachers (final String structureId, final JsonArray groupIds, final Integer PeriodeId,
-                                  Handler<Either<String, JsonArray>> handler) {
+    public void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
+                                 Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "multiTeaching.getMultiteachers")
                 .put("structureId", structureId)
                 .put("groupIds", groupIds)
                 .put("periodId", PeriodeId != null ? PeriodeId.toString() : null);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
-                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-                        JsonObject body = message.body();
-                        if (OK.equals(body.getString(STATUS))) {
-                            JsonArray result = body.getJsonArray(RESULTS);
-                            handler.handle(new Either.Right<String, JsonArray>(result));
-                        } else {
-                            handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                            log.error("[Competences] DefaultUtilsService at getMultiteachers : "
-                                    + body.getString("message"));
-                        }
-                    }
-                }));
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray result = body.getJsonArray(RESULTS);
+                handler.handle(new Either.Right<>(result));
+            } else {
+                handler.handle(new Either.Left<>(body.getString("message")));
+                log.error("[Competences] DefaultUtilsService at getMultiteachers : " + body.getString("message"));
+            }
+        }));
     }
 
     /**

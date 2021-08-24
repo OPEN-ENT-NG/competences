@@ -24,8 +24,8 @@ public interface BilanPeriodiqueService {
      * @param idEleve
      * @param idClasse
      */
-    void getSuiviAcquis(final String idEtablissement, final Long idPeriode,
-                        final String idEleve, final String idClasse,
+    void getSuiviAcquis(final String idEtablissement, final Long idPeriode, final String idEleve,
+                        final JsonArray idClasse, final JsonArray services, final JsonArray multiTeachers,
                         Handler<Either<String, JsonArray>> handler);
 
     /**

@@ -1,6 +1,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.CanUpdateBFCSyntheseRight;
 import fr.openent.competences.security.CreateSyntheseBilanPeriodiqueFilter;
@@ -14,6 +15,7 @@ import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
@@ -32,7 +34,10 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 
+import java.awt.*;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
@@ -45,7 +50,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     private final DefaultAppreciationCPEService appreciationCPEService;
     private final DefaultAvisConseilService avisConseilService;
     private final DefaultAvisOrientationService avisOrientationService;
-    private final NoteService notesService;
+    private final DefaultUtilsService utilsService;
 
     public BilanPeriodiqueController (EventBus eb){
         this.eb = eb;
@@ -54,24 +59,57 @@ public class BilanPeriodiqueController extends ControllerHelper{
         appreciationCPEService = new DefaultAppreciationCPEService();
         avisConseilService = new DefaultAvisConseilService();
         avisOrientationService = new DefaultAvisOrientationService();
-        notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
+        utilsService = new DefaultUtilsService(eb);
     }
 
     @Get("/bilan/periodique/eleve/:idEleve")
     @ApiDoc("renvoit tous les éléments pour le bilan périodique d'un élève")
     @SecuredAction(value="access.conseil.de.classe", type=ActionType.WORKFLOW)
     public void getSuiviDesAcquisEleve(final HttpServerRequest request){
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(UserInfos userInfos) {
-                final String idEtablissement = request.params().get("idEtablissement");
-                final String idPeriodeString = request.params().get("idPeriode");
-                final Long idPeriode = (idPeriodeString != null) ? Long.parseLong(idPeriodeString) : null;
-                final String idEleve = request.params().get("idEleve");
-                final String idClasse = request.params().get("idClasse");
-                bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve, idClasse,
-                        arrayResponseHandler(request));
-            }
+        UserUtils.getUserInfos(eb, request, userInfos -> {
+            final String idEtablissement = request.params().get("idEtablissement");
+            final String idPeriodeString = request.params().get("idPeriode");
+            final Long idPeriode = (idPeriodeString != null) ? Long.parseLong(idPeriodeString) : null;
+            final String idEleve = request.params().get("idEleve");
+            final String idClasse = request.params().get("idClasse");
+
+            Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), responseGroupsClass -> {
+                if(responseGroupsClass.isLeft()) {
+                    String error = responseGroupsClass.left().getValue();
+                    log.error("[Competence] BilanPeriodiqueController at getSuiviDesAcquisEleve : getGroupesClasse " + error);
+                    badRequest(request);
+                } else {
+                    JsonArray groupsClassResult = responseGroupsClass.right().getValue();
+                    JsonArray idGroupClasse = new JsonArray()
+                            .add(idClasse);
+
+                    if(groupsClassResult != null && !groupsClassResult.isEmpty()){
+                        idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray("id_groupes"));
+                    }
+
+                    Future<JsonArray> servicesFuture = Future.future();
+                    utilsService.getServices(idEtablissement, idGroupClasse,
+                            servicesEvent -> formate(servicesFuture, servicesEvent));
+
+                    Future<JsonArray> multiTeachersFuture = Future.future();
+                    utilsService.getMultiTeachers(idEtablissement, idGroupClasse, idPeriode != null ? idPeriode.intValue() : null,
+                            multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
+
+                    CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(futuresEvent -> {
+                        if (futuresEvent.failed()) {
+                            String error = futuresEvent.cause().getMessage();
+                            log.error(error);
+                            badRequest(request);
+                        } else {
+                            JsonArray services = servicesFuture.result();
+                            JsonArray multiTeachers = multiTeachersFuture.result();
+
+                            bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve, idGroupClasse,
+                                    services, multiTeachers, arrayResponseHandler(request));
+                        }
+                    });
+                }
+            });
         });
     }
 
