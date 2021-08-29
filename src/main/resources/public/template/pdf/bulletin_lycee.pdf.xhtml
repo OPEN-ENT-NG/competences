@@ -227,6 +227,35 @@
             margin-top: 20px;
             margin-left : 1px;
             margin-right : 1px;
+
+            @bottom-right {
+                content: counter(page) "/" counter(pages);
+                font-size: x-small;
+                padding-right: 10px;
+            }
+
+            @bottom-center {
+                content: element(footer);
+            }
+        }
+
+        @page:first {
+            @bottom-center {
+                content: normal;
+            }
+        }
+
+        div.footer {
+            display: block;
+            width: 70%;
+            margin: auto;
+            font-size: x-small;
+            position: running(footer);
+        }
+
+        .pull-right {
+            float:right;
+            text-align: right;
         }
 
         .firstProjet {
@@ -286,7 +315,6 @@
 
 {{#eleves}}
 <div class="page">
-
     <div style= "height: 130px;" class="paddingFifty">
         <img id="education" src="data:image/png;base64, {{logoData}}" alt="Logo"/>
         <div class="structure">
@@ -420,7 +448,8 @@
                     style="text-align: justify !important;padding-left:  5px !important;padding-right:  5px !important;background-color: #ffffff; word-wrap:break-word;{{{style}}}"
                     class="secondSuivi ">
                     {{/display}}
-                    {{elementsProgramme}}</td>
+                    {{elementsProgramme}}
+                </td>
 
                 {{/getProgramElements}}
                 {{#display}}
@@ -526,7 +555,6 @@
                 {{/printSousMatieres}}
             </tr>
             {{#printSousMatieres}}
-
 
             {{#sousMatieres}}
             <tr>
@@ -731,6 +759,18 @@
         {{/projects}}
    </div>
     {{/showProjects}}
+
+    <!-- TODO : Que si il y a plus de 1 page -->
+    <div class="footer">
+        <div>
+            <span>{{firstName}} &nbsp; {{lastName}}</span>
+            <span class="pull-right">{{classeOf}} {{classeNameToShow}}</span>
+        </div>
+        <div>
+            <span>{{bilanCycle}}&nbsp; - &nbsp; {{periode}}</span>
+            <span class="pull-right">{{schoolYear}}</span>
+        </div>
+    </div>
 </div>
 {{/eleves}}
 

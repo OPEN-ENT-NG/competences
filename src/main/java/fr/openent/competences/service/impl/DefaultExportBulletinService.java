@@ -502,7 +502,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             JsonArray niveauCompetences;
             try{
-                niveauCompetences   = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
+                niveauCompetences  = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
 
             }catch (java.lang.ClassCastException e){
                 niveauCompetences = new JsonArray(params.getString(NIVEAU_COMPETENCE));
@@ -513,7 +513,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     footerArray.add(niveauCompetences.getJsonObject(i));
                 }
             }
-
 
             String footer = "";
             if(!footerArray.isEmpty()){
@@ -532,7 +531,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         id_niv = id_cycle;
                     }
 
-
                     footer += id_niv + " : " + lib + " - ";
                 }
                 footer = footer.substring(0, footer.length() - 2);
@@ -550,6 +548,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         log.debug(" -------[" + PUT_LIBELLE_FOR_EXPORT_METHOD +" ]: " + idEleve + " FIN " );
         finalHandler.handle(new Either.Right<>(null));
     }
+
     protected Handler<Either<String, JsonObject>> futureGetHandler(Future<JsonObject> future) {
         return event -> {
             if (event.isRight()) {
@@ -597,7 +596,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 futures.add(getAppreciationCPEFuture);
                 futures.add(getAvisConseilFuture);
                 futures.add(getAvisOrientationFuture);
-
 
                 if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
                     Future<JsonObject> getHeadTeachersFuture = Future.future();
@@ -661,8 +659,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         log.error("[Competences] at getExportBulletin error when getting datas for export bulletins : stuedent :" + idEleve);
                     }
                 });
-            }
-            else {
+            } else {
                 finalHandler.handle(new Either.Left<>("[Viescolaire]getExportBulletin :  Problème de parallelisation Lors de l'export des bulletin "));
             }
         }
@@ -720,60 +717,56 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                                    Map<String, JsonObject> elevesMap,
                                                                    Vertx vertx, JsonObject config,
                                                                    Future<JsonArray> elevesFuture,
-                                                                   final AtomicBoolean answered,
                                                                    JsonObject params, Boolean forArchive,
                                                                    Future<JsonObject> future){
-        return new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                if (event.isRight()) {
-                    CompositeFuture.all(elevesFuture, Future.succeededFuture()).setHandler( elevesEvent -> {
-                        if(elevesEvent.failed()){
-                            log.error("getFinalBulletinHandler | error ");
-                            if(future != null){
-                                future.fail(elevesFuture.cause());
-                            }
+        return event -> {
+            if (event.isRight()) {
+                CompositeFuture.all(elevesFuture, Future.succeededFuture()).setHandler(elevesEvent -> {
+                    if(elevesEvent.failed()){
+                        log.error("getFinalBulletinHandler | error ");
+                        if(future != null){
+                            future.fail(elevesFuture.cause());
                         }
-                        String title = params.getString(CLASSE_NAME) + "_" + I18n.getInstance()
-                                .translate("evaluations.bulletin",
-                                        I18n.DEFAULT_DOMAIN, Locale.FRANCE);
-                        JsonObject resultFinal = new JsonObject()
-                                .put(GET_PROGRAM_ELEMENT, params.getBoolean(GET_PROGRAM_ELEMENT))
-                                .put("title", title)
-                                .put(NEUTRE, params.getBoolean(NEUTRE));
-                        if(params.getBoolean(COEFFICIENT) && isNotNull(params.getValue(ERROR + COEFFICIENT))){
-                            renderError(request, new JsonObject().put(ELEVES,
-                                    sortResultByClasseNameAndNameForBulletin(elevesMap)));
-                            return;
+                    }
+                    String title = params.getString(CLASSE_NAME) + "_" + I18n.getInstance()
+                            .translate("evaluations.bulletin",
+                                    I18n.DEFAULT_DOMAIN, Locale.FRANCE);
+                    JsonObject resultFinal = new JsonObject()
+                            .put(GET_PROGRAM_ELEMENT, params.getBoolean(GET_PROGRAM_ELEMENT))
+                            .put("title", title)
+                            .put(NEUTRE, params.getBoolean(NEUTRE));
+                    if(params.getBoolean(COEFFICIENT) && isNotNull(params.getValue(ERROR + COEFFICIENT))){
+                        renderError(request, new JsonObject().put(ELEVES,
+                                sortResultByClasseNameAndNameForBulletin(elevesMap)));
+                        return;
+                    }
+                    resultFinal.put(ELEVES, sortResultByClasseNameAndNameForBulletin(elevesMap));
+                    if(!forArchive) {
+                        resultFinal.put(ID_IMAGES_FILES, params.getJsonArray(ID_IMAGES_FILES));
+                        String template = "bulletin.pdf.xhtml";
+                        if(isNotNull(params.getValue("simple")) && params.getBoolean("simple")) {
+                            template = "bulletin_lycee.pdf.xhtml";
                         }
-                        resultFinal.put(ELEVES, sortResultByClasseNameAndNameForBulletin(elevesMap));
-                        if(!forArchive) {
-                            resultFinal.put(ID_IMAGES_FILES, params.getJsonArray(ID_IMAGES_FILES));
-                            String template = "bulletin.pdf.xhtml";
-                            if(isNotNull(params.getValue("simple")) && params.getBoolean("simple")) {
-                                template = "bulletin_lycee.pdf.xhtml";
-                            }
-                            exportService.genererPdf(request, resultFinal, template, title, vertx, config);
+                        exportService.genererPdf(request, resultFinal, template, title, vertx, config);
 
-                            JsonObject jsonRequest = new JsonObject()
-                                    .put("headers", new JsonObject()
-                                            .put("Accept-Language", request.headers().get("Accept-Language")))
-                                    .put("Host", getHost(request));
+                        JsonObject jsonRequest = new JsonObject()
+                                .put("headers", new JsonObject()
+                                        .put("Accept-Language", request.headers().get("Accept-Language")))
+                                .put("Host", getHost(request));
 
-                            JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BULLETIN)
-                                    .put("request", jsonRequest)
-                                    .put("resultFinal", resultFinal)
-                                    .put("template", template)
-                                    .put("title", title);
+                        JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BULLETIN)
+                                .put("request", jsonRequest)
+                                .put("resultFinal", resultFinal)
+                                .put("template", template)
+                                .put("title", title);
 
-                            eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
-                        }
-                    });
-                }else{
-                    log.error("createFinalHandler : " + event.left().getValue());
-                    badRequest(request);
-                    return;
-                }
+                        eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+                    }
+                });
+            } else {
+                log.error("createFinalHandler : " + event.left().getValue());
+                badRequest(request);
+                return;
             }
         };
     }
@@ -783,21 +776,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                                        Map<String, JsonObject> elevesMap,
                                                                        Vertx vertx, JsonObject config,
                                                                        Future<JsonArray> elevesFuture,
-                                                                       final AtomicBoolean answered,
                                                                        JsonObject params) {
-        return createFinalHandler(request, elevesMap, vertx, config, elevesFuture, answered, params,
-                false,null);
+        return createFinalHandler(request, elevesMap, vertx, config, elevesFuture, params,false,null);
     }
 
     @Deprecated
     public Handler<Either<String, JsonObject>> getFinalArchiveBulletinHandler(Map<String, JsonObject> elevesMap,
                                                                               Vertx vertx, JsonObject config,
                                                                               Future<JsonArray> elevesFuture,
-                                                                              final AtomicBoolean answered,
                                                                               JsonObject params,
                                                                               Future<JsonObject> future) {
-        return createFinalHandler(null, elevesMap, vertx, config, elevesFuture, answered, params,
-                true, future);
+        return createFinalHandler(null, elevesMap, vertx, config, elevesFuture, params,true, future);
     }
 
     private void getBilanPeriodiqueDomaineForGraph(final String idEleve,
@@ -2698,7 +2687,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
                                     final JsonObject classe, Boolean showBilanPerDomaines, String host,
                                     String acceptLanguage, Handler<Either<String, JsonObject>> finalHandler, Vertx vertx){
-
         JsonObject images = params.getJsonObject("images");
         Long typePeriode = params.getLong(TYPE_PERIODE);
         List<Future> futures = new ArrayList<>();
@@ -3297,8 +3285,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         // On lance la récupération des données de tous les élèves  nécessaires sans générer  d'export bulletins
         JsonObject params = initParamsForArchive(idEtablissement, idClasse, idPeriode,imgsStructureObj,niveauDeMatrise);
         final Handler<Either<String, JsonObject>> finalHandler =
-                getFinalArchiveBulletinHandler(elevesMap, vertx, config, elevesFuture, answered,
-                        params, exportFuture);
+                getFinalArchiveBulletinHandler(elevesMap, vertx, config, elevesFuture, params, exportFuture);
         runExportBulletin( idEtablissement,  idClasse,  null,  idPeriode,  params, elevesFuture , elevesMap,
                 answered,  host, acceptLanguage, finalHandler, exportFuture, vertx);
     }

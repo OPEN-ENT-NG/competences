@@ -73,7 +73,7 @@
         background-color: #cccccc;
         {{/neutre}}
         {{^neutre}}
-            background-color: #009ddd;
+        background-color: #009ddd;
         {{/neutre}}
         }
 
@@ -82,7 +82,7 @@
         background-color: #cccccc;
         {{/neutre}}
         {{^neutre}}
-            background-color: #ff9027;
+        background-color: #ff9027;
         {{/neutre}}
 
         }
@@ -92,7 +92,7 @@
         background-color: #cccccc;
         {{/neutre}}
         {{^neutre}}
-            background-color: #b0d243;
+        background-color: #b0d243;
         {{/neutre}}
         }
 
@@ -105,29 +105,29 @@
         td {
             margin: 4px;
             padding: 10px;
-            {{#neutre}}
-                border: solid 1px;
-            {{/neutre}}
+        {{#neutre}}
+        border: solid 1px;
+        {{/neutre}}
         }
 
         table {
             width: 100%;
             font-size: 12px;
             text-align: center;
-            {{#neutre}}
-                border-collapse: collapse;
-            {{/neutre}}
+        {{#neutre}}
+        border-collapse: collapse;
+        {{/neutre}}
         }
 
         .start { page-break-before : left }
 
         table tr:first-child td {
-            {{#neutre}}
-                background-color: #ffffff;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #e2f3fb;
-            {{/neutre}}
+        {{#neutre}}
+        background-color: #ffffff;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #e2f3fb;
+        {{/neutre}}
         }
 
         table tr:first-child td:first-child {
@@ -136,23 +136,23 @@
 
         .secondSuivi {
             width: 50%!important;
-            {{#neutre}}
-                padding: 5px !important;
-                text-align: justify !important;
-            {{/neutre}}
+        {{#neutre}}
+        padding: 5px !important;
+        text-align: justify !important;
+        {{/neutre}}
         }
 
         .thirdSuivi {
-            {{#neutre}}
-                padding: 5px !important;
-                text-align: justify !important;
-            {{/neutre}}
-            {{#getProgramElements}}
-                width: 50% !important;
-            {{/getProgramElements}}
-            {{^getProgramElements}}
-                width: 70% !important;
-            {{/getProgramElements}}
+        {{#neutre}}
+        padding: 5px !important;
+        text-align: justify !important;
+        {{/neutre}}
+        {{#getProgramElements}}
+        width: 50% !important;
+        {{/getProgramElements}}
+        {{^getProgramElements}}
+        width: 70% !important;
+        {{/getProgramElements}}
         }
 
         .domaines {
@@ -166,14 +166,14 @@
 
         .eleve {
             padding: 5px;
-            {{#neutre}}
-                background-color: #cccccc;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #e2f3fb;
-            {{/neutre}}
-            min-height : 60px;
-            font-size: 14px;
+        {{#neutre}}
+        background-color: #cccccc;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #e2f3fb;
+        {{/neutre}}
+        min-height : 60px;
+        font-size: 14px;
         }
 
         .eleve > div {
@@ -208,12 +208,12 @@
             margin-top: 10px;
             padding: 10px;
             visibility: visible !important;
-            {{#neutre}}
-                background-color : #ffffff;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #ffd0a0 !important;
-            {{/neutre}}
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #ffd0a0 !important;
+        {{/neutre}}
         }
 
         .lefCom {
@@ -238,14 +238,14 @@
         .rightCommunication {
             vertical-align: top;
             text-align: right;
-            {{#neutre}}
-                background-color : #ffffff;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #ffd0a0 !important;
-                position: relative;
-                heigth :  45px;
-            {{/neutre}}
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #ffd0a0 !important;
+        position: relative;
+        heigth :  45px;
+        {{/neutre}}
         }
 
         #imgSignature {
@@ -281,6 +281,35 @@
             margin-top: 20px;
             margin-left : 1px;
             margin-right : 1px;
+
+            @bottom-right {
+                content: counter(page) "/" counter(pages);
+                font-size: x-small;
+                padding-right: 10px;
+            }
+
+            @bottom-center {
+                content: element(footer);
+            }
+        }
+
+        @page:first {
+            @bottom-center {
+                content: normal;
+            }
+        }
+
+        div.footer {
+            display: block;
+            width: 70%;
+            margin: auto;
+            font-size: x-small;
+            position: running(footer);
+        }
+
+        .pull-right {
+            float:right;
+            text-align: right;
         }
 
         .firstProjet {
@@ -300,21 +329,21 @@
         }
 
         .projets tr:nth-child(even) td {
-            {{#neutre}}
-                background-color : #ffffff;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #EFF7FC !important;
-            {{/neutre}}
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #EFF7FC !important;
+        {{/neutre}}
         }
 
         .projets tr:first-child td {
-            {{#neutre}}
-                background-color : #ffffff;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #e2f3fb !important;
-            {{/neutre}}
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #e2f3fb !important;
+        {{/neutre}}
         }
 
         .header td {
@@ -342,13 +371,13 @@
             padding-top: 2px;
             padding-bottom: 2px;
         }
+
     </style>
 </head>
 <body>
 
 {{#eleves}}
 <div class="page">
-
     <div style= "height: 130px;" class="paddingFifty">
         <img id="education" src="data:image/png;base64, {{logoData}}" alt="Logo"/>
         <div class="structure">
@@ -438,7 +467,6 @@
     {{#hasSuiviAcquis}}
     <h1 color="blue">{{suiviAcquisLibelle}}</h1>
     <table class="suiviDesAcquis paddingFifty">
-
         <tr class="header">
             <td class="firstSuivi">&nbsp;</td>
             {{#getProgramElements}}
@@ -536,8 +564,8 @@
             </td>
             {{/getClassAverageMinMax}}
 
-        {{#printSousMatieres}}
-           {{^hasSousMatiere}}
+            {{#printSousMatieres}}
+            {{^hasSousMatiere}}
             <td style=" border-left: none;font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
                 class="fifthSuivi onePadding">
                 <br/>
@@ -560,10 +588,9 @@
                 {{positionnement}}
             </td>
             {{/getPositionnement}}
-           {{/hasSousMatiere}}
+            {{/hasSousMatiere}}
 
-
-           {{#hasSousMatiere}}
+            {{#hasSousMatiere}}
             {{#firstSousMatiere}}
             <td style=" border-left: none;background-color: {{{backgroundColor}}}" class="fifthSuivi onePadding">
                 <span style="font-size: xx-small; font-weight: normal">{{libelle}}</span>
@@ -590,9 +617,9 @@
             </td>
             {{/getPositionnement}}
             {{/firstSousMatiere}}
-          {{/hasSousMatiere}}
-        {{/printSousMatieres}}
-        {{^printSousMatieres}}
+            {{/hasSousMatiere}}
+            {{/printSousMatieres}}
+            {{^printSousMatieres}}
             {{#getMoyenneEleve}}
             <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}} "
                 class="fourthSuivi onePadding">
@@ -611,10 +638,9 @@
                 {{positionnement}}
             </td>
             {{/getPositionnement}}
-        {{/printSousMatieres}}
+            {{/printSousMatieres}}
         </tr>
-    {{#printSousMatieres}}
-
+        {{#printSousMatieres}}
 
         {{#sousMatieres}}
         <tr>
@@ -674,7 +700,7 @@
 
         </tr>
         {{/hasSousMatiere}}
-    {{/printSousMatieres}}
+        {{/printSousMatieres}}
 
         {{/printMatiere}}
         {{/suiviAcquis}}
@@ -738,9 +764,10 @@
             {{/getPositionnement}}
         </tr>
         {{/printMoyenneGenerale}}
-
     </table>
-    {{#getPositionnement}}<span class="paddingFifty" style="font-size: xx-small ;position: relative;top: 10px;"> {{footer}}</span>{{/getPositionnement}}
+    {{#getPositionnement}}
+    <span class="paddingFifty" style="font-size: xx-small ;position: relative;top: 10px;"> {{footer}}</span>
+    {{/getPositionnement}}
     {{/hasSuiviAcquis}}
 
     <div class="start">
@@ -763,6 +790,7 @@
         </div>
         {{/hasGraphPerDomaine}}
         {{/showBilanPerDomaines}}
+
         {{#showProjects}}
         {{#projects}}
         {{#hasProject}}
@@ -806,12 +834,10 @@
         {{/projects}}
         {{/showProjects}}
 
-
-        <h1 color= "green"> {{bilanAcquisitionLibelle}}</h1>
+        <h1 color="green">{{bilanAcquisitionLibelle}}</h1>
         <div class="paddingFifty">
-
             <div class="synthese"
-                    style="{{^neutre}}background-color: #eef4d7 !important;{{/neutre}}
+                 style="{{^neutre}}background-color: #eef4d7 !important;{{/neutre}}
                     min-height: 20px; font-size: small;">
                 {{syntheseBilanPeriodque}}<br/>
                 {{#hasAvisConseil}}
@@ -850,8 +876,7 @@
                             </div>
                             <br/>
 
-
-                            <div class="lefCom" >
+                            <div class="lefCom">
                                 {{#evenements}}
                                 <div>
                                     {{.}}
@@ -859,8 +884,7 @@
                                 {{/evenements}}
                             </div>
                         </td>
-                        <td  class="rightCommunication">
-
+                        <td class="rightCommunication">
                             <span  style= " display : block;overflow : hidden; float : right; margin-bottom: 10px;">
                                 {{nameCE}}
                             </span>
@@ -870,22 +894,30 @@
                                 <img id="imgSignature" src="data:image/png;base64, {{imgSignature}}" alt="LogoStructure"/>
                             </div>
                             {{/hasImgSignature}}
-
                         </td>
                     </tr>
                 </table>
 
 
                 {{#showFamily}}
-
                 <div class="synthese" style="height: 60px; padding: 5px">
                     <span style="float: left; margin-left: 5px; margin-top: 0px !important;font-size: small;">{{familyVisa}}</span>
 
                     <span style="float: right;margin-right: 5px; text-align:right;margin-top: 0px;font-size: small;">{{signature}}</span>
                 </div>
-
                 {{/showFamily}}
             </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div>
+            <span>{{firstName}} &nbsp; {{lastName}}</span>
+            <span class="pull-right">{{classeOf}} {{classeNameToShow}}</span>
+        </div>
+        <div>
+            <span>{{bilanCycle}}&nbsp; - &nbsp; {{periode}}</span>
+            <span class="pull-right">{{schoolYear}}</span>
         </div>
     </div>
 </div>

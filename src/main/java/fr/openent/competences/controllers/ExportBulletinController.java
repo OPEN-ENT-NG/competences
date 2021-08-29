@@ -86,7 +86,7 @@ public class ExportBulletinController extends ControllerHelper {
             final AtomicBoolean answered = new AtomicBoolean();
 
             final Handler<Either<String, JsonObject>> finalHandler = exportBulletinService
-                    .getFinalBulletinHandler(request, elevesMap, vertx, config, elevesFuture, answered, params);
+                    .getFinalBulletinHandler(request, elevesMap, vertx, config, elevesFuture, params);
 
             exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, params,
                     elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
