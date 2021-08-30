@@ -329,7 +329,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     classe.put("classeName", params.getString("classeName"));
                     buildDataForStudent(answered, eleves, elevesMap, idPeriode, params, classe,
                             showBilanPerDomaines, host, acceptLanguage, finalHandler, vertx);
-                }else{
+                } else {
                     JsonArray finalEleves = eleves;
                     getClasseInfo(idClasse, classeInfoEvent -> {
                         if(classeInfoEvent.isRight()){
@@ -337,7 +337,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             classe.put("classeName", classeInfoEvent.right().getValue());
 
                             buildDataForStudent(answered, finalEleves, elevesMap, idPeriode, params, classe,
-                                    showBilanPerDomaines, host, acceptLanguage, finalHandler,vertx);
+                                    showBilanPerDomaines, host, acceptLanguage, finalHandler, vertx);
                         } else {
                             String error = "[Viescolaire] @ DefaultExportBulletinService error when getting class";
                             finalHandler.handle(new Either.Left(error));
@@ -360,7 +360,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             if (idElevesEvent.failed()) {
                 log.error("getHandlerGetInfosEleves :" + idElevesFuture.cause().getMessage());
                 future.complete(null);
-                return;
             } else {
                 JsonArray idEleves = idStudents;
                 if (idEleves == null) {
@@ -462,6 +461,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("signature", getLibelle("evaluations.export.bulletin.date.name.visa.responsable"))
                     .put("bornAt", getLibelle("born.on"))
                     .put("classeOf", getLibelle("classe.of"))
+                    .put("numberINE", getLibelle("number.INE"))
                     .put("bilanPerDomainesLibelle", getLibelle("evaluations.bilan.by.domaine"))
                     .put("levelStudent", getLibelle("level.student"))
                     .put("levelClass", getLibelle("level.class"))
@@ -494,11 +494,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES))
                     .put(PRINT_MOYENNE_ANNUELLE, params.getBoolean(MOYENNE_ANNUELLE))
                     .put(NEUTRE, params.getBoolean(NEUTRE, false))
-                    .put(HIDE_HEADTEACHER,params.getBoolean(HIDE_HEADTEACHER,false))
-                    .put(ADD_OTHER_TEACHER,params.getBoolean(ADD_OTHER_TEACHER,false))
-                    .put(FUNCTION_OTHER_TEACHER,params.getString(FUNCTION_OTHER_TEACHER,""))
-                    .put(OTHER_TEACHER_NAME,params.getString(OTHER_TEACHER_NAME,""))
-                    .put(AGRICULTURE_LOGO,params.getBoolean(AGRICULTURE_LOGO,false));
+                    .put(HIDE_HEADTEACHER, params.getBoolean(HIDE_HEADTEACHER,false))
+                    .put(ADD_OTHER_TEACHER, params.getBoolean(ADD_OTHER_TEACHER,false))
+                    .put(FUNCTION_OTHER_TEACHER, params.getString(FUNCTION_OTHER_TEACHER,""))
+                    .put(OTHER_TEACHER_NAME, params.getString(OTHER_TEACHER_NAME,""))
+                    .put(AGRICULTURE_LOGO, params.getBoolean(AGRICULTURE_LOGO,false));
 
             JsonArray niveauCompetences;
             try{
@@ -539,9 +539,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             eleve.put(NIVEAU_COMPETENCE, niveauCompetences).put("footer", "* " + footer);
 
             if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)){
-                eleve.put(LOGO_PATH,"img/ministere_agriculture.png");
-            }else{
-                eleve.put(LOGO_PATH,"img/education_nationale.png");
+                eleve.put(LOGO_PATH, "img/ministere_agriculture.png");
+            } else {
+                eleve.put(LOGO_PATH, "img/education_nationale.png");
             }
 
         }
@@ -2641,10 +2641,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     public void setBirthDate(JsonObject eleve){
-
         String birthDate = eleve.getString("birthDate");
-        if(birthDate!= null) {
-
+        if(birthDate != null) {
             String [] be = birthDate.split("-");
             eleve.put("birthDateLibelle",  be[2] + '/' + be[1] + '/' + be[0]);
         }
@@ -2694,6 +2692,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         for (int i = 0; i < eleves.size(); i++) {
             futures.add(Future.future());
         }
+
         for (int i = 0; i < eleves.size(); i++) {
             JsonObject eleve = eleves.getJsonObject(i);
             eleve.put(TYPE_PERIODE, typePeriode);
