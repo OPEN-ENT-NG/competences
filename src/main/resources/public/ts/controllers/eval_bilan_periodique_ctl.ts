@@ -835,12 +835,14 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         }
 
         $scope.saveElementsProgramme = (elementProgrammeByClasse?) => {
-            if($scope.suiviDesAcquis.elementsProgramme.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH){
+            if($scope.suiviDesAcquis.elementsProgramme.length <= $scope.MAX_LENGTH_300){
                 if(elementProgrammeByClasse != undefined) {
                     $scope.suiviDesAcquis.saveElementProgrammeByClasse(elementProgrammeByClasse);
                 } else {
                     $scope.suiviDesAcquis.saveElementsProgramme();
                 }
+            } else {
+                notify.error('evaluations.releve.elementProgramme.classe.max.length');
             }
         }
 
