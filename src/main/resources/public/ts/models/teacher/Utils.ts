@@ -329,8 +329,16 @@ export class Utils {
                     return evaluation.eval_lib_historise === false;
                 });
             }
-            allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
-            let niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion,false,isYear);
+            //allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
+            let niveauFinaltoShowAllEvaluations;
+            if(notHistorizedEvals.length > 0){
+                allEvaluations = notHistorizedEvals;
+                niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion,false,isYear);
+            } else {
+                let lastEvaluation = _.last (allEvaluations);
+                niveauFinaltoShowAllEvaluations = utils.getMoyenneForBFC( lastEvaluation.evaluation + 1, tableConversion.all) -1;
+            }
+
             if(competence.competencesEvaluations) {
                 competence.niveauFinaltoShowAllEvaluations = niveauFinaltoShowAllEvaluations;
             }else{
