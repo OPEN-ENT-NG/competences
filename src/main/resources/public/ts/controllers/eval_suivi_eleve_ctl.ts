@@ -76,7 +76,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         $scope.canSaveCompetenceNiveauFinal = () => {
             return Utils.canSaveCompetenceNiveauFinal();
         };
-        $scope.LENGTH_MAX_1500 = LengthLimit.MAX_1500;
+        $scope.MAX_LENGTH_1500 = LengthLimit.MAX_1500;
 
         /**
          * Initialise d'une évaluation libre.
