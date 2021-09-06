@@ -1752,9 +1752,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     // La taille de la police varie en fonction du nombre de matières affichées, du fait qu'on affiche la colonne des
     // éléments du programme et aussi du nombre de caractères de l'appréciation ou du libellé des éléments du programme
-    private void setFontSizeOfSuivi (JsonArray subjects, boolean withProgramElement) {
-        String defaultValue = "font-size: auto !important;";
-        String value = defaultValue;
+    private void setFontSizeOfSuivi(JsonArray subjects, boolean withProgramElement) {
+        String value;
         JsonObject fontstyle = new JsonObject();
 
         int nbSubjectOnLimit = 0;
@@ -1769,12 +1768,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             if (withProgramElement) {
                 maxCaractere = Math.max(elementsProgramme.length(), appreciation.length());
-            }
-            else {
+            } else {
                 maxCaractere = appreciation.length();
             }
             if (maxCaractere > (MAX_SIZE_LIBELLE /2 + 24)) {
-                nbSubjectOnLimit ++;
+                nbSubjectOnLimit++;
             }
         }
 
@@ -1783,11 +1781,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         if ((nbSubjectOnLimit <= 6 && nbSubject <= 6)
                 || (nbSubject <= 6 && withProgramElement)
                 || (!withProgramElement && nbSubjectOnLimit <= 10)) {
-            value = defaultValue;
-        }
-        else {
+            value = "font-size: auto !important;";
+        } else {
             if (7 == nbSubject
-                    || (nbSubject <= 11 && nbSubjectUnderLimit >= nbSubject -1 )) {
+                    || (nbSubject <= 11 && nbSubjectUnderLimit >= nbSubject -1)) {
                 value = "font-size: 11px !important;";
             } else {
                 if (8 == nbSubject) {
@@ -1811,6 +1808,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             }
         }
         fontstyle.put("style", value);
+    }
+
+    private void setHeightByRow(JsonArray subjects) {
+        int sizeOfTable = 600; // Taille en pixel du tableau de suivi des acquis
+        int nbSubject = subjects.size();
+        for (int i = 0; i < nbSubject; i++) {
+            JsonObject subject = subjects.getJsonObject(i);
+            subject.put("heightByRow", (sizeOfTable / nbSubject) + "px");
+        }
     }
 
     private void setMoyenneAnnuelle(JsonObject eleveObject, JsonArray matieres, JsonObject params){
@@ -2070,6 +2076,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     }
                                 }
                                 setFontSizeOfSuivi(res, getProgrammeElement);
+                                setHeightByRow(res);
 
                                 setMoyenneGenerale(eleveObject, suiviAcquis, params, idPeriode, idEleve, idEleves);
                                 setMoyenneAnnuelle(eleveObject, suiviAcquis, params);
@@ -2723,7 +2730,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
 
-            getExportBulletin(answered, idEleve, elevesMap,idPeriode, params, classe, host, acceptLanguage,vertx,
+            getExportBulletin(answered, idEleve, elevesMap, idPeriode, params, classe, host, acceptLanguage, vertx,
                     futureGetHandler(futures.get(i)));
         }
         CompositeFuture.all(futures).setHandler(compositeEvent ->{
