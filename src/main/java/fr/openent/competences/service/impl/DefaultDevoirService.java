@@ -833,7 +833,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
 
         if(idGroupes.length != 0) {
+            if(historise) {
+                query.append(" (");
+            }
             query.append(" rel.id_groupe IN " + Sql.listPrepared(idGroupes) + " AND");
+
             for(String idGroupe : idGroupes) {
                 params.add(idGroupe);
             }
@@ -861,12 +865,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
 
         if (idMatieres.length != 0) {
-            query.append(" ((devoirs.id_matiere = '' OR devoirs.id_matiere IN " + Sql.listPrepared(idMatieres) + ") ");
+
             for (String idMatiere : idMatieres) {
                 params.add(idMatiere);
             }
             if (historise) {
-                query.append(" OR ");
+                query.append(" (devoirs.id_matiere = '' OR devoirs.id_matiere IN " + Sql.listPrepared(idMatieres) + ") OR");
+            } else {
+                query.append(" ((devoirs.id_matiere = '' OR devoirs.id_matiere IN " + Sql.listPrepared(idMatieres) + ") ");
             }
         }
         if (historise) {
