@@ -1381,9 +1381,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     synthese = result.getJsonObject(0);
                                 if (synthese != null && !synthese.isEmpty()) {
                                     String syntheseStr = synthese.getString("synthese");
-                                    eleveObject.put("syntheseBilanPeriodque",troncateLibelle(syntheseStr,
+                                    eleveObject.put("syntheseBilanPeriodque", troncateLibelle(syntheseStr,
                                             MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));
-                                    eleveObject.put("syntheseBilanPeriodqueStyle",fontSize(syntheseStr,
+                                    eleveObject.put("syntheseBilanPeriodqueStyle", fontSize(syntheseStr,
                                             MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));
                                     if(isBulletinLycee) eleveObject.put("beforeSyntheseBP", BEFORE_SYNTHESE_BP);
                                 }
@@ -1396,15 +1396,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     }
 
-    public void getAppreciationCPE (String idEleve,  Map<String,JsonObject> elevesMap, Long idPeriode,
-                                    Handler<Either<String, JsonObject>> finalHandler){
+    public void getAppreciationCPE(String idEleve, Map<String,JsonObject> elevesMap, Long idPeriode,
+                                   Handler<Either<String, JsonObject>> finalHandler){
         logBegin(GET_APPRECIATION_CPE_METHOD, idEleve);
         JsonObject eleveObject = elevesMap.get(idEleve);
         if (eleveObject == null) {
             logStudentNotFound(idEleve, GET_APPRECIATION_CPE_METHOD);
             finalHandler.handle(new Either.Right<>(null));
-        }
-        else {
+        } else {
             appreciationCPEService.getAppreciationCPE(idPeriode, idEleve, new Handler<Either<String, JsonObject>>() {
                 private int count = 1;
                 private AtomicBoolean answer = new AtomicBoolean(false);
@@ -1416,8 +1415,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         if (message.contains(TIME) && !answer.get()) {
                             count++;
                             appreciationCPEService.getAppreciationCPE(idPeriode, idEleve, this);
-                        }
-                        else {
+                        } else {
                             if (eleveObject.getJsonArray(ERROR) == null) {
                                 eleveObject.put(ERROR, new JsonArray());
                             }
@@ -1432,7 +1430,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             String app = troncateLibelle(appreciationCPE.getString(APPRECIATION_KEY),
                                     MAX_SIZE_APPRECIATION_CPE);
                             eleveObject.put("appreciationCPE",app)
-                                    .put("appreciationCPEStyle",fontSize(app,  MAX_SIZE_APPRECIATION_CPE));
+                                    .put("appreciationCPEStyle", fontSizeAppreciationCPE(app, MAX_SIZE_APPRECIATION_CPE));
                         }
                         serviceResponseOK(answer, finalHandler, count, idEleve, GET_APPRECIATION_CPE_METHOD);
                     }
@@ -1712,39 +1710,45 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    private String troncateLibelle(String libelle, int max ) {
-
+    private String troncateLibelle(String libelle, int max) {
         if(libelle == null) {
             libelle = "";
-        }
-        else if (libelle.length() > max) {
+        } else if (libelle.length() > max) {
             libelle = libelle.substring(0, max);
             libelle += "...";
         }
         return libelle;
     }
-    private String fontSize(String libelle, int max ) {
 
-        if(libelle == null) {
-            return  "";
-        }
-        else if (libelle.length() < max/2) {
+    private String fontSize(String libelle, int max) {
+        if (libelle == null) {
+            return "";
+        } else if (libelle.length() < max / 2) {
             return "font-size: 10px !important;";
-        }
-        else if (libelle.length() <= max) {
+        } else if (libelle.length() <= max) {
             return "font-size: 8.5px !important;";
         }
         return "";
     }
-    private String fontSizeProject(String libelle, int max ) {
 
+    private String fontSizeAppreciationCPE(String libelle, int max) {
+        String size = "";
+        if (libelle != null) {
+            if (libelle.length() < max / 3) {
+                size = "font-size: small !important;";
+            } else if (libelle.length() <= max) {
+                size = "font-size: x-small !important;";
+            }
+        }
+        return size;
+    }
+
+    private String fontSizeProject(String libelle, int max) {
         if(libelle == null) {
             return  "";
-        }
-        else if (libelle.length() < max/2) {
+        } else if (libelle.length() < max/2) {
             return "font-size: 10px !important;";
-        }
-        else if (libelle.length() <= max) {
+        } else if (libelle.length() <= max) {
             return "font-size: 7.5px !important;";
         }
         return "";

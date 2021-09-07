@@ -651,14 +651,15 @@
             <tr style="page-break-inside: avoid;">
                 <td class="" style=" visibility: visible; width: 60%; border: none">
                     <div  class="leftCom" style="{{appreciationCPEStyle}}">
-                        <span style="font-weight: bold">{{appreciationCPE}}</span>
+                        <span>{{viescolaireLibelle}}</span>
+                        <span>{{appreciationCPE}}</span>
                     </div>
                     <div class="leftCom">
                         {{#evenements}}
                         <div>{{.}}</div>
                         {{/evenements}}
                         {{#printMoyenneAnnuelle}}
-                        <div><span style="font-weight: bold">{{moyenneAnnuelleLibelle}}:</span>{{moyenneAnnuelle}}</div>
+                        <div><span style="font-weight: bold">{{moyenneAnnuelleLibelle}} : </span>{{moyenneAnnuelle}}</div>
                         {{/printMoyenneAnnuelle}}
                         <div><span style="font-weight: bold">{{beforeSyntheseBP}}</span>{{syntheseBilanPeriodque}}</div>
                         {{#hasAvisConseil}}
