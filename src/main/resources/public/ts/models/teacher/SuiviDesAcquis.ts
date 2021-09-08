@@ -63,8 +63,8 @@ export class SuiviDesAcquis  {
 
     async saveElementsProgramme(idClasse?, texte?) {
         let _data = _.extend(this.toJson(), {
-            idClasse: idClasse ? idClasse : this.elementsProgrammeByClasse[0].id_classe,
-            texte: texte ? texte : this.elementsProgramme
+            idClasse: idClasse != undefined ? idClasse : this.elementsProgrammeByClasse[0].id_classe,
+            texte: texte != undefined ? texte : this.elementsProgramme
         });
 
         try{
