@@ -896,7 +896,7 @@ public class DevoirController extends ControllerHelper {
                     if(event.isLeft()){
                         leftToResponse(request, new Either.Left<>(event.left().getValue()));
                     } else {
-                        JsonArray result = event.right().getValue();
+                        JsonObject result = event.right().getValue();
                         Renders.renderJson(request, result);
                     }
                 });
