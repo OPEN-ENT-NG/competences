@@ -1700,7 +1700,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     @Override
     public void getDevoirsEleve(String idEtablissement, String idEleve, String idMatiere, Long idPeriode,
-                                Handler<Either<String, JsonArray>> handler){
+                                Handler<Either<String, JsonObject>> handler){
         List<Future> futures = new ArrayList<>();
 
         Future<JsonArray> devoirsFuture = Future.future();
@@ -1740,8 +1740,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
                 JsonArray matieres = matieresFuture.result();
                 JsonArray groups = groupsFuture.result();
-
-                JsonArray results = new JsonArray();
 
                 Future<JsonArray> servicesFuture = Future.future();
                 utilsService.getServices(idEtablissement, groups,
@@ -1784,15 +1782,32 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                             }
                         }
 
+                        JsonArray resultsDevoirs = new JsonArray();
+
                         ArrayList<Future> resultsFuture = new ArrayList<>();
                         buildArrayOfHomeworks(orderedDevoirs, matieres, services, allMultiTeachers, idEleve,
-                                results, resultsFuture, handler);
+                                resultsDevoirs, resultsFuture, handler);
 
                         CompositeFuture.all(resultsFuture).setHandler(resultEvent -> {
                             if (resultEvent.failed()) {
                                 handler.handle(new Either.Left<>(resultEvent.cause().getMessage()));
                             } else {
-                                handler.handle(new Either.Right<>(results));
+                                JsonObject result = new JsonObject();
+                                result.put("devoirs", resultsDevoirs);
+
+                                if(idMatiere == null && idPeriode == null){
+                                    List<String> idsMatieresDevoirs = devoirs.stream()
+                                            .map(devoir -> ((JsonObject) devoir).getString("id_matiere"))
+                                            .collect(Collectors.toList());
+
+                                    JsonArray resultMatieres = new JsonArray(matieres.stream()
+                                            .filter(matiere -> idsMatieresDevoirs.contains(((JsonObject) matiere).getString("id")))
+                                            .collect(Collectors.toList()));
+
+                                    result.put("matieres", resultMatieres);
+                                }
+
+                                handler.handle(new Either.Right<>(result));
                             }
                         });
                     }
@@ -1803,7 +1818,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     private void buildArrayOfHomeworks(JsonArray orderedDevoirs, JsonArray matieres, JsonArray services,
                                        JsonArray allMultiTeachers, String idEleve, JsonArray results,
-                                       ArrayList<Future> resultsFuture, Handler<Either<String, JsonArray>> handler) {
+                                       ArrayList<Future> resultsFuture, Handler<Either<String, JsonObject>> handler) {
         orderedDevoirs.forEach(devoir -> {
             JsonObject devoirJson = (JsonObject) devoir;
             String idMat = devoirJson.getString("id_matiere");
