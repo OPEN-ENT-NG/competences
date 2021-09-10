@@ -3805,6 +3805,46 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         eleve.put("hasImgLoaded", true);
     }
 
+    @Override
+    public void checkBulletinsExist(JsonArray students, Integer idPeriode, Handler<Either<String, Boolean>> handler) {
+        JsonArray statements = new JsonArray();
+
+        for (int i = 0 ; i < students.size(); i++){
+            JsonObject student =  students.getJsonObject(i);
+            statements.add(
+                    checkStatements(student.getString("id"),
+                            student.getString("idClasse"),
+                            idPeriode));
+        }
+        Sql.getInstance().transaction(statements, new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> event) {
+                JsonObject result = event.body();
+                if (result.getString("status").equals("ok")) {
+                    try{
+                        result.getJsonArray("results")
+                                .getJsonObject(0).getJsonArray("results").getJsonArray(0);
+                        handler.handle(new Either.Right<>(true));
+                    }catch (Exception e){
+                        handler.handle(new Either.Right<>(false));
+                    }
+                } else {
+                    handler.handle(new Either.Left<>(result.getString("status")));
+                }
+            }
+        });
+    }
+
+    private JsonObject checkStatements(String idStudent, String idClasse, Integer idPeriode) {
+        String query = "SELECT 1 from " + Competences.EVAL_SCHEMA + ".archive_bulletins " +
+                " WHERE id_classe = ? AND id_eleve = ? AND id_periode = ? ; ";
+        JsonArray params = new JsonArray().add(idClasse).add(idStudent).add(idPeriode);
+        return  new JsonObject()
+                .put("statement", query)
+                .put("values", params)
+                .put("action", "prepared");
+    }
+
     private void generatesImage(JsonObject eleve, Vertx vertx, String path, Future<String> logoFuture) {
         String image = "public/" + eleve.getString(path);
         try {

@@ -371,4 +371,15 @@ export class ExportBulletins {
         }
     }
 
+    public static async checkBulletins(students: any,  id_type: any) {
+        try{
+            let params = {
+                students,
+                id_type
+            }
+          return await http.post('/competences/bulletins/exists',params)
+        }catch (e) {
+            console.error(e)
+        }
+    }
 }

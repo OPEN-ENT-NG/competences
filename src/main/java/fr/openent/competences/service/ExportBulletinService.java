@@ -201,7 +201,6 @@ public interface ExportBulletinService {
   * @param vertx nécessaire pour lancer la génération du pdf
   * @param config la config du module
   * @param elevesFuture Future le nombre d'élèves pour l'export
-  * @param answered Atomic booléen seté à true si tous les services ont répondu
   * @param params paramètres de la requête
   * @return
   */
@@ -298,4 +297,6 @@ public interface ExportBulletinService {
                          Handler<Either<String, Boolean>> finalHandler);
 
  void generateImagesFromPathForBulletin (JsonObject eleve, Vertx vertx, Handler<Either<String, JsonObject>> handler);
+
+ void checkBulletinsExist(JsonArray students, Integer idPeriode, Handler<Either<String, Boolean>> handler);
 }

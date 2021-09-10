@@ -11,7 +11,6 @@
          ng-controller="reportModelPrintExportController"
          ng-include="'/competences/public/template/enseignants/bulletin/lightbox-select-report-model.html'">
     </div>
-
     <div ng-init="initBulletin()"
          class="ten cell card main-content twelve-mobile">
         <aside class="two cell twelve-mobile left">
@@ -567,7 +566,18 @@
         </aside>
 
     </div>
-
+    <lightbox show="display.bulletinAlert" on-close="cancelBulletinDuplicateForm()">
+        <div class="row">
+            <h1>
+                <i18n>bulletinAlert.title</i18n>
+            </h1>
+            <h2>
+                <i18n>bulletinAlert.text</i18n>
+            </h2>
+            <input type="button" ng-click="cancelBulletinDuplicateForm()" class="cancel"  i18n-value="cancel" />
+            <input type="button" class="button" ng-click="validBulletinDuplicateForm()" i18n-value="Confirmer"/>
+        </div>
+    </lightbox>
 </div>
 <div class="zero"
      id="list-to-pdf"></div>

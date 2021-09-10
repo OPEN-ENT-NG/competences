@@ -1,4 +1,4 @@
-import {_, ng, notify, idiom as lang, Me} from "entcore";
+import {_, ng, notify, idiom as lang, Me, template} from "entcore";
 import {ExportBulletins} from "../models/common/ExportBulletins";
 import * as utils from '../utils/teacher';
 import {evaluations, Utils} from "../models/teacher";
@@ -19,7 +19,9 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
 
         $scope.updateMentionClass = false;
         $scope.updateOrientationOpinion = false;
-
+        $scope.display = {
+            bulletinAlert: false
+        };
         let runMessageLoader = async function () {
             await Utils.runMessageLoader($scope);
         };
@@ -108,33 +110,29 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 $scope.print.nameCE);
         };
 
-        $scope.generateBulletin = async function (options){
-            if(Me && Me.preferences) {
-                if(Utils.isNull(Me.preferences.competences)) {
-                    Me.preferences.competences = {};
-                }
-
-                Me.preferences.competences.printBulletin = Object.assign({}, $scope.print);
-                delete Me.preferences.competences.printBulletin.students;
-                await Me.savePreference('competences');
-            }
-            saveReportModel(userReportModel);
-            let selectedClasses = _.where($scope.printClasses.all, {selected : true});
-
+        function validForm( selectedClasses) {
+            let isvalid = true;
             if (_.isEmpty(selectedClasses)) {
                 notify.info('evaluations.choose.classe');
-                return ;
+                isvalid = false;
             }
             if (!_.isEmpty(selectedClasses) && _.isEmpty($scope.filteredPeriodes)) {
                 notify.info('evaluations.classes.are.not.initialized');
-                return ;
+                isvalid = false;
             }
 
-            if($scope.selected === undefined || $scope.selected.periode === undefined) {
+            if ($scope.selected === undefined || $scope.selected.periode === undefined) {
                 notify.info('evaluations.choose.periode');
-                return ;
+                isvalid = false;
             }
+            if (_.where($scope.allElevesClasses, {selected: true}).length === 0) {
+                notify.info('evaluations.choose.student');
+                isvalid = false;
+            }
+            return isvalid;
+        }
 
+        function getOptions(options) {
             options.mentionOpinion = $scope.mentionClass;
             options.orientationOpinion = $scope.orientationOpinion;
 
@@ -145,7 +143,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             });
             options.idStudents = _.pluck(students, 'id');
 
-            if(options.addOtherTeacher) {
+            if (options.addOtherTeacher) {
                 let otherTeacher = _.findWhere($scope.enseignants.all, {id: options.otherTeacherId});
                 if (otherTeacher && otherTeacher.displayName) {
                     options.otherTeacherName = " : ";
@@ -160,14 +158,34 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                         options.otherTeacherName += otherTeacher.lastName;
                 }
             }
+        }
 
-            if (_.where($scope.allElevesClasses, {selected: true}).length === 0) {
-                notify.info('evaluations.choose.student');
+        $scope.generateBulletin = async function (options) {
+
+            if (Me && Me.preferences) {
+                if (Utils.isNull(Me.preferences.competences)) {
+                    Me.preferences.competences = {};
+                }
+
+                Me.preferences.competences.printBulletin = Object.assign({}, $scope.print);
+                delete Me.preferences.competences.printBulletin.students;
+                await Me.savePreference('competences');
+            }
+            saveReportModel(userReportModel);
+            let selectedClasses = _.where($scope.printClasses.all, {selected: true});
+
+            //REWORK POSSIBLE : fonction renvoie un booleen pour stop + alert qui change
+            if(!validForm(selectedClasses)){
                 return ;
             }
-            if (_.isEmpty(options.idStudents)){
+
+
+            //TODO envoyer requête au back pour check
+            getOptions(options);
+
+            if (_.isEmpty(options.idStudents)) {
                 notify.info('evaluations.choose.student.for.periode');
-                return ;
+                return;
             }
             await runMessageLoader();
 
@@ -189,17 +207,40 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                     options.idStudents = _.pluck(options.students, 'id');
                     if (options.idStudents !== undefined && options.idStudents.length > 0) {
                         try {
-                            await ExportBulletins.generateBulletins(options, $scope);
-                        }
-                        catch (e) {
+                            let {status} =await ExportBulletins.checkBulletins(options.students,$scope.selected.periode.id_type);
+                            if(status == 201){
+                                $scope.optionsBulletins = options ;
+                                $scope.display.bulletinAlert = true;
+                                // template.open('bulletinAlert', '/competences/public/template/enseignants/bulletin/lightbox-alert-bulletin');
+                                utils.safeApply($scope);
+                                return;
+                            }
+                            else {
+                                await ExportBulletins.generateBulletins(options, $scope);
+                            }
+                        } catch (e) {
                             await stopMessageLoader();
                         }
                     }
                 }
+                await stopMessageLoader();
             }
-            await stopMessageLoader();
+
         };
 
+        $scope.cancelBulletinDuplicateForm=  async () =>{
+            $scope.display.bulletinAlert = false;
+            // template.close('bulletinAlert');
+            await stopMessageLoader();
+        }
+
+        $scope.validBulletinDuplicateForm=  async () =>{
+            $scope.display.bulletinAlert = false;
+            // template.close('bulletinAlert');
+            await ExportBulletins.generateBulletins(  $scope.optionsBulletins, $scope);
+            $scope.optionsBulletins = {};
+            await stopMessageLoader();
+        }
         $scope.chooseClasse = async function (classe) {
             await Utils.chooseClasse(classe, $scope, true);
             utils.sortByLastnameWithAccentIgnored($scope.allElevesClasses);

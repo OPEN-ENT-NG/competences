@@ -1,5 +1,6 @@
 package fr.openent.competences.controllers;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import fr.openent.competences.Utils;
 import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.security.AccessExportBulletinFilter;
@@ -207,5 +208,35 @@ public class ExportBulletinController extends ControllerHelper {
     public void getYearsAndPeriodes(final  HttpServerRequest request){
         String idStructure = request.params().get(ID_STRUCTURE_KEY);
         utilsService.getYearsAndPeriodes(idStructure, false, defaultResponseHandler(request));
+    }
+
+    @Post("/bulletins/exists")
+    @ApiDoc("Vérifie si des bulletins existent déjà avec ces paramètres")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessExportBulletinFilter.class)
+    public void checkBulletinsExist( final  HttpServerRequest request){
+        RequestUtils.bodyToJson(request, ressource -> {
+            JsonArray students = ressource.getJsonArray("students");
+            Integer idPeriode = ressource.getInteger("id_type");
+            //if already exist 201 if not 200
+            exportBulletinService.checkBulletinsExist(students,idPeriode , new Handler<Either<String, Boolean>>() {
+                @Override
+                public void handle(Either<String, Boolean> event) {
+                   if(event.isRight()) {
+                       log.info(" VALUE : " + event.right().getValue());
+                       if (event.right().getValue())
+                           request.response().setStatusCode(201).end();
+                       else {
+                           request.response().setStatusCode(200).end();
+                       }
+                   }
+                    else {
+                        badRequest(request);
+                   }
+                }
+            });
+
+        });
+
     }
 }
