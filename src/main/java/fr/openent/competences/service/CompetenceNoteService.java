@@ -35,10 +35,9 @@ public interface CompetenceNoteService extends CrudService {
     /**
      * Créer une compétenceNote
      * @param competenceNote objet contenant les informations relatives à la compétenceNote
-     * @param user utilisateur courant
+     * @param idUser utilisateur courant
      * @param handler handler portant le résultat de la requête
      */
-   // void createCompetenceNote(JsonObject competenceNote, UserInfos user, Handler<Either<String, JsonObject>> handler);
     void createCompetenceNote(JsonObject competenceNote, String idUser, Handler<Either<String, JsonObject>> handler);
     /**
      * Met à jour une compétence note
@@ -95,7 +94,6 @@ public interface CompetenceNoteService extends CrudService {
      * @param _datas liste des compétences notes à créer
      * @param handler handler portant le résultat de la requête
      */
-    //void createCompetencesNotesDevoir(JsonArray _datas, UserInfos user, Handler<Either<String, JsonArray>> handler);
     void createCompetencesNotesDevoir(JsonArray _datas, String idUser, Handler<Either<String, JsonArray>> handler);
     /**
      * Supprimer une liste de compétences notes
@@ -103,6 +101,8 @@ public interface CompetenceNoteService extends CrudService {
      * @param handler handler portant le résultat de la requête
      */
     void dropCompetencesNotesDevoir(JsonArray oIdsJsonArray, Handler<Either<String, JsonArray>> handler);
+
+    void getMaxCompetenceNoteEleveByPeriod (String[] idEleves, Long idPeriode, Boolean isYear, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère toutes les compétences notes d'un élève
@@ -148,21 +148,13 @@ public interface CompetenceNoteService extends CrudService {
      */
     void getConversionTableByClass(String idEtablissement, List<String> idsClasses, Boolean isClassList, Handler<Either<String, JsonArray>> handler);
     /**
-     * Récupère la note maximale pour chaque compétence de chaque élève dont l'id est passé en paramètre.
-     * @param idEleves id des élèves
-     * @param idPeriode id de la période dont on souhaite récupérer les notes, peut être null pour sélectionner l'année
-     * @param idCycle id du cycle dont on souhaite récupérer les notes,
-     * @param isYear afin de savoir si on récupère les notes de toutes l'année ou pas,
-     * @param handler handler portant le résultat de la requête
-     */
-    void getMaxCompetenceNoteEleve(String[] idEleves, Long idPeriode, Long idCycle, Boolean isYear, Handler<Either<String, JsonArray>> handler);
-
-    /**
      * Récupère les cycles des groupes sur lequels un élève a des devoirs avec compétences notées
      * @param idEleve id de l'élève
      * @param handler handler portant le résultat de la requête
      */
     void getCyclesEleve(String idEleve, Handler<Either<String, JsonArray>> handler);
+
+    void getMaxCompetenceNoteEleveByCycle (String[] id_eleve, Long idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * utilise la méthode getConversionNoteCompetence pour associer ordre du niveau de compétence au barème du brevet
