@@ -169,7 +169,8 @@ export class SuiviCompetence extends Model {
             let oDomaine = this.domaines.all[i] as Domaine;
 
             // recherche de toutes les évaluations du domaine et ses sous domaines
-            // (uniquement les max de chaque compétence)
+            // (uniquement les max de chaque compétence si la compétence a été évalué au cours de l'année,
+            // sinon la note de la compétence de la dernière à laquelle elle a été évaluée)
             Utils.getMaxEvaluationsDomaines(oDomaine, oEvaluationsArray,
                 this.tableConversions.all, false, this.bilanFinDeCycles, this.classe, this);
         }

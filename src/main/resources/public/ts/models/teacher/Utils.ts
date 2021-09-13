@@ -329,8 +329,16 @@ export class Utils {
                     return evaluation.eval_lib_historise === false;
                 });
             }
-            allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
-            let niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion,false,isYear);
+            //allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
+            let niveauFinaltoShowAllEvaluations;
+            if(notHistorizedEvals.length > 0){ // si il y a des notes sur la compétence sur l'année en cours, on prend la note max obtenue
+                allEvaluations = notHistorizedEvals;
+                niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion,false,isYear);
+            } else { //sinon on prend la note obtenue la dernière année
+                let lastEvaluation = _.last (allEvaluations);
+                niveauFinaltoShowAllEvaluations = utils.getMoyenneForBFC( lastEvaluation.evaluation + 1, tableConversion.all) -1;
+            }
+
             if(competence.competencesEvaluations) {
                 competence.niveauFinaltoShowAllEvaluations = niveauFinaltoShowAllEvaluations;
             }else{

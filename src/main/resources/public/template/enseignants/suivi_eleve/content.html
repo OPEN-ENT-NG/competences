@@ -52,7 +52,7 @@
                 <select ng-model="releveComp.periode"
                         ng-init="releveComp.periode=search.periode"
                         ng-change="exportRelCompObj.errExport = false; closeWarningMessages();"
-                        ng-options="periode as getI18nPeriode(periode) for periode in search.classe.periodes.all">
+                        ng-options="periode as getI18nPeriode(periode) for periode in releveComp.periodes">
                     <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
                 </select>
             </label><br/>

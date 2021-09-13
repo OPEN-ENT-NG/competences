@@ -266,113 +266,134 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @param idPeriode  Identifiant de la periode au cours de laquelle on souhaite recuperer les evaluations. Peut etre null.
      * @param handler    Handler contenant une map de note par competence, pour chaque eleve.
      */
-    private void getMaxNoteCompetenceEleve(final String[] idEleves, Long idPeriode, Long idCycle, Boolean isYear, final Handler<Either<String, Map<String, Map<Long, Float>>>> handler) {
-        competenceNoteService.getMaxCompetenceNoteEleve(idEleves, idPeriode,idCycle, isYear, event -> {
-            if (event.isRight()) {
-                Map<String, Map<Long,Map<String, Long>>> notesCompetencesEleve = new HashMap<>();
-                Map<String, Map<Long,Float>> moyMaxMatCompEleve = new HashMap<>();
-                Map<Long,List<String>> pastYear = new HashMap<>();
+    private void getMaxNoteCompetenceEleve(final String[] idEleves, Long idPeriode, Long idCycle, Boolean isYear,
+                                           final Handler<Either<String, Map<String, Map<Long, Float>>>> handler) {
 
-                JsonArray notesResultArray = event.right().getValue();
-                for (int i = 0; i < notesResultArray.size(); i++) {
-                    JsonObject _o = notesResultArray.getJsonObject(i);
-                    String id_eleve = _o.getString("id_eleve");
-                    String id_matiere = _o.getString("id_matiere");
-                    Long id_competence = _o.getLong("id_competence");
+        if (idCycle == null) {
+            competenceNoteService.getMaxCompetenceNoteEleveByPeriod(idEleves, idPeriode,  isYear, event -> {
+                if (event.isRight()) {
+                    Map<String, Map<Long, Float>> moyMaxMatCompEleve = getStringMapMap(event);
 
-                    if(_o.getLong("evaluation") < 0) {
-                        continue;
-                    }
-                    if (!notesCompetencesEleve.containsKey(id_eleve)) {
-                        notesCompetencesEleve.put(id_eleve, new HashMap<>());
-                        moyMaxMatCompEleve.put(id_eleve, new HashMap<>());
-                    }
-                    if (!notesCompetencesEleve.get(id_eleve).containsKey(id_competence)) {
-                        notesCompetencesEleve.get(id_eleve).put(id_competence, new HashMap<>());
-                    }
-
-                    Map<String,Long> notesCompetencesEleveIdComp = notesCompetencesEleve.get(id_eleve).get(id_competence);
-
-                    //si la competence n'est pas dans la map
-                    if(!notesCompetencesEleveIdComp.containsKey(id_matiere)) {
-                        //on set la competence avec la note ou le niveau final annuel ou périodique s'il existe
-                        if(_o.getLong("niveau_final_annuel")!= null) {
-                            notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final_annuel"));
-                        }else {
-                            if(_o.getLong("niveau_final")!= null) {
-                                notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final"));
-                            }else {
-                                notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("evaluation"));
-                            }
-                        }
-                        if(_o.getString("owner").equals("id-user-transition-annee"))
-                            if(pastYear.containsKey(id_competence))
-                                pastYear.get(id_competence).add(id_matiere);
-                            else {
-                                pastYear.put(id_competence, new ArrayList<>());
-                                pastYear.get(id_competence).add(id_matiere);
-                            }
-                    }else if(!_o.getString("owner").equals("id-user-transition-annee")){
-                        //si il s'agit d'une compétence noté sur la même année, sinon on ne prends pas en compte les années passées
-                        if(pastYear.containsKey(id_competence) && pastYear.get(id_competence).contains(id_matiere)){
-                            notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("evaluation"));
-                            pastYear.get(id_competence).remove(id_matiere);
-                        }
-                        //sinon on récupère la valeur de la competence déjà enregistrée
-                        Long niveauOfThisCompetence = notesCompetencesEleveIdComp.get(id_matiere);
-                        // on met le niveau_final annuel ou périodique s'il existe ou on le compare à la note de l'élève
-                        if(_o.getLong("niveau_final_annuel")!= null && niveauOfThisCompetence < _o.getLong("niveau_final_annuel")){
-                            notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final_annuel"));
-                        }else{
-                            if(_o.getLong("niveau_final")!= null && niveauOfThisCompetence < _o.getLong("niveau_final")
-                                    && _o.getLong("niveau_final_annuel")== null){
-                                notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final"));
-                            }else{
-                                if(niveauOfThisCompetence < _o.getLong("evaluation") && _o.getLong("niveau_final")== null
-                                        && _o.getLong("niveau_final_annuel")== null){
-                                    notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("evaluation"));
-                                }
-                            }
-                        }
-                    }
+                    handler.handle(new Either.Right<>(moyMaxMatCompEleve));
+                } else {
+                    handler.handle(new Either.Left<>("Erreur lors de la recuperation des evaluations de competences de la period:\n" +
+                            event.left().getValue()));
+                    log.error("getMaxCompetenceNoteEleveByPeriod : " + event.left().getValue());
                 }
+            });
+        } else {
+            competenceNoteService.getMaxCompetenceNoteEleveByCycle(idEleves,idCycle, event -> {
+                if (event.isRight()) {
+                    Map<String, Map<Long, Float>> moyMaxMatCompEleve = getStringMapMap(event);
 
-                //on fait la moyenne des maxs dans chaque matière pour une compétence
-                for (Map.Entry<String, Map<Long, Map<String, Long>>> competences : notesCompetencesEleve.entrySet()) {
-                    String id_eleve = competences.getKey();
-                    for (Map.Entry<Long, Map<String, Long>> competenceMaxMat : competences.getValue().entrySet()) {
-                        Long id_competence = competenceMaxMat.getKey();
-                        Map<String, Long> maxMats = competenceMaxMat.getValue();
-                        float sum = 0;
-                        float nbrofMat = 0;
-                        float moyenneToSend = 1f;
-                        for(Map.Entry<String, Long> maxMat : maxMats.entrySet()){
-                            String id_matiere = maxMat.getKey();
-                            Long max = maxMat.getValue();
-                            if(!pastYear.containsKey(id_competence) || !pastYear.get(id_competence).contains(id_matiere)){
-                                sum += max;
-                                nbrofMat++;
-                            }
-                        }
-                        if (nbrofMat == 0){
-                            for(Long max : maxMats.values()){
-                                sum += max;
-                                nbrofMat++;
-                            }
-                        }
-                        if(nbrofMat != 0)
-                            moyenneToSend = sum / nbrofMat;
-                        moyMaxMatCompEleve.get(id_eleve).put(id_competence, moyenneToSend);
-                    }
+                    handler.handle(new Either.Right<>(moyMaxMatCompEleve));
+                } else {
+                    handler.handle(new Either.Left<>("Erreur lors de la recuperation des evaluations des competences du cycle :\n" +
+                            event.left().getValue()));
+                    log.error("getMaxCompetenceNoteEleveByCycle : " + event.left().getValue());
                 }
+            });
+        }
+    }
 
-                handler.handle(new Either.Right<>(moyMaxMatCompEleve));
-            } else {
-                handler.handle(new Either.Left<>("Erreur lors de la recuperation des evaluations de competences :\n" +
-                        event.left().getValue()));
-                log.error("getMaxNoteCompetenceEleve : " + event.left().getValue());
+    private Map<String, Map<Long, Float>> getStringMapMap (Either<String, JsonArray> event) {
+        Map<String, Map<Long,Map<String, Long>>> notesCompetencesEleve = new HashMap<>();
+        Map<String, Map<Long,Float>> moyMaxMatCompEleve = new HashMap<>();
+        Map<Long,List<String>> pastYear = new HashMap<>();
+
+        JsonArray notesResultArray = event.right().getValue();
+        for (int i = 0; i < notesResultArray.size(); i++) {
+            JsonObject _o = notesResultArray.getJsonObject(i);
+            String id_eleve = _o.getString("id_eleve");
+            String id_matiere = _o.getString("id_matiere");
+            Long id_competence = _o.getLong("id_competence");
+
+            if(_o.getLong("evaluation") < 0) {
+                continue;
             }
-        });
+            if (!notesCompetencesEleve.containsKey(id_eleve)) {
+                notesCompetencesEleve.put(id_eleve, new HashMap<>());
+                moyMaxMatCompEleve.put(id_eleve, new HashMap<>());
+            }
+            if (!notesCompetencesEleve.get(id_eleve).containsKey(id_competence)) {
+                notesCompetencesEleve.get(id_eleve).put(id_competence, new HashMap<>());
+            }
+
+            Map<String,Long> notesCompetencesEleveIdComp = notesCompetencesEleve.get(id_eleve).get(id_competence);
+
+            //si la competence n'est pas dans la map
+            if(!notesCompetencesEleveIdComp.containsKey(id_matiere)) {
+                //on set la competence avec la note ou le niveau final annuel ou périodique s'il existe
+                if(_o.getLong("niveau_final_annuel")!= null) {
+                    notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final_annuel"));
+                }else {
+                    if(_o.getLong("niveau_final")!= null) {
+                        notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final"));
+                    }else {
+                        notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("evaluation"));
+                    }
+                }
+                if(_o.getString("owner").equals("id-user-transition-annee"))
+                    if(pastYear.containsKey(id_competence))
+                        pastYear.get(id_competence).add(id_matiere);
+                    else {
+                        pastYear.put(id_competence, new ArrayList<>());
+                        pastYear.get(id_competence).add(id_matiere);
+                    }
+            }else if(!_o.getString("owner").equals("id-user-transition-annee")){
+                //si il s'agit d'une compétence noté sur la même année, sinon on ne prends pas en compte les années passées
+                if(pastYear.containsKey(id_competence) && pastYear.get(id_competence).contains(id_matiere)){
+                    notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("evaluation"));
+                    pastYear.get(id_competence).remove(id_matiere);
+                }
+                //sinon on récupère la valeur de la competence déjà enregistrée
+                Long niveauOfThisCompetence = notesCompetencesEleveIdComp.get(id_matiere);
+                // on met le niveau_final annuel ou périodique s'il existe ou on le compare à la note de l'élève
+                if(_o.getLong("niveau_final_annuel")!= null && niveauOfThisCompetence < _o.getLong("niveau_final_annuel")){
+                    notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final_annuel"));
+                }else{
+                    if(_o.getLong("niveau_final")!= null && niveauOfThisCompetence < _o.getLong("niveau_final")
+                            && _o.getLong("niveau_final_annuel")== null){
+                        notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("niveau_final"));
+                    }else{
+                        if(niveauOfThisCompetence < _o.getLong("evaluation") && _o.getLong("niveau_final")== null
+                                && _o.getLong("niveau_final_annuel")== null){
+                            notesCompetencesEleveIdComp.put(id_matiere, _o.getLong("evaluation"));
+                        }
+                    }
+                }
+            }
+        }
+
+        //on fait la moyenne des maxs dans chaque matière pour une compétence
+        for (Map.Entry<String, Map<Long, Map<String, Long>>> competences : notesCompetencesEleve.entrySet()) {
+            String id_eleve = competences.getKey();
+            for (Map.Entry<Long, Map<String, Long>> competenceMaxMat : competences.getValue().entrySet()) {
+                Long id_competence = competenceMaxMat.getKey();
+                Map<String, Long> maxMats = competenceMaxMat.getValue();
+                float sum = 0;
+                float nbrofMat = 0;
+                float moyenneToSend = 1f;
+                for(Map.Entry<String, Long> maxMat : maxMats.entrySet()){
+                    String id_matiere = maxMat.getKey();
+                    Long max = maxMat.getValue();
+                    if(!pastYear.containsKey(id_competence) || !pastYear.get(id_competence).contains(id_matiere)){
+                        sum += max;
+                        nbrofMat++;
+                    }
+                }
+                if (nbrofMat == 0){
+                    for(Long max : maxMats.values()){
+                        sum += max;
+                        nbrofMat++;
+                    }
+                }
+                if(nbrofMat != 0)
+                    moyenneToSend = sum / nbrofMat;
+                moyMaxMatCompEleve.get(id_eleve).put(id_competence, moyenneToSend);
+            }
+        }
+        return moyMaxMatCompEleve;
     }
 
     /**
@@ -809,7 +830,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         CompositeFuture.all(maxBaremFuture, domainesRacineFuture, dispDomaineFuture, bfcFuture).setHandler(event -> {
             if(event.failed()){
-                returnFailure("getMoyenneControlesContinusBrevet", event, handler);
+                returnFailure("getMoyenneControlesContinusBrevet ", event, handler);
                 return;
             }
             Map<String, Map<Long, Boolean>> dispensesDomainesEleves = dispDomaineFuture.result();

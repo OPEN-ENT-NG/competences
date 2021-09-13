@@ -4112,6 +4112,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.opened.releveComp = true;
             $scope.releveComp.periode = $scope.search.periode;
             $scope.releveComp.textMod = true;
+            $scope.releveComp.periodes = _.reject($scope.search.classe.periodes.all, (period) => {
+                return period.libelle === 'cycle';
+            });
             $scope.closeWarningMessages();
             $scope.selectUnselectMatieres(false);
             classe ? $scope.forClasse = true : $scope.forClasse = false;
