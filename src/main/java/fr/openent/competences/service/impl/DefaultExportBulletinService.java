@@ -1867,7 +1867,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 moy += ((int)coefMatiere * moyMatiere[0]);
             }
         }
-        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        DecimalFormat decimalFormat = new DecimalFormat("#.0");
         decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
         Object moyenAnnuelle = (sumCoef > 0) ? decimalFormat.format(moy / sumCoef) : NN;
 
@@ -1939,7 +1939,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 eleveObject.getJsonObject(MOYENNE_GENERALE + "Obj"));
         eleveObject.put(PRINT_MOYENNE_GENERALE, params.getBoolean(MOYENNE_GENERALE));
 
-        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        DecimalFormat decimalFormat = new DecimalFormat("#.0");
         decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
         Object moyenGeneral = (sumCoef > 0) ? decimalFormat.format(moy / sumCoef) : NN;
         Object moyenGeneralClass = (nbEleveClass > 0) ? decimalFormat.format(moyClass / nbEleveClass) : NN;
