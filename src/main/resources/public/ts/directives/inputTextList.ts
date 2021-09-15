@@ -43,6 +43,7 @@ export let inputTextList = ng.directive('inputTextList', function() {
         link :  ($scope, element) => {
             $scope.openedList = false;
             $scope.itemsToDisplay = $scope.items;
+            console.log($scope.itemsToDisplay)
             /**
              * Ouvre ou ferme la liste de choix
              * @param item
