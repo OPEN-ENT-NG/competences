@@ -324,7 +324,6 @@
                                         </div>
 
                                         <div ng-class="{'navigable-cell' : currentDevoir.is_evaluated}" class="one cell cell-input">
-
                                             <input-text-list items="getListeAnnotations(evaluations,eleve.evaluation)"
                                                              display-attribute-list="libelle"
                                                              display-attribute-input="libelle_court"
@@ -348,8 +347,7 @@
                                              class="cell cell-indent expandable-content"
                                              ng-click="getEleveInfo(eleve);expandNote($index, false)"
                                              ng-if="currentDevoir.competences.all.length > 0 ">
-                                            <ul class="skills-eleve-list" ng-if="(eleve.evaluation.id_annotation === undefined
-                                            || eleve.evaluation.id_annotation === -1 ||(eleve.evaluation.valeur === annotationNN && currentDevoir.is_evaluated))">
+                                            <ul class="skills-eleve-list" ng-if="showCompetences(eleve)">
                                                 <li ng-mouseenter="highlightCompetence(competence.id_competence, true)"
                                                     ng-mouseleave="highlightCompetence(competence.id_competence, false)"
                                                     class="navigable-cell competences-cell"
