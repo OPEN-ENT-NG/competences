@@ -1549,7 +1549,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             }
         };
-
+        $scope.showCompetences = (eleve) => {
+            return (eleve.evaluation.id_annotation === undefined
+                || eleve.evaluation.id_annotation === -1
+                || (eleve.evaluation.valeur === $scope.annotationNN && $scope.currentDevoir.is_evaluated))
+                || (eleve.evaluation.valeur != "ABS" && eleve.evaluation.valeur != "DISP" && eleve.evaluation.valeur != "NR");
+        }
 
         /**
          * Construis le nom d'une compétence préfixée de la codification du domaine dont elle est rattachée.
