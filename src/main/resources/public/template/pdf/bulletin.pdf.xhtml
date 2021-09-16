@@ -277,6 +277,7 @@
             margin-top: 20px;
             margin-left: 1px;
             margin-right: 1px;
+            margin-bottom: 40px;
 
             @bottom-right {
                 content: counter(page) "/" counter(pages);
@@ -286,6 +287,12 @@
 
             @bottom-center {
                 content: element(footer);
+            }
+        }
+
+        @page:first {
+            @bottom-center {
+                content: normal;
             }
         }
 
@@ -381,7 +388,6 @@
             <span class="pull-right">{{schoolYear}}</span>
         </div>
     </div>
-    <!--<span class="pagination"/>-->
 
     <div style="height: 130px;" class="paddingFifty">
         <img id="education" src="data:image/png;base64, {{logoData}}" alt="Logo"/>
@@ -778,7 +784,7 @@
         {{/printMoyenneGenerale}}
     </table>
     {{#getPositionnement}}
-    <span class="paddingFifty" style="font-size: xx-small ;position: relative;top: 5px;"> {{footer}}</span>
+    <span class="paddingFifty" style="font-size: xx-small;"> {{footer}}</span>
     {{/getPositionnement}}
     {{/hasSuiviAcquis}}
 
