@@ -207,6 +207,7 @@
             margin-top: 20px;
             margin-left : 1px;
             margin-right : 1px;
+            margin-bottom: 40px;
 
             @bottom-right {
                 content: counter(page) "/" counter(pages);
@@ -216,6 +217,12 @@
 
             @bottom-center {
                 content: element(footer);
+            }
+        }
+
+        @page:first {
+            @bottom-center {
+                content: normal;
             }
         }
 
@@ -294,6 +301,17 @@
 
 {{#eleves}}
 <div class="page">
+    <div class="footer">
+        <div>
+            <span>{{firstName}} &nbsp; {{lastName}}</span>
+            <span class="pull-right">{{classeOf}} {{classeNameToShow}}</span>
+        </div>
+        <div>
+            <span>{{bilanCycle}}&nbsp; - &nbsp; {{periode}}</span>
+            <span class="pull-right">{{schoolYear}}</span>
+        </div>
+    </div>
+
     <div style= "height: 130px;" class="paddingFifty">
         <img id="education" src="data:image/png;base64, {{logoData}}" alt="Logo"/>
         <div class="structure">
@@ -740,18 +758,6 @@
         {{/projects}}
    </div>
     {{/showProjects}}
-
-    <!-- TODO : Que si il y a plus de 1 page -->
-    <div class="footer">
-        <div>
-            <span>{{firstName}} &nbsp; {{lastName}}</span>
-            <span class="pull-right">{{classeOf}} {{classeNameToShow}}</span>
-        </div>
-        <div>
-            <span>{{bilanCycle}}&nbsp; - &nbsp; {{periode}}</span>
-            <span class="pull-right">{{schoolYear}}</span>
-        </div>
-    </div>
 </div>
 {{/eleves}}
 
