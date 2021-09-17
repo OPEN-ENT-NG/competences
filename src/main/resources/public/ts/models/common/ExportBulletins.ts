@@ -371,11 +371,12 @@ export class ExportBulletins {
         }
     }
 
-    public static async checkBulletins(students: any,  id_type: any) {
+    public static async checkBulletins(students: any, id_type: any, idStructure: any) {
         try{
             let params = {
                 students,
-                id_type
+                id_type,
+                idStructure
             }
           return await http.post('/competences/bulletins/exists',params)
         }catch (e) {

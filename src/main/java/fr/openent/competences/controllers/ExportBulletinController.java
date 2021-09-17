@@ -1,6 +1,5 @@
 package fr.openent.competences.controllers;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import fr.openent.competences.Utils;
 import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.security.AccessExportBulletinFilter;
@@ -218,8 +217,9 @@ public class ExportBulletinController extends ControllerHelper {
         RequestUtils.bodyToJson(request, ressource -> {
             JsonArray students = ressource.getJsonArray("students");
             Integer idPeriode = ressource.getInteger("id_type");
+            String idStructure = ressource.getString("idStructure");
             //if already exist 201 if not 200
-            exportBulletinService.checkBulletinsExist(students,idPeriode , new Handler<Either<String, Boolean>>() {
+            exportBulletinService.checkBulletinsExist(students,idPeriode,idStructure , new Handler<Either<String, Boolean>>() {
                 @Override
                 public void handle(Either<String, Boolean> event) {
                    if(event.isRight()) {

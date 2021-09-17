@@ -3806,39 +3806,43 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void checkBulletinsExist(JsonArray students, Integer idPeriode, Handler<Either<String, Boolean>> handler) {
+    public void checkBulletinsExist(JsonArray students, Integer idPeriode, String idStructure, Handler<Either<String, Boolean>> handler) {
         JsonArray statements = new JsonArray();
-
-        for (int i = 0 ; i < students.size(); i++){
-            JsonObject student =  students.getJsonObject(i);
-            statements.add(
-                    checkStatements(student.getString("id"),
-                            student.getString("idClasse"),
-                            idPeriode));
-        }
-        Sql.getInstance().transaction(statements, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                JsonObject result = event.body();
-                if (result.getString("status").equals("ok")) {
-                    try{
-                        result.getJsonArray("results")
-                                .getJsonObject(0).getJsonArray("results").getJsonArray(0);
-                        handler.handle(new Either.Right<>(true));
-                    }catch (Exception e){
-                        handler.handle(new Either.Right<>(false));
-                    }
-                } else {
-                    handler.handle(new Either.Left<>(result.getString("status")));
-                }
+        utilsService.getYearsAndPeriodes(idStructure, true, yearEvent -> {
+            String idYear = yearEvent.right().getValue().getString("start_date").substring(0,4);
+            for (int i = 0 ; i < students.size(); i++){
+                JsonObject student =  students.getJsonObject(i);
+                statements.add(
+                        checkStatements(student.getString("id"),
+                                student.getString("idClasse"),
+                                idPeriode,
+                                idYear));
             }
+            Sql.getInstance().transaction(statements, new Handler<Message<JsonObject>>() {
+                @Override
+                public void handle(Message<JsonObject> event) {
+                    JsonObject result = event.body();
+                    if (result.getString("status").equals("ok")) {
+                        try{
+                            result.getJsonArray("results")
+                                    .getJsonObject(0).getJsonArray("results").getJsonArray(0);
+                            handler.handle(new Either.Right<>(true));
+                        }catch (Exception e){
+                            handler.handle(new Either.Right<>(false));
+                        }
+                    } else {
+                        handler.handle(new Either.Left<>(result.getString("status")));
+                    }
+                }
+            });
         });
+
     }
 
-    private JsonObject checkStatements(String idStudent, String idClasse, Integer idPeriode) {
+    private JsonObject checkStatements(String idStudent, String idClasse, Integer idPeriode, String idYear) {
         String query = "SELECT 1 from " + Competences.EVAL_SCHEMA + ".archive_bulletins " +
-                " WHERE id_classe = ? AND id_eleve = ? AND id_periode = ? ; ";
-        JsonArray params = new JsonArray().add(idClasse).add(idStudent).add(idPeriode);
+                " WHERE id_classe = ? AND id_eleve = ? AND id_periode = ? AND id_annee = ? ; ";
+        JsonArray params = new JsonArray().add(idClasse).add(idStudent).add(idPeriode).add(idYear);
         return  new JsonObject()
                 .put("statement", query)
                 .put("values", params)

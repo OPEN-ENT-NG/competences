@@ -207,7 +207,8 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                     options.idStudents = _.pluck(options.students, 'id');
                     if (options.idStudents !== undefined && options.idStudents.length > 0) {
                         try {
-                            let {status} =await ExportBulletins.checkBulletins(options.students,$scope.selected.periode.id_type);
+                            console.log(options)
+                            let {status} =await ExportBulletins.checkBulletins(options.students,$scope.selected.periode.id_type,options.idStructure);
                             if(status == 201){
                                 $scope.optionsBulletins = options ;
                                 $scope.display.bulletinAlert = true;

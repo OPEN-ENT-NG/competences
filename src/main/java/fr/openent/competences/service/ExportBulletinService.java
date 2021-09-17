@@ -298,5 +298,5 @@ public interface ExportBulletinService {
 
  void generateImagesFromPathForBulletin (JsonObject eleve, Vertx vertx, Handler<Either<String, JsonObject>> handler);
 
- void checkBulletinsExist(JsonArray students, Integer idPeriode, Handler<Either<String, Boolean>> handler);
+ void checkBulletinsExist(JsonArray students, Integer idPeriode, String idStructure, Handler<Either<String, Boolean>> handler);
 }
