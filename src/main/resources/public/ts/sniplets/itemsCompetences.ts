@@ -230,12 +230,20 @@ export const itemsCompetences = {
                 id_etablissement: this.itemsCompetences.that.structure.id
             };
             this.itemsCompetences.that.printDomaines = _.clone(domaines);
-            this.itemsCompetences.that.selectedDomaines = this.itemsCompetences.that.newItem.ids_domaine;
+          //  this.itemsCompetences.that.selectedDomaines = this.itemsCompetences.that.newItem.ids_domaine;
+            this.itemsCompetences.that.initSelectDomaine(this.itemsCompetences.that.printDomaines);
             utils.safeApply(this.itemsCompetences.that);
         }.bind(this),
 
-        initSelectDomaine: function (domaine) {
-            domaine.selected = _.contains(this.itemsCompetences.that.newItem.ids_domaine, domaine.id);
+        initSelectDomaine: function (domaines) {
+            _.forEach(domaines.all, (domaine) => {
+                domaine.selected = _.contains(this.itemsCompetences.that.newItem.ids_domaine, domaine.id);
+                this.itemsCompetences.that.initSelectDomaine(domaine.domaines);
+            });
+        }.bind(this),
+
+        isStringUndefinedOrEmpty: function(name) {
+            return (name === undefined || name.trim().length === 0)
         }.bind(this),
 
         selectDomaine: function (domaine) {

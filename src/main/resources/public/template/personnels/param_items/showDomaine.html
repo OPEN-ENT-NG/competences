@@ -23,8 +23,7 @@
         <label ng-if="domaine.competences.all.length > 0" class="checkbox">
             <input type="checkbox"
                    ng-disabled="!newItem.ismanuelle"
-                   ng-init="initSelectDomaine(domaine)"
-                   ng-click="selectDomaine(domaine)"
+                   ng-change="selectDomaine(domaine);"
                    ng-model="domaine.selected">
             <span></span>
         </label> [[domaine.codification]] - [[domaine.libelle]]
@@ -43,9 +42,7 @@
             <label class="checkbox">
                 <input type="checkbox"
                        ng-disabled="!newItem.ismanuelle"
-                       ng-init="initSelectDomaine(domaine);"
-                       ng-click="selectDomaine(domaine);"
-                       ng-init="selectDomaine(domaine)"
+                       ng-change="selectDomaine(domaine);"
                        ng-model="domaine.selected">
                 <span></span>
             </label> [[domaine.codification]] - [[domaine.libelle]]
