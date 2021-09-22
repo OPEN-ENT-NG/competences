@@ -1297,15 +1297,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         StringBuilder query = new StringBuilder()
                 .append("WITH res AS ( ")
-                .append("SELECT devoirs.id, devoirs.id_matiere, devoirs.owner, services.is_visible, services.coefficient,")
-                .append(" devoirs.id_periode, rel_devoirs_groupes.id_groupe ")
+                .append("SELECT devoirs.id, devoirs.id_matiere, devoirs.owner, services.is_visible, services.coefficient, ")
+                .append("devoirs.id_periode, rel_devoirs_groupes.id_groupe ")
                 .append("FROM notes.devoirs ")
                 .append("INNER JOIN notes.rel_devoirs_groupes ON (devoirs.id = rel_devoirs_groupes.id_devoir) ")
                 .append("LEFT JOIN viesco.services ON (rel_devoirs_groupes.id_groupe = services.id_groupe ")
                 .append("AND devoirs.owner = services.id_enseignant AND devoirs.id_matiere = services.id_matiere ")
                 .append("AND services.id_etablissement = ?) ")
-                .append("WHERE devoirs.eval_lib_historise = FALSE AND devoirs.id_etablissement = ? ")
-                .append(") ");
+                .append("WHERE devoirs.eval_lib_historise = FALSE AND devoirs.id_etablissement = ?) ");
         values.add(idEtablissement).add(idEtablissement);
 
         query.append("SELECT res.id_matiere, res.owner, res.is_visible, res.coefficient, res.id_periode, res.id_groupe ")
@@ -1333,16 +1332,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("UNION ");
 
-        query.append("SELECT DISTINCT moyenne_finale.id_matiere, services.id_enseignant, services.is_visible, services.coefficient,")
+        query.append("SELECT DISTINCT moyenne_finale.id_matiere, services.id_enseignant, services.is_visible, services.coefficient, ")
                 .append("moyenne_finale.id_periode, services.id_groupe ")
                 .append("FROM notes.moyenne_finale ")
                 .append("LEFT JOIN viesco.services ON (moyenne_finale.id_classe = services.id_groupe ")
                 .append("AND moyenne_finale.id_matiere = services.id_matiere ")
                 .append("AND services.id_etablissement = ?) ")
-                .append("WHERE services.id_etablissement = ? ");
-        values.add(idEtablissement).add(idEtablissement);
-
-        query.append("AND moyenne_finale.id_eleve = ? ");
+                .append("WHERE moyenne_finale.id_eleve = ? ");
+        values.add(idEtablissement);
         values.add(idEleve);
 
         query.append("UNION ");
