@@ -335,7 +335,9 @@ export class Utils {
                 allEvaluations = notHistorizedEvals;
                 niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion,false,isYear);
             } else { //sinon on prend la note obtenue la dernière année
-                let lastEvaluation = _.last (allEvaluations);
+                let lastEvaluation = _.max (allEvaluations, (evaluation)=> {
+                    return Date.parse(evaluation.created);
+                });
                 niveauFinaltoShowAllEvaluations = utils.getMoyenneForBFC( lastEvaluation.evaluation + 1, tableConversion.all) -1;
             }
 
