@@ -77,10 +77,10 @@ public class DefaultElementProgramme implements ElementProgramme {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT texte, id_classe ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".element_programme ")
-                .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_classe IN " + Sql.listPrepared(idsClasse.getList()))
-                .append("AND "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_periode = ? ")
-                .append("AND "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_matiere = ? ");
+                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".element_programme ")
+                .append("WHERE ").append(Competences.COMPETENCES_SCHEMA).append(".element_programme.id_classe IN ").append(Sql.listPrepared(idsClasse.getList()))
+                .append("AND ").append(Competences.COMPETENCES_SCHEMA).append(".element_programme.id_periode = ? ")
+                .append("AND ").append(Competences.COMPETENCES_SCHEMA).append(".element_programme.id_matiere = ? ");
 
         for(Object idClasse : idsClasse){
             values.add(idClasse);
@@ -89,10 +89,8 @@ public class DefaultElementProgramme implements ElementProgramme {
         values.add(idPeriode);
         values.add(idMatiere);
 
-        sql.prepared(query.toString(), values, Competences.DELIVERY_OPTIONS,
-                SqlResult.validResultHandler(handler));
+        sql.prepared(query.toString(), values, Competences.DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
-
 
     @Override
     public void getDomainesEnseignement(String idCycle, Handler<Either<String, JsonArray>> handler){

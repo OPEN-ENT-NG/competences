@@ -105,24 +105,22 @@ public class Utils {
      * @param idsClasses array une clase
      * @param handler    response l'id de classe avec ses groups s'ils existent sinon retourne que id de la classe
      */
-    public static void getGroupesClasse(EventBus eb, final JsonArray idsClasses, final Handler<Either<String, JsonArray>> handler) {
+    public static void getGroupesClasse(EventBus eb, final JsonArray idsClasses,
+                                        final Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put(ACTION, "classe.getGroupesClasse")
                 .put("idClasses", idsClasses);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-                        JsonObject body = message.body();
-                        if (OK.equals(body.getString(STATUS))) {
-                            JsonArray queryResult = body.getJsonArray(RESULTS);
-                            handler.handle(new Either.Right<String, JsonArray>(queryResult));
-                        } else {
-                            handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                            log.error("getGroupesClasse : " + body.getString("message"));
-                        }
-                    }
-                }));
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray queryResult = body.getJsonArray(RESULTS);
+                handler.handle(new Either.Right<>(queryResult));
+            } else {
+                handler.handle(new Either.Left<>(body.getString("message")));
+                log.error("getGroupesClasse : " + body.getString("message"));
+            }
+        }));
     }
 
     /**

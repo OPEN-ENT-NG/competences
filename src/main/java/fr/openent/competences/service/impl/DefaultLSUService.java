@@ -49,13 +49,13 @@ public class DefaultLSUService implements LSUService {
     }
 
 
-    public void serviceResponseOK (AtomicBoolean answer, int count, String thread, String method) {
-        if (count > 1 ) {
+    public void serviceResponseOK(AtomicBoolean answer, int count, String thread, String method) {
+        if(count > 1) {
             log.info("[ "+ method + " ] : " + thread + " TIME OUT " + count);
         }
         if(!answer.get()) {
             answer.set(true);
-            log.info(" -------[" + method + "]: " + thread + " FIN " );
+            log.info("[ " + method + " ]: " + thread + " FIN ");
         }
     }
 
