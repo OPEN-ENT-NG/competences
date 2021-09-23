@@ -353,7 +353,9 @@
             </div>
             {{/addOtherTeacher}}
             <div style="font-size: small;">{{classeOf}} {{classeNameToShow}}</div>
+            {{#hasINENumber}}
             <div style="font-size: small;">{{numberINE}} {{ine}}</div>
+            {{/hasINENumber}}
         </div>
         {{/getResponsable}}
         {{#getResponsable}}
@@ -375,7 +377,9 @@
             </div>
             {{/addOtherTeacher}}
             <div style="font-size: small;">{{classeOf}} {{classeNameToShow}}</div>
+            {{#hasINENumber}}
             <div style="font-size: small;">{{numberINE}} {{ine}}</div>
+            {{/hasINENumber}}
         </div>
         <div class="responsable">
             {{^relativesHaveTwoNames}}

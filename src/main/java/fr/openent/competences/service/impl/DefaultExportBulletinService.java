@@ -429,9 +429,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void putLibelleForExport(String idEleve, Map<String , JsonObject> elevesMap, JsonObject params,
+    public void putLibelleForExport(String idEleve, Map<String, JsonObject> elevesMap, JsonObject params,
                                     Handler<Either<String, JsonObject>> finalHandler){
-
         JsonObject eleve = elevesMap.get(idEleve);
         logBegin(PUT_LIBELLE_FOR_EXPORT_METHOD, idEleve);
         if(eleve == null) {
@@ -502,7 +501,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             JsonArray niveauCompetences;
             try{
-                niveauCompetences  = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
+                niveauCompetences = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
 
             }catch (java.lang.ClassCastException e){
                 niveauCompetences = new JsonArray(params.getString(NIVEAU_COMPETENCE));
@@ -639,7 +638,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         idEleve, elevesMap, idPeriode, futureGetHandler(getEvenementsFuture));
                 getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, params.getString("idStructure"),isBulletinLycee,
                         futureGetHandler(getSyntheseBilanPeriodiqueFuture));
-                getStructure(idEleve, elevesMap.get(idEleve),   futureGetHandler(getStructureFuture));
+                getStructure(idEleve, elevesMap.get(idEleve), futureGetHandler(getStructureFuture));
                 getLibellePeriode(idEleve, elevesMap, idPeriode, host, acceptLanguage, futureGetHandler(getLibellePeriodeFuture));
                 getAnneeScolaire(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), futureGetHandler(getAnneeScolaireFuture));
                 getCycle(idEleve, classe.getString(ID_CLASSE), elevesMap,idPeriode, params.getLong(TYPE_PERIODE),
@@ -2729,6 +2728,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     || !eleve.getString(ID_ETABLISSEMENT_KEY).equals(params.getString(ID_ETABLISSEMENT_KEY)))){
                 eleve.put(ID_ETABLISSEMENT_KEY, params.getString("idStructure"));
             }
+
+            eleve.put("hasINENumber", eleve.containsKey("ine") && eleve.getString("ine") != null);
 
             elevesMap.put(idEleve, eleve);
 
