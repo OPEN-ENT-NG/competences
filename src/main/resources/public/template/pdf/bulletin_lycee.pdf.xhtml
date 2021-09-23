@@ -6,7 +6,6 @@
 <head>
     <title>{{title}}</title>
     <style type="text/css">
-
         body {
             font-family: "Calibri", sans-serif;
             align-content: center;
@@ -14,17 +13,9 @@
             margin: 0;
         }
 
-        .page {
-            page-break-after: always;
-        }
-
         .paddingFifty {
             padding-left : 20px;
             padding-right : 20px;
-        }
-
-        .page:last-child{
-            page-break-after: avoid;
         }
 
         #education {
@@ -93,7 +84,9 @@
             border-collapse: collapse;
         }
 
-        .start { page-break-before : auto }
+        .start {
+            page-break-before : auto
+        }
 
         table tr:first-child td {
             background-color: #ffffff;
@@ -118,15 +111,6 @@
             {{^getProgramElements}}
                 width: 70% !important;
             {{/getProgramElements}}
-        }
-
-        .domaines {
-            font-size: 10px;
-            font-style: italic;
-        }
-
-        .blank_row {
-            height: 20px !important;
         }
 
         .eleve {
@@ -170,7 +154,7 @@
             visibility: visible !important;
         }
 
-        .lefCom {
+        .leftCom {
             text-align: left;
             font-weight: normal;
             font-size: small;
@@ -180,18 +164,6 @@
 
         .inlineBlock {
             display: inline-block;
-        }
-
-        .leftCommunication {
-            margin-top: 0%!important;
-            padding-top: 5px;
-            width: 67.5% !important;
-            height: 45px !important;
-        }
-
-        .rightCommunication {
-            vertical-align: top;
-            text-align: right;
         }
 
         #imgSignature {
@@ -222,11 +194,49 @@
             margin-top : 0px;
         }
 
+        .page {
+            page-break-after: always;
+        }
+
+        .page:last-child{
+            page-break-after: avoid;
+        }
+
         @page{
-            size : A4 ;
+            size : A4;
             margin-top: 20px;
             margin-left : 1px;
             margin-right : 1px;
+            margin-bottom: 40px;
+
+            @bottom-right {
+                /*content: counter(page) "/" counter(pages);*/
+                font-size: x-small;
+                padding-right: 10px;
+            }
+
+            @bottom-center {
+                content: element(footer);
+            }
+        }
+
+        @page:first {
+            @bottom-center {
+                content: normal;
+            }
+        }
+
+        div.footer {
+            display: block;
+            width: 70%;
+            margin: auto;
+            font-size: x-small;
+            position: running(footer);
+        }
+
+        .pull-right {
+            float:right;
+            text-align: right;
         }
 
         .firstProjet {
@@ -256,6 +266,7 @@
         }
 
         .header td {
+            height: 50px;
             font-size: x-small;
             padding-left: 2px;
             padding-right: 2px;
@@ -280,12 +291,26 @@
             padding-top: 2px;
             padding-bottom: 2px;
         }
+
+        .suiviDesAcquis {
+            height: 700px;
+        }
     </style>
 </head>
 <body>
 
 {{#eleves}}
 <div class="page">
+    <div class="footer">
+        <div>
+            <span>{{firstName}} &nbsp; {{lastName}}</span>
+            <span class="pull-right">{{classeOf}} {{classeNameToShow}}</span>
+        </div>
+        <div>
+            <span>{{bilanCycle}}&nbsp; - &nbsp; {{periode}}</span>
+            <span class="pull-right">{{schoolYear}}</span>
+        </div>
+    </div>
 
     <div style= "height: 130px;" class="paddingFifty">
         <img id="education" src="data:image/png;base64, {{logoData}}" alt="Logo"/>
@@ -328,6 +353,9 @@
             </div>
             {{/addOtherTeacher}}
             <div style="font-size: small;">{{classeOf}} {{classeNameToShow}}</div>
+            {{#hasINENumber}}
+            <div style="font-size: small;">{{numberINE}} {{ine}}</div>
+            {{/hasINENumber}}
         </div>
         {{/getResponsable}}
         {{#getResponsable}}
@@ -349,6 +377,9 @@
             </div>
             {{/addOtherTeacher}}
             <div style="font-size: small;">{{classeOf}} {{classeNameToShow}}</div>
+            {{#hasINENumber}}
+            <div style="font-size: small;">{{numberINE}} {{ine}}</div>
+            {{/hasINENumber}}
         </div>
         <div class="responsable">
             {{^relativesHaveTwoNames}}
@@ -372,40 +403,39 @@
     {{#hasSuiviAcquis}}
     <div class="paddingFifty">
         <table class="suiviDesAcquis">
-
             <tr class="header">
-                <td class="firstSuivi">&nbsp;</td>
+                <td>&nbsp;</td>
                 {{#getProgramElements}}
                 <td class="secondSuivi">{{suiviElementLibelle}}</td>
                 {{/getProgramElements}}
 
                 <td class="thirdSuivi">{{suiviAcquisitionLibelle}}</td>
                 {{#printCoefficient}}
-                <td class="fourthSuivi">{{coefficientLibelle}}</td>
+                <td>{{coefficientLibelle}}</td>
                 {{/printCoefficient}}
                 {{#getStudentRank}}
-                <td class="sixthSuivi">{{studentRankLibelle}}</td>
+                <td>{{studentRankLibelle}}</td>
                 {{/getStudentRank}}
                 {{#getClassAverageMinMax}}
                 <td class="onePadding">{{classAverageMinLibelle}}</td>
                 <td class="onePadding">{{classAverageMaxLibelle}}</td>
                 {{/getClassAverageMinMax}}
                 {{#printSousMatieres}}
-                <td class="fourthSuivi"></td>
+                <td></td>
                 {{/printSousMatieres}}
 
                 {{#getMoyenneEleve}}
-                <td class="fourthSuivi">{{moyenneStudentLibelle}}</td>
+                <td>{{moyenneStudentLibelle}}</td>
                 {{/getMoyenneEleve}}
                 {{#getMoyenneClasse}}
-                <td class="fifthSuivi">{{moyenneClasseLibelle}}</td>
+                <td>{{moyenneClasseLibelle}}</td>
                 {{/getMoyenneClasse}}
             </tr>
 
             {{#suiviAcquis}}
             {{#printMatiere}}
             <tr>
-                <td style= "border-right: none; background-color: #ffffff"  rowspan="{{rowSpan}}"
+                <td style= "border-right: none; background-color: #ffffff; height: {{{heightByRow}}};"  rowspan="{{rowSpan}}"
                     class="left-align emptyClass">
                     <span style="font-size: small; font-weight: bold">{{libelleMatiere}}</span><br/>
 
@@ -420,7 +450,8 @@
                     style="text-align: justify !important;padding-left:  5px !important;padding-right:  5px !important;background-color: #ffffff; word-wrap:break-word;{{{style}}}"
                     class="secondSuivi ">
                     {{/display}}
-                    {{elementsProgramme}}</td>
+                    {{elementsProgramme}}
+                </td>
 
                 {{/getProgramElements}}
                 {{#display}}
@@ -434,7 +465,7 @@
                 {{#printCoefficient}}
                 <td rowspan="{{rowSpan}}"
                     style="text-align: center; background-color: #ffffff;word-wrap:break-word; {{{style}}}"
-                    class="fourthSuivi onePadding">
+                    class="onePadding">
                     {{coef}}
                 </td>
                 {{/printCoefficient}}
@@ -442,7 +473,7 @@
                 {{#getStudentRank}}
                 <td rowspan="{{rowSpan}}"
                     style="font-size: x-small; text-align: center; word-wrap:break-word; {{{style}}}"
-                    class="fifthSuivi onePadding">
+                    class="onePadding">
                     {{#studentRank}}
                     {{rank}}/{{rank_size}}
                     {{/studentRank}}
@@ -470,18 +501,18 @@
                 {{#printSousMatieres}}
                 {{^hasSousMatiere}}
                 <td style=" border-left: none;font-size: x-small; font-weight: bold; background-color: #ffffff"
-                    class="fifthSuivi onePadding">
+                    class="onePadding">
                     <br/>
                 </td>
                 {{#getMoyenneEleve}}
                 <td style="font-size: x-small; font-weight: bold; background-color: #ffffff "
-                    class="fourthSuivi onePadding">
+                    class="onePadding">
                     {{moyenneEleve}}
                 </td>
                 {{/getMoyenneEleve}}
                 {{#getMoyenneClasse}}
                 <td style="font-size: x-small; font-weight: bold; background-color: #ffffff"
-                    class="fifthSuivi onePadding">
+                    class="onePadding">
                     {{moyenneClasse}}
                 </td>
                 {{/getMoyenneClasse}}
@@ -490,18 +521,18 @@
 
                 {{#hasSousMatiere}}
                 {{#firstSousMatiere}}
-                <td style=" border-left: none;background-color: #ffffff" class="fifthSuivi onePadding">
+                <td style=" border-left: none;background-color: #ffffff" class="onePadding">
                     <span style="font-size: xx-small; font-weight: normal">{{libelle}}</span>
                 </td>
                 {{#getMoyenneEleve}}
-                <td style="background-color: #ffffff" class="fourthSuivi onePadding">
+                <td style="background-color: #ffffff" class="onePadding">
                     {{#moyenneEleveSousMat}}
                     <span style="font-size: xx-small; font-weight: normal">{{moyenneEleve}}</span>
                     {{/moyenneEleveSousMat}}
                 </td>
                 {{/getMoyenneEleve}}
                 {{#getMoyenneClasse}}
-                <td style="background-color: #ffffff" class="fifthSuivi onePadding">
+                <td style="background-color: #ffffff" class="onePadding">
                     {{#moyenneClasseSousMat}}
                     <span style="font-size: xx-small; font-weight: normal">{{moyenneClasse}}</span>
                     {{/moyenneClasseSousMat}}
@@ -513,13 +544,13 @@
                 {{^printSousMatieres}}
                 {{#getMoyenneEleve}}
                 <td style="font-size: x-small; font-weight: bold; background-color: #ffffff "
-                    class="fourthSuivi onePadding">
+                    class="onePadding">
                     {{moyenneEleve}}
                 </td>
                 {{/getMoyenneEleve}}
                 {{#getMoyenneClasse}}
                 <td style="font-size: x-small; font-weight: bold; background-color: #ffffff"
-                    class="fifthSuivi onePadding">
+                    class="onePadding">
                     {{moyenneClasse}}
                 </td>
                 {{/getMoyenneClasse}}
@@ -527,21 +558,20 @@
             </tr>
             {{#printSousMatieres}}
 
-
             {{#sousMatieres}}
             <tr>
-                <td style=" border-left: none;background-color: #ffffff" class="fifthSuivi onePadding">
+                <td style=" border-left: none;background-color: #ffffff" class="onePadding">
                     <span style="font-size: xx-small; font-weight: normal">{{libelle}}</span>
                 </td>
                 {{#getMoyenneEleve}}
-                <td style="background-color: #ffffff" class="fourthSuivi onePadding">
+                <td style="background-color: #ffffff" class="onePadding">
                     {{#moyenneEleveSousMat}}
                     <span style="font-size: xx-small; font-weight: normal">{{moyenneEleve}}</span>
                     {{/moyenneEleveSousMat}}
                 </td>
                 {{/getMoyenneEleve}}
                 {{#getMoyenneClasse}}
-                <td style="background-color: #ffffff" class="fifthSuivi onePadding">
+                <td style="background-color: #ffffff" class="onePadding">
                     {{#moyenneClasseSousMat}}
                     <span style="font-size: xx-small; font-weight: normal">{{moyenneClasse}}</span>
                     {{/moyenneClasseSousMat}}
@@ -554,19 +584,19 @@
             <tr>
                 {{#printSousMatieres}}
                 <td style=" border-left: none;font-size: x-small; font-weight: bold; background-color: #ffffff"
-                    class="fifthSuivi onePadding">
+                    class="onePadding">
                     <br/>
                 </td>
                 {{/printSousMatieres}}
                 {{#getMoyenneEleve}}
                 <td style="font-size: x-small; font-weight: bold; background-color: #ffffff "
-                    class="fourthSuivi onePadding">
+                    class="onePadding">
                     {{moyenneEleve}}
                 </td>
                 {{/getMoyenneEleve}}
                 {{#getMoyenneClasse}}
                 <td style="font-size: x-small; font-weight: bold; background-color: #ffffff"
-                    class="fifthSuivi onePadding">
+                    class="onePadding">
                     {{moyenneClasse}}
                 </td>
                 {{/getMoyenneClasse}}
@@ -589,13 +619,13 @@
                 <td class="thirdSuivi"></td>
 
                 {{#printCoefficient}}
-                <td class="fourthSuivi"></td>
+                <td></td>
                 {{/printCoefficient}}
                 {{#getStudentRank}}
                 {{#moyenneGeneraleObj}}
                 <td rowspan="{{rowSpan}}"
                     style="font-size: x-small; text-align: center; word-wrap:break-word; {{{style}}}"
-                    class="fifthSuivi onePadding">
+                    class="onePadding">
                     {{#studentRank}}
                     {{rank}}/{{rank_size}}
                     {{/studentRank}}
@@ -623,13 +653,13 @@
                 {{/moyenneGeneraleObj}}
                 {{/getClassAverageMinMax}}
                 {{#printSousMatieres}}
-                <td class="fourthSuivi"></td>
+                <td></td>
                 {{/printSousMatieres}}
                 {{#getMoyenneEleve}}
-                <td class="fourthSuivi" style="font-weight: bold;"> {{moyenneGenerale}}</td>
+                <td style="font-weight: bold;"> {{moyenneGenerale}}</td>
                 {{/getMoyenneEleve}}
                 {{#getMoyenneClasse}}
-                <td class="fiveSuivi" style="font-size: x-small; font-weight: bold;"> {{moyenneGeneraleClass}}</td>
+                <td style="font-size: x-small; font-weight: bold;"> {{moyenneGeneraleClass}}</td>
                 {{/getMoyenneClasse}}
             </tr>
             {{/printMoyenneGenerale}}
@@ -642,15 +672,16 @@
         <table style="">
             <tr style="page-break-inside: avoid;">
                 <td class="" style=" visibility: visible; width: 60%; border: none">
-                    <div  class="lefCom" style="{{appreciationCPEStyle}}">
-                        <span style="font-weight: bold">{{appreciationCPE}}</span>
+                    <div  class="leftCom" style="{{appreciationCPEStyle}}">
+                        <span>{{viescolaireLibelle}}</span>
+                        <span>{{appreciationCPE}}</span>
                     </div>
-                    <div class="lefCom">
+                    <div class="leftCom">
                         {{#evenements}}
                         <div>{{.}}</div>
                         {{/evenements}}
                         {{#printMoyenneAnnuelle}}
-                        <div><span style="font-weight: bold">{{moyenneAnnuelleLibelle}}:</span>{{moyenneAnnuelle}}</div>
+                        <div><span style="font-weight: bold">{{moyenneAnnuelleLibelle}} : </span>{{moyenneAnnuelle}}</div>
                         {{/printMoyenneAnnuelle}}
                         <div><span style="font-weight: bold">{{beforeSyntheseBP}}</span>{{syntheseBilanPeriodque}}</div>
                         {{#hasAvisConseil}}

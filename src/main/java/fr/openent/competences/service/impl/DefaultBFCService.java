@@ -46,6 +46,8 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.utils.StringUtils;
 
 import java.io.StringReader;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -471,6 +473,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
             JsonArray resultEleve = new fr.wseduc.webutils.collections.JsonArray();
 
+            DecimalFormat decimalFormat = new DecimalFormat("#.0");
+            decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
+
             for (Domaine d : domainesRacine) {
                 JsonObject note = new JsonObject();
                 if (bfcEleves.containsKey(eleve) && bfcEleves.get(eleve).containsKey(d.getId()) &&
@@ -483,7 +488,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                         } else {
                             Double moy = calculMoyenne(d, notesCompetencesEleves, eleve, bornes);
                             if (moy != null)
-                                note.put("moyenne",Math.round(moy * 100.0) / 100.0);
+                                note.put("moyenne", Double.valueOf(decimalFormat.format(moy)));
                         }
                     }
                 } else if (notesCompetencesEleves.containsKey(eleve)) {
@@ -498,7 +503,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                             note.put("idDomaine",d.getId());
                             note.put("niveau", simplifiedMoy);
                             if(recapEval)
-                                note.put("moyenne", Math.round(moy * 100.0) / 100.0);
+                                note.put("moyenne", Double.valueOf(decimalFormat.format(moy)));
                         }
                     }
                 }
