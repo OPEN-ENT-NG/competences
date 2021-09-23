@@ -1250,7 +1250,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             if(!(moyFinalesNNElevesByPeriode != null && moyFinalesNNElevesByPeriode.containsKey(idPeriode)
                     && moyFinalesNNElevesByPeriode.get(idPeriode).contains(id_eleve))) {
                 if (!notesPeriodeByEleves.containsKey(id_eleve)) {
-                    notesPeriodeByEleves.put(id_eleve, new ArrayList<NoteDevoir>());
+                    notesPeriodeByEleves.put(id_eleve, new ArrayList<>());
                 }
                 notesPeriodeByEleves.get(id_eleve).add(note);
             }
@@ -1290,7 +1290,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 }
             }
         }
-        return (double) Math.round((sumMoyClasse / nbEleve) * 100) / 100;
+        DecimalFormat decimalFormat = new DecimalFormat("#.0");
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
+
+        return Double.valueOf(decimalFormat.format((sumMoyClasse / nbEleve)));
     }
 
     public void calculAndSetMoyenneClasseByPeriode(final JsonArray moyFinalesEleves,
@@ -1367,7 +1370,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             if (idPeriode != null) {
                 moyennePeriodeClasse.put("id", idPeriode);
                 ArrayList<NoteDevoir> allNotes = notesByPeriode.getValue().get(idPeriode);
-                Double classAverage =  calculMoyenneByElevesByPeriode(result, allNotes, moyFinales, moyFinalesNN, idPeriode);
+                Double classAverage = calculMoyenneByElevesByPeriode(result, allNotes, moyFinales, moyFinalesNN, idPeriode);
                 JsonObject averageStudentCurrentPeriode = result.getJsonObject(NOTES_BY_PERIODE_BY_STUDENT).getJsonObject(idPeriode.toString());
                 //cas : tous les élèves notés ont une moyenne finale NN
                 if (classAverage == 0 && averageStudentCurrentPeriode != null && averageStudentCurrentPeriode.isEmpty()) {
@@ -1393,8 +1396,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
             JsonObject moyennePeriodeClasse = new JsonObject();
             if(nbPeriode != 0) {
+                DecimalFormat decimalFormat = new DecimalFormat("#.0");
+                decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
+
                 moyennePeriodeClasse.put("id", (JsonObject) null).put("moyenne",
-                        (double) Math.round((sumMoyPeriode / moyennesClasses.size()) * 100) / 100);
+                        Double.valueOf(decimalFormat.format(sumMoyPeriode / moyennesClasses.size())));
             } else {
                 moyennePeriodeClasse.put("id", (JsonObject) null).put("moyenne", "NN");
             }

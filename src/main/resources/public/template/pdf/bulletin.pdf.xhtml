@@ -6,7 +6,6 @@
 <head>
     <title>{{title}}</title>
     <style type="text/css">
-
         body {
             font-family: "Calibri", sans-serif;
             align-content: center;
@@ -14,17 +13,9 @@
             margin: 0;
         }
 
-        .page {
-            page-break-after: always;
-        }
-
         .paddingFifty {
             padding-left : 20px;
             padding-right : 20px;
-        }
-
-        .page:last-child{
-            page-break-after: avoid;
         }
 
         #education {
@@ -43,6 +34,7 @@
             margin-top: 0px;
             float:right;
         }
+
         #imgStruct {
             height: 90px;
             position: relative;
@@ -55,7 +47,6 @@
             overflow : hidden;
             float : right;
             margin-bottom: 20px;
-
         }
 
         h1 {
@@ -73,7 +64,7 @@
         background-color: #cccccc;
         {{/neutre}}
         {{^neutre}}
-            background-color: #009ddd;
+        background-color: #009ddd;
         {{/neutre}}
         }
 
@@ -82,9 +73,8 @@
         background-color: #cccccc;
         {{/neutre}}
         {{^neutre}}
-            background-color: #ff9027;
+        background-color: #ff9027;
         {{/neutre}}
-
         }
 
         h1[color="green"] {
@@ -92,7 +82,7 @@
         background-color: #cccccc;
         {{/neutre}}
         {{^neutre}}
-            background-color: #b0d243;
+        background-color: #b0d243;
         {{/neutre}}
         }
 
@@ -105,29 +95,31 @@
         td {
             margin: 4px;
             padding: 10px;
-            {{#neutre}}
-                border: solid 1px;
-            {{/neutre}}
+        {{#neutre}}
+        border: solid 1px;
+        {{/neutre}}
         }
 
         table {
             width: 100%;
             font-size: 12px;
             text-align: center;
-            {{#neutre}}
-                border-collapse: collapse;
-            {{/neutre}}
+        {{#neutre}}
+        border-collapse: collapse;
+        {{/neutre}}
         }
 
-        .start { page-break-before : left }
+        .start {
+            page-break-before : left
+        }
 
         table tr:first-child td {
-            {{#neutre}}
-                background-color: #ffffff;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #e2f3fb;
-            {{/neutre}}
+        {{#neutre}}
+        background-color: #ffffff;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #e2f3fb;
+        {{/neutre}}
         }
 
         table tr:first-child td:first-child {
@@ -136,23 +128,23 @@
 
         .secondSuivi {
             width: 50%!important;
-            {{#neutre}}
-                padding: 5px !important;
-                text-align: justify !important;
-            {{/neutre}}
+        {{#neutre}}
+        padding: 5px !important;
+        text-align: justify !important;
+        {{/neutre}}
         }
 
         .thirdSuivi {
-            {{#neutre}}
-                padding: 5px !important;
-                text-align: justify !important;
-            {{/neutre}}
-            {{#getProgramElements}}
-                width: 50% !important;
-            {{/getProgramElements}}
-            {{^getProgramElements}}
-                width: 70% !important;
-            {{/getProgramElements}}
+        {{#neutre}}
+        padding: 5px !important;
+        text-align: justify !important;
+        {{/neutre}}
+        {{#getProgramElements}}
+        width: 50% !important;
+        {{/getProgramElements}}
+        {{^getProgramElements}}
+        width: 70% !important;
+        {{/getProgramElements}}
         }
 
         .domaines {
@@ -160,20 +152,16 @@
             font-style: italic;
         }
 
-        .blank_row {
-            height: 20px !important;
-        }
-
         .eleve {
             padding: 5px;
-            {{#neutre}}
-                background-color: #cccccc;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #e2f3fb;
-            {{/neutre}}
-            min-height : 60px;
-            font-size: 14px;
+        {{#neutre}}
+        background-color: #cccccc;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #e2f3fb;
+        {{/neutre}}
+        min-height : 60px;
+        font-size: 14px;
         }
 
         .eleve > div {
@@ -208,15 +196,15 @@
             margin-top: 10px;
             padding: 10px;
             visibility: visible !important;
-            {{#neutre}}
-                background-color : #ffffff;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #ffd0a0 !important;
-            {{/neutre}}
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #ffd0a0 !important;
+        {{/neutre}}
         }
 
-        .lefCom {
+        .leftCom {
             text-align: left;
             font-weight: normal;
             font-size: small;
@@ -238,14 +226,14 @@
         .rightCommunication {
             vertical-align: top;
             text-align: right;
-            {{#neutre}}
-                background-color : #ffffff;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #ffd0a0 !important;
-                position: relative;
-                heigth :  45px;
-            {{/neutre}}
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #ffd0a0 !important;
+        position: relative;
+        heigth :  45px;
+        {{/neutre}}
         }
 
         #imgSignature {
@@ -276,11 +264,49 @@
             margin-top : 0px;
         }
 
+        .page {
+            page-break-after: always;
+        }
+
+        .page:last-child{
+            page-break-after: avoid;
+        }
+
         @page{
-            size : A4 ;
+            size: A4;
             margin-top: 20px;
-            margin-left : 1px;
-            margin-right : 1px;
+            margin-left: 1px;
+            margin-right: 1px;
+            margin-bottom: 40px;
+
+            @bottom-right {
+                /*content: counter(page) "/" counter(pages);*/
+                font-size: x-small;
+                padding-right: 10px;
+            }
+
+            @bottom-center {
+                content: element(footer);
+            }
+        }
+
+        @page:first {
+            @bottom-center {
+                content: normal;
+            }
+        }
+
+        div.footer {
+            display: block;
+            width: 70%;
+            margin: auto;
+            font-size: x-small;
+            position: running(footer);
+        }
+
+        .pull-right {
+            float: right;
+            text-align: right;
         }
 
         .firstProjet {
@@ -300,24 +326,25 @@
         }
 
         .projets tr:nth-child(even) td {
-            {{#neutre}}
-                background-color : #ffffff;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #EFF7FC !important;
-            {{/neutre}}
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #EFF7FC !important;
+        {{/neutre}}
         }
 
         .projets tr:first-child td {
-            {{#neutre}}
-                background-color : #ffffff;
-            {{/neutre}}
-            {{^neutre}}
-                background-color: #e2f3fb !important;
-            {{/neutre}}
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #e2f3fb !important;
+        {{/neutre}}
         }
 
         .header td {
+            height: 50px;
             font-size: x-small;
             padding-left: 2px;
             padding-right: 2px;
@@ -325,7 +352,6 @@
 
         .onePadding {
             padding: 1px !important;
-            margin: 0 !important;
             overflow: hidden;
             text-overflow: ellipsis;
             vertical-align: middle !important;
@@ -342,14 +368,28 @@
             padding-top: 2px;
             padding-bottom: 2px;
         }
+
+        .suiviDesAcquis {
+            height: 700px;
+        }
     </style>
 </head>
 <body>
 
 {{#eleves}}
 <div class="page">
+    <div class="footer">
+        <div>
+            <span>{{firstName}} &nbsp; {{lastName}}</span>
+            <span class="pull-right">{{classeOf}} {{classeNameToShow}}</span>
+        </div>
+        <div>
+            <span>{{bilanCycle}}&nbsp; - &nbsp; {{periode}}</span>
+            <span class="pull-right">{{schoolYear}}</span>
+        </div>
+    </div>
 
-    <div style= "height: 130px;" class="paddingFifty">
+    <div style="height: 130px;" class="paddingFifty">
         <img id="education" src="data:image/png;base64, {{logoData}}" alt="Logo"/>
         <div class="structure">
             {{#structureLibelle}}
@@ -395,6 +435,9 @@
             </div>
             {{/addOtherTeacher}}
             <div style="font-size: small;">{{classeOf}} {{classeNameToShow}}</div>
+            {{#hasINENumber}}
+            <div style="font-size: small;">{{numberINE}} {{ine}}</div>
+            {{/hasINENumber}}
         </div>
         {{/getResponsable}}
         {{#getResponsable}}
@@ -416,6 +459,9 @@
             </div>
             {{/addOtherTeacher}}
             <div style="font-size: small;">{{classeOf}} {{classeNameToShow}}</div>
+            {{#hasINENumber}}
+            <div style="font-size: small;">{{numberINE}} {{ine}}</div>
+            {{/hasINENumber}}
         </div>
         <div class="responsable">
             {{^relativesHaveTwoNames}}
@@ -438,48 +484,48 @@
     {{#hasSuiviAcquis}}
     <h1 color="blue">{{suiviAcquisLibelle}}</h1>
     <table class="suiviDesAcquis paddingFifty">
-
         <tr class="header">
-            <td class="firstSuivi">&nbsp;</td>
+            <td>&nbsp;</td>
             {{#getProgramElements}}
             <td class="secondSuivi">{{suiviElementLibelle}}</td>
             {{/getProgramElements}}
             <td class="thirdSuivi">{{suiviAcquisitionLibelle}}</td>
             {{#printCoefficient}}
-            <td class="fourthSuivi">{{coefficientLibelle}}</td>
+            <td>{{coefficientLibelle}}</td>
             {{/printCoefficient}}
             {{#getStudentRank}}
-            <td class="sixthSuivi">{{studentRankLibelle}}</td>
+            <td>{{studentRankLibelle}}</td>
             {{/getStudentRank}}
             {{#getClassAverageMinMax}}
             <td class="onePadding">{{classAverageMinLibelle}}</td>
             <td class="onePadding">{{classAverageMaxLibelle}}</td>
             {{/getClassAverageMinMax}}
             {{#printSousMatieres}}
-            <td class="fourthSuivi"></td>
+            <td></td>
             {{/printSousMatieres}}
 
             {{#getMoyenneEleve}}
-            <td class="fourthSuivi">{{moyenneStudentLibelle}}</td>
+            <td>{{moyenneStudentLibelle}}</td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
-            <td class="fifthSuivi">{{moyenneClasseLibelle}}</td>
+            <td>{{moyenneClasseLibelle}}</td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
-            <td class="sixthSuivi">{{positionementLibelle}}</td>
+            <td>{{positionementLibelle}}</td>
             {{/getPositionnement}}
         </tr>
-
         {{#suiviAcquis}}
         {{#printMatiere}}
         <tr>
-            <td style= "border-right: none; background-color: {{{backgroundColor}}}"  rowspan="{{rowSpan}}"
+            <td style="border-right: none; background-color: {{{backgroundColor}}}; height: {{{heightByRow}}};" rowspan="{{rowSpan}}"
                 class="left-align emptyClass">
                 <span style="font-size: small; font-weight: bold">{{libelleMatiere}}</span><br/>
 
-                <div class="inlineBlock">{{#teachers}}
+                <div class="inlineBlock">
+                    {{#teachers}}
                     <span style="color: black; font-size: smaller;">{{initial}}.{{name}}</span>
-                    {{/teachers}}</div>
+                    {{/teachers}}
+                </div>
             </td>
 
             {{#getProgramElements}}
@@ -488,8 +534,8 @@
                 style="text-align: justify; background-color: {{{backgroundColor}}}; word-wrap:break-word;{{{style}}}"
                 class="secondSuivi onePadding">
                 {{/display}}
-                {{elementsProgramme}}</td>
-
+                {{elementsProgramme}}
+            </td>
             {{/getProgramElements}}
             {{#display}}
 
@@ -499,19 +545,19 @@
                 {{/display}}
                 {{appreciation}}
             </td>
+
             {{#printCoefficient}}
             <td rowspan="{{rowSpan}}"
                 style="text-align: center; background-color: {{{backgroundColor}}};word-wrap:break-word; {{{style}}}"
-                class="fourthSuivi onePadding">
+                class="onePadding">
                 {{coef}}
             </td>
             {{/printCoefficient}}
 
-
             {{#getStudentRank}}
             <td rowspan="{{rowSpan}}"
                 style="font-size: x-small; text-align: center; background-color: {{{backgroundColor}}};word-wrap:break-word; {{{style}}}"
-                class="fifthSuivi onePadding">
+                class="onePadding">
                 {{#studentRank}}
                 {{rank}}/{{rank_size}}
                 {{/studentRank}}
@@ -521,7 +567,7 @@
             {{#getClassAverageMinMax}}
             <td rowspan="{{rowSpan}}"
                 style="font-size: x-small; text-align: center; background-color: {{{backgroundColor}}}"
-                class="fifthSuivi onePadding">
+                class="onePadding">
                 {{#classAverageMinMax}}
                 {{min}}
                 {{/classAverageMinMax}}
@@ -529,114 +575,116 @@
 
             <td rowspan="{{rowSpan}}"
                 style="font-size: x-small; text-align: center; background-color: {{{backgroundColor}}}"
-                class="fifthSuivi onePadding">
+                class="onePadding">
                 {{#classAverageMinMax}}
                 {{max}}
                 {{/classAverageMinMax}}
             </td>
             {{/getClassAverageMinMax}}
 
-        {{#printSousMatieres}}
-           {{^hasSousMatiere}}
+            {{#printSousMatieres}}
+            {{^hasSousMatiere}}
             <td style=" border-left: none;font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
-                class="fifthSuivi onePadding">
+                class="onePadding">
                 <br/>
             </td>
+
             {{#getMoyenneEleve}}
             <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}} "
-                class="fourthSuivi onePadding">
+                class="onePadding">
                 {{moyenneEleve}}
             </td>
             {{/getMoyenneEleve}}
+
             {{#getMoyenneClasse}}
             <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
-                class="fifthSuivi onePadding">
+                class="onePadding">
                 {{moyenneClasse}}
             </td>
             {{/getMoyenneClasse}}
+
             {{#getPositionnement}}
             <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
-                class="sixthSuivi onePadding">
+                class="onePadding">
                 {{positionnement}}
             </td>
             {{/getPositionnement}}
-           {{/hasSousMatiere}}
 
+            {{/hasSousMatiere}}
 
-           {{#hasSousMatiere}}
+            {{#hasSousMatiere}}
             {{#firstSousMatiere}}
-            <td style=" border-left: none;background-color: {{{backgroundColor}}}" class="fifthSuivi onePadding">
+            <td style=" border-left: none;background-color: {{{backgroundColor}}}" class="onePadding">
                 <span style="font-size: xx-small; font-weight: normal">{{libelle}}</span>
             </td>
             {{#getMoyenneEleve}}
-            <td style="background-color: {{{backgroundColor}}}" class="fourthSuivi onePadding">
+            <td style="background-color: {{{backgroundColor}}}" class="onePadding">
                 {{#moyenneEleveSousMat}}
                 <span style="font-size: xx-small; font-weight: normal">{{moyenneEleve}}</span>
                 {{/moyenneEleveSousMat}}
             </td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
-            <td style="background-color: {{{backgroundColor}}}" class="fifthSuivi onePadding">
+            <td style="background-color: {{{backgroundColor}}}" class="onePadding">
                 {{#moyenneClasseSousMat}}
                 <span style="font-size: xx-small; font-weight: normal">{{moyenneClasse}}</span>
                 {{/moyenneClasseSousMat}}
             </td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
-            <td style="background-color: {{{backgroundColor}}}" class="sixthSuivi onePadding">
+            <td style="background-color: {{{backgroundColor}}}" class="onePadding">
                 {{#positionnementSousMat}}
                 <span style="font-size: xx-small; font-weight: normal">{{positionnement}}</span>
                 {{/positionnementSousMat}}
             </td>
             {{/getPositionnement}}
             {{/firstSousMatiere}}
-          {{/hasSousMatiere}}
-        {{/printSousMatieres}}
-        {{^printSousMatieres}}
+            {{/hasSousMatiere}}
+            {{/printSousMatieres}}
+            {{^printSousMatieres}}
             {{#getMoyenneEleve}}
             <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}} "
-                class="fourthSuivi onePadding">
+                class="onePadding">
                 {{moyenneEleve}}
             </td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
             <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
-                class="fifthSuivi onePadding">
+                class="onePadding">
                 {{moyenneClasse}}
             </td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
             <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
-                class="sixthSuivi onePadding">
+                class="onePadding">
                 {{positionnement}}
             </td>
             {{/getPositionnement}}
-        {{/printSousMatieres}}
+            {{/printSousMatieres}}
         </tr>
-    {{#printSousMatieres}}
-
+        {{#printSousMatieres}}
 
         {{#sousMatieres}}
         <tr>
-            <td style=" border-left: none;background-color: {{{backgroundColor}}}" class="fifthSuivi onePadding">
+            <td style=" border-left: none;background-color: {{{backgroundColor}}}" class="onePadding">
                 <span style="font-size: xx-small; font-weight: normal">{{libelle}}</span>
             </td>
             {{#getMoyenneEleve}}
-            <td style="background-color: {{{backgroundColor}}}" class="fourthSuivi onePadding">
+            <td style="background-color: {{{backgroundColor}}}" class="onePadding">
                 {{#moyenneEleveSousMat}}
                 <span style="font-size: xx-small; font-weight: normal">{{moyenneEleve}}</span>
                 {{/moyenneEleveSousMat}}
             </td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
-            <td style="background-color: {{{backgroundColor}}}" class="fifthSuivi onePadding">
+            <td style="background-color: {{{backgroundColor}}}" class="onePadding">
                 {{#moyenneClasseSousMat}}
                 <span style="font-size: xx-small; font-weight: normal">{{moyenneClasse}}</span>
                 {{/moyenneClasseSousMat}}
             </td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
-            <td style="background-color: {{{backgroundColor}}}" class="sixthSuivi onePadding">
+            <td style="background-color: {{{backgroundColor}}}" class="onePadding">
                 {{#positionnementSousMat}}
                 <span style="font-size: xx-small; font-weight: normal">{{positionnement}}</span>
                 {{/positionnementSousMat}}
@@ -649,37 +697,37 @@
         <tr>
             {{#printSousMatieres}}
             <td style=" border-left: none;font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
-                class="fifthSuivi onePadding">
+                class="onePadding">
                 <br/>
             </td>
             {{/printSousMatieres}}
             {{#getMoyenneEleve}}
             <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}} "
-                class="fourthSuivi onePadding">
+                class="onePadding">
                 {{moyenneEleve}}
             </td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
             <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
-                class="fifthSuivi onePadding">
+                class="onePadding">
                 {{moyenneClasse}}
             </td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
             <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
-                class="sixthSuivi onePadding">
+                class="onePadding">
                 {{positionnement}}
             </td>
             {{/getPositionnement}}
 
         </tr>
         {{/hasSousMatiere}}
-    {{/printSousMatieres}}
+        {{/printSousMatieres}}
 
         {{/printMatiere}}
         {{/suiviAcquis}}
         {{#printMoyenneGenerale}}
-        <tr  class="moyenneGeneral" style= "background-color: {{{backgroundColor}}}" >
+        <tr class="moyenneGeneral" style= "background-color: {{{backgroundColor}}}" >
             <td style= "border-right: none; "
                 class="left-align emptyClass">
                 <span style="font-size: small; font-weight: bold">{{moyenneGeneraleLibelle}}</span><br/>
@@ -691,13 +739,13 @@
             <td class="thirdSuivi"></td>
 
             {{#printCoefficient}}
-            <td class="fourthSuivi"></td>
+            <td></td>
             {{/printCoefficient}}
             {{#getStudentRank}}
             {{#moyenneGeneraleObj}}
             <td rowspan="{{rowSpan}}"
                 style="font-size: x-small; text-align: center; word-wrap:break-word; {{{style}}}"
-                class="fifthSuivi onePadding">
+                class="onePadding">
                 {{#studentRank}}
                 {{rank}}/{{rank_size}}
                 {{/studentRank}}
@@ -725,22 +773,23 @@
             {{/moyenneGeneraleObj}}
             {{/getClassAverageMinMax}}
             {{#printSousMatieres}}
-            <td class="fourthSuivi"></td>
+            <td></td>
             {{/printSousMatieres}}
             {{#getMoyenneEleve}}
-            <td class="fourthSuivi" style="font-weight: bold;"> {{moyenneGenerale}}</td>
+            <td style="font-weight: bold;"> {{moyenneGenerale}}</td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
-            <td class="fiveSuivi" style="font-size: x-small; font-weight: bold;"> {{moyenneGeneraleClass}}</td>
+            <td style="font-size: x-small; font-weight: bold;"> {{moyenneGeneraleClass}}</td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
-            <td class="sixthSuivi"></td>
+            <td></td>
             {{/getPositionnement}}
         </tr>
         {{/printMoyenneGenerale}}
-
     </table>
-    {{#getPositionnement}}<span class="paddingFifty" style="font-size: xx-small ;position: relative;top: 10px;"> {{footer}}</span>{{/getPositionnement}}
+    {{#getPositionnement}}
+    <span class="paddingFifty" style="font-size: xx-small;"> {{footer}}</span>
+    {{/getPositionnement}}
     {{/hasSuiviAcquis}}
 
     <div class="start">
@@ -763,6 +812,7 @@
         </div>
         {{/hasGraphPerDomaine}}
         {{/showBilanPerDomaines}}
+
         {{#showProjects}}
         {{#projects}}
         {{#hasProject}}
@@ -806,12 +856,10 @@
         {{/projects}}
         {{/showProjects}}
 
-
-        <h1 color= "green"> {{bilanAcquisitionLibelle}}</h1>
+        <h1 color="green">{{bilanAcquisitionLibelle}}</h1>
         <div class="paddingFifty">
-
             <div class="synthese"
-                    style="{{^neutre}}background-color: #eef4d7 !important;{{/neutre}}
+                 style="{{^neutre}}background-color: #eef4d7 !important;{{/neutre}}
                     min-height: 20px; font-size: small;">
                 {{syntheseBilanPeriodque}}<br/>
                 {{#hasAvisConseil}}
@@ -822,17 +870,16 @@
                 {{/hasAvisConseil}}<br/>
                 {{#hasAvisOrientation}}
                 <span style="font-weight: bold">
-                        {{beforeAvisOrientation}}
-                    </span>
+                    {{beforeAvisOrientation}}
+                </span>
                 {{avisOrientation}}
                 {{/hasAvisOrientation}}<br/>
                 {{#printMoyenneAnnuelle}}
                 <span style="font-weight: bold">
-                        {{moyenneAnnuelleLibelle}}:
-                    </span>
+                    {{moyenneAnnuelleLibelle}} :
+                </span>
                 {{moyenneAnnuelle}}
                 {{/printMoyenneAnnuelle}}
-
             </div>
         </div>
 
@@ -842,16 +889,13 @@
                 <table>
                     <tr>
                         <td class="synthese leftCommunication">
-                            <div  class="lefCom" style="{{appreciationCPEStyle}}">
-                                <span style="font-size: small !important;">{{viescolaireLibelle}}</span>
-                                <span style="font-weight: bold">
-                                {{appreciationCPE}}
-                                </span>
+                            <div class="leftCom" style="{{appreciationCPEStyle}}">
+                                <span>{{viescolaireLibelle}}</span>
+                                <span>{{appreciationCPE}}</span>
                             </div>
                             <br/>
 
-
-                            <div class="lefCom" >
+                            <div class="leftCom">
                                 {{#evenements}}
                                 <div>
                                     {{.}}
@@ -859,8 +903,7 @@
                                 {{/evenements}}
                             </div>
                         </td>
-                        <td  class="rightCommunication">
-
+                        <td class="rightCommunication">
                             <span  style= " display : block;overflow : hidden; float : right; margin-bottom: 10px;">
                                 {{nameCE}}
                             </span>
@@ -870,20 +913,17 @@
                                 <img id="imgSignature" src="data:image/png;base64, {{imgSignature}}" alt="LogoStructure"/>
                             </div>
                             {{/hasImgSignature}}
-
                         </td>
                     </tr>
                 </table>
 
 
                 {{#showFamily}}
-
                 <div class="synthese" style="height: 60px; padding: 5px">
                     <span style="float: left; margin-left: 5px; margin-top: 0px !important;font-size: small;">{{familyVisa}}</span>
 
                     <span style="float: right;margin-right: 5px; text-align:right;margin-top: 0px;font-size: small;">{{signature}}</span>
                 </div>
-
                 {{/showFamily}}
             </div>
         </div>

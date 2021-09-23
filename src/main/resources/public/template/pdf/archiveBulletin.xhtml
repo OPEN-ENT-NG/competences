@@ -115,10 +115,6 @@
             font-style: italic;
         }
 
-        .blank_row {
-            height: 20px !important;
-        }
-
         .eleve {
             padding: 5px;
             background-color: #e2f3fb;
@@ -768,19 +764,19 @@
     <table class="suiviDesAcquis paddingFifty">
 
         <tr class="header">
-            <td class="firstSuivi">&nbsp;</td>
+            <td>&nbsp;</td>
             {{#getProgramElements}}
             <td class="secondSuivi">{{suiviElementLibelle}}</td>
             {{/getProgramElements}}
             <td class="thirdSuivi">{{suiviAcquisitionLibelle}}</td>
             {{#getMoyenneEleve}}
-            <td class="fourthSuivi">{{moyenneStudentLibelle}}</td>
+            <td>{{moyenneStudentLibelle}}</td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
-            <td class="fifthSuivi">{{moyenneClasseLibelle}}</td>
+            <td>{{moyenneClasseLibelle}}</td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
-            <td class="sixthSuivi">{{positionementLibelle}}</td>
+            <td>{{positionementLibelle}}</td>
             {{/getPositionnement}}
         </tr>
 
@@ -805,13 +801,13 @@
                 {{/display}}
                 {{appreciation}}</td>
             {{#getMoyenneEleve}}
-            <td style="font-size: x-small; font-weight: bold" class="fourthSuivi onePadding">{{moyenneEleve}}</td>
+            <td style="font-size: x-small; font-weight: bold" class="onePadding">{{moyenneEleve}}</td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
-            <td style="font-size: x-small;" class="fifthSuivi onePadding">{{moyenneClasse}}</td>
+            <td style="font-size: x-small;" class="onePadding">{{moyenneClasse}}</td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
-            <td style="font-size: x-small; font-weight: bold" class="sixthSuivi onePadding">{{positionnement}}</td>
+            <td style="font-size: x-small; font-weight: bold" class="onePadding">{{positionnement}}</td>
             {{/getPositionnement}}
         </tr>
         {{/printMatiere}}
