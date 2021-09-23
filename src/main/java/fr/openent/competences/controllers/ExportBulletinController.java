@@ -208,4 +208,35 @@ public class ExportBulletinController extends ControllerHelper {
         String idStructure = request.params().get(ID_STRUCTURE_KEY);
         utilsService.getYearsAndPeriodes(idStructure, false, defaultResponseHandler(request));
     }
+
+    @Post("/bulletins/exists")
+    @ApiDoc("Vérifie si des bulletins existent déjà avec ces paramètres")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessExportBulletinFilter.class)
+    public void checkBulletinsExist( final  HttpServerRequest request){
+        RequestUtils.bodyToJson(request, ressource -> {
+            JsonArray students = ressource.getJsonArray("students");
+            Integer idPeriode = ressource.getInteger("id_type");
+            String idStructure = ressource.getString("idStructure");
+            //if already exist 201 if not 200
+            exportBulletinService.checkBulletinsExist(students,idPeriode,idStructure , new Handler<Either<String, Boolean>>() {
+                @Override
+                public void handle(Either<String, Boolean> event) {
+                   if(event.isRight()) {
+                       log.info(" VALUE : " + event.right().getValue());
+                       if (event.right().getValue())
+                           request.response().setStatusCode(201).end();
+                       else {
+                           request.response().setStatusCode(200).end();
+                       }
+                   }
+                    else {
+                        badRequest(request);
+                   }
+                }
+            });
+
+        });
+
+    }
 }

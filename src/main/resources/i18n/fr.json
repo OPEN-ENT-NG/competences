@@ -768,5 +768,8 @@
   "no.data.to.export": "Pas de données à exporter",
   "evaluation.orderShowSubject.title": "Organiser les matières",
   "evaluation.orderShowSubject.description": "Cet écran permet d'organiser l'ordre dans lequel sont affichées les matières sur les différents écrans et exports de l'application Compétences. Par défaut, les matières sont organisées par ordre alphabétique.",
-  "evaluations.export.bfc.no.cycle": "Veuillez séléctionner un cycle"
+  "evaluations.export.bfc.no.cycle": "Veuillez séléctionner un cycle",
+  "confirm": "Confirmer",
+  "bulletinAlert.title" : "Remplacement d'un bulletin",
+  "bulletinAlert.text": "Vous allez regénérer un bulletin. La vue parents sera mise à jour et l'ancienne version du bulletin sera écrasée. Voulez-vous continuer ?"
 }
