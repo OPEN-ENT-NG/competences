@@ -53,9 +53,8 @@ public class DigitalSkillsController extends ControllerHelper {
                 final String idStudent = request.params().get("idStudent");
                 final String idClass = request.params().get("idClass");
                 final String idStructure = request.params().get("idStructure");
-                final Long idTypePeriod = Long.parseLong(request.params().get("idTypePeriod"));
 
-                digitalSkillsService.getDigitalSkillsByStudentByClass(idStudent, idClass, idStructure, idTypePeriod,
+                digitalSkillsService.getDigitalSkillsByStudentByClass(idStudent, idClass, idStructure,
                         DefaultResponseHandler.defaultResponseHandler(request));
             } else {
                 unauthorized(request);

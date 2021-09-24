@@ -21,8 +21,8 @@ public class DefaultStudentAppreciationDigitalSkills extends SqlCrudService impl
         StringBuilder query = new StringBuilder();
         JsonArray values = setValue(studentApp);
         query.append("INSERT INTO " ).append(this.schema).append(this.table)
-                .append(" (student_id, structure_id, period_type_id, appreciation) VALUES (?, ?, ?, ?) ")
-                .append("ON CONFLICT (student_id, structure_id, period_type_id) DO UPDATE SET appreciation = ? ")
+                .append(" (student_id, structure_id, appreciation) VALUES (?, ?, ?) ")
+                .append("ON CONFLICT (student_id, structure_id) DO UPDATE SET appreciation = ? ")
                 .append("RETURNING id");
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
@@ -31,7 +31,6 @@ public class DefaultStudentAppreciationDigitalSkills extends SqlCrudService impl
     private JsonArray setValue(JsonObject studentApp){
         return new JsonArray().add(studentApp.getString("id_student"))
                 .add(studentApp.getString("id_structure"))
-                .add(studentApp.getLong("id_type_period"))
                 .add(studentApp.getString("appreciation"))
                 .add(studentApp.getString("appreciation"));
     }
@@ -46,13 +45,13 @@ public class DefaultStudentAppreciationDigitalSkills extends SqlCrudService impl
     }
 
     @Override
-    public void getStudentAppreciation(String idStudent, String idStructure, Long idTypePeriod,
+    public void getStudentAppreciation(String idStudent, String idStructure,
                                        Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
         query.append("SELECT * FROM ").append(this.schema).append(this.table)
-                .append(" WHERE student_id = ? AND structure_id = ? AND period_type_id = ? ");
+                .append(" WHERE student_id = ? AND structure_id = ?");
 
-        JsonArray values = new JsonArray().add(idStudent).add(idStructure).add(idTypePeriod);
+        JsonArray values = new JsonArray().add(idStudent).add(idStructure);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
     }

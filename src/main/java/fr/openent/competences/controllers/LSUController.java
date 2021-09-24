@@ -619,7 +619,7 @@ public class LSUController extends ControllerHelper {
                                         log.error("getXML : log.error(\"getXML : getApEpiParcoursBalises \" + project); " + compNumCommun);
                                     }
                                 };
-                                getBaliseCompetencesNumeriqueCommun(donnees, idsClasesCycle3, idsTypePeriodes, getBaliseCompNumCommuneHandler);
+                                getBaliseCompetencesNumeriqueCommun(donnees, idsClasesCycle3, getBaliseCompNumCommuneHandler);
                             } else {
                                 futureCompNumCommun.complete();
                             }
@@ -2364,9 +2364,9 @@ public class LSUController extends ControllerHelper {
                 });
     }
 
-    private void getBaliseCompetencesNumeriqueCommun(final Donnees donnees, final List<String> idsClassCycle3, final List<Integer> idsTypePeriodes,
+    private void getBaliseCompetencesNumeriqueCommun(final Donnees donnees, final List<String> idsClassCycle3,
                                                      final Handler<String> handler){
-        classAppreciationDigitalSkillsService.getAppreciationsClasses(idsClassCycle3, idsTypePeriodes,
+        classAppreciationDigitalSkillsService.getAppreciationsClasses(idsClassCycle3,
                 new Handler<Either<String, JsonArray>>() {
                     final AtomicBoolean answer = new AtomicBoolean(false);
                     final AtomicInteger count = new AtomicInteger(0);
@@ -2377,7 +2377,7 @@ public class LSUController extends ControllerHelper {
                         if(eventAppsClasses.isLeft()){
                             String error = eventAppsClasses.left().getValue();
                             if(error != null && error.contains(TIME)){
-                                classAppreciationDigitalSkillsService.getAppreciationsClasses(idsClassCycle3, idsTypePeriodes,this );
+                                classAppreciationDigitalSkillsService.getAppreciationsClasses(idsClassCycle3,this );
                             } else {
                                 answer.set(true);
                                 handler.handle("getBaliseCompetencesNumeriqueCommun no data available ");
@@ -3023,7 +3023,7 @@ public class LSUController extends ControllerHelper {
                     );
 
                     if(currentPeriode.getIndice() == currentPeriode.getNbPeriodes() && currentCycle.equals(LevelCycle.CYCLE3.getValue())) {
-                        digitalSkillsService.getDigitalSkillsByStudent(idEleve, idStructure, idPeriode, new Handler<Either<String, JsonObject>>() {
+                        digitalSkillsService.getDigitalSkillsByStudent(idEleve, idStructure, new Handler<Either<String, JsonObject>>() {
                             AtomicBoolean answer = new AtomicBoolean(false);
                             AtomicInteger count = new AtomicInteger(0);
                             final String thread = "(" + currentEleve.getNom() + " " + currentEleve.getPrenom() + ")";
@@ -3061,7 +3061,7 @@ public class LSUController extends ControllerHelper {
                                 } else {
                                     String error = digitalSkillsEvent.left().getValue();
                                     if (error != null && error.contains(TIME)) {
-                                        digitalSkillsService.getDigitalSkillsByStudent(idEleve, idStructure, idPeriode, this);
+                                        digitalSkillsService.getDigitalSkillsByStudent(idEleve, idStructure, this);
                                     } else {
                                         answer.set(true);
                                     }

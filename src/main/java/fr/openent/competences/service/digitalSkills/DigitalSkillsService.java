@@ -11,9 +11,9 @@ import org.entcore.common.sql.SqlResult;
 public interface DigitalSkillsService {
 
     void getDigitalSkillsByStudentByClass(final String id_student, final String id_class, final String id_structure,
-                             final Long id_type_period, Handler<Either<String, JsonObject>> handler);
+                             Handler<Either<String, JsonObject>> handler);
 
-    void getDigitalSkillsByStudent( final String id_student, final String id_structure,  final Long id_type_period,
+    void getDigitalSkillsByStudent(final String id_student, final String id_structure,
                                     Handler<Either<String, JsonObject>> handler);
 
     void getAllDigitalSkillsByDomaine(Handler<Either<String, JsonArray>> handler);

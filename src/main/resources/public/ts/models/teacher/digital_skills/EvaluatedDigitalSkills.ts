@@ -6,16 +6,14 @@ export class EvaluatedDigitalSkills extends Model {
     digital_skill_id: number;
     student_id: string;
     structure_id: string;
-    period_type_id: number;
     level: number;
     libelle: string;
 
-    constructor (id_digital_skill, id_student, id_structure, id_type_period, level, libelle) {
+    constructor (id_digital_skill, id_student, id_structure, level, libelle) {
         super();
         this.digital_skill_id = id_digital_skill;
         this.student_id = id_student;
         this.structure_id = id_structure;
-        this.period_type_id = id_type_period;
         this.level = level;
         this.libelle = libelle;
     }
@@ -25,7 +23,6 @@ export class EvaluatedDigitalSkills extends Model {
             id_digital_skill: this.digital_skill_id,
             id_student: this.student_id,
             id_structure: this.structure_id,
-            id_type_period: this.period_type_id,
             level: this.level
         }
     }

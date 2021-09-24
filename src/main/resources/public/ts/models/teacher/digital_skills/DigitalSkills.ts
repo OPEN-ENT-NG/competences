@@ -1,9 +1,8 @@
-import {Collection, Model, notify,_} from "entcore";
+import {Model, notify,_} from "entcore";
 import {ClassAppreciation} from "./ClassAppreciationDigitalSkills";
 import {StudentAppreciation} from "./StudentAppreciationDigitalSkills";
 
 import {Classe} from "../Classe";
-import {Periode} from "../Periode";
 import {Eleve} from "../Eleve";
 import http from "axios";
 import {Structure} from "../Structure";
@@ -13,10 +12,8 @@ import {DomaineDigitalSkills} from "./DomaineDigitalSkills";
 
 export class DigitalSkills extends Model {
     id_structure: string;
-    periods: Collection<Periode>;
     class: Classe;
     student: Eleve;
-    selected_period: Periode;
     classAppreciation: ClassAppreciation;
     studentAppreciation: StudentAppreciation;
     digitalSkillsByDomaine: Array<DomaineDigitalSkills>;
@@ -24,19 +21,17 @@ export class DigitalSkills extends Model {
     constructor(o : any, structure : Structure) {
         super();
         this.class = o.classe;
-        this.periods = o.classe.periodes;
-        this.selected_period = o.periode;
         this.student = o.eleve;
         this.id_structure = structure.id;
-        this.studentAppreciation = new StudentAppreciation(o.eleve.id, structure.id, o.periode.id_type);
-        this.classAppreciation = new ClassAppreciation(o.classe, o.periode.id_type);
+        this.studentAppreciation = new StudentAppreciation(o.eleve.id, structure.id);
+        this.classAppreciation = new ClassAppreciation(o.classe);
         this.digitalSkillsByDomaine = [];
     }
 
     async sync() {
         try{
             let url = `competences/digitalSkills/appreciations/evaluation?idStructure=${this.id_structure}`;
-            url += `&idStudent=${this.student.id}&idClass=${this.class.id}&idTypePeriod=${this.selected_period.id_type}`;
+            url += `&idStudent=${this.student.id}&idClass=${this.class.id}`;
             let data = await http.get(url);
             if(data.status === 200) {
                 if(DigitalSkills.hasData(data.data.studentAppreciation)){
@@ -78,7 +73,7 @@ export class DigitalSkills extends Model {
                     }
 
                     let digitalSkill = new EvaluatedDigitalSkills(line.id_digital_skill, this.student.id,
-                        this.id_structure, this.selected_period.id_type, 0, line.libelle);
+                        this.id_structure, 0, line.libelle);
                     domaineDigitalSkill.digitalSkills.push(digitalSkill);
                 });
             }

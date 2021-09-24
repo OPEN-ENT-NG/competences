@@ -11,6 +11,5 @@ public interface StudentDigitalSkillsService extends CrudService {
 
     void deleteDigitalSkillLevel(Long idDigSkill, Handler<Either<String, JsonObject>> handler);
 
-    void getEvaluatedDigitalSkills(String idStudent, String idStructure, Long idTypePeriod,
-                                   Handler<Either<String, JsonArray>> handler);
+    void getEvaluatedDigitalSkills(String idStudent, String idStructure, Handler<Either<String, JsonArray>> handler);
 }
