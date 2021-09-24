@@ -9,9 +9,6 @@
     "id_type_structure": {
       "type": "string"
     },
-    "id_type_period": {
-      "type": "integer"
-    },
     "appreciation": {
       "type" : "string"
     }
@@ -20,7 +17,6 @@
   "required": [
     "id_class",
     "id_type_structure",
-    "id_type_period",
     "appreciation"
   ]
 }

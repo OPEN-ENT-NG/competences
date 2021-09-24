@@ -5,21 +5,18 @@ export class StudentAppreciation extends Model {
     id: number;
     student_id: string;
     structure_id: string;
-    period_type_id: number;
     appreciation: string;
 
-    constructor (id_student, id_structure, id_type_period) {
+    constructor (id_student, id_structure) {
         super();
         this.student_id = id_student;
         this.structure_id = id_structure;
-        this.period_type_id = id_type_period;
     }
 
     toJSON(){
         return {
             id_student: this.student_id,
             id_structure: this.structure_id,
-            id_type_period: this.period_type_id,
             appreciation : this.appreciation
         }
     }

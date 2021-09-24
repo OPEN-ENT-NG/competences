@@ -23,9 +23,9 @@ public class DefaultStudentDigitalSkills extends SqlCrudService implements Stude
     public void createOrUpdateLevel(JsonObject digitalSkill, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
         query.append("INSERT INTO ").append(this.schema).append(this.table)
-                .append("(id_digital_skill, student_id, structure_id, period_type_id, level)")
-                .append("VALUES (?, ?, ?, ?, ?)")
-                .append("ON CONFLICT (id_digital_skill, student_id, structure_id, period_type_id) DO UPDATE SET level = ? ")
+                .append("(id_digital_skill, student_id, structure_id, level)")
+                .append("VALUES (?, ?, ?, ?)")
+                .append("ON CONFLICT (id_digital_skill, student_id, structure_id) DO UPDATE SET level = ? ")
                 .append("RETURNING id");
 
         JsonArray values = setValue(digitalSkill);
@@ -37,7 +37,6 @@ public class DefaultStudentDigitalSkills extends SqlCrudService implements Stude
         return new JsonArray().add(digitalSkill.getLong("id_digital_skill"))
                 .add(digitalSkill.getString("id_student"))
                 .add(digitalSkill.getString("id_structure"))
-                .add(digitalSkill.getLong("id_type_period"))
                 .add(digitalSkill.getLong("level"))
                 .add(digitalSkill.getLong("level"));
     }
@@ -53,15 +52,15 @@ public class DefaultStudentDigitalSkills extends SqlCrudService implements Stude
     }
 
     @Override
-    public void getEvaluatedDigitalSkills(String idStudent, String idStructure, Long idTypePeriod,
+    public void getEvaluatedDigitalSkills(String idStudent, String idStructure,
                                           Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         query.append("SELECT * FROM ").append(this.schema).append(this.table)
                 .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DIGITAL_SKILLS_TABLE)
                 .append(" ds ON ds.id = id_digital_skill")
-                .append(" WHERE student_id = ? AND structure_id = ? AND period_type_id = ?");
+                .append(" WHERE student_id = ? AND structure_id = ?");
 
-        JsonArray values = new JsonArray().add(idStudent).add(idStructure).add(idTypePeriod);
+        JsonArray values = new JsonArray().add(idStudent).add(idStructure);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }

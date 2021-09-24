@@ -34,26 +34,27 @@ public class DefaultDigitalSkillsService implements DigitalSkillsService {
     }
 
     public DefaultDigitalSkillsService (ClassAppreciationDigitalSkillsService classAppDigitalSkills,
-            StudentAppreciationDigitalSkillsService studentAppDigitalSkills, StudentDigitalSkillsService levelDigitalSkills) {
+                                        StudentAppreciationDigitalSkillsService studentAppDigitalSkills,
+                                        StudentDigitalSkillsService levelDigitalSkills) {
         this.classAppDigitalSkills = classAppDigitalSkills;
         this.studentAppDigitalSkills = studentAppDigitalSkills;
         this.studentDigitalSkills = levelDigitalSkills;
     }
 
     @Override
-    public void getDigitalSkillsByStudentByClass(String idStudent, String idClass, String idStructure, Long idTypePeriod,
-                                     Handler<Either<String, JsonObject>> handler) {
+    public void getDigitalSkillsByStudentByClass(String idStudent, String idClass, String idStructure,
+                                                 Handler<Either<String, JsonObject>> handler) {
         Future<JsonObject> getStudentAppFuture = Future.future();
         Future<JsonObject> getClassAppFuture = Future.future();
         Future<JsonArray> getEvaluatedDigitalSkillsFuture = Future.future();
 
-        studentAppDigitalSkills.getStudentAppreciation(idStudent, idStructure, idTypePeriod, responseStudentApp ->
+        studentAppDigitalSkills.getStudentAppreciation(idStudent, idStructure, responseStudentApp ->
                 FormateFutureEvent.formate("[Competences] DefaultDigitalSkills No student appreciation Digital Skills ",
                         getStudentAppFuture, responseStudentApp));
-        classAppDigitalSkills.getClassAppreciation(idClass, idTypePeriod, responseClassApp ->
+        classAppDigitalSkills.getClassAppreciation(idClass, responseClassApp ->
                 FormateFutureEvent.formate("[Competences] DefaultDigitalSkills No class appreciation Digital Skills ",
                         getClassAppFuture, responseClassApp));
-        studentDigitalSkills.getEvaluatedDigitalSkills(idStudent, idStructure, idTypePeriod, responseEvaluations ->
+        studentDigitalSkills.getEvaluatedDigitalSkills(idStudent, idStructure, responseEvaluations ->
                 FormateFutureEvent.formate("[Competences] DefaultDigitalSkills No evaluated Digital Skills ",
                         getEvaluatedDigitalSkillsFuture, responseEvaluations));
 
@@ -85,17 +86,16 @@ public class DefaultDigitalSkillsService implements DigitalSkillsService {
     }
 
     @Override
-    public void getDigitalSkillsByStudent (String id_student, String id_structure, Long id_type_period,
-                                           Handler<Either<String, JsonObject>> handler) {
-
+    public void getDigitalSkillsByStudent(String id_student, String id_structure,
+                                          Handler<Either<String, JsonObject>> handler) {
         Future<JsonObject> getStudentAppFuture = Future.future();
 
         Future<JsonArray> getEvaluatedDigitalSkillsFuture = Future.future();
 
-        studentAppDigitalSkills.getStudentAppreciation(id_student, id_structure, id_type_period, responseStudentApp ->
+        studentAppDigitalSkills.getStudentAppreciation(id_student, id_structure, responseStudentApp ->
                 FormateFutureEvent.formate("[Competences] DefaultDigitalSkills No student appreciation Digital Skills ",
                         getStudentAppFuture, responseStudentApp));
-        studentDigitalSkills.getEvaluatedDigitalSkills(id_student, id_structure, id_type_period, responseEvaluations ->
+        studentDigitalSkills.getEvaluatedDigitalSkills(id_student, id_structure, responseEvaluations ->
                 FormateFutureEvent.formate("[Competences] DefaultDigitalSkills No evaluated Digital Skills ",
                         getEvaluatedDigitalSkillsFuture, responseEvaluations));
 
@@ -103,27 +103,27 @@ public class DefaultDigitalSkillsService implements DigitalSkillsService {
                 getHandlerAllDigitalSkillsStudent(handler, getStudentAppFuture, getEvaluatedDigitalSkillsFuture));
     }
 
-   private Handler<AsyncResult<CompositeFuture>> getHandlerAllDigitalSkillsStudent ( Handler<Either<String, JsonObject>> handler,
-                                                    Future<JsonObject> getStudentAppFuture,
-                                                    Future<JsonArray> getEvaluatedDigitalSkillsFuture) {
-       return  allResponseStudent -> {
-           if (allResponseStudent.failed()) {
-                   handler.handle(new Either.Left<>(allResponseStudent.cause().getMessage()));
-                   log.info(allResponseStudent.cause().getMessage());
-               } else {
-                   JsonObject result = new JsonObject();
+    private Handler<AsyncResult<CompositeFuture>> getHandlerAllDigitalSkillsStudent(Handler<Either<String, JsonObject>> handler,
+                                                                                    Future<JsonObject> getStudentAppFuture,
+                                                                                    Future<JsonArray> getEvaluatedDigitalSkillsFuture) {
+        return  allResponseStudent -> {
+            if (allResponseStudent.failed()) {
+                handler.handle(new Either.Left<>(allResponseStudent.cause().getMessage()));
+                log.info(allResponseStudent.cause().getMessage());
+            } else {
+                JsonObject result = new JsonObject();
 
-                   JsonObject studentAppreciation = getStudentAppFuture.result();
-                   JsonArray evaluatedDigitalSkills = getEvaluatedDigitalSkillsFuture.result();
+                JsonObject studentAppreciation = getStudentAppFuture.result();
+                JsonArray evaluatedDigitalSkills = getEvaluatedDigitalSkillsFuture.result();
 
-                   result.put("studentAppreciation", studentAppreciation);
-                   result.put("evaluatedDigitalSkills", evaluatedDigitalSkills);
+                result.put("studentAppreciation", studentAppreciation);
+                result.put("evaluatedDigitalSkills", evaluatedDigitalSkills);
 
-                   handler.handle(new Either.Right<>(result));
-               }
+                handler.handle(new Either.Right<>(result));
+            }
 
-       };
-   }
+        };
+    }
 
     @Override
     public void getAllDigitalSkillsByDomaine(Handler<Either<String, JsonArray>> handler){
