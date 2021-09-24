@@ -78,8 +78,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
             let isClassAndCycle3 = isNotEmptyClasse ? $scope.search.classe.type_groupe === Common.TYPE_GROUP &&
                 $scope.search.classe.id_cycle === Common.CYCLE_3 : false;
-            let isLastPeriod = isNotEmptyPeriode ? $scope.search.periode.ordre === $scope.search.periode.type : false;
-            $scope.showDigitalSkills = !$scope.critereIsEmpty && isClassAndCycle3 && isLastPeriod;
+            $scope.showDigitalSkills = !$scope.critereIsEmpty && isClassAndCycle3;
         };
 
         if (model.me.type === 'PERSRELELEVE') {

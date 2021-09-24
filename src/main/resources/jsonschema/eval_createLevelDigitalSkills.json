@@ -12,9 +12,6 @@
     "id_structure": {
       "type" : "string"
     },
-    "id_type_period": {
-      "type": "integer"
-    },
     "level": {
       "type" : "integer"
     }
@@ -24,7 +21,6 @@
     "id_digital_skill",
     "id_student",
     "id_structure",
-    "id_type_period",
     "level"
   ]
 }
