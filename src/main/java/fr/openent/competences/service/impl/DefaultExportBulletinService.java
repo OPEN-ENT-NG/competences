@@ -2442,8 +2442,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 o.remove(keyResponsable);
                 o.put(keyResponsable, false);
                 sortedJsonArray.add(o);
-            }
-            else {
+            } else {
                 for (int i = 0; i < responsables.size(); i++) {
                     if (i == 0) {
                         sortedJsonArray.add(setResponsablesLibelle(JsonObject.mapFrom(o),
@@ -2456,17 +2455,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         try {
                             for (int j = sortedJsonArray.size() - 1; j > (sortedJsonArray.size() - 1 - i); j--) {
                                 JsonObject responsableToCheck = sortedJsonArray.getJsonObject(j);
-                                String addressResponsaleToCheck =
-                                        responsableToCheck.getString(ADDRESSE_POSTALE);
-                                String addressResponsale =
-                                        responsable.getString(ADDRESSE_POSTALE);
-                                String lastNameResponsableToCheck = responsableToCheck.getString("responsableLastName",
-                                        "");
-                                String lastNameResponsable = responsable.getString("responsableLastName",
-                                        "");
+                                String addressResponsaleToCheck = responsableToCheck.getString(ADDRESSE_POSTALE);
+                                String addressResponsale = responsable.getString(ADDRESSE_POSTALE);
+                                String lastNameResponsableToCheck = responsableToCheck.getString("responsableLastName","");
+                                String lastNameResponsable = responsable.getString("responsableLastName","");
                                 String civiliteResponsableToCheck = responsableToCheck.getString("civilite");
                                 String civiliteResponsable = responsable.getString("civilite");
-                                String newLastNameResponsableToCheck = new String();
+                                String newLastNameResponsableToCheck;
 
                                 if (!addressResponsale.equals(addressResponsaleToCheck)) {
                                     isDifferentAddress = true;
@@ -2477,7 +2472,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     JsonArray responsableNewLibelle = new fr.wseduc.webutils.collections.JsonArray();
                                     JsonArray responsableOldLibelle = responsableToCheck.getJsonArray("responsableLibelle");
                                     if (lastNameResponsable.equals(lastNameResponsableToCheck)) {
-
                                         if ("M.".equals(civiliteResponsableToCheck)) {
                                             newLastNameResponsableToCheck = civiliteResponsableToCheck + " et Mme " +
                                                     lastNameResponsableToCheck + " " +
@@ -2491,9 +2485,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         responsableNewLibelle.add(newLastNameResponsableToCheck);
                                         responsableNewLibelle.add(responsableOldLibelle.getValue(1))
                                                 .add(responsableOldLibelle.getValue(2));
-
-
-                                    } else {//if same adress with different lastName
+                                    } else { //if same adress with different lastName
                                         JsonObject responsableWithDifferentName = new JsonObject();
                                         if ("M.".equals(civiliteResponsableToCheck)) {
                                             responsableWithDifferentName.put("firstLastName", civiliteResponsableToCheck + " " + lastNameResponsableToCheck + " et")
@@ -2501,7 +2493,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                     .put("adresseResponsable", responsableOldLibelle.getValue(1))
                                                     .put("codePostalRelative", responsableOldLibelle.getValue(2));
                                         } else {
-
                                             responsableWithDifferentName.put("firstLastName", civiliteResponsable + " " + lastNameResponsable + " et")
                                                     .put("secondLastName", civiliteResponsableToCheck + " " + lastNameResponsableToCheck);
                                             if (responsableOldLibelle.size() > 1){
@@ -2512,7 +2503,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                         .put("codePostalRelative", "");
                                             }
                                         }
-
 
                                         responsableNewLibelle.add(responsableWithDifferentName);
                                         responsableToCheck.put("relativesHaveTwoNames", true);
@@ -2550,8 +2540,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             if (city == null) {
                 city = zipCode;
-            }
-            else {
+            } else {
                 city = zipCode + " " + city;
             }
 
@@ -2563,8 +2552,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             if (city == null) {
                 city = zipCode;
-            }
-            else {
+            } else {
                 city = zipCode + " " + city;
             }
         }
@@ -2573,7 +2561,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             civilite = "M.";
         }
 
-        JsonArray responsableLibelle = new JsonArray().add( civilite + " " + lastName  + " " + firstName );
+        JsonArray responsableLibelle = new JsonArray().add(civilite + " " + lastName  + " " + firstName);
         if (address != null){
             responsableLibelle.add(address);
         }
@@ -2584,15 +2572,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         responsableLibelle.add(city);
 
-
         res.put("responsableLibelle", responsableLibelle);
         res.put(ADDRESSE_POSTALE, address + city);
         res.put("responsableLastName", lastName);
-        res.put("civilite",civilite);
+        res.put("civilite", civilite);
         if("M.".equals(civilite)){
-            res.put("responsableFirstName",firstName);
+            res.put("responsableFirstName", firstName);
         }
-        res.put("relativesHaveTwoNames",relativesHaveTwoNames);
+        res.put("relativesHaveTwoNames", relativesHaveTwoNames);
         return res;
     }
 
