@@ -299,6 +299,7 @@ export class Devoir extends Model implements IModel{
 
     save (add? : any,rem? : any, update? : any) : Promise<any> {
         return new Promise((resolve, reject) => {
+            console.log("devoir")
             if(!this.id){
                 this.create().then((data) => {
                     if (resolve && (typeof (resolve) === 'function')) {
