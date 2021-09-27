@@ -1428,7 +1428,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         if (appreciationCPE != null) {
                             String app = troncateLibelle(appreciationCPE.getString(APPRECIATION_KEY),
                                     MAX_SIZE_APPRECIATION_CPE);
-                            eleveObject.put("appreciationCPE",app)
+                            eleveObject.put("appreciationCPE", app)
                                     .put("appreciationCPEStyle", fontSizeAppreciationCPE(app, MAX_SIZE_APPRECIATION_CPE));
                         }
                         serviceResponseOK(answer, finalHandler, count, idEleve, GET_APPRECIATION_CPE_METHOD);
