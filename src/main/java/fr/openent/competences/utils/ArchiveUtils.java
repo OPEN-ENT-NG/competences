@@ -5,10 +5,7 @@ import fr.openent.competences.folders.FolderExporterZip;
 import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.model.PdfFile;
 import fr.openent.competences.model.Folder;
-import fr.openent.competences.service.impl.ArchiveWorker;
-import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -35,13 +32,11 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Competences.ACTION;
 import static fr.openent.competences.Competences.FIRST_NAME_KEY;
 import static fr.openent.competences.Competences.LAST_NAME_KEY;
 import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static fr.wseduc.webutils.http.Renders.getHost;
 
 public class ArchiveUtils {
 
@@ -60,28 +55,10 @@ public class ArchiveUtils {
                 SqlResult.validUniqueResultHandler(handler));
     }
 
-    private static void clearCompletedTable(){
-        String query = "DELETE FROM " + Competences.EVAL_SCHEMA + ".arhive_bulletins_complet WHERE true;";
-        Sql.getInstance().prepared(query, new JsonArray(), Competences.DELIVERY_OPTIONS, event -> {
-            JsonObject body = event.body();
-            if(!body.getString(STATUS).equals(OK)){
-                String message = body.getString(MESSAGE);
-                log.error("[clearCompletedTable] :: " + message);
-            }
-            else{
-                JsonArray structures = body.getJsonArray(RESULTS);
-                log.info("[clearCompletedTable] :: " + structures.encode());
-            }
-        });
-    }
-
     private static void clearArchiveTable(JsonArray ids, String table, Handler<Either<String,JsonObject>> handler){
         String query = "DELETE FROM notes." + table + " WHERE id_file IN "+ Sql.listPrepared(ids.getList()) + ";";
         Sql.getInstance().prepared(query, ids, Competences.DELIVERY_OPTIONS,
                 SqlResult.validUniqueResultHandler(handler));
-        if(table.equals(ARCHIVE_BULLETIN_TABLE)){
-            clearCompletedTable();
-        }
     }
 
     private static void getAllIdFileArchive(String table, Handler<Either<String,JsonObject>> handler){
@@ -194,26 +171,6 @@ public class ArchiveUtils {
         filename += periode;
         filename += end;
         return filename;
-    }
-
-    public static void generateArchiveBulletin(EventBus eb, HttpServerRequest request) {
-        new DefaultUtilsService(eb).getActivesStructureForArchiveBulletin(structuresEvent -> {
-            if(structuresEvent.isLeft()){
-                log.error(structuresEvent.left().getValue());
-                return;
-            }
-            JsonArray idStructures = structuresEvent.right().getValue();
-            JsonObject action = new JsonObject()
-                    .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
-                    .put(HOST, getHost(request))
-                    .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
-                    .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
-                    .put(ID_STRUCTURES_KEY,idStructures)
-                    .put(PATH, request.path());
-
-            eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
-            Renders.ok(request);
-        });
     }
 
     public static void getArchiveBFCZip(String idStructure, String idYear, HttpServerRequest request, EventBus eb,

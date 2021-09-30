@@ -536,8 +536,8 @@ public class DefaultLSUService implements LSUService {
     }
 
     @Override
-    public void getAllStudentWithRelatives(String idStructure, List<String> idsClass, List<String> idsDeletedStudent, Handler<Either<String, JsonArray>> handler) {
-
+    public void getAllStudentWithRelatives(String idStructure, List<String> idsClass, List<String> idsDeletedStudent,
+                                           Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "user.getAllElevesWithTheirRelatives")
                 .put("idStructure",idStructure)

@@ -18,7 +18,6 @@
 package fr.openent.competences;
 
 import fr.openent.competences.controllers.*;
-import fr.openent.competences.service.impl.ArchiveWorker;
 import fr.openent.competences.service.impl.BulletinWorker;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
 import fr.openent.competences.service.impl.CompetencesTransitionWorker;
@@ -334,8 +333,6 @@ public class Competences extends BaseServer {
         setRepositoryEvents(new CompetenceRepositoryEvents(eb));
 
         // Worker
-        log.info("WORKER : " + ArchiveWorker.class.getSimpleName());
-        vertx.deployVerticle(ArchiveWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
         log.info("WORKER : " + CompetencesTransitionWorker.class.getSimpleName());
         vertx.deployVerticle(CompetencesTransitionWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
         log.info("WORKER : " + BulletinWorker.class.getSimpleName());

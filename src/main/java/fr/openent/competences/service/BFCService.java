@@ -146,6 +146,4 @@ public interface BFCService extends CrudService {
                            final JsonArray idEleves, final Long idCycle,
                            final String host, final String acceptLanguage, Vertx vertx, JsonObject config,
                            Future<JsonObject> exportResult, Future<String> periodeNameResult);
-
-    void generateArchiveBFC(EventBus eb, HttpServerRequest request);
 }

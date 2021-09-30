@@ -1049,19 +1049,6 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 formate(exportResult, exportResultEvent));
     }
 
-    @Override
-    public void generateArchiveBFC(EventBus eb, HttpServerRequest request) {
-        JsonObject action = new JsonObject()
-                .put(ACTION, ArchiveWorker.ARCHIVE_BFC)
-                .put(HOST, getHost(request))
-                .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
-                .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
-                .put(SCHEME, getScheme(request))
-                .put(PATH, request.path());
-        eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
-        Renders.ok(request);
-    }
-
     /**
      * Recupere les parametres manquant afin de pouvoir generer le BFC dans le cas ou seul des identifiants d'eleves
      * sont fournis.

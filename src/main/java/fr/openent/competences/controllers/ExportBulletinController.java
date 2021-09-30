@@ -34,7 +34,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
-import static fr.openent.competences.utils.ArchiveUtils.generateArchiveBulletin;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class ExportBulletinController extends ControllerHelper {
@@ -126,26 +125,6 @@ public class ExportBulletinController extends ControllerHelper {
         }
     }
 
-    /**
-     * Genere le releve
-     */
-    @Get("/generate/archive/bulletin")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    @ResourceFilter(SuperAdminFilter.class)
-    public void archiveBulletin(final HttpServerRequest request){
-        Utils.setLocale(I18n.acceptLanguage(request));
-        Utils.setDomain(getHost(request));
-        ArchiveUtils.generateArchiveBulletin(eb,request);
-//        JsonObject action = new JsonObject()
-//                .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
-//                .put(HOST, getHost(request))
-//                .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
-//                .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
-//                .put(PATH, request.path());
-//        eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
-//        Renders.ok(request);
-    }
-
     @Get("/archive/bulletin/:idEleve/:idPeriode/:idClasse")
     @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
     @ResourceFilter(SuperAdminFilter.class)
@@ -162,28 +141,6 @@ public class ExportBulletinController extends ControllerHelper {
     @ResourceFilter(SuperAdminFilter.class)
     public void deleteArchive(final HttpServerRequest request){
         ArchiveUtils.deleteAll(ARCHIVE_BULLETIN_TABLE, storage, response -> Renders.renderJson(request, response));
-    }
-
-    @Post("/generate/archive/bulletin")
-    @ApiDoc("Retourne tous les types de devoir par etablissement")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessExportBulletinFilter.class)
-    public void ArvhiveBulletinPost(final HttpServerRequest request) {
-        Utils.setLocale(I18n.acceptLanguage(request));
-        Utils.setDomain(getHost(request));
-        generateArchiveBulletin(eb,request);
-//        RequestUtils.bodyToJson(request, body -> {
-//            JsonArray idStructures = body.getJsonArray(ID_STRUCTURES_KEY);
-//            JsonObject action = new JsonObject()
-//                    .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
-//                    .put(HOST, getHost(request))
-//                    .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
-//                    .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
-//                    .put(PATH, request.path())
-//                    .put(ID_STRUCTURES_KEY, idStructures);
-//            eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
-//            Renders.ok(request);
-//        });
     }
 
     @Get("/archive/bulletin")
