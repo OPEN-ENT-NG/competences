@@ -807,9 +807,8 @@ public class LSUController extends ControllerHelper {
      * @param handler response success
      */
     private void getAllStudentAndBaliseEleve(HttpServerRequest request, Donnees donnees, List<String> idsClass,
-                                             Map<String,JsonArray> periodesByClass,String idStructure,
+                                             Map<String,JsonArray> periodesByClass, String idStructure,
                                              Map<Long, JsonObject> periodeUnheededStudents, Handler<String> handler){
-
         Map<String, JsonObject> mapDeleteStudent = new HashMap<>();
 
         Handler<Either<String,JsonArray>> handlerGetAllStudents = event -> {
@@ -823,40 +822,34 @@ public class LSUController extends ControllerHelper {
                 } catch (Exception e) {
                     e.printStackTrace();
                     if(e instanceof ParseException){
-                        badRequest(request,"getBaliseEleveBP : error to convert date "+ e.getMessage());
+                        badRequest(request, "getBaliseEleveBP : error to convert date "+ e.getMessage());
                         log.error("getBaliseEleveBP : error to convert date "+ e.getMessage());
                     }else{
-                        badRequest(request,"getBaliseEleveBP : error to setEleve "+ e.getMessage());
+                        badRequest(request, "getBaliseEleveBP : error to setEleve "+ e.getMessage());
                         log.error("getBaliseEleveBP : error to setEleve "+ e.getMessage());
                     }
-
                 }
             }
-
         };
 
         final Handler<Either<String,Map<String,JsonObject>>> handlerDeletedStudentPostgre = event -> {
-
             if(event.isLeft()){
                 String error = event.left().getValue();
                 log.error("error to get deleted Student in Postgres : " + error);
-                badRequest(request,"getDeletedStudentsPostgres : " + error);
+                badRequest(request, "getDeletedStudentsPostgres : " + error);
             }else{
                 List<String> idsEleve = new ArrayList<String>(mapDeleteStudent.keySet());
-                lsuService.getAllStudentWithRelatives(idStructure,idsClass,idsEleve, handlerGetAllStudents );
+                lsuService.getAllStudentWithRelatives(idStructure, idsClass, idsEleve, handlerGetAllStudents);
             }
         };
 
         lsuService.getDeletedStudentsPostgres(periodesByClass,mapDeleteStudent, handlerDeletedStudentPostgre);
-
     }
 
     private void getBaliseEleveBP(Donnees donnees, List<String> idsClass,Map<String,JsonArray> periodesByClass,
                                   JsonArray allStudentsWithRelatives, Map<String,JsonObject> deletedStudentPostgres,
                                   Map<Long, JsonObject> periodeUnheededStudents,Handler<String> handler)
             throws ParseException {
-
-
         Map<String,String> mapIdClassCodeDivision = new HashMap<>();
         //errorsExport = new JsonObject();
         if(allStudentsWithRelatives.isEmpty()){
@@ -865,7 +858,6 @@ public class LSUController extends ControllerHelper {
             Donnees.Eleves eleves = objectFactory.createDonneesEleves();
 
             for (int i = 0; i < allStudentsWithRelatives.size(); i++) {
-
                 JsonObject student = allStudentsWithRelatives.getJsonObject(i);
                 String created_date = student.getString("createdDate");
                 Date createdDate = UtilsConvert.convertStringToDate(created_date, "yyyy-MM-dd");
@@ -887,7 +879,6 @@ public class LSUController extends ControllerHelper {
                         Eleve eleve = setBaliseEleve(eleves, mapIdClassCodeDivision, null, null, student, handler);
                         setBaliseResponsableAndAdress(student, eleve);
                     }
-
                 }else{//cas de l'élève qui a été dans la ou les classes demandées => élève qui a changé de classe
 
                     JsonObject studentPostgres = deletedStudentPostgres.get(student.getString("idEleve"));
@@ -895,8 +886,7 @@ public class LSUController extends ControllerHelper {
                     //élève qui a changé de classe et dont la nouvelle classe n'est pas demandée pour l'export
                     //dans la rep de la requête Neo on aura id de la nouvelle classe et non de l'ancienne
                     // si on demande l'export de l'ancienne et/ou de la nouvelle
-                    if( !idsClass.contains(student.getString("idClass"))) { //cas élève supprimé ds une autre classe
-
+                    if(!idsClass.contains(student.getString("idClass"))) { //cas élève supprimé ds une autre classe
                         if (oldClasses.size() == 1) {
                             String deleteDateString = oldClasses.getJsonObject(0).getString("deleteDate");
                             Date deleteDatePostgre = UtilsConvert.convertStringToDate(deleteDateString.split("T")[0], "yyyy-MM-dd");

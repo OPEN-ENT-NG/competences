@@ -764,7 +764,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false, tableauConversion,
                 idsClassWithNoteAppCompNoteStudent, idPeriodAsked);
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
-        noteService.setRankAndMinMaxInClasseByPeriode(idPeriodAsked, idEleve, notesByDevoirByPeriodeClasse, moyFinalesEleves, result);
+        noteService.setRankAndMinMaxInClasseByPeriode(idPeriodAsked, idEleve, notesByDevoirByPeriodeClasse,
+                moyFinalesEleves, result);
     }
 
     public void getBilanPeriodiqueDomaineForGraph(final String idEleve,String idEtablissement,

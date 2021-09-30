@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS notes.arhive_bulletins_complet;

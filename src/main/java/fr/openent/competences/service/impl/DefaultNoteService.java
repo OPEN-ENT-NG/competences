@@ -932,12 +932,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
     }
 
-    public HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> calculMoyennesEleveByPeriode (JsonArray listNotes,
-                                                                                             final JsonObject result,
-                                                                                             String idEleve,
-                                                                                             JsonArray idEleves,
-                                                                                             List<String> idsClassWithNoteAppCompNoteStudent,
-                                                                                             Long idPeriodeAsked) {
+    public HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>
+    calculMoyennesEleveByPeriode(JsonArray listNotes, final JsonObject result, String idEleve, JsonArray idEleves,
+                                 List<String> idsClassWithNoteAppCompNoteStudent, Long idPeriodeAsked) {
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriode = new HashMap<>();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse = new HashMap<>();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesClasseBySousMat = new HashMap<>();
@@ -958,7 +955,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 String id_eleve = note.getString("id_eleve");
                 Long id_sousMatiere = note.getLong(ID_SOUS_MATIERE);
                 String id_groupe = note.getString("id_groupe");
-                if( idsClassWithNoteAppCompNoteStudent != null && idPeriodeAsked != null){
+                if(idsClassWithNoteAppCompNoteStudent != null && idPeriodeAsked != null){
                     if(idEleve.equals(id_eleve) && idPeriodeAsked.equals(id_periode) && id_groupe != null &&
                             !idsClassWithNoteAppCompNoteStudent.contains(id_groupe))
                         idsClassWithNoteAppCompNoteStudent.add(id_groupe);

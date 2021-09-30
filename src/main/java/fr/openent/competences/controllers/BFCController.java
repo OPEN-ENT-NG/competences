@@ -560,14 +560,6 @@ public class BFCController extends ControllerHelper {
         }
     }
 
-    @Get("/generate/archive/bfc")
-    @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
-    public void archiveBFC(final HttpServerRequest request){
-        Utils.setLocale(I18n.acceptLanguage(request));
-        Utils.setDomain(getHost(request));
-        bfcService.generateArchiveBFC(eb,request);
-    }
-
     @Get("/archive/bfc/:idEleve/:idCycle/:idClasse")
     @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
     public void getArchive(final HttpServerRequest request){

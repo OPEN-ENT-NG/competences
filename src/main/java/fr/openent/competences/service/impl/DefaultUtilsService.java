@@ -1298,31 +1298,6 @@ public class DefaultUtilsService implements UtilsService {
         });
     }
 
-    /**
-     *
-     * @param handler all structure has devoirs, periode and bulletin not saved
-     */
-    @Override
-    public void getActivesStructureForArchiveBulletin ( Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT id_etablissement from " +  COMPETENCES_SCHEMA + ".devoirs "+
-                "WHERE devoirs.owner != 'id-user-transition-annee' AND " +
-                "id_etablissement NOT IN ( " +
-                "SELECT DISTINCT id_etablissement FROM " + COMPETENCES_SCHEMA + ".arhive_bulletins_complet " +
-                "WHERE EXTRACT (YEAR FROM arhive_bulletins_complet.date_archive) = EXTRACT (YEAR FROM CURRENT_TIMESTAMP) );";
-        Sql.getInstance().prepared(query, new JsonArray(), new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonArray structures = new JsonArray();
-                for (Object ja:message.body().getJsonArray("results")) {
-                    structures.add(new JsonObject().put("id_etablissement",((JsonArray)ja).getString(0)));
-                }
-                log.info(structures.size());
-                handler.handle(new Either.Right<>(structures));
-            }
-        });
-    }
-
-
     public void studentAvailableForPeriode(final String idClasse, final Long idPeriode, final Integer typeClasse,
                                            Handler<Message<JsonObject>> handler) {
         JsonObject action = new JsonObject();
