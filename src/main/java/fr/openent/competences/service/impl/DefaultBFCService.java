@@ -488,7 +488,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                         } else {
                             Double moy = calculMoyenne(d, notesCompetencesEleves, eleve, bornes);
                             if (moy != null)
-                                note.put("moyenne", Double.valueOf(decimalFormat.format(moy)));
+                                note.put("moyenne", Double.valueOf(decimalFormat.format(moy).replaceAll(",", ".")));
                         }
                     }
                 } else if (notesCompetencesEleves.containsKey(eleve)) {
@@ -503,7 +503,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                             note.put("idDomaine",d.getId());
                             note.put("niveau", simplifiedMoy);
                             if(recapEval)
-                                note.put("moyenne", Double.valueOf(decimalFormat.format(moy)));
+                                note.put("moyenne", Double.valueOf(decimalFormat.format(moy).replaceAll(",", ".")));
                         }
                     }
                 }

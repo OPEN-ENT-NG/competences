@@ -1293,7 +1293,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         DecimalFormat decimalFormat = new DecimalFormat("#.0");
         decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
 
-        return Double.valueOf(decimalFormat.format((sumMoyClasse / nbEleve)));
+        return Double.valueOf(decimalFormat.format((sumMoyClasse / nbEleve)).replaceAll(",", "."));
     }
 
     public void calculAndSetMoyenneClasseByPeriode(final JsonArray moyFinalesEleves,
@@ -1400,7 +1400,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
 
                 moyennePeriodeClasse.put("id", (JsonObject) null).put("moyenne",
-                        Double.valueOf(decimalFormat.format(sumMoyPeriode / moyennesClasses.size())));
+                        Double.valueOf(decimalFormat.format(sumMoyPeriode / moyennesClasses.size()).replaceAll(",", ".")));
             } else {
                 moyennePeriodeClasse.put("id", (JsonObject) null).put("moyenne", "NN");
             }
