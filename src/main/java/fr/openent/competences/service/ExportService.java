@@ -18,6 +18,7 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -50,6 +51,19 @@ public interface ExportService {
 
     void genererPdf(final HttpServerRequest request, final JsonObject templateProps, final String templateName,
                     final String prefixPdfName, Vertx vertx, JsonObject config);
+
+    /**
+     * Generate PDF by proceeding template html first before generating its buffer with PDF sequentially
+     *
+     * @param request       HttpServerRequest to send response  {@link HttpServerRequest}
+     * @param templateProps Props object to send for proceeding template {@link JsonObject}
+     * @param templateName  Name of the template used for proceeding template {@link String} (e.g bulletin.pdf.xhtml...)
+     * @param title         Title of the pdf {@link String}
+     * @param vertx         Vertx instance {@link Vertx}
+     * @param config        config module entcore instance {@link JsonObject}
+     */
+    void generateSchoolReportPdf(HttpServerRequest request, JsonObject templateProps, String templateName, String title,
+                                 Vertx vertx, JsonObject config);
 
     void getMatiereExportReleveComp(final JsonArray idMatieres, Handler<Either<String, String>> handler);
 

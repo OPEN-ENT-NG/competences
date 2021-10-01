@@ -13,6 +13,9 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.template.TemplateProcessor;
+import fr.wseduc.webutils.template.lambdas.I18nLambda;
+import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -25,8 +28,10 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.util.PDFMergerUtility;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.http.request.JsonHttpServerRequest;
 import org.entcore.common.neo4j.Neo4j;
@@ -49,6 +54,7 @@ import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLTimeoutException;
@@ -746,7 +752,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         if(isNotNull(params.getValue("simple")) && params.getBoolean("simple")) {
                             template = "bulletin_lycee.pdf.xhtml";
                         }
-                        exportService.genererPdf(request, resultFinal, template, title, vertx, config);
+
+                        exportService.generateSchoolReportPdf(request, resultFinal, template, title, vertx, config);
 
                         JsonObject jsonRequest = new JsonObject()
                                 .put("headers", new JsonObject()
