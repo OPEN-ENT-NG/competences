@@ -16,6 +16,11 @@
  */
 
 body.evaluations {
+  .select:not(button) {
+    select{
+      margin: 0;
+    }
+  }
   .forceTop:before {
     content: none !important;
   }
