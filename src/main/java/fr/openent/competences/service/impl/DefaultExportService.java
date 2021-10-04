@@ -28,6 +28,9 @@ import fr.wseduc.webutils.Either.*;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.template.TemplateProcessor;
+import fr.wseduc.webutils.template.lambdas.I18nLambda;
+import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -38,8 +41,10 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.util.PDFMergerUtility;
 import org.entcore.common.storage.Storage;
 
 import javax.imageio.ImageIO;
@@ -54,6 +59,7 @@ import static fr.openent.competences.helpers.ExportEvaluationHelper.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -1308,6 +1314,128 @@ public class DefaultExportService implements ExportService {
                 });
             }
         });
+    }
+
+    @Override
+    public void generateSchoolReportPdf(HttpServerRequest request, JsonObject templateProps, String templateName,
+                                        String prefixPdfName, Vertx vertx, JsonObject config) {
+        final String templatePath = FileResolver.absolutePath(config.getJsonObject("exports").getString("template-path"));
+        final String baseUrl = getScheme(request) + "://" + Renders.getHost(request) + config.getString("app-address") + "/public/";
+
+        TemplateProcessor templateProcessor = new TemplateProcessor(vertx, templatePath).escapeHTML(false);
+        templateProcessor.setLambda("i18n", new I18nLambda("fr"));
+        templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
+
+        JsonArray students = templateProps.getJsonArray("eleves");
+        String startDate = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
+        String fileName = prefixPdfName + "_" + startDate + ".pdf";
+        List<Future<byte[]>> studentsBufferFutures = new ArrayList<>();
+        Promise<byte[]> init = Promise.promise();
+        Future<byte[]> current = init.future();
+        for (int i = 0; i < students.size(); i++) {
+            int indice = i;
+            current = current.compose(e -> {
+                JsonObject student = students.getJsonObject(indice);
+                templateProps.remove("eleves");
+                templateProps.put("eleves", new JsonArray().add(student));
+                Future<byte[]> next = renderTemplateAndGeneratePdf(templateProcessor, vertx, baseUrl, templateProps,
+                        templateName, student);
+                studentsBufferFutures.add(next);
+                return next;
+            });
+        }
+        current
+                .onSuccess(res -> {
+                    try {
+                        PDFMergerUtility mergedPdf = new PDFMergerUtility();
+                        List<File> pdfFiles = new ArrayList<>();
+                        for (int i = 0; i < studentsBufferFutures.size(); i++) {
+                            byte[] studentByte = studentsBufferFutures.get(i).result();
+                            File outputFile = new File(i + fileName);
+                            FileOutputStream outputStream = new FileOutputStream(outputFile);
+                            outputStream.write(studentByte);
+                            pdfFiles.add(outputFile);
+                        }
+                        pdfFiles.forEach(mergedPdf::addSource);
+                        ByteArrayOutputStream pdfDocOutputstream = new ByteArrayOutputStream();
+                        mergedPdf.setDestinationFileName(fileName);
+                        mergedPdf.setDestinationStream(pdfDocOutputstream);
+                        mergedPdf.mergeDocuments();
+                        ByteArrayOutputStream bos = (ByteArrayOutputStream) mergedPdf.getDestinationStream();
+
+                        request.response().putHeader("Content-Type", "application/pdf");
+                        request.response().putHeader("Content-Disposition", "attachment; filename=" + fileName);
+                        request.response().end(Buffer.buffer(bos.toByteArray()));
+                        for (File pdfFile: pdfFiles) {
+                            Files.deleteIfExists(Paths.get(pdfFile.getAbsolutePath()));
+                        }
+                        JsonArray removesFiles = templateProps.getJsonArray("idImagesFiles");
+                        if (removesFiles != null) {
+                            storage.removeFiles(removesFiles, event -> log.info(String.format("[Competences@%s::generateSchoolReportPdf] - " +
+                                            "Remove graph Images: %s", this.getClass().getSimpleName(), event.encode())));
+                        }
+                    } catch (IOException | COSVisitorException e) {
+                        String error = String.format("[Competences@%s::generateSchoolReportPdf] An exception has occured during process: %s",
+                                this.getClass().getSimpleName(), e.getMessage());
+                        log.error(error);
+                        badRequest(request, error);
+                    }
+                })
+                .onFailure(err -> {
+                    String error = String.format("[Competences@%s::generateSchoolReportPdf] An exception has occured " +
+                                    "during renderTemplateAndGeneratePdf: %s",
+                            this.getClass().getSimpleName(), err.getMessage());
+                    log.error(error);
+                    badRequest(request, error);
+                });
+        init.complete();
+    }
+
+    /**
+     * Method that will process template to fetch its buffer and generate PDF within
+     *
+     * @param templateProcessor     Template configuration to process template {@link TemplateProcessor}
+     * @param vertx                 Vertx instance
+     * @param baseUrl               BaseUrl
+     * @param templateProps         Props object to send for proceeding template {@link JsonObject}
+     * @param templateName          Name of the template used for proceeding template {@link String} (e.g bulletin.pdf.xhtml...)
+     * @param student               student data info object
+     * @return Future {@link Future of {byte[]} } containing student's file pdf in byte
+     */
+    private Future<byte[]> renderTemplateAndGeneratePdf(TemplateProcessor templateProcessor, Vertx vertx, String baseUrl,
+                                                        JsonObject templateProps, String templateName, JsonObject student) {
+        Promise<byte[]> promise = Promise.promise();
+        templateProcessor.processTemplate(templateName, templateProps, writer -> {
+            if (writer == null || writer.isEmpty()) {
+                String error = String.format("[Competences@%s::renderTemplateAndGeneratePdf] Failed to process template for student : %s",
+                        this.getClass().getSimpleName(), student.getString("idEleve"));
+                log.error(error);
+                promise.fail(error);
+            } else {
+                String node = (String) vertx.sharedData().getLocalMap("server").get("node");
+                if (node == null) {
+                    node = "";
+                }
+                JsonObject actionObject = new JsonObject()
+                        .put("content", writer.getBytes(StandardCharsets.UTF_8))
+                        .put("baseUrl", baseUrl);
+
+                eb.request(node + "entcore.pdf.generator", actionObject, new DeliveryOptions()
+                        .setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L), handlerToAsyncHandler(reply -> {
+                    JsonObject pdfResponse = reply.body();
+                    if (!"ok".equals(pdfResponse.getString("status"))) {
+                        String error = String.format("[Competences@%s::renderTemplateAndGeneratePdf] Failed to generate PDF" +
+                                        " after processTemplate for student : %s",
+                                this.getClass().getSimpleName(), student.getString("idEleve"));
+                        log.error(error);
+                        promise.fail(error);
+                    } else {
+                        promise.complete(pdfResponse.getBinary("content"));
+                    }
+                }));
+            }
+        });
+        return promise.future();
     }
 
     public void getMatiereExportReleveComp(final JsonArray idMatieres, Handler<Either<String, String>> handler) {

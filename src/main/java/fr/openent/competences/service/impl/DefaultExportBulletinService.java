@@ -13,6 +13,9 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.template.TemplateProcessor;
+import fr.wseduc.webutils.template.lambdas.I18nLambda;
+import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -25,8 +28,10 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.util.PDFMergerUtility;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.http.request.JsonHttpServerRequest;
 import org.entcore.common.neo4j.Neo4j;
@@ -49,6 +54,7 @@ import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLTimeoutException;
@@ -513,7 +519,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 }
             }
 
-            String footer = "";
+            String caption = "";
             if(!footerArray.isEmpty()){
                 for (int i = 0; i < footerArray.size(); i++) {
                     JsonObject niv = footerArray.getJsonObject(i);
@@ -530,12 +536,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         id_niv = id_cycle;
                     }
 
-                    footer += id_niv + " : " + lib + " - ";
+                    caption += id_niv + " : " + lib + " - ";
                 }
-                footer = footer.substring(0, footer.length() - 2);
+                caption = caption.substring(0, caption.length() - 2);
             }
 
-            eleve.put(NIVEAU_COMPETENCE, niveauCompetences).put("footer", "* " + footer);
+            eleve.put(NIVEAU_COMPETENCE, niveauCompetences).put("caption", "* " + caption);
 
             if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)){
                 eleve.put(LOGO_PATH, "img/ministere_agriculture.png");
@@ -746,7 +752,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         if(isNotNull(params.getValue("simple")) && params.getBoolean("simple")) {
                             template = "bulletin_lycee.pdf.xhtml";
                         }
-                        exportService.genererPdf(request, resultFinal, template, title, vertx, config);
+
+                        exportService.generateSchoolReportPdf(request, resultFinal, template, title, vertx, config);
 
                         JsonObject jsonRequest = new JsonObject()
                                 .put("headers", new JsonObject()
@@ -1805,8 +1812,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void setHeightByRow(JsonArray subjects) {
-        int sizeOfTable = 600; // Taille en pixel du tableau de suivi des acquis
         int nbSubject = subjects.size();
+        int sizeOfTable = 580; // Taille en pixel du tableau de suivi des acquis
+        if(nbSubject > 0 && subjects.getJsonObject(0).getBoolean(GET_POSITIONNEMENT)) {
+            sizeOfTable -= 20;
+        }
         for (int i = 0; i < nbSubject; i++) {
             JsonObject subject = subjects.getJsonObject(i);
             subject.put("heightByRow", (sizeOfTable / nbSubject) + "px");

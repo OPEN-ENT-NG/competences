@@ -280,7 +280,7 @@
             margin-bottom: 40px;
 
             @bottom-right {
-                /*content: counter(page) "/" counter(pages);*/
+                content: counter(page) "/" counter(pages);
                 font-size: x-small;
                 padding-right: 10px;
             }
@@ -291,8 +291,6 @@
         }
 
         @page:first {
-            margin-bottom: 0 !important;
-
             @bottom-center {
                 content: normal;
             }
@@ -369,10 +367,6 @@
             height: 10px;
             padding-top: 2px;
             padding-bottom: 2px;
-        }
-
-        .suiviDesAcquis {
-            height: 700px;
         }
     </style>
 </head>
@@ -485,7 +479,7 @@
 
     {{#hasSuiviAcquis}}
     <h1 color="blue">{{suiviAcquisLibelle}}</h1>
-    <table class="suiviDesAcquis paddingFifty">
+    <table class="paddingFifty">
         <tr class="header">
             <td>&nbsp;</td>
             {{#getProgramElements}}
@@ -790,7 +784,7 @@
         {{/printMoyenneGenerale}}
     </table>
     {{#getPositionnement}}
-    <span class="paddingFifty" style="font-size: xx-small;"> {{footer}}</span>
+    <span class="paddingFifty" style="font-size: xx-small;">{{caption}}</span>
     {{/getPositionnement}}
     {{/hasSuiviAcquis}}
 
