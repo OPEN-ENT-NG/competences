@@ -368,10 +368,6 @@
             padding-top: 2px;
             padding-bottom: 2px;
         }
-
-        .suiviDesAcquis {
-            height: 700px;
-        }
     </style>
 </head>
 <body>
@@ -483,7 +479,7 @@
 
     {{#hasSuiviAcquis}}
     <h1 color="blue">{{suiviAcquisLibelle}}</h1>
-    <table class="suiviDesAcquis paddingFifty">
+    <table class="paddingFifty">
         <tr class="header">
             <td>&nbsp;</td>
             {{#getProgramElements}}
@@ -788,7 +784,7 @@
         {{/printMoyenneGenerale}}
     </table>
     {{#getPositionnement}}
-    <span class="paddingFifty" style="font-size: xx-small;"> {{footer}}</span>
+    <span class="paddingFifty" style="font-size: xx-small;">{{caption}}</span>
     {{/getPositionnement}}
     {{/hasSuiviAcquis}}
 

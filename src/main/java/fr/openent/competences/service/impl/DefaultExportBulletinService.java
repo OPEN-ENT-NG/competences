@@ -519,7 +519,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 }
             }
 
-            String footer = "";
+            String caption = "";
             if(!footerArray.isEmpty()){
                 for (int i = 0; i < footerArray.size(); i++) {
                     JsonObject niv = footerArray.getJsonObject(i);
@@ -536,12 +536,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         id_niv = id_cycle;
                     }
 
-                    footer += id_niv + " : " + lib + " - ";
+                    caption += id_niv + " : " + lib + " - ";
                 }
-                footer = footer.substring(0, footer.length() - 2);
+                caption = caption.substring(0, caption.length() - 2);
             }
 
-            eleve.put(NIVEAU_COMPETENCE, niveauCompetences).put("footer", "* " + footer);
+            eleve.put(NIVEAU_COMPETENCE, niveauCompetences).put("caption", "* " + caption);
 
             if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)){
                 eleve.put(LOGO_PATH, "img/ministere_agriculture.png");
@@ -1812,8 +1812,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void setHeightByRow(JsonArray subjects) {
-        int sizeOfTable = 600; // Taille en pixel du tableau de suivi des acquis
         int nbSubject = subjects.size();
+        int sizeOfTable = 580; // Taille en pixel du tableau de suivi des acquis
+        if(nbSubject > 0 && subjects.getJsonObject(0).getBoolean(GET_POSITIONNEMENT)) {
+            sizeOfTable -= 20;
+        }
         for (int i = 0; i < nbSubject; i++) {
             JsonObject subject = subjects.getJsonObject(i);
             subject.put("heightByRow", (sizeOfTable / nbSubject) + "px");
