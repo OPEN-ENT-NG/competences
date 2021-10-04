@@ -495,24 +495,17 @@ public class DevoirController extends ControllerHelper {
     @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     @ApiDoc("Retourne la moyenne du devoir dont l'id est passé en paramètre")
     public void getMoyenneDevoir(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                if(user != null) {
-                    Long idDevoir = Long.parseLong(request.params().get("idDevoir"));
-                    boolean stats = Boolean.parseBoolean(request.params().get("stats"));
+        UserUtils.getUserInfos(eb, request, user -> {
+            if(user != null) {
+                Long idDevoir = Long.parseLong(request.params().get("idDevoir"));
 
-                    devoirsService.getMoyenne(idDevoir, stats, null, new Handler<Either<String, JsonObject>>() {
-                        @Override
-                        public void handle(Either<String, JsonObject> event) {
-                            if(event.isRight()) {
-                                Renders.renderJson(request, event.right().getValue());
-                            } else {
-                                leftToResponse(request, event.left());
-                            }
-                        }
-                    });
-                }
+                devoirsService.getMoyenne(idDevoir,null, event -> {
+                    if(event.isRight()) {
+                        Renders.renderJson(request, event.right().getValue());
+                    } else {
+                        leftToResponse(request, event.left());
+                    }
+                });
             }
         });
     }

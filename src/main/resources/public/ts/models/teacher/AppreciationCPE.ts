@@ -18,9 +18,9 @@ export class AppreciationCPE extends Model {
         this.id_periode = idPeriode;
     }
 
-    async syncAppreciationCPE () {
+    async syncAppreciationCPE() {
         try {
-            let {data} = await http.get(`/competences/appreciation/CPE/bilan/periodique?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}`);
+            let {data} = await http.get(this.api.DATA_APPRECIATION + `?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}`);
             if(data.appreciation !== undefined) {
                 this.appreciation = data.appreciation;
             }

@@ -77,7 +77,7 @@ export class Devoir extends Model implements IModel{
             getCompetencesLastDevoir : '/competences/competences/last/devoir/',
             getNotesDevoir : '/competences/devoir/' + this.id + '/notes',
             getAppreciationDevoir: '/competences/appreciation/' + this.id + '/appreciations',
-            getStatsDevoir : '/competences/devoir/' + this.id + '/moyenne?stats=true',
+            getMoyenneDevoir : '/competences/devoir/' + this.id + '/moyenne',
             getCompetencesNotes : '/competences/competence/notes/devoir/',
             saveCompetencesNotes : '/competences/competence/notes',
             updateCompetencesNotes : '/competences/competence/notes',
@@ -315,25 +315,30 @@ export class Devoir extends Model implements IModel{
         });
     }
 
-    calculStats (change = true) : Promise<any> {
+    calculStats(moyenne = true, percent = true) : Promise<any> {
         return new Promise(async (resolve, reject) => {
             let that = this;
             try {
-                let allPromise = [axioshttp.get(this.api.getStatsDevoir)];
-                if(change)
+                let allPromise = [];
+                if(moyenne)
+                    allPromise.push(axioshttp.get(this.api.getMoyenneDevoir));
+                if(percent)
                     allPromise.push(evaluations.devoirs.getPercentDone(that));
 
                 let response = await Promise.all(allPromise);
 
-                let stat = response[0].data;
-                if (!stat.error) {
-                    that.statistiques = stat;
-                    that.statistiques.percentDone =
-                        _.findWhere(evaluations.structure.devoirs.all, {id: that.id}).percent;
-                } else {
-                    _.mapObject(that.statistiques, (val) => {
-                        return "";
-                    });
+                if(moyenne) {
+                    let stat = response[0].data;
+                    if(!stat.error) {
+                        that.statistiques = stat;
+                    } else {
+                        _.mapObject(that.statistiques, (val) => {
+                            return "";
+                        });
+                    }
+                }
+                if(percent) {
+                    that.statistiques.percentDone = _.findWhere(evaluations.structure.devoirs.all, {id: that.id}).percent;
                 }
 
                 if (resolve && typeof(resolve) === 'function') {

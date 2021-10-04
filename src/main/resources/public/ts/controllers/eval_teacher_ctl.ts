@@ -303,7 +303,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.currentDevoir.groupe = _.findWhere($scope.structure.classes.all,
                             {id: $scope.currentDevoir.id_groupe});
 
-                        let allPromise = [$scope.currentDevoir.calculStats(false), $scope.currentDevoir.competences.sync()];
+                        let allPromise = [$scope.currentDevoir.calculStats(), $scope.currentDevoir.competences.sync()];
                         if ($scope.currentDevoir.groupe.periodes.empty()) {
                             allPromise.push($scope.currentDevoir.groupe.periodes.sync(),
                                 $scope.currentDevoir.groupe.eleves.sync());
@@ -3242,22 +3242,37 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if(Utils.isNull(eleve)){
                 return;
             }
+
             if(!$scope.opened.lightboxConfirmCleanAppreciation) {
                 $scope.appreciationBackUp = eleve.appreciation_matiere_periode;
                 $scope.studentTemp = eleve;
             }
+
             $scope.showInfosEleve = true;
             template.close('leftSide-userInfo');
             await utils.safeApply($scope);
-            let idPeriode = (Utils.isNotNull($scope.search.periode)?$scope.search.periode.id_type: null);
+
             if(eleve != "" && !eleve.idClasse)
                 eleve.idClasse = $scope.search.classe.id;
-            let allPromise = [eleve.getEvenements($scope.structure.id), $scope.getAvatar(eleve)];
-            if(Utils.isNotNull(idPeriode)) {
-                eleve.appreciationCPE = new AppreciationCPE(eleve.id, idPeriode);
-                allPromise.push(eleve.appreciationCPE.syncAppreciationCPE());
+
+            let allPromise = [];
+            if(eleve.evenements == null) {
+                allPromise.push(eleve.getEvenements($scope.structure.id));
+            }
+
+            if(eleve.img == null) {
+                allPromise.push($scope.getAvatar(eleve));
+            }
+
+            if(eleve.appreciationCPE == null) {
+                let idPeriode = Utils.isNotNull($scope.search.periode) ? $scope.search.periode.id_type : null;
+                if(Utils.isNotNull(idPeriode)) {
+                    eleve.appreciationCPE = new AppreciationCPE(eleve.id, idPeriode);
+                    allPromise.push(eleve.appreciationCPE.syncAppreciationCPE());
+                }
             }
             await Promise.all(allPromise);
+
             let syncPeriodeClasse = async () => {
                 if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes) &&
                     _.isEmpty($scope.search.classe.periodes.all)){
@@ -3274,6 +3289,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.search.periode = _.findWhere($scope.filteredPeriode, {id_type: idPeriode});
                 }
             }
+
             if($location.path() === '/competences/eleve') {
                 await syncPeriodeClasse();
                 $scope.filteredPeriode = $scope.search.classe.periodes.all;

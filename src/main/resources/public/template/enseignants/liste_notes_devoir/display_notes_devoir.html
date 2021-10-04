@@ -227,7 +227,6 @@
             <div class="marginFive">
                 <div class="card">
                     <content class="block row">
-
                         <div class="devoirs-header" id="liste-notes-devoir-header" current-devoir="currentDevoir"
                              style="position: -webkit-sticky; position: sticky;top: 64px !important; z-index: 10">
                             <div class="align-center">
@@ -301,14 +300,13 @@
                             </div>
 
                             <div ng-repeat="eleve in currentDevoir.eleves.all track by $index" ng-class="{openedEleve : openedEleve === $index}">
-
                                 <div class="expandable navigable-row twelve">
                                     <div class="row navigable-inputs-row">
                                         <div ng-if="currentDevoir.competences.all.length > 0" class="one inline-block coche-case cell">
                                             <label class="checkbox">
                                                 <input type="checkbox" ng-model="eleve.selected"
                                                        ng-init="eleve.selected = false"
-                                                       ng-click="getEleveInfo(eleve);selectEleveListe(eleve)"
+                                                       ng-click="getEleveInfo(eleve); selectEleveListe(eleve)"
                                                        ng-disabled="eleve.evaluation.id_annotation !== undefined
                                                        && eleve.evaluation.id_annotation > 0
                                                        && ((!currentDevoir.is_evaluated)
@@ -319,7 +317,7 @@
                                         <div class="two cell cell-indent expandable-content text-overflow"
                                              ng-class="{'deletedStudent': eleve.deleteDate !== null}"
                                              class="tooltip-overlay" tooltip="[[eleve.lastName]] [[eleve.firstName]]"
-                                             ng-click="getEleveInfo(eleve);expandNote($index, false)">
+                                             ng-click="getEleveInfo(eleve); expandNote($index, false)">
                                             [[::eleve.lastName]] [[::eleve.firstName]]
                                         </div>
 

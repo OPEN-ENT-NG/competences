@@ -1134,39 +1134,35 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void getMoyenne(Long idDevoir, final boolean stats, String[] idEleves,
-                           final Handler<Either<String, JsonObject>> handler) {
-        noteService.getNotesParElevesParDevoirs(idEleves, new Long[]{idDevoir},
-                new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if (event.isRight()) {
-                            ArrayList<NoteDevoir> notes = new ArrayList<>();
+    public void getMoyenne(Long idDevoir, String[] idEleves, final Handler<Either<String, JsonObject>> handler) {
+        noteService.getNotesParElevesParDevoirs(idEleves, new Long[]{idDevoir}, event -> {
+            if (event.isRight()) {
+                ArrayList<NoteDevoir> notes = new ArrayList<>();
 
-                            JsonArray listNotes = event.right().getValue();
+                JsonArray listNotes = event.right().getValue();
 
-                            for (int i = 0; i < listNotes.size(); i++) {
-                                JsonObject note = listNotes.getJsonObject(i);
-                                String coef = note.getString("coefficient");
-                                if(coef != null) {
-                                    NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(note.getString("valeur")),
-                                            note.getBoolean("ramener_sur"), Double.valueOf(coef));
+                for (int i = 0; i < listNotes.size(); i++) {
+                    JsonObject note = listNotes.getJsonObject(i);
+                    String coef = note.getString("coefficient");
+                    if(coef != null) {
+                        NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(note.getString("valeur")),
+                                note.getBoolean("ramener_sur"), Double.valueOf(coef));
 
-                                    notes.add(noteDevoir);
-                                }
-                            }
-
-                            if (!notes.isEmpty()) {
-                                handler.handle(new Either.Right<>(utilsService.calculMoyenneParDiviseur(notes, stats)));
-                            } else {
-                                handler.handle(new Either.Right<>(new JsonObject()));
-                            }
-                        } else {
-                            log.error("[get Moyenne]: cannot get Eleves class");
-                            handler.handle(new Either.Left<String, JsonObject>(event.left().getValue()));
-                        }
+                        notes.add(noteDevoir);
                     }
-                });
+                }
+
+                if (!notes.isEmpty()) {
+                    handler.handle(new Either.Right<>(utilsService.calculMoyenneParDiviseur(notes, true)));
+                } else {
+                    handler.handle(new Either.Right<>(new JsonObject()));
+                }
+            } else {
+                log.error("[get Moyenne]: cannot get Eleves class");
+                handler.handle(new Either.Left<>(event.left().getValue()));
+            }
+
+        });
     }
 
     @Override
