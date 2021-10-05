@@ -121,12 +121,20 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false, bfc: false};
             closeTemplateButNot('suivi-acquis');
 
-            $scope.syncPeriodesBilanPeriodique();
+            await $scope.syncPeriodesBilanPeriodique();
+            $scope.displayBilanPeriodique();
 
             if($scope.elementBilanPeriodique === undefined){
                 $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
                     $scope.search.periode.id_type, $scope.structure, $scope.filteredPeriode);
             }
+
+            /*
+            Dans le cas où la période change automatiquement avec un changement d'onglet
+             */
+            $scope.elementBilanPeriodique.idPeriode = $scope.search.periode.id_type;
+            $scope.elementBilanPeriodique.suivisAcquis.idPeriode = $scope.search.periode.id_type;
+
             await $scope.elementBilanPeriodique.suivisAcquis.getSuivisDesAcquis();
 
             await utils.safeApply($scope);

@@ -24,9 +24,6 @@ import {AvisOrientation} from "./AvisOrientation";
 import {Graph} from "../common/Graph";
 import http from "axios";
 
-
-declare  let Chart: any;
-
 export class ElementBilanPeriodique extends Model {
     suivisAcquis : SuivisDesAcquis;
     projet : object;
@@ -34,7 +31,6 @@ export class ElementBilanPeriodique extends Model {
     graphique : object;
     synchronized: any;
     elementProgramme: any;
-    idTypePeriode : number;
     typePeriode : TypePeriode[];
     idPeriode : number;
     classe: Classe;
@@ -58,22 +54,23 @@ export class ElementBilanPeriodique extends Model {
     }
 
 
-    constructor(pClasse, pEleve, pIdTypePeriode,pStructure, pTypePeriode) {
+    constructor(pClasse, pEleve, pIdPeriode, pStructure, pTypePeriode) {
         super();
         this.structure = pStructure;
         this.classe = pClasse;
         this.eleve = pEleve;
-        this.idTypePeriode = pIdTypePeriode;
-        this.idPeriode = this.idTypePeriode;
+        this.idPeriode = pIdPeriode;
         this.typePeriode = pTypePeriode;
         this.suivisAcquis = new SuivisDesAcquis(this.eleve ? this.eleve.id : undefined,
             this.classe ? this.classe.id : undefined, this.structure ? this.structure.id : undefined,
-            this.idTypePeriode, this.typePeriode);
+            this.idPeriode, this.typePeriode);
     }
 
 
     async getDataForGraph(eleve, forDomaine?, niveauCompetences?, idPeriode?) {
-        if(idPeriode!==undefined) {this.idPeriode = idPeriode;}
+        if(idPeriode !== undefined) {
+            this.idPeriode = idPeriode;
+        }
         await Graph.getDataForGraph(this, eleve, forDomaine, niveauCompetences);
     }
 
@@ -85,5 +82,4 @@ export class ElementBilanPeriodique extends Model {
             notify.error('evaluations.avis.synthses.bilan.periodique.get.error');
         }
     }
-
 }
