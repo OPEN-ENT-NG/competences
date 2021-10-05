@@ -2886,64 +2886,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         let isWorkingProgress:Boolean = false;
         let idHTMLofInput:String;
 
-        function saveAnnotation(evaluation: Evaluation) {
-            evaluation.saveAppreciation().then((res) => {
-                evaluation.oldAppreciation = evaluation.appreciation;
-                if (res.id !== undefined) {
-                    evaluation.id_appreciation = res.id;
-                    evaluation.data.id_appreciation = res.id;
-                }
-                utils.safeApply($scope);
-            });
-        }
-
-        function deleteAnnotation(evaluation: Evaluation) {
-            evaluation.deleteAppreciation().then((res) => {
-                evaluation.oldAppreciation = evaluation.appreciation;
-                if (res.rows === 1) {
-                    evaluation.id_appreciation = undefined;
-                    evaluation.data.id_appreciation = undefined;
-                }
-                utils.safeApply($scope);
-            });
-        }
-
-        function isSaveEvaluationAnnotation(evaluation: Evaluation, isAppreciationChanged: Boolean) {
+       function isSaveEvaluationAnnotation(evaluation: Evaluation, isAppreciationChanged: Boolean) {
             return evaluation.oldAppreciation !== undefined && evaluation.appreciation !== undefined
                 && isAppreciationChanged && evaluation.appreciation !== '';
         }
-
-        function isDeletionAnnotation(evaluation: Evaluation) {
-            return evaluation.id_appreciation !== undefined && evaluation.id_appreciation !== null && evaluation.appreciation === "";
-        }
-
-        function isNewValidValue(evaluation: Evaluation, devoir: Devoir) {
-            return parseFloat(evaluation.valeur) <= devoir.diviseur && parseFloat(evaluation.valeur) >= 0 && evaluation.oldValeur != evaluation.valeur;
-        }
-
         function calculerMoyenneEleveAndStats(eleve, evaluation: Evaluation) {
             $scope.calculerMoyenneEleve(eleve);
             $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
         }
 
-        async function saveValue(evaluation: Evaluation, isInReleleve: boolean, eleve) {
-            try{
-                let res = await evaluation.save();
-                evaluation.valid = true;
-                evaluation.oldValeur = evaluation.valeur;
-                if (res.id !== undefined) {
-                    evaluation.id = res.id;
-                    evaluation.data.id = res.id;
-                }
-            }catch (e) {
-                return ;
-            }
 
-            calculStats(isInReleleve, eleve, evaluation)
-            $scope.opened.lightbox = false;
-            delete $scope.selected.eleve;
-            await utils.safeApply($scope);
-        }
 
         function handleErrorWrongValue(devoir: Devoir, evaluation: Evaluation, $event) {
             notify.error(lang.translate("error.note.outbound") + devoir.diviseur);
@@ -2955,36 +2907,75 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         }
 
-        async function deleteEvaluation(evaluation: Evaluation) {
-            let res = await evaluation.delete();
-            evaluation.valid = true;
-            evaluation.oldValeur = evaluation.valeur;
-            if (res.rows === 1) {
-                evaluation.id = undefined;
-                evaluation.data.id = undefined;
-            }
-        }
 
         function isEmptyValue(evaluation: Evaluation) {
             return evaluation.id !== undefined && evaluation.valeur === "" &&
                 (evaluation.id_annotation === undefined || evaluation.id_annotation < 0);
         }
 
-        function calculStats(isInReleleve: boolean, eleve, evaluation: Evaluation) {
-            if (isInReleleve) {
-                calculerMoyenneEleveAndStats(eleve, evaluation);
+
+        function deleteEvaluationAppreciation(evaluation) {
+            evaluation.deleteAppreciation().then((res) => {
+                evaluation.oldAppreciation = evaluation.appreciation;
+                if (res.rows === 1) {
+                    evaluation.id_appreciation = undefined;
+                    evaluation.data.id_appreciation = undefined;
+                }
+                utils.safeApply($scope);
+            });
+        }
+
+        async function deleteAnnotation(evaluation, isInReleve: boolean, eleve) {
+            isWorkingProgress = true;
+            let res = await evaluation.delete();
+            evaluation.valid = true;
+            evaluation.oldValeur = evaluation.valeur;
+            if (isInReleve) {
+                if (res.rows === 1) {
+                    evaluation.id = undefined;
+                    evaluation.data.id = undefined;
+                }
+                $scope.calculerMoyenneEleve(eleve);
+                $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
             } else {
+                if (res.rows === 1) {
+                    evaluation.id = undefined;
+                    evaluation.data.id = undefined;
+                }
                 $scope.calculStatsDevoir();
             }
         }
 
-        $scope.saveNoteDevoirEleve = async function (evaluation: Evaluation, $event, eleve, isAnnotation?) {
-            // todo refacto make this function more readable
-            let isInReleleve = $location.$$path === '/releve'
-            if (isInReleleve)
-                idHTMLofInput = getHTMLiD($event);
+        async function saveEvaluationValeur(evaluation, devoir: Devoir, isInReleve: boolean, eleve) {
+            isWorkingProgress = true;
+            let res = await evaluation.save();
+            evaluation.valid = true;
+            evaluation.oldValeur = evaluation.valeur;
+            if (devoir.coefficient === null) {
+                notify.info('evaluation.devoir.coef.is.null');
+            }
+            if (res.id !== undefined) {
+                evaluation.id = res.id;
+                evaluation.data.id = res.id;
+            }
 
-            //if(isWorkingProgress) return;
+            if (isInReleve) {
+                $scope.calculerMoyenneEleve(eleve);
+                $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
+            } else {
+                $scope.calculStatsDevoir();
+            }
+            $scope.opened.lightbox = false;
+            delete $scope.selected.eleve;
+            await utils.safeApply($scope);
+            isWorkingProgress = false;
+        }
+
+        $scope.saveNoteDevoirEleve = async function (evaluation, $event, eleve, isAnnotaion?) {
+            // todo refacto make this function more readable
+            let isInReleve = $location.$$path === '/releve';
+            if (isInReleve)
+                idHTMLofInput = getHTMLiD($event);
             let isValueChanged:Boolean = (evaluation.valeur !== evaluation.oldValeur);
             let isAppreciationChanged:Boolean = (evaluation.oldAppreciation !== evaluation.appreciation);
             const reg = /^[0-9]+(\.[0-9]{1,2})?$/;
@@ -2992,77 +2983,73 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (isValueChanged || isAppreciationChanged) {
                 giveShortTermToValue(evaluation);
                 cleanComma(evaluation);
-                updateValueToNN(evaluation, isAnnotation);
+                updateValueToNN(evaluation, isAnnotaion);
                 cleanIdAppreciation(evaluation);
                 // On est dans le cas d'une sauvegarde ou création d'appréciation
                 if (isSaveEvaluationAnnotation(evaluation, isAppreciationChanged)) {
-                    saveAnnotation(evaluation);
-                }
-                else {
+                    evaluation.saveAppreciation().then((res) => {
+                        evaluation.oldAppreciation = evaluation.appreciation;
+                        if (res.id !== undefined) {
+                            evaluation.id_appreciation = res.id;
+                            evaluation.data.id_appreciation = res.id;
+                        }
+                        utils.safeApply($scope);
+                    });
+                } else {
                     // On est dans le cas d'une suppression d'appréciation
-                    if (isDeletionAnnotation(evaluation)) {
-                        deleteAnnotation(evaluation);
-                    }
-                    else {
+                    if (evaluation.id_appreciation !== undefined && evaluation.id_appreciation !== null && evaluation.appreciation === "") {
+                        deleteEvaluationAppreciation(evaluation);
+                    } else {
                         // On est dans le cas d'une sauvegarde d'une note ou d'annotation
                         if (evaluation.data !== undefined && evaluation.data.id !== undefined && evaluation.id === undefined) {
                             evaluation.id = evaluation.data.id;
                         }
-                        // let annotation = _.findWhere($scope.evaluations.annotations.all, {libelle_court: evaluation.valeur});
-                        // if (!reg.test(evaluation.valeur) && (annotation !== undefined && annotation !== null
-                        //     && annotation.id !== evaluation.oldId_annotation)) {
-                        //     evaluation.id_annotation = annotation.id;
-                        //     console.log("JE RENTRE")
-                        //     $scope.saveAnnotationDevoirEleve(evaluation, $event, eleve, isAnnotation);
-                        // } else {
-                        let devoir = evaluations.devoirs.findWhere({id: evaluation.id_devoir});
-                        if ((evaluation.oldValeur !== undefined && isValueChanged) || evaluation.oldAppreciation !== undefined && isAppreciationChanged) {
-                            if (evaluation.valeur !== undefined && evaluation.valeur !== "" && reg.test(evaluation.valeur) && devoir !== undefined) {
-                                if (isNewValidValue(evaluation, devoir)) {
-                                    isWorkingProgress = true;
-                                    if (devoir.coefficient === null) {
-                                        notify.info('evaluation.devoir.coef.is.null');
+                        let annotation = _.findWhere($scope.evaluations.annotations.all, {libelle_court: evaluation.valeur});
+                        if (!reg.test(evaluation.valeur) && (annotation !== undefined && annotation !== null
+                            && annotation.id !== evaluation.oldId_annotation) && evaluation.oldValeur != evaluation.valeur) {
+                            evaluation.id_annotation = annotation.id;
+                            $scope.saveAnnotationDevoirEleve(evaluation, $event, eleve, isAnnotaion);
+                        } else {
+                            if ((evaluation.oldValeur !== undefined && isValueChanged) || evaluation.oldAppreciation !== undefined && isAppreciationChanged) {
+                                if (evaluation.valeur !== undefined && evaluation.valeur !== "" && reg.test(evaluation.valeur)) {
+                                    let devoir = evaluations.devoirs.findWhere({id: evaluation.id_devoir});
+                                    if (devoir !== undefined) {
+                                        if (parseFloat(evaluation.valeur) <= devoir.diviseur && parseFloat(evaluation.valeur) >= 0) {
+                                            await saveEvaluationValeur(evaluation, devoir, isInReleve, eleve);
+                                            if (isInReleve)
+                                                $(`#${idHTMLofInput} > input`).select();
+                                        } else {
+                                            handleErrorWrongValue(devoir,evaluation, $event)
+                                        }
                                     }
-                                    await saveValue(evaluation, isInReleleve, eleve);
-                                    isWorkingProgress = false;
-                                    if (isInReleleve)
-                                        $(`#${idHTMLofInput} > input`).select();
-
                                 } else {
-                                    handleErrorWrongValue(devoir, evaluation, $event);
-                                    return;
-                                }
-                            }
-                            else {
-                                if (isEmptyValue(evaluation)) {
-                                    isWorkingProgress = true;
-                                    await deleteEvaluation(evaluation);
-                                    //moyen de factoriser
-                                    calculStats(isInReleleve, eleve, evaluation);
-                                    await utils.safeApply($scope);
-                                    isWorkingProgress = false;
-                                    console.log("NOTE à 0 ")
-                                    if (isInReleleve)
-                                        $(`#${idHTMLofInput} > input`).select();
-                                } else if (evaluation.id !== undefined && evaluation.valeur === "" && (evaluation.id_annotation !== undefined && evaluation.id_annotation > 0)) {
-                                    await $scope.deleteAnnotationDevoir(evaluation, true);
-                                } else {
-                                    if (evaluation.valeur !== "" && !_.findWhere($scope.evaluations.annotations.all, {libelle_court: evaluation.valeur})) {
-                                        if ($event !== undefined && $event.target !== undefined) {
-                                            $event.target.focus();
+                                    if (isEmptyValue(evaluation)) {
+                                        await deleteAnnotation(evaluation, isInReleve, eleve);
+                                        await utils.safeApply($scope);
+                                        isWorkingProgress = false;
+                                        if (isInReleve)
+                                            $(`#${idHTMLofInput} > input`).select();
+                                    } else if (evaluation.id !== undefined && evaluation.valeur === "" && (evaluation.id_annotation !== undefined && evaluation.id_annotation > 0)) {
+                                        await $scope.deleteAnnotationDevoir(evaluation, true);
+                                    } else {
+                                        if (evaluation.valeur !== "" && !_.findWhere($scope.evaluations.annotations.all, {libelle_court: evaluation.valeur})) {
+                                            if ($event !== undefined && $event.target !== undefined) {
+                                                $event.target.focus();
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                        // }
                     }
                 }
                 $scope.opened.lightbox = false;
                 await utils.safeApply($scope);
             }
-
         };
+
+
+
 
         /**
          * Ouvre le détail du devoir correspondant à l'index passé en paramètre
@@ -4573,7 +4560,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         }
 
         $scope.initDataLightBoxEleve = async function () {
-            console.log("plop")
             let eleve = $scope.informations.eleve;
             if (eleve.evaluations.extended !== true) {
                 _.forEach(eleve.evaluations.all, (evaluation) => {
