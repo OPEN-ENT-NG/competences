@@ -29,6 +29,7 @@
             <li class="twelve skills-header skill-40 underline"
                 ng-repeat="competence in enseignement.competences.all"
                 ng-init="initHeader(competence); initCheckBox(competence, $parent.enseignement)"
+                ng-if="isVisibleAndHasVisibleChildren(competence)"
                 ng-class="{opened: competence.open}">
                 <label class="one checkbox skills-checkbox skills-headers-checkbox">
                     <input id="[[competence.id]]_[[competence.id_enseignement]]"

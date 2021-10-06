@@ -181,6 +181,22 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 $timeout.cancel(timer);
                 item.hovering = false;
             };
+
+            $scope.isVisibleAndHasVisibleChildren = function (competence) {
+                if(competence.masque) {
+                    return false;
+                }
+
+                let hasVisibleChildren = false;
+                for(var i = 0; i < competence.competences.all.length; i++) {
+                    let item = competence.competences.all[i];
+                    if(!item.masque) {
+                        hasVisibleChildren = true;
+                        break;
+                    }
+                }
+                return hasVisibleChildren;
+            };
         }]
     };
 });
