@@ -31,8 +31,7 @@ public class ExportEvaluationHelper {
         devoirMap.put("nom", devoir.getString("name"));
         devoirMap.put("coeff", devoir.getString("coefficient"));
         devoirMap.put("sur", devoir.getLong("diviseur"));
-        devoirMap.put("periode", I18n.getInstance().translate(
-                "viescolaire.periode." + String.valueOf(devoir.getLong("periodetype")), host, language)
+        devoirMap.put("periode", I18n.getInstance().translate("viescolaire.periode." + devoir.getLong("periodetype").toString(), language,host)
                 + " " + String.valueOf(devoir.getLong("periodeordre")));
         devoirMap.put("sousMatiere", devoir.getString("libelle", ""));
 
