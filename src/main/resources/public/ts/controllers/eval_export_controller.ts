@@ -387,7 +387,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                             " (" + lang.translate('viescolaire.utils.annee.encours') + ")"
                     });
 
-                    let nbYear = 1;
+                    let nbYear = 5;
                     for(var i = 1; i <= nbYear; i++) {
                         $scope.years.push({
                             id: parseInt(startYear) - i,
