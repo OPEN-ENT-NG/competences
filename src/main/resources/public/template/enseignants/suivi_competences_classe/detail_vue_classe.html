@@ -15,19 +15,25 @@
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
 <div class="detail classe-view">
-    <dic class="dominos">
+    <div class="dominos">
         <div class="item"
              ng-repeat="eleve in informations.classe.eleves.all |filter:DisplayEvaluable |filter:FilterColor">
-                <section ng-click="displaySuiviEleve(eleve);" class="domino" style="border: solid 3px  [[getEvaluationResultColor(eleve.id)]]">
-                <div class="top" ng-init="getAvatar(eleve)">
-
-                    <img src="[[eleve.img]]" alt="[[eleve.firstName + ' ' + eleve.lastName]]">
+            <section ng-click="displaySuiviEleve(eleve);" class="domino"
+                     style="border: solid 3px [[getEvaluationResultColor(eleve.id)]]">
+                <div class="center"
+                     style="margin-top: 20px">
+                    <div class="round-avatar big-round-avatar" ng-init="eleve.getAvatar(structure.id)">
+                        <img src="[[eleve.img]]"
+                             alt="No Avatar."
+                             onerror="this.onerror = null; this.src=`/assets/themes/${skin.skin}/img/illustrations/no-avatar.svg`;"/>
+                    </div>
                 </div>
-                <div tooltip="[[eleve.firstName + ' ' + eleve.lastName]]" class="bottom">
-                    <h4  ng-class="{'deletedStudent': eleve.deleteDate !== null}">
-                        [[eleve.firstName + ' ' + eleve.lastName]]</h4>
+                <div tooltip="[[eleve.firstName + ' ' + eleve.lastName]]" class="center">
+                    <h4 ng-class="{'deletedStudent': eleve.deleteDate !== null}">
+                        [[eleve.firstName + ' ' + eleve.lastName]]
+                    </h4>
                 </div>
             </section>
         </div>
-    </dic>
+    </div>
 </div>

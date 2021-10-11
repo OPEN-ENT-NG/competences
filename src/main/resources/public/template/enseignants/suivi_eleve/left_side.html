@@ -114,7 +114,7 @@
     </section>
 </div>
 <div class="fiche student-info diffpadding cell card twelve criterion" ng-class="{opened : openedStudentInfo === true}"
-     ng-if="informations.eleve !== '' && informations.eleve !== undefined && route.current.$$route.originalPath === '/competences/eleve'">
+     ng-if="informations.eleve !== '' && informations.eleve != undefined && route.current.$$route.originalPath === '/competences/eleve'">
     <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
     <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'"></div>
 </div>

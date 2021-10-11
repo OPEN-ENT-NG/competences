@@ -367,7 +367,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if (!template.isEmpty('leftSide-devoirInfo')) template.close('leftSide-devoirInfo');
                     if ($scope.releveNote !== undefined &&
                         (($scope.search.matiere === undefined
-                            || $scope.search.matiere === null)
+                                || $scope.search.matiere === null)
                             || $scope.search.matiere.id !== $scope.releveNote.idMatiere
                             || $scope.search.classe.id !== $scope.releveNote.idClasse
                             || $scope.search.periode.id_type !== $scope.releveNote.idPeriode)) {
@@ -1551,8 +1551,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
         $scope.showCompetences = (eleve) => {
             return (eleve.evaluation.id_annotation === undefined
-                || eleve.evaluation.id_annotation === -1
-                || (eleve.evaluation.valeur === $scope.annotationNN && $scope.currentDevoir.is_evaluated))
+                    || eleve.evaluation.id_annotation === -1
+                    || (eleve.evaluation.valeur === $scope.annotationNN && $scope.currentDevoir.is_evaluated))
                 || (eleve.evaluation.valeur != "ABS" && eleve.evaluation.valeur != "DISP" && eleve.evaluation.valeur != "NR");
         }
 
@@ -3246,17 +3246,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-
-        $scope.getAvatar = async function (eleve) {
-            try {
-                let imgUrl = `/userbook/avatar/${eleve.id}`;
-                await httpAxios.get(imgUrl);
-                eleve.img = imgUrl;
-            }
-            catch (e) {
-                eleve.img = `/assets/themes/${skin.skin}/img/illustrations/no-avatar.svg`;
-            }
-        };
         /**
          * Retourne les informations relatives à un élève
          * @param eleve élève
@@ -3276,16 +3265,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             template.close('leftSide-userInfo');
             await utils.safeApply($scope);
 
-            if(eleve != "" && !eleve.idClasse)
+            if(eleve != "" && !eleve.idClasse){
                 eleve.idClasse = $scope.search.classe.id;
+            }
+
+            if(eleve.img == null) {
+                eleve.getAvatar($scope.structure.id);
+            }
 
             let allPromise = [];
             if(eleve.evenements == null) {
                 allPromise.push(eleve.getEvenements($scope.structure.id));
-            }
-
-            if(eleve.img == null) {
-                allPromise.push($scope.getAvatar(eleve));
             }
 
             if(eleve.appreciationCPE == null) {

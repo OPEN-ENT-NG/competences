@@ -18,17 +18,23 @@
 <div ng-if="me.type === 'PERSRELELEVE'" class="display-children zero-mobile">
     <div ng-repeat="eleve in eleves track by $index"
          ng-click="chooseChild(eleve, true)"
-         ng-class="{'selected': eleve === selectedEleve }">
-         <c-round-avatar eleve="eleve"></c-round-avatar>
+         ng-class="{'selected': eleve === selectedEleve }"
+         class="center">
+        <div class="round-avatar" ng-init="eleve.getAvatar()">
+            <img src="[[eleve.img]]"
+                 alt="No Avatar."
+                 onerror="this.onerror = null; this.src=`/assets/themes/${skin.skin}/img/illustrations/no-avatar.svg`;"/>
+        </div>
+        <span>[[eleve.firstName]]</span>
     </div>
 </div>
 <div ng-if="me.type === 'PERSRELELEVE'">
-<section class="row custom-mobile-releve twelve-mobile">
-    <label class="select cell two twelve-mobile">
-        <select ng-model="selectedEleve"
-                ng-change="chooseChild(selectedEleve, true)"
-                ng-options="e.firstName for e in eleves">
-        </select>
-    </label>
-</section>
+    <section class="row custom-mobile-releve twelve-mobile">
+        <label class="select cell two twelve-mobile">
+            <select ng-model="selectedEleve"
+                    ng-change="chooseChild(selectedEleve, true)"
+                    ng-options="e.firstName for e in eleves">
+            </select>
+        </label>
+    </section>
 </div>

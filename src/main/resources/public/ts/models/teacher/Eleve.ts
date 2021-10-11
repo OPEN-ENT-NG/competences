@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model, Collection, _, notify, http as httpCore, moment} from 'entcore';
+import {Model, Collection, _, notify, http as httpCore, moment, skin} from 'entcore';
 import http  from 'axios';
 import { Evaluation, SuiviCompetence } from './index';
 import {ElementBilanPeriodique} from "./ElementBilanPeriodique";
@@ -36,7 +36,7 @@ export class Eleve extends DefaultEleve  {
     evenement : any;
     selected : boolean;
     classeName : string;
-
+    img : string;
 
     get api() {
         return {
@@ -156,5 +156,9 @@ export class Eleve extends DefaultEleve  {
         } catch (e) {
             notify.error(e);
         }
+    }
+
+    getAvatar(idStructure) {
+        this.img = `/viescolaire/structures/${idStructure}/students/${this.id}/picture`;
     }
 }
