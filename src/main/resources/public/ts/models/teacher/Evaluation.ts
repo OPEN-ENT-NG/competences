@@ -21,6 +21,8 @@ import { CompetenceNote } from './index';
 export class Evaluation extends Model implements IModel {
     id : number;
     id_eleve : string;
+    data:any;
+    valid: boolean;
     id_devoir : number;
     id_appreciation : number;
     valeur : any;
