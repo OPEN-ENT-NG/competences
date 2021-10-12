@@ -1349,9 +1349,10 @@ public class DefaultExportService implements ExportService {
                     try {
                         PDFMergerUtility mergedPdf = new PDFMergerUtility();
                         List<File> pdfFiles = new ArrayList<>();
+                        String tmp = System.getProperty("java.io.tmpdir");
                         for (int i = 0; i < studentsBufferFutures.size(); i++) {
                             byte[] studentByte = studentsBufferFutures.get(i).result();
-                            File outputFile = new File(i + fileName);
+                            File outputFile = new File(tmp + "/" + i + fileName);
                             FileOutputStream outputStream = new FileOutputStream(outputFile);
                             outputStream.write(studentByte);
                             pdfFiles.add(outputFile);
