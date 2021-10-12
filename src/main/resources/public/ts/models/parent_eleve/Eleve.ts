@@ -18,13 +18,14 @@
 import {DefaultEleve} from "../common/DefaultEleve";
 import {Classe} from "./Classe";
 import http from "axios";
-import {notify} from "entcore";
+import {notify, skin} from "entcore";
 
 export class Eleve extends DefaultEleve {
     classe: Classe;
     idStructure: string;
     id_cycle: string;
     cycles : any;
+    img : string;
 
     constructor(o?: any) {
         super();
@@ -46,6 +47,9 @@ export class Eleve extends DefaultEleve {
         } catch (e) {
             notify.error('evaluations.eleve.cycle.get.error');
         }
+    }
 
+    getAvatar() {
+        this.img = `/viescolaire/structures/${this.idStructure}/students/${this.id}/picture`;
     }
 }

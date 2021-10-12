@@ -20,9 +20,13 @@
         ng-class="{'deletedStudent': informations.eleve.deleteDate !== null}"
         ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);">[[informations.eleve.lastName]] [[informations.eleve.firstName]]</h2>
 </div>
-<div ng-show="informations.eleve !== undefined" class="menuLeftStyle">
+<div class="menuLeftStyle">
     <div class="imgEleve">
-        <img src="[[informations.eleve.img]]" alt="" ng-if="informations.eleve !== null" />
+        <div class="round-avatar">
+            <img src="[[informations.eleve.img]]"
+                 alt="No Avatar."
+                 onerror="this.onerror = null; this.src=`/assets/themes/${skin.skin}/img/illustrations/no-avatar.svg`;"/>
+        </div>
     </div>
     <div ng-if="informations.eleve.competencesNotes !== undefined"
          class="five inline-block align-center" style="padding-left: 29%">

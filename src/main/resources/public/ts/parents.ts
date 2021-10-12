@@ -20,7 +20,6 @@
  */
 import { routes, ng } from 'entcore';
 import {evaluationsController} from './controllers/eval_parent_ctl';
-import {cRoundAvatar} from "./utils/directives/cRoundAvatar";
 import {releveController} from "./controllers/eval_parent_releve_ctrl";
 import {bulletinController} from "./controllers/eval_parent_bulletin_ctrl";
 import {cFilAriane} from "./utils/directives/cFilAriane";
@@ -42,7 +41,6 @@ ng.controllers.push(listController);
 ng.controllers.push(evalBilanPeriodiqueCtl);
 
 // directives
-ng.directives.push(cRoundAvatar);
 ng.directives.push(cFilAriane);
 ng.directives.push(proportionSuiviCompetence);
 ng.directives.push(cSkillsBubble);
