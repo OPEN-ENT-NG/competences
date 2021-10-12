@@ -1322,7 +1322,7 @@ public class DefaultExportService implements ExportService {
         final String templatePath = FileResolver.absolutePath(config.getJsonObject("exports").getString("template-path"));
         final String baseUrl = getScheme(request) + "://" + Renders.getHost(request) + config.getString("app-address") + "/public/";
 
-        TemplateProcessor templateProcessor = new TemplateProcessor(vertx, templatePath).escapeHTML(false);
+        TemplateProcessor templateProcessor = new TemplateProcessor(vertx, templatePath).escapeHTML(true);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
 
