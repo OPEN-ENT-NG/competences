@@ -434,7 +434,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
             eleve.put("suiviAcquisLibelle", getLibelle("evaluation.bilan.periodique.suivi.acquis")
-                            + " " + getLibelle("of.student"))
+                    + " " + getLibelle("of.student"))
                     .put("communicationLibelle", getLibelle("viescolaire.communication.with.familly"))
                     .put("communicationHeaderRightFirst",
                             getLibelle("evaluations.export.bulletin.communication.header.right.first"))
@@ -1194,13 +1194,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 List<String> idElements = new ArrayList<String>();
                                 Map<Long, JsonObject> mapElement = new HashMap<>();
                                 JsonObject epi = new JsonObject().put(LIBELLE,
-                                                getLibelle("enseignements.pratiques.interdisciplinaires"))
+                                        getLibelle("enseignements.pratiques.interdisciplinaires"))
                                         .put(HAS_PROJECT, false);
                                 JsonObject ap = new JsonObject().put(LIBELLE,
-                                                getLibelle("accompagnements.personnalises"))
+                                        getLibelle("accompagnements.personnalises"))
                                         .put(HAS_PROJECT, false);
                                 JsonObject parcours = new JsonObject().put(LIBELLE,
-                                                getLibelle("parcours.educatifs"))
+                                        getLibelle("parcours.educatifs"))
                                         .put(HAS_PROJECT, false);
 
                                 if (elementBilanPeriodique == null) {
@@ -2797,7 +2797,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             utilsService.getYearsAndPeriodes(idEtablissement, true, yearEvent -> {
                 if (yearEvent.isRight()) {
-                    String idYear = yearEvent.right().getValue().getString("start_date").substring(0, 4);
+                    Date date= new Date();
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(date);
+                    int month = cal.get(Calendar.MONTH);
+                    int year = cal.get(Calendar.YEAR);
+                    String idYear;
+                    if(month >= 7) {
+                        idYear =  String.valueOf(year);
+                    }else {
+                        idYear = String.valueOf(year-1);
+                    }
                     if(type.equals(TypePDF.BULLETIN.toString())) {
                         handleSaveBulletinInSql(eleve, file, handler, name, idEleve, idClasse, externalIdClasse,
                                 idEtablissement, idPeriode, idParent, idFile, idYear);
