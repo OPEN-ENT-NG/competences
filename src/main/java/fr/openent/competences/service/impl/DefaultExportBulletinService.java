@@ -2899,11 +2899,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                              Integer idCycle, String idYear, String filename, String idFile,
                              Handler<Either<String, JsonObject>> handler) {
         String query = "INSERT INTO " + Competences.EVAL_SCHEMA +
-                ".archive_bfc (id_eleve, external_id_classe, id_classe, id_etablissement, id_cycle, id_annee, id_file, file_name) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+                ".archive_bfc (id_eleve, external_id_classe, id_classe, id_etablissement, id_cycle, id_annee, id_file, file_name, modified ) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, Now()) " +
                 "ON CONFLICT (id_classe, id_etablissement, id_cycle, id_eleve, id_annee) " +
                 "DO UPDATE SET id_eleve = ?, external_id_classe = ?, id_classe = ?, id_etablissement = ?, id_cycle = ?, " +
-                "id_annee = ?, id_file = ?, file_name = ? " +
+                "id_annee = ?, id_file = ?, file_name = ? , modified = Now() " +
                 "RETURNING (SELECT id_file from notes.archive_bfc " +
                 "WHERE file_name = ? AND external_id_classe = ? AND id_classe = ? AND id_etablissement = ? " +
                 "AND id_cycle = ? AND id_annee = ? AND id_eleve = ?);";

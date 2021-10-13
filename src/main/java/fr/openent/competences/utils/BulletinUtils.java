@@ -32,10 +32,10 @@ public class BulletinUtils {
                 .add(idParent != null ? idParent : "NULL").add(idYear);
 
         String query = "INSERT INTO " + COMPETENCES_SCHEMA + "." + STORAGE_BULLETIN_TABLE +
-                " (id_classe, id_eleve, id_etablissement, external_id_classe, id_periode, id_file, file_name, id_parent, id_annee)" +
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)" +
+                " (id_classe, id_eleve, id_etablissement, external_id_classe, id_periode, id_file, file_name, id_parent, id_annee, modified)" +
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, Now())" +
                 " ON CONFLICT (id_classe, id_eleve, id_etablissement, external_id_classe, id_periode, id_parent, id_annee)" +
-                " DO UPDATE SET id_file = ? "+
+                " DO UPDATE SET id_file = ? , modified = Now() "+
                 " RETURNING ( SELECT id_file from " + COMPETENCES_SCHEMA + ". " + STORAGE_BULLETIN_TABLE +
                 " WHERE id_classe = ?  AND id_eleve = ?  AND id_etablissement = ?  AND external_id_classe = ?" +
                 " AND id_periode = ?  AND id_parent = ?  AND id_annee = ?);";
