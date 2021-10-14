@@ -200,10 +200,12 @@
                     <i18n>evaluation.eleve.header.followItems</i18n>
                 </header>
                 <header ng-class="displayFollowEleve === 'followNotes'? 'tabs-selected': ''"
+                        ng-if="search.periode.libelle !== 'cycle'"
                         data-ng-click="selectDisplayClassTabs('followNotes')">
                     <i18n>evaluation.eleve.header.followNotes</i18n>
                 </header>
                 <header ng-class="displayFollowEleve === 'bulletins'? 'tabs-selected': ''"
+                        ng-if="search.periode.libelle !== 'cycle' && search.periode.id !== null "
                         data-ng-click="selectDisplayClassTabs('bulletins')">
                     <i18n>evaluation.eleve.header.bulletins</i18n>
                 </header>
