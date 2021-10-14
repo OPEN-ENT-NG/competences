@@ -6,16 +6,11 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.service.*;
-import fr.openent.competences.helpers.MustachHelper;
-import fr.openent.competences.helpers.NodePdfGeneratorClientHelper;
 import fr.openent.competences.utils.BulletinUtils;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
-import fr.wseduc.webutils.template.TemplateProcessor;
-import fr.wseduc.webutils.template.lambdas.I18nLambda;
-import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -28,10 +23,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.util.PDFMergerUtility;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.http.request.JsonHttpServerRequest;
 import org.entcore.common.neo4j.Neo4j;
@@ -54,10 +47,8 @@ import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.SQLTimeoutException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -68,7 +59,6 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.utils.BulletinUtils.getIdParentForStudent;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 
 public class DefaultExportBulletinService implements ExportBulletinService{
 

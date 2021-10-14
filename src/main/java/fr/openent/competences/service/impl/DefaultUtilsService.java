@@ -1281,23 +1281,6 @@ public class DefaultUtilsService implements UtilsService {
         return val;
     }
 
-    @Override
-    public void getActivesStructure(EventBus event, Handler<Either<String, JsonArray>>handler) {
-
-        String query = "SELECT DISTINCT id_etablissement from " + VSCO_SCHEMA +".periode ;";
-        Sql.getInstance().prepared(query, new JsonArray(), new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonArray structures = new JsonArray();
-                for (Object ja:message.body().getJsonArray("results")) {
-                    structures.add(new JsonObject().put("id_etablissement",((JsonArray)ja).getString(0)));
-                }
-                log.info(structures.size());
-                handler.handle(new Either.Right<>(structures));
-            }
-        });
-    }
-
     public void studentAvailableForPeriode(final String idClasse, final Long idPeriode, final Integer typeClasse,
                                            Handler<Message<JsonObject>> handler) {
         JsonObject action = new JsonObject();

@@ -248,7 +248,6 @@ public class BFCController extends ControllerHelper {
                 syntheseService.getIdCycleWithIdEleve(idEleve, new Handler<Either<String, Integer>>() {
                     @Override
                     public void handle(Either<String, Integer> idCycle) {
-                        log.debug("id_cycle : "+idCycle.right().getValue());
                         if (idCycle.isRight()) {
                             syntheseService.getBfcSyntheseByEleve(idEleve, idCycle.right().getValue(),
                                     defaultResponseHandler(request));

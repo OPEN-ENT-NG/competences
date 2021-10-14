@@ -291,14 +291,6 @@ public interface UtilsService {
     String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean translation);
 
     /**
-     * get actives structures
-     *
-     * @param event   event Bus to viescolaire
-     * @param handler response
-     */
-    void getActivesStructure(EventBus event, Handler<Either<String, JsonArray>>handler);
-
-    /**
      * get class info with eventBus
      * @param idClass id class
      * @param handler response
