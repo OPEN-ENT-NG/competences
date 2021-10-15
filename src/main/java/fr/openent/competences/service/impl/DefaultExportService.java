@@ -1325,7 +1325,7 @@ public class DefaultExportService implements ExportService {
         TemplateProcessor templateProcessor = new TemplateProcessor(vertx, templatePath).escapeHTML(true);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
-
+        JsonObject localTemplateProps = templateProps.copy();
         JsonArray students = templateProps.getJsonArray("eleves");
         String startDate = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
         String fileName = prefixPdfName + "_" + startDate + ".pdf";
@@ -1336,9 +1336,9 @@ public class DefaultExportService implements ExportService {
             int indice = i;
             current = current.compose(e -> {
                 JsonObject student = students.getJsonObject(indice);
-                templateProps.remove("eleves");
-                templateProps.put("eleves", new JsonArray().add(student));
-                Future<byte[]> next = renderTemplateAndGeneratePdf(templateProcessor, vertx, baseUrl, templateProps,
+                localTemplateProps.remove("eleves");
+                localTemplateProps.put("eleves", new JsonArray().add(student));
+                Future<byte[]> next = renderTemplateAndGeneratePdf(templateProcessor, vertx, baseUrl, localTemplateProps,
                         templateName, student);
                 studentsBufferFutures.add(next);
                 return next;
