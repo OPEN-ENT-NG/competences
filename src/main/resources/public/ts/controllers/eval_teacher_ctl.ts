@@ -278,15 +278,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             getDevoir();
                             if ($scope.currentDevoir === undefined) {
                                 notify.error('error.homework.not.found');
-                                $scope.opened.displayMessageLoader = false;
-                                await  Utils.stopMessageLoader($scope);
+                                await Utils.stopMessageLoader($scope);
                                 $scope.goTo('/');
                                 return;
                             }
                         }
                         $scope.usePerso = evaluations.structure.usePerso;
                         $scope.updateColorAndLetterForSkills();
-                        // $scope.updateNiveau($scope.usePerso);
                         if ($scope.printOption === undefined) {
                             $scope.printOption = {
                                 display: false,
@@ -326,29 +324,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             $scope.openedStudentInfo = true;
                             if ($scope.currentDevoir !== undefined) {
                                 await $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode);
-                                await  Utils.stopMessageLoader($scope);
-                                // fin message chargement
-                                $scope.opened.displayMessageLoader = false;
-                                await  utils.safeApply($scope);
                             }
 
-                            await  Utils.stopMessageLoader($scope);
-
+                            await Utils.stopMessageLoader($scope);
                         };
 
                         let _classe = evaluations.structure.classes.findWhere({id: $scope.currentDevoir.id_groupe});
                         if (_classe !== undefined) {
                             await syncStudents();
                         } else {
-                            $scope.opened.displayMessageLoader = false;
-                            await  Utils.stopMessageLoader($scope);
+                            await Utils.stopMessageLoader($scope);
                         }
-
                     }
-                }
-                catch (e){
-                    $scope.opened.displayMessageLoader = false;
-                    await  Utils.stopMessageLoader($scope);
+                } catch (e){
+                    await Utils.stopMessageLoader($scope);
                 }
             },
 
@@ -3274,17 +3263,25 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
             let allPromise = [];
+
             if(eleve.evenements == null) {
                 allPromise.push(eleve.getEvenements($scope.structure.id));
             }
 
             if(eleve.appreciationCPE == null) {
-                let idPeriode = Utils.isNotNull($scope.search.periode) ? $scope.search.periode.id_type : null;
+                let idPeriode = null;
+                if(Utils.isNotNull($scope.search.periode)) {
+                    idPeriode = $scope.search.periode.id_type
+                } else if(Utils.isNotNull($scope.currentDevoir)) {
+                    idPeriode = $scope.currentDevoir.id_periode;
+                }
+
                 if(Utils.isNotNull(idPeriode)) {
                     eleve.appreciationCPE = new AppreciationCPE(eleve.id, idPeriode);
                     allPromise.push(eleve.appreciationCPE.syncAppreciationCPE());
                 }
             }
+
             await Promise.all(allPromise);
 
             let syncPeriodeClasse = async () => {

@@ -43,12 +43,11 @@ export let inputTextList = ng.directive('inputTextList', function() {
         link :  ($scope, element) => {
             $scope.openedList = false;
             $scope.itemsToDisplay = $scope.items;
-            console.log($scope.itemsToDisplay)
             /**
              * Ouvre ou ferme la liste de choix
              * @param item
              */
-            $scope.changeOpenedList = function(item) {
+            $scope.changeOpenedList = function() {
                 $scope.getEleveInfo($scope.focusItem);
                 $scope.openedList = !$scope.openedList;
                 if ($scope.openedList) {
@@ -113,8 +112,7 @@ export let inputTextList = ng.directive('inputTextList', function() {
             $scope.containsIgnoreCase = function (psString, psKeyword) {
                 if (psKeyword !== undefined) {
                     return psString.toLowerCase().indexOf(psKeyword.toLowerCase()) >= 0 && psKeyword.trim() !== "";
-                }
-                else {
+                } else {
                     return false;
                 }
             };
