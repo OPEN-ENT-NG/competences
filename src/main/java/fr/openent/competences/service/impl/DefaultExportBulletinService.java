@@ -2795,30 +2795,24 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 return;
             }
 
-            utilsService.getYearsAndPeriodes(idEtablissement, true, yearEvent -> {
-                if (yearEvent.isRight()) {
-                    Date date= new Date();
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime(date);
-                    int month = cal.get(Calendar.MONTH);
-                    int year = cal.get(Calendar.YEAR);
-                    String idYear;
-                    if(month >= 7) {
-                        idYear =  String.valueOf(year);
-                    }else {
-                        idYear = String.valueOf(year-1);
-                    }
-                    if(type.equals(TypePDF.BULLETIN.toString())) {
-                        handleSaveBulletinInSql(eleve, file, handler, name, idEleve, idClasse, externalIdClasse,
-                                idEtablissement, idPeriode, idParent, idFile, idYear);
-                    }else{
-                        handleSaveBFCinSQL(eleve, file, handler, name, idEleve, idClasse, idCycle, idYear,
-                                externalIdClasse, idEtablissement, idFile);
-                    }
-                } else {
-                    handler.handle(new Either.Left<>(yearEvent.left().getValue()));
-                }
-            });
+            Date date= new Date();
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(date);
+            int month = cal.get(Calendar.MONTH);
+            int year = cal.get(Calendar.YEAR);
+            String idYear;
+            if(month >= 7) {
+                idYear =  String.valueOf(year);
+            }else {
+                idYear = String.valueOf(year-1);
+            }
+            if(type.equals(TypePDF.BULLETIN.toString())) {
+                handleSaveBulletinInSql(eleve, file, handler, name, idEleve, idClasse, externalIdClasse,
+                        idEtablissement, idPeriode, idParent, idFile, idYear);
+            }else{
+                handleSaveBFCinSQL(eleve, file, handler, name, idEleve, idClasse, idCycle, idYear,
+                        externalIdClasse, idEtablissement, idFile);
+            }
         });
 
     }
