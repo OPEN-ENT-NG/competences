@@ -18,104 +18,154 @@
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head >	<title>Relevé de notes</title>
+<head>
+    <title>Relevé de notes</title>
     <style type="text/css">
-
-        body{
+        body {
             padding: 10px;
             font-family: "Calibri";
         }
-        .head, .head tr, .display-student, .display-student tr, .display-bulletin, .display-bulletin tr{
+
+        table {
+            table-layout: fixed;
+        }
+
+        table, table tr {
             width: 100%;
         }
-        .head tr td:first-child{
-            width: 65%;
+
+        @page {
+            size: A4;
+            margin: 5%;
         }
+
         .page {
             page-break-after: always;
         }
 
-        .page:last-child{
+        .page:last-child {
             page-break-after: avoid;
         }
-        h1{
+
+        h1 {
             text-align: center;
         }
-        .display-student tr td:first-child{
-            width:60%;
-        }
-        .display-bulletin{
+
+        .display-bulletin {
             text-align: center;
-            border-spacing: 0px;
-            margin: 50px 0 30px 0;
+            border-spacing: 0;
+            margin-top: 20px;
+            margin-bottom: 10px;
         }
-        .display-bulletin tr{
+
+        .display-bulletin tr {
             padding: 0;
         }
-        .display-bulletin tr td{
+
+        .display-bulletin tr td {
             margin: 0;
             padding: 10px;
         }
+
+        .head tr td:first-child {
+            min-width : 60%;
+            width: 60%;
+            max-width: 60%;
+        }
+
+        .head tr td:last-child {
+            min-width : 40%;
+            width: 40%;
+            max-width: 40%;
+        }
+
+        .width-10 {
+            width: 10%;
+        }
+
+        .width-20 {
+            width: 20%;
+        }
+
+        .width-40 {
+            width: 40%;
+        }
+
         .greyscale{
             background-color: #f0f0f0;
         }
+
         .upper{
             text-transform: uppercase;
         }
+
         .align-left{
             text-align: left;
         }
+
         .align-right{
             text-align: right;
             text-indent: 5px;
         }
+
         .matiere{
             border: none !important;
             border-left: solid 1px #000 !important;
             border-bottom: solid 1px #000 !important;
         }
+
         .professeur{
             border: none !important;
             font-size: 10px;
         }
+
         .sousMat {
             font-size: 10px;
             text-align: left;
             width: 10px;
         }
-        .bottom{
+
+        .border-bottom {
             border-bottom: solid 1px #000;
         }
-        .left{
+
+        .border-left {
             border-left: solid 1px #000;
         }
-        .right-bottom{
+
+        .border-right-bottom{
             border-right: solid 1px #000;
             border-bottom: solid 1px #000;
         }
-        .right{
+
+        .border-right{
             border-right: solid 1px #000;
         }
-        .left-right{
+
+        .border-left-right-bottom{
             border-left: solid 1px #000;
             border-right: solid 1px #000;
             border-bottom: solid 1px #000;
         }
-        .none {
+
+        .border-none {
             border: none;
         }
+
         .entete-1 td{
-            /*border-left: solid 1px #000;*/
             border-top: solid 1px #000;
             border-bottom: solid 1px #000;
         }
+
         .entete-2 td{
             border-bottom: solid 1px #000;
             border-left: solid 1px #000;
         }
+
         .diviseur{
             font-size: 70%;
         }
+
         .note{
             font-weight: bold;
             font-size: 90%;
@@ -135,155 +185,175 @@
 
 {{#eleves}}
 <div class="page">
-<table class="head">
-    <tr><td><strong>{{#etablissement}}{{name}}{{/etablissement}}</strong></td><td class="align-right">Elève : <strong>{{#user}}{{displayName}}{{/user}}</strong></td></tr>
-    <tr><td><strong>{{#etablissement}}{{address}}{{/etablissement}}</strong></td><td class="align-right">Classe : <strong>{{#classe}}{{name}}{{/classe}}</strong></td></tr>
-    <tr><td><strong>{{#etablissement}}{{zipcode}} {{city}}{{/etablissement}}</strong></td><td class="align-right">Période : <strong>{{#periode}}{{libelle}}{{/periode}}</strong></td></tr>
-    <tr><td><strong>{{#etablissement}}Tél : {{phone}}{{/etablissement}}</strong></td></tr>
-</table>
+    <table class="head">
+        <tr>
+            <td><strong>{{#etablissement}}{{name}}{{/etablissement}}</strong></td>
+            <td class="align-right">Elève : <strong>{{#user}}{{displayName}}{{/user}}</strong></td>
+        </tr>
+        <tr>
+            <td><strong>{{#etablissement}}{{address}}{{/etablissement}}</strong></td>
+            <td class="align-right">Classe : <strong>{{#classe}}{{name}}{{/classe}}</strong></td>
+        </tr>
+        <tr>
+            <td><strong>{{#etablissement}}{{zipcode}} {{city}}{{/etablissement}}</strong></td>
+            <td class="align-right">Période : <strong>{{#periode}}{{libelle}}{{/periode}}</strong></td>
+        </tr>
+        <tr>
+            <td><strong>{{#etablissement}}Tél : {{phone}}{{/etablissement}}</strong></td>
+        </tr>
+    </table>
 
-<h1>Relevé de notes</h1>
+    <h1>Relevé de notes</h1>
 
-
-<table class="display-bulletin">
-    <tr class="greyscale entete-1">
-
+    <table class="display-bulletin">
         {{#printSousMatiere}}
-        <td colspan="2" class="align-left left"><strong>Matière</strong></td>
-        <td class="left-right"><strong>Notes</strong></td>
-        <td class="right-bottom" colspan="2"><strong>Moyenne</strong></td>
+        <colgroup>
+            <col span="2" class="width-20" />
+            <col class="width-40" />
+            <col span="2" class="width-10" />
+        </colgroup>
+        <tr class="greyscale entete-1">
+            <td class="border-left" colspan="2"><strong>Matière</strong></td>
+            <td class="border-left-right-bottom"><strong>Notes</strong></td>
+            <td class="border-right-bottom" colspan="2"><strong>Moyenne</strong></td>
+        </tr>
         {{/printSousMatiere}}
         {{^printSousMatiere}}
-        <td class="align-left left"><strong>Matière</strong></td>
-        <td class="left-right"><strong>Notes</strong></td>
-        <td class="right-bottom"><strong>Moyenne</strong></td>
+        <tr class="greyscale entete-1">
+            <td class="border-left width-40"><strong>Matière</strong></td>
+            <td class="border-left-right-bottom width-40"><strong>Notes</strong></td>
+            <td class="border-right-bottom width-20"><strong>Moyenne</strong></td>
+        </tr>
         {{/printSousMatiere}}
-    </tr>
 
-    {{^printSousMatiere}}
-    {{#matieres}}
-    <tr>
 
-        <td class="upper align-left matiere">
-            <span  class="align-left">{{name}}</span>
-            <span  class="align-left professeur">
+        {{^printSousMatiere}}
+        {{#matieres}}
+        <tr>
+            <td class="upper align-left matiere">
+                <span class="align-left">{{name}}</span>
+                <span class="align-left professeur">
                 {{#displayNameEnseignant}}
                 <br/><span>{{.}}</span>
                 {{/displayNameEnseignant}}
             </span>
-        </td>
-        <td class="left-right">
-            {{#devoirs}}
-            <span class="div-note">
-            <span class="note">{{note}}</span>{{#hasDiviseur}}<span class="diviseur">/{{diviseur}}</span>{{/hasDiviseur}}
+            </td>
+            <td class="border-left-right-bottom">
+                {{#devoirs}}
+                <span class="div-note">
+            <span class="note">{{note}}</span>
+                {{#hasDiviseur}}<span class="diviseur">/{{diviseur}}</span>{{/hasDiviseur}}
             {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
           </span>
-            {{/devoirs}}
-        </td>
-        <td  class="right-bottom"><span class="note">{{moyenne}}</span>{{^moyenne_non_note}}{{#hasDiviseurMatiere}}<span class="diviseur">/20</span>{{/hasDiviseurMatiere}}{{/moyenne_non_note}}</td>
+                {{/devoirs}}
+            </td>
+            <td class="border-right-bottom">
+                <span class="note">{{moyenne}}</span>
+                {{^moyenne_non_note}}{{#hasDiviseurMatiere}}
+                <span class="diviseur">/20</span>
+                {{/hasDiviseurMatiere}}{{/moyenne_non_note}}
+            </td>
+        </tr>
+        {{/matieres}}
+        {{/printSousMatiere}}
 
-    </tr>
-    {{/matieres}}
-    {{/printSousMatiere}}
-
-
-    {{#printSousMatiere}}
-    {{#matieres}}
-    <tr>
-        {{#hasSousMatiere}}
-        <td rowspan="{{rowspan}}" class="upper align-left matiere">
-            <span  class="align-left">{{name}}</span>
-            <span  class="align-left professeur">
+        {{#printSousMatiere}}
+        {{#matieres}}
+        <tr>
+            {{#hasSousMatiere}}
+            <td rowspan="{{rowspan}}" class="upper align-left matiere">
+                <span class="align-left">{{name}}</span>
+                <span class="align-left professeur">
                 {{#displayNameEnseignant}}
                 <br/><span>{{.}}</span>
                 {{/displayNameEnseignant}}
             </span>
-        </td>
-        {{#first_sous_matieres}}
-        {{#isLast}}
-        <td class="sousMat bottom"><span class="pretty center">{{libelle}}</span></td>
-        <td class="left-right">
-            {{#devoirs}}
-            <span class="div-note">
+            </td>
+            {{#first_sous_matieres}}
+            {{#isLast}}
+            <td class="sousMat border-bottom"><span class="pretty center">{{libelle}}</span></td>
+            <td class="border-left-right-bottom">
+                {{#devoirs}}
+                <span class="div-note">
+            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
+            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}</span>
+                {{/devoirs}}
+            </td>
+            <td class="border-bottom"><span class="diviseur">{{moyenne}}</span></td>
+            {{/isLast}}
+            {{^isLast}}
+            <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
+            <td class="border-left border-right">
+                {{#devoirs}}
+                <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
             {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
           </span>
-            {{/devoirs}}
-        </td>
-        <td  class="bottom"><span class="diviseur">{{moyenne}}</span></td>
-        {{/isLast}}
-        {{^isLast}}
-        <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
-        <td class="left right">
-            {{#devoirs}}
-            <span class="div-note">
-            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
-          </span>
-            {{/devoirs}}
-        </td>
-        <td  class="none"><span class="diviseur">{{moyenne}}</span></td>
-        {{/isLast}}
-        {{/first_sous_matieres}}
+                {{/devoirs}}
+            </td>
+            <td class="border-none"><span class="diviseur">{{moyenne}}</span></td>
+            {{/isLast}}
+            {{/first_sous_matieres}}
 
-        <td rowspan="{{rowspan}}"  class="right-bottom"><span class="note">{{moyenne}}</span>{{^moyenne_non_note}}<span class="diviseur">/20</span>{{/moyenne_non_note}}</td>
-        {{/hasSousMatiere}}
+            <td rowspan="{{rowspan}}" class="border-right-bottom">
+                <span class="note">{{moyenne}}</span>
+                {{^moyenne_non_note}}<span class="diviseur">/20</span>{{/moyenne_non_note}}
+            </td>
+            {{/hasSousMatiere}}
 
-        {{^hasSousMatiere}}
-        <td class="upper align-left matiere" colspan="2">
-            <span  class="align-left">{{name}}</span>
-            <span  class="align-left professeur">
+            {{^hasSousMatiere}}
+            <td class="upper align-left matiere" colspan="2">
+                <span class="align-left">{{name}}</span>
+                <span class="align-left professeur">
                 {{#displayNameEnseignant}}
                 <br/><span>{{.}}</span>
                 {{/displayNameEnseignant}}
             </span>
-        </td>
-        <td class="left-right">
-            {{#devoirs}}
-            <span class="div-note">
+            </td>
+            <td class="border-left-right-bottom">
+                {{#devoirs}}
+                <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
-          </span>
-            {{/devoirs}}
-        </td>
-        <td class="right-bottom" colspan="2"><span class="note">{{moyenne}}</span>{{^moyenne_non_note}}<span class="diviseur">/20</span>{{/moyenne_non_note}}</td>
-        {{/hasSousMatiere}}
-
-    </tr>
-    {{#sous_matieres_tail}}
-    <tr>
-        {{^isLast}}
-        <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
-        <td class="left right">
-            {{#devoirs}}
-            <span class="div-note">
+            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}</span>
+                {{/devoirs}}
+            </td>
+            <td class="border-right-bottom" colspan="2">
+                <span class="note">{{moyenne}}</span>{{^moyenne_non_note}}
+                <span class="diviseur">/20</span>{{/moyenne_non_note}}
+            </td>
+            {{/hasSousMatiere}}
+        </tr>
+        {{#sous_matieres_tail}}
+        <tr>
+            {{^isLast}}
+            <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
+            <td class="border-left border-right">
+                {{#devoirs}}
+                <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
-          </span>
-            {{/devoirs}}
-        </td>
-        <td  class="none"><span class="diviseur">{{moyenne}}</span></td>
-        {{/isLast}}
-        {{#isLast}}
-        <td class="sousMat bottom"><span class="pretty center">{{libelle}}</span></td>
-        <td class="left-right">
-            {{#devoirs}}
-            <span class="div-note">
+            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}</span>
+                {{/devoirs}}
+            </td>
+            <td class="border-none"><span class="diviseur">{{moyenne}}</span></td>
+            {{/isLast}}
+            {{#isLast}}
+            <td class="sousMat border-bottom"><span class="pretty center">{{libelle}}</span></td>
+            <td class="border-left-right-bottom">
+                {{#devoirs}}
+                <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
-          </span>
-            {{/devoirs}}
-        </td>
-        <td  class="bottom"><span class="diviseur">{{moyenne}}</span></td>
-        {{/isLast}}
-    </tr>
-    {{/sous_matieres_tail}}
-    {{/matieres}}
-    {{/printSousMatiere}}
+            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}</span>
+                {{/devoirs}}
+            </td>
+            <td class="border-bottom"><span class="diviseur">{{moyenne}}</span></td>
+            {{/isLast}}
+        </tr>
+        {{/sous_matieres_tail}}
+        {{/matieres}}
+        {{/printSousMatiere}}
+    </table>
 
-</table>
-
-* note <sup>(n)</sup> : Note ayant pour coefficient n.
+    * note <sup>(n)</sup> : Note ayant pour coefficient n.
 </div>
 {{/eleves}}
 </body>
