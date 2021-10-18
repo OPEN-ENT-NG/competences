@@ -2,67 +2,67 @@
     <fieldset>
         <legend><i18n>competences.on.periode</i18n></legend>
         <div class="twelve cell">
-                    <span>
-                        <i18n>viescolaire.retards</i18n>:&nbsp;
-                    </span>
-        <label  class="bold">
-                <span ng-if="canUpdateRetardAndAbscence">
-                    <input id="retard"type="number" min="0" ng-model="search.eleve.evenement.retard"
-                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('retard')"
-                           ng-click="focusMe($event);">
+            <span>
+                <i18n>viescolaire.retards</i18n>:&nbsp;
+            </span>
+            <label class="bold">
+                <span ng-if="!absencesRetardsFromPresences()">
+                    <input id="retard" type="number" min="0" ng-model="search.eleve.evenement.retard"
+                           ng-disabled="!canUpdateRetardAndAbsence()" ng-blur="setColonne('retard')"
+                           ng-click="focusMe($event)">
                 </span>
-            <span ng-if="!canUpdateRetardAndAbscence">
-                    [[ search.eleve.evenement.retard ]]
+                <span ng-if="absencesRetardsFromPresences()">
+                    [[search.eleve.evenement.retard]]
             </span>
-        </label>
+            </label>
         </div>
         <div class="twelve cell">
-                    <span>
-                        <i18n>viescolaire.abs.justified</i18n>:&nbsp;
-                    </span>
-        <label  class="bold">
-                <span  ng-if="canUpdateRetardAndAbscence">
-                    <input id="abs_just"type="number" min="0" ng-model="search.eleve.evenement.abs_just"
-                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('abs_just')"
-                           ng-click="focusMe($event);">
+            <span>
+                <i18n>viescolaire.abs.justified</i18n>:&nbsp;
+            </span>
+            <label class="bold">
+                <span ng-if="!absencesRetardsFromPresences()">
+                    <input id="abs_just" type="number" min="0" ng-model="search.eleve.evenement.abs_just"
+                           ng-disabled="!canUpdateRetardAndAbsence()" ng-blur="setColonne('abs_just')"
+                           ng-click="focusMe($event)">
                 </span>
-            <span ng-if="!canUpdateRetardAndAbscence">
-                    [[ search.eleve.evenement.abs_just ]]
-            </span>
-            <i18n>half.days</i18n>
-        </label>
+                <span ng-if="absencesRetardsFromPresences()">
+                    [[search.eleve.evenement.abs_just]]
+                </span>
+                <i18n>half.days</i18n>
+            </label>
         </div>
         <div class="twelve cell">
-                    <span>
-                        <i18n>viescolaire.abs.not.justified</i18n>:&nbsp;
-                    </span>
-        <label  class="bold">
-            <span ng-if="canUpdateRetardAndAbscence">
-                    <input id="abs_non_just"type="number" min="0" ng-model="search.eleve.evenement.abs_non_just"
-                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('abs_non_just')"
-                           ng-click="focusMe($event);">
+            <span>
+                <i18n>viescolaire.abs.not.justified</i18n>:&nbsp;
             </span>
-            <span ng-if="!canUpdateRetardAndAbscence">
-                    [[ search.eleve.evenement.abs_non_just ]]
+            <label class="bold">
+            <span ng-if="!absencesRetardsFromPresences()">
+                    <input id="abs_non_just" type="number" min="0" ng-model="search.eleve.evenement.abs_non_just"
+                           ng-disabled="!canUpdateRetardAndAbsence()" ng-blur="setColonne('abs_non_just')"
+                           ng-click="focusMe($event)">
             </span>
-            <i18n>half.days</i18n>
-        </label>
+            <span ng-if="absencesRetardsFromPresences()">
+                [[search.eleve.evenement.abs_non_just]]
+            </span>
+                <i18n>half.days</i18n>
+            </label>
         </div>
         <div class="twelve cell">
-                    <span>
-                        <i18n>viescolaire.nb.courses.lost</i18n>:&nbsp;
-                    </span>
-        <label  class="bold">
-             <span ng-if="canUpdateRetardAndAbscence">
+            <span>
+                <i18n>viescolaire.nb.courses.lost</i18n>:&nbsp;
+            </span>
+            <label class="bold">
+             <span ng-if="!absencesRetardsFromPresences()">
                     <input id="abs_totale_heure" type="number" min="0" ng-model="search.eleve.evenement.abs_totale_heure"
-                           ng-disabled="!canUpdateRetardAndAbscence" ng-change="setColonne('abs_totale_heure')"
-                           ng-click="focusMe($event);">
+                           ng-disabled="!canUpdateRetardAndAbsence()" ng-change="setColonne('abs_totale_heure')"
+                           ng-click="focusMe($event)">
                 </span>
-            <span ng-if="!canUpdateRetardAndAbscence">
-                    [[ search.eleve.evenement.abs_totale_heure ]]
+                <span ng-if="absencesRetardsFromPresences()">
+                    [[search.eleve.evenement.abs_totale_heure]]
             </span>
-            <i18n>hours</i18n>
-        </label>
+                <i18n>hours</i18n>
+            </label>
         </div>
 
         <div class="twelve">
@@ -72,19 +72,16 @@
                    class="twelve"
                    ng-maxlength="MAX_LENGTH_600"
                    maxlength="[[MAX_LENGTH_600]]"
-                   ng-disabled="!canSaisiAppreciationCPE"
-                   ng-disabled="!canUpdateRetardAndAbscence" ng-blur="elementBilanPeriodique.appreciationCPE.saveAppreciationCPE();">
+                   ng-disabled="!canSaisiAppreciationCPE()"
+                   ng-blur="elementBilanPeriodique.appreciationCPE.saveAppreciationCPE();">
          </textarea>
-
         </div>
     </fieldset>
     <fieldset>
         <legend><i18n>history</i18n></legend>
         <div class="responsive-table">
-
             <table>
                 <thead>
-
                 <tr>
                     <th class="titleCenter"><i18n>viescolaire.utils.periode</i18n></th>
                     <th class="titleCenter"><i18n>viescolaire.retards</i18n></th>
@@ -96,7 +93,8 @@
                 <tbody>
                 <tr ng-repeat="evenement in search.eleve.evenements | orderBy:'ordre' ">
                     <td class="width-td-20" data-label="[[translate('viescolaire.utils.periode')]]">
-                        [[evenement.periode]] </td>
+                        [[evenement.periode]]
+                    </td>
                     <td class="width-td-0"
                         data-label="[[translate('viescolaire.retards')]]">
                     <span ng-if="evenement.retard !== undefined">
@@ -135,8 +133,6 @@
                 </tr>
                 </tbody>
             </table>
-
         </div>
-
     </fieldset>
 </article>

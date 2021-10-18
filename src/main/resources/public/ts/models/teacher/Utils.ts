@@ -45,11 +45,12 @@ export class Utils {
         return model.me.type === "PERSEDUCNAT";
     }
 
-    static async rightsChefEtabHeadTeacherOnBilanPeriodique (classe, nameWorkFlow){
-        return (model.me.type !== 'ENSEIGNANT' && model.me.
-            hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow[nameWorkFlow]))
-            || (model.me.type === 'ENSEIGNANT' && this.isHeadTeacher(classe) && model.me.
-            hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow[nameWorkFlow]));
+    static canUpdateRetardAndAbsence () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateRetardAndAbsence);
+    }
+
+    static canUpdateAppreciations () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateAppreciations);
     }
 
     static canCreateElementBilanPeriodique () {
