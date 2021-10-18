@@ -142,7 +142,7 @@
                 <section>
                     <label class="select">
                         <select ng-model="search.classe"
-                                ng-change="syncPeriode(search.classe.id);"
+                                ng-change="syncPeriode(search.classe.id); deselectStudent()"
                                 ng-options="classe as classe.name group by classe.type_groupe_libelle for classe
                                 in filteredClasses | orderBy:['type_groupe_libelle','name']">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
@@ -153,7 +153,7 @@
                     <label class="select">
                         <select ng-model="search.periode"
                                 ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
-                                ng-change="setMatieresFiltered(); getReleve()"
+                                ng-change="setMatieresFiltered(); getReleve();"
                                 ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all | orderBy:'id_type'">
                             <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
                             </option>
@@ -177,7 +177,7 @@
                 <container template="leftSide-devoirInfo"></container>
             </div>
 
-            <div ng-if="!template.isEmpty('leftSide-userInfo') && showInfosEleve && matieresFiltered.includes(search.matiere)"
+            <div ng-if="!template.isEmpty('leftSide-userInfo') && informations.eleve != undefined && matieresFiltered.includes(search.matiere)"
                  class="marginFive fiche student-info card left"
                  ng-class="{opened : openedStudentInfo === true}">
                 <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
