@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~competences~1.34.1",
+      "name": "fr.openent~competences~1.34-SNAPSHOT",
       "config": {
         "main" : "fr.openent.competences.Competences",
         "port" : 8129,
