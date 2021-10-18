@@ -38,7 +38,7 @@ Behaviours.register('competences', {
             createDispenseDomaineEleve: 'fr.openent.competences.controllers.DomaineController|createDispenseDomaineEleve',
             canUpdateNiveauEnsCpl: 'fr.openent.competences.controllers.BFCController|updateNiveauEnsCpl',
             access:"fr.openent.competences.controllers.CompetencesController|view",
-            canUpdateRetardAndAbscence:'fr.openent.competences.controllers.UtilsController|insertRetardOrAbscence',
+            canUpdateRetardAndAbsence:'fr.openent.competences.controllers.UtilsController|insertRetardOrAbscence',
             bilanPeriodique: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createElementBilanPeriodique",
             accessProjets: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciationSaisieProjet",
             canUpdateAppreciations: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciationBilanPeriodique",

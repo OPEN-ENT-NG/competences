@@ -23,7 +23,7 @@
                         <input type="radio"
                                ng-model="digitalSkill.level"
                                ng-change="digitalSkill.onLevelChange()"
-                               ng-disabled="!canSaveDigitalSkills"
+                               ng-disabled="!canSaveDigitalSkills()"
                                ng-value="0">
                         <span></span>
                     </label>
@@ -33,7 +33,7 @@
                         <input type="radio"
                                ng-model="digitalSkill.level"
                                ng-change="digitalSkill.onLevelChange()"
-                               ng-disabled="!canSaveDigitalSkills"
+                               ng-disabled="!canSaveDigitalSkills()"
                                ng-value="1">
                         <span></span>
                     </label>
@@ -43,7 +43,7 @@
                         <input type="radio"
                                ng-model="digitalSkill.level"
                                ng-change="digitalSkill.onLevelChange()"
-                               ng-disabled="!canSaveDigitalSkills"
+                               ng-disabled="!canSaveDigitalSkills()"
                                ng-value="2">
                         <span></span>
                     </label>
@@ -53,7 +53,7 @@
                         <input type="radio"
                                ng-model="digitalSkill.level"
                                ng-change="digitalSkill.onLevelChange()"
-                               ng-disabled="!canSaveDigitalSkills"
+                               ng-disabled="!canSaveDigitalSkills()"
                                ng-value="3">
                         <span></span>
                     </label>
@@ -69,7 +69,7 @@
                   class="twelve input-appreciation"
                   rows="4"
                   type="text"
-                  ng-disabled="!canSaveDigitalSkills"
+                  ng-disabled="!canSaveDigitalSkills()"
                   ng-model="digitalSkills.studentAppreciation.appreciation"
                   ng-blur="digitalSkills.studentAppreciation.save();"
                   ng-maxlength="MAX_LENGTH_600"
@@ -83,7 +83,7 @@
                   class="twelve input-appreciation"
                   rows="4"
                   type="text"
-                  ng-disabled="!canSaveDigitalSkills"
+                  ng-disabled="!canSaveDigitalSkills()"
                   ng-model="digitalSkills.classAppreciation.appreciation"
                   ng-blur="digitalSkills.classAppreciation.save();"
                   ng-maxlength="MAX_LENGTH_600"

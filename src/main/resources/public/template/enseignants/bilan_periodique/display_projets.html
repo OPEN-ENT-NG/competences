@@ -44,7 +44,7 @@
                     </div>
                 </div>
                 <div class="four cell marginFive">
-                        <textarea ng-show="canUpdateAppreciations"
+                        <textarea ng-show="canUpdateAppreciations()"
                                   class="twelve input-appreciation marginTopZero"
                                   rows="4"
                                   type="text"
@@ -52,7 +52,7 @@
                                   ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
                                   ng-blur="saveAppElement(element, true, informations.eleve)">
                         </textarea>
-                    <span ng-show="!canUpdateAppreciations"
+                    <span ng-show="!canUpdateAppreciations()"
                           ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
                         </span>
                 </div>
@@ -76,7 +76,7 @@
                           ng-if="sortedEnseignant[$index -1] != enseignant">[[enseignant]] [[$last ? '' : ', ']]</span>
                 </div>
                 <div class="four cell marginFive">
-                        <textarea ng-show="canUpdateAppreciations"
+                        <textarea ng-show="canUpdateAppreciations()"
                                   class="twelve input-appreciation marginTopZero"
                                   rows="4"
                                   type="text"
@@ -84,7 +84,7 @@
                                   ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
                                   ng-blur="saveAppElement(element, true, informations.eleve)">
                         </textarea>
-                    <span ng-show="!canUpdateAppreciations"
+                    <span ng-show="!canUpdateAppreciations()"
                           ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
                     </span>
                 </div>
@@ -105,7 +105,7 @@
                     <strong>[[element.theme.libelle]]</strong>
                 </div>
                 <div class="four cell marginFive">
-                        <textarea ng-show="canUpdateAppreciations"
+                        <textarea ng-show="canUpdateAppreciations()"
                                   class="twelve input-appreciation marginTopZero"
                                   rows="4"
                                   type="text"
@@ -113,7 +113,7 @@
                                   ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
                                   ng-blur="saveAppElement(element, true, informations.eleve)">
                         </textarea>
-                    <span ng-show="!canUpdateAppreciations"
+                    <span ng-show="!canUpdateAppreciations()"
                           ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
                         </span>
                 </div>
