@@ -91,38 +91,38 @@
             width: 40%;
         }
 
-        .greyscale{
+        .greyscale {
             background-color: #f0f0f0;
         }
 
-        .upper{
+        .upper {
             text-transform: uppercase;
         }
 
-        .align-left{
+        .align-left {
             text-align: left;
         }
 
-        .align-right{
+        .align-right {
             text-align: right;
             text-indent: 5px;
         }
 
-        .matiere{
+        .matiere {
             border: none !important;
             border-left: solid 1px #000 !important;
             border-bottom: solid 1px #000 !important;
         }
 
-        .professeur{
+        .professeur {
             border: none !important;
             font-size: 10px;
         }
 
         .sousMat {
             font-size: 10px;
-            text-align: left;
             width: 10px;
+            text-align: right;
         }
 
         .border-bottom {
@@ -133,16 +133,16 @@
             border-left: solid 1px #000;
         }
 
-        .border-right-bottom{
+        .border-right-bottom {
             border-right: solid 1px #000;
             border-bottom: solid 1px #000;
         }
 
-        .border-right{
+        .border-right {
             border-right: solid 1px #000;
         }
 
-        .border-left-right-bottom{
+        .border-left-right-bottom {
             border-left: solid 1px #000;
             border-right: solid 1px #000;
             border-bottom: solid 1px #000;
@@ -152,17 +152,12 @@
             border: none;
         }
 
-        .entete-1 td{
+        .entete-1 td {
             border-top: solid 1px #000;
             border-bottom: solid 1px #000;
         }
 
-        .entete-2 td{
-            border-bottom: solid 1px #000;
-            border-left: solid 1px #000;
-        }
-
-        .diviseur{
+        .diviseur {
             font-size: 70%;
         }
 
@@ -271,7 +266,7 @@
             </td>
             {{#first_sous_matieres}}
             {{#isLast}}
-            <td class="sousMat border-bottom"><span class="pretty center">{{libelle}}</span></td>
+            <td class="sousMat border-bottom"><span>{{libelle}}</span></td>
             <td class="border-left-right-bottom">
                 {{#devoirs}}
                 <span class="div-note">
@@ -282,7 +277,7 @@
             <td class="border-bottom"><span class="diviseur">{{moyenne}}</span></td>
             {{/isLast}}
             {{^isLast}}
-            <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
+            <td class="sousMat"><span>{{libelle}}</span></td>
             <td class="border-left border-right">
                 {{#devoirs}}
                 <span class="div-note">
@@ -318,15 +313,15 @@
                 {{/devoirs}}
             </td>
             <td class="border-right-bottom" colspan="2">
-                <span class="note">{{moyenne}}</span>{{^moyenne_non_note}}
-                <span class="diviseur">/20</span>{{/moyenne_non_note}}
+                <span class="note">{{moyenne}}</span>
+                {{^moyenne_non_note}}<span class="diviseur">/20</span>{{/moyenne_non_note}}
             </td>
             {{/hasSousMatiere}}
         </tr>
         {{#sous_matieres_tail}}
         <tr>
             {{^isLast}}
-            <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
+            <td class="sousMat"><span>{{libelle}}</span></td>
             <td class="border-left border-right">
                 {{#devoirs}}
                 <span class="div-note">
@@ -337,7 +332,7 @@
             <td class="border-none"><span class="diviseur">{{moyenne}}</span></td>
             {{/isLast}}
             {{#isLast}}
-            <td class="sousMat border-bottom"><span class="pretty center">{{libelle}}</span></td>
+            <td class="sousMat border-bottom"><span>{{libelle}}</span></td>
             <td class="border-left-right-bottom">
                 {{#devoirs}}
                 <span class="div-note">
