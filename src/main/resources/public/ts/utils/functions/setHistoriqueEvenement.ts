@@ -10,16 +10,16 @@ export let setHistoriqueEvenement = function ($scope, eleve, filteredPeriode) {
         ordre: 0,
         periode: $scope.getI18nPeriode({id: null})
     };
-    if (!_.isEmpty(eleve.evenements)
-        && Utils.isNotNull(filteredPeriode)
-        && (eleve.evenements.length > filteredPeriode.length)) {
-        // On enlève la ligne correspondant à l'année pour la recalculer si on doit la mettre à jour
-        eleve.evenements.pop();
 
-    }
-    _.forEach(_.filter(filteredPeriode, (p) => {
+    let periodes = _.filter(filteredPeriode, (p) => {
         return p.id_type > -1
-    }), (periode) => {
+    });
+
+    eleve.evenements = _.filter(eleve.evenements, (evenement) => {
+        return _.contains(_.pluck(periodes, 'id_type'), evenement.id_periode);
+    });
+
+    _.forEach(periodes, (periode) => {
         let evenement = _.findWhere(eleve.evenements, {id_periode: periode.id_type});
         let pushIt = false;
         if (evenement === undefined) {
@@ -31,7 +31,6 @@ export let setHistoriqueEvenement = function ($scope, eleve, filteredPeriode) {
         }
 
         evenement.periode = $scope.getI18nPeriode(periode);
-        evenement.ordre = periode.ordre;
 
         // initialisation des retards et absences
         evenement.retard = (evenement.retard !== undefined) ? evenement.retard : 0;
@@ -48,7 +47,6 @@ export let setHistoriqueEvenement = function ($scope, eleve, filteredPeriode) {
         year.abs_totale_heure += evenement.abs_totale_heure;
         year.ordre += evenement.ordre;
 
-
         if (periode.id_type === $scope.search.periode.id_type) {
             eleve.evenement = evenement;
         }
@@ -56,6 +54,7 @@ export let setHistoriqueEvenement = function ($scope, eleve, filteredPeriode) {
             eleve.evenements.push(evenement);
         }
     });
+
     if(Utils.isNull($scope.search.periode.id_type)){
         eleve.evenement = year;
         eleve.appreciationCPE = {};

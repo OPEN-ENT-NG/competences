@@ -2496,9 +2496,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await utils.safeApply($scope);
             }
 
-
-
             if(Utils.isNotNull($scope.informations) && Utils.isNotNull($scope.informations.eleve)) {
+                $scope.informations.eleve.appreciationCPE = null;
                 await $scope.getEleveInfo($scope.informations.eleve);
             }
             await utils.safeApply($scope);
@@ -3194,13 +3193,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         /**
-         * Masque l'encart du détail de l'élève
-         */
-        $scope.hideInfosEleve = function (){
-            $scope.showInfosEleve = false;
-        };
-
-        /**
          * Masque l'encart du détail de l'évaluation
          */
         $scope.hideInfosEval = function (){
@@ -3245,12 +3237,18 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 return;
             }
 
+            let idPeriode = null;
+            if(Utils.isNotNull($scope.search.periode)) {
+                idPeriode = $scope.search.periode.id_type
+            } else if(Utils.isNotNull($scope.currentDevoir)) {
+                idPeriode = $scope.currentDevoir.id_periode;
+            }
+
             if(!$scope.opened.lightboxConfirmCleanAppreciation) {
                 $scope.appreciationBackUp = eleve.appreciation_matiere_periode;
                 $scope.studentTemp = eleve;
             }
 
-            $scope.showInfosEleve = true;
             template.close('leftSide-userInfo');
             await utils.safeApply($scope);
 
@@ -3266,16 +3264,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             if(eleve.evenements == null) {
                 allPromise.push(eleve.getEvenements($scope.structure.id));
+            } else {
+                if(Utils.isNotNull(idPeriode)) {
+                    eleve.evenement = _.findWhere(eleve.evenements, {id_periode: idPeriode});
+                }
             }
 
             if(eleve.appreciationCPE == null) {
-                let idPeriode = null;
-                if(Utils.isNotNull($scope.search.periode)) {
-                    idPeriode = $scope.search.periode.id_type
-                } else if(Utils.isNotNull($scope.currentDevoir)) {
-                    idPeriode = $scope.currentDevoir.id_periode;
-                }
-
                 if(Utils.isNotNull(idPeriode)) {
                     eleve.appreciationCPE = new AppreciationCPE(eleve.id, idPeriode);
                     allPromise.push(eleve.appreciationCPE.syncAppreciationCPE());
@@ -3295,22 +3290,24 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.search.classe = _.findWhere($scope.structure.classes.all, {id : $scope.currentDevoir.id_groupe});
                 await syncPeriodeClasse();
                 if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes)) {
-                    let idPeriode = $scope.currentDevoir.id_periode;
                     $scope.filteredPeriode = $scope.search.classe.periodes.all;
                     $scope.search.periode = _.findWhere($scope.filteredPeriode, {id_type: idPeriode});
                 }
-            }
-
-            if($location.path() === '/competences/eleve') {
+            } else {
                 await syncPeriodeClasse();
                 $scope.filteredPeriode = $scope.search.classe.periodes.all;
             }
+
             utils.setHistoriqueEvenement($scope, eleve, $scope.filteredPeriode);
 
             $scope.informations.eleve = eleve;
             template.open('leftSide-userInfo', 'enseignants/informations/display_eleve');
             await utils.safeApply($scope);
         };
+
+        $scope.deselectStudent = () => {
+            $scope.informations.eleve = undefined;
+        }
 
         /**
          * Highlight la compétence survolée
