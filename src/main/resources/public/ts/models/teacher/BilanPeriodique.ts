@@ -32,7 +32,6 @@ export class BilanPeriodique extends  Model {
     appreciations : Collection<AppreciationElement>;
     endSaisie : Boolean;
 
-
     static get api() {
         return {
             GET_ELEMENTS: '/competences/elementsBilanPeriodique?idEtablissement=' + evaluations.structure.id,
@@ -43,7 +42,8 @@ export class BilanPeriodique extends  Model {
             GET_SYNTHESIS: '/competences/releve/exportTotale',
             GET_HOMEWORK:"/competences/releve/export/checkDevoirs?idEtablissement=",
             GET_APPRAISALS:"/competences/recapAppreciations/print/",
-            GET_SUBJECTS: "/competences/subjects/short-label/subjects?ids="
+            GET_SUBJECTS: "/competences/subjects/short-label/subjects?ids=",
+            GET_EXPORT_RECAP_EVAL: "/competences/recapEval/print/"
         }
     }
 
@@ -225,10 +225,12 @@ export class BilanPeriodique extends  Model {
         throw new Error("getAppraisals");
     }
 
-    public async summaryEvaluations (idClass:string, idPeriod:number):Promise<void>{
-        let url:string =`/competences/recapEval/print/${idClass}/export?text=false&usePerso=false`;
-        if(idPeriod) url += `&idPeriode=${idPeriod}`;
+    public async getExportRecapEval(idClass:string, idPeriod:number):Promise<void>{
+        let url:string =`${BilanPeriodique.api.GET_EXPORT_RECAP_EVAL}${idClass}/export?text=false&usePerso=false`;
+        if(idPeriod)
+            url += `&idPeriode=${idPeriod}`;
         url += "&json=true";
+
         const { data, status }:AxiosResponse = await http.get(url);
         if(status === 200) return data;
         notify.error(lang.translate("competance.error.results.class"));
@@ -422,10 +424,10 @@ export class BilanPeriodique extends  Model {
             }
     }
 
-    public makeCsv (fileName:string, dataHeader:Array<Array<any>>, dataBody:Array<Array<any>>):void{
-        let csvPrepared:Array<Array<any>> = [...dataHeader, ...dataBody];
+    public makeCsv (fileName:string, csvPrepared:Array<Array<any>>):void{
         if (csvPrepared.length > 0) {
-            const blob = new Blob([`\ufeff${Utils.prepareCsvString(csvPrepared)}`], {type: ' type: "text/csv;charset=UTF-8"'});
+            const blob = new Blob([`\ufeff${Utils.prepareCsvString(csvPrepared)}`],
+                {type: ' type: "text/csv;charset=UTF-8"'});
             const link = document.createElement('a');
             link.href = (window as any).URL.createObjectURL(blob);
             link.setAttribute("target", "_blank");
