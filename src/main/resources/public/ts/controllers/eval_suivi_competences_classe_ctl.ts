@@ -437,7 +437,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                         $scope.opened.recapEval = false
                     } else {
                         $scope.evalNotFound = true;
-                        $timeout( () => $scope.evalNotFound = false, 1000);
+                        $timeout(() => $scope.evalNotFound = false, 1000);
                     }
                     $scope.disabledExportFile = false;
                     break;
@@ -688,8 +688,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             try {
                 isManualCsvFromAngular = true;
                 fileDownloadName.csv = `positioning${infoNameFileEnd}`;
-                const resultSummaryEvaluations = await bilanPeriodic.summaryEvaluations( idClass, idPeriod);
-                dataBodyCsv = prepareBodyPositioningForCsv(resultSummaryEvaluations);
+                const resultRecapEval = await bilanPeriodic.getExportRecapEval(idClass, idPeriod);
+                dataBodyCsv = prepareBodyPositioningForCsv(resultRecapEval);
                 return true
             } catch (e) {
                 return false
@@ -754,23 +754,16 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             let isExportFinish:boolean | undefined = undefined;
             try {
                 if(isManualCsvFromAngular){
-                    bilanPeriodic.makeCsv(fileDownloadName[formatType], makeHeaderCsv(), dataBodyCsv);
+                    bilanPeriodic.makeCsv(fileDownloadName[formatType], dataBodyCsv);
                     isExportFinish = true;
                 } else {
                     $scope.suiviClasse.periode = $scope.search.periode;
                     $scope.opened.releveNoteTotaleChoice = "moy";
-                    $scope.suiviClasse.withAppreciations =
-                        $scope.suiviClasse.withAvisConseil =
-                            $scope.suiviClasse.withAvisOrientation =
-                                false;
-                    await $scope.exportRecapEval(
-                        $scope.suiviClasse.textMod,
-                        fileDownloadName[formatType],
-                        $scope.search.periode.id_type,
-                        false,
-                        true,
-                        true
-                    );
+                    $scope.suiviClasse.withAppreciations = $scope.suiviClasse.withAvisConseil =
+                        $scope.suiviClasse.withAvisOrientation = false;
+                    await $scope.exportRecapEval($scope.suiviClasse.textMod, fileDownloadName[formatType],
+                        $scope.search.periode.id_type,false,
+                        true,true);
                     await Utils.stopMessageLoader($scope);
                 }
             } catch (error) {
@@ -794,20 +787,6 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             lang.translate('classaverage.max'),
         ];
 
-        const makeHeaderCsv = ():Array<Array<string>> => {
-            return  [[
-                `${lang.translate('evaluations.classe.groupe')}:`,
-                ($scope.search.classe? $scope.search.classe.name : "")
-
-            ], [
-                `${lang.translate('viescolaire.periode.3')}:`,
-                (`${lang.translate('viescolaire.utils.periode')}&nbsp;
-                ${$scope.search.periode
-                    ? $scope.search.periode.ordre || lang.translate("viescolaire.utils.annee")
-                    : ""}`)
-            ]]
-        };
-
         const emptyValue:string = "";
         const emptyRow:any = (defaultValue:boolean = false):Array<string> => defaultValue? new Array(emptyValue) : new Array(0);
 
@@ -830,22 +809,33 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             return [dataHeader, ...result];
         };
 
-        const prepareBodyPositioningForCsv = (dataBody:any):Array<Array<string | number>> => {
+        const prepareBodyPositioningForCsv = (resultRecapEval:any):Array<Array<string | number>> => {
             let result:Array<Array<string | number>> = emptyRow();
             let row:Array<string | number> = emptyRow(true);
+            let header:Array<Array<any>> = emptyRow();
             let footer:Array<Array<any>> = emptyRow();
-            if(dataBody.domaines){
-                for (let rowIndex = 0; rowIndex < dataBody.domaines.length; rowIndex++) {
-                    let domaine = dataBody.domaines[rowIndex];
+
+            header.push([
+                [`${lang.translate('evaluations.classe.groupe')} : `], [`${resultRecapEval.classe}`]
+            ]);
+            header.push([
+                [`${lang.translate('viescolaire.utils.periode')} : `], [`${resultRecapEval.periode}`]
+            ]);
+            result.push(...header);
+
+            if(resultRecapEval.domaines){
+                for (let rowIndex = 0; rowIndex < resultRecapEval.domaines.length; rowIndex++) {
+                    let domaine = resultRecapEval.domaines[rowIndex];
                     row.push(domaine.codification || emptyValue);
                     footer.push([[`${domaine.codification || ""} /${domaine.libelle}`]]);
                 }
                 result.push(row);
             }
-            if(dataBody.eleves){
-                for (let rowIndex = 0; rowIndex < dataBody.eleves.length; rowIndex++) {
+
+            if(resultRecapEval.eleves){
+                for (let rowIndex = 0; rowIndex < resultRecapEval.eleves.length; rowIndex++) {
                     row = emptyRow();
-                    let student = dataBody.eleves[rowIndex];
+                    let student = resultRecapEval.eleves[rowIndex];
                     let notesByStudent:Array<string> = emptyRow();
                     row.push(student.nom || emptyValue,);
                     if(student.notes){
