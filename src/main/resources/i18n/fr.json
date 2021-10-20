@@ -175,6 +175,7 @@
   "evaluations.export.bfc.not.found.err" : "Le bilan de fin de cycle n'a pas pu être récupéré",
   "evaluations.export.eleves.not.found.err" : "Les élèves n'ont pas pu être récupéré",
   "evaluations.export.cycle.not.found.err" : "Le cycle n'a pas pu être récupéré",
+  "evaluation.export.eleves.in.several.classes.err" : "L'export pdf n'est pas possible car un ou plusieurs élèves de la classe demandée sont aussi sur une autre classe",
   "evaluations.devoir.print" : " Les résultats du devoir",
   "evaluations.remplacants.title":"Gérer les remplacements",
   "evaluations.remplacement.add":"Ajouter un remplacement",

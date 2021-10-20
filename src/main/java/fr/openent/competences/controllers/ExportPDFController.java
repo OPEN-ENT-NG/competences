@@ -64,9 +64,8 @@ import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.utils.UtilsConvert.strIdGroupesToJsonArray;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
-import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
+import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -493,28 +492,32 @@ public class ExportPDFController extends ControllerHelper {
                         _iGroupesdArr, idEtablissementEl, listIdMatieres, finalIdPeriode, isCycle, finalHandler);
             } else {
                 JsonArray eleves = (JsonArray) elevesFuture.result();
+                if(eleves.size() != elevesMap.size()) {
+                    leftToResponse(request, new Either.Left<>("one or more students are in several classes"));
+                } else {
+                    final AtomicBoolean answered = new AtomicBoolean();
+                    JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
 
-                final AtomicBoolean answered = new AtomicBoolean();
-                JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
-                final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap,
-                        nomGroupes, matieres, libellePeriode, json, answered, resultFinal);
+                    final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap,
+                            nomGroupes, matieres, libellePeriode, json, answered, resultFinal);
 
-                for (int i = 0; i < eleves.size(); i++) {
-                    JsonObject eleve = eleves.getJsonObject(i);
-                    String idEleveEl = eleve.getString(ID_ELEVE_KEY);
-                    String idEtablissementEl = eleve.getString(ID_ETABLISSEMENT_KEY);
-                    idEtablissement.add(idEtablissementEl);
-                    idGroupes.add(eleve.getString(ID_CLASSE_KEY));
-                    final String nomClasse = eleve.getString("classeName");
-                    nomGroupes.put(idEleveEl, nomClasse);
-                    String[] _idGroupes = new String[1];
-                    _idGroupes[0] = idGroupes.get(i);
-                    JsonArray idManualGroupes = strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
-                    JsonArray idFunctionalGroupes = strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
-                    JsonArray idGroupesJsArr = utilsService.saUnion(idFunctionalGroupes, idManualGroupes);
-                    String[] idGroupesArr = UtilsConvert.jsonArrayToStringArr(idGroupesJsArr);
-                    exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleveEl, _idGroupes, idGroupesArr,
-                            idEtablissement.get(i), listIdMatieres, finalIdPeriode, isCycle, finalHandler);
+                    for (int i = 0; i < eleves.size(); i++) {
+                        JsonObject eleve = eleves.getJsonObject(i);
+                        String idEleveEl = eleve.getString(ID_ELEVE_KEY);
+                        String idEtablissementEl = eleve.getString(ID_ETABLISSEMENT_KEY);
+                        idEtablissement.add(idEtablissementEl);
+                        idGroupes.add(eleve.getString(ID_CLASSE_KEY));
+                        final String nomClasse = eleve.getString("classeName");
+                        nomGroupes.put(idEleveEl, nomClasse);
+                        String[] _idGroupes = new String[1];
+                        _idGroupes[0] = idGroupes.get(i);
+                        JsonArray idManualGroupes = strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
+                        JsonArray idFunctionalGroupes = strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
+                        JsonArray idGroupesJsArr = utilsService.saUnion(idFunctionalGroupes, idManualGroupes);
+                        String[] idGroupesArr = UtilsConvert.jsonArrayToStringArr(idGroupesJsArr);
+                        exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleveEl, _idGroupes, idGroupesArr,
+                                idEtablissement.get(i), listIdMatieres, finalIdPeriode, isCycle, finalHandler);
+                    }
                 }
             }
         });

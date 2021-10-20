@@ -133,6 +133,10 @@
              ng-if="cycleNotFound">
             <i18n>evaluations.export.cycle.not.found.err</i18n>
         </div>
+        <div class="warning"
+             ng-if="studentInSeveralClasses">
+            <i18n>evaluation.export.eleves.in.several.classes.err</i18n>
+        </div>
         <button class="right-magnet"
                 ng-disabled = "disabledExport()"
                 ng-click="exportReleveComp(informations.eleve.id, releveComp.periode.id_type, !releveComp.textMod, exportByEnseignement)">

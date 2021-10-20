@@ -4119,6 +4119,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 case "{\"error\":\"different cycle\"}" :
                     $scope.cycleNotFound = true;
                     break;
+                case "{\"error\":\"one or more students are in several classes\"}" :
+                    $scope.studentInSeveralClasses = true;
+                    break;
                 default :
                     $scope.exportRecapEvalObj.errExport = true;
             }
@@ -4177,6 +4180,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.bfcNotFound = false;
             $scope.elevesNotFound = false;
             $scope.cycleNotFound = false;
+            $scope.studentInSeveralClasses = false;
             $scope.exportRelCompObj.errExport = false;
             $scope.exportRecapEvalObj.errExport = false;
             $scope.exportDevoirObj.errExport = false;
