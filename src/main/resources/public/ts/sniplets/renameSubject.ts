@@ -30,7 +30,6 @@ export const renameSubject = {
     },
     controller: {
         init: async function () {
-            console.log(renameSubject.title);
             this.lang = lang;
             this.id = this.source.id;
             this.search = {
@@ -44,8 +43,10 @@ export const renameSubject = {
             renameSubject.that = this;
             await this.getSubjects();
         },
+
         initSource: function () {
         },
+
         getSubjects: async function () {
             try {
                 renameSubject.that.opened.displayMessageLoader = true;
@@ -56,19 +57,20 @@ export const renameSubject = {
                 };
                 renameSubject.that.opened.displayMessageLoader = false;
                 await safeApply(renameSubject.that);
-            }
-            catch (e) {
+            } catch (e) {
                 notify.error('evaluations.rename.subject.error.get.subjects');
                 renameSubject.that.opened.displayMessageLoader = false;
                 await safeApply(renameSubject.that);
             }
         },
+
         toJson: function() {
              _.extend(renameSubject.that.newModel, {
                  idStructure : renameSubject.that.id
             });
-            return  renameSubject.that.newModel;
+            return renameSubject.that.newModel;
         },
+
         saveModel: async function () {
             try {
                 renameSubject.that.opened.lightboxCreateModel = false;
@@ -76,25 +78,23 @@ export const renameSubject = {
                 await http.post('/competences/matieres/libelle/model/save', this.toJson());
                 notify.success('evaluations.rename.subject.success.save.model');
                 await this.getSubjects();
-            }
-            catch (e) {
+            } catch (e) {
                 console.error(e);
                 notify.error('evaluations.rename.subject.error.save.model');
             }
         },
+
         deleteModel: async function(model) {
           try{
-
               await http.delete(`/competences/matieres/model/${model.id}`);
               notify.success('evaluations.rename.subject.success.delete.model');
               await this.getSubjects();
-
-          }
-          catch (e) {
+          } catch (e) {
               console.error(e);
               notify.error('evaluations.rename.subject.error.delete.model');
           }
         },
+
         openCreateModel: async function (model?) {
             renameSubject.that.opened.lightboxCreateModel = true;
             if (model === undefined) {
@@ -105,19 +105,19 @@ export const renameSubject = {
                 _.forEach(renameSubject.that.models.all[0].subjects, (subject) => {
                     renameSubject.that.newModel.subjects.push(_.clone(subject));
                 });
-            }
-            else {
+            } else {
                 renameSubject.that.newModel = model;
             }
             await safeApply(renameSubject.that);
         },
+
         filterSearch: function(searchParams){
             return (model) => {
                 let result = true;
 
                 if (result && searchParams.name && searchParams.name !== '*' && searchParams.name !== '') {
                     let regexp = new RegExp('^' + searchParams.name.toUpperCase());
-                    result =  regexp.test(model.title.toUpperCase());
+                    result = regexp.test(model.title.toUpperCase());
                 }
                 return result;
             };

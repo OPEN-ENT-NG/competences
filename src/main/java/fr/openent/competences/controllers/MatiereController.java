@@ -43,7 +43,6 @@ public class MatiereController extends ControllerHelper {
     @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     public void setModel(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, ressource -> {
-
             String idStructure = ressource.getString(ID_STRUCTURE_KEY);
             String title = ressource.getString(TITLE);
             Long idModel = ressource.getLong(ID_KEY);
@@ -51,19 +50,16 @@ public class MatiereController extends ControllerHelper {
             if(idStructure != null) {
                 matiereService.saveModel(idStructure, title, idModel, libelleMatiere, event -> {
                     if(event.isLeft()){
-                        JsonObject error = (new JsonObject()).put("error", event.left().getValue());
+                        JsonObject error = new JsonObject().put("error", event.left().getValue());
                         Renders.renderJson(request, error, 400);
-                    }
-                    else {
+                    } else {
                         Renders.renderJson(request, event.right().getValue());
                     }
                 });
-            }
-            else {
+            } else {
                 badRequest(request);
             }
         });
-
     }
 
     @Get("/matieres/models/:idStructure")
