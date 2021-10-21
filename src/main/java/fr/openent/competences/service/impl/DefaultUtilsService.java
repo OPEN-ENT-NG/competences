@@ -1235,7 +1235,7 @@ public class DefaultUtilsService implements UtilsService {
 
     public JsonObject getObjectForPeriode(JsonArray array, Long idPeriode, String key) {
         JsonObject res = null;
-        if (isNotNull(array )) {
+        if (isNotNull(array)) {
             for (int i = 0; i < array.size(); i++) {
                 JsonObject o = array.getJsonObject(i);
                 if (isNotNull(o)){

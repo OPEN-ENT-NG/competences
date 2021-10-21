@@ -31,13 +31,12 @@ import static org.entcore.common.sql.Sql.listPrepared;
 public class DefaultMatiereService extends SqlCrudService implements MatiereService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultMatiereService.class);
-    private static String subjectLibelleTable = VSCO_SCHEMA + "." + VSCO_MATIERE_LIBELLE_TABLE;
-    private static String modelSubjectLibelleTable = VSCO_SCHEMA + "." + VSCO_MODEL_MATIERE_LIBELLE_TABLE;
-    private static String underSubjectTable = VSCO_SCHEMA + ".sousmatiere";
-    private static String typeUnderSubjectTable = VSCO_SCHEMA + ".type_sousmatiere";
-    private static String ID_SOUS_MATIERE = "id_sousmatiere";
+    private static final String subjectLibelleTable = VSCO_SCHEMA + "." + VSCO_MATIERE_LIBELLE_TABLE;
+    private static final String modelSubjectLibelleTable = VSCO_SCHEMA + "." + VSCO_MODEL_MATIERE_LIBELLE_TABLE;
+    private static final String underSubjectTable = VSCO_SCHEMA + "." + VSCO_SOUS_MATIERE_TABLE;
+    private static final String typeUnderSubjectTable = VSCO_SCHEMA + "." + VSCO_TYPE_SOUS_MATIERE_TABLE;
 
-    private EventBus eb;
+    private final EventBus eb;
     private static final String LIBELLE_COURT = "libelle_court";
 
     public DefaultMatiereService(EventBus eb) {
@@ -52,13 +51,11 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
 
     @Override
     public void getLibellesCourtsMatieres(Boolean wantMapCodeLibelle, Handler<Either<String, Map<String, String>>> handler) {
-
         String query = "SELECT bcn, code, libelle_court FROM " + this.resourceTable + " ;";
         Map<String, String> responseMap = new HashMap<>();
 
         Sql.getInstance().prepared(query, new JsonArray(), Competences.DELIVERY_OPTIONS,
                 SqlResult.validResultHandler(event -> {
-
                     if (event.isRight()) {
                         JsonArray codesLibellesCourts = event.right().getValue();
 
@@ -79,17 +76,12 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                         handler.handle(new Either.Right<>(responseMap));
                         log.error("getLibellesCourtsMatieres : " + event.left().getValue());
                     }
-
                 }));
-
     }
 
     private JsonObject createModel(String title, Long idModel, String idStructure) {
-        String query =
-                " INSERT INTO " + modelSubjectLibelleTable +
-                        " (id, title, id_etablissement ) " +
-                        " VALUES " +
-                        " (?, ?, ?) ";
+        String query = "INSERT INTO " + modelSubjectLibelleTable + " (id, title, id_etablissement) " +
+                " VALUES (?, ?, ?) ";
 
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -102,10 +94,9 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     }
 
     private JsonObject updateModel(String title, Long idModel, String idStructure) {
-        String query =
-                " UPDATE " + modelSubjectLibelleTable +
-                        " SET title = ?, id_etablissement =? " +
-                        " WHERE id = ? ";
+        String query = "UPDATE " + modelSubjectLibelleTable +
+                " SET title = ?, id_etablissement = ? " +
+                " WHERE id = ? ";
 
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -118,12 +109,9 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     }
 
     private JsonObject saveLibelleSubjectModel(String libelle, Long idModel, String idSubject) {
-        String query =
-                " INSERT INTO " + subjectLibelleTable +
-                        " (id_model, libelle, external_id_subject ) " +
-                        " VALUES " +
-                        " (?, ?, ?) " +
-                        " ON CONFLICT (external_id_subject, id_model) DO UPDATE SET libelle = ? ";
+        String query = " INSERT INTO " + subjectLibelleTable + " (id_model, libelle, external_id_subject) " +
+                " VALUES (?, ?, ?) " +
+                " ON CONFLICT (external_id_subject, id_model) DO UPDATE SET libelle = ? ";
 
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -135,9 +123,8 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                 .put("action", "prepared");
     }
 
-    private void buildStatement(String idStructure, String title, Long idModel,
-                                JsonArray libelleMatiere, boolean create,
-                                Handler<Either<String, JsonObject>> handler) {
+    private void buildStatement(String idStructure, String title, Long idModel, JsonArray libelleMatiere,
+                                boolean create, Handler<Either<String, JsonObject>> handler) {
         JsonArray statements = new JsonArray();
 
         if (create) {
@@ -158,11 +145,8 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
 
     public void saveModel(String idStructure, String title, final Long idModel, JsonArray libelleMatiere,
                           Handler<Either<String, JsonObject>> handler) {
-
-
         if (idModel == null) {
-            final String queryNewCours =
-                    "SELECT nextval('" + VSCO_SCHEMA + ".model_subject_libelle_id_seq') as id";
+            final String queryNewCours = "SELECT nextval('" + VSCO_SCHEMA + ".model_subject_libelle_id_seq') as id";
 
             sql.raw(queryNewCours, SqlResult.validUniqueResultHandler(event -> {
                 if (event.isRight()) {
@@ -417,13 +401,13 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     }
 
     private JsonObject buildUpdateDevoir(JsonObject devoir, JsonObject sousMatiere) {
-        String query =
-                " UPDATE " + COMPETENCES_SCHEMA + ".devoirs " +
-                        " SET id_sousmatiere = ? " +
-                        " WHERE id = ? ";
+        String query = "UPDATE " + COMPETENCES_SCHEMA + ".devoirs " +
+                " SET id_sousmatiere = ? " +
+                " WHERE id = ? ";
 
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        values.add(sousMatiere.getLong(ID_SOUS_MATIERE)).add(devoir.getLong(ID_KEY));
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray()
+                .add(sousMatiere.getLong("id_sousmatiere"))
+                .add(devoir.getLong(ID_KEY));
 
         return new JsonObject().put("statement", query).put("values", values).put("action", "prepared");
     }

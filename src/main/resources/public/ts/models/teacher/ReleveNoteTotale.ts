@@ -84,11 +84,14 @@ export class ReleveNoteTotale extends  Model implements IModel {
         };
     }
 
+    formateForCsV(value : any) {
+        return value.toString().replaceAll(".", ",");
+    }
+
     async export (teacherBySubject:Array<any>) {
         return new Promise(async (resolve, reject) => {
             try {
                 let columnCsv = [];
-                let blob;
                 let addingAllStudents = false;
                 let data = await httpAxios.post(this.api.EXPORT, this.toJson());
                 let response;
@@ -96,141 +99,165 @@ export class ReleveNoteTotale extends  Model implements IModel {
                 if(this.periodes.length > 0){
                     response = data.data.annual;
                     responseOtherPeriodes = data.data;
-                }else{
+                } else {
                     response = data.data;
                 }
                 await this.formateHeaderAndColumn(teacherBySubject, response.statistiques);
 
                 _.forEach(this.matiereWithNotes, (matiere) => {
                     if (!addingAllStudents) {
-                        _.forEach(response.eleves, (line) => {
+                        _.forEach(response.eleves, (eleve) => {
                             if (this.exportOptions.moyenneMat) {
-                                if (line.moyenneFinale != undefined && line.moyenneFinale[matiere.id] != undefined) {
-                                    line[matiere.name + 'Moyenne'] = line.moyenneFinale[matiere.id];
+                                if (eleve.moyenneFinale != undefined && eleve.moyenneFinale[matiere.id] != undefined) {
+                                    eleve[matiere.name + 'Moyenne'] = this.formateForCsV(eleve.moyenneFinale[matiere.id]);
                                 } else {
-                                    line[matiere.name + 'Moyenne'] = "";
+                                    eleve[matiere.name + 'Moyenne'] = "";
                                 }
                             }
+
                             if(this.exportOptions.positionnementFinal) {
-                                if (line.positionnement && line.positionnement[matiere.id]) {
-                                    line[matiere.name + 'Positionnement'] = Number(line.positionnement[matiere.id].toString().replace(",","."));
+                                if (eleve.positionnement && eleve.positionnement[matiere.id]) {
+                                    eleve[matiere.name + 'Positionnement'] = this.formateForCsV(eleve.positionnement[matiere.id]);
                                 } else {
-                                    line[matiere.name + 'Positionnement'] = "";
+                                    eleve[matiere.name + 'Positionnement'] = "";
                                 }
                             }
+
                             if(this.exportOptions.averageFinal && this.periodes.length >0) {
-                                if(line.moyenne_generale != undefined)
-                                    line['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = line.moyenne_generale;
-                                else
-                                    line['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = "NN"
-                                for (let periode of this.periodes){
-                                    if((responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName).length != 0 &&
-                                        (responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName)[0].moyenne_generale != undefined)
-                                        line['moyenne_generale'+periode.periodeName] = (responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName)[0].moyenne_generale;
-                                    else
-                                        line['moyenne_generale'+periode.periodeName] = "NN"
+                                if(eleve.moyenne_generale != undefined){
+                                    eleve['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = this.formateForCsV(eleve.moyenne_generale);
+                                } else {
+                                    eleve['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = "NN";
                                 }
-                            }else if (this.exportOptions.averageFinal) {
-                                if(line.moyenne_generale != undefined)
-                                    line['moyenne_generale'] = line.moyenne_generale;
-                                else
-                                    line['moyenne_generale'] = "NN"
-                            }
-                            if(this.exportOptions.appreciation) {
-                                if (line.synthese_bilan_periodique != undefined) {
-                                    line['appreciation_conseil_de_classe'] = line.synthese_bilan_periodique;
-                                    while (!_.isEmpty(line['appreciation_conseil_de_classe'].match('\n'))) {
-                                        line['appreciation_conseil_de_classe'] = line['appreciation_conseil_de_classe'].replace('\n', ' ');
+                                for (let periode of this.periodes){
+                                    let eleveOtherPeriode = responseOtherPeriodes[periode.idPeriode].eleves
+                                        .filter(el => el.displayName == eleve.displayName);
+                                    if(eleveOtherPeriode.length != 0 && eleveOtherPeriode[0].moyenne_generale != undefined) {
+                                        eleve['moyenne_generale' + periode.periodeName] = this.formateForCsV(eleveOtherPeriode[0].moyenne_generale);
+                                    } else {
+                                        eleve['moyenne_generale' + periode.periodeName] = "NN"
                                     }
-                                } else
-                                    line['appreciation_conseil_de_classe'] = "";
-                            }
-                            if(this.exportOptions.avisConseil && this.periodes.length >0) {
-                                for (let periode of this.periodes){
-                                    if((responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName).length != 0 &&
-                                        (responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName)[0].avis_conseil_de_classe != undefined)
-                                        line['avis_conseil_de_classe'+periode.periodeName] = (responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName)[0].avis_conseil_de_classe;
-                                    else
-                                        line['avis_conseil_de_classe'+periode.periodeName] = ""
                                 }
-                            }else if(this.exportOptions.avisConseil){
-                                if (line.avis_conseil_de_classe != undefined)
-                                    line['avis_conseil_de_classe'] = line.avis_conseil_de_classe;
-                                else
-                                    line['avis_conseil_de_classe'] = "";
-                            }
-                            if(this.exportOptions.avisOrientation && this.periodes.length >0) {
-                                for (let periode of this.periodes){
-                                    if((responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName).length != 0 &&
-                                        ((responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName)[0] as any).avis_conseil_orientation != undefined)
-                                        line['avis_orientation'+periode.periodeName] = ((responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName)[0] as any).avis_conseil_orientation;
-                                    else
-                                        line['avis_orientation'+periode.periodeName] = ""
+                            } else if (this.exportOptions.averageFinal) {
+                                if(eleve.moyenne_generale != undefined) {
+                                    eleve['moyenne_generale'] = this.formateForCsV(eleve.moyenne_generale);
+                                } else {
+                                    eleve['moyenne_generale'] = "NN";
                                 }
-                            }else if(this.exportOptions.avisOrientation) {
-                                if (line.avis_conseil_orientation != undefined)
-                                    line['avis_orientation'] = line.avis_conseil_orientation;
-                                else
-                                    line['avis_orientation'] = "";
                             }
-                            columnCsv.push(_.pick(line, this.format['column']));
+
+                            if(this.exportOptions.appreciation) {
+                                if (eleve.synthese_bilan_periodique != undefined) {
+                                    eleve['appreciation_conseil_de_classe'] = eleve.synthese_bilan_periodique;
+                                    while (!_.isEmpty(eleve['appreciation_conseil_de_classe'].match('\n'))) {
+                                        eleve['appreciation_conseil_de_classe'] = eleve['appreciation_conseil_de_classe'].replace('\n', ' ');
+                                    }
+                                } else {
+                                    eleve['appreciation_conseil_de_classe'] = "";
+                                }
+                            }
+
+                            if(this.exportOptions.avisConseil && this.periodes.length > 0) {
+                                for (let periode of this.periodes){
+                                    let eleveOtherPeriode = responseOtherPeriodes[periode.idPeriode].eleves
+                                        .filter(el => el.displayName == eleve.displayName);
+                                    if(eleveOtherPeriode.length != 0 && eleveOtherPeriode[0].avis_conseil_de_classe != undefined) {
+                                        eleve['avis_conseil_de_classe' + periode.periodeName] = eleveOtherPeriode[0].avis_conseil_de_classe;
+                                    } else {
+                                        eleve['avis_conseil_de_classe' + periode.periodeName] = "";
+                                    }
+                                }
+                            } else if(this.exportOptions.avisConseil){
+                                if (eleve.avis_conseil_de_classe != undefined) {
+                                    eleve['avis_conseil_de_classe'] = eleve.avis_conseil_de_classe;
+                                } else {
+                                    eleve['avis_conseil_de_classe'] = "";
+                                }
+                            }
+
+                            if(this.exportOptions.avisOrientation && this.periodes.length > 0) {
+                                for (let periode of this.periodes){
+                                    let eleveOtherPeriode = responseOtherPeriodes[periode.idPeriode].eleves
+                                        .filter(el => el.displayName == eleve.displayName);
+                                    if(eleveOtherPeriode.length != 0 && eleveOtherPeriode[0].avis_conseil_orientation != undefined) {
+                                        eleve['avis_orientation' + periode.periodeName] = eleveOtherPeriode[0].avis_conseil_orientation;
+                                    } else {
+                                        eleve['avis_orientation' + periode.periodeName] = "";
+                                    }
+                                }
+                            } else if(this.exportOptions.avisOrientation) {
+                                if (eleve.avis_conseil_orientation != undefined) {
+                                    eleve['avis_orientation'] = eleve.avis_conseil_orientation;
+                                } else {
+                                    eleve['avis_orientation'] = "";
+                                }
+                            }
+                            columnCsv.push(_.pick(eleve, this.format['column']));
                         });
+
                         if (this.exportOptions.statistiques) {
                             let jsonMoyenneToAdd = {};
                             jsonMoyenneToAdd["displayName"] = lang.translate('viescolaire.classe.moyenne');
+
                             let jsonMinToAdd = {};
                             jsonMinToAdd["displayName"] = "Minimum";
+
                             let jsonMaxToAdd = {};
                             jsonMaxToAdd["displayName"] = "Maximum";
+
                             if(this.exportOptions.moyenneMat) {
                                 if(response.statistiques[matiere.id] != undefined && response.statistiques[matiere.id].moyenne != undefined) {
-                                    jsonMoyenneToAdd[matiere.name + 'Moyenne'] = response.statistiques[matiere.id].moyenne.moyenne;
-                                    jsonMinToAdd[matiere.name + 'Moyenne'] = response.statistiques[matiere.id].moyenne.minimum;
-                                    jsonMaxToAdd[matiere.name + 'Moyenne'] = response.statistiques[matiere.id].moyenne.maximum;
+                                    jsonMoyenneToAdd[matiere.name + 'Moyenne'] = this.formateForCsV(response.statistiques[matiere.id].moyenne.moyenne);
+                                    jsonMinToAdd[matiere.name + 'Moyenne'] = this.formateForCsV(response.statistiques[matiere.id].moyenne.minimum);
+                                    jsonMaxToAdd[matiere.name + 'Moyenne'] = this.formateForCsV(response.statistiques[matiere.id].moyenne.maximum);
                                 }else{
                                     jsonMoyenneToAdd[matiere.name + 'Moyenne'] = "NN";
                                     jsonMinToAdd[matiere.name + 'Moyenne'] = "NN";
                                     jsonMaxToAdd[matiere.name + 'Moyenne'] = "NN";
                                 }
                             }
+
                             if(this.exportOptions.positionnementFinal) {
                                 if(response.statistiques[matiere.id] != undefined && response.statistiques[matiere.id].positionnement != undefined) {
-                                    jsonMoyenneToAdd[matiere.name + 'Positionnement'] = response.statistiques[matiere.id].positionnement.moyenne;
-                                    jsonMinToAdd[matiere.name + 'Positionnement'] = response.statistiques[matiere.id].positionnement.minimum;
-                                    jsonMaxToAdd[matiere.name + 'Positionnement'] = response.statistiques[matiere.id].positionnement.maximum;
-                                }else{
+                                    jsonMoyenneToAdd[matiere.name + 'Positionnement'] = this.formateForCsV(response.statistiques[matiere.id].positionnement.moyenne);
+                                    jsonMinToAdd[matiere.name + 'Positionnement'] = this.formateForCsV(response.statistiques[matiere.id].positionnement.minimum);
+                                    jsonMaxToAdd[matiere.name + 'Positionnement'] = this.formateForCsV(response.statistiques[matiere.id].positionnement.maximum);
+                                } else {
                                     jsonMoyenneToAdd[matiere.name + 'Positionnement'] = "NN";
                                     jsonMinToAdd[matiere.name + 'Positionnement'] = "NN";
                                     jsonMaxToAdd[matiere.name + 'Positionnement'] = "NN";
                                 }
-
                             }
-                            if(this.exportOptions.averageFinal && this.periodes.length >0) {
-                                if(response.statistiques.moyenne_generale != undefined && response.statistiques.moyenne_generale.moyenne != undefined) {
-                                    jsonMoyenneToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = response.statistiques.moyenne_generale.moyenne;
-                                    jsonMinToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = response.statistiques.moyenne_generale.minimum;
-                                    jsonMaxToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = response.statistiques.moyenne_generale.maximum;
-                                }else{
+
+                            if(this.exportOptions.averageFinal && this.periodes.length > 0) {
+                                if(response.statistiques.moyenne_generale != undefined
+                                    && response.statistiques.moyenne_generale.moyenne != undefined) {
+                                    jsonMoyenneToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = this.formateForCsV(response.statistiques.moyenne_generale.moyenne);
+                                    jsonMinToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = this.formateForCsV(response.statistiques.moyenne_generale.minimum);
+                                    jsonMaxToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = this.formateForCsV(response.statistiques.moyenne_generale.maximum);
+                                } else {
                                     jsonMoyenneToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = "NN";
                                     jsonMinToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = "NN";
                                     jsonMaxToAdd['moyenne_generale' + lang.translate('viescolaire.utils.annee')] = "NN";
                                 }
                                 for (let periode of this.periodes) {
-                                    if(responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale != undefined && responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.moyenne != undefined) {
-                                        jsonMoyenneToAdd['moyenne_generale' + periode.periodeName] = responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.moyenne;
-                                        jsonMinToAdd['moyenne_generale' + periode.periodeName] = responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.minimum;
-                                        jsonMaxToAdd['moyenne_generale' + periode.periodeName] = responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.maximum;
-                                    }else{
+                                    if(responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale != undefined
+                                        && responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.moyenne != undefined) {
+                                        jsonMoyenneToAdd['moyenne_generale' + periode.periodeName] = this.formateForCsV(responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.moyenne);
+                                        jsonMinToAdd['moyenne_generale' + periode.periodeName] = this.formateForCsV(responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.minimum);
+                                        jsonMaxToAdd['moyenne_generale' + periode.periodeName] = this.formateForCsV(responseOtherPeriodes[periode.idPeriode].statistiques.moyenne_generale.maximum);
+                                    } else {
                                         jsonMoyenneToAdd['moyenne_generale' + periode.periodeName] = "NN";
                                         jsonMinToAdd['moyenne_generale' + periode.periodeName] = "NN";
                                         jsonMaxToAdd['moyenne_generale' + periode.periodeName] = "NN";
                                     }
                                 }
-                            }else if(this.exportOptions.averageFinal) {
-                                if(response.statistiques.moyenne_generale != undefined && response.statistiques.moyenne_generale.moyenne != undefined) {
-                                    jsonMoyenneToAdd['moyenne_generale'] = response.statistiques.moyenne_generale.moyenne;
-                                    jsonMinToAdd['moyenne_generale'] = response.statistiques.moyenne_generale.minimum;
-                                    jsonMaxToAdd['moyenne_generale'] = response.statistiques.moyenne_generale.maximum;
+                            } else if(this.exportOptions.averageFinal) {
+                                if(response.statistiques.moyenne_generale != undefined
+                                    && response.statistiques.moyenne_generale.moyenne != undefined) {
+                                    jsonMoyenneToAdd['moyenne_generale'] = this.formateForCsV(response.statistiques.moyenne_generale.moyenne);
+                                    jsonMinToAdd['moyenne_generale'] = this.formateForCsV(response.statistiques.moyenne_generale.minimum);
+                                    jsonMaxToAdd['moyenne_generale'] = this.formateForCsV(response.statistiques.moyenne_generale.maximum);
                                 }else{
                                     jsonMoyenneToAdd['moyenne_generale'] = "NN";
                                     jsonMinToAdd['moyenne_generale'] = "NN";
@@ -243,29 +270,29 @@ export class ReleveNoteTotale extends  Model implements IModel {
                         }
                         addingAllStudents = true;
                     } else {
-                        _.forEach(response.eleves, (line) => {
+                        _.forEach(response.eleves, (eleve) => {
                             if (this.exportOptions.moyenneMat) {
-                                if (line.moyenneFinale != undefined && line.moyenneFinale[matiere.id] != undefined) {
-                                    columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Moyenne'] = line.moyenneFinale[matiere.id];
+                                if (eleve.moyenneFinale != undefined && eleve.moyenneFinale[matiere.id] != undefined) {
+                                    columnCsv.filter(el => el.displayName == eleve.displayName)[0][matiere.name + 'Moyenne'] = this.formateForCsV(eleve.moyenneFinale[matiere.id]);
                                 } else {
-                                    columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Moyenne'] = "";
+                                    columnCsv.filter(el => el.displayName == eleve.displayName)[0][matiere.name + 'Moyenne'] = "";
                                 }
                             }
                             if(this.exportOptions.positionnementFinal) {
-                                if (line.positionnement != undefined && line.positionnement[matiere.id]) {
-                                    columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Positionnement'] = Number(line.positionnement[matiere.id].toString().replace(",","."));
+                                if (eleve.positionnement != undefined && eleve.positionnement[matiere.id]) {
+                                    columnCsv.filter(el => el.displayName == eleve.displayName)[0][matiere.name + 'Positionnement'] = this.formateForCsV(eleve.positionnement[matiere.id]);
                                 } else {
-                                    columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Positionnement'] = "";
+                                    columnCsv.filter(el => el.displayName == eleve.displayName)[0][matiere.name + 'Positionnement'] = "";
                                 }
                             }
                         });
                         if (this.exportOptions.statistiques && (this.exportOptions.moyenneMat || this.exportOptions.positionnementFinal)) {
                             if(this.exportOptions.moyenneMat) {
                                 if(response.statistiques[matiere.id] != undefined && response.statistiques[matiere.id].moyenne != undefined) {
-                                    columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Moyenne'] = response.statistiques[matiere.id].moyenne.moyenne;
-                                    columnCsv.filter(line => line.displayName == "Minimum")[0][matiere.name + 'Moyenne'] = response.statistiques[matiere.id].moyenne.minimum;
-                                    columnCsv.filter(line => line.displayName == "Maximum")[0][matiere.name + 'Moyenne'] = response.statistiques[matiere.id].moyenne.maximum;
-                                }else{
+                                    columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Moyenne'] = this.formateForCsV(response.statistiques[matiere.id].moyenne.moyenne);
+                                    columnCsv.filter(line => line.displayName == "Minimum")[0][matiere.name + 'Moyenne'] = this.formateForCsV(response.statistiques[matiere.id].moyenne.minimum);
+                                    columnCsv.filter(line => line.displayName == "Maximum")[0][matiere.name + 'Moyenne'] = this.formateForCsV(response.statistiques[matiere.id].moyenne.maximum);
+                                } else {
                                     columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Moyenne'] = "NN";
                                     columnCsv.filter(line => line.displayName == "Minimum")[0][matiere.name + 'Moyenne'] = "NN";
                                     columnCsv.filter(line => line.displayName == "Maximum")[0][matiere.name + 'Moyenne'] = "NN";
@@ -273,10 +300,10 @@ export class ReleveNoteTotale extends  Model implements IModel {
                             }
                             if(this.exportOptions.positionnementFinal) {
                                 if(response.statistiques[matiere.id] != undefined && response.statistiques[matiere.id].positionnement != undefined) {
-                                    columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Positionnement'] = response.statistiques[matiere.id].positionnement.moyenne;
-                                    columnCsv.filter(line => line.displayName == "Minimum")[0][matiere.name + 'Positionnement'] = response.statistiques[matiere.id].positionnement.minimum;
-                                    columnCsv.filter(line => line.displayName == "Maximum")[0][matiere.name + 'Positionnement'] = response.statistiques[matiere.id].positionnement.maximum;
-                                }else{
+                                    columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Positionnement'] = this.formateForCsV(response.statistiques[matiere.id].positionnement.moyenne);
+                                    columnCsv.filter(line => line.displayName == "Minimum")[0][matiere.name + 'Positionnement'] = this.formateForCsV(response.statistiques[matiere.id].positionnement.minimum);
+                                    columnCsv.filter(line => line.displayName == "Maximum")[0][matiere.name + 'Positionnement'] = this.formateForCsV(response.statistiques[matiere.id].positionnement.maximum);
+                                } else {
                                     columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Positionnement'] = "NN";
                                     columnCsv.filter(line => line.displayName == "Minimum")[0][matiere.name + 'Positionnement'] = "NN";
                                     columnCsv.filter(line => line.displayName == "Maximum")[0][matiere.name + 'Positionnement'] = "NN";
@@ -289,16 +316,16 @@ export class ReleveNoteTotale extends  Model implements IModel {
                 if (columnCsv.length > 0) {
                     let csvData = Utils.ConvertToCSV(columnCsv, this.format['header'], this.format['column']);
                     csvData = "\ufeff"+csvData;
-                    blob = new Blob([csvData], { type: ' type: "text/csv;charset=UTF-8"' });
+                    let blob = new Blob([csvData], { type: ' type: "text/csv;charset=UTF-8"' });
                     let link = document.createElement('a');
                     link.href = (window as any).URL.createObjectURL(blob);
-                    if(this.exportOptions.positionnementFinal && this.exportOptions.moyenneMat)
+                    if(this.exportOptions.positionnementFinal && this.exportOptions.moyenneMat) {
                         link.download = `tableau_moyenne_positionnement_toutes_matieres_${this.classe.name}_${this.periodeName}.csv`;
-                    else
-                    if(this.exportOptions.positionnementFinal)
+                    } else if(this.exportOptions.positionnementFinal) {
                         link.download = `tableau_positionnement_toutes_matieres_${this.classe.name}_${this.periodeName}.csv`;
-                    else
+                    } else {
                         link.download = `tableau_moyenne_toutes_matieres_${this.classe.name}_${this.periodeName}.csv`;
+                    }
                     document.body.appendChild(link);
                     link.click();
                     resolve();
