@@ -4092,7 +4092,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await Utils.runMessageLoader($scope);
             }
 
-            ($scope.search.periode.libelle  === "cycle") ? url += "&isCycle=" + true : "&isCycle=" + false;
+            ($scope.releveComp.periode.libelle  === "cycle") ? url += "&isCycle=" + true : "&isCycle=" + false;
 
             url += "&byEnseignement=" + exportByEnseignement;
 

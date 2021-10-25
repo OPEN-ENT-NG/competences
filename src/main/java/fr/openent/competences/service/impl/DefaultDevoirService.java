@@ -794,96 +794,73 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         if (idMatieres.length != 0) {
             query.append(" (devoirs.id_matiere IN " + Sql.listPrepared(idMatieres));
+            query.append(")  AND");
             for (String idMatiere : idMatieres) {
                 params.add(idMatiere);
             }
-            if (historise) {
-                query.append(" OR ");
-            }
-        }
-        if (historise) {
-            query.append("( devoirs.eval_lib_historise = ? )");
-            params.add(historise);
-        }
-        if (idMatieres.length != 0 || historise) {
-            query.append(")  AND");
         }
 
         query.delete(query.length() - 3, query.length());
 
-        query.append(" UNION ");
-
-        query.append("SELECT devoirs.*, rel.id_groupe, users.username as teacher")
-                .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs")
-                .append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ")
-                .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel").append(" ON devoirs.id = rel.id_devoir")
-                .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCES_NOTES_TABLE + " AS comp").append(" ON devoirs.id = comp.id_devoir");
-
-
-        if(hasCompetences == null || !hasCompetences) {
-            query.append(" WHERE");
-        } else {
-            query.append(" WHERE EXISTS (SELECT 1 FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCES_DEVOIRS + " AS comp WHERE comp.id_devoir = devoirs.id) AND");
-        }
-
-        // recuperation des evaluations libres de l'élève
         if(idEleve != null) {
+            query.append(" UNION ");
+
+            query.append("SELECT devoirs.*, rel.id_groupe, users.username as teacher")
+                    .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs")
+                    .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".users on users.id = devoirs.owner ")
+                    .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel").append(" ON devoirs.id = rel.id_devoir")
+                    .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCES_NOTES_TABLE + " AS comp").append(" ON devoirs.id = comp.id_devoir");
+
+
+            if (hasCompetences == null || !hasCompetences) {
+                query.append(" WHERE");
+            } else {
+                query.append(" WHERE EXISTS (SELECT 1 FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCES_DEVOIRS + " AS comp WHERE comp.id_devoir = devoirs.id) AND");
+            }
+
+            // recuperation des evaluations libres de l'élève
+
             query.append(" comp.id_eleve = ? AND rel.id_groupe IS NULL AND ");
             params.add(idEleve);
-        }
 
-        if(idGroupes.length != 0) {
-            if(historise) {
-                query.append(" (");
+            if (idDevoirs.length != 0) {
+                query.append(" devoirs.id IN " + Sql.listPrepared(idDevoirs) + " AND");
+                for (Long idDevoir : idDevoirs) {
+                    params.add(idDevoir);
+                }
             }
-            query.append(" rel.id_groupe IN " + Sql.listPrepared(idGroupes) + " AND");
 
-            for(String idGroupe : idGroupes) {
-                params.add(idGroupe);
+            if (idPeriodes.length != 0) {
+                query.append(" devoirs.id_periode IN " + Sql.listPrepared(idPeriodes) + " AND");
+                for (Long idPeriode : idPeriodes) {
+                    params.add(idPeriode);
+                }
             }
-        }
 
-        if (idDevoirs.length != 0) {
-            query.append(" devoirs.id IN " + Sql.listPrepared(idDevoirs) + " AND");
-            for (Long idDevoir : idDevoirs) {
-                params.add(idDevoir);
+            if (idEtablissements.length != 0) {
+                query.append(" devoirs.id_etablissement IN " + Sql.listPrepared(idEtablissements) + " AND");
+                for (String idEtablissement : idEtablissements) {
+                    params.add(idEtablissement);
+                }
             }
-        }
 
-        if (idPeriodes.length != 0) {
-            query.append(" devoirs.id_periode IN " + Sql.listPrepared(idPeriodes) + " AND");
-            for (Long idPeriode : idPeriodes) {
-                params.add(idPeriode);
+            if (idMatieres.length != 0) {
+                query.append(" ((devoirs.id_matiere = '' OR devoirs.id_matiere IN " + Sql.listPrepared(idMatieres) + ")");
+                query.append(")  AND");
+                for (String idMatiere : idMatieres) {
+                    params.add(idMatiere);
+                }
             }
-        }
+            query.delete(query.length() - 3, query.length());
 
-        if (idEtablissements.length != 0) {
-            query.append(" devoirs.id_etablissement IN " + Sql.listPrepared(idEtablissements) + " AND");
-            for (String idEtablissement : idEtablissements) {
-                params.add(idEtablissement);
-            }
-        }
-
-        if (idMatieres.length != 0) {
-
-            for (String idMatiere : idMatieres) {
-                params.add(idMatiere);
-            }
-            if (historise) {
-                query.append(" (devoirs.id_matiere = '' OR devoirs.id_matiere IN " + Sql.listPrepared(idMatieres) + ") OR");
-            } else {
-                query.append(" ((devoirs.id_matiere = '' OR devoirs.id_matiere IN " + Sql.listPrepared(idMatieres) + ") ");
-            }
         }
         if (historise) {
-            query.append("( devoirs.eval_lib_historise = ? )");
+            query.append("OR ( devoirs.eval_lib_historise = ? )");
             params.add(historise);
         }
-        if (idMatieres.length != 0 || historise) {
-            query.append(")  AND");
-        }
 
-        query.delete(query.length() - 3, query.length());
+
+
 
         Sql.getInstance().prepared(query.toString(), params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
