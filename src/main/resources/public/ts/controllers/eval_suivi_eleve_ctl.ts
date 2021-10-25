@@ -838,6 +838,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     }
                 }
                 $scope.loadingTab = true;
+                if( !$scope.suiviFilter)
+                    $scope.suiviFilter = {} ;
                 switch ($scope.displayFollowEleve) {
                     case ('followItems'):
                         if (template.containers['suivi-competence-content'] !== undefined) {
@@ -851,8 +853,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                     $scope.isCycle = true;
                                     if($location.path() == '/conseil/de/classe')
                                         Utils.initFilterMine($scope);
-                                    else
+                                    else{
                                         $scope.suiviFilter.mine = "false";
+                                    }
                                 } else {
                                     $scope.currentCycle = {id_cycle: $scope.search.classe ? $scope.search.classe.id_cycle : undefined};
                                     $scope.isCycle = false;
