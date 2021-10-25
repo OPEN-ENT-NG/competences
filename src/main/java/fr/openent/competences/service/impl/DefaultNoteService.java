@@ -1290,7 +1290,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         DecimalFormat decimalFormat = new DecimalFormat("#.0");
         decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
 
-        return Double.valueOf(decimalFormat.format((sumMoyClasse / nbEleve)).replaceAll(",", "."));
+        if(nbEleve!=0)
+            return Double.valueOf(decimalFormat.format((sumMoyClasse / nbEleve)).replaceAll(",", "."));
+      else
+          return Double.valueOf(decimalFormat.format((sumMoyClasse / 1)).replaceAll(",", "."));
     }
 
     public void calculAndSetMoyenneClasseByPeriode(final JsonArray moyFinalesEleves,
