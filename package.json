@@ -25,7 +25,7 @@
     "chart.js": "^2.7.2",
     "color": "^3.1.2",
     "core-js": "2.4.1",
-    "entcore": "3.12.0",
+    "entcore": "3.12.6",
     "entcore-toolkit": "^1.0.1",
     "gulp": "3.9.1",
     "gulp-clean": "^0.3.2",
