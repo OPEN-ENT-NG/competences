@@ -939,7 +939,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan =
                     await $scope.elementBilanPeriodique.avisConseil.createNewOpinion(opinion);
                 await $scope.refreshOpinionList(opinion);
-                $scope.elementBilanPeriodique.avisConseil.saveAvisConseil($scope.search.avisClasse.id);
+                await $scope.elementBilanPeriodique.avisConseil.saveAvisConseil($scope.search.avisClasse.id);
             } else if ($scope.search.avisOrientation && $scope.search.avisOrientation.type_avis === 0) {
                 $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan =
                     await $scope.elementBilanPeriodique.avisOrientation.createNewOpinion(opinion);
