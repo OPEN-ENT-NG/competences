@@ -16,10 +16,9 @@
  */
 
 import {Model, Collection, http, _} from 'entcore';
-import { Eleve, Periode, SuiviCompetenceClasse, Utils, BaremeBrevetEleves } from './index';
+import { Eleve, Periode, SuiviCompetenceClasse, BaremeBrevetEleves } from './index';
 import * as utils from '../../utils/teacher';
 import {TypePeriode} from "../common/TypePeriode";
-declare let bundle:any;
 
 export class Classe extends Model {
     eleves : Collection<Eleve>;
@@ -38,13 +37,14 @@ export class Classe extends Model {
         eleves :  boolean,
         periodes:  boolean
     };
+    idGroups : any;
 
     toString() {
         return this.name;
     }
 
-    public static  libelle = {
-        CLASSE:'Classe',
+    public static libelle = {
+        CLASSE: "Classe",
         GROUPE: "Groupe d'enseignement",
         GROUPE_MANUEL: "Groupe manuel"
     };
@@ -59,7 +59,7 @@ export class Classe extends Model {
         return {
             syncClasse: '/viescolaire/classes/' + this.id + '/users',
             syncGroupe : '/viescolaire/groupe/enseignement/users/' + this.id + '?type=Student',
-            syncPeriode : '/viescolaire/periodes?idGroupe=' + this.id
+            syncPeriode : '/viescolaire/periodes?idGroupe=' + this.id,
         }
     }
 
@@ -67,10 +67,11 @@ export class Classe extends Model {
         super();
         let synchronizeObject = {eleves: false, periodes: false };
         if (o !== undefined) {
-            o = _.extend(o, {synchronized: synchronizeObject});
+            o = _.extend(o, {
+                synchronized: synchronizeObject
+            });
             this.updateData(o, false);
-        }
-        else {
+        } else {
             this.synchronized = synchronizeObject;
         }
         this.collection(Eleve, {
@@ -108,7 +109,7 @@ export class Classe extends Model {
                         this.periodes.load(res);
                         this.synchronized.periodes = true;
                         resolve();
-                    }).error( () =>{
+                    }).error(() =>{
                         this.periodes.load([]);
                         this.synchronized.periodes = true;
                         resolve();
@@ -129,11 +130,11 @@ export class Classe extends Model {
     public static get_type_groupe_libelle = (classe) => {
         let libelleClasse;
 
-        if ( classe.type_groupe === Classe.type.CLASSE) {
+        if (classe.type_groupe === Classe.type.CLASSE) {
             libelleClasse = Classe.libelle.CLASSE;
-        } else if ( classe.type_groupe === Classe.type.GROUPE) {
+        } else if (classe.type_groupe === Classe.type.GROUPE) {
             libelleClasse = Classe.libelle.GROUPE;
-        }else if ( classe.type_groupe === Classe.type.GROUPE_MANUEL) {
+        } else if (classe.type_groupe === Classe.type.GROUPE_MANUEL) {
             libelleClasse = Classe.libelle.GROUPE_MANUEL;
         }
         return libelleClasse;
@@ -156,11 +157,9 @@ export class Classe extends Model {
                     return !eleve.isEvaluable(classePeriode);
                 })
             };
-        }
-        else {
+        } else {
             res.eleves = this.eleves;
         }
         return res;
     }
-
 }

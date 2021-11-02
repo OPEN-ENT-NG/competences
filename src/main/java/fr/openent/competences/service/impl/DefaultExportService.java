@@ -658,33 +658,29 @@ public class DefaultExportService implements ExportService {
     @Override
     public void getExportRecapEval(final Boolean text, final Boolean usePerso, final Long idCycle,
                                    final String idEtablissement, final Handler<Either<String, JsonArray>> handler) {
+        niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, idCycle, niveauEither -> {
+            if (niveauEither.isRight()) {
+                JsonArray legende = new fr.wseduc.webutils.collections.JsonArray();
+                JsonArray result = niveauEither.right().getValue();
+                for (int i = result.size() - 1; i >= 0; i--) {
+                    JsonObject niveau = new JsonObject();
+                    JsonObject o = result.getJsonObject(i);
 
-        niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, idCycle, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> stringJsonArrayEither) {
-                if (stringJsonArrayEither.isRight()) {
-                    JsonArray legende = new fr.wseduc.webutils.collections.JsonArray();
-                    JsonArray result = stringJsonArrayEither.right().getValue();
-                    for (int i = result.size() - 1; i >= 0; i--) {
-                        JsonObject niveau = new JsonObject();
-                        JsonObject o = result.getJsonObject(i);
+                    niveau.put("libelle", o.getString("libelle") != null
+                            ? o.getString("libelle") : o.getString("default_lib"));
 
-                        niveau.put("libelle",  o.getString("libelle") != null
-                                ? o.getString("libelle") : o.getString("default_lib"));
+                    niveau.put("visu", text ? getMaitrise(o.getString("lettre"),
+                            o.getInteger(ORDRE).toString()) : o.getString("default"));
+                    niveau.put(ORDRE, o.getInteger(ORDRE));
 
-                        niveau.put("visu", text ? getMaitrise(o.getString("lettre"),
-                                o.getInteger(ORDRE).toString()) : o.getString("default"));
-                        niveau.put(ORDRE, o.getInteger(ORDRE));
+                    if(usePerso && !text)
+                        niveau.put("persoColor", o.getString("couleur"));
 
-                        if(usePerso && !text)
-                            niveau.put("persoColor", o.getString("couleur"));
-
-                        legende.add(niveau);
-                    }
-                    handler.handle(new Either.Right<>(legende));
-                } else {
-                    handler.handle(new Either.Left<>("exportRecapEval : empty result."));
+                    legende.add(niveau);
                 }
+                handler.handle(new Either.Right<>(legende));
+            } else {
+                handler.handle(new Either.Left<>("exportRecapEval : empty result."));
             }
         });
     }
@@ -1373,7 +1369,7 @@ public class DefaultExportService implements ExportService {
                         JsonArray removesFiles = templateProps.getJsonArray("idImagesFiles");
                         if (removesFiles != null) {
                             storage.removeFiles(removesFiles, event -> log.info(String.format("[Competences@%s::generateSchoolReportPdf] - " +
-                                            "Remove graph Images: %s", this.getClass().getSimpleName(), event.encode())));
+                                    "Remove graph Images: %s", this.getClass().getSimpleName(), event.encode())));
                         }
                     } catch (IOException | COSVisitorException e) {
                         String error = String.format("[Competences@%s::generateSchoolReportPdf] An exception has occured during process: %s",
@@ -1625,12 +1621,12 @@ public class DefaultExportService implements ExportService {
             }
             String idClass = (!userJSON.containsKey("c"))? userJSON.getString("idClasse") :
                     userJSON.getJsonObject("c").getJsonObject("data").getString("id");
-                    ;
+            ;
             Future<JsonArray> multiTeachersFuture = Future.future();
             utilsService.getMultiTeachersByClass(idEtablissement, idClass,
                     idPeriode != null ? idPeriode.intValue() : null, multiTeacherEvent -> {
-                formate(multiTeachersFuture, multiTeacherEvent);
-            });
+                        formate(multiTeachersFuture, multiTeacherEvent);
+                    });
 
             Future<JsonArray> servicesFuture = Future.future();
             log.info("getDataForExportReleveEleve");

@@ -538,10 +538,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
     @Override
     public void buildBFC(final boolean recapEval, final String[] idEleves, final String idClasse,
-                         final String idStructure,
-                         final Long idPeriode, final Long idCycle, final Boolean isYear,
+                         final String idStructure, final Long idPeriode, final Long idCycle, final Boolean isYear,
                          final Handler<Either<String, JsonObject>> handler) {
-
         final Map<String, Map<Long, Float>> notesCompetencesEleve = new HashMap<>();
         final Map<String, Map<Long, Integer>> bfcEleve = new HashMap<>();
         final SortedSet<Double> echelleConversion = new TreeSet<>();
@@ -553,7 +551,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         // mais n'effectue le calcul du BFC qu'une fois que ces 4 paramètres sont remplis.
         // Cette vérification de la présence des 4 paramètres est effectuée par calcMoyBFC().
 
-        getMaxNoteCompetenceEleve(idEleves, idPeriode,idCycle, isYear,  event -> {
+        getMaxNoteCompetenceEleve(idEleves, idPeriode, idCycle, isYear, event -> {
             if (event.isRight()) {
                 notesCompetencesEleve.putAll(event.right().getValue());
                 if (notesCompetencesEleve.isEmpty()) {
@@ -568,7 +566,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
             }
         });
 
-        getBFCsByEleve(idEleves, idStructure,idCycle, event -> {
+        getBFCsByEleve(idEleves, idStructure, idCycle, event -> {
             if (event.isRight()) {
                 JsonArray bfcResultArray = event.right().getValue();
 
@@ -1303,21 +1301,21 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                             eleveJson.put("nameCE", imgStructure.getJsonObject("nameAndBrad")
                                                     .getValue(NAME));
                                             eleveJson.put("imgSignature", imgStructure.getJsonObject("nameAndBrad")
-                                                   .getValue(PATH));
+                                                    .getValue(PATH));
                                             eleveJson.put("hasNameAndBrad", true);
                                         }
                                         Future<JsonObject> getImagesBase64Future = Future.future();
                                         futures.add(getImagesBase64Future);
                                         exportBulletinService.generateImagesFromPathForBulletin(eleveJson, vertx,
                                                 eventImage -> {
-                                            formate(getImagesBase64Future, eventImage);
-                                        } );
+                                                    formate(getImagesBase64Future, eventImage);
+                                                } );
                                     }
                                     CompositeFuture.all(futures).setHandler(eventFutureStudent -> {
 
                                         collectBFCEleve(classe.getKey(), new JsonObject().put(ELEVES, classeResult), result,
                                                 handler);
-                                            });
+                                    });
 
                                 }
                             });

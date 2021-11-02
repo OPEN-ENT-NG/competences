@@ -3353,6 +3353,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return isValidClasse(item.id, item.id_matiere, $scope.classes.all);
         };
 
+        $scope.filterValidClasseGroups = (item) => {
+            let valid = isValidClasse(item.id, item.id_matiere, $scope.allClasses.all);
+
+            if(!valid && item.type_groupe === Classe.type.CLASSE && item.idGroups) {
+                for(let i = 0; i < item.idGroups.length; i++) {
+                    let group = item.idGroups[i];
+                    if(isValidClasse(group, item.id_matiere, $scope.allClasses.all)){
+                        valid = true;
+                        break;
+                    }
+                }
+            }
+
+            return valid;
+        }
+
         $scope.filterValidDevoir = (item) => {
             return isValidDevoir(item.id_groupe, item.id_matiere, $scope.classes.all);
         };
@@ -3381,6 +3397,25 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 return eleve.selected
             });
         };
+
+        $scope.linkGroupsToClasses = async function () {
+            return new Promise(async (resolve, reject) => {
+                let url = '/competences/classe/groupes?idStructure=' + $scope.structure.id;
+                http().getJson(url).done((mapGroups) => {
+                    for (let i = 0; i < mapGroups.length; i++) {
+                        let classe = _.findWhere($scope.allClasses.all, {id: mapGroups[i].id_classe});
+                        if (classe != null) {
+                            classe.idGroups = mapGroups[i].id_groupes;
+                        }
+                    }
+                    resolve();
+                }).error((e) => {
+                    console.error(e);
+                    reject();
+                });
+            });
+        }
+
 
         /**
          * Sélectionne tous les élèves de la liste passée en paramètre
@@ -3805,10 +3840,18 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.matieres = evaluations.structure.matieres;
             $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
             $scope.releveNotes = evaluations.structure.releveNotes;
+
             $scope.classes = evaluations.structure.classes;
+            $scope.allClasses = evaluations.structure.allClasses;
             $scope.filteredClasses = _.filter($scope.classes.all, classe => {
                 return $scope.filterValidClasse(classe);
             });
+            $scope.linkGroupsToClasses().then(() => {
+                $scope.filteredClassesGroups = _.filter($scope.allClasses.all, classe => {
+                    return $scope.filterValidClasseGroups(classe);
+                });
+            });
+
             $scope.devoirs = evaluations.structure.devoirs;
             $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
                 return $scope.filterValidDevoir(devoir);
