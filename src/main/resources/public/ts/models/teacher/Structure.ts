@@ -338,7 +338,7 @@ export class Structure extends Model {
             });
         };
         this.collection(Classe, {
-            sync:  () => {
+            sync: () => {
                 return new Promise(async (resolve) => {
                     let allPromise = await Promise.all([httpAxios.get(this.api.CLASSE.synchronization),
                         httpAxios.get(this.api.GET_SERVICES), httpAxios.get(this.api.CLASSE.synchronizationAllClasses)]);
@@ -352,7 +352,12 @@ export class Structure extends Model {
                             return service.id_groups ? service.id_groups.includes(classe.id)
                                 : service.id_groupe === classe.id;
                         });
-                        classe.services = (!_.isEmpty(servicesClasse)) ? servicesClasse : null;
+                        classe.services = !_.isEmpty(servicesClasse) ? servicesClasse : null;
+
+                        let classeOfAllClasses = _.findWhere(allClasses, {id: classe.id});
+                        if(classeOfAllClasses != null) {
+                            classeOfAllClasses.services = !_.isEmpty(servicesClasse) ? servicesClasse : null;
+                        }
                     });
 
                     this.allClasses = angular.copy(this.classes);
