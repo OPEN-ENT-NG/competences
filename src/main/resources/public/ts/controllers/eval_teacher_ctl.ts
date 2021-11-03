@@ -2442,9 +2442,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (Utils.isNotNull($scope.releveNote)) {
                 delete $scope.releveNote;
             }
+
             if ($scope.elementProgrammeDisplay !== undefined) {
                 delete $scope.elementProgrammeDisplay;
             }
+
             if (Utils.isNotNull($scope.selected) && Utils.isNotNull($scope.selected.devoirs)
                 && Utils.isNotNull($scope.selected.devoirs.list)) {
                 for (let i = 0; i < $scope.selected.devoirs.list.length; i++) {
@@ -2452,8 +2454,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
                 $scope.selected.devoirs.list = [];
             }
-
-            // initSubjectWhenSearchAnotherThing();
 
             if (Utils.isNotDefault($scope.search.classe) && $scope.search.classe.id !== undefined
                 && Utils.isNotDefault($scope.search.matiere) && $scope.search.matiere.id !== undefined
@@ -2487,19 +2487,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.toogleDevoirNote();
                     }
                     $scope.opened.displayMessageLoader = false;
+
+                    if(Utils.isNotNull($scope.informations) && Utils.isNotNull($scope.informations.eleve)) {
+                        $scope.informations.eleve.appreciationCPE = null;
+                    } else {
+                        $scope.informations.eleve = $scope.releveNote.classe.eleves.all[0];
+                    }
+                    await $scope.getEleveInfo($scope.informations.eleve);
+
                     await utils.safeApply($scope);
                 }).catch( async () => {
                     await Utils.stopMessageLoader($scope);
                 });
 
                 $scope.openedStudentInfo = false;
-                await utils.safeApply($scope);
             }
 
-            if(Utils.isNotNull($scope.informations) && Utils.isNotNull($scope.informations.eleve)) {
-                $scope.informations.eleve.appreciationCPE = null;
-                await $scope.getEleveInfo($scope.informations.eleve);
-            }
             await utils.safeApply($scope);
         };
 
@@ -3305,7 +3308,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             await utils.safeApply($scope);
         };
 
-        $scope.deselectStudent = () => {
+        $scope.reloadStudentInformations = () => {
             $scope.informations.eleve = undefined;
         }
 
