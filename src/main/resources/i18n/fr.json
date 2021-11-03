@@ -600,6 +600,7 @@
   "evaluations.add.file.signature" : "Signature ",
   "evaluations.homework.details":"Détails de l'évaluation",
   "evaluations.bulletin":"Bulletins",
+  "evaluations.generate.bulletin":"Générer les bulletins",
   "evaluations.bulletin.agricole": "Logo du Ministère de l'Agriculture",
   "evaluations.page.one": "Page 1",
   "evaluations.page.two": "Page 2",
