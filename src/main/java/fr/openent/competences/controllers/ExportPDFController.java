@@ -983,7 +983,7 @@ public class ExportPDFController extends ControllerHelper {
                     }
                     final boolean isHabilite = moy;
 
-                    exportService.getExportRecapEval(text, usePerso, idCycle, idEtablissement, exportRecapEither -> {
+                    exportService.getLegendeRecapEval(text, usePerso, idCycle, idEtablissement, exportRecapEither -> {
                         if (exportRecapEither.isRight()) {
                             try {
                                 final JsonObject result = new JsonObject();

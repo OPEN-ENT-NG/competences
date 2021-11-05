@@ -46,8 +46,8 @@ public interface ExportService {
                              final List<String> idMatieres, Long idPeriodeType, final Boolean isCycle,
                              final Handler<Either<String, JsonObject>> handler);
 
-    void getExportRecapEval(final Boolean text, final Boolean usePerso, final Long idCycle, final String idEtablissement,
-                            final Handler<Either<String, JsonArray>> handler);
+    void getLegendeRecapEval(final Boolean text, final Boolean usePerso, final Long idCycle,
+                                   final String idEtablissement, final Handler<Either<String, JsonArray>> handler);
 
     void genererPdf(final HttpServerRequest request, final JsonObject templateProps, final String templateName,
                     final String prefixPdfName, Vertx vertx, JsonObject config);

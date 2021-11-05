@@ -161,13 +161,14 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @param handler
      */
     @Override
-    public void getBFCsByEleve(String[] idEleves, String idEtablissement, Long idCycle, Handler<Either<String,JsonArray>> handler) {
+    public void getBFCsByEleve(String[] idEleves, String idEtablissement, Long idCycle,
+                               Handler<Either<String,JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT * ")
-                .append("FROM notes.bilan_fin_cycle ")
-                .append("INNER JOIN notes.domaines ON bilan_fin_cycle.id_domaine=domaines.id ")
-                .append("WHERE bilan_fin_cycle.id_eleve IN " + Sql.listPrepared(idEleves))
+                .append(" FROM notes.bilan_fin_cycle")
+                .append(" INNER JOIN notes.domaines ON bilan_fin_cycle.id_domaine = domaines.id")
+                .append(" WHERE bilan_fin_cycle.id_eleve IN " + Sql.listPrepared(idEleves))
                 .append(" AND bilan_fin_cycle.id_etablissement = ? AND valeur >= 0 ");
 
         for(String s : idEleves) {
@@ -196,16 +197,18 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      *
      * @see Domaine
      */
-    private void getDomaines(final String idClasse, Long idCycle, final Handler<Either<String, Map<Long, Domaine>>> handler) {
-        domaineService.getArbreDomaines(idClasse,null, idCycle, event -> {
-            if (event.isRight()) {
-                if (event.right().getValue().size() == 0) {
-                    handler.handle(new Either.Left<>("Erreur lors de la recuperation des domaines : aucun domaine de competences n'a ete trouve."));
+    private void getDomaines(final String idClasse, Long idCycle,
+                             final Handler<Either<String, Map<Long, Domaine>>> handler) {
+        domaineService.getArbreDomaines(idClasse,null, idCycle, arbreDomainesEvent -> {
+            if (arbreDomainesEvent.isRight()) {
+                JsonArray domainesResultArray = arbreDomainesEvent.right().getValue();
+                if (domainesResultArray.size() == 0) {
+                    handler.handle(new Either.Left<>("Erreur lors de la recuperation des domaines : " +
+                            "aucun domaine de competences n'a ete trouve."));
                     log.error("getDomaines (" + idClasse + ") : aucun domaine de competences n'a ete trouve.");
                 }
-                final Map<Long, Domaine> domaines = new HashMap<>();
-                JsonArray domainesResultArray = event.right().getValue();
 
+                final Map<Long, Domaine> domaines = new HashMap<>();
                 for (int i = 0; i < domainesResultArray.size(); i++) {
                     JsonObject _o = domainesResultArray.getJsonObject(i);
                     Domaine _d = new Domaine(_o.getLong(ID_KEY), _o.getBoolean("evaluated"));
@@ -216,15 +219,16 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     }
                     domaines.put(_d.getId(), _d);
                 }
-                if(!domaines.isEmpty()) {
 
-                    competenceService.getCompetencesDomaines(idClasse, domaines.keySet().toArray(new Long[0]), event1 -> {
-                        if (event1.isRight()) {
-                            if (event1.right().getValue().size() == 0) {
-                                handler.handle(new Either.Left<>("Erreur lors de la recuperation des competences pour les domaines : aucun competence pour les domaines selectionnes."));
+                if(!domaines.isEmpty()) {
+                    competenceService.getCompetencesDomaines(idClasse, domaines.keySet().toArray(new Long[0]), event -> {
+                        if (event.isRight()) {
+                            JsonArray competencesResultArray = event.right().getValue();
+                            if (competencesResultArray.size() == 0) {
+                                handler.handle(new Either.Left<>("Erreur lors de la recuperation des competences " +
+                                        "pour les domaines : aucun competence pour les domaines selectionnes."));
                                 log.error("getDomaines : getCompetencesDomaines : aucun competence pour les domaines selectionnes.");
                             }
-                            JsonArray competencesResultArray = event1.right().getValue();
 
                             for (int i = 0; i < competencesResultArray.size(); i++) {
                                 JsonObject _o = competencesResultArray.getJsonObject(i);
@@ -233,18 +237,19 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                             }
                             handler.handle(new Either.Right<>(domaines));
                         } else {
-                            handler.handle(new Either.Left<>("Erreur lors de la recuperation des competences pour les domaines :\n" + event1.left().getValue()));
-                            log.error("getDomaines : getCompetencesDomaines : " + event1.left().getValue());
+                            handler.handle(new Either.Left<>("Erreur lors de la recuperation des competences " +
+                                    "pour les domaines :\n" + event.left().getValue()));
+                            log.error("getDomaines : getCompetencesDomaines : " + event.left().getValue());
                         }
                     });
                 } else {
                     handler.handle(new Either.Left<>("La classe " + idClasse + " n'est rattachee a aucun cycle."));
                     log.error("La classe " + idClasse + " n'est rattachée a aucun cycle.");
                 }
-
             } else {
-                handler.handle(new Either.Left<>("Erreur lors de la recuperation des domaines :\n" + event.left().getValue()));
-                log.error("getDomaines (" + idClasse + ") : " + event.left().getValue());
+                handler.handle(new Either.Left<>("Erreur lors de la recuperation " +
+                        "des domaines :\n" + arbreDomainesEvent.left().getValue()));
+                log.error("getDomaines (" + idClasse + ") : " + arbreDomainesEvent.left().getValue());
             }
         });
     }
@@ -258,29 +263,28 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @param handler    Handler contenant une map de note par competence, pour chaque eleve.
      */
     private void getMaxNoteCompetenceEleve(final String[] idEleves, Long idPeriode, Long idCycle, Boolean isYear,
-                                           final Handler<Either<String, Map<String, Map<Long, Float>>>> handler) {
-
-        if (idCycle == null) {
-            competenceNoteService.getMaxCompetenceNoteEleveByPeriod(idEleves, idPeriode,  isYear, event -> {
+                                           Boolean recapEval, final Handler<Either<String, Map<String, Map<Long, Float>>>> handler) {
+        if (idCycle == null || recapEval) {
+            competenceNoteService.getMaxCompetenceNoteEleveByPeriod(idEleves, idPeriode, isYear, event -> {
                 if (event.isRight()) {
                     Map<String, Map<Long, Float>> moyMaxMatCompEleve = getStringMapMap(event);
 
                     handler.handle(new Either.Right<>(moyMaxMatCompEleve));
                 } else {
-                    handler.handle(new Either.Left<>("Erreur lors de la recuperation des evaluations de competences de la period:\n" +
-                            event.left().getValue()));
+                    handler.handle(new Either.Left<>("Erreur lors de la recuperation des evaluations " +
+                            "de competences de la periode :\n" + event.left().getValue()));
                     log.error("getMaxCompetenceNoteEleveByPeriod : " + event.left().getValue());
                 }
             });
         } else {
-            competenceNoteService.getMaxCompetenceNoteEleveByCycle(idEleves,idCycle, event -> {
+            competenceNoteService.getMaxCompetenceNoteEleveByCycle(idEleves, idCycle, event -> {
                 if (event.isRight()) {
                     Map<String, Map<Long, Float>> moyMaxMatCompEleve = getStringMapMap(event);
 
                     handler.handle(new Either.Right<>(moyMaxMatCompEleve));
                 } else {
-                    handler.handle(new Either.Left<>("Erreur lors de la recuperation des evaluations des competences du cycle :\n" +
-                            event.left().getValue()));
+                    handler.handle(new Either.Left<>("Erreur lors de la recuperation des evaluations " +
+                            "des competences du cycle :\n" + event.left().getValue()));
                     log.error("getMaxCompetenceNoteEleveByCycle : " + event.left().getValue());
                 }
             });
@@ -396,28 +400,29 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @param handler      Handler contenant un set ordonne des bornes pour chaque niveau (donc n+1 bornes, n etant le
      *                     nombre de niveau de maitrise).
      */
-    private void getEchelleConversion(String idStructure, String idClasse, final Handler<Either<String, SortedSet<Double>>> handler) {
-        competenceNoteService.getConversionNoteCompetence(idStructure, idClasse, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight()) {
-                    if(event.right().getValue().size() == 0) {
-                        handler.handle(new Either.Left<String, SortedSet<Double>>("Erreur lors de la recuperation de l'echelle de conversion : aucun echelle de conversion n'a ete trouvee."));
-                        log.error("getEchelleConversion : aucun echelle de conversion n'a ete trouvee.");
-                    }
-                    SortedSet<Double> bornes = new TreeSet<>();
-                    JsonArray conversion = event.right().getValue();
+    private void getEchelleConversion(String idStructure, String idClasse,
+                                      final Handler<Either<String, SortedSet<Double>>> handler) {
+        competenceNoteService.getConversionNoteCompetence(idStructure, idClasse, event -> {
+            if (event.isRight()) {
+                JsonArray conversion = event.right().getValue();
 
-                    for (int i = 0; i < conversion.size(); i++) {
-                        JsonObject _o = conversion.getJsonObject(i);
-                        bornes.add(_o.getDouble("valmin"));
-                        bornes.add(_o.getDouble("valmax"));
-                    }
-                    handler.handle(new Either.Right<String, SortedSet<Double>>(bornes));
-                } else {
-                    handler.handle(new Either.Left<String, SortedSet<Double>>("Erreur lors de la recuperation de l'echelle de conversion :\n" + event.left().getValue()));
-                    log.error("getEchelleConversion : " + event.left().getValue());
+                if(conversion.size() == 0) {
+                    handler.handle(new Either.Left<>("Erreur lors de la recuperation de l'echelle de conversion : " +
+                            "aucun echelle de conversion n'a ete trouvee."));
+                    log.error("getEchelleConversion : aucun echelle de conversion n'a ete trouvee.");
                 }
+                SortedSet<Double> bornes = new TreeSet<>();
+
+                for (int i = 0; i < conversion.size(); i++) {
+                    JsonObject _o = conversion.getJsonObject(i);
+                    bornes.add(_o.getDouble("valmin"));
+                    bornes.add(_o.getDouble("valmax"));
+                }
+                handler.handle(new Either.Right<>(bornes));
+            } else {
+                handler.handle(new Either.Left<>("Erreur lors de la recuperation " +
+                        "de l'echelle de conversion :\n" + event.left().getValue()));
+                log.error("getEchelleConversion : " + event.left().getValue());
             }
         });
     }
@@ -434,21 +439,11 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      *                                eleve
      * @param handler                 handler contenant une map des niveaux de maitrise par domaine de chaque eleve
      */
-    private void calcMoyBFC(boolean recapEval,
-                            String[] idEleves,
-                            Map<String, Map<Long, Integer>> bfcEleves,
-                            Map<String, Map<Long, Float>> notesCompetencesEleves,
-                            SortedSet<Double> bornes,
-                            List<Domaine> domainesRacine,
-                            Handler<Either<String, JsonObject>> handler) {
-
-        if(domainesRacine.isEmpty() || bornes.isEmpty() || notesCompetencesEleves.isEmpty() || bfcEleves.isEmpty()) {
-            //Si les domaines, les bornes, les BFCs ou les notes ne sont pas remplis, la fonction
-            // s'arrête sans avoir effectuer aucun traitement.
-            return;
-        } else if(notesCompetencesEleves.get(EMPTY) != null && bfcEleves.get(EMPTY) != null) {
-            //Par contre, si les domaines et les bornes sont renseignées mais qu'aucune compétence n'a été évaluée,
-            // une réponse vide est retournée.
+    private void calcMoyBFC(boolean recapEval, String[] idEleves, Map<String, Map<Long, Integer>> bfcEleves,
+                            Map<String, Map<Long, Float>> notesCompetencesEleves, SortedSet<Double> echelleConversion,
+                            List<Domaine> domainesRacine, Handler<Either<String, JsonObject>> handler) {
+        if(notesCompetencesEleves.get(EMPTY) != null && bfcEleves.get(EMPTY) != null) {
+            //Si les domaines et les bornes sont renseignées mais qu'aucune compétence n'a été évaluée, une réponse vide est retournée.
             handler.handle(new Either.Right(new JsonObject()));
             return;
         }
@@ -460,7 +455,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 continue;
             }
 
-            JsonArray resultEleve = new fr.wseduc.webutils.collections.JsonArray();
+            JsonArray resultEleve = new JsonArray();
 
             DecimalFormat decimalFormat = new DecimalFormat("#.0");
             decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
@@ -468,27 +463,28 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
             for (Domaine d : domainesRacine) {
                 JsonObject note = new JsonObject();
                 if (bfcEleves.containsKey(eleve) && bfcEleves.get(eleve).containsKey(d.getId()) &&
-                        bfcEleves.get(eleve).get(d.getId()) >= bornes.first() && bfcEleves.get(eleve).get(d.getId()) <= bornes.last()) {
-                    note.put("idDomaine",d.getId());
+                        bfcEleves.get(eleve).get(d.getId()) >= echelleConversion.first() &&
+                        bfcEleves.get(eleve).get(d.getId()) <= echelleConversion.last()) {
+                    note.put("idDomaine", d.getId());
                     note.put("niveau", bfcEleves.get(eleve).get(d.getId()));
                     if(recapEval){
                         if(bfcEleves.get(eleve).containsKey(d.getId())){
                             note.put("moyenne", bfcEleves.get(eleve).get(d.getId()));
                         } else {
-                            Double moy = calculMoyenne(d, notesCompetencesEleves, eleve, bornes);
+                            Double moy = calculMoyenne(d, notesCompetencesEleves, eleve, echelleConversion);
                             if (moy != null)
                                 note.put("moyenne", Double.valueOf(decimalFormat.format(moy).replaceAll(",", ".")));
                         }
                     }
                 } else if (notesCompetencesEleves.containsKey(eleve)) {
-                    Double moy = calculMoyenne(d, notesCompetencesEleves, eleve, bornes);
+                    Double moy = calculMoyenne(d, notesCompetencesEleves, eleve, echelleConversion);
                     if (moy != null) {
-                        Iterator<Double> bornesIterator = bornes.iterator();
+                        Iterator<Double> echelleConversionIterator = echelleConversion.iterator();
                         int simplifiedMoy = 0;
-                        while (moy >= bornesIterator.next() && bornesIterator.hasNext()) {
+                        while (moy >= echelleConversionIterator.next() && echelleConversionIterator.hasNext()) {
                             simplifiedMoy++;
                         }
-                        if(simplifiedMoy >= bornes.first() && simplifiedMoy <= bornes.last()) {
+                        if(simplifiedMoy >= echelleConversion.first() && simplifiedMoy <= echelleConversion.last()) {
                             note.put("idDomaine",d.getId());
                             note.put("niveau", simplifiedMoy);
                             if(recapEval)
@@ -505,7 +501,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
             }
         }
         if(recapEval){
-            JsonArray domainesR = new fr.wseduc.webutils.collections.JsonArray();
+            JsonArray domainesR = new JsonArray();
             for (Domaine d : domainesRacine) {
                 domainesR.add(d.getId());
             }
@@ -515,57 +511,41 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         handler.handle(new Either.Right<>(result));
     }
 
-    private Double calculMoyenne(Domaine d, Map<String, Map<Long, Float>> notesCompetencesEleves, String eleve, SortedSet<Double> bornes){
+    private Double calculMoyenne(Domaine d, Map<String, Map<Long, Float>> notesCompetencesEleves, String eleve,
+                                 SortedSet<Double> echelleConversion){
         float total = 0;
         long diviseur = 0;
         for (Long idCompetence : d.getCompetences()) {
             if (notesCompetencesEleves.get(eleve) != null && notesCompetencesEleves.get(eleve).containsKey(idCompetence)) {
                 //convertir les moyennes des maxs dans chaque matière en un chiffre rond
                 float moy = notesCompetencesEleves.get(eleve).get(idCompetence) + 1;
-                Iterator<Double> bornesIterator = bornes.iterator();
+                Iterator<Double> echelleConversionIterator = echelleConversion.iterator();
                 int simplifiedMoy = 0;
-                while (moy >= bornesIterator.next() && bornesIterator.hasNext()) {
+                while (moy >= echelleConversionIterator.next() && echelleConversionIterator.hasNext()) {
                     simplifiedMoy++;
                 }
-                if(simplifiedMoy >= bornes.first() && simplifiedMoy <= bornes.last()) {
+                if(simplifiedMoy >= echelleConversion.first() && simplifiedMoy <= echelleConversion.last()) {
                     total += simplifiedMoy;
                     diviseur++;
                 }
             }
         }
-        return (diviseur != 0 ? ((double) total / diviseur) : null);
+        return diviseur != 0 ? ((double) total / diviseur) : null;
     }
 
     @Override
     public void buildBFC(final boolean recapEval, final String[] idEleves, final String idClasse,
                          final String idStructure, final Long idPeriode, final Long idCycle, final Boolean isYear,
                          final Handler<Either<String, JsonObject>> handler) {
-        final Map<String, Map<Long, Float>> notesCompetencesEleve = new HashMap<>();
         final Map<String, Map<Long, Integer>> bfcEleve = new HashMap<>();
+        final Map<String, Map<Long, Float>> notesCompetencesEleve = new HashMap<>();
         final SortedSet<Double> echelleConversion = new TreeSet<>();
-        final Map<Long, Domaine> domaines = new HashMap<>();
         final List<Domaine> domainesRacine = new ArrayList<>();
 
-        // La fonction récupère les BFC existants pour chaque élèves, les domaines relatifs à la classe de ces élèves,
-        // les notes maximum de ces élèves par compétence ainsi que l'échelle de conversion de ces notes simultanément,
-        // mais n'effectue le calcul du BFC qu'une fois que ces 4 paramètres sont remplis.
-        // Cette vérification de la présence des 4 paramètres est effectuée par calcMoyBFC().
+        List<Future> listOfFutures = new ArrayList<>();
 
-        getMaxNoteCompetenceEleve(idEleves, idPeriode, idCycle, isYear, event -> {
-            if (event.isRight()) {
-                notesCompetencesEleve.putAll(event.right().getValue());
-                if (notesCompetencesEleve.isEmpty()) {
-                    notesCompetencesEleve.put(EMPTY, new HashMap<>());
-                }
-                calcMoyBFC(recapEval, idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine,
-                        handler);
-            } else {
-                handler.handle(new Either.Left<>("Impossible de recuperer les evaluations pour " +
-                        "la classe selectionnee :\n" + event.left().getValue()));
-                log.error("buildBFC : getMaxNoteCompetenceEleve : " + event.left().getValue());
-            }
-        });
-
+        Future getBFCsByEleveFuture = Future.future();
+        listOfFutures.add(getBFCsByEleveFuture);
         getBFCsByEleve(idEleves, idStructure, idCycle, event -> {
             if (event.isRight()) {
                 JsonArray bfcResultArray = event.right().getValue();
@@ -585,31 +565,53 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     bfcEleve.put(EMPTY, new HashMap<>());
                     // Ajouter une valeur inutilisee dans la map permet de s'assurer que le traitement a ete effectue
                 }
-                calcMoyBFC(recapEval, idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine,
-                        handler);
+                getBFCsByEleveFuture.complete();
             } else {
+                getBFCsByEleveFuture.failed();
                 handler.handle(new Either.Left<>("Impossible de recuperer le bilan de fin de cycle pour la " +
                         "classe selectionnee :\n" + event.left().getValue()));
                 log.error("buildBFC : getBFCsByEleve : " + event.left().getValue());
             }
         });
 
+        Future getMaxNoteCompetenceEleveFuture = Future.future();
+        listOfFutures.add(getMaxNoteCompetenceEleveFuture);
+        getMaxNoteCompetenceEleve(idEleves, idPeriode, idCycle, isYear, recapEval, event -> {
+            if (event.isRight()) {
+                notesCompetencesEleve.putAll(event.right().getValue());
+                if (notesCompetencesEleve.isEmpty()) {
+                    notesCompetencesEleve.put(EMPTY, new HashMap<>());
+                }
+                getMaxNoteCompetenceEleveFuture.complete();
+            } else {
+                getMaxNoteCompetenceEleveFuture.failed();
+                handler.handle(new Either.Left<>("Impossible de recuperer les evaluations pour " +
+                        "la classe selectionnee :\n" + event.left().getValue()));
+                log.error("buildBFC : getMaxNoteCompetenceEleve : " + event.left().getValue());
+            }
+        });
+
+        Future echelleConversionFuture = Future.future();
+        listOfFutures.add(echelleConversionFuture);
         getEchelleConversion(idStructure, idClasse, event -> {
             if (event.isRight()) {
                 echelleConversion.addAll(event.right().getValue());
-                calcMoyBFC(recapEval, idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine,
-                        handler);
+                echelleConversionFuture.complete();
             } else {
+                echelleConversionFuture.failed();
                 handler.handle(new Either.Left<>("Impossible de recuperer l'echelle de conversion pour la " +
                         "classe selectionnee :\n" + event.left().getValue()));
                 log.error("buildBFC : getEchelleConversion : " + event.left().getValue());
             }
         });
 
+        Future domainesFuture = Future.future();
+        listOfFutures.add(domainesFuture);
         getDomaines(idClasse, idCycle, event -> {
             if (event.isRight()) {
                 Set<Domaine> setDomainesRacine = new LinkedHashSet<>();
 
+                final Map<Long, Domaine> domaines = new HashMap<>();
                 domaines.putAll(event.right().getValue());
                 for (Domaine domaine : domaines.values()) {
                     if (domaine.getParentRacine() != null) {
@@ -617,12 +619,24 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     }
                 }
                 domainesRacine.addAll(setDomainesRacine);
-                calcMoyBFC(recapEval, idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine,
-                        handler);
+
+                domainesFuture.complete();
             } else {
+                domainesFuture.failed();
                 handler.handle(new Either.Left<>("Impossible de recuperer les domaines racines pour la" +
                         " classe selectionne :\n" + event.left().getValue()));
                 log.error("buildBFC : getDomaines : " + event.left().getValue());
+            }
+        });
+
+        CompositeFuture.all(listOfFutures).setHandler(event -> {
+            if (event.succeeded()) {
+                calcMoyBFC(recapEval, idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine,
+                        handler);
+            } else {
+                String error = event.cause().getMessage();
+                log.error("[buildBFC] : " + error);
+                handler.handle(new Either.Left<>("[buildBFC] Failed : " + error));
             }
         });
     }

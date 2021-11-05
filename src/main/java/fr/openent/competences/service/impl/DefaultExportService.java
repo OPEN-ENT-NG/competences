@@ -656,8 +656,8 @@ public class DefaultExportService implements ExportService {
     }
 
     @Override
-    public void getExportRecapEval(final Boolean text, final Boolean usePerso, final Long idCycle,
-                                   final String idEtablissement, final Handler<Either<String, JsonArray>> handler) {
+    public void getLegendeRecapEval(final Boolean text, final Boolean usePerso, final Long idCycle,
+                                    final String idEtablissement, final Handler<Either<String, JsonArray>> handler) {
         niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, idCycle, niveauEither -> {
             if (niveauEither.isRight()) {
                 JsonArray legende = new fr.wseduc.webutils.collections.JsonArray();
