@@ -97,16 +97,18 @@ export class DevoirsCollection {
         });
     }
 
-
-    getPercentDone (devoir?) : Promise<any> {
+    getPercentDone(devoir?) : Promise<any> {
         return new Promise(async (resolve, reject) => {
             if(devoir && evaluations.structure.synchronized.devoirs) {
+                if(devoir.eleves.length() === 0) {
+                    await devoir.eleves.sync();
+                }
+
                 let url = this.api.done + "?idDevoir=" + devoir.id + "&nbStudents=" + devoir.eleves.length();
                 http().getJson(url).done((res) => {
-                    let calculatedPercent = _.findWhere(res, {id : devoir.id});
-                    let _devoir = _.findWhere(this.all, {id : devoir.id});
+                    let _devoir = _.findWhere(this.all, {id : res.id});
                     if (_devoir !== undefined) {
-                        _devoir.percent = calculatedPercent === undefined ? 0 : calculatedPercent.percent;
+                        _devoir.percent = res.percent;
                     }
                     model.trigger('apply');
                     resolve();

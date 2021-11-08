@@ -139,11 +139,10 @@ public interface DevoirService extends CrudService {
     /**
      * Récupère le nombre de notes en fonction du devoir pour un utilisateur donné
      * @param user l'utilisateur connecté
-     * @param idEleves identifiants des élèves de la classe à l'instant T
      * @param idDevoir id du devoir concerné
      * @param handler handler portant le résultat de la requête
      */
-    void getNbNotesDevoirs(UserInfos user, List<String> idEleves, Long idDevoir, Handler<Either<String, JsonArray>> handler);
+    void getNbNotesDevoirs(UserInfos user, Long idDevoir, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère le nombre d'annotations en fonction du devoir pour un utilisateur donné
@@ -152,7 +151,7 @@ public interface DevoirService extends CrudService {
      * @param idDevoir id du devoir concerné
      * @param handler handler portant le résultat de la requête
      */
-    void getNbAnnotationsDevoirs(UserInfos user, List<String> idEleves, Long idDevoir, Handler<Either<String, JsonArray>> handler);
+    void getNbAnnotationsDevoirs(Long idDevoir, Handler<Either<String, JsonArray>> handler);
 
     /**
      * verifie si le devoir est evalué ou pas
@@ -193,7 +192,7 @@ public interface DevoirService extends CrudService {
      */
     void getNbCompetencesDevoirs(Long[] idGroupes, Handler<Either<String, JsonArray>> handler);
 
-    void getNbCompetencesDevoirsByEleve(List<String> idEleves, Long idDevoir, Handler<Either<String, JsonArray>> handler);
+    void getNbCompetencesDevoirsByEleve(Long idDevoir, Handler<Either<String, JsonArray>> handler);
 
     void updatePercent(Long IdDevoir, Integer percent, Handler<Either<String, JsonArray>> handler);
 

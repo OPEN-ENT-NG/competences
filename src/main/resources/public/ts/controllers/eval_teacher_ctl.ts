@@ -2967,8 +2967,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             let isInReleve = $location.$$path === '/releve';
             if (isInReleve)
                 idHTMLofInput = getHTMLiD($event);
+
             let isValueChanged:Boolean = (evaluation.valeur !== evaluation.oldValeur);
             let isAppreciationChanged:Boolean = (evaluation.oldAppreciation !== evaluation.appreciation);
+
             const reg = /^[0-9]+(\.[0-9]{1,2})?$/;
             cleanShortTermCaseValue(evaluation);
             if (isValueChanged || isAppreciationChanged) {
