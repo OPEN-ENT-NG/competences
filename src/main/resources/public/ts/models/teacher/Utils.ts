@@ -26,7 +26,6 @@ import {getTitulairesForRemplacantsCoEnseignant} from "../../utils/teacher";
 
 export class Utils {
     static isHeadTeacher (classe) {
-
         return _.contains(
             _.union(evaluations.structure.detailsUser.headTeacher,
                 evaluations.structure.detailsUser.headTeacherManual), classe.externalId);
@@ -39,6 +38,26 @@ export class Utils {
         } else {
             return isAdmin || this.isHeadTeacher(classe);
         }
+    }
+
+    static userHasService (classe, id_matiere?) {
+        let evaluables = _.filter(classe.services, service => {
+            let substituteTeacher = _.findWhere(service.substituteTeachers, {second_teacher_id : model.me.userId});
+            let correctDateSubstituteTeacher = substituteTeacher &&
+                moment(new Date()).isBetween(moment(substituteTeacher.start_date),
+                    moment(substituteTeacher.entered_end_date), 'days', '[]');
+            let coTeachers = _.findWhere(service.coTeachers, {second_teacher_id: model.me.userId});
+            let mainTeacher = service.id_enseignant == model.me.userId;
+            if(id_matiere){
+                correctDateSubstituteTeacher = correctDateSubstituteTeacher &&
+                    substituteTeacher.subject_id == id_matiere;
+                coTeachers = _.findWhere(service.coTeachers,
+                    {second_teacher_id: model.me.userId, subject_id : id_matiere});
+                mainTeacher = mainTeacher && service.id_matiere == id_matiere;
+            }
+            return service.evaluable && (coTeachers || correctDateSubstituteTeacher || mainTeacher);
+        });
+        return evaluables.length > 0;
     }
 
     static isPersEducNat () {

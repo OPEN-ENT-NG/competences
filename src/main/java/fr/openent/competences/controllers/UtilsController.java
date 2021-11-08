@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.*;
@@ -183,6 +184,25 @@ public class UtilsController extends ControllerHelper {
                 } else {
                     unauthorized(request);
                 }
+            }
+        });
+    }
+
+    @Get("/classe/groupes")
+    public void getGroupesClasse(final HttpServerRequest request){
+        final String idStructure = request.params().get("idStructure");
+        Utils.getClassesStruct(eb, idStructure, eventClasses -> {
+            if (eventClasses.isRight()) {
+                List<String> idClasses = eventClasses.right().getValue();
+                Utils.getGroupesClasse(eb, new JsonArray(idClasses), eventGroups -> {
+                    if (eventGroups.isRight()) {
+                        Renders.renderJson(request, eventGroups.right().getValue());
+                    } else {
+                        badRequest(request);
+                    }
+                });
+            } else {
+                badRequest(request);
             }
         });
     }
