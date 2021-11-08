@@ -346,7 +346,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Post("/avis/bilan/periodique")
     @ApiDoc("Créer un avis de conseil de classe")
-    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type = ActionType.AUTHENTICATED) // TODO : WORKFLOW mais en AUTHENTICATED ?
+    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type = ActionType.AUTHENTICATED)
     public void createOpinion(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -473,15 +473,15 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SetAvisConseilFilter.class)
     public void deleteAvisConseil(final HttpServerRequest request){
-        String validator = pathPrefix + Competences.SCHEMA_AVIS_CONSEIL_ORIENTATION_BILAN_PERIODIQUE;
-        RequestUtils.bodyToJson(request, validator, new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject idAvisClasse) {
-                final Long idPeriode = idAvisClasse.getLong("id_periode");
-                final String idEleve = idAvisClasse.getString("id_eleve");
-                final String idStructure = idAvisClasse.getString("id_structure");
+        UserUtils.getUserInfos(eb, request, user -> {
+            if(user != null) {
+                final Long idPeriode = Long.parseLong(request.params().get("id_periode"));
+                final String idEleve = request.params().get("id_eleve");
+                final String idStructure = request.params().get("id_structure");
                 avisConseilService.deleteAvisConseil(idPeriode, idEleve, idStructure,
                         defaultResponseHandler(request));
+            } else {
+                badRequest(request);
             }
         });
     }
@@ -538,31 +538,17 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SetAvisConseilFilter.class)
     public void deleteAvisOrientation(final HttpServerRequest request){
-        String validator = pathPrefix + Competences.SCHEMA_AVIS_CONSEIL_ORIENTATION_BILAN_PERIODIQUE;
-        RequestUtils.bodyToJson(request, validator, new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject idAvisClasse) {
-                final Long idPeriode = idAvisClasse.getLong("id_periode");
-                final String idEleve = idAvisClasse.getString("id_eleve");
-                final String idStructure = idAvisClasse.getString("id_structure");
+        UserUtils.getUserInfos(eb, request, user -> {
+            if(user != null) {
+                final Long idPeriode = Long.parseLong(request.params().get("id_periode"));
+                final String idEleve = request.params().get("id_eleve");
+                final String idStructure = request.params().get("id_structure");
                 avisOrientationService.deleteAvisOrientation(idPeriode, idEleve, idStructure,
                         defaultResponseHandler(request));
+            } else {
+                badRequest(request);
             }
         });
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

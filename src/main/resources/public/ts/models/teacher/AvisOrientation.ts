@@ -1,4 +1,5 @@
-import {notify, http} from 'entcore';
+import {notify} from 'entcore';
+import http from 'axios';
 import {DefaultAvis} from "../common/DefaultAvis";
 
 export class AvisOrientation extends DefaultAvis {
@@ -19,7 +20,8 @@ export class AvisOrientation extends DefaultAvis {
 
     async syncAvisOrientation () {
         try {
-            let {data} = await http().get(this.api.AVIS_ORIENTATION + `?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}&id_structure=${this.id_structure}`);
+            let {data} = await http.get(this.api.AVIS_ORIENTATION +
+                `?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}&id_structure=${this.id_structure}`);
             if(data[0].id_avis_conseil_bilan !== undefined) {
                 this.id_avis_conseil_bilan = data[0].id_avis_conseil_bilan;
             }
@@ -41,20 +43,20 @@ export class AvisOrientation extends DefaultAvis {
         this.id_avis_conseil_bilan = idAvisClasse;
         if (this.id_avis_conseil_bilan !== undefined && this.id_avis_conseil_bilan !== null) {
             try {
-                await http().postJson(this.api.AVIS_ORIENTATION, this.toJSON());
+                await http.post(this.api.AVIS_ORIENTATION, this.toJSON());
             } catch (e) {
                 notify.error('evaluations.avis.orientation.bilan.periodique.save.error');
             }
         } else {
             this.id_avis_conseil_bilan = -1;
-            await http().deleteJson(this.api.AVIS_ORIENTATION, this.toJSON());
+            await http.delete(`/competences/avis/orientation?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}&id_structure=${this.id_structure}`);
         }
     }
 
     async createNewOpinion (avisLibelle) {
         if(avisLibelle){
             try {
-                let result = await http().postJson(this.api.NEW_OPINION, {
+                let result = await http.post(this.api.NEW_OPINION, {
                     libelle: avisLibelle,
                     type_avis: 2,
                     id_etablissement: this.id_structure,
