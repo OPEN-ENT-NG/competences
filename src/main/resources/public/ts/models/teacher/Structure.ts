@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model, Collection, http, _, model, idiom as lang } from 'entcore';
+import {Model, Collection, http, _, model, idiom as lang, angular} from 'entcore';
 import * as utils from '../../utils/teacher';
 import {
     Eleve,
@@ -49,6 +49,7 @@ export class Structure extends Model {
     devoirs: Devoirs;
     synchronized: any;
     classes: Collection<Classe>;
+    allClasses: Collection<Classe>;
     classesBilanPeriodique: any[];
     matieres: Collection<Matiere>;
     types: Collection<Type>;
@@ -73,7 +74,6 @@ export class Structure extends Model {
     get api() {
         return {
             getEnseignants: '/competences/user/list?profile=Teacher&structureId=',
-            getClasses: '/viescolaire/classes?idEtablissement=' + this.id,
             getClassesBilanPeriodique: '/competences/elementsBilanPeriodique/classes?idStructure=' + this.id,
             TYPE: {
                 synchronization: '/competences/types?idEtablissement=' + this.id
@@ -86,6 +86,7 @@ export class Structure extends Model {
             },
             CLASSE: {
                 synchronization: '/viescolaire/classes?idEtablissement=' + this.id,
+                synchronizationAllClasses: '/viescolaire/classes?idEtablissement=' + this.id + "&forAdmin=true",
                 synchronizationRemplacement: '/viescolaire/classes/secondary?idStructure=' + this.id
             },
             ELEVE: {
@@ -320,6 +321,7 @@ export class Structure extends Model {
                 return classe;
             });
         };
+
         this.syncRemplacement = function () {
             return new Promise((resolve, reject) => {
                 http().getJson(that.api.CLASSE.synchronizationRemplacement)
@@ -336,24 +338,38 @@ export class Structure extends Model {
             });
         };
         this.collection(Classe, {
-            sync:  () => {
-                return new Promise(async (resolve, reject) => {
+            sync: () => {
+                return new Promise(async (resolve) => {
                     let allPromise = await Promise.all([httpAxios.get(this.api.CLASSE.synchronization),
-                        httpAxios.get(this.api.GET_SERVICES)]);
-                    let res = allPromise[0].data;
-                    _.map(res, (classe) => {
-                            let services = _.filter(allPromise[1].data, service =>{
-                                return service.id_groups ? service.id_groups.includes(classe.id)
-                                    : service.id_groupe === classe.id;
-                            });
-                            classe.services = (!_.isEmpty(services))? services : null;
+                        httpAxios.get(this.api.GET_SERVICES), httpAxios.get(this.api.CLASSE.synchronizationAllClasses)]);
+
+                    let classes = allPromise[0].data;
+                    let services = allPromise[1].data;
+                    let allClasses = allPromise[2].data;
+
+                    _.map(classes, (classe) => {
+                        let servicesClasse = _.filter(services, service =>{
+                            return service.id_groups ? service.id_groups.includes(classe.id)
+                                : service.id_groupe === classe.id;
                         });
-                        this.classes.addRange(castClasses(res));
-                        this.eleves.sync().then(() => {
-                            model.trigger('apply');
-                            if (Utils.isChefEtabOrHeadTeacher())
-                                resolve();
-                        });
+                        classe.services = !_.isEmpty(servicesClasse) ? servicesClasse : null;
+
+                        let classeOfAllClasses = _.findWhere(allClasses, {id: classe.id});
+                        if(classeOfAllClasses != null) {
+                            classeOfAllClasses.services = !_.isEmpty(servicesClasse) ? servicesClasse : null;
+                        }
+                    });
+
+                    this.allClasses = angular.copy(this.classes);
+                    this.classes.addRange(castClasses(classes));
+                    this.allClasses.addRange(castClasses(allClasses));
+
+                    this.eleves.sync().then(() => {
+                        model.trigger('apply');
+                        if (Utils.isChefEtabOrHeadTeacher())
+                            resolve();
+                    });
+
                     if (!Utils.isChefEtabOrHeadTeacher()) {
                         this.syncRemplacement().then(() => {
                             model.trigger('apply');
@@ -452,20 +468,6 @@ export class Structure extends Model {
         });
     }
 
-    syncClasses(idEtab): Promise<any> {
-        return new Promise((resolve, reject) => {
-            var that = this;
-            http().getJson(this.api.getClasses).done((res) => {
-                _.map(res, (classe) => {
-                    classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
-                    return classe;
-                });
-
-                that.classes.load(res);
-            });
-            this.classes.sync();
-        });
-    }
     syncClassesBilanPeriodique(): Promise<any> {
         return new Promise((resolve, reject) => {
             var that = this;

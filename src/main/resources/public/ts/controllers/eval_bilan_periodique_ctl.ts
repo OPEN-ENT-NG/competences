@@ -69,7 +69,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         }
 
         $scope.canSaveAppMatierePosiBilanPeriodique = () => {
-            return (Utils.canSaveAppMatierePosiBilanPeriodique() || Utils.isChefEtabOrHeadTeacher($scope.search.classe))
+            return ((Utils.canSaveAppMatierePosiBilanPeriodique() && Utils.userHasService($scope.search.classe))
+                    || Utils.isChefEtabOrHeadTeacher($scope.search.classe))
                 && finSaisieBilan;
         }
 
