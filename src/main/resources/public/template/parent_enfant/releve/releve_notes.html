@@ -9,7 +9,7 @@
             </tr>
 
             <tbody>
-            <tr ng-repeat-start="matiere in filtredMatieres = (matieresReleve.all | filter:hasEvaluatedDevoir)"
+            <tr ng-repeat-start="matiere in matieresReleve.all"
                 ng-init="oddMatiere=$odd; evenMatiere=$even">
                 <td data-label="[[translate('viescolaire.utils.subject')]]" colspan="2"
                     ng-if="matiere.sousMatieres === undefined || matiere.sousMatieres.all.length === 0">
@@ -29,7 +29,7 @@
                 <td class="notesDevoir" ng-if="matiere.sousMatieres === undefined || matiere.sousMatieres.all.length === 0"
                     data-label="[[translate('evaluations.grade')]]" >
                     <div ng-repeat="devoirReleveNotes in dataReleve.devoirs.all | filter:isEvaluated track by $index">
-                        <div class=" alignCenterVertically"
+                        <div class="alignCenterVertically"
                              ng-class="{noteDevoir: devoirReleveNotes.id_matiere === matiere.id}">
                             <div ng-if="devoirReleveNotes.id_matiere === matiere.id">
                                 <span ng-if="devoirReleveNotes.annotation === undefined"
@@ -40,7 +40,8 @@
 							        / [[devoirReleveNotes.diviseur]]
 						        </span>
                                 <span ng-if="devoirReleveNotes.annotation !== undefined"
-                                      class="bold fontXLarge">[[devoirReleveNotes.annotation.libelle_court]]
+                                      class="bold fontXLarge">
+                                    [[devoirReleveNotes.annotation.libelle_court]]
 						        </span>
                                 <sup ng-show='devoirReleveNotes.coefficient != null
                                             && devoirReleveNotes.coefficient != 1' class="bold fontLarge">

@@ -39,13 +39,14 @@ export let releveController = ng.controller('ReleveController', [
             if ($scope.dataReleve === undefined) {
                 return;
             }
-            let id_eleve;
-            if (model.me.type === 'PERSRELELEVE') {
-                id_eleve = $scope.searchReleve.eleve.id;
+
+            if (model.me.type === 'PERSRELELEVE') { // TODO $scope.matieres null
+                await utils.calculMoyennes($scope.search.periode.id_type, $scope.searchReleve.eleve.id, $scope.matieresReleve,
+                    $scope.matieres, $scope.enseignants, $scope.searchReleve.eleve.classe.services, $scope.dataReleve.devoirs);
             } else {
-                id_eleve = $scope.eleve.id;
+                await utils.calculMoyennes($scope.search.periode.id_type, $scope.eleve.id, $scope.matieresReleve,
+                    $scope.matieres, $scope.enseignants, $scope.searchReleve.eleve.classe.services, $scope.dataReleve.devoirs);
             }
-            await utils.calculMoyennes($scope.search.periode.id_type, id_eleve, $scope.matieresReleve.all, $scope.dataReleve.devoirs);
             await utils.safeApply($scope);
         };
         /**
@@ -60,12 +61,14 @@ export let releveController = ng.controller('ReleveController', [
                 && $scope.searchReleve.periode.id_type !== -1) {
                 idPeriode = $scope.searchReleve.periode.id_type;
             }
-            //let idClasse = (eleve.classe!==undefined)?eleve.classe.id : undefined;
+
             await evaluations.devoirs.sync(eleve.idStructure, eleve.id, undefined, idPeriode);
             $scope.dataReleve = {
                 devoirs: evaluations.devoirs
             };
+
             $scope.matieresReleve = evaluations.matieres;
+            await $scope.calculMoyenneMatieres();
             $scope.matieresReleve.forEach(matiere => {
                 let teachers = [];
                 let visible = true;
@@ -74,7 +77,7 @@ export let releveController = ng.controller('ReleveController', [
                         s.coTeachers.forEach(coTeacher => {
                             let teacher = $scope.getTeacherFromEvaluations(coTeacher.second_teacher_id);
                             if(coTeacher.is_visible && teacher != undefined && !_.contains(teachers, teacher)){
-                                matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id})
+                                matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id});
                                 teachers.push(teacher);
                             }
                         });
@@ -82,7 +85,7 @@ export let releveController = ng.controller('ReleveController', [
                             let teacher = $scope.getTeacherFromEvaluations(substituteTeacher.second_teacher_id);
                             let conditionForDate = Utils.checkDateForSubTeacher(substituteTeacher, $scope.searchReleve.periode);
                             if(substituteTeacher.is_visible && teacher != undefined && !_.contains(teachers, teacher) && conditionForDate){
-                                matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id})
+                                matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id});
                                 teachers.push(teacher);
                             }
                         });
@@ -93,7 +96,6 @@ export let releveController = ng.controller('ReleveController', [
                 matiere.coTeachers = teachers;
             });
 
-            await $scope.calculMoyenneMatieres();
             await Utils.stopMessageLoader($scope);
         };
 
@@ -153,8 +155,7 @@ export let releveController = ng.controller('ReleveController', [
             await utils.safeApply($scope);
         });
 
-        // Filter
-        $scope.hasEvaluatedDevoir = (matiere) => {
+        /*$scope.hasEvaluatedDevoir = (matiere) => {
             if($scope.dataReleve) {
                 let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) => {
                     return (devoir.note !== undefined || devoir.annotation !== undefined)
@@ -163,7 +164,8 @@ export let releveController = ng.controller('ReleveController', [
             }else{
                 return false;
             }
-        };
+        };*/
+
         $scope.isEvaluated = (devoir) => {
             return devoir.is_evaluated && (devoir.note !== undefined || devoir.annotation !== undefined);
         };
@@ -177,13 +179,7 @@ export let releveController = ng.controller('ReleveController', [
         };
 
         $scope.checkHaveResult = function () {
-            let res = false;
-            _.forEach(evaluations.matieres.all, (matiere) => {
-                if ($scope.hasEvaluatedDevoir(matiere)) {
-                    res = true;
-                }
-            });
-            return res;
+            return $scope.matieresReleve.length() > 0;
         };
 
     }]);
