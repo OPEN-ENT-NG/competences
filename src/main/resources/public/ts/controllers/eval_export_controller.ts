@@ -49,13 +49,13 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             };
 
             $scope.LSU_TYPE_EXPORT = LSU_TYPE_EXPORT;
-            $scope.getYearsAndPeriodes();
             if(typeArchive !== undefined) {
                 $scope.paramsArchive = {
                     type: typeArchive,
                     idStructure: $scope.structure.id
                 };
             }
+            $scope.getYearsAndPeriodes();
             await utils.safeApply($scope);
         }
 
@@ -369,31 +369,36 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         $scope.getYearsAndPeriodes = function () {
             $scope.currentYearTypesPeriodes = [];
             $scope.years = [];
-            http.get('/competences/years?idStructure=' + $scope.structure.id).then(function (data) {
+            console.log("yo année " + $scope.paramsArchive.type)
+
+
+            http.get('/competences/years?idStructure=' + $scope.structure.id + '&type=' + $scope.paramsArchive.type).then(function (data) {
                 if(data.status === 200){
                     let res = data.data;
+                    console.log(res)
+                    // let periodes = JSON.parse(res.periodes);
+                    // $scope.currentYearTypesPeriodes = _.filter($scope.structure.typePeriodes.all , (type) => {
+                    //     type.selected = true;
+                    //     return periodes.includes(type.id);
+                    // });
+                    //
+                    // let startYear = moment(res.start_date).format('YYYY');
+                    // let endYear = moment(res.end_date).format('YYYY');
 
-                    let periodes = JSON.parse(res.periodes);
-                    $scope.currentYearTypesPeriodes = _.filter($scope.structure.typePeriodes.all , (type) => {
-                        type.selected = true;
-                        return periodes.includes(type.id);
-                    });
-
-                    let startYear = moment(res.start_date).format('YYYY');
-                    let endYear = moment(res.end_date).format('YYYY');
-                    $scope.years.push({
-                        id: startYear,
-                        libelle : startYear + ' - ' + endYear +
-                            " (" + lang.translate('viescolaire.utils.annee.encours') + ")"
-                    });
-
-                    let nbYear = 5;
-                    for(var i = 1; i <= nbYear; i++) {
+                    res.forEach(year => {
                         $scope.years.push({
-                            id: parseInt(startYear) - i,
-                            libelle : (parseInt(startYear) - i) + ' - ' + (parseInt(endYear) - i)
+                            id: year.id_annee,
+                            libelle:year.id_annee
                         });
-                    }
+                    });
+                    //
+                    // let nbYear = 5;
+                    // for(var i = 1; i <= nbYear; i++) {
+                    //     $scope.years.push({
+                    //         id: parseInt(startYear) - i,
+                    //         libelle : (parseInt(startYear) - i) + ' - ' + (parseInt(endYear) - i)
+                    //     });
+                    // }
 
                     $scope.paramsArchive.year = $scope.years[0].id;
 

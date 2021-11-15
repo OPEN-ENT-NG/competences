@@ -26,6 +26,7 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.SuperAdminFilter;
+import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
@@ -34,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
+import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class ExportBulletinController extends ControllerHelper {
@@ -163,7 +165,8 @@ public class ExportBulletinController extends ControllerHelper {
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
     public void getYearsAndPeriodes(final  HttpServerRequest request){
         String idStructure = request.params().get(ID_STRUCTURE_KEY);
-        utilsService.getYearsAndPeriodes(idStructure, false, defaultResponseHandler(request));
+        String type = request.params().get("type");
+        utilsService.getYearsAndPeriodesExport(idStructure,type,  arrayResponseHandler(request));
     }
 
     @Post("/bulletins/exists")
@@ -196,4 +199,6 @@ public class ExportBulletinController extends ControllerHelper {
         });
 
     }
+
+
 }

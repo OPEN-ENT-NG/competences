@@ -1471,4 +1471,22 @@ public class DefaultUtilsService implements UtilsService {
 
         );
     }
+
+    @Override
+    public void getYearsAndPeriodesExport(String idStructure, String type, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
+        String tableName;
+        if(type.equals("bfc")){
+            tableName = "archive_bfc";
+        }else {
+            tableName = "archive_bulletins";
+        }
+        query.append("SELECT DISTINCT id_annee ");
+        query.append(" FROM notes.");
+        query.append(tableName);
+        query.append(" WHERE id_etablissement = ? ;");
+        JsonArray params = new JsonArray().add(idStructure);
+        Sql.getInstance().prepared(query.toString(), params, Competences.DELIVERY_OPTIONS,
+                validResultHandler(handler));
+    }
 }

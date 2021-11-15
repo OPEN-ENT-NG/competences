@@ -339,4 +339,6 @@ public interface UtilsService {
      */
     void getPeriodesClasses (String idEtablissement, JsonArray idClasses,
                              Long idPeriode, final Handler<Either<String, JsonArray>> handler);
+
+    void getYearsAndPeriodesExport(String idStructure, String type,  Handler<Either<String, JsonArray>> defaultResponseHandler);
 }
