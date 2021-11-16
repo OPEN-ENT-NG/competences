@@ -50,12 +50,13 @@
         }
 
         h1 {
-            margin-top: 20px;
-            padding: 5px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            padding: 2px;
             text-align: center;
             color: #FFFFFF;
             font-weight: bold;
-            font-size: 20px;
+            font-size: 18px;
             width: 100%;
         }
 
@@ -310,7 +311,7 @@
         }
 
         .firstProjet {
-            width: 35%;
+            width: 45%;
             visibility: visible !important;
             background-color: #E2F0FA;
             padding-bottom: 1px;
@@ -319,10 +320,17 @@
         }
 
         .secondProjet {
-            text-align:left;
+            text-align: left;
             overflow: hidden;
             padding-bottom: 1px;
             padding-top: 1px;
+        }
+
+        .margin-padding-1 {
+            margin-top: 1px;
+            margin-bottom: 1px;
+            padding-top: 1px;
+            padding-bottom: 1px;
         }
 
         .projets tr:nth-child(even) td {
@@ -812,8 +820,8 @@
         {{#showProjects}}
         {{#projects}}
         {{#hasProject}}
-        <h4 class="paddingFifty">{{libelle}}</h4>
-        <table class="projets paddingFifty">
+        <h4 class="paddingFifty margin-padding-1">{{libelle}}</h4>
+        <table class="projets paddingFifty margin-padding-1">
             {{#elements}}
             {{#hasCommentaire}}
             <tr>
