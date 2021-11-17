@@ -40,14 +40,12 @@
         </ul>
         <ul class="ul-competences">
             <li class="row">
-                <label class="checkbox cell one">
+                <label class="checkbox cell">
                     <input type="checkbox"
                            ng-model="newReportModel.selected"
-                           ng-change="makeNewReportModel()"
-                    />
-                    <span></span>
+                           ng-change="makeNewReportModel()" />
+                    <i18n class="cell">competences.report.model.add</i18n>
                 </label>
-                <i18n class="cell ten">competences.report.model.add</i18n>
             </li>
             <li ng-if="newReportModel.getSelected()"
                 class="row">
