@@ -996,11 +996,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.selectClasse = function (selectedClasseId: string) {
             let classe = $scope.classes.findWhere({id: selectedClasseId});
-            if (classe !== undefined) {
-                $scope.selected.classes.push({
-                    id: selectedClasseId,
-                    type_groupe: classe.type_groupe
-                });
+            if(!_.contains(_.pluck($scope.selected.classes, 'id'), selectedClasseId)) {
+                if (classe !== undefined) {
+                    $scope.selected.classes.push({
+                        id: selectedClasseId,
+                        type_groupe: classe.type_groupe
+                    });
+                }
             } else {
                 $scope.selected.classes = _.reject($scope.selected.classes, (classe) => {
                     return classe.id === selectedClasseId;
@@ -2877,7 +2879,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         let isWorkingProgress:Boolean = false;
         let idHTMLofInput:String;
 
-       function isSaveEvaluationAnnotation(evaluation: Evaluation, isAppreciationChanged: Boolean) {
+        function isSaveEvaluationAnnotation(evaluation: Evaluation, isAppreciationChanged: Boolean) {
             return evaluation.oldAppreciation !== undefined && evaluation.appreciation !== undefined
                 && isAppreciationChanged && evaluation.appreciation !== '';
         }
