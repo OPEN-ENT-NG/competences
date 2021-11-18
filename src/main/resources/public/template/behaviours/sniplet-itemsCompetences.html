@@ -149,14 +149,14 @@
                                 ng-click="connaissance.OpenSousDom = !connaissance.OpenSousDom">
                                 [[connaissance.nom]]
                             </h3>
-                            <h3 data-ng-click="openCreateItem(connaissance,lastSelectedCycle.domaines);"
+                            <h3 data-ng-click="openCreateItem(connaissance,lastSelectedCycle.domaines)"
                                 class="inline-block"><i ng-show="connaissance.action" class="plus-input"></i></h3>
                         </div>
                         <div ng-class="{'margin-top-1em' : connaissance.competences.length > 0,
                             'openedSectionDom' : connaissance.OpenSousDom}"
                              style='height: auto;'>
                         <div  sortable-list ng-model="connaissance.competences.all"
-                              ng-change="updateOrderConnaisance(connaissance)       " class="thought-out-actions">
+                              ng-change="updateOrderConnaisance(connaissance)" class="thought-out-actions">
                             <div sortable-element
                                  class="suivi-eleve-item competence-line"
                                  ng-repeat="competence in connaissance.competences.all| orderBy:'index'"
@@ -183,11 +183,10 @@
                                                             && !competence.rename
                                                             && !isEmptyShowDomaine(competence.id)}"
                                      class="six inline-block ellipsis competence"
-                                     ng-show="  competence.rename">
+                                     ng-show="competence.rename">
 
-                                <span
-                                        ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
-                                    <ng-form name="skillsTextForm" >
+                                <span ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
+                                    <ng-form name="skillsTextForm">
                                         <input type="text"
                                                style="margin-bottom: 0px;"
                                                class="twelve inline-block ellipsis competence"
@@ -203,13 +202,13 @@
                                 <dots-menu>
                                     <opt  data-ng-click="saveItem(competence, 'mask');"
                                           ng-if="!competence.masque">
-                                        <i ng-class="{'eye-slash': competence.masque, 'eye-open': !competence.masque}">
+                                        <i ng-class="{'eye-slash': competence.masque, 'eye-open-orange eye-white-color': !competence.masque}">
                                         </i>
                                         &nbsp;<i18n>item.mask</i18n>
                                     </opt>
                                     <opt  data-ng-click="saveItem(competence, 'mask');"
                                           ng-if="competence.masque">
-                                        <i ng-class="{'eye-slash': competence.masque, 'eye-open': !competence.masque}">
+                                        <i ng-class="{'eye-slash': competence.masque, 'eye-open-orange eye-white-color': !competence.masque}">
                                         </i>
                                         &nbsp;<i18n>item.demask</i18n>
                                     </opt>
@@ -227,7 +226,6 @@
                                         <i  class="updateDomaine"></i>&nbsp;<i18n>item.show.domaine</i18n>
                                     </opt>
                                 </dots-menu>
-
 
                                 <container
                                         template="patchwork[[competence.id]]" class="flexible content cell">

@@ -267,7 +267,7 @@
 
                                 <div class="visiApprec inline-block"
                                      ng-click="switchVisibilityApprec(currentDevoir)">
-                                    <i ng-class="{'eye-slash': !currentDevoir.apprec_visible, 'eye-open': currentDevoir.apprec_visible}"></i>
+                                    <i ng-class="{'eye-slash': !currentDevoir.apprec_visible, 'eye-open-orange eye-grey-color': currentDevoir.apprec_visible}"></i>
                                     <span ng-if="!currentDevoir.apprec_visible"
                                           tooltip="evaluations.devoir.appreciation.tooltip.hide">&nbsp;</span>
                                     <span ng-if="currentDevoir.apprec_visible"
@@ -277,7 +277,7 @@
                             <div class="visiApprec inline-block right-magnet cell alone"
                                  ng-click="switchVisibilityApprec(currentDevoir)"
                                  ng-if="currentDevoir.competences.all.length >= 8">
-                                <i ng-class="{'eye-slash': !currentDevoir.apprec_visible, 'eye-open': currentDevoir.apprec_visible}"></i>
+                                <i ng-class="{'eye-slash': !currentDevoir.apprec_visible, 'eye-open-orange eye-grey-color': currentDevoir.apprec_visible}"></i>
                                 <span ng-if="!currentDevoir.apprec_visible"
                                       tooltip="evaluations.devoir.appreciation.tooltip.hide">&nbsp;</span>
                                 <span ng-if="currentDevoir.apprec_visible"
