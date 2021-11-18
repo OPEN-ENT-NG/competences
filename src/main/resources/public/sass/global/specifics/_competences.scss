@@ -924,9 +924,8 @@ body.evaluations {
     .microbox-content .microbox-material {
       padding-bottom: 5px;
     }
-
-
   }
+
   .openedEleve {
     box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.35);
     padding: 10px;
@@ -3648,5 +3647,12 @@ body.evaluations {
   .margin-15 {
     margin: 15px;
   }
+}
 
+i.eye-open-orange.eye-grey-color::before {
+  color: grey !important;
+}
+
+i.eye-open-orange.eye-white-color::before {
+  color: white !important;
 }
