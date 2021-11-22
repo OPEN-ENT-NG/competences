@@ -1677,8 +1677,7 @@ public class DefaultExportService implements ExportService {
             if (null != params.get("idTypePeriode") && null != params.get("ordrePeriode")) {
                 final long idTypePeriode = Long.parseLong(params.get("idTypePeriode"));
                 final long ordrePeriode = Long.parseLong(params.get("ordrePeriode"));
-                String libellePeriode = getLibelle("viescolaire.periode." + idTypePeriode);
-                libellePeriode += (" " + ordrePeriode);
+                String libellePeriode = getLibelle("viescolaire.periode." + idTypePeriode) + " " + ordrePeriode;
                 periodeJSON.put("libelle", libellePeriode);
             } else {
                 // Construction de la période année
@@ -1690,7 +1689,7 @@ public class DefaultExportService implements ExportService {
                 final JsonArray multiTeachers = multiTeachersFuture.result();
                 final JsonArray services = servicesFuture.result();
 
-                final JsonArray idEnseignants = new fr.wseduc.webutils.collections.JsonArray();
+                final JsonArray idEnseignants = new JsonArray();
 
                 for (int i = 0; i < services.size(); i++) {
                     JsonObject service = services.getJsonObject(i);
@@ -1768,8 +1767,8 @@ public class DefaultExportService implements ExportService {
                                 .findFirst().orElse(null);
 
                         if(mainTeacher != null) {
-                            String displayName = mainTeacher.getString("firstName").charAt(0) + ".";
-                            displayName += mainTeacher.getString("name");
+                            String displayName = mainTeacher.getString("firstName").charAt(0) + "." +
+                                    mainTeacher.getString("name");
 
                             if (!_enseignantMatiere.contains(displayName)) {
                                 if(isVisible){
@@ -1785,14 +1784,15 @@ public class DefaultExportService implements ExportService {
                             .collect(Collectors.toList()));
 
                     for(int j = 0; j < multiTeachersMatiere.size(); j ++){
-                        String coTeacherId = multiTeachers.getJsonObject(j).getString("second_teacher_id");
+                        String coTeacherId = multiTeachersMatiere.getJsonObject(j).getString("second_teacher_id");
 
                         JsonObject coTeacher = (JsonObject) users.stream()
                                 .filter(el -> coTeacherId.equals(((JsonObject) el).getString("id")))
                                 .findFirst().orElse(null);
 
                         if(coTeacher != null){
-                            String multiTeacherName = coTeacher.getString("firstName").charAt(0) + "." + coTeacher.getString("name");
+                            String multiTeacherName = coTeacher.getString("firstName").charAt(0) + "." +
+                                    coTeacher.getString("name");
                             if(!_enseignantMatiere.contains(multiTeacherName)) {
                                 _enseignantMatiere.add(multiTeacherName);
                             }
@@ -1990,13 +1990,13 @@ public class DefaultExportService implements ExportService {
         Utils.getElevesClasse(eb, idClasse, idPeriode, elevesEvent -> {
             if (elevesEvent.isLeft()) {
                 String error = elevesEvent.left().getValue();
-                log.error("[ getDataForExportReleveClasse ]" + error);
+                log.error("[getDataForExportReleveClasse]" + error);
                 handler.handle(new Either.Left<>(getLibelle("evaluations.get.students.classe.error")));
                 return;
             }
             JsonArray elevesClasse = elevesEvent.right().getValue();
             if(isNull(elevesClasse)){
-                log.error("[ getDataForExportReleveClasse ] : NO student in classe");
+                log.error("[getDataForExportReleveClasse] : NO student in classe");
                 handler.handle(new Either.Left<>(getLibelle("evaluations.export.releve.no.student")));
                 return;
             }
@@ -2004,8 +2004,8 @@ public class DefaultExportService implements ExportService {
             JsonArray exportResultClasse = new JsonArray();
             List<Future> classeFuture = new ArrayList<>();
             MultiMap params = MultiMap.caseInsensitiveMultiMap();
-            params.add("idTypePeriode", isNotNull(idTypePeriode)? idTypePeriode.toString() : null)
-                    .add("ordrePeriode", isNotNull(ordre)? ordre.toString() : null);
+            params.add("idTypePeriode", isNotNull(idTypePeriode) ? idTypePeriode.toString() : null)
+                    .add("ordrePeriode", isNotNull(ordre) ? ordre.toString() : null);
             getDataForClasse(elevesClasse, idEtablissement, idPeriode, params, exportResultClasse, classeFuture);
 
             CompositeFuture.all(classeFuture).setHandler(event -> {
@@ -2030,11 +2030,11 @@ public class DefaultExportService implements ExportService {
             Future eleveFuture = Future.future();
 
             classeFuture.add(eleveFuture);
-            getDataForEleve(elevesClasse, idEleve, idEtablissement, idPeriode, params, eleveFuture, exportResultClasse);
+            getDataForEleve(idEleve, idEtablissement, idPeriode, params, eleveFuture, exportResultClasse);
         }
     }
 
-    private void getDataForEleve(JsonArray elevesClasse, String idEleve, String idEtablissement, Long idPeriode, MultiMap params,
+    private void getDataForEleve(String idEleve, String idEtablissement, Long idPeriode, MultiMap params,
                                  Future eleveFuture, JsonArray exportResultClasse) {
         getDataForExportReleveEleve(idEleve, idEtablissement, idPeriode, params, event -> {
             if(event.isLeft()){
