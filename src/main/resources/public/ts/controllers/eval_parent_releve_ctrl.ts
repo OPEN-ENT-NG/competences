@@ -32,8 +32,7 @@ export let releveController = ng.controller('ReleveController', [
     '$scope', '$location',
     async  function ($scope, $location) {
         /**
-         * Calcul la moyenne pour chaque matière
-         * contenue dans $scope.matieres
+         * Calcul la moyenne pour chaque matière contenue dans $scope.matieres
          */
         $scope.calculMoyenneMatieres = async function () {
             if ($scope.dataReleve === undefined) {
@@ -50,7 +49,7 @@ export let releveController = ng.controller('ReleveController', [
             await utils.safeApply($scope);
         };
         /**
-         * chargement d'un
+         * chargement d'un releve
          * @returns {Promise<void>}
          */
         $scope.loadReleveNote = async function () {
