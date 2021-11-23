@@ -311,10 +311,10 @@ export class ReleveNote extends  Model implements IModel {
             try {
                 await Promise.all([this.syncEvaluations(), this.syncDevoirs()]);
                 this.periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
-                let _notes, _devoirs, _eleves;
+                let _notes, _devoirstat, _eleves;
                 if (this._tmp) {
                     _notes = this._tmp.notes;
-                    _devoirs = this._tmp.devoirs;
+                    _devoirstat = this._tmp.devoirs;
                     _eleves = this._tmp.eleves;
                     this.classe.eleves.load(_eleves);
                     if (this.idPeriode !== null) {
@@ -368,10 +368,12 @@ export class ReleveNote extends  Model implements IModel {
                     });
                     eleve.evaluations.load(_evals, null, false);
                 });
-                _.each(_devoirs, (devoir) => {
-                    let d = _.findWhere(this.devoirs.all, {id: devoir.id});
+                _.each(_devoirstat, (dstat) => {
+                    let d = _.findWhere(this.devoirs.all, {id: dstat.id});
+                    if(d.eleves.length() === 0)
+                        d.eleves.all = this.classe.eleves.all;
                     if (d) {
-                        d.statistiques = devoir;
+                        d.statistiques = dstat;
                         if (!d.percent) {
                             evaluations.devoirs.getPercentDone(d).then(() => {
                                 d.statistiques.percentDone = d.percent;
@@ -379,9 +381,6 @@ export class ReleveNote extends  Model implements IModel {
                         } else {
                             d.statistiques.percentDone = d.percent;
                         }
-
-                        if(d.eleves.length() === 0)
-                            d.eleves.all = this.classe.eleves.all;
                     }
                 });
 
