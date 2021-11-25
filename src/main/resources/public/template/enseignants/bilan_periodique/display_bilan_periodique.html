@@ -19,78 +19,72 @@
     <aside class="two cell twelve-mobile left">
         <container template = "left-menu"></container>
     </aside>
+    <section class="ten twelve-mobile cell right">
+        <content ng-if="critereIsEmpty">
+            <article class="card tableReleves">
+                <i18n>evaluation.bilan.periodique.empty</i18n>
+            </article>
+        </content>
 
-
-        <section class="ten twelve-mobile cell right">
-
-            <content ng-if="critereIsEmpty">
-                <article class="card tableReleves">
-                    <i18n>evaluation.bilan.periodique.empty</i18n>
+        <content ng-if="!critereIsEmpty" class="twelve twelve-mobile cell right">
+            <div class="content-suivi-eleve twelve-mobile">
+                <article class="twelve" style="width: auto; margin-top: 5px; height: 54px" sticky offset="64"
+                         ng-hide="me.type === 'PERSRELELEVE'">
+                    <h2 class="align-center">
+                        <i class="previous cell" ng-click="incrementEleve(-1)" ng-hide="hideArrow(-1)"></i>
+                        [[informations.eleve.lastName]] [[informations.eleve.firstName]]
+                        <i class="next right-magnet" ng-click="incrementEleve(1)" ng-hide="hideArrow(1)"></i>
+                    </h2>
                 </article>
-            </content>
 
-
-            <content ng-if="!critereIsEmpty" class="twelve twelve-mobile cell right">
-
-                    <div class="content-suivi-eleve twelve-mobile">
-
-                        <article class="twelve" style="width: auto; margin-top: 5px; height: 54px" sticky offset="64"
-                                 ng-hide="me.type === 'PERSRELELEVE'">
-                            <h2 class="align-center">
-                                <i class="previous cell" ng-click="incrementEleve(-1)" ng-hide="hideArrow(-1)"></i>
-                                [[informations.eleve.lastName]] [[informations.eleve.firstName]]
-                                <i class="next right-magnet" ng-click="incrementEleve(1)" ng-hide="hideArrow(1)"></i>
-                            </h2>
-                        </article>
-
-                        <div class="row tabs vertical-spacing-twice heading-tabs">
-                            <header ng-class="{selected : selected.suiviAcquis}" ng-click="openSuiviAcquis()">
-                                <div class="horizontal-spacing">
-                                    <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.suivi.acquis</span></i18n></span>
-                                </div>
-                            </header>
-                            <header ng-class="{selected : selected.projet}" ng-click="openProjet()">
-                                <div class="horizontal-spacing">
-                                    <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.projets</span></i18n></span>
-                                </div>
-                            </header>
-                            <header ng-class="{selected : selected.vieScolaire}" ng-click="openVieScolaire()">
-                                <div class="horizontal-spacing">
-                                    <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.vie.scolaire</span></i18n></span>
-                                </div>
-                            </header>
-                            <header ng-class="{selected : selected.graphique}" ng-click="openGraphique()">
-                                <div class="horizontal-spacing">
-                                    <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.graphiques</span></i18n></span>
-                                </div>
-                            </header>
-                            <header ng-class="{selected : selected.bfc}" ng-click="openBFC()">
-                                <div class="horizontal-spacing">
-                                    <span><i18n><span class="no-style ng-scope">evaluations.bilan.fin.cycle.title</span></i18n></span>
-                                </div>
-                            </header>
-                            <header ng-class="{selected : selected.digitalSkills}" ng-click="openDigitalSkills()"
-                                    ng-if="showDigitalSkills">
-                                <div class="horizontal-spacing">
-                                    <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.digital.skills</span></i18n></span>
-                                </div>
-                            </header>
+                <div class="row tabs vertical-spacing-twice heading-tabs">
+                    <header ng-class="{selected : selected.suiviAcquis}" ng-click="openSuiviAcquis()">
+                        <div class="horizontal-spacing">
+                            <span class="no-style ng-scope"><i18n>evaluation.bilan.periodique.suivi.acquis</i18n></span>
                         </div>
-                        <div class="twelve">
-                            <container template="suivi-acquis"></container>
-                            <container template="projet"></container>
-                            <container template="vie-scolaire"></container>
-                            <container template="graphique"></container>
-                            <container class="twelve" ng-if="selected.bfc" template="bfc" ng-init="refreshAndOpenBFC(true, true, opened.bfcPeriode)"
-                                         ng-controller="EvalSuiviEleveCtl"></container>
-                            <container template="digital-skills" ng-if="showDigitalSkills"></container>
+                    </header>
+                    <header ng-class="{selected : selected.projet}" ng-click="openProjet()">
+                        <div class="horizontal-spacing">
+                            <span class="no-style ng-scope"><i18n>evaluation.bilan.periodique.projets</i18n></span>
                         </div>
+                    </header>
+                    <header ng-class="{selected : selected.vieScolaire}" ng-click="openVieScolaire()">
+                        <div class="horizontal-spacing">
+                            <span class="no-style ng-scope"><i18n>evaluation.bilan.periodique.vie.scolaire</i18n></span>
+                        </div>
+                    </header>
+                    <header ng-class="{selected : selected.graphique}" ng-click="openGraphique()">
+                        <div class="horizontal-spacing">
+                            <span class="no-style ng-scope"><i18n>evaluation.bilan.periodique.graphiques</i18n></span>
+                        </div>
+                    </header>
+                    <header ng-class="{selected : selected.bfc}" ng-click="openBFC()">
+                        <div class="horizontal-spacing">
+                            <span class="no-style ng-scope"><i18n>evaluation.bilan.fin.cycle.title</i18n></span>
+                        </div>
+                    </header>
+                    <header ng-class="{selected : selected.digitalSkills}" ng-click="openDigitalSkills()"
+                            ng-if="showDigitalSkills">
+                        <div class="horizontal-spacing">
+                            <span class="no-style ng-scope"><i18n>evaluation.bilan.periodique.digital.skills</i18n></span>
+                        </div>
+                    </header>
+                </div>
+                <div class="twelve">
+                    <container template="suivi-acquis"></container>
+                    <container template="projet"></container>
+                    <container template="vie-scolaire"></container>
+                    <container template="graphique"></container>
+                    <container class="twelve" ng-if="selected.bfc" template="bfc" ng-init="refreshAndOpenBFC(true, true, opened.bfcPeriode)"
+                               ng-controller="EvalSuiviEleveCtl"></container>
+                    <container template="digital-skills" ng-if="showDigitalSkills"></container>
+                </div>
 
-                    </div>
+            </div>
 
-            </content>
+        </content>
 
-        </section>
+    </section>
 
 </div>
 
