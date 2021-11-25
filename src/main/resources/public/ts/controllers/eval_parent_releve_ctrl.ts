@@ -20,7 +20,7 @@
  */
 
 import {model, ng, idiom as lang, moment} from 'entcore';
-import { evaluations } from '../models/eval_parent_mdl';
+import {evaluations as evaluationsParentFormat, evaluations} from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
 import {Utils} from "../models/teacher";
 import http from "axios";
@@ -40,11 +40,11 @@ export let releveController = ng.controller('ReleveController', [
             }
 
             if (model.me.type === 'PERSRELELEVE') { // TODO $scope.matieres null
-                await utils.calculMoyennes($scope.search.periode.id_type, $scope.searchReleve.eleve.id, $scope.matieresReleve,
-                    $scope.matieres, $scope.enseignants, $scope.searchReleve.eleve.classe.services, $scope.dataReleve.devoirs);
+                await utils.calculMoyennes($scope.search.periode.id_type, $scope.searchReleve.eleve.id,
+                    $scope.matieresReleve, $scope.matieres, $scope.dataReleve.devoirs);
             } else {
                 await utils.calculMoyennes($scope.search.periode.id_type, $scope.eleve.id, $scope.matieresReleve,
-                    $scope.matieres, $scope.enseignants, $scope.searchReleve.eleve.classe.services, $scope.dataReleve.devoirs);
+                    $scope.matieres, $scope.dataReleve.devoirs);
             }
             await utils.safeApply($scope);
         };
@@ -55,45 +55,14 @@ export let releveController = ng.controller('ReleveController', [
         $scope.loadReleveNote = async function () {
             await Utils.runMessageLoader($scope);
             let eleve = $scope.searchReleve.eleve;
-            let idPeriode = undefined;
-            if ($scope.searchReleve.periode !== null && $scope.searchReleve.periode.id_type !== null
-                && $scope.searchReleve.periode.id_type !== -1) {
-                idPeriode = $scope.searchReleve.periode.id_type;
-            }
 
-            await evaluations.devoirs.sync(eleve.idStructure, eleve.id, undefined, idPeriode);
+            await evaluations.devoirs.sync(eleve.idStructure, eleve.id, undefined, $scope.searchReleve.periode);
             $scope.dataReleve = {
                 devoirs: evaluations.devoirs
             };
 
-            $scope.matieresReleve = evaluations.matieres;
+            $scope.matieresReleve = _.filter(evaluations.matieres.all, (m) => m.hasDevoir);
             await $scope.calculMoyenneMatieres();
-            $scope.matieresReleve.forEach(matiere => {
-                let teachers = [];
-                let visible = true;
-                $scope.searchReleve.eleve.classe.services.forEach(s => {
-                    if(s.id_matiere === matiere.id){
-                        s.coTeachers.forEach(coTeacher => {
-                            let teacher = $scope.getTeacherFromEvaluations(coTeacher.second_teacher_id);
-                            if(coTeacher.is_visible && teacher != undefined && !_.contains(teachers, teacher)){
-                                matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id});
-                                teachers.push(teacher);
-                            }
-                        });
-                        s.substituteTeachers.forEach(substituteTeacher => {
-                            let teacher = $scope.getTeacherFromEvaluations(substituteTeacher.second_teacher_id);
-                            let conditionForDate = Utils.checkDateForSubTeacher(substituteTeacher, $scope.searchReleve.periode);
-                            if(substituteTeacher.is_visible && teacher != undefined && !_.contains(teachers, teacher) && conditionForDate){
-                                matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id});
-                                teachers.push(teacher);
-                            }
-                        });
-                        visible = s.is_visible;
-                    }
-                });
-                matiere.ens_is_visible = visible;
-                matiere.coTeachers = teachers;
-            });
 
             await Utils.stopMessageLoader($scope);
         };
@@ -138,7 +107,7 @@ export let releveController = ng.controller('ReleveController', [
             $scope.me = {
                 type: model.me.type
             };
-            $scope.matieresReleve = evaluations.matieres;
+            $scope.matieresReleve = _.filter(evaluations.matieres.all, (m) => m.hasDevoir);
 
             await $scope.loadReleveNote();
             await Utils.stopMessageLoader($scope);
@@ -178,7 +147,7 @@ export let releveController = ng.controller('ReleveController', [
         };
 
         $scope.checkHaveResult = function () {
-            return $scope.matieresReleve.length() > 0;
+            return $scope.matieresReleve.length > 0;
         };
 
     }]);

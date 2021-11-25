@@ -213,8 +213,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.search.periode = evaluations.periode;
                     $scope.displayCycles($scope.search.periode);
                     $scope.devoirs = evaluations.devoirs;
-                    console.log(evaluations);
                     $scope.matieres = evaluations.matieres;
+                    $scope.matieresReleve = _.filter(evaluations.matieres.all, (m) => m.hasDevoir);
                     $scope.enseignants = evaluations.enseignants;
                     await $scope.updateNiveau(evaluations.usePerso);
                     await $scope.getCyclesEleve();
@@ -511,8 +511,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     && $scope.searchBilan.periode.id_type !== undefined){
                     // On récupère les devoirs de la période sélectionnée
 
-                    await evaluations.devoirs.sync(evaluations.eleve.idStructure,evaluations.eleve.id, undefined,
-                        $scope.searchBilan.periode.id_type, undefined, historise);
+                    await evaluations.devoirs.sync(evaluations.eleve.idStructure, evaluations.eleve.id, undefined,
+                        $scope.searchBilan.periode, undefined, historise);
                     $scope.getCompetences(evaluations);
                     await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve,
                         $scope.competences, undefined);
@@ -805,8 +805,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.initDefaultMatiere = function () {
-            if($scope.matieres !== undefined && $scope.matieres.all !== undefined && $scope.matieres.all.length === 1) {
-                $scope.search.matiere = $scope.matieres.all[0];
+            if($scope.matieresReleve !== undefined && $scope.matieresReleve.length === 1) {
+                $scope.search.matiere = $scope.matieresReleve[0];
             }
             return $scope.search.matiere;
         };

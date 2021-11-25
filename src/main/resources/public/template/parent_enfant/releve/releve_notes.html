@@ -9,20 +9,14 @@
             </tr>
 
             <tbody>
-            <tr ng-repeat-start="matiere in matieresReleve.all"
+            <tr ng-repeat-start="matiere in matieresReleve"
                 ng-init="oddMatiere=$odd; evenMatiere=$even">
                 <td data-label="[[translate('viescolaire.utils.subject')]]" colspan="2"
                     ng-if="matiere.sousMatieres === undefined || matiere.sousMatieres.all.length === 0">
                     <span class="alignMatiere">[[matiere.name]]</span>
                     <ul>
-                        <li ng-show="matiere.ens_is_visible" ng-repeat="ens in matiere.ens track by ens.id">
+                        <li ng-repeat="ens in matiere.ens track by ens.id">
                             <span class="nomEnseignant">[[ens.displayName]]</span>
-                        </li>
-                        <li ng-repeat="coTeacher in matiere.coTeachers">
-                            <span class="nomEnseignant">[[coTeacher.displayName]]</span>
-                        </li>
-                        <li ng-repeat="substituteTeacher in matiere.substituteTeachers">
-                            <span class="nomEnseignant">[[substituteTeacher.displayName]]</span>
                         </li>
                     </ul>
                 </td>

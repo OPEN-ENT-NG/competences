@@ -76,29 +76,21 @@ function getMoyenne (devoirs) {
     }
 }
 
-function addMatieresWithoutDevoirs(matieresReleve, matieres, enseignants, services, moyennesFinales) {
+function addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales) {
     for(let moyenneFinale of moyennesFinales) {
-        if(!_.contains(_.pluck(matieresReleve.all, 'id'), moyenneFinale.id_matiere)) {
+        if(!_.contains(_.pluck(matieresReleve, 'id'), moyenneFinale.id_matiere)) {
             let matiere = _.findWhere(matieres.all, {id : moyenneFinale.id_matiere});
             if (moyenneFinale.moyenne == null) {
                 matiere.moyenne = "NN";
             } else {
                 matiere.moyenne = moyenneFinale.moyenne;
             }
-
-            let service = _.findWhere(services, {id_matiere: moyenneFinale.id_matiere});
-            let enseignant = _.findWhere(enseignants.all, {id: service.id_enseignant});
-            matiere.ens = [];
-            if (enseignant !== undefined) {
-                matiere.ens.push(enseignant);
-            }
-            matieresReleve.all.push(matiere);
+            matieresReleve.push(matiere);
         }
     }
 }
 
-export async function calculMoyennes(periode_idType, id_eleve, matieresReleve, matieres, enseignants,
-                                     services, dataReleveDevoirs) {
+export async function calculMoyennes(periode_idType, id_eleve, matieresReleve, matieres, dataReleveDevoirs) {
     return new Promise(async (resolve, reject) => {
         try {
             let url = '/competences/eleve/' + id_eleve + "/moyenneFinale?";
@@ -107,8 +99,8 @@ export async function calculMoyennes(periode_idType, id_eleve, matieresReleve, m
 
             http.get(url).then(res => {
                 let moyennesFinales = res.data;
-                addMatieresWithoutDevoirs(matieresReleve, matieres, enseignants, services, moyennesFinales);
-                for (let matiere of matieresReleve.all) {
+                addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales);
+                for (let matiere of matieresReleve) {
                     let devoirsMatieres = dataReleveDevoirs.where({id_matiere: matiere.id});
                     if (devoirsMatieres !== undefined) {
                         let moyenneFinale = _.findWhere(moyennesFinales, {id_matiere: matiere.id});
