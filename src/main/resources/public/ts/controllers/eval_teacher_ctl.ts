@@ -223,10 +223,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // récupération de tous les devoirs sans limite
                     await evaluations.structure.syncDevoirs();
 
-                    _.map($scope.devoirs.all, (devoir) => {
-                        devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
-                    });
                     $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+                        devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
                         return $scope.filterValidDevoir(devoir);
                     });
                     let openTemplates = (): void => {
@@ -671,6 +669,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.competencesSearchKeyWord = "";
         $scope.devoirs = evaluations.devoirs;
         $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+            devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
             return $scope.filterValidDevoir(devoir);
         });
         $scope.enseignements = evaluations.enseignements;
@@ -805,6 +804,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 devoir.duplicate($scope.selected.classes).then(() => {
                     $scope.devoirs.sync().then(() => {
                         $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+                            devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
                             return $scope.filterValidDevoir(devoir);
                         });
                         $scope.resetSelected();
@@ -2131,6 +2131,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                     $scope.selected.devoirs.list = _.without($scope.selected.devoirs.list, d);
                                 }
                                 $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+                                    devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
                                     return $scope.filterValidDevoir(devoir);
                                 });
                                 utils.safeApply($scope);
@@ -2340,6 +2341,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if ($location.path() === "/devoir/create") {
                         if (res !== undefined) {
                             $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+                                devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
                                 return $scope.filterValidDevoir(devoir);
                             });
                             savePreferences();
@@ -3858,6 +3860,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             $scope.devoirs = evaluations.structure.devoirs;
             $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+                devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
                 return $scope.filterValidDevoir(devoir);
             });
             $scope.types = evaluations.structure.types;

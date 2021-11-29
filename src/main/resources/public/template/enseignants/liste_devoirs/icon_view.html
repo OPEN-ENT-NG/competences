@@ -16,7 +16,7 @@
   -->
 <div class="devoir-icons-view">
     <div class="cell three devoir-icons-element"
-         ng-repeat="devoir in filteredDevoirs | customSearchFilters:search | filter:search.name" ng-init="rand(devoir)">
+         ng-repeat="devoir in filteredDevoirs | customSearchFilters:search |orderBy: ['-date', '+nameClass'] | filter:search.name" ng-init="rand(devoir)">
         <a class="devoir-icons-container-link" ng-href="#/devoir/[[devoir.id]]">
             <section class="devoir-icons-container">
                 <div class="devoir-percent" ng-style="{width: devoir.percent+'%'}"></div>
@@ -28,7 +28,7 @@
                 <div class="devoir-icons-description expandable-content"  ng-if="devoir.libelle.length > 30" tooltip="[[devoir.libelle]]">[[devoir.libelle|limitTo:27]]...</div>
                 <div class="devoir-icons-description expandable-content"  ng-if="devoir.libelle.length <= 30">[[devoir.libelle]]</div>
                 <footer>
-                    <div class="devoir-icons-class expandable-content">[[getClasseData(devoir.id_groupe, 'name')]]</div>
+                    <div class="devoir-icons-class expandable-content">[[devoir.nameClass]]</div>
                     <div class="devoir-icons-coef expandable-content" ng-if="devoir.is_evaluated === true">
                         <i18n>evaluations.test.coefficient</i18n> : [[devoir.coefficient]]
                     </div>

@@ -73,7 +73,7 @@
                         [[getDateFormated(devoir.date)]]
                     </div>
                     <div class="one cell cell-indent expandable-content three-mobile">
-                        [[(getClasseData(devoir.id_groupe, 'name') === '' || getClasseData(devoir.id_groupe, 'name') === undefined) ? getNameInOtherClasses(devoir.id_groupe,devoir.id)  : getClasseData(devoir.id_groupe, 'name')]]
+                        [[devoir.nameClass]]
                     </div>
                     <div class="three cell cell-indent expandable-content three-mobile">
                         [[devoir.name]]
@@ -99,7 +99,7 @@
                         [[getDateFormated(devoir.date)]]
                     </div>
                     <div class="one cell cell-indent expandable-content three-mobile">
-                        [[getClasseData(devoir.id_groupe, 'name')]]
+                        [[devoir.nameClass]]
                     </div>
                     <div class="three cell cell-indent expandable-content three-mobile">
                         [[devoir.name]]

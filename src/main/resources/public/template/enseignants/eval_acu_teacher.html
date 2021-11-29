@@ -81,7 +81,7 @@
                             </div>
                         </div>
                         <div class="content-box-accueil--table--content" style="max-height: 220px; overflow: auto !important;" bottom-scroll="syncAllDevoirs()">
-                            <div  ng-repeat="devoir in filteredDevoirs | customSearchFilters:search | orderBy:'date':true" class="row">
+                            <div  ng-repeat="devoir in filteredDevoirs | customSearchFilters:search |orderBy: ['-date', '+nameClass']" class="row">
                                 <a ng-href="#/devoir/[[devoir.id]]" >
                                     <div class="four cell">
                                         [[getDateFormated(devoir.date)]]
@@ -90,7 +90,7 @@
                                         [[devoir.name]]
                                     </div>
                                     <div class="three cell">
-                                        [[(getClasseData(devoir.id_groupe, 'name') === '' || getClasseData(devoir.id_groupe, 'name') === undefined) ? getNameInOtherClasses(devoir.id_groupe,devoir.id)  : getClasseData(devoir.id_groupe, 'name')]]
+                                        [[devoir.nameClass]]
                                     </div>
                                 </a>
                             </div>
@@ -122,7 +122,7 @@
                             </div>
                         </div>
                         <div class="content-box-accueil--table--content" style="overflow: auto !important;" bottom-scroll="syncAllDevoirs()">
-                            <div ng-repeat="devoir in devoirsNotDone | orderBy:'date':true" class="row">
+                            <div ng-repeat="devoir in devoirsNotDone |orderBy: ['-date', '+nameClass']" class="row">
                                 <a ng-href="#/devoir/[[devoir.id]]" >
                                     <div class="four cell">
                                         [[getDateFormated(devoir.date)]]
@@ -131,7 +131,7 @@
                                         [[devoir.name]]
                                     </div>
                                     <div class="three cell">
-                                        [[getClasseData(devoir.id_groupe, 'name')]]
+                                        [[devoir.nameClass]]
                                     </div>
                                 </a>
                             </div>

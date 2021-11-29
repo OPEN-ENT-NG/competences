@@ -96,6 +96,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
             $scope.initChartListNotDone = function () {
                 $scope.getDevoirsNotDone().then(async function(devoirs){
                     $scope.devoirsNotDone = _.filter(devoirs, (devoir) => {
+                        devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
                         return $scope.filterValidDevoir(devoir);
                     });
                     $scope.devoirsClasses = _.filter(evaluations.structure.classes.all, (classe) => {
@@ -159,6 +160,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                 $scope.search = $scope.initSearch();
                 $scope.devoirs = evaluations.structure.devoirs;
                 $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
+                    devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
                     return $scope.filterValidDevoir(devoir);
                 });
                 $scope.usePerso = evaluations.structure.usePerso;
