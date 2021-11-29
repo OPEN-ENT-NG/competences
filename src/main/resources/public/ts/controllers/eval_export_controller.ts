@@ -397,9 +397,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                                 libelle: libelle
                             });
                         });
-                        $scope.years = _.sortBy($scope.years, function(year){
-                            return year.id.charCodeAt() * -1; // sort descending
-                        });
+                        $scope.years = _.sortBy($scope.years, (year) =>  year.id * -1); // sort descending
                     } else {
                         $scope.years.push({
                             id: start_active_year,
