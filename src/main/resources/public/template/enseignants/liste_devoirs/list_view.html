@@ -24,7 +24,8 @@
             </label>
         </div>
 
-        <div class= "cell cell-indent four-mobile" ng-class="{'one': isChefEtabOrHeadTeacher(), 'two': !isChefEtabOrHeadTeacher()}">
+        <div class="cell cell-indent four-mobile"
+             ng-class="{'one': isChefEtabOrHeadTeacher(), 'two': !isChefEtabOrHeadTeacher()}">
             <i18n>viescolaire.utils.date</i18n>
         </div>
         <div tooltip="Classe / Groupe" class="one cell cell-indent three-mobile ellipsis">
@@ -36,14 +37,11 @@
         <div class="one cell cell-indent last zero-mobile">
             <i18n>evaluations.test.coefficient</i18n>
         </div>
-        <div tooltip="Nb. compétences"  ng-if="isChefEtabOrHeadTeacher()" class="one ellipsis cell cell-indent last zero-mobile ">
+        <div tooltip="Nb. compétences" class="cell cell-indent last zero-mobile"
+             ng-class="{'one ellipsis': isChefEtabOrHeadTeacher(), 'two': !isChefEtabOrHeadTeacher()}">
             <i18n>evaluations.skills.nb</i18n>
         </div>
-        <div  ng-if="!isChefEtabOrHeadTeacher()" class="two cell cell-indent last zero-mobile ">
-            <i18n>evaluations.skills.nb</i18n>
-        </div>
-
-        <div class="one cell cell-indent zero-mobile">
+        <div class="one ellipsis cell cell-indent zero-mobile">
             <i18n>evaluations.test.percent</i18n>
         </div>
         <div ng-if="isChefEtabOrHeadTeacher()" class="two cell cell-indent four-mobile">
@@ -54,12 +52,11 @@
         </div>
     </div>
 
-
-    <div class="expandable-liste card"  bottom-scroll="pOFilterEval.limitTo = pOFilterEval.limitTo + 5" >
+    <div class="expandable-liste card" bottom-scroll="pOFilterEval.limitTo = pOFilterEval.limitTo + 5" >
         <div class="expandable twelve"
              ng-repeat="devoir in filteredDevoirs | customSearchFilters:search |orderBy: ['-date', '+nameClass'] | limitTo:pOFilterEval.limitTo "
-             ng-class="{'opened shadow': openedDevoir === $index, 'DisabledDevoir': disabledDevoir[devoir.id]}" >
-            <div class="row" >
+             ng-class="{'opened shadow': openedDevoir === $index, 'DisabledDevoir': disabledDevoir[devoir.id]}">
+            <div class="row">
                 <div class="one cell cell-check expandable-content two-mobile">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="devoir.selected" ng-change="selectDevoir(devoir)">
@@ -69,7 +66,7 @@
                 <a ng-href="#/devoir/[[devoir.id]]"
                    ng-if="isValidClasseMatiere(devoir.id_groupe)">
                     <div class="cell cell-indent expandable-content four-mobile"
-                         ng-class="{'one': isChefEtabOrHeadTeacher(), 'two': !isChefEtabOrHeadTeacher()}" >
+                         ng-class="{'one': isChefEtabOrHeadTeacher(), 'two': !isChefEtabOrHeadTeacher()}">
                         [[getDateFormated(devoir.date)]]
                     </div>
                     <div class="one cell cell-indent expandable-content three-mobile">
@@ -82,14 +79,14 @@
                         [[(devoir.is_evaluated === true) ? devoir.coefficient : 'N/A']]
                     </div>
                     <div class="cell cell-indent expandable-content zero-mobile"
-                         ng-class="{'one ellipsis': isChefEtab(), 'two': !isChefEtabOrHeadTeacher()}">
+                         ng-class="{'one ellipsis': isChefEtabOrHeadTeacher(), 'two': !isChefEtabOrHeadTeacher()}">
                         [[devoir.nbcompetences]]
                     </div>
-                    <div class="one cell cell-indent expandable-content  zero-mobile">
+                    <div class="one ellipsis cell cell-indent expandable-content zero-mobile">
                         [[devoir.percent = (devoir.percent !== undefined) ? devoir.percent : 0]]%
                     </div>
                     <div ng-if="isChefEtabOrHeadTeacher()"
-                            class="two cell cell-indent expandable-content  zero-mobile">
+                         class="two cell cell-indent expandable-content zero-mobile">
                         [[devoir.teacher]]
                     </div>
                 </a>
@@ -108,14 +105,14 @@
                         [[(devoir.is_evaluated === true) ? devoir.coefficient : 'N/A']]
                     </div>
                     <div class="cell cell-indent expandable-content zero-mobile"
-                         ng-class="{'one ellipsis': isChefEtabOrHeadTeacher(), 'two': !isChefEtabOrHeadTeacher()}"   >
+                         ng-class="{'one ellipsis': isChefEtabOrHeadTeacher(), 'two': !isChefEtabOrHeadTeacher()}">
                         [[devoir.nbcompetences]]
                     </div>
-                    <div class="one cell cell-indent expandable-content  zero-mobile">
+                    <div class="one cell cell-indent expandable-content zero-mobile">
                         [[devoir.percent = (devoir.percent !== undefined) ? devoir.percent : 0]]%
                     </div>
                     <div ng-if="isChefEtabOrHeadTeacher()"
-                         class="two cell cell-indent expandable-content  zero-mobile">
+                         class="two cell cell-indent expandable-content zero-mobile">
                         [[devoir.teacher]]
                     </div>
                 </div>
