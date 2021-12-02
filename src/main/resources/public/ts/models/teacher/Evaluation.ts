@@ -59,9 +59,9 @@ export class Evaluation extends Model implements IModel {
     toJSON () {
         let o = new Evaluation();
         if(this.id !== null) o.id = this.id;
-        o.id_eleve  = this.id_eleve;
+        o.id_eleve = this.id_eleve;
         o.id_devoir = parseInt(this.id_devoir.toString());
-        o.valeur   = parseFloat(this.valeur);
+        o.valeur = parseFloat(this.valeur);
         if (this.appreciation) o.appreciation = this.appreciation;
         delete o.competenceNotes;
         return o;
@@ -70,7 +70,7 @@ export class Evaluation extends Model implements IModel {
 
     save () : Promise<Evaluation> {
         return new Promise((resolve) => {
-            if ( this.id_annotation !== undefined && this.id_annotation !== -1){
+            if (this.id_annotation !== undefined && this.id_annotation !== -1){
                 this.deleteAnnotationDevoir().then(()=>{
                     delete this.oldId_annotation;
                     delete this.id_annotation;
@@ -79,7 +79,7 @@ export class Evaluation extends Model implements IModel {
                         resolve(data);
                     });
                 });
-            }else {
+            } else {
                 this.create().then((data) => {
                     resolve(data);
                 });
@@ -122,21 +122,20 @@ export class Evaluation extends Model implements IModel {
             });
         });
     }
+
     createAppreciation () : Promise<Evaluation> {
         return new Promise((resolve) => {
             let _appreciation = {
                 id_devoir : this.id_devoir,
-                id_eleve  : this.id_eleve,
-                valeur    : this.appreciation
+                id_eleve : this.id_eleve,
+                valeur : this.appreciation
             };
-            http().postJson(this.api.createAppreciation, _appreciation).done ( function (data) {
+            http().postJson(this.api.createAppreciation, _appreciation).done(function (data) {
                 if(resolve && (typeof(resolve) === 'function')) {
                     resolve(data);
                 }
             }) ;
-
         });
-
     }
 
     updateAppreciation () : Promise<Evaluation> {
@@ -144,8 +143,8 @@ export class Evaluation extends Model implements IModel {
             let _appreciation = {
                 id : this.id_appreciation,
                 id_devoir : this.id_devoir,
-                id_eleve  : this.id_eleve,
-                valeur    : this.appreciation
+                id_eleve : this.id_eleve,
+                valeur : this.appreciation
             };
             http().putJson(this.api.updateAppreciation, _appreciation).done(function (data) {
                 if(resolve && (typeof(resolve) === 'function')) {
@@ -168,39 +167,39 @@ export class Evaluation extends Model implements IModel {
         return new Promise((resolve) => {
             let _annotation = {
                 id_devoir : this.id_devoir,
-                id_annotation  : this.id_annotation,
-                id_eleve    : this.id_eleve
+                id_annotation : this.id_annotation,
+                id_eleve : this.id_eleve
             };
-            http().postJson(this.api.createAnnotation, _annotation).done ( function (data) {
+            http().postJson(this.api.createAnnotation, _annotation).done(function (data) {
                 if (resolve && (typeof(resolve) === 'function')) {
                     resolve(data);
                 }
             });
         });
-
     }
 
     updateAnnotationDevoir (): Promise<Evaluation> {
         return new Promise((resolve) => {
             let _annotation = {
                 id_devoir : this.id_devoir,
-                id_annotation  : parseInt(this.id_annotation.toString()),
-                id_eleve    : this.id_eleve
+                id_annotation : parseInt(this.id_annotation.toString()),
+                id_eleve : this.id_eleve
             };
-            http().putJson(this.api.updateAnnotation, _annotation).done ( function (data) {
+            http().putJson(this.api.updateAnnotation, _annotation).done(function (data) {
                 if (resolve && (typeof(resolve) === 'function')) {
                     resolve(data);
                 }
             });
         });
     }
+
     deleteAnnotationDevoir () : Promise<any> {
         return new Promise((resolve) => {
             let _annotation = {
                 id_devoir : this.id_devoir,
-                id_eleve    : this.id_eleve
+                id_eleve : this.id_eleve
             };
-            http().delete(this.api.deleteAnnotation,_annotation).done(function (data) {
+            http().delete(this.api.deleteAnnotation, _annotation).done(function (data) {
                 if(resolve && typeof(resolve) === 'function') {
                     resolve(data);
                 }
