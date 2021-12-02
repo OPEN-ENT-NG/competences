@@ -384,7 +384,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                     let years = res.years;
                     let start_active_year = active_year.start_date.substring(0, 4);
                     let end_active_year = active_year.end_date.substring(0, 4);
-                    if(years.length > 0) {
+                    if(years && years.length > 0) {
                         years.forEach(year => {
                             let nextYear = (parseInt(year.id_annee) + 1);
                             let libelle = year.id_annee + " - " + nextYear;
