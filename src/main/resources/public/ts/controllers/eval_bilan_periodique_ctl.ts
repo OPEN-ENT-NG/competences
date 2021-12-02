@@ -349,15 +349,19 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 idStructure: subject.idEtablissement,
                 idSubject: subject.id_matiere,
                 idPeriod: subject.idPeriode,
-                idSchoolClass: subject.idClasse,
+                idClass: subject.appreciationByClasse.idClasse,
             }
             return new AppreciationSubjectPeriodStudent(appreciationSubjectPeriodStudentPrepared);
         }
 
         $scope.appreciationBlurCheck = function (subject): void {
-            if($scope.opened.lightboxConfirmCleanAppreciation) return;
+            if($scope.opened.lightboxConfirmCleanAppreciation) {
+                return;
+            }
             $scope.appreciationSubjectPeriod = preparedDataForAppreciation(subject);
-            if ($scope.appreciationSubjectPeriod.appreciation === undefined) return;
+            if ($scope.appreciationSubjectPeriod.appreciation === undefined) {
+                return;
+            }
             if (subject.previousAppreciationMatiere === $scope.appreciationSubjectPeriod.appreciation) {
                 return;
             } else if ($scope.appreciationSubjectPeriod.appreciation.length > 0) {

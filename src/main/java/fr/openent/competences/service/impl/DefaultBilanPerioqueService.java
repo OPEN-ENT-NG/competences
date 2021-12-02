@@ -412,7 +412,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void setSubjectLibelleAndTeachers(String idEleve, JsonArray idClasseGroups, String idEtablissement,
-                                              JsonArray groupsStudent, Map<String,JsonObject> idsMatieresIdsTeachers,
+                                              JsonArray groupsStudent, Map<String, JsonObject> idsMatieresIdsTeachers,
                                               Map<String, JsonObject> idsMatLibelle,
                                               Map<String, JsonObject> teachersInfos, Long idPeriod,
                                               Handler<Either<String, JsonArray>> handler) {
@@ -428,6 +428,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             JsonArray idsTeachers = teachersObject.getJsonArray("teachers");
             final JsonObject result = new JsonObject().put(COEFFICIENT, new JsonObject());
             JsonObject coefObject = teachersObject.getJsonObject("_" +  COEFFICIENT);
+            String idGroupe = teachersObject.getString("id_groupe");
 
             //Ajout des libellés des matières
             setSubjectLibelle(idMatiere, result, idsMatLibelle);
@@ -435,6 +436,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             setTeacherInfo(result, idsTeachers, teachersInfos);
             // Mise en forme des matières par coefficient
             setSubjectByCoeficient(idMatiere, result, coefObject, idsMatLibelle, teachersInfos);
+
+            result.put("idClasse", idGroupe);
 
             // Récupération des élements du Programme
             Future<JsonArray> elementsProgFuture = Future.future();
@@ -509,10 +512,12 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             JsonObject subject = subjects.getJsonObject(i);
             final String idMatiere = subject.getString(ID_MATIERE);
             Long id_periode = subject.getLong("id_periode");
+            String id_groupe = subject.getString("id_groupe");
 
             if (!idsMatieresIdsTeachers.containsKey(idMatiere)) {
                 idsMatieresIdsTeachers.put(idMatiere, new JsonObject()
                         .put("teachers", new JsonArray())
+                        .put("id_groupe", id_groupe)
                         .put("_" + COEFFICIENT, new JsonObject()));
             }
 
@@ -531,6 +536,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             if (!idsMatieresIdsTeachers.containsKey(idMatiere)) {
                 idsMatieresIdsTeachers.put(idMatiere, new JsonObject()
                         .put("teachers", new JsonArray())
+                        .put("id_groupe", "")
                         .put("_" + COEFFICIENT, new JsonObject()));
             }
         }
@@ -538,45 +544,6 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         if (!subjectsMissingTeachers.isEmpty()) {
             getMissingTeachers(idsTeachers, subjectsMissingTeachers, idsMatieresIdsTeachers, services);
         }
-    }
-
-    private void getMissingTeachers(JsonArray idsTeachers, List<String> subjectsMissingTeachers,
-                                    Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray services) {
-        subjectsMissingTeachers.forEach(idSubject -> {
-            services.stream().forEach(service -> {
-                JsonObject serviceObj = (JsonObject) service;
-                String idServiceSubject = serviceObj.getString("id_matiere");
-
-                if (idServiceSubject.equals(idSubject) && serviceObj.getBoolean("is_visible")) {
-                    String owner = serviceObj.getString("id_enseignant");
-                    Long coefficient = serviceObj.getLong(COEFFICIENT);;
-                    coefficient = isNull(coefficient) ? 1L : coefficient;
-                    JsonObject matiere = idsMatieresIdsTeachers.get(idSubject);
-                    JsonArray teachers = matiere.getJsonArray("teachers");
-
-                    if(!teachers.contains(owner) && teachers.isEmpty()) {
-                        addTeachers(teachers, idsTeachers, owner, matiere, coefficient);
-                    }
-                }
-            });
-        });
-    }
-
-    private void addMultiTeachers(JsonArray multiTeachers, String idMatiere, JsonArray teachers, JsonArray idsTeachers){
-        multiTeachers.forEach(item -> {
-            JsonObject multiTeacher = (JsonObject) item;
-
-            String subjectId = multiTeacher.getString("subject_id");
-            String coTeacherId = multiTeacher.getString("second_teacher_id");
-
-            if (subjectId.equals(idMatiere)) {
-                if (isNotNull(coTeacherId) && !teachers.contains(coTeacherId)) {
-                    teachers.add(coTeacherId);
-                }
-                if (isNotNull(coTeacherId) && !idsTeachers.contains(coTeacherId))
-                    idsTeachers.add(coTeacherId);
-            }
-        });
     }
 
     private void checkVisibilityAndAddTeachers(JsonArray services, JsonObject matiere, final String idMatiere,
@@ -620,6 +587,45 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             subjectsMissingTeachers.add(idMatiere);
         else if(!teachers.isEmpty())
             subjectsMissingTeachers.remove(idMatiere);
+    }
+
+    private void getMissingTeachers(JsonArray idsTeachers, List<String> subjectsMissingTeachers,
+                                    Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray services) {
+        subjectsMissingTeachers.forEach(idSubject -> {
+            services.stream().forEach(service -> {
+                JsonObject serviceObj = (JsonObject) service;
+                String idServiceSubject = serviceObj.getString("id_matiere");
+
+                if (idServiceSubject.equals(idSubject) && serviceObj.getBoolean("is_visible")) {
+                    String owner = serviceObj.getString("id_enseignant");
+                    Long coefficient = serviceObj.getLong(COEFFICIENT);;
+                    coefficient = isNull(coefficient) ? 1L : coefficient;
+                    JsonObject matiere = idsMatieresIdsTeachers.get(idSubject);
+                    JsonArray teachers = matiere.getJsonArray("teachers");
+
+                    if(!teachers.contains(owner) && teachers.isEmpty()) {
+                        addTeachers(teachers, idsTeachers, owner, matiere, coefficient);
+                    }
+                }
+            });
+        });
+    }
+
+    private void addMultiTeachers(JsonArray multiTeachers, String idMatiere, JsonArray teachers, JsonArray idsTeachers){
+        multiTeachers.forEach(item -> {
+            JsonObject multiTeacher = (JsonObject) item;
+
+            String subjectId = multiTeacher.getString("subject_id");
+            String coTeacherId = multiTeacher.getString("second_teacher_id");
+
+            if (subjectId.equals(idMatiere)) {
+                if (isNotNull(coTeacherId) && !teachers.contains(coTeacherId)) {
+                    teachers.add(coTeacherId);
+                }
+                if (isNotNull(coTeacherId) && !idsTeachers.contains(coTeacherId))
+                    idsTeachers.add(coTeacherId);
+            }
+        });
     }
 
     private void addTeachers(JsonArray teachers, JsonArray idsTeachers, String owner,
@@ -693,12 +699,13 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
                 if(appMatPer != null) {
                     if(!mapIdPeriodeAppreciations.containsKey(idPerApp)){
-                        mapIdPeriodeAppreciations.put(idPerApp, new fr.wseduc.webutils.collections.JsonArray().add(
-                                new JsonObject().put("idClasse", idClasseApp)
-                                        .put("appreciation", appMatPer)));
+                        mapIdPeriodeAppreciations.put(idPerApp, new JsonArray().add(new JsonObject()
+                                .put("idClasse", idClasseApp)
+                                .put("appreciation", appMatPer)));
                     } else {
                         JsonArray appreciationsByIdPeriode = mapIdPeriodeAppreciations.get(idPerApp);
-                        JsonObject appResponse = new JsonObject().put("idClasse", idClasseApp)
+                        JsonObject appResponse = new JsonObject()
+                                .put("idClasse", idClasseApp)
                                 .put("appreciation", appMatPer);
 
                         if(!appreciationsByIdPeriode.contains(appResponse)){
@@ -742,15 +749,16 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
             if(!mapIdPeriodeAppreciations.isEmpty()) {
                 for (Map.Entry<Integer, JsonArray> idPeriodeApp : mapIdPeriodeAppreciations.entrySet()) {
-                    appreciations.add(new JsonObject().put("id_periode",
-                            idPeriodeApp.getKey()).put("appreciationByClasse", idPeriodeApp.getValue()));
+                    appreciations.add(new JsonObject()
+                            .put("id_periode", idPeriodeApp.getKey())
+                            .put("appreciationByClasse", idPeriodeApp.getValue()));
                 }
             }
         }
 
-        result.put("appreciations",appreciations);
+        result.put("appreciations", appreciations);
         result.put("positionnementsFinaux", positionnements);
-        result.put("moyennesFinales",moyennesFinales);
+        result.put("moyennesFinales", moyennesFinales);
     }
 
     private void setMoyAndPosForSuivi(JsonArray notes, JsonArray compNotes, JsonArray moyFinalesEleves,

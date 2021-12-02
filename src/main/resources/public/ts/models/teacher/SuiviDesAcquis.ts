@@ -128,7 +128,6 @@ export class SuiviDesAcquis  {
 export class SuivisDesAcquis extends Model{
     all: SuiviDesAcquis[];
     tableConversions: Collection<TableConversion>;
-    moyenneGeneraleElve : string;
     moyenneGeneraleClasse: string;
     idEleve: string;
     idClasse: string;
@@ -173,8 +172,7 @@ export class SuivisDesAcquis extends Model{
                 _.mapObject(subject.coefficient, (val, key) => {
                     subject.coefficients.push(_.extend(val, {coefficient : key}));
                 });
-            }
-            else {
+            } else {
                 subject.hasConflict = false;
             }
         })
@@ -191,24 +189,23 @@ export class SuivisDesAcquis extends Model{
 
                 let suiviDesAcquisToRemove = [];
 
-                // pour chaque suiviDesAcquis setter
-                // l'appréciation de toutes les classes et groupes
+                // pour chaque suiviDesAcquis setter l'appréciation de toutes les classes et groupes
                 _.each(this.all, (suiviDesAcquis) => {
                     suiviDesAcquis.idEleve = this.idEleve;
-                    suiviDesAcquis.idClasse = this.idClasse;
                     suiviDesAcquis.idEtablissement = this.idEtablissement;
                     suiviDesAcquis.idPeriode = this.idPeriode;
 
-                    if(suiviDesAcquis.appreciations !== null && suiviDesAcquis.appreciations !== undefined
-                        && _.find(suiviDesAcquis.appreciations,{id_periode : suiviDesAcquis.idPeriode}) !== undefined){
-                        suiviDesAcquis.appreciationByClasse = _.find(suiviDesAcquis.appreciations, {id_periode : suiviDesAcquis.idPeriode}).appreciationByClasse[0];
-                    } else {
+                    if(suiviDesAcquis.appreciations !== null && suiviDesAcquis.appreciations !== undefined){
+                        let appreciationsPeriode = _.find(suiviDesAcquis.appreciations, {id_periode : suiviDesAcquis.idPeriode});
+                        if(appreciationsPeriode !== undefined) {
+                            suiviDesAcquis.appreciationByClasse = appreciationsPeriode.appreciationByClasse[0];
+                        }
+                    }
+                    if(suiviDesAcquis.appreciationByClasse === undefined) {
                         suiviDesAcquis.appreciationByClasse = new AppreciationMatiere(suiviDesAcquis.idClasse);
                     }
 
                     // la moyenneEleve pour chaque période et chaque matiere
-
-
                     let finalAverage = (suiviDesAcquis.moyennesFinales !== null && suiviDesAcquis.moyennesFinales !== undefined) ?
                         _.find(suiviDesAcquis.moyennesFinales, {id_periode: suiviDesAcquis.idPeriode}) : undefined;
                     if(finalAverage !== undefined){
@@ -258,18 +255,18 @@ export class SuivisDesAcquis extends Model{
                     _.each(this.historiques, (histo) => {
                         //ajout de la moyennefinale si elle existe sinon ajout de la moyenne de l'eleve si elle existe pour la periode en cours
                         if(_.find(suiviDesAcquis.moyennesFinales, {id : histo.id_type}) !== undefined){
-                            histo.moyEleveAllMatieres.push(_.find(suiviDesAcquis.moyennesFinales,{id : histo.id_type}).moyenne);
+                            histo.moyEleveAllMatieres.push(_.find(suiviDesAcquis.moyennesFinales, {id : histo.id_type}).moyenne);
                         } else if (_.find(suiviDesAcquis.moyennes, {id: histo.id_type})!== undefined){
-                            histo.moyEleveAllMatieres.push(_.find(suiviDesAcquis.moyennes,{id : histo.id_type}).moyenne);
+                            histo.moyEleveAllMatieres.push(_.find(suiviDesAcquis.moyennes, {id : histo.id_type}).moyenne);
                         }
                         if(_.find(suiviDesAcquis.moyennesClasse,{id: histo.id_type}) !== undefined){
-                            histo.moyClasseAllMatieres.push(_.find(suiviDesAcquis.moyennesClasse,{id: histo.id_type}).moyenne);
+                            histo.moyClasseAllMatieres.push(_.find(suiviDesAcquis.moyennesClasse, {id: histo.id_type}).moyenne);
                         }
                     });
 
                     if (suiviDesAcquis.appreciationByClasse.appreciation === "" && suiviDesAcquis.moyenneEleve === "NN"
-                        && finalAverage === undefined
-                        && suiviDesAcquis.positionnement_auto === 0 && suiviDesAcquis.positionnement_final === 0) {
+                        && finalAverage === undefined && suiviDesAcquis.positionnement_auto === 0
+                        && suiviDesAcquis.positionnement_final === 0) {
                         suiviDesAcquisToRemove.push(suiviDesAcquis)
                     }
 

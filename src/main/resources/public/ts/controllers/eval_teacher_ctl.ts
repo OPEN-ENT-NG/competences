@@ -4365,7 +4365,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 idStructure: $scope.releveNote.idEtablissement,
                 idSubject: $scope.releveNote.idMatiere,
                 idPeriod: $scope.releveNote.idPeriode,
-                idSchoolClass: $scope.releveNote.idClasse, // TODO TBEGUEY idSchoolClass -> idClass
+                idClass: $scope.releveNote.idClasse,
             }
             return new AppreciationSubjectPeriodStudent(appreciationSubjectPeriodStudentPrepared);
         }

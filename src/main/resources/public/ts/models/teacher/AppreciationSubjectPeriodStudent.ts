@@ -1,4 +1,4 @@
-import { http} from "entcore";
+import {http} from "entcore";
 
 export class AppreciationSubjectPeriodStudent {
     private id:Number;
@@ -6,7 +6,7 @@ export class AppreciationSubjectPeriodStudent {
     public appreciation:String;
     private isDeleted = false;
     private idSubject:String;
-    private idSchoolClass:String;
+    private idClass:String;
     private idPeriod:String;
     private idStructure:String;
     private URL_API = "/competences/appreciation-subject-period";
@@ -17,7 +17,7 @@ export class AppreciationSubjectPeriodStudent {
             this.idStudent = appreciationSubjectPeriodStudent.idStudent;
             this.appreciation = appreciationSubjectPeriodStudent.appreciation;
             this.idSubject = appreciationSubjectPeriodStudent.idSubject;
-            this.idSchoolClass = appreciationSubjectPeriodStudent.idSchoolClass;
+            this.idClass = appreciationSubjectPeriodStudent.idClass;
             this.idPeriod = appreciationSubjectPeriodStudent.idPeriod;
             this.idStructure = appreciationSubjectPeriodStudent.idStructure;
         }
@@ -39,7 +39,7 @@ export class AppreciationSubjectPeriodStudent {
     private toJSON():any{
         return {
             idMatiere: this.idSubject,
-            idClasse: this.idSchoolClass,
+            idClasse: this.idClass,
             idEtablissement: this.idStructure,
             idPeriode: this.idPeriod,
             idEleve: this.idStudent,
