@@ -14,7 +14,8 @@
   ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
-<div class="fiche devoir-info" ng-class="{opened : openedDevoirInfo === true}">
+<div class="fiche devoir-info" ng-class="{opened : openedDevoirInfo === true}"
+     ng-if="informations.devoir != undefined">
     <span class="plus-input" ng-click="openLeftMenu('openedDevoirInfo', openedDevoirInfo);"></span>
     <h2 ng-class="{whiteSpaceNormalBox : informations.devoir.hoveringRecap}"
         class="head text-overflow"
@@ -23,7 +24,7 @@
         ng-mouseleave="hideIt(informations.devoir)">
         [[informations.devoir.name]]
     </h2>
-    <div ng-show="informations.devoir !== undefined">
+    <div>
         <ul>
             <li><span class="bold"><i18n>viescolaire.utils.description</i18n></span> : [[informations.devoir.libelle]]</li>
             <li><span class="bold"><i18n>viescolaire.utils.type</i18n></span> : [[informations.devoir._type_libelle]]</li>
@@ -38,8 +39,8 @@
         </ul>
     </div>
     <div ng-if="informations.devoir.is_evaluated">
-        <h2  ng-show="informations.devoir !== undefined " class="head" ng-click="openedStatistiques = !openedStatistiques"><i18n>viescolaire.utils.stats</i18n></h2>
-        <div  ng-show="informations.devoir !== undefined ">
+        <h2 class="head" ng-click="openedStatistiques = !openedStatistiques"><i18n>viescolaire.utils.stats</i18n></h2>
+        <div>
             <ul>
                 <li><span class="bold"><i18n>evaluation.classe.average</i18n></span>: <span style="color: #1785E6;font-weight: bold;">[[informations.devoir.statistiques.moyenne]]</span></li>
                 <li><span class="bold"><i18n>evaluations.grade.min</i18n></span>: <span style="color: #E61758;font-weight: bold;">[[informations.devoir.statistiques.noteMin]]</span></li>

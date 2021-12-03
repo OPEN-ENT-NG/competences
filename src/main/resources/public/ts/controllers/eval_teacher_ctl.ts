@@ -2511,14 +2511,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.setMatieresFiltered = () => {
-            $scope.search.matiere = null;
+            let idMatiereSelected = $scope.search.matiere != undefined ? $scope.search.matiere.id : undefined;
+            delete $scope.search.matiere;
             if($scope.search.periode != '*' && $scope.search.periode != -1){
                 $scope.matieresFiltered = _.unique($filter('getMatiereClasse')($scope.matieres.all,
-                    $scope.search.classe ? $scope.search.classe.id : undefined, $scope.classes, model.me.userId), (mat) => {
-                    return mat.id;}
+                        $scope.search.classe ? $scope.search.classe.id : undefined, $scope.classes, model.me.userId), (mat) => {
+                        return mat.id;
+                    }
                 );
 
-                if($scope.matieresFiltered.length === 1) {
+                let matiere = _.findWhere($scope.matieresFiltered, {id : idMatiereSelected});
+                if(matiere !== undefined){
+                    $scope.search.matiere = matiere;
+                } else if($scope.matieresFiltered.length === 1) {
                     $scope.search.matiere = $scope.matieresFiltered[0];
                 }
             } else {
@@ -3312,8 +3317,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             await utils.safeApply($scope);
         };
 
-        $scope.reloadStudentInformations = () => {
-            $scope.informations.eleve = undefined;
+        $scope.deleteStudentInformations = () => {
+            delete $scope.informations.eleve;
+        }
+
+        $scope.deleteDevoirInformations = () => {
+            delete $scope.informations.devoir;
         }
 
         /**

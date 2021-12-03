@@ -142,7 +142,7 @@
                 <section>
                     <label class="select">
                         <select ng-model="search.classe"
-                                ng-change="syncPeriode(search.classe.id); reloadStudentInformations()"
+                                ng-change="syncPeriode(search.classe.id); deleteStudentInformations(); deleteDevoirInformations();"
                                 ng-options="classe as classe.name group by classe.type_groupe_libelle for classe
                                 in filteredClasses | orderBy:['type_groupe_libelle','name']">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
@@ -153,7 +153,7 @@
                     <label class="select">
                         <select ng-model="search.periode"
                                 ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
-                                ng-change="setMatieresFiltered(); getReleve();"
+                                ng-change="setMatieresFiltered(); getReleve(); deleteDevoirInformations();"
                                 ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all | orderBy:'id_type'">
                             <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
                             </option>
@@ -164,7 +164,7 @@
                     <label class="select">
                         <select ng-model="search.matiere"
                                 ng-disabled="search.classe == null || search.classe == '*' || search.classe == '' "
-                                ng-change="getReleve()"
+                                ng-change="getReleve(); deleteDevoirInformations();"
                                 ng-options="matiere.name for matiere in matieresFiltered | unique:'name'">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
                         </select>
