@@ -2806,7 +2806,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             }else {
                 idYear = String.valueOf(year-1);
             }
-            if(type.equals(TypePDF.BULLETIN.toString())) {
+            if(type.equals(TypePDF.BULLETINS.toString())) {
                 handleSaveBulletinInSql(eleve, file, handler, name, idEleve, idClasse, externalIdClasse,
                         idEtablissement, idPeriode, idParent, idFile, idYear);
             }else{
