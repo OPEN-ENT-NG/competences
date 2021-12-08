@@ -1,7 +1,7 @@
 package fr.openent.competences.enums;
 
 public enum TypePDF {
-    BULLETIN("Bulletin"),
+    BULLETINS("BULLETINS"),
     BFC("BFC");
 
     private String word ;

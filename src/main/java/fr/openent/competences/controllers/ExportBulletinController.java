@@ -15,6 +15,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -26,6 +27,7 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.SuperAdminFilter;
+import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
@@ -33,7 +35,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
+import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class ExportBulletinController extends ControllerHelper {
@@ -143,8 +147,8 @@ public class ExportBulletinController extends ControllerHelper {
         ArchiveUtils.deleteAll(ARCHIVE_BULLETIN_TABLE, storage, response -> Renders.renderJson(request, response));
     }
 
-    @Get("/archive/bulletin")
-    @ApiDoc("télécharge l archive d'un étab")
+    @Get("/archive/bulletins")
+    @ApiDoc("Télécharge l'archive d'un établissement")
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
     @ResourceFilter(SuperAdminFilter.class)
     public void getArchiveBulletin(final HttpServerRequest request){
@@ -158,12 +162,35 @@ public class ExportBulletinController extends ControllerHelper {
         });
     }
 
-    @Get("/years")
-    @ApiDoc("Récupère les dates de l'année et les types de périodes associés")
+    @Get("/archive/years")
+    @ApiDoc("Récupère les années pour les archives et les périodes de l'année en cours")
     @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
     public void getYearsAndPeriodes(final  HttpServerRequest request){
         String idStructure = request.params().get(ID_STRUCTURE_KEY);
-        utilsService.getYearsAndPeriodes(idStructure, false, defaultResponseHandler(request));
+        String type = request.params().get("type");
+
+        Future<JsonArray> yearsFuture = Future.future();
+        utilsService.getYearsArchive(idStructure, type, yearsEvent -> formate(yearsFuture, yearsEvent));
+
+        Future<JsonObject> activeYearFuture = Future.future();
+        utilsService.getYearsAndPeriodes(idStructure, false, activeYearEvent -> formate(activeYearFuture, activeYearEvent));
+
+        CompositeFuture.all(yearsFuture, activeYearFuture).setHandler(event -> {
+            if(event.failed()){
+                String error = event.cause().getMessage();
+                log.error("[getYearsAndPeriodes] : " + error);
+                badRequest(request,"[getYearsAndPeriodes] Failed");
+            } else {
+                JsonArray years = yearsFuture.result();
+                JsonObject activeYear = activeYearFuture.result();
+
+                JsonObject result = new JsonObject();
+                result.put("years", years);
+                result.put("active_year", activeYear);
+
+                Renders.renderJson(request, result);
+            }
+        });
     }
 
     @Post("/bulletins/exists")
@@ -196,4 +223,6 @@ public class ExportBulletinController extends ControllerHelper {
         });
 
     }
+
+
 }

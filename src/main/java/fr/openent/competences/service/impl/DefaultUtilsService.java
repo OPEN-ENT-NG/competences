@@ -1471,4 +1471,18 @@ public class DefaultUtilsService implements UtilsService {
 
         );
     }
+
+    @Override
+    public void getYearsArchive(String idStructure, String type, Handler<Either<String, JsonArray>> handler) {
+        String tableName = "archive_" + type;
+
+        StringBuilder query = new StringBuilder()
+        .append("SELECT DISTINCT id_annee")
+        .append(" FROM notes.").append(tableName)
+        .append(" WHERE id_etablissement = ?;");
+
+        JsonArray params = new JsonArray().add(idStructure);
+        Sql.getInstance().prepared(query.toString(), params, Competences.DELIVERY_OPTIONS,
+                validResultHandler(handler));
+    }
 }

@@ -132,7 +132,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
         JsonObject bulletinToHandle = HandleStackJsonObjectBulletins();
         if (bulletinToHandle == null) return;
         log.info("start Work processBulletin in Bulletins worker");
-        bulletinToHandle.put("typeExport", TypePDF.BULLETIN.toString());
+        bulletinToHandle.put("typeExport", TypePDF.BULLETINS.toString());
         exportBulletinService.runSavePdf(bulletinToHandle, paramBulletin, vertx, config, event -> {
             processBulletin(paramBulletin, bulletinHandlerWork);
             if(event.isLeft()){

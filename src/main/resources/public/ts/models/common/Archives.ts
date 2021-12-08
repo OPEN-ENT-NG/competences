@@ -36,25 +36,22 @@ export class Archives {
                 if(params.periodes_type) {
                     url += "&idsPeriode=" + params.periodes_type.join(",");
                 }
-                http.get(url, {responseType: 'arraybuffer'})
-                    .then(function (data) {
-                        if(data.status === 200)
-                            if (resolve && typeof(resolve) === 'function') {
-                                resolve(data);
-                            }
-                        if (data.status === 202) {
-                            reject();
+                http.get(url, {responseType: 'arraybuffer'}).then(function (data) {
+                    if(data.status === 200)
+                        if (resolve && typeof(resolve) === 'function') {
+                            resolve(data);
                         }
-                        if(data.status === 204){
-                            toasts.info("no.data.to.export")
-                            reject();
-                        }
-                    })
-                    .catch( () => {
+                    if (data.status === 202) {
                         reject();
-                    });
-            }
-            catch (e){
+                    }
+                    if(data.status === 204){
+                        toasts.info("no.data.to.export")
+                        reject();
+                    }
+                }).catch(() => {
+                    reject();
+                });
+            } catch (e){
                 notify.error('evaluation.archives.generation.error');
                 reject(e);
             }
