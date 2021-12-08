@@ -49,13 +49,13 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             };
 
             $scope.LSU_TYPE_EXPORT = LSU_TYPE_EXPORT;
-            $scope.getYearsAndPeriodes();
             if(typeArchive !== undefined) {
                 $scope.paramsArchive = {
                     type: typeArchive,
                     idStructure: $scope.structure.id
                 };
             }
+            $scope.getYearsAndPeriodes();
             await utils.safeApply($scope);
         }
 
@@ -343,7 +343,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         $scope.generateArchives = async function () {
             await Utils.runMessageLoader($scope);
             $scope.inProgress = true;
-            $scope.showMessageBulletin = $scope.paramsArchive.type === 'bulletin';
+            $scope.showMessageBulletin = $scope.paramsArchive.type === 'bulletins';
 
             if($scope.paramsArchive.year === $scope.years[0].id){
                 $scope.paramsArchive.periodes_type = _.pluck(_.filter($scope.currentYearTypesPeriodes, (type_periode) => {
@@ -356,7 +356,6 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                 link.href = window.URL.createObjectURL(blob);
                 link.download = res.headers['content-disposition'].split('filename=')[1];
                 link.download = link.download.split("\"").join("");
-                console.log(link.download);
                 document.body.appendChild(link);
                 link.click();
                 await Utils.stopMessageLoader($scope);
@@ -369,32 +368,42 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         $scope.getYearsAndPeriodes = function () {
             $scope.currentYearTypesPeriodes = [];
             $scope.years = [];
-            http.get('/competences/years?idStructure=' + $scope.structure.id).then(function (data) {
+
+            let url = '/competences/archive/years?idStructure=' + $scope.structure.id +
+                '&type=' + $scope.paramsArchive.type;
+            http.get(url).then(function (data) {
                 if(data.status === 200){
                     let res = data.data;
 
-                    let periodes = JSON.parse(res.periodes);
-                    $scope.currentYearTypesPeriodes = _.filter($scope.structure.typePeriodes.all , (type) => {
-                        type.selected = true;
-                        return periodes.includes(type.id);
-                    });
+                     let active_year = res.active_year;
+                     $scope.currentYearTypesPeriodes = _.filter($scope.structure.typePeriodes.all , (type) => {
+                         type.selected = true;
+                         return active_year.periodes.includes(type.id);
+                     });
 
-                    let startYear = moment(res.start_date).format('YYYY');
-                    let endYear = moment(res.end_date).format('YYYY');
-                    $scope.years.push({
-                        id: startYear,
-                        libelle : startYear + ' - ' + endYear +
-                            " (" + lang.translate('viescolaire.utils.annee.encours') + ")"
-                    });
+                    let years = res.years;
+                    let start_active_year = active_year.start_date.substring(0, 4);
+                    let end_active_year = active_year.end_date.substring(0, 4);
+                    if(years && years.length > 0) {
+                        years.forEach(year => {
+                            let nextYear = (parseInt(year.id_annee) + 1);
+                            let libelle = year.id_annee + " - " + nextYear;
+                            if(start_active_year === year.id_annee && end_active_year === nextYear.toString()) {
+                                libelle += " (Année en cours)";
+                            }
 
-                    let nbYear = 5;
-                    for(var i = 1; i <= nbYear; i++) {
+                            $scope.years.push({
+                                id: year.id_annee,
+                                libelle: libelle
+                            });
+                        });
+                        $scope.years = _.sortBy($scope.years, (year) =>  year.id * -1); // sort descending
+                    } else {
                         $scope.years.push({
-                            id: parseInt(startYear) - i,
-                            libelle : (parseInt(startYear) - i) + ' - ' + (parseInt(endYear) - i)
+                            id: start_active_year,
+                            libelle: start_active_year + " - " + end_active_year + " (Année en cours)"
                         });
                     }
-
                     $scope.paramsArchive.year = $scope.years[0].id;
 
                     utils.safeApply($scope);
