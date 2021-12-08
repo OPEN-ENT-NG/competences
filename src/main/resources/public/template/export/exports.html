@@ -145,10 +145,24 @@
                         </label>
                     </div>
                 </div>
+                <div class="row twelve cell horizontal-spacing">
+                    <h4><i18n>evaluations.archives.choice.type</i18n></h4>
+                    <label>
+                        <input type="radio" ng-model="paramsArchive.type" value="bfc"
+                               ng-change="getYearsAndPeriodes()">
+                        <i18n>evaluations.bilan.fin.cycle.title</i18n>
+                    </label><br/>
+                    <label>
+                        <input type="radio" ng-model="paramsArchive.type" value="bulletins"
+                               ng-change="getYearsAndPeriodes()">
+                        <i18n>evaluations.bulletin</i18n>
+                    </label>
+                </div>
                 <div class="row ten cell horizontal-spacing">
                     <h4><i18n>viescolaire.utils.periode</i18n></h4>
                     <div class="row display-inline-block">
-                        <label class="ten small" ><span><i18n>viescolaire.utils.annee</i18n> : </span>
+                        <label class="ten small">
+                            <span><i18n>viescolaire.utils.annee</i18n> : </span>
                             <select ng-model="paramsArchive.year"
                                     ng-options="year.id as year.libelle for year in years">
                             </select>
@@ -156,25 +170,13 @@
                     </div>
                     <div class="row display-inline-block margin-loader">
                         <label class="checkbox ten left-spacing-twice"
-                               ng-show="paramsArchive.year === years[0].id && paramsArchive.type === 'bulletin'"
+                               ng-show="paramsArchive.year === years[0].id && paramsArchive.type === 'bulletins'"
                                ng-repeat="type_periode in currentYearTypesPeriodes | orderBy:'id'">
                             <input type="checkbox"
                                    ng-model="type_periode.selected">
                             <span>[[getPeriodeLibelle(type_periode)]]</span>
                         </label>
                     </div>
-                </div>
-                <h4><i18n>evaluations.archives.choice.type</i18n></h4>
-                <div class="twelve cell horizontal-spacing">
-                    <label>
-                        <input type="radio" ng-model="paramsArchive.type" value="bfc">
-                        <i18n>evaluations.bilan.fin.cycle.title</i18n>
-                    </label><br/>
-                    <label>
-                        <input type="radio" ng-model="paramsArchive.type" value="bulletin">
-                        <i18n>evaluations.bulletin</i18n>
-
-                    </label>
                 </div>
                 <!-- Archives pas encore générer par le superUser-->
                 <button type="button" ng-click="generateArchives()" class="vertical-spacing">
