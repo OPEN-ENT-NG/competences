@@ -307,8 +307,13 @@ public class ExportEvaluationHelper {
 
                     competenceNotesEleves.add(_competenceNotes);
                 } else {
-                    competenceNotesEleves.add(text ? getMaitrise(maitrises.get("0").getString("lettre"), "0")
-                            : getMaitrise(maitrises.get("0").getString("default"), "0"));
+                    JsonObject _competenceNotes = new JsonObject();
+                    _competenceNotes.put("visu", getMaitrise(maitrises.get("0").getString("default"), "0"));
+
+                    if(usePerso && !text)
+                        _competenceNotes.put("persoColor", maitrises.get(String.valueOf("0")).getString("couleur"));
+
+                    competenceNotesEleves.add(_competenceNotes);
                 }
                 eleveObject.put("competenceNotes", competenceNotesEleves);
             }
