@@ -19,10 +19,6 @@
         <i18n>evaluation.not.exist</i18n>
     </div>
 
-    <div class="ten formative-legend">
-        * (F) : Evaluation de type Formative
-    </div>
-
     <table class="ten responsive-table" ng-if="!EvaluationExiste(detailCompetence.competencesEvaluations)">
         <thead>
         <tr>
@@ -44,6 +40,9 @@
                 <span ng-show="sortType == 'evaluation' && !sortReverse" class="sort-desc"></span>
                 <span ng-show="sortType == 'evaluation' && sortReverse" class="sort-asc"></span>
             </th>
+
+            <th>
+            </th>
         </tr>
         </thead>
         <tbody>
@@ -61,8 +60,17 @@
                                  classes="'competence-eval'">
                 </c-skills-bubble>
             </td>
+            <td>
+                <opt data-ng-click="deleteModel(model);">
+                    <i class="trash"></i>
+                </opt>
+            </td>
         </tr>
 
         </tbody>
     </table>
+
+    <div class="ten formative-legend right-spacing-twice">
+        * (F) : Evaluation de type Formative
+    </div>
 </div>
