@@ -385,18 +385,16 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     if (idPeriode) {
                         url += "&idPeriode=" + idPeriode;
                     }
-                    http().getJson(url)
-                        .error((result) => {
-                            $scope.errorWhenExportPdf = true;
-                            $scope.errorResult(result);
-                            utils.safeApply($scope);
-                        })
-                        .done((result) => {
-                            delete $scope.recapEval;
-                            $scope.opened.recapEval = false;
-                            launchDownloadInNewWindows(url);
-                            utils.safeApply($scope);
-                        });
+                    try{
+                       let data = await httpAxios.get(url, {responseType: 'arraybuffer'});
+                        delete $scope.recapEval;
+                        $scope.opened.recapEval = false;
+                        Utils.downloadFile(data, document);
+                    }catch(e){
+                        $scope.errorWhenExportPdf = true;
+                        $scope.errorResult(e.error());
+                        utils.safeApply($scope);
+                    }
                     break;
                 }
                 case 'printTabMoyPosAppr': {
@@ -596,6 +594,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     notify.success('evaluations.export.bulletin.success'):
                     notify.error('competance.information.noExport');
             }
+            utils.safeApply($scope);
         };
 
         const initResultPeriodic = ():any => {
