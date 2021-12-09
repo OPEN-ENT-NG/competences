@@ -1884,71 +1884,31 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         //récupérer les moysFinales => set mapIdEleveIdMatMoy
                         if (moyenneFinale != null && !moyenneFinale.equals("-100")) {
-                            if (mapIdEleveIdMatMoy.containsKey(idEleveMoyF)) {
-                                Map<String, Double> mapIdMatMoy = mapIdEleveIdMatMoy.get(idEleveMoyF);
-                                // meme eleve changement de matiere
-                                if (!mapIdMatMoy.containsKey(idMatMoyF)) {
-                                    mapIdMatMoy.put(idMatMoyF, Double.valueOf(moyenneFinale));
+                            if(!mapAllidMatAndidTeachers.containsKey(idMatMoyF))
+                            setListTeachers(services, multiTeachers,mapAllidMatAndidTeachers,idMatMoyF);
+                            if(mapAllidMatAndidTeachers.containsKey(idMatMoyF)){
+                                if (mapIdEleveIdMatMoy.containsKey(idEleveMoyF)) {
+                                    Map<String, Double> mapIdMatMoy = mapIdEleveIdMatMoy.get(idEleveMoyF);
+                                    // meme eleve changement de matiere
+                                    if (!mapIdMatMoy.containsKey(idMatMoyF)) {
+                                        mapIdMatMoy.put(idMatMoyF, Double.valueOf(moyenneFinale));
+                                    }
+                                } else {//nouvel eleve
+                                    Map<String, Double> newMapIdMatMoy = new HashMap<>();
+                                    newMapIdMatMoy.put(idMatMoyF, Double.valueOf(moyenneFinale));
+                                    mapIdEleveIdMatMoy.put(idEleveMoyF, newMapIdMatMoy);
                                 }
-                            } else {//nouvel eleve
-                                Map<String, Double> newMapIdMatMoy = new HashMap<>();
-                                newMapIdMatMoy.put(idMatMoyF, Double.valueOf(moyenneFinale));
-                                mapIdEleveIdMatMoy.put(idEleveMoyF, newMapIdMatMoy);
-                            }
+                            }//else case student with final average on another structure
                         } else if(moyenneFinale == null) {//pas de moyFinale => set mapIdEleveIdMatListNotes
                             if (respNoteMoyFinale.getString("coefficient") == null || !respNoteMoyFinale.getBoolean("is_evaluated")){
                                 continue;
                             }
                             if(idEleveNotes != null){
-                                NoteDevoir noteDevoir = new NoteDevoir(
-                                        Double.valueOf(respNoteMoyFinale.getString("valeur")),
-                                        Double.valueOf(respNoteMoyFinale.getInteger("diviseur")),
-                                        respNoteMoyFinale.getBoolean("ramener_sur"),
-                                        Double.valueOf(respNoteMoyFinale.getString("coefficient")));
-
-                                if (mapIdEleveIdMatListNotes.containsKey(idEleveNotes)) {
-                                    Map<String, List<NoteDevoir>> mapIdMatListNotes = mapIdEleveIdMatListNotes.get(idEleveNotes);
-                                    if (mapIdMatListNotes.containsKey(idMatiere)) {
-                                        mapIdMatListNotes.get(idMatiere).add(noteDevoir);
-                                    } else {//nouvelle matière dc nouvelle liste de notes
-                                        List<NoteDevoir> newListNotes = new ArrayList<>();
-                                        newListNotes.add(noteDevoir);
-                                        mapIdMatListNotes.put(idMatiere, newListNotes);
-                                    }
-                                } else {//nouvel élève dc nelle map idMat-listnotes
-                                    Map<String, List<NoteDevoir>> newMapIdMatListNotes = new HashMap<>();
-                                    List<NoteDevoir> newListNotes = new ArrayList<>();
-                                    newListNotes.add(noteDevoir);
-                                    newMapIdMatListNotes.put(idMatiere, newListNotes);
-                                    mapIdEleveIdMatListNotes.put(idEleveNotes, newMapIdMatListNotes);
-                                }
+                                setMapIdEleveIdMatListNotes(mapIdEleveIdMatListNotes, respNoteMoyFinale, idEleveNotes, idMatiere);
                             }
-                        }
-
-                        if(idMatiere == null && idMatMoyF != null){
-                            respNoteMoyFinale.put("id_matiere", idMatMoyF);
-                        }
-
-                        if(idMatiere != null){
-                            Set<String> listIdsTeacher = new HashSet();
-                            JsonObject service = (JsonObject) services.stream()
-                                    .filter(el -> idMatiere.equals(((JsonObject) el).getString("id_matiere")))
-                                    .findFirst().orElse(null);
-
-                            if(service != null && service.getBoolean("is_visible"))
-                                listIdsTeacher.add(service.getString("id_enseignant"));
-
-                            multiTeachers.forEach(item -> {
-                                JsonObject teacher = (JsonObject) item;
-
-                                String subjectId = teacher.getString("subject_id");
-                                String coTeacherId = teacher.getString("second_teacher_id");
-
-                                if (subjectId.equals(idMatiere)) {
-                                    listIdsTeacher.add(coTeacherId);
-                                }
-                            });
-                            mapAllidMatAndidTeachers.put(idMatiere, listIdsTeacher);
+                            if(!mapAllidMatAndidTeachers.containsKey(idMatiere)){
+                                setListTeachers(services, multiTeachers, mapAllidMatAndidTeachers, idMatiere);
+                            }
                         }
                     }
 
@@ -2054,6 +2014,56 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 }
             }
         };
+    }
+
+    private void setMapIdEleveIdMatListNotes (Map<String, Map<String, List<NoteDevoir>>> mapIdEleveIdMatListNotes,
+                                              JsonObject respNoteMoyFinale, String idEleveNotes, String idMatiere) {
+        NoteDevoir noteDevoir = new NoteDevoir(
+                Double.valueOf(respNoteMoyFinale.getString("valeur")),
+                Double.valueOf(respNoteMoyFinale.getInteger("diviseur")),
+                respNoteMoyFinale.getBoolean("ramener_sur"),
+                Double.valueOf(respNoteMoyFinale.getString("coefficient")));
+
+        if (mapIdEleveIdMatListNotes.containsKey(idEleveNotes)) {
+            Map<String, List<NoteDevoir>> mapIdMatListNotes = mapIdEleveIdMatListNotes.get(idEleveNotes);
+            if (mapIdMatListNotes.containsKey(idMatiere)) {
+                mapIdMatListNotes.get(idMatiere).add(noteDevoir);
+            } else {//nouvelle matière dc nouvelle liste de notes
+                List<NoteDevoir> newListNotes = new ArrayList<>();
+                newListNotes.add(noteDevoir);
+                mapIdMatListNotes.put(idMatiere, newListNotes);
+            }
+        } else {//nouvel élève dc nelle map idMat-listnotes
+            Map<String, List<NoteDevoir>> newMapIdMatListNotes = new HashMap<>();
+            List<NoteDevoir> newListNotes = new ArrayList<>();
+            newListNotes.add(noteDevoir);
+            newMapIdMatListNotes.put(idMatiere, newListNotes);
+            mapIdEleveIdMatListNotes.put(idEleveNotes, newMapIdMatListNotes);
+        }
+    }
+
+    private void setListTeachers (JsonArray services, JsonArray multiTeachers,
+                                  SortedMap<String, Set<String>> mapAllidMatAndidTeachers, String idMatiere) {
+        Set<String> listIdsTeacher = new HashSet();
+
+        JsonObject service = (JsonObject) services.stream()
+                .filter(el -> idMatiere.equals(((JsonObject) el).getString("id_matiere")))
+                .findFirst().orElse(null);
+
+        if(service != null) {
+            if(service.getBoolean("is_visible") )listIdsTeacher.add(service.getString("id_enseignant"));
+            multiTeachers.forEach(item -> {
+                JsonObject teacher = (JsonObject) item;
+
+                String subjectId = teacher.getString("subject_id");
+                String coTeacherId = teacher.getString("second_teacher_id");
+
+                if (subjectId.equals(idMatiere)) {
+                    listIdsTeacher.add(coTeacherId);
+                }
+            });
+            mapAllidMatAndidTeachers.put(idMatiere, listIdsTeacher);
+        }
     }
 
     @Override
