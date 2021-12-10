@@ -61,9 +61,10 @@
                 </c-skills-bubble>
             </td>
             <td>
-                <opt data-ng-click="deleteModel(model);">
-                    <i class="trash"></i>
-                </opt>
+                <i class="trash"
+                   data-ng-click="deleteEvaluationLibre(evaluation.id_competences_notes)"
+                   tooltip="evaluations.test.delete">
+                </i>
             </td>
         </tr>
 

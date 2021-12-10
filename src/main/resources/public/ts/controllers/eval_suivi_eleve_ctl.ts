@@ -40,6 +40,7 @@ import http from "axios";
 import { evaluations as evaluationsParentFormat } from '../models/eval_parent_mdl';
 import {LengthLimit} from "../constants";
 import {getTitulairesForRemplacantsCoEnseignant} from "../utils/teacher";
+import httpAxios from "axios";
 declare let _: any;
 declare let Chart: any;
 declare let location: any;
@@ -1358,6 +1359,15 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             template.open('followEleve', `enseignants/suivi_eleve/tabs_follow_eleve/${nameOfPageHtml}`);
             $scope.changeContent();
         };
+
+        $scope.deleteEvaluationLibre = async function(idCompetence) {
+            try {
+                await http.delete(`/competences/competence/notes/${idCompetence}`)
+            }
+            catch (e) {
+                console.error(e);
+            }
+        }
 
         /**********************************************************************************************************
          *  Onglet SUIVI DES NOTES

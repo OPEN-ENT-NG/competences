@@ -164,4 +164,5 @@ public interface CompetenceNoteService extends CrudService {
      */
     void getMaxBaremeMapOrderBaremeBrevet(String idEtablissement, String idClasse, Handler<Either<String,Map<Integer, Map<Integer,Integer>>>> handler);
 
- }
+    void dropCompetenceNotesDevoir(String idCompetenceNote, Handler<Either<String, JsonArray>> handler);
+}
