@@ -2666,16 +2666,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param moyennesFinales
          * @returns {string}
          */
-        $scope.getMoyenne = function (idPeriode,eleve) {
+        $scope.getMoyenne = function (idPeriode, eleve) {
             if(idPeriode == null){
                 let periodes = 0;
                 let sum = 0;
-                for(let i=1;i<6;i++){
+                for(let i = 1; i < 6; i++){
                     let _moyenneFinale = _.findWhere(eleve.moyennesFinales, {id_periode: i});
                     if (_moyenneFinale !== undefined && _moyenneFinale !== null && _moyenneFinale.moyenne !== undefined) {
                         sum += Number(_moyenneFinale.moyenne);
-                        periodes ++;
-                    }else {
+                        periodes++;
+                    } else {
                         let _moyenne = _.findWhere(eleve.moyennes, {id_periode: i});
                         if (_moyenne !== undefined && _moyenne !== null && _moyenne.moyenne !== undefined) {
                             sum += Number(_moyenne.moyenne);
@@ -2684,17 +2684,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
                 if(periodes != 0){
-                    return (Number(sum/periodes).toFixed(2));
+                    return (Number(sum / periodes).toFixed(2));
                 }
             }
+
             let _moyenneFinale = _.findWhere(eleve.moyennesFinales, {id_periode: idPeriode});
             if (_moyenneFinale !== undefined && _moyenneFinale !== null && _moyenneFinale.moyenne !== undefined) {
                 return _moyenneFinale.moyenne;
             }
+
             let _moyenne = _.findWhere(eleve.moyennes, {id_periode: idPeriode});
             if (_moyenne !== undefined && _moyenne !== null && _moyenne.moyenne !== undefined) {
                 return _moyenne.moyenne;
             }
+
             return "";
         };
 
