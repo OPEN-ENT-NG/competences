@@ -200,6 +200,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.allCompetences = devoirTmp.competences;
                     $scope.evaluatedCompetence = $scope.evaluationOfSkilles($scope.allCompetences, devoirTmp);
                     $scope.setClasseEnseignants($scope.search);
+                    $scope.notYearPeriodes = _.filter($scope.filteredPeriode, (periode) => {
+                        return $scope.notYear(periode);
+                    });
                     $scope.devoir.competences.sync().then(async () => {
                         await $scope.createDevoir();
                         template.open('main', 'enseignants/creation_devoir/display_creation_devoir');
@@ -763,11 +766,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
                 setSearchPeriode(classe, currentPeriode);
                 if ($location.path() === '/devoir/create' ||
-                    ($scope.devoir !== undefined
-                        && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
+                    ($scope.devoir !== undefined && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
                     $scope.devoir.id_periode = currentPeriode !== null ? currentPeriode.id_type : null;
                     $scope.controleDate($scope.devoir);
-                    utils.safeApply($scope);
                 }
                 if($location.path() === '/releve') {
                     $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
