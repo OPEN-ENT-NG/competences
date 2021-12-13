@@ -388,7 +388,7 @@ export class ReleveNote extends  Model implements IModel {
                         d.eleves.all = this.classe.eleves.all;
                     if (d) {
                         d.statistiques = dstat;
-                        if (!d.percent) {
+                        if (d.percent === undefined) {
                             evaluations.devoirs.getPercentDone(d).then(() => {
                                 d.statistiques.percentDone = d.percent;
                             });
