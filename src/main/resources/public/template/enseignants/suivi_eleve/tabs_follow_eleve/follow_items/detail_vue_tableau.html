@@ -62,8 +62,8 @@
             </td>
             <td>
                 <i class="trash"
-                   data-ng-click="deleteEvaluationLibre(evaluation.id_competences_notes)"
-                   tooltip="evaluations.test.delete">
+                   ng-click="displayDeleteEvaluationLibre(evaluation)"
+                   ng-show="evaluation.id_typeeval == 1">
                 </i>
             </td>
         </tr>
@@ -74,4 +74,60 @@
     <div class="ten formative-legend right-spacing-twice">
         * (F) : Evaluation de type Formative
     </div>
+
+
+    <lightbox show="suppressionEvaluationLibre" on-close="closeDeleteEvaluationLibre()">
+
+        <h1>Supprimer une évaluation libre</h1>
+        <p>Vous allez supprimer l'évaluation libre suivante :</p>
+        <table class="ten responsive-table" ng-if="!EvaluationExiste(detailCompetence.competencesEvaluations)">
+            <thead>
+            <tr>
+                <th ng-click="sortType = 'evaluation_libelle'; sortReverse =!sortReverse">
+                    <i18n>evaluations.title</i18n>
+                    <span ng-show="sortType == 'evaluation_libelle' && !sortReverse" class="sort-desc"></span>
+                    <span ng-show="sortType == 'evaluation_libelle' && sortReverse" class="sort-asc"></span>
+                </th>
+                <th ng-click="sortType = 'owner_name'; sortReverse =!sortReverse"><i18n>viescolaire.utils.teacher</i18n>
+                    <span ng-show="sortType == 'owner_name' && !sortReverse" class="sort-desc"></span>
+                    <span ng-show="sortType == 'owner_name' && sortReverse" class="sort-asc"></span>
+                </th>
+                <th ng-click="sortType = 'evaluation_date'; sortReverse =!sortReverse"><i18n>date</i18n>
+                    <span ng-show="sortType == 'evaluation_date' && !sortReverse" class="sort-desc"></span>
+                    <span ng-show="sortType == 'evaluation_date' && sortReverse" class="sort-asc"></span>
+                </th>
+                <th ng-click="sortType = 'evaluation'; sortReverse =!sortReverse">
+                    <i18n>level</i18n>
+                    <span ng-show="sortType == 'evaluation' && !sortReverse" class="sort-desc"></span>
+                    <span ng-show="sortType == 'evaluation' && sortReverse" class="sort-asc"></span>
+                </th>
+
+                <th>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>
+                    [[evalToDelete.evaluation_libelle]]
+                    <span ng-if="evalToDelete.formative"> (F)</span>
+                </td>
+                <td class="titre-widget ten centered enseignantCycle">[[evalToDelete.owner_name]]</td>
+                <td>[[getDateFormated(evalToDelete.evaluation_date)]]</td>
+                <td>
+                    <c-skills-bubble text="(mapLettres[evalToDelete.evaluation])"
+                                     color="(mapCouleurs[evalToDelete.evaluation])"
+                                     classes="'competence-eval'">
+                    </c-skills-bubble>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <button class="marginFive" ng-click="closeDeleteEvaluationLibre()">
+            <i18n>evaluations.evaluation.libre.cancel</i18n>
+        </button>
+        <button class="marginFive" ng-click="deleteEvaluationLibre(evalToDelete.id_competences_notes)">
+            <i18n>evaluations.evaluation.libre.delete</i18n>
+        </button>
+    </lightbox>
 </div>

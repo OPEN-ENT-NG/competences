@@ -103,6 +103,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 controlledDate: true,
                 matieres: $filter('getMatiereClasse')(evaluations.matieres.all, $scope.search.classe.id, $scope.classes, model.me.userId),
                 sousmatiere: [],
+                suppressionEvaluationLibre: false,
             });
 
             let competenceEvaluee = new CompetenceNote({
@@ -121,7 +122,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
          * Ouvre la fenêtre de création d'une évaluation libre
          */
         $scope.createEvaluationLibre = async () => {
-            $scope.messages.successEvalLibre = false;
+            $scope.hideMessages();
             $scope.evaluationLibre = $scope.initEvaluationLibre();
 
             if ($scope.search.classe && $scope.search.classe.periodes && $scope.search.classe.periodes.length() == 0) {
@@ -317,8 +318,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
          */
         $scope.hasValueInConversionTable = (domaine, Conversion, $index) => {
             return (domaine.moyenne !== -1 &&
-                (($index !== 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne < Conversion.valmax) ||
-                    ($index === 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <= Conversion.valmax))) ||
+                    (($index !== 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne < Conversion.valmax) ||
+                        ($index === 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <= Conversion.valmax))) ||
                 ((domaine.moyenne === -1 && domaine.bfc !== undefined) &&
                     (($index !== 0 && domaine.bfc.valeur >= Conversion.valmin && domaine.bfc.valeur < Conversion.valmax) ||
                         ($index === 0 && domaine.bfc.valeur >= Conversion.valmin && domaine.bfc.valeur <= Conversion.valmax)))
@@ -712,6 +713,12 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             utils.scrollTo('top');
         };
 
+        $scope.hideMessages = function() {
+            for(let m in $scope.messages){
+                $scope.messages[m] = false;
+            }
+        }
+
         /**
          * Lance la séquence de retour à la vue globale du suivi de compétence
          */
@@ -719,7 +726,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             template.close("suivi-competence-detail");
             $scope.opened.detailCompetenceSuivi = false;
             $scope.detailCompetence = null;
-            $scope.messages.successEvalLibre = false;
+            $scope.hideMessages();
         };
 
         /**
@@ -1367,7 +1374,45 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             catch (e) {
                 console.error(e);
             }
+            finally {
+                $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve, $scope.search.periode,
+                    $scope.search.classe, $scope.currentCycle, false, $scope.evaluations.structure);
+
+                $scope.suiviCompetence.sync().then( async () => {
+                    if ($scope.searchBilan.parDomaine === 'true') {
+                        await $scope.suiviCompetence.domaines.sync();
+                        await $scope.suiviCompetence.setMoyenneCompetences();
+                        $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
+                        await $scope.initChartsEval();
+
+                        await utils.safeApply($scope);
+                    } else if ($scope.searchBilan.parDomaine === 'false') {
+                        $scope.suiviFilter.mine = 'false';
+                        await $scope.suiviCompetence.enseignements.sync();
+                    }
+                    $scope.messages.deleteEvalLibre = true;
+                    $scope.closeDeleteEvaluationLibre();
+                })
+            }
         }
+
+        /**
+         *Afficher une lightbox pour la suppression d'évaluation libre
+         */
+        $scope.displayDeleteEvaluationLibre = function(evaluation) {
+            $scope.hideMessages();
+            $scope.suppressionEvaluationLibre = true;
+            $scope.evalToDelete = evaluation;
+            utils.safeApply($scope);
+        };
+
+        /**
+         *Fermer une lightbox pour la suppression d'évaluation libre
+         */
+        $scope.closeDeleteEvaluationLibre = () => {
+            $scope.suppressionEvaluationLibre = false;
+            utils.safeApply($scope);
+        };
 
         /**********************************************************************************************************
          *  Onglet SUIVI DES NOTES
