@@ -446,7 +446,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("SELECT DISTINCT competences.id as id_competence, competences.id_parent, competences.id_type, competences.id_cycle, ")
                 .append("competences_notes.id as id_competences_notes, competences_notes.evaluation, competences_notes.owner, ")
                 .append("competences_notes.created, devoirs.name as evaluation_libelle, devoirs.date as evaluation_date,")
-                .append("devoirs.id_matiere AS id_matiere, rel_competences_domaines.id_domaine, devoirs.id_type AS id_typeEval,")
+                .append("devoirs.id_matiere AS id_matiere, rel_competences_domaines.id_domaine, devoirs.id_type AS id_typeEval, competences_notes.id_devoir AS id_devoir,")
                 .append(" type.formative AS formative ")
                 .append(", competence_niveau_final.niveau_final AS niveau_final  ")
                 .append(", competence_niveau_final_annuel.niveau_final AS niveau_final_annuel  ")

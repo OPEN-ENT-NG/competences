@@ -39,7 +39,6 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -523,10 +522,10 @@ public class CompetenceNoteController extends ControllerHelper {
 
 
     @Delete("/competence/notes/:idCompetenceNote")
-    @ApiDoc("Supprime une évaluation libre")
+    @ApiDoc("Supprime une compétence note")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessSuiviCompetenceFilter.class)
-    public void deleteEvaluationLibre(final HttpServerRequest request) {
+    public void deleteCompetenceNote(final HttpServerRequest request) {
         if (request.params().contains("idCompetenceNote")) {
             String idCompetenceNote = request.params().get("idCompetenceNote");
             competencesNotesService.dropCompetenceNotesDevoir(idCompetenceNote, new Handler<Either<String, JsonArray>>() {
