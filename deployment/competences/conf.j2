@@ -1,0 +1,48 @@
+{
+    "name": "{{ competencesVersion }}",
+    "config": {
+        "main" : "fr.openent.competences.Competences",
+        "port": 8129,
+        "app-name": "Competences",
+        "app-address": "/competences",
+        "app-icon": "https://{{ host }}/competences/public/img/uni-competences.svg",
+        "host": "https://{{ host }}",
+        "ssl": true,
+        {% if overrideTheme %} "override-theme": {{ override2d }}, {% endif %}
+        "auto-redeploy": false,
+        "userbook-host": "https://{{ host }}",
+        "integration-mode": "HTTP",
+        "app-registry.port": 8012,
+        "mode": "prod",
+        "entcore.port": 8009,
+        "db-schema": "notes",
+        "vsco-schema": "viesco",
+        "sql": true,
+        "publicConf": {
+            "xiti": {
+                "ID_SERVICE": {
+                    "default": 6
+                },
+                "LIBELLE_SERVICE": {
+                    "default": "GESTION_COMPETENCES"
+                }
+            }
+        },
+        "lsun": {
+            "xsd_path": "./public/lsun/import-complet-strict.xsd",
+            "civilite_regex" : "^[Mm][^mM]*[Mm][^mM]*$"
+        },
+        {% if urlPDFGenerator is defined %}
+        "node-pdf-generator" : {
+            "authorization" : "Basic {{ authorizationPDFGenerator }}",
+            "url": "{{ urlPDFGenerator }}"
+        },
+        {% endif %}
+        "exports": {
+            "template-path": "./public/template/pdf/"
+        },
+        "transition" : {
+            "timeout-transaction" : 1000
+        }
+    }
+}
