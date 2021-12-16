@@ -1293,13 +1293,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         $scope.checkHaveResult = function () {
             switch ($scope.displayFollowEleve) {
                 case ('followNotes'):
-                    let res = false;
-                    _.forEach(evaluations.matieres.all, (matiere) => {
-                        if ($scope.hasEvaluatedDevoir(matiere)) {
-                            res = true;
-                        }
-                    });
-                    return res;
+                    return $scope.matieresReleve.length > 0;
                 case ('bulletins'):
                     if ($scope.search.periode !== null && $scope.search.periode.id_type !== null)
                         return $scope.content;
@@ -1373,8 +1367,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             if ($scope.dataReleve === undefined) {
                 return;
             }
-            let id_eleve = $scope.search.eleve.id;
-            await utils.calculMoyennes($scope.search.periode.id_type, id_eleve, $scope.matieresReleve.all, $scope.dataReleve.devoirs);
+            await utils.calculMoyennes($scope.search.periode.id_type, $scope.search.eleve.id, $scope.matieresReleve,
+                $scope.matieres, $scope.dataReleve.devoirs);
             await utils.safeApply($scope);
         };
 
@@ -1394,8 +1388,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             await utils.safeApply($scope);
         };
 
-        // Filter
-        $scope.hasEvaluatedDevoir = (matiere) => {
+        /*$scope.hasEvaluatedDevoir = (matiere) => {
             if($scope.dataReleve) {
                 let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) => {
                     return (devoir.note !== undefined || devoir.annotation !== undefined)
@@ -1404,7 +1397,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             }else{
                 return false;
             }
-        };
+        };*/
+
         $scope.isEvaluated = (devoir) => {
             return devoir.is_evaluated && (devoir.note !== undefined || devoir.annotation !== undefined);
         };
@@ -1425,44 +1419,17 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         };
 
         // Fonction de sélection d'un enfant par le parent
-        $scope.chooseChild = async function(eleve) {
+        $scope.chooseChild = async function() {
             return new Promise( async (resolve, reject) => {
                 try {
                     await evaluationsParentFormat.devoirs.sync($scope.structure.id,  $scope.search.eleve.id,
-                        undefined, $scope.search.periode.id_type);
+                        undefined, $scope.search.periode, undefined, false, $scope.search.classe);
                     $scope.dataReleve = {
                         devoirs: evaluationsParentFormat.devoirs
                     };
-                    $scope.matieresReleve = evaluationsParentFormat.matieres;
-                    $scope.matieresReleve.forEach(matiere => {
-                        let teachers = [];
-                        let visible = true;
-                        $scope.search.classe.services.forEach(s => {
-                            if(s.id_matiere === matiere.id){
-                                s.coTeachers.forEach(coTeacher => {
-                                    let teacher = $scope.getTeacherFromStructure(coTeacher.second_teacher_id);
-                                    if(coTeacher.is_visible && teacher != undefined && !_.contains(teachers, teacher)) {
-                                        matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id})
-                                        teachers.push(teacher);
-                                    }
-                                });
-                                s.substituteTeachers.forEach(substituteTeacher => {
-                                    let teacher = $scope.getTeacherFromStructure(substituteTeacher.second_teacher_id);
-
-                                    let conditionForDate = Utils.checkDateForSubTeacher(substituteTeacher, $scope.search.periode);
-                                    if(substituteTeacher.is_visible && teacher != undefined && !_.contains(teachers, teacher) && conditionForDate){
-                                        matiere.ens = _.reject(matiere.ens, (ens) => {return ens.id == teacher.id})
-                                        teachers.push(teacher);
-                                    }
-                                });
-
-                                visible = s.is_visible;
-                            }
-                        });
-                        matiere.ens_is_visible = visible;
-                        matiere.coTeachers = teachers;
-                    });
+                    $scope.matieresReleve = _.filter(evaluationsParentFormat.matieres.all, (m) => m.hasDevoir);
                     await $scope.calculMoyenneMatieres();
+
                     await utils.safeApply($scope);
                     await Utils.stopMessageLoader($scope);
                     resolve();

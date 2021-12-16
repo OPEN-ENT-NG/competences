@@ -900,9 +900,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray result = body.getJsonArray(RESULTS);
-                handler.handle(new Either.Right<String, JsonArray>(result));
+                handler.handle(new Either.Right<>(result));
             } else {
-                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                handler.handle(new Either.Left<>(body.getString("message")));
                 log.error("listDevoirsWithAnnotations : " + body.getString("message"));
             }
         }));

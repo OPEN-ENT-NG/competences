@@ -294,7 +294,7 @@ public class DefaultUtilsService implements UtilsService {
                 .append("OPTIONAL MATCH ")
                 .append("(n:`UserBook` {userid : {id}}) ")
                 .append("OPTIONAL MATCH (c:`Class`) WHERE c.externalId in u.classes ")
-                .append("RETURN u,n,c");
+                .append("RETURN u, n, c");
         neo4j.execute(query.toString(), new JsonObject().put("id", id), Neo4jResult.validUniqueResultHandler(result));
     }
 
