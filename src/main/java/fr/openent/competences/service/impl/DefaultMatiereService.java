@@ -355,11 +355,13 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     }
 
     public void getMatieresEtab(String idEtablissement, Handler<Either<String, JsonArray>> handler) {
-        // Récupération des matières de l'établmissement
-        Future<JsonArray> subjectF = Future.future();
         //vu qu on use pas le user peut être appeller un autre fonction de viesco?
-        JsonObject action = new JsonObject().put("action", "matiere.getMatieresForUser").put("userType", "Personnel")
-                .put("idUser", "null").put("idStructure", idEtablissement).put("onlyId", false);
+        JsonObject action = new JsonObject()
+                .put("action", "matiere.getMatieresForUser")
+                .put("userType", "Personnel")
+                .put("idUser", "null")
+                .put("idStructure", idEtablissement)
+                .put("onlyId", false);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {

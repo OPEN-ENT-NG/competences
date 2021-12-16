@@ -15,23 +15,24 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {_} from 'entcore';
-import * as utils from "../teacher";
+import {_, workspace} from 'entcore';
 import http from "axios";
+import service = workspace.v2.service;
+
 /**
  * @param arr liste de nombres
  * @returns la moyenne si la liste n'est pas vide
  */
 export function average (arr) {
     return _.reduce(arr, function(memo, num) {
-            return memo + num;
-        }, 0) / (arr.length === 0 ? 1 : arr.length);
+        return memo + num;
+    }, 0) / (arr.length === 0 ? 1 : arr.length);
 }
 
-function   getMoyenne (devoirs) {
+function getMoyenne (devoirs) {
     if(devoirs.length == 0){
         return "NN";
-    }else {
+    } else {
         let diviseurM = 20;
 
         // (SUM ( ni *m *ci /di)  + SUM ( nj *cj)  ) / (S ( ci)  + SUM ( cj  *dj /m)  )
@@ -75,14 +76,30 @@ function   getMoyenne (devoirs) {
     }
 }
 
-export async function calculMoyennes (periode_idType,id_eleve,matieresReleve,dataReleveDevoirs) {
-    return new Promise( async (resolve, reject) => {
+function addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales) {
+    for(let moyenneFinale of moyennesFinales) {
+        if(!_.contains(_.pluck(matieresReleve, 'id'), moyenneFinale.id_matiere)) {
+            let matiere = _.findWhere(matieres.all, {id : moyenneFinale.id_matiere});
+            if (moyenneFinale.moyenne == null) {
+                matiere.moyenne = "NN";
+            } else {
+                matiere.moyenne = moyenneFinale.moyenne;
+            }
+            matieresReleve.push(matiere);
+        }
+    }
+}
+
+export async function calculMoyennes(periode_idType, id_eleve, matieresReleve, matieres, dataReleveDevoirs) {
+    return new Promise(async (resolve, reject) => {
         try {
-            let id_typePeriode = "";
+            let url = '/competences/eleve/' + id_eleve + "/moyenneFinale?";
             if (periode_idType)
-                id_typePeriode = "idPeriode=" + periode_idType.toString();
-            http.get('/competences/eleve/' + id_eleve + "/moyenneFinale?" + id_typePeriode).then(res => {
+                url += "idPeriode=" + periode_idType.toString();
+
+            http.get(url).then(res => {
                 let moyennesFinales = res.data;
+                addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales);
                 for (let matiere of matieresReleve) {
                     let devoirsMatieres = dataReleveDevoirs.where({id_matiere: matiere.id});
                     if (devoirsMatieres !== undefined) {
@@ -119,10 +136,9 @@ export async function calculMoyennes (periode_idType,id_eleve,matieresReleve,dat
                 }
                 resolve();
             });
+        } catch (e) {
+            console.error(e);
+            reject(e);
         }
-        catch (e) {
-                console.error(e);
-                reject(e);
-            }
-        });
+    });
 }

@@ -110,8 +110,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return new Promise( async (resolve) => {
                 if (model.me.type === 'ELEVE') {
                     $scope.eleve = evaluations.eleve;
-                }
-                else if (model.me.type === 'PERSRELELEVE') {
+                } else if (model.me.type === 'PERSRELELEVE') {
                     $scope.eleves = evaluations.eleves.all;
                 }
                 $scope.searchBilan = {
@@ -144,12 +143,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.init = async function (withSyncDevoir?) {
             return new Promise( async (resolve) => {
-
                 if ($scope.eleve === undefined) {
                     await evaluations.sync();
                     await initialise(withSyncDevoir);
-                }
-                else {
+                } else {
                     await initialise(withSyncDevoir);
                 }
                 resolve();
@@ -200,7 +197,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         // Fonction de sélection d'un enfant par le parent
         $scope.chooseChild = async function(eleve, withSyncDevoir?) {
-            return new Promise( async (resolve, reject) => {
+            return new Promise(async (resolve, reject) => {
                 await Utils.runMessageLoader($scope);
                 try {
                     evaluations.eleve = eleve;
@@ -217,9 +214,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.displayCycles($scope.search.periode);
                     $scope.devoirs = evaluations.devoirs;
                     $scope.matieres = evaluations.matieres;
+                    $scope.matieresReleve = _.filter(evaluations.matieres.all, (m) => m.hasDevoir);
                     $scope.enseignants = evaluations.enseignants;
                     await $scope.updateNiveau(evaluations.usePerso);
                     await $scope.getCyclesEleve();
+
                     if ($location.path() === "/bilan/periodique") {
                         $scope.informations = {
                             eleve: $scope.eleve
@@ -233,6 +232,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             }
                         };
                     }
+
                     if($location.path() === "/competences/eleve") {
                         template.close('main');
                         await utils.safeApply($scope);
@@ -256,10 +256,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         template.open('main', 'parent_enfant/liste_devoirs/display_devoir');
                         await utils.safeApply($scope);
                     }
+
                     if($location.path() !== "/releve") {
                         await utils.safeApply($scope);
                         await Utils.stopMessageLoader($scope);
                     }
+
                     $scope.update = false;
                     resolve();
                 }
@@ -509,8 +511,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     && $scope.searchBilan.periode.id_type !== undefined){
                     // On récupère les devoirs de la période sélectionnée
 
-                    await evaluations.devoirs.sync(evaluations.eleve.idStructure,evaluations.eleve.id, undefined,
-                        $scope.searchBilan.periode.id_type, undefined, historise);
+                    await evaluations.devoirs.sync(evaluations.eleve.idStructure, evaluations.eleve.id, undefined,
+                        $scope.searchBilan.periode, undefined, historise);
                     $scope.getCompetences(evaluations);
                     await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve,
                         $scope.competences, undefined);
@@ -549,7 +551,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await evaluations.enseignements.sync(evaluations.eleve.idClasse, $scope.competences, cycle.id_cycle);
             }
 
-            $scope.evaluations =  evaluations;
+            $scope.evaluations = evaluations;
             template.close('main');
             await utils.safeApply($scope);
             template.open('main',  'parent_enfant/bilan_competences/content_vue_bilan_eleve');
@@ -587,7 +589,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         // Initialisation des variables du Bilan
         $scope.initBilan = async function () {
-
             if($scope.searchBilan.parDomaine === undefined) {
                 $scope.searchBilan.parDomaine = 'false';
             }
@@ -605,8 +606,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
             await $scope.changePeriode();
-            if($scope.currentCycle !== undefined
-                && $scope.currentCycle.id_cycle !== undefined) {
+            if($scope.currentCycle !== undefined && $scope.currentCycle.id_cycle !== undefined) {
                 $scope.searchBilan.id_cycle =  $scope.currentCycle.id_cycle;
             }
 
@@ -803,9 +803,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $location.replace();
             utils.safeApply($scope);
         };
+
         $scope.initDefaultMatiere = function () {
-            if($scope.matieres !== undefined && $scope.matieres.all !== undefined && $scope.matieres.all.length === 1) {
-                $scope.search.matiere = $scope.matieres.all[0];
+            if($scope.matieresReleve !== undefined && $scope.matieresReleve.length === 1) {
+                $scope.search.matiere = $scope.matieresReleve[0];
             }
             return $scope.search.matiere;
         };
