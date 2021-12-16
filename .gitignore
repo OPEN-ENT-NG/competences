@@ -17,3 +17,4 @@ src/main/resources/view
 node_modules
 build.sh
 docker-compose.yml
+/coverage/
