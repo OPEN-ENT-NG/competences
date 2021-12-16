@@ -40,10 +40,10 @@ export let releveController = ng.controller('ReleveController', [
             }
 
             if (model.me.type === 'PERSRELELEVE') { // TODO $scope.matieres null
-                await utils.calculMoyennes($scope.search.periode.id_type, $scope.searchReleve.eleve.id,
+                await utils.calculMoyennes($scope.searchReleve.periode.id_type, $scope.searchReleve.eleve.id,
                     $scope.matieresReleve, $scope.matieres, $scope.dataReleve.devoirs);
             } else {
-                await utils.calculMoyennes($scope.search.periode.id_type, $scope.eleve.id, $scope.matieresReleve,
+                await utils.calculMoyennes($scope.searchReleve.periode.id_type, $scope.eleve.id, $scope.matieresReleve,
                     $scope.matieres, $scope.dataReleve.devoirs);
             }
             await utils.safeApply($scope);
