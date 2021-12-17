@@ -15,8 +15,22 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {Model, IModel, http, notify} from 'entcore';
-import httpAxios, {AxiosRequestConfig} from 'axios';
+import {http, IModel, Model, notify} from 'entcore';
+import httpAxios from 'axios';
+
+export interface CompetenceNote {
+    id: number;
+    id_devoir: number;
+    id_competence: number;
+    evaluation: number;
+    id_eleve: string;
+    ids_matieres: string[];
+    id_periode: number;
+    niveau_final: number;
+    id_classe: string;
+    nom?: string;
+}
+
 export class CompetenceNote extends Model implements IModel {
     id: number;
     id_devoir: number;
@@ -36,13 +50,13 @@ export class CompetenceNote extends Model implements IModel {
         }
     }
 
-    constructor(o? : any) {
+    constructor(o?: any) {
         super();
         if (o !== undefined) this.updateData(o, false);
     }
 
     toJSON() {
-        if(this.niveau_final !== undefined){
+        if (this.niveau_final !== undefined) {
             return {
                 id_periode: this.id_periode,
                 id_eleve: this.id_eleve,
@@ -50,7 +64,7 @@ export class CompetenceNote extends Model implements IModel {
                 id_competence: this.id_competence,
                 ids_matieres: this.ids_matieres
             }
-        }else {
+        } else {
             return {
                 id: this.id,
                 id_devoir: this.id_devoir,
@@ -113,9 +127,9 @@ export class CompetenceNote extends Model implements IModel {
     }
 
     async saveNiveaufinal(): Promise<void> {
-        try{
-            await httpAxios.post(`/competences/competence/note/niveaufinal`,this.toJSON());
-        }catch (e) {
+        try {
+            await httpAxios.post(`/competences/competence/note/niveaufinal`, this.toJSON());
+        } catch (e) {
             notify.error('competences.competence.niveau.final.save.err');
         }
     }

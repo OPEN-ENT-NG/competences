@@ -1,3 +1,14 @@
 {
-	"competences.title": "Competences"
+	"competences.title": "Competences",
+
+	"competences.memento.widget.unavailable": "Information not available - periods not defined for the class",
+	"competences.memento.notes.title": "Notes & Skills",
+	"competences.memento.notes.last.notes": "Dernières notes",
+	"competences.memento.average": "AVERAGE",
+	"competences.memento.coefficient.diminutive": "coeff",
+	"competences.memento.average.diminutive": "avg",
+	"competences.memento.widget.last.notes.no.notes": "There is no note saved for the moment",
+	"competences.memento.widget.average.subjects.no.notes": "There is no note for this period",
+	"competences.memento.widget.subject.detail.no.notes": "There are no ratings for the selected filters",
+	"competences.memento.notes.init.failed": "An error occurred while loading the notes widget"
 }
