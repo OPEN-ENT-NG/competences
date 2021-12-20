@@ -15,23 +15,27 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {Model, IModel, _, moment, Collection, http, idiom as lang, notify, model} from 'entcore';
+import {_, Collection, http, idiom as lang, IModel, Model, model, moment, notify} from 'entcore';
 import httpAxios from 'axios';
 import {
-    AppreciationClasse,
-    Periode,
-    Matiere,
-    Evaluation,
-    Classe,
+    AppreciationClasse, BaremeBrevetEleve,
+    Classe, CompetenceNote,
     Devoir,
+    Domaine,
+    Evaluation,
+    evaluations,
+    Matiere,
+    Periode,
     Structure,
-    evaluations, TableConversion, Domaine, Utils
+    TableConversion,
+    Utils
 } from './index';
 import {getNN} from "../../utils/functions/utilsNN";
 import * as utils from "../../utils/teacher";
-import {Graph} from "../common/Graph";
-import {SousMatiere} from "./SousMatiere";
 import {getTitulairesForRemplacantsCoEnseignant} from "../../utils/teacher";
+import {Graph} from "../common/Graph";
+import {Mix} from "entcore-toolkit";
+import {StudentAppreciation} from "./digital_skills/StudentAppreciationDigitalSkills";
 
 
 export class ReleveNote extends  Model implements IModel {
@@ -311,11 +315,13 @@ export class ReleveNote extends  Model implements IModel {
             try {
                 await Promise.all([this.syncEvaluations(), this.syncDevoirs()]);
                 this.periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
-                let _notes, _devoirstat, _eleves;
+
+                let _notes, _devoirstat, _eleves, _competenceNotes;
                 if (this._tmp) {
                     _notes = this._tmp.notes;
                     _devoirstat = this._tmp.devoirs;
                     _eleves = this._tmp.eleves;
+                    _competenceNotes = this._tmp.competencesNotes;
                     this.classe.eleves.load(_eleves);
                     if (this.idPeriode !== null) {
                         this.elementProgramme = this._tmp.elementProgramme;
@@ -323,51 +329,59 @@ export class ReleveNote extends  Model implements IModel {
                     }
                     await this.getConversionTable(this._tmp.tableConversions);
                 }
+
                 this.hasEvaluatedDevoirs = _.findWhere(this.devoirs.all, {is_evaluated: true});
                 this.hasEvaluatedDevoirs = (this.hasEvaluatedDevoirs !== undefined);
                 _.each(this.classe.eleves.all, (eleve) => {
                     let _evals = [];
-                    let _t = _.where(_notes, {id_eleve: eleve.id});
-                    _.each(this.devoirs.all, async (devoir) => {
+                    let _notesEleve = _.where(_notes, {id_eleve: eleve.id});
+                    _.each(this.devoirs.all, (devoir) => {
                         let periode = _.findWhere(this.classe.periodes.all, {id_type: devoir.id_periode});
                         let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
-                        let _e;
-                        if (_t && _t.length !== 0) {
-                            _e = _.findWhere(_t, {id_devoir: devoir.id});
 
-                            if (_e) {
-                                _e.oldValeur = _e.valeur;
-                                _e.oldAppreciation = _e.appreciation !== undefined ? _e.appreciation : '';
-                                if (_e.annotation !== undefined
-                                    && _e.annotation !== null
-                                    && _e.annotation > 0) {
-                                    _e.oldAnnotation = _e.annotation;
-                                    _e.annotation_libelle_court = evaluations.structure.annotations.findWhere(
-                                        {id: _e.annotation}).libelle_court;
-                                    _e.is_annotation = true;
+                        let _eval;
+                        if (_notesEleve && _notesEleve.length !== 0) {
+                            _eval = Mix.castAs(Evaluation, _.findWhere(_notesEleve, {id_devoir: devoir.id}));
+
+                            if (_eval) {
+                                _eval.oldValeur = _eval.valeur;
+                                _eval.oldAppreciation = _eval.appreciation !== undefined ? _eval.appreciation : '';
+                                if (_eval.annotation !== undefined && _eval.annotation !== null
+                                    && _eval.annotation > 0) {
+                                    _eval.oldAnnotation = _eval.annotation;
+                                    _eval.annotation_libelle_court = evaluations.structure.annotations.findWhere(
+                                        {id: _eval.annotation}).libelle_court;
+                                    _eval.is_annotation = true;
                                 }
-                                _e.endSaisie = endSaisie;
-                                _evals.push(_e);
-                            }
-                            else {
-                                _evals.push(new Evaluation({
+                                _eval.endSaisie = endSaisie;
+                            } else {
+                                _eval = new Evaluation({
                                     valeur: "", oldValeur: "", appreciation: "",
                                     oldAppreciation: "", id_devoir: devoir.id, id_eleve: eleve.id,
                                     ramener_sur: devoir.ramener_sur, coefficient: devoir.coefficient,
                                     is_evaluated: devoir.is_evaluated, endSaisie: endSaisie
-                                }));
+                                });
                             }
                         } else {
-                            _evals.push(new Evaluation({
+                            _eval = new Evaluation({
                                 valeur: "", oldValeur: "", appreciation: "",
                                 oldAppreciation: "", id_devoir: devoir.id, id_eleve: eleve.id,
                                 ramener_sur: devoir.ramener_sur, coefficient: devoir.coefficient,
                                 is_evaluated: devoir.is_evaluated, endSaisie: endSaisie
-                            }));
+                            });
                         }
+
+                        let competenceNotesEleve = Mix.castArrayAs(CompetenceNote, _.where(_competenceNotes, {
+                            id_eleve: eleve.id,
+                            id_devoir: devoir.id
+                        }));
+                        _eval.competenceNotes.all.push(...competenceNotesEleve);
+
+                        _evals.push(_eval);
                     });
-                    eleve.evaluations.load(_evals, null, false);
+                    eleve.evaluations.all.push(..._evals);
                 });
+
                 _.each(_devoirstat, (dstat) => {
                     let d = _.findWhere(this.devoirs.all, {id: dstat.id});
                     if(d.eleves.length() === 0)
@@ -395,21 +409,18 @@ export class ReleveNote extends  Model implements IModel {
                         let e = _.findWhere(_eleves, {id: eleve.id});
                         if (e !== undefined && e.moyenne != null) {
                             eleve.moyenne = e.moyenne;
-                        }
-                        else {
+                        } else {
                             eleve.moyenne = getNN();
                         }
                     });
-                }
-                else {
+                } else {
                     this.isNN = true;
                     _.each(this.classe.eleves.all, (eleve) => {
                         eleve.moyenne = getNN();
                     })
                 }
                 resolve();
-            }
-            catch (e) {
+            } catch (e) {
                 console.error(e);
                 notify.error('evaluations.releve.sync.error');
                 reject();

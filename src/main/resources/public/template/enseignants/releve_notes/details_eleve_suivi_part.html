@@ -17,8 +17,7 @@
 
 <!--  Evaluation numérique -->
 <fieldset ng-if="hasDevoirsEvalues(informations.eleve.evaluations)">
-    <div ng-repeat="evaluation in informations.eleve.evaluations.all | filter:{is_evaluated:true}
-                        track by $index">
+    <div ng-repeat="evaluation in informations.eleve.evaluations.all | filter:{is_evaluated:true} track by $index">
         <div ng-if="evaluation.valeur !== ''" class="alignCenterVertically noteDevoir cell">
             <div>
                 <span ng-if="evaluation.annotation === null || evaluation.annotation === undefined"
@@ -42,28 +41,24 @@
 </fieldset>
 <br>
 <!-- Compétence évaluation -->
-<fieldset ng-if="hasCompetencesNotes(informations.eleve.evaluations)">
-    <div ng-repeat="evaluation in informations.eleve.evaluations.all | filter:hasCompetences
-                        track by $index">
-        <div  class="cell three">
-            <div>
-                <div ng-if="evaluation.competencesNotes.length > 0"
-                     class="eleven inline-block align-center padding-proportion">
-                    <proportion-suivi-competence
-                            evaluations="evaluation.competencesNotes"
-                            is-classe="false" filter="{mine : false}" list-teacher="listTeacher"
-                            map-lettres="mapLettres"
-                            map-couleurs="mapCouleurs"
-                            maj-proportions="evaluation.competencesNotes"
-                            add-to-tool-tip="evaluation.name"
-                    ></proportion-suivi-competence>
-                </div>
+<fieldset ng-if="hasCompetenceNotes(informations.eleve.evaluations)">
+    <div ng-repeat="evaluation in informations.eleve.evaluations.all | filter:hasCompetences track by $index">
+        <div class="cell three">
+            <div class="eleven inline-block align-center padding-proportion">
+                <proportion-suivi-competence
+                        evaluations="evaluation.competenceNotes.all"
+                        is-classe="false" filter="{mine : false}" list-teacher="listTeacher"
+                        map-lettres="mapLettres"
+                        map-couleurs="mapCouleurs"
+                        maj-proportions="evaluation.competenceNotes.all"
+                        add-to-tool-tip="evaluation.name"
+                ></proportion-suivi-competence>
             </div>
         </div>
     </div>
     <div class="titre-widget">
         <label class="right-magnet">
-            <h5 class="inline-block ">
+            <h5 class="inline-block">
                 <a role="button"
                    ng-click="openedLigthboxDetailsEleve(informations.eleve);"><i18n>show.details</i18n></a>
             </h5>
