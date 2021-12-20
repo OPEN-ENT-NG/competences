@@ -67,7 +67,6 @@ export class Evaluation extends Model implements IModel {
         return o;
     }
 
-
     save () : Promise<Evaluation> {
         return new Promise((resolve) => {
             if (this.id_annotation !== undefined && this.id_annotation !== -1){

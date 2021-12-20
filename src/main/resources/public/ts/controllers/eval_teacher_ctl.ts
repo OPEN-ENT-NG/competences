@@ -4851,8 +4851,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             await utils.safeApply($scope);
         };
-        $scope.hasCompetences = function (devoir) {
-            return devoir.nbcompetences > 0;
+
+        $scope.hasCompetences = function (evaluation) {
+            return evaluation.competenceNotes.length() > 0;
         };
 
         $scope.updateHistorique = async function (eleve, colonne: string) {
@@ -4877,31 +4878,27 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             await $scope.initDataLightBoxEleve();
             await utils.safeApply($scope);
         };
-        $scope.hasCompetencesNotes = function (evaluations) {
-            if (evaluations === undefined || evaluations.all === undefined) {
-                return false;
-            } else {
+
+        $scope.hasCompetenceNotes = function (evaluations) {
+            if (evaluations !== undefined && evaluations.all !== undefined) {
                 for (let i = 0; i < evaluations.all.length; i++) {
                     let evaluation = evaluations.all[i];
-                    if (evaluation.nbcompetences > 0 && evaluation.competencesNotes.length > 0) {
+                    if (evaluation.competenceNotes.length() > 0) {
                         return true;
                     }
                 }
-                return false;
             }
+            return false;
         };
+
         $scope.hasDevoirsEvalues = function (evaluations) {
-            let hasDevoirsEvalues = (evaluations)? _.where(evaluations.all, {is_evaluated: true}) : false;
-            if (hasDevoirsEvalues.length > 0) {
-                for (let i = 0; i < hasDevoirsEvalues.length; i++) {
-                    if (hasDevoirsEvalues[i].valeur !== '') {
-                        return true;
-                    }
+            let hasDevoirsEvalues = (evaluations) ? _.where(evaluations.all, {is_evaluated: true}) : false;
+            for (let i = 0; i < hasDevoirsEvalues.length; i++) {
+                if (hasDevoirsEvalues[i].valeur !== '') {
+                    return true;
                 }
-                return false;
-            } else {
-                return false;
             }
+            return false;
         };
 
         $scope.isNotFirstEleve = function () {
