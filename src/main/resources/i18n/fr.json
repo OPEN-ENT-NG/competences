@@ -198,7 +198,7 @@
   "evaluations.evaluation.create":"Créer une évaluation",
   "evaluations.evaluation.libre.add":"Ajouter une évaluation libre",
   "evaluations.evaluation.libre.add.success":"Évaluation libre ajoutée !",
-  "evaluations.evaluation.libre.delete":"Supprimer",
+  "evaluations.evaluation.libre.delete":"Confirmer",
   "evaluations.evaluation.libre.delete.success":"Évaluation libre supprimée !",
   "evaluations.evaluation.libre.cancel":"Annuler",
   "evaluations.releve.title":"Relevé périodique",

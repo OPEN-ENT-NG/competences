@@ -35,6 +35,12 @@
         <div class="ten formative-legend">
             * (F) : Evaluation de type Formative
         </div>
+        <div class="switchToView" ng-class="{ selected: template.contains('suivi-competence-detail',
+                        'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_tableau') }"
+               ng-click="template.open('suivi-competence-detail',
+                        'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_tableau')">
+                Accéder à la vue Liste
+        </div>
     </div>
 
 </div>
