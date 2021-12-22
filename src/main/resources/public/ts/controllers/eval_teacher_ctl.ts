@@ -112,7 +112,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 idEleve: null,
                 name: '',
                 enseignant: null,
-                duplication: ''
+                duplication: '',
+                matieres: [],
+                services: [],
+
             }
         };
         $scope.togglePanel = function ($event) {
@@ -427,13 +430,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         };
                         $scope.showRechercheBar = false;
                         if (!Utils.isChefEtabOrHeadTeacher()) {
-                            http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id).done(function (res) {
-                                $scope.allMatieresSorted = _.sortBy(res, 'rank');
-                                utils.safeApply($scope);
-                            });
+                            http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id)
+                                .done(function (matieres) {
+                                    $scope.search.matieres = matieres;
+                                });
+                            $scope.allMatieresSorted = _.sortBy($scope.search.matieres, 'rank');
+                            utils.safeApply($scope);
                         } else {
                             $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
+                            $scope.search.matieres = $scope.allMatieresSorted;
                         }
+                        http().getJson('/viescolaire/services?idEtablissement=' + evaluations.structure.id)
+                            .done(function (services) {
+                                $scope.search.services = services;
+                            });
 
                         if ($scope.informations.eleve === undefined) {
                             $scope.informations.eleve = null;
@@ -495,13 +505,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     };
                     if (!Utils.isChefEtabOrHeadTeacher()) {
                         http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id)
-                            .done(async function (res) {
-                                $scope.allMatieresSorted = _.sortBy(res, 'rank');
-                                await utils.safeApply($scope);
+                            .done(async function (matieres) {
+                                $scope.search.matieres = matieres;
                             });
+                        $scope.allMatieresSorted = _.sortBy($scope.search.matieres, 'rank');
+                        utils.safeApply($scope);
                     } else {
                         $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
+                        $scope.search.matieres = $scope.allMatieresSorted;
                     }
+                    http().getJson('/viescolaire/services?idEtablissement=' + evaluations.structure.id)
+                        .done(function (services) {
+                            $scope.search.services = services;
+                        });
                     if (params.idClasse != undefined) {
                         let classe: Classe = evaluations.classes.findWhere({id: params.idClasse});
                         $scope.search.classe = classe;
@@ -4209,12 +4225,27 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.releveComp.textMod = true;
             $scope.closeWarningMessages();
             $scope.selectUnselectMatieres(false);
+            $scope.updateMatieres();
+
             classe ? $scope.forClasse = true : $scope.forClasse = false;
         };
 
         $scope.getFormatedDate = function (date) {
             return moment(date).format("DD/MM/YYYY");
         };
+
+        $scope.updateMatieres = function () {
+            let filteredServices = _.filter($scope.search.services, service => {
+                return service.id_groupe === $scope.search.classe.id;
+            })
+            $scope.allMatieresFiltered = _.filter($scope.search.matieres, matiere => {
+                for (let service of filteredServices){
+                    if (service.id_matiere === matiere.id) return true;
+                }
+                return false;
+            });
+            $scope.allMatieresSorted = _.sortBy($scope.allMatieresFiltered, 'rank');
+        }
 
         $scope.openedRecapEval = () => {
             if ($scope.releveNoteTotale !== undefined) {
@@ -4226,6 +4257,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.disableAppreciation();
             $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
             $scope.closeWarningMessages();
+            $scope.updateMatieres();
             utils.safeApply($scope);
         };
 
