@@ -4553,7 +4553,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         }
 
-        function getPositionementData(nbPositionnementAnnee: number, positionnementAnnee: number, isMoyenneFinaleAnnee: boolean, historiqueAnnee: any, moyenneFinaleAnnee, isPositionnementFinaleAnnee: boolean, moyenneSousMatiereAnnee: {}, posSousMatiereAnnee: {}, eleve) {
+        function getPositionementData(nbPositionnementAnnee: number, positionnementAnnee: number, isMoyenneFinaleAnnee: boolean, historiqueAnnee: any, moyenneFinaleAnnee, isPositionnementFinaleAnnee: boolean, moyenneSousMatiereAnnee: {}, posSousMatiereAnnee: {}, eleve, moyenneClasseFinaleAnnee: number) {
             let positionnementFinaleAnnee = 0;
             if (nbPositionnementAnnee !== 0) {
                 positionnementFinaleAnnee = Math.round(positionnementAnnee / nbPositionnementAnnee);
@@ -4565,6 +4565,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 historiqueAnnee.moyenne = moyenneFinaleAnnee;
                 historiqueAnnee.moyenneFinale = "";
             }
+
+            historiqueAnnee.moyenneClasse = moyenneClasseFinaleAnnee;
 
             let posAnneeForHistorique = (positionnementFinaleAnnee > 0) ? positionnementFinaleAnnee : utils.getNN();
             if (isPositionnementFinaleAnnee) {
@@ -4638,6 +4640,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                 let moyenneAnnee = 0;
                 let nbMoyenneAnnee = 0;
+                let moyenneClasseAnnee = 0;
+                let nbMoyenneClasseAnnee = 0;
                 let moyenneSousMatiereAnnee = {};
                 let posSousMatiereAnnee = {};
                 _.forEach($scope.releveNote.matiere.sousMatieres.all, (sousMatiere) => {
@@ -4748,12 +4752,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
                     if (idPeriode !== null && (details_moyennes_finales !== undefined|| details_moyennes !== undefined) && moyenneFinale !== null ) {
                         nbMoyenneAnnee++;
+                        nbMoyenneClasseAnnee++;
                         if (details_moyennes_finales !== undefined ) {
                             isMoyenneFinaleAnnee = true;
                             moyenneAnnee += parseFloat(moyenneFinale);
                         } else {
                             moyenneAnnee += moyenne;
                         }
+                        moyenneClasseAnnee += moyenneClasse;
                     }
 
                     // On stocke le positionnement du trimestre pour le calcul du positionnement à l'année
@@ -4770,7 +4776,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                     }
 
-                    if (idPeriode !== null) {
+                    if (idPeriode !== null && idPeriode !== undefined) {
                         initDataWhenPeriodeIsNotNull(eleve, periode, moyenneClasse, moyenne, moyenneFinale, positionnement,
                             positionnementFinal, appreciation, moyenne_sous_matieres, pos_sous_matieres, idPeriode);
                     } else {
@@ -4788,9 +4794,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 // On calcule la moyenne à l'année
                 let moyenneFinaleAnnee = getMoyenneData(nbMoyenneAnnee, moyenneAnnee);
 
+                let moyenneClasseFinaleAnnee = getMoyenneData(nbMoyenneClasseAnnee, moyenneClasseAnnee);
+
 // On calcule le positionnement à l'année
                 getPositionementData(nbPositionnementAnnee, positionnementAnnee, isMoyenneFinaleAnnee, historiqueAnnee,
-                    moyenneFinaleAnnee, isPositionnementFinaleAnnee, moyenneSousMatiereAnnee, posSousMatiereAnnee, eleve);
+                    moyenneFinaleAnnee, isPositionnementFinaleAnnee, moyenneSousMatiereAnnee, posSousMatiereAnnee, eleve,
+                    moyenneClasseFinaleAnnee);
 
                 eleve.evaluations.extended = true;
                 utils.safeApply($scope);
