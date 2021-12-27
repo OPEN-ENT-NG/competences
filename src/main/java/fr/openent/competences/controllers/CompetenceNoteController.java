@@ -528,18 +528,15 @@ public class CompetenceNoteController extends ControllerHelper {
     public void deleteCompetenceNote(final HttpServerRequest request) {
         if (request.params().contains("idCompetenceNote")) {
             String idCompetenceNote = request.params().get("idCompetenceNote");
-            competencesNotesService.dropCompetenceNotesDevoir(idCompetenceNote, new Handler<Either<String, JsonArray>>() {
-                @Override
-                public void handle(Either<String, JsonArray> event) {
-                    if (event.isRight()) {
+            competencesNotesService.dropCompetenceNotesDevoir(idCompetenceNote, handlerCompetence -> {
+                    if (handlerCompetence.isRight()) {
                         JsonObject item = new JsonObject();
-                        item.put("id_cycle", event.right().getValue());
+                        item.put("id_cycle", handlerCompetence.right().getValue());
                         renderJson(request, item);
                     } else {
                         log.info("idCompetenceNote not found");
                         Renders.badRequest(request);
                     }
-                }
             });
         } else {
             Renders.badRequest(request, "Invalid parameters");

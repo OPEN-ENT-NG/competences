@@ -72,14 +72,14 @@
     </table>
 
     <div class="ten formative-legend right-spacing-twice">
-        * (F) : Evaluation de type Formative
+        <i18n>evaluations.graph.formative</i18n>
     </div>
 
-
+    <!-- Fenêtre de suppression d'évaluation libre -->
     <lightbox show="suppressionEvaluationLibre" on-close="closeDeleteEvaluationLibre()">
         <div class="paddingTwenty">
-            <h1>Supprimer une évaluation libre</h1>
-            <p>Vous allez supprimer l'évaluation libre suivante :</p>
+            <h1><i18n>evaluations.tab.delete</i18n></h1>
+            <p><i18n>evaluations.tab.delete.gonna</i18n></p>
                 <table class="ten responsive-table lightBoxEval" ng-if="!EvaluationExiste(detailCompetence.competencesEvaluations)">
                     <thead>
                     <tr>

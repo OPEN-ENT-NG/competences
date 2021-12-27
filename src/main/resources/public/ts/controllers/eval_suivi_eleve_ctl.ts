@@ -40,7 +40,6 @@ import http from "axios";
 import { evaluations as evaluationsParentFormat } from '../models/eval_parent_mdl';
 import {LengthLimit} from "../constants";
 import {getTitulairesForRemplacantsCoEnseignant} from "../utils/teacher";
-import httpAxios from "axios";
 declare let _: any;
 declare let Chart: any;
 declare let location: any;
@@ -1397,9 +1396,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         }
 
         /**
-         *Afficher une lightbox pour la suppression d'évaluation libre
+         *Afficher la lightbox de la suppression d'évaluation libre
          */
-        $scope.displayDeleteEvaluationLibre = function(evaluation) {
+        $scope.displayDeleteEvaluationLibre = function (evaluation): void {
             $scope.hideMessages();
             $scope.suppressionEvaluationLibre = true;
             $scope.evalToDelete = evaluation;
@@ -1407,9 +1406,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         };
 
         /**
-         *Fermer une lightbox pour la suppression d'évaluation libre
+         *Fermer la lightbox de la suppression d'évaluation libre
          */
-        $scope.closeDeleteEvaluationLibre = () => {
+        $scope.closeDeleteEvaluationLibre = function (): void {
             $scope.suppressionEvaluationLibre = false;
             utils.safeApply($scope);
         };
