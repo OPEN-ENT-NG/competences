@@ -1366,12 +1366,14 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             $scope.changeContent();
         };
 
-        $scope.deleteEvaluationLibre = async function(idDevoir) {
+        $scope.deleteEvaluationLibre = async function(evaluation) {
             try {
-                await http.delete(`/competences/devoir?idDevoir=${idDevoir}`)
+                let devoir = new Devoir(evaluation);
+                devoir.id = evaluation.id_devoir;
+                await devoir.remove();
             }
             catch (e) {
-                console.error(e);
+                console.log(e);
             }
             finally {
                 $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve, $scope.search.periode,

@@ -590,7 +590,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
     @Override
     public void dropCompetenceNotesDevoir(String idCompetenceNote, Handler<Either<String, JsonArray>> handler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        JsonArray values = new JsonArray();
         StringBuilder query = new StringBuilder();
         query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id = ? ;");
         values.add(idCompetenceNote);
