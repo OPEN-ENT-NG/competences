@@ -23,7 +23,8 @@ import {
     ReleveNote,
     ReleveNoteTotale,
     GestionRemplacement,
-    Classe, Annotation
+    Classe, Annotation,
+    Service,
 } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
@@ -418,6 +419,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
 
             displaySuiviEleve: async function (params) {
+                let Service = new Service({
+                    id_etablissement : evaluations.structure.id
+                });
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
@@ -430,9 +434,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         };
                         $scope.showRechercheBar = false;
                         if (!Utils.isChefEtabOrHeadTeacher()) {
-                            http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id)
-                                .done(function (matieres) {
-                                    $scope.search.matieres = matieres;
+                            Service.syncMatieres()
+                                .then(function () {
+                                    $scope.search.matieres = Service.matieres;
                                 });
                             $scope.allMatieresSorted = _.sortBy($scope.search.matieres, 'rank');
                             utils.safeApply($scope);
@@ -440,9 +444,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
                             $scope.search.matieres = $scope.allMatieresSorted;
                         }
-                        http().getJson('/viescolaire/services?idEtablissement=' + evaluations.structure.id)
-                            .done(function (services) {
-                                $scope.search.services = services;
+
+                        Service.syncServices()
+                            .then(function () {
+                                $scope.search.services = Service.services;
                             });
 
                         if ($scope.informations.eleve === undefined) {
