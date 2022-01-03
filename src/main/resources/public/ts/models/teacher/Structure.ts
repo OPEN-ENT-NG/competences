@@ -522,4 +522,28 @@ export class Structure extends Model {
         }
         this.synchronized.typeSousMatieres = true;
     }
+
+    async syncServices(): Promise<any> {
+        return new Promise ( ((resolve, reject) => {
+            http().getJson(this.api.GET_SERVICES)
+                .done((res)=> {
+                    resolve(res);
+                })
+                .error(() => {
+                    reject();
+                });
+        }));
+    }
+
+    async syncMatieres(): Promise<any> {
+        return new Promise ( ((resolve, reject) => {
+            http().getJson(this.api.MATIERE.synchronization)
+                .done((res)=> {
+                    resolve(res);
+                })
+                .error(() => {
+                    reject();
+                });
+        }));
+    }
 }

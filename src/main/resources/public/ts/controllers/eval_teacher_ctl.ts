@@ -23,8 +23,7 @@ import {
     ReleveNote,
     ReleveNoteTotale,
     GestionRemplacement,
-    Classe, Annotation,
-    Service,
+    Classe, Annotation
 } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
@@ -419,9 +418,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
 
             displaySuiviEleve: async function (params) {
-                let Service = new Service({
-                    id_etablissement : evaluations.structure.id
-                });
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
@@ -434,20 +430,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         };
                         $scope.showRechercheBar = false;
                         if (!Utils.isChefEtabOrHeadTeacher()) {
-                            Service.syncMatieres()
-                                .then(function () {
-                                    $scope.search.matieres = Service.matieres;
+                            evaluations.structure.syncMatieres()
+                                .then(function (res) {
+                                    $scope.matieres = res;
                                 });
-                            $scope.allMatieresSorted = _.sortBy($scope.search.matieres, 'rank');
+                            $scope.allMatieresSorted = _.sortBy($scope.matieres, 'rank');
                             utils.safeApply($scope);
                         } else {
                             $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
-                            $scope.search.matieres = $scope.allMatieresSorted;
+                            $scope.matieres = $scope.allMatieresSorted;
                         }
-
-                        Service.syncServices()
-                            .then(function () {
-                                $scope.search.services = Service.services;
+                        evaluations.structure.syncServices()
+                            .then(function (res) {
+                                $scope.services = res;
                             });
 
                         if ($scope.informations.eleve === undefined) {
@@ -509,19 +504,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         await utils.safeApply($scope);
                     };
                     if (!Utils.isChefEtabOrHeadTeacher()) {
-                        http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id)
-                            .done(async function (matieres) {
-                                $scope.search.matieres = matieres;
+                        evaluations.structure.syncMatieres()
+                            .then(function (res) {
+                                $scope.matieres = res;
                             });
-                        $scope.allMatieresSorted = _.sortBy($scope.search.matieres, 'rank');
+                        $scope.allMatieresSorted = _.sortBy($scope.matieres, 'rank');
                         utils.safeApply($scope);
                     } else {
                         $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
-                        $scope.search.matieres = $scope.allMatieresSorted;
+                        $scope.matieres = $scope.allMatieresSorted;
                     }
-                    http().getJson('/viescolaire/services?idEtablissement=' + evaluations.structure.id)
-                        .done(function (services) {
-                            $scope.search.services = services;
+                    evaluations.structure.syncServices()
+                        .then(function (res) {
+                            $scope.services = res;
                         });
                     if (params.idClasse != undefined) {
                         let classe: Classe = evaluations.classes.findWhere({id: params.idClasse});
@@ -4240,10 +4235,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.updateMatieres = function () {
-            let filteredServices = _.filter($scope.search.services, service => {
+            let filteredServices = _.filter($scope.services, service => {
                 return service.id_groupe === $scope.search.classe.id;
             })
-            $scope.allMatieresFiltered = _.filter($scope.search.matieres, matiere => {
+            $scope.allMatieresFiltered = _.filter($scope.matieres, matiere => {
                 for (let service of filteredServices){
                     if (service.id_matiere === matiere.id) return true;
                 }
