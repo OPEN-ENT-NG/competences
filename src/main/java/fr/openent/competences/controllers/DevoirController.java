@@ -855,7 +855,7 @@ public class DevoirController extends ControllerHelper {
     @Get("/devoirs/eleve")
     @ApiDoc("Pour l'appli mobile, permet de récupérer les derniers devoirs d'un élève")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessStudentParentFilter.class)
+    @ResourceFilter(AccessStudentParentTeacherPersonnelFilter.class)
     public void getDevoirsEleve(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (user != null) {
@@ -884,7 +884,7 @@ public class DevoirController extends ControllerHelper {
     @Get("/devoirs/notes")
     @ApiDoc("Pour l'appli mobile, permet de récupérer l'ensemble des notes d'un élève pour une période")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessStudentParentFilter.class)
+    @ResourceFilter(AccessStudentParentTeacherPersonnelFilter.class)
     public void getDevoirsNotes(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if(user != null){
