@@ -587,13 +587,4 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         values.add(idEleve);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
-
-    @Override
-    public void dropCompetenceNotesDevoir(String idCompetenceNote, Handler<Either<String, JsonArray>> handler) {
-        JsonArray values = new JsonArray();
-        StringBuilder query = new StringBuilder();
-        query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id = ? ;");
-        values.add(idCompetenceNote);
-        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
-    }
 }

@@ -519,27 +519,4 @@ public class CompetenceNoteController extends ControllerHelper {
             }
         });
     }
-
-
-    @Delete("/competence/notes/:idCompetenceNote")
-    @ApiDoc("Supprime une compétence note")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessSuiviCompetenceFilter.class)
-    public void deleteCompetenceNote(final HttpServerRequest request) {
-        if (request.params().contains("idCompetenceNote")) {
-            String idCompetenceNote = request.params().get("idCompetenceNote");
-            competencesNotesService.dropCompetenceNotesDevoir(idCompetenceNote, handlerCompetence -> {
-                    if (handlerCompetence.isRight()) {
-                        JsonObject item = new JsonObject();
-                        item.put("id_cycle", handlerCompetence.right().getValue());
-                        renderJson(request, item);
-                    } else {
-                        log.info("idCompetenceNote not found");
-                        Renders.badRequest(request);
-                    }
-            });
-        } else {
-            Renders.badRequest(request, "Invalid parameters");
-        }
-    }
 }
