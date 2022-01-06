@@ -694,7 +694,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.currentDevoir = {};
         $scope.informations = {};
         $scope.messages = {
-            successEvalLibre: false
+            successEvalLibre: false,
+            deleteEvalLibre: false
         };
         $scope.me = model.me;
         $scope.text = "";

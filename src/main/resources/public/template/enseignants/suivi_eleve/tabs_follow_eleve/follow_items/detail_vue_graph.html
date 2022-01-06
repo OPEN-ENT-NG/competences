@@ -19,10 +19,6 @@
         <i18n>evaluation.not.exist</i18n>
     </div>
 
-    <div class="ten formative-legend">
-        * (F) : Evaluation de type Formative
-    </div>
-
     <div ng-if="!EvaluationExiste(detailCompetence.competencesEvaluations)" class = "ten cell">
         <div class="box-accueil twelve-mobile">
                 <canvas
@@ -35,7 +31,18 @@
                         >
                 </canvas>
         </div>
+
+        <div class="ten formative-legend">
+            <i18n>evaluations.graph.formative</i18n>
+        </div>
+        <div class="switchToView" ng-class="{ selected: template.contains('suivi-competence-detail',
+                        'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_tableau') }"
+               ng-click="template.open('suivi-competence-detail',
+                        'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_tableau')">
+                <i18n>evaluations.graph.go.list</i18n>
+        </div>
     </div>
+
 </div>
 
 

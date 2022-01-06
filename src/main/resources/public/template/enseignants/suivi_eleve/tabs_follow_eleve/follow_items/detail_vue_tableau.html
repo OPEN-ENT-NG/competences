@@ -19,10 +19,6 @@
         <i18n>evaluation.not.exist</i18n>
     </div>
 
-    <div class="ten formative-legend">
-        * (F) : Evaluation de type Formative
-    </div>
-
     <table class="ten responsive-table" ng-if="!EvaluationExiste(detailCompetence.competencesEvaluations)">
         <thead>
         <tr>
@@ -44,6 +40,9 @@
                 <span ng-show="sortType == 'evaluation' && !sortReverse" class="sort-desc"></span>
                 <span ng-show="sortType == 'evaluation' && sortReverse" class="sort-asc"></span>
             </th>
+
+            <th>
+            </th>
         </tr>
         </thead>
         <tbody>
@@ -61,8 +60,75 @@
                                  classes="'competence-eval'">
                 </c-skills-bubble>
             </td>
+            <td>
+                <i class="trash"
+                   ng-click="displayDeleteEvaluationLibre(evaluation)"
+                   ng-show="evaluation.id_typeeval == 1">
+                </i>
+            </td>
         </tr>
 
         </tbody>
     </table>
+
+    <div class="ten formative-legend right-spacing-twice">
+        <i18n>evaluations.graph.formative</i18n>
+    </div>
+
+    <!-- Fenêtre de suppression d'évaluation libre -->
+    <lightbox show="suppressionEvaluationLibre" on-close="closeDeleteEvaluationLibre()">
+        <div class="paddingTwenty">
+            <h1><i18n>evaluations.tab.delete</i18n></h1>
+            <p><i18n>evaluations.tab.delete.gonna</i18n></p>
+                <table class="ten responsive-table lightBoxEval" ng-if="!EvaluationExiste(detailCompetence.competencesEvaluations)">
+                    <thead>
+                    <tr>
+                        <th ng-click="sortType = 'evaluation_libelle'; sortReverse =!sortReverse">
+                            <i18n>evaluations.title</i18n>
+                            <span ng-show="sortType == 'evaluation_libelle' && !sortReverse" class="sort-desc"></span>
+                            <span ng-show="sortType == 'evaluation_libelle' && sortReverse" class="sort-asc"></span>
+                        </th>
+                        <th ng-click="sortType = 'owner_name'; sortReverse =!sortReverse"><i18n>viescolaire.utils.teacher</i18n>
+                            <span ng-show="sortType == 'owner_name' && !sortReverse" class="sort-desc"></span>
+                            <span ng-show="sortType == 'owner_name' && sortReverse" class="sort-asc"></span>
+                        </th>
+                        <th ng-click="sortType = 'evaluation_date'; sortReverse =!sortReverse"><i18n>date</i18n>
+                            <span ng-show="sortType == 'evaluation_date' && !sortReverse" class="sort-desc"></span>
+                            <span ng-show="sortType == 'evaluation_date' && sortReverse" class="sort-asc"></span>
+                        </th>
+                        <th ng-click="sortType = 'evaluation'; sortReverse =!sortReverse">
+                            <i18n>level</i18n>
+                            <span ng-show="sortType == 'evaluation' && !sortReverse" class="sort-desc"></span>
+                            <span ng-show="sortType == 'evaluation' && sortReverse" class="sort-asc"></span>
+                        </th>
+
+                        <th>
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>
+                            [[evalToDelete.evaluation_libelle]]
+                            <span ng-if="evalToDelete.formative"> (F)</span>
+                        </td>
+                        <td class="titre-widget ten centered enseignantCycle">[[evalToDelete.owner_name]]</td>
+                        <td>[[getDateFormated(evalToDelete.evaluation_date)]]</td>
+                        <td>
+                            <c-skills-bubble text="(mapLettres[evalToDelete.evaluation])"
+                                             color="(mapCouleurs[evalToDelete.evaluation])"
+                                             classes="'competence-eval'">
+                            </c-skills-bubble>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            <button class="buttonEvalPopupDelete" ng-click="deleteEvaluationLibre(evalToDelete)">
+                <i18n>evaluations.evaluation.libre.delete</i18n>
+            </button>
+            <button class="buttonEvalPopupConfirm" ng-click="closeDeleteEvaluationLibre()">
+                <i18n>evaluations.evaluation.libre.cancel</i18n>
+            </button>
+        </div>
+    </lightbox>
 </div>

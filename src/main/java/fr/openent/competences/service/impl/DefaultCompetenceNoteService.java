@@ -25,7 +25,6 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -253,7 +252,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     public void dropCompetencesNotesDevoir(JsonArray oIdsJsonArray, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
-        query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id IN " + Sql.listPrepared(oIdsJsonArray.getList()) + ";");
+            query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id IN " + Sql.listPrepared(oIdsJsonArray.getList()) + ";");
         Sql.getInstance().prepared(query.toString(), oIdsJsonArray, SqlResult.validResultHandler(handler));
     }
 
@@ -447,7 +446,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("SELECT DISTINCT competences.id as id_competence, competences.id_parent, competences.id_type, competences.id_cycle, ")
                 .append("competences_notes.id as id_competences_notes, competences_notes.evaluation, competences_notes.owner, ")
                 .append("competences_notes.created, devoirs.name as evaluation_libelle, devoirs.date as evaluation_date,")
-                .append("devoirs.id_matiere AS id_matiere, rel_competences_domaines.id_domaine, ")
+                .append("devoirs.id_matiere AS id_matiere, rel_competences_domaines.id_domaine, devoirs.id_type AS id_typeEval, competences_notes.id_devoir AS id_devoir,")
                 .append(" type.formative AS formative ")
                 .append(", competence_niveau_final.niveau_final AS niveau_final  ")
                 .append(", competence_niveau_final_annuel.niveau_final AS niveau_final_annuel  ")
