@@ -403,7 +403,7 @@
                                 </td>
                                 <td class="colMoyenne" ng-repeat="periode in filteredPeriode | orderBy:'-type'"
                                     ng-class="{changedAverage: hasMoyenneFinale(periode.id, eleve.moyennesFinales)}">
-                                    [[getMoyenne(periode.id,eleve)]]
+                                    [[getMoyenne(periode.id_type,eleve)]]
                                 </td>
                                 <td class="colMoyenne">
                                     <i class="pencil"
