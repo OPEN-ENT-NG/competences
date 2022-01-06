@@ -2674,6 +2674,32 @@ body.evaluations {
     margin: 2%;
   }
 
+  .switchToView{
+    margin-left: 6%;
+    color: #4bafd5;
+  }
+
+  .buttonEvalPopupDelete{
+    margin-bottom: 25px;
+    margin-left: 10px;
+    float: right;
+  }
+
+  .buttonEvalPopupConfirm{
+    margin-bottom: 25px;
+    margin-right: 10px;
+    float: right;
+    background-color: silver;
+  }
+
+  .lightBoxEval{
+    width: 100%;
+  }
+
+  .paddingTwenty{
+    padding: 20px;
+  }
+
   .conversion-legend.bfc {
     list-style-type: none;
     padding: 0;
