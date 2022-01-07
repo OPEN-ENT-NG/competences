@@ -94,7 +94,7 @@ public class ExportBulletinController extends ControllerHelper {
             exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, params,
                     elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
                     finalHandler, null, vertx);
-            eventStore.createAndStoreEvent(EventStoresCompetences.CREATE_SCHOOL_REPORT.name(), request);
+            eventStore.createAndStoreEvent(EventStoresCompetences.DO_SCHOOL_REPORT.name(), request);
         });
     }
 
