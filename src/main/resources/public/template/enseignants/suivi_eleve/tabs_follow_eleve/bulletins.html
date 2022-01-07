@@ -1,6 +1,11 @@
 <br><br>
-<div ng-show="checkHaveResult() && displayFollowEleve == 'bulletins'" class="center">
-    <iframe ng-src="[[content]]"  width="900" height="1200" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<div ng-show="checkHaveResult() && displayFollowEleve == 'bulletins'" class="center" >
+    <div class="download-link">
+        <a ng-href="[[content]]" download="bulletin.pdf">Téléchargez le PDF en cliquant ici </a>
+    </div>
+    <div>
+        <embed ng-src="[[content]]" width="900" height="1200">
+    </div>
 </div>
 <div ng-show="!checkHaveResult() && displayFollowEleve == 'bulletins'" class="center">
     <h1 class="twelve-mobile grey-color"><i18n>competence.eleve.bulletin.empty</i18n></h1>
