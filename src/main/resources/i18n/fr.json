@@ -651,6 +651,7 @@
   "evaluation.eleve.header.bulletins": "BULLETINS",
   "competence.error.results.eleve": "Erreur dans la récupération des données",
   "competence.eleve.bulletin.empty": "Aucun bulletin n'a été généré pour sur la période sélectionnée",
+  "competence.eleve.bulletin.download": "Téléchargez, le PDF en cliquant ici",
 
   "add.annotation":"Dérouler pour ajouter une annotation. Sélectionner 'Évaluer' pour enlever l'annotation.",
   "keyboard.button":"Raccourci clavier" ,
