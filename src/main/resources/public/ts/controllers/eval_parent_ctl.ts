@@ -214,7 +214,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.displayCycles($scope.search.periode);
                     $scope.devoirs = evaluations.devoirs;
                     $scope.matieres = evaluations.matieres;
-                    $scope.matieresReleve = _.filter(evaluations.matieres.all, (m) => m.hasDevoir);
+                    $scope.matieresReleve = _.filter(evaluations.matieres.all, (m) => m.hasDevoirWithNote);
                     $scope.enseignants = evaluations.enseignants;
                     await $scope.updateNiveau(evaluations.usePerso);
                     await $scope.getCyclesEleve();

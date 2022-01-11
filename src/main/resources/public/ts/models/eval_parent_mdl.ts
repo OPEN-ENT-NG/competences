@@ -235,10 +235,12 @@ export class Evaluations extends Model {
 
                                     this.devoirs.load(devoirs);
                                     this.enseignants.sync(structureId);
-                                    let matieresDevoirs = _.pluck(devoirs, 'id_matiere');
+                                    //releve note
+                                    let devoirsWithNote = _.filter(devoirs, (d) => { return d.note !== undefined ; });
+                                    let matieresDevoirs = _.pluck(devoirsWithNote, 'id_matiere');
                                     this.enseignants.sync(structureId).then(() => {
                                         this.matieres.sync().then(() => {
-                                            if(this.eleve != undefined && this.eleve.classe != undefined) {
+                                            if(this.eleve != undefined && this.eleve.classe != undefined && classe == undefined) {
                                                 classe = this.eleve.classe;
                                             }
                                             _.forEach(classe.services, service => {
@@ -268,7 +270,7 @@ export class Evaluations extends Model {
                                                     });
 
                                                     _matiere.ens = teachers;
-                                                    _matiere.hasDevoir = _.contains(matieresDevoirs, _matiere.id);
+                                                    _matiere.hasDevoirWithNote = _.contains(matieresDevoirs, _matiere.id);
                                                 }
                                             });
                                             resolve();

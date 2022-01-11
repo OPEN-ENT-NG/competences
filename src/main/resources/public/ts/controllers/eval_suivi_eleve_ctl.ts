@@ -1483,7 +1483,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     $scope.dataReleve = {
                         devoirs: evaluationsParentFormat.devoirs
                     };
-                    $scope.matieresReleve = _.filter(evaluationsParentFormat.matieres.all, (m) => m.hasDevoir);
+                    $scope.matieresReleve = _.filter(evaluationsParentFormat.matieres.all, (m) => m.hasDevoirWithNote);
                     await $scope.calculMoyenneMatieres();
 
                     await utils.safeApply($scope);

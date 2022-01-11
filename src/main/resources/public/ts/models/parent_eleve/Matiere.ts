@@ -27,7 +27,7 @@ export class Matiere extends DefaultMatiere {
     ens: any = [];
     ens_is_visible: boolean;
     moyenne: number;
-    hasDevoir : boolean;
+    hasDevoirWithNote : boolean;
     sousMatieres: Collection<SousMatiere>;
     constructor () {
         super()

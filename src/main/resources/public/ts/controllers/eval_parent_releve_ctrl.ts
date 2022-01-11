@@ -61,7 +61,7 @@ export let releveController = ng.controller('ReleveController', [
                 devoirs: evaluations.devoirs
             };
 
-            $scope.matieresReleve = _.filter(evaluations.matieres.all, (m) => m.hasDevoir);
+            $scope.matieresReleve = _.filter(evaluations.matieres.all, (m) => m.hasDevoirWithNote);
             await $scope.calculMoyenneMatieres();
 
             await Utils.stopMessageLoader($scope);
@@ -107,7 +107,7 @@ export let releveController = ng.controller('ReleveController', [
             $scope.me = {
                 type: model.me.type
             };
-            $scope.matieresReleve = _.filter(evaluations.matieres.all, (m) => m.hasDevoir);
+            $scope.matieresReleve = _.filter(evaluations.matieres.all, (m) => m.hasDevoirWithNote);
 
             await $scope.loadReleveNote();
             await Utils.stopMessageLoader($scope);
