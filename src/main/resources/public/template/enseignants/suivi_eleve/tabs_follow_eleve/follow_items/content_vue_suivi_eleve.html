@@ -69,8 +69,8 @@
         <h3 ng-class="{'openedDom' : domaine.OpenSousDom}" class="margin-top-1em Domaine"
             ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0" ng-click="domaine.OpenSousDom = !domaine.OpenSousDom"
             ng-init="domaine.OpenSousDom = false">[[domaine.codification]] - [[domaine.libelle]]</h3>
-        <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;'>
-            <div class="competence-line" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated">
+        <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;' bottom-scroll="pOFilterEval.limitTo = pOFilterEval.limitTo + 5">
+            <div class="competence-line" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated| limitTo:pOFilterEval.limitTo">
                 <div ng-class="{whiteSpaceNormal: competence.hovering || displayCycle || (!search.periode.id && !search.periode.libelle)}"
                      ng-mouseenter="showIt(competence)"
                      ng-click="openDetailCompetence(competence)" ng-mouseleave="hideIt(competence)"
