@@ -16,12 +16,29 @@
  */
 
 import {Model} from 'entcore';
+
+export interface Period {
+    id?: number;
+    id_etablissement?: string;
+    id_classe?: string;
+    timestamp_dt: Date;
+    timestamp_fn: Date;
+    date_fin_saisie?: Date;
+    id_type?: number;
+    date_conseil_classe?: Date;
+    publication_bulletin?: boolean;
+
+    type?: number;
+    ordre?: number;
+    label?: string;
+}
+
 /**
  * Created by rahnir on 10/08/2017.
  */
-export class Periode extends Model{
+export class Periode extends Model {
     id: number;
-    id_etablissement : string;
+    id_etablissement: string;
     id_classe: string;
     timestamp_dt: Date;
     timestamp_fn: Date;
@@ -30,7 +47,7 @@ export class Periode extends Model{
     date_conseil_classe: Date;
     publication_bulletin: boolean;
 
-    toString = function() {
+    toString = function () {
         return String(this.id_type);
     }
 }

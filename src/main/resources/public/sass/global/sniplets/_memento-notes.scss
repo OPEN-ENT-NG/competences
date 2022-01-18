@@ -1,0 +1,210 @@
+$memento-light-grey: #e3e3e3;
+$memento-competences-indicator-shadow-color: #545454;
+$memento-grey: #7a7a7a;
+$memento-white: #FFF;
+$memento-disable-background-color: rgba(255, 255, 255, 0.8);
+
+.mementoNotes {
+
+  &-disableSelect {
+    user-select: none;
+  }
+
+  &-disabled {
+    position: absolute !important;
+    background-color: $memento-disable-background-color;
+    z-index: 1;
+  }
+
+  &-title {
+
+    &-lastNotes {
+      font-size: 0.9em;
+      padding: 28px 16px 0;
+    }
+
+    &-periodsNav {
+      &-arrow {
+        font-size: 3em;
+        margin: 14px 16px;
+      }
+
+      &-lastNotes {
+        margin: 0 10px;
+      }
+
+      &-subjectDetailSubject {
+        margin: 10px 0 -6px;
+      }
+
+      &-subjectDetailPeriod {
+        font-size: 0.8em;
+        margin: 0;
+      }
+    }
+  }
+
+  &-data {
+    overflow-y: scroll;
+    height: 426px;
+
+    &-lastNotes {
+      filter: drop-shadow(0px 0px 2px $memento-light-grey);
+
+      &-note {
+        background-color: $memento-white;
+        border-radius: 10px;
+        height: 100px;
+
+        &-competencesInfo {
+          right: 140px;
+
+          &-container {
+            background: $memento-white;
+            z-index: 1;
+            width: 250px;
+            font-size: 0.8em;
+            color: $memento-grey;
+            border-radius: 10px 3px 3px 10px;
+            filter: drop-shadow(0px 5px 5px $memento-competences-indicator-shadow-color);
+            max-height: 300px;
+            overflow-y: scroll;
+
+            &-text {
+              &-competencesChip {
+                height: 28px;
+                width: 28px;
+                border-radius: 100px;
+                margin: auto 10px;
+              }
+            }
+          }
+        }
+
+        &-info {
+          &-content {
+            padding: 4px 10px;
+
+            > p {
+              margin: 0;
+            }
+
+            > p:first-child {
+              text-transform: uppercase;
+            }
+
+            > p:not([class*="font-bold"]) {
+              font-size: 0.8em;
+            }
+          }
+
+          &-competencesIndicator {
+            width: 30px;
+            border-radius: 100px;
+            padding-left: 16px;
+            padding-right: 16px;
+            border-width: 2px;
+            filter: drop-shadow(-1px 0px 1px $memento-grey);
+            background: $memento-white;
+            margin: 20px;
+            right: -50px;
+
+            &:hover + .mementoNotes-data-lastNotes-note-competencesInfo {
+              display: block;
+            }
+          }
+        }
+
+        &-value {
+          border-radius: 10px;
+          color: $memento-white;
+          width: 100px;
+          z-index: 1;
+          padding: 10px;
+
+          > p:first-child {
+            font-size: 0.9em;
+          }
+
+          > p:not(:first-child) {
+            font-size: 0.7em;
+            height: 1.4em;
+            margin: 0;
+          }
+
+          &-content {
+            font-size: 1.5em;
+            margin: 0 8px;
+          }
+        }
+      }
+    }
+
+    &-subjects {
+      padding: 0 55px;
+
+      &-content {
+        background-color: $memento-white;
+        border-radius: 5px;
+        border: 0 solid;
+        border-left-width: 10px;
+
+        &-info {
+          padding-left: 10px;
+
+          > p {
+            margin: 0;
+            text-transform: uppercase;
+            font-size: 0.8em;
+          }
+        }
+
+        &-value {
+          margin-bottom: auto;
+          margin-top: auto;
+          padding-right: 30px;
+
+          > p {
+            width: 50px;
+          }
+        }
+      }
+
+      &-separator {
+        margin: 5px 0;
+        border-radius: 10px;
+        border: 0 solid $memento-light-grey;
+        border-top-width: 2px;
+      }
+
+      &-detailedSubject {
+        margin: 5px 0;
+
+        p {
+          margin: 0;
+          font-size: 0.8em;
+        }
+
+        &-value {
+          margin: auto;
+
+          span {
+            font-size: 1.5em;
+          }
+
+          &-average {
+            font-size: 2.2em;
+          }
+        }
+      }
+    }
+
+    &-noContent {
+      margin-top: 166px;
+
+      h4 {
+        font-weight: normal;
+      }
+    }
+  }
+}

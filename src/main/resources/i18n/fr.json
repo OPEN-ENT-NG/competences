@@ -780,5 +780,16 @@
   "evaluations.export.bfc.no.cycle": "Veuillez séléctionner un cycle",
   "confirm": "Confirmer",
   "bulletinAlert.title" : "Remplacement d'un bulletin",
-  "bulletinAlert.text": "Vous allez regénérer un bulletin. La vue parents sera mise à jour et l'ancienne version du bulletin sera écrasée. Voulez-vous continuer ?"
+  "bulletinAlert.text": "Vous allez regénérer un bulletin. La vue parents sera mise à jour et l'ancienne version du bulletin sera écrasée. Voulez-vous continuer ?",
+
+  "competences.memento.widget.unavailable": "Informations non disponibles - périodes non définies pour la classe",
+  "competences.memento.notes.title": "Notes & Compétences",
+  "competences.memento.notes.last.notes": "Dernières notes",
+  "competences.memento.average": "MOYENNE",
+  "competences.memento.coefficient.diminutive": "coeff",
+  "competences.memento.average.diminutive": "moy",
+  "competences.memento.widget.last.notes.no.notes": "Il n'y a pas de note enregistré pour le moment",
+  "competences.memento.widget.average.subjects.no.notes": "Il n'y a pas de note pour cette période",
+  "competences.memento.widget.subject.detail.no.notes": "Il n'y a pas de notes pour les filtres sélectionnés",
+  "competences.memento.notes.init.failed": "Une erreur est survenue lors du chargement du widget notes"
 }

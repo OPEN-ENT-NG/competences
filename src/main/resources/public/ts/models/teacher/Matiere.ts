@@ -15,18 +15,31 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model } from 'entcore';
-import {Competence, SousMatiere} from './index';
+import {Competence, Devoir, SousMatiere} from './index';
 import {DefaultMatiere} from "../common/DefaultMatiere";
+
+export interface Matiere {
+    id: any;
+    sousMatieres: any;
+    name: string;
+
+    matiere?: string;
+    matiere_rank?: number;
+    matiere_coeff?: number;
+    devoirs?: Array<Devoir>;
+    moyenne?: number;
+    teacher?: string;
+}
 
 export class Matiere extends DefaultMatiere {
     id: any;
     sousMatieres: any;
     name: string;
 
-    constructor () {
+    constructor(o?: any) {
         super();
         this.collection(SousMatiere);
         this.collection(Competence);
+        if (o !== undefined) this.updateData(o);
     }
 }

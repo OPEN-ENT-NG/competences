@@ -1,0 +1,224 @@
+<div class="card vertical-spacing relative mementoNotes" id="memento-notes-sniplet">
+    <!-- Error section is displayed if there is no period -->
+    <div class="mementoNotes-disabled flex-row justify-center align-center absolute"
+         ng-show="vm.disabled">
+        <h4>
+            <i18n>competences.memento.widget.unavailable</i18n>
+        </h4>
+    </div>
+
+    <!-- Selector to change the period and change the subject -->
+    <div class="mementoNotes-section-filter">
+        <i18n>competences.memento.notes.title</i18n>
+        <!-- Select containing the different periods -->
+        <select class="mementoNotes-disableSelect"
+                ng-options="period as vm.getPeriodLabel(period) for period in vm.arrayPeriodSubjects"
+                ng-change="vm.switchPeriod()"
+                ng-model="vm.selected.periodSubjects"></select>
+        <!-- Select containing the different subjects -->
+        <select class="mementoNotes-disableSelect"
+                ng-options="subject as vm.getSubjectName(subject) for subject in vm.lastNotesPeriodSubjects.subjects"
+                ng-change="vm.switchSubject()"
+                ng-model="vm.selected.subject"></select>
+    </div>
+
+    <div>
+        <div class="mementoNotes-title">
+            <!-- Last notes title section -->
+            <div class="mementoNotes-title-lastNotes row font-bold" ng-show="vm.isLastNotesDisplay()">
+                <i18n>competences.memento.notes.last.notes</i18n>
+            </div>
+
+            <!-- Allows navigation between periods for average subjects display and subject detail display -->
+            <div class="mementoNotes-title-periodsNav mementoNotes-disableSelect flex-row justify-center align-center"
+                 ng-show="vm.isAverageSubjectsDisplay() || vm.isSubjectDetailDisplay()">
+                <!-- Previous navigation-->
+                <div ng-click="vm.previousPeriod()">
+                    <p class="mementoNotes-title-periodsNav-arrow font-bold">‹</p>
+                </div>
+
+                <div ng-show="vm.isAverageSubjectsDisplay()">
+                    <!-- Current period label-->
+                    <p class="mementoNotes-title-periodsNav-lastNotes centered-text no-margin">
+                        [[vm.getSelectedPeriodLabel()]]
+                    </p>
+                </div>
+
+                <!-- Selected filter information section-->
+                <div ng-show="vm.isSubjectDetailDisplay()">
+                    <!-- Current subject label-->
+                    <p class="mementoNotes-title-periodsNav-subjectDetailSubject uppercase centered-text">
+                        [[vm.getSelectedSubjectName()]]
+                    </p>
+                    <!-- Current period label-->
+                    <p class="mementoNotes-title-periodsNav-subjectDetailPeriod uppercase centered-text no-margin">
+                        [[vm.getSelectedPeriodLabel()]]
+                    </p>
+                </div>
+                <!-- Next navigation-->
+                <div ng-click="vm.nextPeriod()">
+                    <p class="mementoNotes-title-periodsNav-arrow font-bold">›</p>
+                </div>
+            </div>
+        </div>
+        <div class="mementoNotes-data">
+
+            <!-- Last notes section -->
+            <div ng-show="vm.isLastNotesDisplay()">
+                <div class="mementoNotes-data-lastNotes big-block-container" ng-show="vm.hasLastNote()">
+
+                    <!-- For each note -->
+                    <div ng-repeat="note in vm.notes"
+                         class="display-flex mementoNotes-data-lastNotes-note vertical-spacing-twice">
+                        <!-- Competences information section -->
+                        <div ng-mouseenter="showCompetencesInfo=true" ng-mouseleave="showCompetencesInfo=false"
+                             ng-show="showCompetencesInfo"
+                             class="mementoNotes-data-lastNotes-note-competencesInfo absolute-position">
+                            <div class="mementoNotes-data-lastNotes-note-competencesInfo-container relative block-container">
+
+                                <!-- For each competence -->
+                                <div ng-repeat="competence in note.competences"
+                                     class="mementoNotes-data-lastNotes-note-competencesInfo-container-text display-flex">
+                                    <p class="flex-one top-spacing-twice bottom-spacing-twice">[[competence.nom]]</p>
+                                    <!-- Competences chip section -->
+                                    <div ng-style="{'background': vm.getCompetencesColor(competence.evaluation)}"
+                                         class="mementoNotes-data-lastNotes-note-competencesInfo-container-text-competencesChip"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Note information section -->
+                        <div class="mementoNotes-data-lastNotes-note-info display-flex flex-one">
+                            <div class="mementoNotes-data-lastNotes-note-info-content flex-one">
+                                <p class="font-bold">[[note.matiere]]</p>
+                                <p>[[note.teacher]]</p>
+                                <p>[[note.title]]</p>
+                                <p>[[vm.formatDate(note.date, "DD/MM/YYYY")]]</p>
+                            </div>
+                            <!-- Competences indicator section. Only display if there is at least one competences -->
+                            <div ng-mouseenter="showCompetencesInfo=true" ng-mouseleave="showCompetencesInfo=false"
+                                 ng-show="vm.isNoteHasCompetences(note)"
+                                 class="mementoNotes-data-lastNotes-note-info-competencesIndicator relative">
+                                <p class="mementoNotes-data-lastNotes-note-info-competencesIndicator-text absolute-position font-bold">
+                                    C</p>
+                            </div>
+                        </div>
+
+                        <!-- Note value section -->
+                        <div ng-style="{'background': vm.getNoteBackgroundColor(note)}"
+                             class="mementoNotes-data-lastNotes-note-value">
+                            <p class="centered-text vertical-spacing-twice"><span
+                                    class="mementoNotes-data-lastNotes-note-value-content font-bold">[[note.note]]</span>/[[note.diviseur]]
+                            </p>
+                            <p>
+                                <i18n>competences.memento.coefficient.diminutive</i18n>
+                                : [[note.coefficient]]
+                            </p>
+                            <p>
+                                <i18n>competences.memento.average.diminutive</i18n>
+                                : [[note.moyenne]]
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No content section. Only show when there is no notes -->
+                <div class="mementoNotes-data-noContent centered-bloc-text" ng-show="!vm.hasLastNote()">
+                    <div class="flex-row justify-center align-center">
+                        <div class="red-bar bar">&nbsp;</div>
+                        <h4>
+                            <i18n>competences.memento.widget.last.notes.no.notes</i18n>
+                        </h4>
+                        <div class="purple-bar bar">&nbsp;</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Average subjects section -->
+            <div ng-show="vm.isAverageSubjectsDisplay()" class="mementoNotes-data-subjects">
+
+                <!-- For each subject -->
+                <div ng-repeat="subject in vm.selected.periodSubjects.subjects" ng-show="subject.matiere != ''">
+                    <!-- Subject information section -->
+                    <div class="mementoNotes-data-subjects-content display-flex"
+                         ng-style="{'border-color': vm.getBorderColor(subject)}">
+                        <div class="mementoNotes-data-subjects-content-info flex-one">
+                            <p class="font-bold">[[vm.getSubjectName(subject)]]</p>
+                            <p>[[vm.getSubjectTeacherName(subject)]]</p>
+                        </div>
+                        <div class="font-bold mementoNotes-data-subjects-content-value">
+                            <p class="no-margin centered-text">[[vm.getSubjectAverage(subject)]]</p>
+                        </div>
+                    </div>
+
+                    <!-- Separator -->
+                    <div class="mementoNotes-data-subjects-separator"
+                         ng-show="!vm.isLastSubject(subject)">
+                    </div>
+                </div>
+
+                <!-- No content section. Only show when there is no subject  -->
+                <div class="mementoNotes-data-noContent centered-bloc-text" ng-show="!vm.isSelectedPeriodHasSubject()">
+                    <div class="flex-row justify-center align-center">
+                        <div class="red-bar bar">&nbsp;</div>
+                        <h4>
+                            <i18n>competences.memento.widget.average.subjects.no.notes</i18n>
+                        </h4>
+                        <div class="purple-bar bar">&nbsp;</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject detail section -->
+            <div ng-show="vm.isSubjectDetailDisplay()" class="mementoNotes-data-subjects">
+                <div ng-show="vm.isSelectedSubjectHasHomeworks()">
+                    <!-- Average information section -->
+                    <div>
+                        <div class="mementoNotes-data-subjects-detailedSubject display-flex">
+                            <div class="mementoNotes-data-subjects-detailedSubject-info flex-one">
+                                <i18n>competences.memento.average</i18n>
+                            </div>
+                            <div class="mementoNotes-data-subjects-detailedSubject-value">
+                                <p><span
+                                        class="mementoNotes-data-subjects-detailedSubject-value-average font-bold right-spacing-small">[[vm.getSubjectAverageSelectedPeriod()]]</span>/20
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- For each homework -->
+                    <div ng-repeat="homework in vm.getSelectedSubjectHomeworks()">
+
+                        <!-- Separator -->
+                        <div class="mementoNotes-data-subjects-separator">
+                        </div>
+
+                        <!-- Homework information section -->
+                        <div class="mementoNotes-data-subjects-detailedSubject display-flex">
+                            <div class="mementoNotes-data-subjects-detailedSubject-info flex-one">
+                                <p class="font-bold">[[homework.name]]</p>
+                                <p>[[vm.formatDate(homework.date, "DD/MM/YYYY")]]</p>
+                            </div>
+                            <div class="mementoNotes-data-subjects-detailedSubject-value">
+                                <p><span class="font-bold right-spacing-small">[[homework.note]]</span>/[[homework.diviseur]]
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No content section. Only show when there is no subject -->
+                <div class="mementoNotes-data-noContent centered-bloc-text"
+                     ng-show="!vm.isSelectedSubjectHasHomeworks()">
+                    <div class="flex-row justify-center align-center">
+                        <div class="red-bar bar">&nbsp;</div>
+                        <h4>
+                            <i18n>competences.memento.widget.subject.detail.no.notes</i18n>
+                        </h4>
+                        <div class="purple-bar bar">&nbsp;</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

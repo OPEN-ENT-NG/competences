@@ -18,6 +18,34 @@
 import {Model, IModel, Collection, http, notify} from 'entcore';
 import { CompetenceNote } from './index';
 
+export interface Evaluation {
+    id : number;
+    id_eleve : string;
+    data:any;
+    valid: boolean;
+    id_devoir : number;
+    id_appreciation : number;
+    valeur : any;
+    appreciation : any;
+    coefficient : number;
+    ramener_sur : boolean;
+    competenceNotes : Collection<CompetenceNote>;
+    oldValeur : any;
+    is_evaluated  : boolean;
+    oldAppreciation : any;
+    oldId_annotation : number;
+    id_annotation : number;
+
+    matiere?: string;
+    teacher?: string;
+    title?: string;
+    date?: string;
+    note?: string;
+    diviseur?: number;
+    moyenne?: string;
+    competences?: Array<CompetenceNote>;
+}
+
 export class Evaluation extends Model implements IModel {
     id : number;
     id_eleve : string;

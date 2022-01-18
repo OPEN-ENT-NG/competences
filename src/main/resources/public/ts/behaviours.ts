@@ -27,6 +27,7 @@ import {opinionConference} from "./sniplets/opinionConference";
 import {paramImportCSV} from "./sniplets/param_import_csv";
 import {programElements} from "./sniplets/programsElement";
 import {orderShowSubject} from "./sniplets/orderShowSubject";
+import {notesMementoWidget} from "./sniplets/memento"
 
 Behaviours.register('competences', {
     rights: {
@@ -37,8 +38,8 @@ Behaviours.register('competences', {
             linkGroupCycle: 'fr.openent.competences.controllers.UtilsController|updateLinkGroupesCycles',
             createDispenseDomaineEleve: 'fr.openent.competences.controllers.DomaineController|createDispenseDomaineEleve',
             canUpdateNiveauEnsCpl: 'fr.openent.competences.controllers.BFCController|updateNiveauEnsCpl',
-            access:"fr.openent.competences.controllers.CompetencesController|view",
-            canUpdateRetardAndAbsence:'fr.openent.competences.controllers.UtilsController|insertRetardOrAbscence',
+            access: "fr.openent.competences.controllers.CompetencesController|view",
+            canUpdateRetardAndAbsence: 'fr.openent.competences.controllers.UtilsController|insertRetardOrAbscence',
             bilanPeriodique: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createElementBilanPeriodique",
             accessProjets: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciationSaisieProjet",
             canUpdateAppreciations: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciationBilanPeriodique",
@@ -59,18 +60,20 @@ Behaviours.register('competences', {
         },
         resource: {}
     },
-    loadResources: async function(callback) {},
+    loadResources: async function (callback) {
+    },
     sniplets: {
         visibilitymoyBFC: visibilitymoyBFC,
         visibilityDNB: visibilityDNB,
         itemsCompetences: itemsCompetences,
         linkGroupCycle: linkGroupCycle,
         epi_ap_parcours: bilanPeriodique,
-        paramServices : paramServices,
+        paramServices: paramServices,
         renameSubject: renameSubject,
         param_import_csv: paramImportCSV,
         opinionConference: opinionConference,
         programElements: programElements,
-        orderShowSubject: orderShowSubject
+        orderShowSubject: orderShowSubject,
+        'notes-memento-widget': notesMementoWidget
     }
 });
