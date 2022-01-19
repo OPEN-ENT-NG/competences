@@ -2674,12 +2674,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let sum = 0;
                 for(let i=1;i<6;i++){
                     let _moyenneFinale = _.findWhere(eleve.moyennesFinales, {id_periode: i});
-                    if (_moyenneFinale !== undefined && _moyenneFinale !== null && _moyenneFinale.moyenne !== undefined) {
+                    if (_moyenneFinale !== undefined && _moyenneFinale !== null && _moyenneFinale.moyenne !== undefined && _moyenneFinale.moyenne !== null) {
                         sum += Number(_moyenneFinale.moyenne);
                         periodes ++;
                     }else {
                         let _moyenne = _.findWhere(eleve.moyennes, {id_periode: i});
-                        if (_moyenne !== undefined && _moyenne !== null && _moyenne.moyenne !== undefined) {
+                        if (_moyenne !== undefined && _moyenne !== null && _moyenne.moyenne !== undefined && _moyenne.moyenne !== "NN") {
                             sum += Number(_moyenne.moyenne);
                             periodes++;
                         }
@@ -2690,7 +2690,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             }
             let _moyenneFinale = _.findWhere(eleve.moyennesFinales, {id_periode: idPeriode});
-            if (_moyenneFinale !== undefined && _moyenneFinale !== null && _moyenneFinale.moyenne !== undefined) {
+            if (_moyenneFinale !== undefined && _moyenneFinale !== null && _moyenneFinale.moyenne !== undefined && _moyenneFinale.moyenne !== null) {
                 return _moyenneFinale.moyenne;
             }
             let _moyenne = _.findWhere(eleve.moyennes, {id_periode: idPeriode});
@@ -4753,13 +4753,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
                     if (idPeriode !== null && (details_moyennes_finales !== undefined|| details_moyennes !== undefined) && moyenneFinale !== null ) {
                         nbMoyenneAnnee++;
-                        nbMoyenneClasseAnnee++;
                         if (details_moyennes_finales !== undefined ) {
                             isMoyenneFinaleAnnee = true;
                             moyenneAnnee += parseFloat(moyenneFinale);
                         } else {
                             moyenneAnnee += moyenne;
                         }
+                    }
+
+                    // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
+                    if (idPeriode != null && moyenneClasse != undefined) {
+                        nbMoyenneClasseAnnee++;
                         moyenneClasseAnnee += moyenneClasse;
                     }
 
