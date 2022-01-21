@@ -133,7 +133,7 @@
                     <select ng-model="evaluationLibre.id_periode"
                             ng-change="controleDate()"
                             ng-options="periode.id_type as getI18nPeriode(periode)
-                            for periode in evaluationLibre.periodes">
+                            for periode in evaluationLibre.periodes| orderBy: 'id_type'">
                         <option class="header-opt" disabled value="">
                             [[translate('viescolaire.utils.periode')]]
                         </option>
@@ -156,7 +156,7 @@
 
             <div class="nine cell twelve-mobile">
                 <date-picker style="margin: 10px 0;" ng-model="evaluationLibre.dateDevoir" class="four"
-                             ng-change="showDate = true; controleDate(evaluationLibre)">
+                             ng-change="showDate = true; controleDate(evaluationLibre)" readonly="true">
                 </date-picker>
             </div>
         </section>
@@ -175,7 +175,7 @@
 
             <div class="nine cell twelve-mobile">
                 <date-picker style="margin: 10px 0;" ng-model="evaluationLibre.datePublication" class="four"
-                             ng-change="showDate = true; controleDate(evaluationLibre)">
+                             ng-change="showDate = true; controleDate(evaluationLibre)" readonly="true" >
                 </date-picker>
             </div>
         </section>
