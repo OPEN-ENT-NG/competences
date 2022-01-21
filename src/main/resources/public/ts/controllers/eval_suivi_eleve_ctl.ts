@@ -114,6 +114,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             evaluationLibre.competences.all.push($scope.detailCompetence.id);
             evaluationLibre.competenceEvaluee = competenceEvaluee;
 
+
+
             return evaluationLibre;
         };
 
@@ -123,7 +125,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         $scope.createEvaluationLibre = async () => {
             $scope.hideMessages();
             $scope.evaluationLibre = $scope.initEvaluationLibre();
-
+            $scope.evaluationLibre.dateDevoir = new Date($scope.evaluationLibre.date);
+            $scope.evaluationLibre.datePublication = new Date($scope.evaluationLibre.date_publication);
             if ($scope.search.classe && $scope.search.classe.periodes && $scope.search.classe.periodes.length() == 0) {
                 await $scope.search.classe.periodes.sync();
             }
@@ -205,7 +208,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 idClasse = $scope.search.classe.id;
             }
             let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
-            if (classe !== undefined && _.isEmpty(classe.periodes) && classe.periodes !== undefined) {
+            if (classe !== undefined && _.isEmpty(classe.periodes.all) && classe.periodes !== undefined) {
                 await classe.periodes.sync();
             }
             let current_periode = _.findWhere(classe.periodes.all, {id_type: $scope.evaluationLibre.id_periode});
