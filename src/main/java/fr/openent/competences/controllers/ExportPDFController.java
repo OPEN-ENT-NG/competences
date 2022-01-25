@@ -483,6 +483,7 @@ public class ExportPDFController extends ControllerHelper {
                 JsonObject eleve = (JsonObject) elevesFuture.result();
                 final String nomClasse = eleve.getString("classeName");
                 final String idEtablissementEl = eleve.getString(ID_ETABLISSEMENT_KEY);
+                final String eleveLevel = eleve.getString("level");
                 JsonArray idManualGroupes = strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
                 JsonArray idFunctionalGroupes = strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
 
@@ -498,7 +499,7 @@ public class ExportPDFController extends ControllerHelper {
                 JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
                 final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap,
                         nomGroupes, matieres, libellePeriode, json, answered, resultFinal);
-                exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]),
+                exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleves[0], eleveLevel, idGroupes.toArray(new String[0]),
                         _iGroupesdArr, idEtablissementEl, listIdMatieres, finalIdPeriode, isCycle, finalHandler);
             } else {
                 JsonArray eleves = (JsonArray) elevesFuture.result();
@@ -525,7 +526,7 @@ public class ExportPDFController extends ControllerHelper {
                         JsonArray idFunctionalGroupes = strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
                         JsonArray idGroupesJsArr = utilsService.saUnion(idFunctionalGroupes, idManualGroupes);
                         String[] idGroupesArr = UtilsConvert.jsonArrayToStringArr(idGroupesJsArr);
-                        exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleveEl, _idGroupes, idGroupesArr,
+                        exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleveEl, "", _idGroupes, idGroupesArr,     //TODO : adapter le eleveLevel pour la classe
                                 idEtablissement.get(i), listIdMatieres, finalIdPeriode, isCycle, finalHandler);
                     }
                 }

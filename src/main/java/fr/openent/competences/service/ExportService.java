@@ -42,7 +42,7 @@ public interface ExportService {
                        Handler<Either<String, JsonObject>> handler);
 
     void getExportReleveComp(final Boolean text, final Boolean usePerso, final Boolean pByEnseignement, final String idEleve,
-                             String[] idGroupes,String[] idFunctionalGroupes, final String idEtablissement,
+                             final String eleveLevel, String[] idGroupes,String[] idFunctionalGroupes, final String idEtablissement,
                              final List<String> idMatieres, Long idPeriodeType, final Boolean isCycle,
                              final Handler<Either<String, JsonObject>> handler);
 

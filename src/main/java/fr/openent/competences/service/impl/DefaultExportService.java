@@ -633,8 +633,8 @@ public class DefaultExportService implements ExportService {
 
     @Override
     public void getExportReleveComp(final Boolean text, final Boolean usePerso, final Boolean pByEnseignement,
-                                    final String idEleve, final String[] idGroupes, String[] idFunctionalGroupes,
-                                    final String idEtablissement, final List<String> idMatieres,
+                                    final String idEleve, final String eleveLevel, final String[] idGroupes,
+                                    String[] idFunctionalGroupes, final String idEtablissement, final List<String> idMatieres,
                                     Long idPeriodeType, Boolean isCycle, final Handler<Either<String, JsonObject>> handler) {
         final JsonArray maitriseArray = new fr.wseduc.webutils.collections.JsonArray();
         final JsonArray enseignementArray = new fr.wseduc.webutils.collections.JsonArray();
@@ -645,7 +645,7 @@ public class DefaultExportService implements ExportService {
         String[] idMatieresTab = idMatieres.toArray(new String[0]);
         final AtomicBoolean answered = new AtomicBoolean();
         final AtomicBoolean byEnseignement = new AtomicBoolean(pByEnseignement);
-        final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, usePerso, idEleve, devoirsArray,
+        final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, usePerso, idEleve, eleveLevel, devoirsArray,
                 maitriseArray, competencesArray, domainesArray, competencesNotesArray, enseignementArray, answered,
                 byEnseignement, handler);
 
@@ -766,8 +766,8 @@ public class DefaultExportService implements ExportService {
 
 
     private Handler<Either<String, JsonArray>>
-    getReleveCompFinalHandler(final Boolean text, final Boolean usePerso, final String idEleve, final JsonArray devoirs,
-                              final JsonArray maitrises, final JsonArray competences,
+    getReleveCompFinalHandler(final Boolean text, final Boolean usePerso, final String idEleve, final String eleveLevel,
+                              final JsonArray devoirs, final JsonArray maitrises, final JsonArray competences,
                               final JsonArray domaines, final JsonArray competencesNotes, final JsonArray enseignements,
                               final AtomicBoolean answered, final AtomicBoolean byEnseignement,
                               final Handler<Either<String, JsonObject>> responseHandler) {
@@ -837,8 +837,8 @@ public class DefaultExportService implements ExportService {
                                     Map<String, JsonObject> enseignementsMap = extractData(enseignements, ID_KEY);
 
                                     JsonObject resToAdd = formatJsonObjectExportReleveComp(
-                                            text, usePerso, Boolean.valueOf(byEnseignement.get()), idEleve, devoirsList,
-                                            maitrisesMap, competencesMap, domainesMap,
+                                            text, usePerso, Boolean.valueOf(byEnseignement.get()), idEleve, eleveLevel,
+                                            devoirsList, maitrisesMap, competencesMap, domainesMap,
                                             enseignementsMap,
                                             competenceNotesMap)
                                             .put("noDevoir", false);
@@ -866,8 +866,45 @@ public class DefaultExportService implements ExportService {
     }
 
 
+    private TreeMap<String, HashMap<Calendar, Calendar>> calculPeriodesAnnees (String eleveLevel) {
+        int niveau = Integer.parseInt(eleveLevel.replaceAll("[^\\d.]", ""));
+        if (niveau != -1) { //TODO : Changer la condition
+            Calendar date = Calendar.getInstance();
+            int actualMonth = date.get(Calendar.MONTH);
+            int actualYear = date.get(Calendar.YEAR);
+            Calendar periodeBeginning = Calendar.getInstance();
+            Calendar periodeEnding = Calendar.getInstance();
+            if (actualMonth < 9) {
+                int pastYear = actualYear - 1;
+                periodeBeginning.set(pastYear, Calendar.SEPTEMBER,1);
+                periodeEnding.set(actualYear, Calendar.AUGUST,31);
+            } else {
+                int afterYear = actualYear + 1;
+                periodeBeginning.set(actualYear, Calendar.SEPTEMBER,1);
+                periodeEnding.set(afterYear, Calendar.AUGUST,31);
+            }
+
+            TreeMap<String, HashMap<Calendar, Calendar>> periodes = new TreeMap<>(Collections.reverseOrder());
+            for (int i = niveau; i <= 6; i++) {
+                if (i != niveau) {
+                    periodeBeginning.set(periodeBeginning.get(Calendar.YEAR)-1,
+                            periodeBeginning.get(Calendar.MONTH), periodeBeginning.get(Calendar.DATE));
+                    periodeEnding.set(periodeEnding.get(Calendar.YEAR)-1,
+                            periodeEnding.get(Calendar.MONTH), periodeEnding.get(Calendar.DATE));
+                }
+                String label = i + "ème";
+                HashMap<Calendar, Calendar> periode = new HashMap<>();
+                periode.put(periodeBeginning, periodeEnding);
+                periodes.put(label, periode);
+            }
+            return periodes;
+        }
+        return null;
+    };
+
+
     private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean usePerso, Boolean byEnseignement,
-                                                        String idEleve, List<String> devoirs,
+                                                        String idEleve, String eleveLevel, List<String> devoirs,
                                                         Map<String, JsonObject> maitrises,
                                                         Map<String, JsonObject> competences,
                                                         Map<String, JsonObject> domaines,
@@ -877,6 +914,8 @@ public class DefaultExportService implements ExportService {
         JsonObject result = new JsonObject();
         result.put("text", text);
         result.put("idEleve", idEleve);
+
+        TreeMap<String, HashMap<Calendar, Calendar>> periodes = calculPeriodesAnnees(eleveLevel);
 
         JsonObject header = new JsonObject();
         JsonObject body = new JsonObject();
@@ -967,23 +1006,40 @@ public class DefaultExportService implements ExportService {
                         .getString("libelle"));
             }
             JsonArray competencesInDomainArray = new fr.wseduc.webutils.collections.JsonArray();
-            for (String competence : competencesInDomain.getValue()) {
-                List<Long> valuesByComp = new ArrayList<>();
-                for (String devoir : devoirByCompetences.get(competence)) {
-                    if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
-                            .containsKey(competence)) {
-                        valuesByComp.add(competenceNotesByDevoir.get(devoir).get(competence) + 1);
-                    } else {
-                        valuesByComp.add(0L);
+            for(Map.Entry<String,HashMap<Calendar, Calendar>> entry : periodes.entrySet()) {
+                String key = entry.getKey();
+                HashMap<Calendar, Calendar> periode = entry.getValue();
+                Calendar beginningYear = Calendar.getInstance();
+                Calendar endYear = Calendar.getInstance();
+
+                for (Map.Entry<Calendar, Calendar> cal : periode.entrySet()) {
+                    beginningYear = cal.getKey();
+                    endYear = cal.getKey();
+                }
+
+                //TODO : Créer le JSON de la période en cours
+
+                for (String competence : competencesInDomain.getValue()) {
+                    if (isInPeriode(competence)){
+                        List<Long> valuesByComp = new ArrayList<>();
+                        for (String devoir : devoirByCompetences.get(competence)) {
+                            if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
+                                    .containsKey(competence)) {
+                                valuesByComp.add(competenceNotesByDevoir.get(devoir).get(competence) + 1);
+                            } else {
+                                valuesByComp.add(0L);
+                            }
+                        }
+                        JsonObject competenceNote = new JsonObject();
+                        competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
+                        String machin = competencesObjByIdComp.get(competence).getString("date");
+                        competenceNote.put("competenceNotes", calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size()));
+                        competencesInDomainArray.add(competenceNote);
                     }
                 }
-                JsonObject competenceNote = new JsonObject();
-                competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
-                competenceNote.put("competenceNotes", calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size()));
-                competencesInDomainArray.add(competenceNote);
+                domainObj.put("domainBody", competencesInDomainArray);
+                bodyBody.add(domainObj);
             }
-            domainObj.put("domainBody", competencesInDomainArray);
-            bodyBody.add(domainObj);
         }
 
         body.put("body", bodyBody);

@@ -151,7 +151,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         StringBuilder query = new StringBuilder();
         String idDevoirsForQuery = Sql.listPrepared(idDevoirs.getList());
 
-        query.append("SELECT competences_notes.*,competences.nom as nom, competences.id_type as id_type, ")
+        query.append("SELECT competences_notes.*,competences.nom as nom, competences.id_type as id_type, devoirs.date, ")
                 .append(" competences.id_parent as id_parent, ")
                 .append(" competence_niveau_final.niveau_final AS niveau_final  ")
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes, ")
@@ -176,7 +176,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
             query.append(" UNION SELECT null as id, competences_devoirs.id_devoir, ")
                     .append(" competences_devoirs.id_competence, null as evaluation, ")
                     .append(" null as owner, ? as id_eleve,null as created, null as modified, competences.nom as nom, ")
-                    .append(" competences.id_type as id_type, competences.id_parent as id_parent,  ")
+                    .append(" competences.id_type as id_type, devoirs.date, competences.id_parent as id_parent,  ")
                     .append(" competence_niveau_final.niveau_final AS niveau_final  ")
                     .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs, ")
                     .append( Competences.COMPETENCES_SCHEMA +".devoirs, ")
