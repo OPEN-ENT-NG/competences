@@ -2929,56 +2929,76 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     @Override
     public void runSavePdf(JsonObject bulletinEleve, final JsonObject bulletin, Vertx vertx, JsonObject config,
                            Handler<Either<String, Boolean>> bulletinHandlerWork){
-        final HttpServerRequest request = new JsonHttpServerRequest(bulletin.getJsonObject("request"));
-        final JsonObject templateProps =  bulletin.getJsonObject("resultFinal");
-        final String templateName = bulletin.getString("template");
-        final String prefixPdfName = bulletin.getString("title");
+        try {
+            final HttpServerRequest request = new JsonHttpServerRequest(bulletin.getJsonObject("request"));
+            final JsonObject templateProps = bulletin.getJsonObject("resultFinal");
+            final String templateName = bulletin.getString("template");
+            final String prefixPdfName = bulletin.getString("title");
 
-        generateAndSavePdf(request, templateProps, templateName, prefixPdfName, bulletinEleve,
-                vertx, config, bulletinHandlerWork);
+            generateAndSavePdf(request, templateProps, templateName, prefixPdfName, bulletinEleve,
+                    vertx, config, bulletinHandlerWork);
+        }catch (Exception e){
+            bulletinHandlerWork.handle(new Either.Left<>(e.getMessage()));
+        }
     }
 
     @Override
     public void generateAndSavePdf(final HttpServerRequest request, JsonObject resultFinal, final String templateName,
                                    final String prefixPdfName, JsonObject eleve, Vertx vertx, JsonObject config,
-                                   Handler<Either<String, Boolean>> finalHandler){
-        final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
-        final String templatePath = FileResolver.absolutePath(config.getJsonObject("exports")
-                .getString("template-path"));
-        final String baseUrl = getScheme(request) + "://" + Renders.getHost(request) +
-                config.getString("app-address") + "/public/";
-        String node = (String) vertx.sharedData().getLocalMap("server").get("node");
-        if (node == null) {
-            node = "";
+                                   Handler<Either<String, Boolean>> finalHandler) {
+        try {
+            final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
+            final String templatePath = FileResolver.absolutePath(config.getJsonObject("exports")
+                    .getString("template-path"));
+            final String baseUrl = getScheme(request) + "://" + Renders.getHost(request) +
+                    config.getString("app-address") + "/public/";
+            String node = (String) vertx.sharedData().getLocalMap("server").get("node");
+            if (node == null) {
+                node = "";
+            }
+            final String _node = node;
+            processTemplate(request, resultFinal, templateName, prefixPdfName, eleve, vertx, config, finalHandler,
+                    dateDebut, templatePath, baseUrl, _node);
+        }catch (Exception e){
+            finalHandler.handle(new Either.Left<>(e.getMessage()));
         }
-        final String _node = node;
-        processTemplate(request, resultFinal, templateName, prefixPdfName, eleve, vertx, config, finalHandler,
-                dateDebut, templatePath, baseUrl, _node);
     }
 
     private void processTemplate (HttpServerRequest request, JsonObject resultFinal, String templateName,
                                   String prefixPdfName, JsonObject eleve, Vertx vertx, JsonObject config,
                                   Handler<Either<String, Boolean>> finalHandler, String dateDebut, String templatePath,
                                   String baseUrl, String _node) {
-        vertx.fileSystem().readFile(templatePath + templateName, new Handler<AsyncResult<Buffer>>() {
-            @Override
-            public void handle(AsyncResult<Buffer> result) {
-                if (!result.succeeded()) {
-                    badRequest(request, "Error while reading template : " + templatePath + templateName);
-                    log.error("[DefaultExportBulletinService | processTemplate] Error while reading template : " + templatePath + templateName);
-                    return;
+        try {
+
+            vertx.fileSystem().readFile(templatePath + templateName, new Handler<AsyncResult<Buffer>>() {
+                @Override
+                public void handle(AsyncResult<Buffer> result) {
+                    if (!result.succeeded()) {
+                        badRequest(request, "Error while reading template : " + templatePath + templateName);
+                        log.error("[DefaultExportBulletinService | processTemplate] Error while reading template : " + templatePath + templateName);
+                        finalHandler.handle(new Either.Left("[DefaultExportBulletinService | processTemplate] Error while reading template : " + templatePath + templateName));
+                        return;
+                    }
+                    try {
+
+                        StringReader reader = new StringReader(result.result().toString("UTF-8"));
+                        Renders render = new Renders(vertx, config);
+
+                        JsonObject templateProps = resultFinal;
+
+                        templateProps.put("eleves", new JsonArray().add(eleve));
+                        render.processTemplate(request, templateProps, templateName, reader,
+                                getRenderProcessHandler(templateProps, baseUrl, _node, request, prefixPdfName, dateDebut, eleve, finalHandler));
+                    }
+                    catch (Exception e){
+                        finalHandler.handle(new Either.Left<>(e.getMessage()));
+                    }
                 }
-                StringReader reader = new StringReader(result.result().toString("UTF-8"));
-                Renders render = new Renders(vertx, config);
+            });
+        }catch (Exception e){
+            finalHandler.handle(new Either.Left<>(e.getMessage()));
+        }
 
-                JsonObject templateProps = resultFinal;
-
-                templateProps.put("eleves", new JsonArray().add(eleve));
-                render.processTemplate(request, templateProps, templateName, reader,
-                        getRenderProcessHandler(templateProps, baseUrl, _node, request, prefixPdfName, dateDebut, eleve, finalHandler));
-
-            }
-        });
     }
 
     private Handler<Writer> getRenderProcessHandler(JsonObject templateProps, String baseUrl, String _node,
@@ -2987,6 +3007,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return new Handler<Writer>() {
             @Override
             public void handle(Writer writer) {
+                try{
                 String processedTemplate = ((StringWriter) writer).getBuffer().toString();
                 JsonObject actionObject = new JsonObject();
                 byte[] bytes;
@@ -2997,12 +3018,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     log.error("[DefaultExportBulletinService | getRenderProcessHandler] " + e.getMessage() + " "+
                             eleve.getString("idEleve") + " " + eleve.getString("lastName"));
                 }
-
                 actionObject.put("content", bytes).put("baseUrl", baseUrl);
                 eb.send(_node + "entcore.pdf.generator", actionObject,
                         new DeliveryOptions().setSendTimeout(
                                 TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
                         handlerToAsyncHandler(getPdfRenderHandler(request, templateProps, prefixPdfName, dateDebut, eleve, finalHandler)));
+                }catch (Exception e){
+                    finalHandler.handle(new Either.Left<>(e.getMessage()));
+                }
             }
         };
     }
@@ -3014,34 +3037,39 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             @Override
             public void handle(Message<JsonObject> reply) {
                 JsonObject pdfResponse = reply.body();
-                if (!"ok".equals(pdfResponse.getString("status"))) {
-                    badRequest(request, pdfResponse.getString("message"));
-                    return;
-                }
-                byte[] pdf = pdfResponse.getBinary("content");
-
-                if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
-                    File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
-                    OutputStream outStream = null;
-                    try {
-                        outStream = new FileOutputStream(pdfFile);
-                    } catch (FileNotFoundException e) {
-                        log.error("[DefaultExportBulletinService | getPdfRenderHandler 1 ]" + e.getMessage() + " "
-                                + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                        e.printStackTrace();
+                try {
+                    if (!"ok".equals(pdfResponse.getString("status"))) {
+                        badRequest(request, pdfResponse.getString("message"));
+                        return;
                     }
-                    try {
-                        outStream.write(pdf);
-                    } catch (IOException e) {
-                        log.error("[DefaultExportBulletinService | getPdfRenderHandler 2] " + e.getMessage() + " " +
-                                eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                        e.printStackTrace();
-                    }
+                    byte[] pdf = pdfResponse.getBinary("content");
 
-                    handleCreateFile(pdfFile, outStream, templateProps, prefixPdfName, dateDebut, eleve, finalHandler);
-                } else {
-                    Buffer buffer = Buffer.buffer(pdf);
-                    savePdfDefault(buffer, eleve, finalHandler);
+                    if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
+                        File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
+                        OutputStream outStream = null;
+                        try {
+                            outStream = new FileOutputStream(pdfFile);
+                        } catch (FileNotFoundException e) {
+                            log.error("[DefaultExportBulletinService | getPdfRenderHandler 1 ]" + e.getMessage() + " "
+                                    + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                            e.printStackTrace();
+                        }
+                        try {
+                            outStream.write(pdf);
+                        } catch (IOException e) {
+                            log.error("[DefaultExportBulletinService | getPdfRenderHandler 2] " + e.getMessage() + " " +
+                                    eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                            e.printStackTrace();
+                            finalHandler.handle(new Either.Left(e.getMessage()));
+                        }
+
+                        handleCreateFile(pdfFile, outStream, templateProps, prefixPdfName, dateDebut, eleve, finalHandler);
+                    } else {
+                        Buffer buffer = Buffer.buffer(pdf);
+                        savePdfDefault(buffer, eleve, finalHandler);
+                    }
+                }catch(Exception e){
+                    finalHandler.handle(new Either.Left(e.getMessage()));
                 }
             }
         };
