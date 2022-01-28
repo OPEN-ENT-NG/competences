@@ -24,9 +24,7 @@ import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.VertxException;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import org.entcore.common.neo4j.Neo4j;
@@ -35,7 +33,6 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -1320,7 +1317,7 @@ public class DefaultUtilsService implements UtilsService {
 
     public void getActiveStatePresences ( final String idStructure, Handler<Either<String,JsonObject>> handler){
         // Récupération de la config vie scolaire
-        Future<JsonObject> configFuture = Future.future();
+        Promise<JsonObject> configFuture = Promise.promise();
         JsonObject action = new JsonObject()
                 .put("action", "config.generale");
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -1339,26 +1336,24 @@ public class DefaultUtilsService implements UtilsService {
         }));
 
         // Récupération de l'activation du module présences de l'établissement
-        Future<JsonObject> activationFuture = Future.future();
-        isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
+//        isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
 
-        CompositeFuture.all(configFuture, activationFuture).setHandler(event -> {
-            if(event.failed()){
-                String error = event.cause().getMessage();
-                log.error("[getRetardsAndAbsences-config] : " + error);
-            } else{
-                JsonObject configVieScolaire = configFuture.result();
-                JsonObject activationStructure = activationFuture.result();
-                JsonObject result = new JsonObject();
-                result.put("installed",configVieScolaire.getBoolean("presences"));
-                if(!activationStructure.isEmpty() && activationStructure.getBoolean("actif"))
-                    result.put("activate",true);
-                else
-                    result.put("activate",false);
-
+        configFuture.future().onSuccess(configEvent -> {
+            JsonObject result = new JsonObject();
+            result.put("installed",configEvent.getBoolean("presences"));
+            if (configEvent.getBoolean("presences")){
+                Future<JsonObject> activationFuture = Future.future();
+                log.info("presences plop");
+                isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
+                activationFuture.onSuccess(event -> {
+                    result.put("activate",!event.isEmpty() && event.getBoolean("actif"));
+                    handler.handle(new Either.Right<>(result));
+                }).onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] "+event.getMessage())));
+            }else{
+                result.put("activate",false);
                 handler.handle(new Either.Right<>(result));
             }
-        });
+        }).onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] "+event.getMessage())));;
     }
 
     public void getSyncStatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler){
@@ -1477,9 +1472,9 @@ public class DefaultUtilsService implements UtilsService {
         String tableName = "archive_" + type;
 
         StringBuilder query = new StringBuilder()
-        .append("SELECT DISTINCT id_annee")
-        .append(" FROM notes.").append(tableName)
-        .append(" WHERE id_etablissement = ?;");
+                .append("SELECT DISTINCT id_annee")
+                .append(" FROM notes.").append(tableName)
+                .append(" WHERE id_etablissement = ?;");
 
         JsonArray params = new JsonArray().add(idStructure);
         Sql.getInstance().prepared(query.toString(), params, Competences.DELIVERY_OPTIONS,
