@@ -260,10 +260,26 @@ const vm: IViewModel = {
     defaultSubject: new Matiere({id: -1, matiere: `${idiom.translate(`matieres`)}`, matiere_rank: -1}),
     structure: null,
     async init(student: string, group: Array<string>): Promise<void> {
+        vm.disabled = false;
         vm.student = student;
         vm.group = group;
-        vm.disabled = false;
+        vm.notes = [];
+        vm.arrayPeriodSubjects = [];
+        vm.display = Display.LastNotes;
+        vm.selected.subject = new Matiere({id: -1});
+        vm.selected.periodSubjects = {
+            period: {
+                label: "",
+                timestamp_dt: undefined,
+                timestamp_fn: undefined
+            },
+            subjects: []
+        };
+        vm.yearPeriodSubjects = null;
+        vm.lastNotesPeriodSubjects = null;
+        vm.defaultSubject = new Matiere({id: -1, matiere: `${idiom.translate(`matieres`)}`, matiere_rank: -1});
         vm.structure = new Structure({id: window.structure.id});
+
         vm.structure.niveauCompetences.sync();
         vm.notes = await DevoirsService.getLatestNotes(window.structure.id, vm.student);
         vm.arrayPeriodSubjects = [];
