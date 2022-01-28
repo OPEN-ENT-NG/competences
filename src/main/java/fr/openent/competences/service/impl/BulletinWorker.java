@@ -136,7 +136,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
         exportBulletinService.runSavePdf(bulletinToHandle, paramBulletin, vertx, config, event -> {
             processBulletin(paramBulletin, bulletinHandlerWork);
             if(event.isLeft()){
-                log.error("[BulletinWorker | processBulletin] : " + event.left().getValue());
+                log.error("ERROR [BulletinWorker | processBulletin] : " + event.left().getValue());
             }
         });
     }

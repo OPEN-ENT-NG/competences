@@ -2969,7 +2969,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                   Handler<Either<String, Boolean>> finalHandler, String dateDebut, String templatePath,
                                   String baseUrl, String _node) {
         try {
-
             vertx.fileSystem().readFile(templatePath + templateName, new Handler<AsyncResult<Buffer>>() {
                 @Override
                 public void handle(AsyncResult<Buffer> result) {
@@ -2980,7 +2979,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         return;
                     }
                     try {
-
                         StringReader reader = new StringReader(result.result().toString("UTF-8"));
                         Renders render = new Renders(vertx, config);
 
