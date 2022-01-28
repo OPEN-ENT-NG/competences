@@ -266,6 +266,7 @@ const vm: IViewModel = {
         vm.structure = new Structure({id: window.structure.id});
         vm.structure.niveauCompetences.sync();
         vm.notes = await DevoirsService.getLatestNotes(window.structure.id, vm.student);
+        vm.arrayPeriodSubjects = [];
 
         await vm.loadPeriods();
         if (vm.arrayPeriodSubjects.length === 0) {
