@@ -1338,22 +1338,24 @@ public class DefaultUtilsService implements UtilsService {
         // Récupération de l'activation du module présences de l'établissement
 //        isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
 
-        configFuture.future().onSuccess(configEvent -> {
-            JsonObject result = new JsonObject();
-            result.put("installed",configEvent.getBoolean("presences"));
-            if (configEvent.getBoolean("presences")){
-                Future<JsonObject> activationFuture = Future.future();
-                log.info("presences plop");
-                isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
-                activationFuture.onSuccess(event -> {
-                    result.put("activate",!event.isEmpty() && event.getBoolean("actif"));
-                    handler.handle(new Either.Right<>(result));
-                }).onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] "+event.getMessage())));
-            }else{
-                result.put("activate",false);
-                handler.handle(new Either.Right<>(result));
-            }
-        }).onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] "+event.getMessage())));;
+        configFuture.future()
+                .onSuccess(configEvent -> {
+                    JsonObject result = new JsonObject();
+                    boolean configInstalled = Boolean.TRUE.equals(configEvent.getBoolean("presences"));
+                    result.put("installed",configInstalled);
+                    if (configInstalled){
+                        Future<JsonObject> activationFuture = Future.future();
+                        isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
+                        activationFuture.onSuccess(event -> {
+                            result.put("activate",!event.isEmpty() && event.getBoolean("actif"));
+                            handler.handle(new Either.Right<>(result));
+                        }).onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] "+event.getMessage())));
+                    }else{
+                        result.put("activate",false);
+                        handler.handle(new Either.Right<>(result));
+                    }
+                })
+                .onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] "+event.getMessage())));;
     }
 
     public void getSyncStatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler){
