@@ -3078,6 +3078,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             log.error("[DefaultExportBulletinService | getPdfRenderHandler 1 ]" + e.getMessage() + " "
                                     + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
                             e.printStackTrace();
+                            finalHandler.handle(new Either.Left(e.getMessage()));
+                            return;
                         }
                         try {
                             outStream.write(pdf);
