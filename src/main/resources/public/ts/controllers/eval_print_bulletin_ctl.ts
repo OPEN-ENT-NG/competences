@@ -190,10 +190,11 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             await runMessageLoader();
 
             let classes = _.groupBy($scope.allElevesClasses, 'classeName');
-            for (let key in classes) {
-                if (classes.hasOwnProperty(key)) {
-                    let val = classes[key];
-                    options.classeName = key;
+            let hasOneArchive = false;
+            for (let classe in classes) {
+                if (classes.hasOwnProperty(classe)) {
+                    let val = classes[classe];
+                    options.classeName = classe;
                     options.idStructure = $scope.structure.id;
                     if (val !== undefined && val.length > 0) {
                         options.idClasse = val[0].idClasse;
@@ -219,22 +220,60 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                             if(status == 201){
                                 $scope.optionsBulletins = options ;
                                 $scope.display.bulletinAlert = true;
-                                // template.open('bulletinAlert', '/competences/public/template/enseignants/bulletin/lightbox-alert-bulletin');
+                                hasOneArchive = true;
                                 utils.safeApply($scope);
-                                return;
-                            }
-                            else {
-                                await ExportBulletins.generateBulletins(options, $scope);
+                                return
                             }
                         } catch (e) {
                             await stopMessageLoader();
                         }
                     }
                 }
-                await stopMessageLoader();
+            }
+            //si y a pas duplicata
+            if(!hasOneArchive) {
+                $scope.sendBulletins(options)
             }
 
+
         };
+        $scope.sendBulletins = async (options) =>{
+            let classes = _.groupBy($scope.allElevesClasses, 'classeName');
+
+            for (let classe in classes) {
+                if (classes.hasOwnProperty(classe)) {
+                    let val = classes[classe];
+                    options.classeName = classe;
+                    options.idStructure = $scope.structure.id;
+                    if (val !== undefined && val.length > 0) {
+                        options.idClasse = val[0].idClasse;
+                        if (options.showBilanPerDomaines === true || !$scope.niveauCompetences) {
+                            selectPersonnalisation(val[0].id_cycle);
+                        }
+                    }
+                    options.students = _.filter(val, function (student) {
+                        return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
+                    });
+                    options.idStudents = _.pluck(options.students, 'id');
+                    if (options.idStudents !== undefined && options.idStudents.length > 0) {
+                        try {
+                            let studentsToSend = []
+                            options.students.forEach(student => {
+                                let studentTemp = {
+                                    id: student.id,
+                                    idClasse: student.idClasse
+                                }
+                                studentsToSend.push(studentTemp)
+                            })
+                            await ExportBulletins.generateBulletins(options, $scope);
+                        } catch (e) {
+                            await stopMessageLoader();
+                        }
+                    }
+                }
+            }
+            await stopMessageLoader();
+        }
 
         $scope.cancelBulletinDuplicateForm=  async () =>{
             $scope.display.bulletinAlert = false;
@@ -245,7 +284,8 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
         $scope.validBulletinDuplicateForm=  async () =>{
             $scope.display.bulletinAlert = false;
             // template.close('bulletinAlert');
-            await ExportBulletins.generateBulletins(  $scope.optionsBulletins, $scope);
+            //TODO plûtot appeller la boucle là
+            await $scope.sendBulletins( $scope.optionsBulletins);
             $scope.optionsBulletins = {};
             await stopMessageLoader();
         }
