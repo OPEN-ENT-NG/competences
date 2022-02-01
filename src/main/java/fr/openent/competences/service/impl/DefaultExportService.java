@@ -62,6 +62,7 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -830,6 +831,7 @@ public class DefaultExportService implements ExportService {
                                     }
 
                                     List<String> devoirsList = new ArrayList<>(extractData(devoirs, ID_KEY).keySet());
+                                    Map<String, JsonObject> devoirsMap = extractData(devoirs, ID_KEY);
                                     Map<String, JsonObject> maitrisesMap = extractData(
                                             orderBy(addMaitriseNE(maitrises), ORDRE, true), ORDRE);
                                     Map<String, JsonObject> competencesMap = extractData(competences, ID_KEY);
@@ -838,7 +840,7 @@ public class DefaultExportService implements ExportService {
 
                                     JsonObject resToAdd = formatJsonObjectExportReleveComp(
                                             text, usePerso, Boolean.valueOf(byEnseignement.get()), idEleve, eleveLevel,
-                                            devoirsList, maitrisesMap, competencesMap, domainesMap,
+                                            devoirsMap, maitrisesMap, competencesMap, domainesMap,
                                             enseignementsMap,
                                             competenceNotesMap)
                                             .put("noDevoir", false);
@@ -866,7 +868,7 @@ public class DefaultExportService implements ExportService {
     }
 
 
-    private TreeMap<String, HashMap<Calendar, Calendar>> calculPeriodesAnnees (String eleveLevel) {
+    private TreeMap<String, HashMap<Date, Date>> calculPeriodesAnnees (String eleveLevel) {
         int niveau = Integer.parseInt(eleveLevel.replaceAll("[^\\d.]", ""));
         if (niveau != -1) { //TODO : Changer la condition
             Calendar date = Calendar.getInstance();
@@ -884,7 +886,7 @@ public class DefaultExportService implements ExportService {
                 periodeEnding.set(afterYear, Calendar.AUGUST,31);
             }
 
-            TreeMap<String, HashMap<Calendar, Calendar>> periodes = new TreeMap<>(Collections.reverseOrder());
+            TreeMap<String, HashMap<Date, Date>> periodes = new TreeMap<>(Collections.reverseOrder());
             for (int i = niveau; i <= 6; i++) {
                 if (i != niveau) {
                     periodeBeginning.set(periodeBeginning.get(Calendar.YEAR)-1,
@@ -893,18 +895,39 @@ public class DefaultExportService implements ExportService {
                             periodeEnding.get(Calendar.MONTH), periodeEnding.get(Calendar.DATE));
                 }
                 String label = i + "ème";
-                HashMap<Calendar, Calendar> periode = new HashMap<>();
-                periode.put(periodeBeginning, periodeEnding);
+                HashMap<Date, Date> periode = new HashMap<>();
+                periode.put(periodeBeginning.getTime(), periodeEnding.getTime());
                 periodes.put(label, periode);
             }
             return periodes;
         }
         return null;
-    };
+    }
+
+
+    private boolean isInPeriode(String dateCompetence, Date beginningYear, Date endingYear){
+        String[] dateParts = dateCompetence.split(" ");
+        Date date = null;
+        try {
+            date = new SimpleDateFormat("yyyy-MM-dd").parse(dateParts[0]);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return (date.after(beginningYear) && date.before(endingYear));
+    }
+
+
+    private JsonObject buildPeriode(String classe, String width) {
+        JsonObject periode = new JsonObject();
+        periode.put("classe", classe);
+        periode.put("width", width);
+        return periode;
+    }
 
 
     private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean usePerso, Boolean byEnseignement,
-                                                        String idEleve, String eleveLevel, List<String> devoirs,
+                                                        String idEleve, String eleveLevel, Map<String, JsonObject> devoirs,
                                                         Map<String, JsonObject> maitrises,
                                                         Map<String, JsonObject> competences,
                                                         Map<String, JsonObject> domaines,
@@ -915,7 +938,7 @@ public class DefaultExportService implements ExportService {
         result.put("text", text);
         result.put("idEleve", idEleve);
 
-        TreeMap<String, HashMap<Calendar, Calendar>> periodes = calculPeriodesAnnees(eleveLevel);
+        TreeMap<String, HashMap<Date, Date>> periodes = calculPeriodesAnnees(eleveLevel);
 
         JsonObject header = new JsonObject();
         JsonObject body = new JsonObject();
@@ -993,6 +1016,7 @@ public class DefaultExportService implements ExportService {
         body.put("header", bodyHeader);
 
         JsonArray bodyBody = new fr.wseduc.webutils.collections.JsonArray();
+        JsonArray bodyPeriodesAndComp = new fr.wseduc.webutils.collections.JsonArray();
         for (Map.Entry<String, Set<String>> competencesInDomain : competencesByDomainOrEnsei.entrySet()) {
             JsonObject domainObj = new JsonObject();
             if (byEnseignement) {
@@ -1006,40 +1030,50 @@ public class DefaultExportService implements ExportService {
                         .getString("libelle"));
             }
             JsonArray competencesInDomainArray = new fr.wseduc.webutils.collections.JsonArray();
-            for(Map.Entry<String,HashMap<Calendar, Calendar>> entry : periodes.entrySet()) {
-                String key = entry.getKey();
-                HashMap<Calendar, Calendar> periode = entry.getValue();
-                Calendar beginningYear = Calendar.getInstance();
-                Calendar endYear = Calendar.getInstance();
+            JsonArray periodesArray = new fr.wseduc.webutils.collections.JsonArray();
 
-                for (Map.Entry<Calendar, Calendar> cal : periode.entrySet()) {
-                    beginningYear = cal.getKey();
-                    endYear = cal.getKey();
-                }
+            for (String competence : competencesInDomain.getValue()) {
+                JsonObject competenceNote = new JsonObject();
+                boolean hasCompetenceNote = false;
+                for(Map.Entry<String,HashMap<Date, Date>> entry : periodes.entrySet()) {
+                    String classe = entry.getKey();
+                    HashMap<Date, Date> periode = entry.getValue();
+                    Date beginningYear = new Date();
+                    Date endingYear = new Date();
 
-                //TODO : Créer le JSON de la période en cours
-
-                for (String competence : competencesInDomain.getValue()) {
-                    if (isInPeriode(competence)){
-                        List<Long> valuesByComp = new ArrayList<>();
+                    for (Map.Entry<Date, Date> date : periode.entrySet()) {
+                        beginningYear = date.getKey();
+                        endingYear = date.getValue();
+                    }
+                    List<Long> valuesByComp = new ArrayList<>();
+                    //if (isInPeriode(competencesObjByIdComp.get(competence).getString("date"), beginningYear, endingYear)){
                         for (String devoir : devoirByCompetences.get(competence)) {
                             if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
-                                    .containsKey(competence)) {
+                                    .containsKey(competence) && devoirs.get(devoir).getBoolean("eval_lib_historise")
+                                    && isInPeriode(devoirs.get(devoir).getString("date"), beginningYear, endingYear)){
                                 valuesByComp.add(competenceNotesByDevoir.get(devoir).get(competence) + 1);
                             } else {
-                                valuesByComp.add(0L);
+                                //valuesByComp.add(0L);
                             }
                         }
-                        JsonObject competenceNote = new JsonObject();
-                        competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
-                        String machin = competencesObjByIdComp.get(competence).getString("date");
-                        competenceNote.put("competenceNotes", calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size()));
-                        competencesInDomainArray.add(competenceNote);
+                    if(!valuesByComp.isEmpty()) {
+                        hasCompetenceNote = true;
+                        JsonArray competencesNotes = calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size());
+                        competenceNote.put("competenceNotes", competencesNotes);
                     }
+                        //TODO : Gérer l'ajout de compétence à une entité
+                    //}
                 }
-                domainObj.put("domainBody", competencesInDomainArray);
-                bodyBody.add(domainObj);
+                if(hasCompetenceNote){
+                    competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
+                    competencesInDomainArray.add(competenceNote);
+                }
+
             }
+            //TODO : Changer la width des périodes
+
+            domainObj.put("domainBody", competencesInDomainArray);
+            bodyBody.add(domainObj);
         }
 
         body.put("body", bodyBody);
@@ -1170,7 +1204,7 @@ public class DefaultExportService implements ExportService {
                 }
                 width = String.valueOf(tempWidth);
             }
-            competenceNotesObj.put("width", width);
+            competenceNotesObj.put("width", "1");
 
             resultList.add(competenceNotesObj);
         }
