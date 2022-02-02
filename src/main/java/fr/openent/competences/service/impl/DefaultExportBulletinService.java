@@ -2764,9 +2764,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     public static void getExternalIdClasse(String idClasse,  Handler<Either<String, JsonObject>> handler) {
-        String query = "MATCH (c:Class {id:{idClasse}}) return c.externalId as externalId ";
-        JsonObject params = new JsonObject().put(ID_CLASSE_KEY, idClasse);
-        Neo4j.getInstance().execute(query.toString(), params, Neo4jResult.validUniqueResultHandler(handler));
+        try {
+            String query = "MATCH (c:Class {id:{idClasse}}) return c.externalId as externalId ";
+            JsonObject params = new JsonObject().put(ID_CLASSE_KEY, idClasse);
+            Neo4j.getInstance().execute(query.toString(), params, Neo4jResult.validUniqueResultHandler(handler));
+        }catch (Exception e){
+            handler.handle(new Either.Left<>("[DefaultExportBulletinService | getExternalIDClassse] : Exception on savePdfInStorage "
+                    + e.getMessage() + " "
+                  + idClasse));
+        }
     }
 
     // BULLETIN WORKER
@@ -2816,12 +2822,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 externalIdClasse, idEtablissement, idFile);
                     }
                 }catch (Exception e){
-                    handler.handle(new Either.Left<>(e.getMessage()));
+                    handler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfInStorage | writeBuffer] : Exception on savePdfInStorage "
+                            + e.getMessage() + " "
+                            + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                 }
 
             });
         }catch (Exception e){
-            handler.handle(new Either.Left<>(e.getMessage()));
+            handler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfInStorage] : Exception on savePdfInStorage "
+                    + e.getMessage() + " "
+                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
         }
     }
 
@@ -2855,12 +2865,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             }
                         }
                     }catch (Exception e){
-                        handler.handle(new Either.Left<>(e.getMessage()));
+                        handler.handle(new Either.Left<>("[DefaultExportBulletinService | handleBFCinSQL event id classe] : Exception on savePdfInStorage "
+                                + e.getMessage() + " "
+                                + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                     }
                 });
             }
         }catch (Exception e){
-            handler.handle(new Either.Left<>(e.getMessage()));
+            handler.handle(new Either.Left<>("[DefaultExportBulletinService | handleBFCinSQL] : Exception on savePdfInStorage "
+                    + e.getMessage() + " "
+                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
         }
 
     }
@@ -2904,13 +2918,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 }
                             }
                         }catch (Exception e){
-                            handler.handle(new Either.Left<>(e.getMessage()));
+                            handler.handle(new Either.Left<>("[DefaultExportBulletinService | handleSaveBulletinInsQL | externalIdClasse] : Exception on savePdfInStorage "
+                                    + e.getMessage() + " "
+                                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                         }
                     });
                 }
             }
         }catch (Exception e){
-            handler.handle(new Either.Left<>(e.getMessage()));
+            handler.handle(new Either.Left<>("[DefaultExportBulletinService | handleSaveBulletinInSQL] : Exception on savePdfInStorage "
+                    + e.getMessage() + " "
+                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
         }
 
     }
@@ -2964,7 +2982,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             generateAndSavePdf(request, templateProps, templateName, prefixPdfName, bulletinEleve,
                     vertx, config, bulletinHandlerWork);
         }catch (Exception e){
-            bulletinHandlerWork.handle(new Either.Left<>(e.getMessage()));
+            bulletinHandlerWork.handle(new Either.Left<>("runSavePdf " + e.getMessage()  + " "+
+                    bulletinEleve.getString("idEleve") + " " + bulletinEleve.getString("lastName")));
         }
     }
 
@@ -2986,7 +3005,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             processTemplate(request, resultFinal, templateName, prefixPdfName, eleve, vertx, config, finalHandler,
                     dateDebut, templatePath, baseUrl, _node);
         }catch (Exception e){
-            finalHandler.handle(new Either.Left<>(e.getMessage()));
+            finalHandler.handle(new Either.Left<>("generateAndSavePdf " + e.getMessage() + " "+
+                    eleve.getString("idEleve") + " " + eleve.getString("lastName")));
         }
     }
 
@@ -3015,12 +3035,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 getRenderProcessHandler(templateProps, baseUrl, _node, request, prefixPdfName, dateDebut, eleve, finalHandler));
                     }
                     catch (Exception e){
-                        finalHandler.handle(new Either.Left<>(e.getMessage()));
+                        finalHandler.handle(new Either.Left<>(" processTemplate readFile Handle"+ e.getMessage() + " "+
+                                eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                     }
                 }
             });
         }catch (Exception e){
-            finalHandler.handle(new Either.Left<>(e.getMessage()));
+            finalHandler.handle(new Either.Left<>("processTemplate " + e.getMessage()  + " "+
+                    eleve.getString("idEleve") + " " + eleve.getString("lastName")));
         }
 
     }
@@ -3041,6 +3063,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         bytes = processedTemplate.getBytes();
                         log.error("[DefaultExportBulletinService | getRenderProcessHandler] " + e.getMessage() + " "+
                                 eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                        finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | getRenderProcessHandler] " + e.getMessage() + " "+
+                                eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                     }
                     actionObject.put("content", bytes).put("baseUrl", baseUrl);
                     eb.send(_node + "entcore.pdf.generator", actionObject,
@@ -3048,7 +3072,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
                             handlerToAsyncHandler(getPdfRenderHandler(request, templateProps, prefixPdfName, dateDebut, eleve, finalHandler)));
                 }catch (Exception e){
-                    finalHandler.handle(new Either.Left<>(e.getMessage()));
+                    finalHandler.handle(new Either.Left<>("getRenderProcessHandler " + e.getMessage() + " "+
+                            eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                 }
             }
         };
@@ -3064,7 +3089,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 try {
                     if (!"ok".equals(pdfResponse.getString("status"))) {
                         badRequest(request, pdfResponse.getString("message"));
-                        finalHandler.handle(new Either.Left(pdfResponse.getString("message")));
+                        finalHandler.handle(new Either.Left("getPdfRenderHandler pdfResponse status " + pdfResponse.getString("message")
+                         + " "
+                                + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                         return;
                     }
                     byte[] pdf = pdfResponse.getBinary("content");
@@ -3078,7 +3105,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             log.error("[DefaultExportBulletinService | getPdfRenderHandler 1 ]" + e.getMessage() + " "
                                     + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
                             e.printStackTrace();
-                            finalHandler.handle(new Either.Left(e.getMessage()));
+                            finalHandler.handle(new Either.Left("[DefaultExportBulletinService | getPdfRenderHandler 1 ]" + e.getMessage() + " "
+                                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                             return;
                         }
                         try {
@@ -3088,14 +3116,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             log.error("[DefaultExportBulletinService | getPdfRenderHandler 2] " + e.getMessage() + " " +
                                     eleve.getString("idEleve") + " " + eleve.getString("lastName"));
                             e.printStackTrace();
-                            finalHandler.handle(new Either.Left(e.getMessage()));
+                            finalHandler.handle(new Either.Left("[DefaultExportBulletinService | IOException  ]" + e.getMessage() + " "
+                                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                         }
                     } else {
                         Buffer buffer = Buffer.buffer(pdf);
                         savePdfDefault(buffer, eleve, finalHandler);
                     }
                 }catch(Exception e){
-                    finalHandler.handle(new Either.Left(e.getMessage()));
+                    finalHandler.handle(new Either.Left("[DefaultExportBulletinService | Exception  ]" + e.getMessage() + " "
+                            + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                 }
             }
         };
@@ -3278,12 +3308,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         log.error("[DefaultExportBulletinService | savePdfDefault] : Error on savePdfInStorage "
                                 + event.left().getValue() + " "
                                 + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                        finalHandler.handle(new Either.Left<>(event.left().getValue()));
+                        finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfDefault] : Error on savePdfInStorage "
+                                + event.left().getValue() + " "
+                                + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                     } else {
                         finalHandler.handle(new Either.Right<>(true));
                     }
                 }catch (Exception e){
-                    finalHandler.handle(new Either.Left<>(e.getMessage()));
+                    finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfDefault] : Exception on savePdfInStorage "
+                            + e.getMessage() + " "
+                            + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
 
                 }
             }
