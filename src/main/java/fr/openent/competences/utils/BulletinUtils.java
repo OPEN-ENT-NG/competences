@@ -56,7 +56,7 @@ public class BulletinUtils {
 
                     }
                 }else{
-                    handler.handle(new Either.Left<>("error when putting data in sql bfc_archive"));
+                    handler.handle(new Either.Left<>("error when putting data in sql bulletin_archive"));
 
                 }
             }
