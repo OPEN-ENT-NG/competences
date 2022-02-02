@@ -2764,129 +2764,173 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     public static void getExternalIdClasse(String idClasse,  Handler<Either<String, JsonObject>> handler) {
-        String query = "MATCH (c:Class {id:{idClasse}}) return c.externalId as externalId ";
-        JsonObject params = new JsonObject().put(ID_CLASSE_KEY, idClasse);
-        Neo4j.getInstance().execute(query.toString(), params, Neo4jResult.validUniqueResultHandler(handler));
+        try {
+            String query = "MATCH (c:Class {id:{idClasse}}) return c.externalId as externalId ";
+            JsonObject params = new JsonObject().put(ID_CLASSE_KEY, idClasse);
+            Neo4j.getInstance().execute(query.toString(), params, Neo4jResult.validUniqueResultHandler(handler));
+        }catch (Exception e){
+            handler.handle(new Either.Left<>("[DefaultExportBulletinService | getExternalIDClassse] : Exception on savePdfInStorage "
+                    + e.getMessage() + " "
+                  + idClasse));
+        }
     }
 
     // BULLETIN WORKER
     @Override
     public void savePdfInStorage(JsonObject eleve, Buffer file, Handler<Either<String, JsonObject>> handler){
-        String name = getFileNameForStudent(eleve);
-        String idEleve = eleve.getString("idEleve");
-        String idClasse = eleve.getString("idClasse");
-        Integer idCycle = eleve.getInteger("idCycle");
-        String externalIdClasse = eleve.getString("externalId");
-        String idEtablissement = eleve.getString("idEtablissement");
-        Long idPeriode = eleve.getLong("idPeriode");
-        String idParent = getIdParentForStudent(eleve);
-        String type = eleve.getString("typeExport");
+        try{
+            String name = getFileNameForStudent(eleve);
+            String idEleve = eleve.getString("idEleve");
+            String idClasse = eleve.getString("idClasse");
+            Integer idCycle = eleve.getInteger("idCycle");
+            String externalIdClasse = eleve.getString("externalId");
+            String idEtablissement = eleve.getString("idEtablissement");
+            Long idPeriode = eleve.getLong("idPeriode");
+            String idParent = getIdParentForStudent(eleve);
+            String type = eleve.getString("typeExport");
 
-        this.storage.writeBuffer(file, "application/pdf", name, uploaded -> {
-            String idFile = uploaded.getString("_id");
-            if (!OK.equals(uploaded.getString(STATUS)) || idFile ==  null) {
-                String error = "save pdf  : " + uploaded.getString(MESSAGE);
-                if(error.contains(TIME)){
-                    savePdfInStorage(eleve, file, handler);
-                } else {
-                    log.error(error);
-                    handler.handle(new Either.Right<>(new JsonObject()));
-                }
-                return;
-            }
-
-            Date date= new Date();
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(date);
-            int month = cal.get(Calendar.MONTH);
-            int year = cal.get(Calendar.YEAR);
-            String idYear;
-            if(month >= 7) {
-                idYear =  String.valueOf(year);
-            }else {
-                idYear = String.valueOf(year-1);
-            }
-            if(type.equals(TypePDF.BULLETINS.toString())) {
-                handleSaveBulletinInSql(eleve, file, handler, name, idEleve, idClasse, externalIdClasse,
-                        idEtablissement, idPeriode, idParent, idFile, idYear);
-            }else{
-                handleSaveBFCinSQL(eleve, file, handler, name, idEleve, idClasse, idCycle, idYear,
-                        externalIdClasse, idEtablissement, idFile);
-            }
-        });
-
-    }
-
-    private void handleSaveBFCinSQL(JsonObject eleve, Buffer file, Handler<Either<String, JsonObject>> handler,
-                                    String name, String idEleve, String idClasse, Integer idCycle, String idYear,
-                                    String externalIdClasse, String idEtablissement, String idFile) {
-        if (isNotNull(externalIdClasse)) {
-            saveBFCfile(idEleve, idClasse, externalIdClasse, idEtablissement, idCycle, idYear, name, idFile, handler);
-        }else{
-            getExternalIdClasse(idClasse, event -> {
-                if (event.isLeft()) {
-                    String error = "save bfc pdf  : " + event.left().getValue();
-                    log.error(error);
-                    if (error.contains(TIME)) {
-                        getExternalIdClasse(idClasse, handler);
-                    } else {
-                        log.error(error);
-                        handler.handle(new Either.Right<>(new JsonObject()));
-                    }
-                    return;
-                } else {
-                    JsonObject result = event.right().getValue();
-                    if (result == null) {
-                        log.error("Null externalId");
-                        handler.handle(new Either.Right<>(new JsonObject()));
-                    } else {
-                        String externalId = result.getString(EXTERNAL_ID_KEY);
-                        saveBFCfile(idEleve, idClasse, externalId, idEtablissement, idCycle, idYear, name, idFile, handler);
-                    }
-                }
-            });
-        }
-    }
-
-    private void handleSaveBulletinInSql(JsonObject eleve, Buffer file, Handler<Either<String, JsonObject>> handler,
-                                         String name, String idEleve, String idClasse, String externalIdClasse,
-                                         String idEtablissement, Long idPeriode, String idParent, String idFile,
-                                         String idYear) {
-        if (!(isNotNull(idEleve) && isNotNull(idClasse) && isNotNull(idEtablissement) && isNotNull(idPeriode))) {
-            log.error("save bulletin pdf : null parameter plop");
-            handler.handle(new Either.Right<>(new JsonObject()));
-        } else {
-            Handler<Either<String, JsonObject>> saveBulletinHandler = BulletinUtils.saveBulletinHandler(idEleve,
-                    idClasse, externalIdClasse, idEtablissement, idPeriode, handler);
-
-            if (isNotNull(externalIdClasse)) {
-                BulletinUtils.saveIdBulletin(storage,idEleve, idClasse, externalIdClasse, idEtablissement, idPeriode,
-                        idFile, name, idParent, idYear, saveBulletinHandler);
-            } else {
-                getExternalIdClasse(idClasse, event -> {
-                    if (event.isLeft()) {
-                        String error = "save bulletin pdf  : " + event.left().getValue();
-                        log.error(error);
+            this.storage.writeBuffer(file, "application/pdf", name, uploaded -> {
+                try {
+                    String idFile = uploaded.getString("_id");
+                    if (!OK.equals(uploaded.getString(STATUS)) || idFile == null) {
+                        String error = "save pdf  : " + uploaded.getString(MESSAGE);
                         if (error.contains(TIME)) {
                             savePdfInStorage(eleve, file, handler);
                         } else {
                             log.error(error);
                             handler.handle(new Either.Right<>(new JsonObject()));
                         }
+                        return;
+                    }
+
+                    Date date = new Date();
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(date);
+                    int month = cal.get(Calendar.MONTH);
+                    int year = cal.get(Calendar.YEAR);
+                    String idYear;
+                    if (month >= 7) {
+                        idYear = String.valueOf(year);
                     } else {
-                        JsonObject result = event.right().getValue();
-                        if (result == null) {
-                            log.error("Null externalId");
-                            handler.handle(new Either.Right<>(new JsonObject()));
+                        idYear = String.valueOf(year - 1);
+                    }
+                    if (type.equals(TypePDF.BULLETINS.toString())) {
+                        handleSaveBulletinInSql(eleve, file, handler, name, idEleve, idClasse, externalIdClasse,
+                                idEtablissement, idPeriode, idParent, idFile, idYear);
+                    } else {
+                        handleSaveBFCinSQL(eleve, file, handler, name, idEleve, idClasse, idCycle, idYear,
+                                externalIdClasse, idEtablissement, idFile);
+                    }
+                }catch (Exception e){
+                    handler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfInStorage | writeBuffer] : Exception on savePdfInStorage "
+                            + e.getMessage() + " "
+                            + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+                }
+
+            });
+        }catch (Exception e){
+            handler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfInStorage] : Exception on savePdfInStorage "
+                    + e.getMessage() + " "
+                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+        }
+    }
+
+    private void handleSaveBFCinSQL(JsonObject eleve, Buffer file, Handler<Either<String, JsonObject>> handler,
+                                    String name, String idEleve, String idClasse, Integer idCycle, String idYear,
+                                    String externalIdClasse, String idEtablissement, String idFile) {
+        try{
+            if (isNotNull(externalIdClasse)) {
+                saveBFCfile(idEleve, idClasse, externalIdClasse, idEtablissement, idCycle, idYear, name, idFile, handler);
+            }else{
+                getExternalIdClasse(idClasse, event -> {
+                    try{
+                        if (event.isLeft()) {
+                            String error = "save bfc pdf  : " + event.left().getValue();
+                            log.error(error);
+                            if (error.contains(TIME)) {
+                                getExternalIdClasse(idClasse, handler);
+                            } else {
+                                log.error(error);
+                                handler.handle(new Either.Right<>(new JsonObject()));
+                            }
+                            return;
                         } else {
-                            String externalId = result.getString(EXTERNAL_ID_KEY);
-                            BulletinUtils.saveIdBulletin(storage, idEleve, idClasse, externalId, idEtablissement,
-                                    idPeriode, idFile, name, idParent, idYear, saveBulletinHandler);
+                            JsonObject result = event.right().getValue();
+                            if (result == null) {
+                                log.error("Null externalId");
+                                handler.handle(new Either.Right<>(new JsonObject()));
+                            } else {
+                                String externalId = result.getString(EXTERNAL_ID_KEY);
+                                saveBFCfile(idEleve, idClasse, externalId, idEtablissement, idCycle, idYear, name, idFile, handler);
+                            }
                         }
+                    }catch (Exception e){
+                        handler.handle(new Either.Left<>("[DefaultExportBulletinService | handleBFCinSQL event id classe] : Exception on savePdfInStorage "
+                                + e.getMessage() + " "
+                                + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                     }
                 });
             }
+        }catch (Exception e){
+            handler.handle(new Either.Left<>("[DefaultExportBulletinService | handleBFCinSQL] : Exception on savePdfInStorage "
+                    + e.getMessage() + " "
+                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
         }
+
+    }
+
+    private void handleSaveBulletinInSql(JsonObject eleve, Buffer file, Handler<Either<String, JsonObject>> handler,
+                                         String name, String idEleve, String idClasse, String externalIdClasse,
+                                         String idEtablissement, Long idPeriode, String idParent, String idFile,
+                                         String idYear) {
+        try {
+            if (!(isNotNull(idEleve) && isNotNull(idClasse) && isNotNull(idEtablissement) && isNotNull(idPeriode))) {
+                log.error("save bulletin pdf : null parameter plop");
+                handler.handle(new Either.Right<>(new JsonObject()));
+            } else {
+                Handler<Either<String, JsonObject>> saveBulletinHandler = BulletinUtils.saveBulletinHandler(idEleve,
+                        idClasse, externalIdClasse, idEtablissement, idPeriode, handler);
+
+                if (isNotNull(externalIdClasse)) {
+                    BulletinUtils.saveIdBulletin(storage, idEleve, idClasse, externalIdClasse, idEtablissement, idPeriode,
+                            idFile, name, idParent, idYear, saveBulletinHandler);
+                } else {
+                    getExternalIdClasse(idClasse, event -> {
+                        try {
+                            if (event.isLeft()) {
+                                String error = "save bulletin pdf  : " + event.left().getValue();
+                                log.error(error);
+                                if (error.contains(TIME)) {
+                                    savePdfInStorage(eleve, file, handler);
+                                } else {
+                                    log.error(error);
+                                    handler.handle(new Either.Right<>(new JsonObject()));
+                                }
+                            } else {
+                                JsonObject result = event.right().getValue();
+                                if (result == null) {
+                                    log.error("Null externalId");
+                                    handler.handle(new Either.Right<>(new JsonObject()));
+                                } else {
+                                    String externalId = result.getString(EXTERNAL_ID_KEY);
+                                    BulletinUtils.saveIdBulletin(storage, idEleve, idClasse, externalId, idEtablissement,
+                                            idPeriode, idFile, name, idParent, idYear, saveBulletinHandler);
+                                }
+                            }
+                        }catch (Exception e){
+                            handler.handle(new Either.Left<>("[DefaultExportBulletinService | handleSaveBulletinInsQL | externalIdClasse] : Exception on savePdfInStorage "
+                                    + e.getMessage() + " "
+                                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+                        }
+                    });
+                }
+            }
+        }catch (Exception e){
+            handler.handle(new Either.Left<>("[DefaultExportBulletinService | handleSaveBulletinInSQL] : Exception on savePdfInStorage "
+                    + e.getMessage() + " "
+                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+        }
+
     }
 
     private void saveBFCfile(String idEleve, String idClasse, String externalIdClasse, String idEtablissement,
@@ -2929,56 +2973,78 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     @Override
     public void runSavePdf(JsonObject bulletinEleve, final JsonObject bulletin, Vertx vertx, JsonObject config,
                            Handler<Either<String, Boolean>> bulletinHandlerWork){
-        final HttpServerRequest request = new JsonHttpServerRequest(bulletin.getJsonObject("request"));
-        final JsonObject templateProps =  bulletin.getJsonObject("resultFinal");
-        final String templateName = bulletin.getString("template");
-        final String prefixPdfName = bulletin.getString("title");
+        try {
+            final HttpServerRequest request = new JsonHttpServerRequest(bulletin.getJsonObject("request"));
+            final JsonObject templateProps = bulletin.getJsonObject("resultFinal");
+            final String templateName = bulletin.getString("template");
+            final String prefixPdfName = bulletin.getString("title");
 
-        generateAndSavePdf(request, templateProps, templateName, prefixPdfName, bulletinEleve,
-                vertx, config, bulletinHandlerWork);
+            generateAndSavePdf(request, templateProps, templateName, prefixPdfName, bulletinEleve,
+                    vertx, config, bulletinHandlerWork);
+        }catch (Exception e){
+            bulletinHandlerWork.handle(new Either.Left<>("runSavePdf " + e.getMessage()  + " "+
+                    bulletinEleve.getString("idEleve") + " " + bulletinEleve.getString("lastName")));
+        }
     }
 
     @Override
     public void generateAndSavePdf(final HttpServerRequest request, JsonObject resultFinal, final String templateName,
                                    final String prefixPdfName, JsonObject eleve, Vertx vertx, JsonObject config,
-                                   Handler<Either<String, Boolean>> finalHandler){
-        final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
-        final String templatePath = FileResolver.absolutePath(config.getJsonObject("exports")
-                .getString("template-path"));
-        final String baseUrl = getScheme(request) + "://" + Renders.getHost(request) +
-                config.getString("app-address") + "/public/";
-        String node = (String) vertx.sharedData().getLocalMap("server").get("node");
-        if (node == null) {
-            node = "";
+                                   Handler<Either<String, Boolean>> finalHandler) {
+        try {
+            final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
+            final String templatePath = FileResolver.absolutePath(config.getJsonObject("exports")
+                    .getString("template-path"));
+            final String baseUrl = getScheme(request) + "://" + Renders.getHost(request) +
+                    config.getString("app-address") + "/public/";
+            String node = (String) vertx.sharedData().getLocalMap("server").get("node");
+            if (node == null) {
+                node = "";
+            }
+            final String _node = node;
+            processTemplate(request, resultFinal, templateName, prefixPdfName, eleve, vertx, config, finalHandler,
+                    dateDebut, templatePath, baseUrl, _node);
+        }catch (Exception e){
+            finalHandler.handle(new Either.Left<>("generateAndSavePdf " + e.getMessage() + " "+
+                    eleve.getString("idEleve") + " " + eleve.getString("lastName")));
         }
-        final String _node = node;
-        processTemplate(request, resultFinal, templateName, prefixPdfName, eleve, vertx, config, finalHandler,
-                dateDebut, templatePath, baseUrl, _node);
     }
 
     private void processTemplate (HttpServerRequest request, JsonObject resultFinal, String templateName,
                                   String prefixPdfName, JsonObject eleve, Vertx vertx, JsonObject config,
                                   Handler<Either<String, Boolean>> finalHandler, String dateDebut, String templatePath,
                                   String baseUrl, String _node) {
-        vertx.fileSystem().readFile(templatePath + templateName, new Handler<AsyncResult<Buffer>>() {
-            @Override
-            public void handle(AsyncResult<Buffer> result) {
-                if (!result.succeeded()) {
-                    badRequest(request, "Error while reading template : " + templatePath + templateName);
-                    log.error("[DefaultExportBulletinService | processTemplate] Error while reading template : " + templatePath + templateName);
-                    return;
+        try {
+            vertx.fileSystem().readFile(templatePath + templateName, new Handler<AsyncResult<Buffer>>() {
+                @Override
+                public void handle(AsyncResult<Buffer> result) {
+                    if (!result.succeeded()) {
+                        badRequest(request, "Error while reading template : " + templatePath + templateName);
+                        log.error("[DefaultExportBulletinService | processTemplate] Error while reading template : " + templatePath + templateName);
+                        finalHandler.handle(new Either.Left("[DefaultExportBulletinService | processTemplate] Error while reading template : " + templatePath + templateName));
+                        return;
+                    }
+                    try {
+                        StringReader reader = new StringReader(result.result().toString("UTF-8"));
+                        Renders render = new Renders(vertx, config);
+
+                        JsonObject templateProps = resultFinal;
+
+                        templateProps.put("eleves", new JsonArray().add(eleve));
+                        render.processTemplate(request, templateProps, templateName, reader,
+                                getRenderProcessHandler(templateProps, baseUrl, _node, request, prefixPdfName, dateDebut, eleve, finalHandler));
+                    }
+                    catch (Exception e){
+                        finalHandler.handle(new Either.Left<>(" processTemplate readFile Handle"+ e.getMessage() + " "+
+                                eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+                    }
                 }
-                StringReader reader = new StringReader(result.result().toString("UTF-8"));
-                Renders render = new Renders(vertx, config);
+            });
+        }catch (Exception e){
+            finalHandler.handle(new Either.Left<>("processTemplate " + e.getMessage()  + " "+
+                    eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+        }
 
-                JsonObject templateProps = resultFinal;
-
-                templateProps.put("eleves", new JsonArray().add(eleve));
-                render.processTemplate(request, templateProps, templateName, reader,
-                        getRenderProcessHandler(templateProps, baseUrl, _node, request, prefixPdfName, dateDebut, eleve, finalHandler));
-
-            }
-        });
     }
 
     private Handler<Writer> getRenderProcessHandler(JsonObject templateProps, String baseUrl, String _node,
@@ -2987,22 +3053,28 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return new Handler<Writer>() {
             @Override
             public void handle(Writer writer) {
-                String processedTemplate = ((StringWriter) writer).getBuffer().toString();
-                JsonObject actionObject = new JsonObject();
-                byte[] bytes;
-                try {
-                    bytes = processedTemplate.getBytes("UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    bytes = processedTemplate.getBytes();
-                    log.error("[DefaultExportBulletinService | getRenderProcessHandler] " + e.getMessage() + " "+
-                            eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                try{
+                    String processedTemplate = ((StringWriter) writer).getBuffer().toString();
+                    JsonObject actionObject = new JsonObject();
+                    byte[] bytes;
+                    try {
+                        bytes = processedTemplate.getBytes("UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        bytes = processedTemplate.getBytes();
+                        log.error("[DefaultExportBulletinService | getRenderProcessHandler] " + e.getMessage() + " "+
+                                eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                        finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | getRenderProcessHandler] " + e.getMessage() + " "+
+                                eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+                    }
+                    actionObject.put("content", bytes).put("baseUrl", baseUrl);
+                    eb.send(_node + "entcore.pdf.generator", actionObject,
+                            new DeliveryOptions().setSendTimeout(
+                                    TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                            handlerToAsyncHandler(getPdfRenderHandler(request, templateProps, prefixPdfName, dateDebut, eleve, finalHandler)));
+                }catch (Exception e){
+                    finalHandler.handle(new Either.Left<>("getRenderProcessHandler " + e.getMessage() + " "+
+                            eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                 }
-
-                actionObject.put("content", bytes).put("baseUrl", baseUrl);
-                eb.send(_node + "entcore.pdf.generator", actionObject,
-                        new DeliveryOptions().setSendTimeout(
-                                TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
-                        handlerToAsyncHandler(getPdfRenderHandler(request, templateProps, prefixPdfName, dateDebut, eleve, finalHandler)));
             }
         };
     }
@@ -3014,34 +3086,46 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             @Override
             public void handle(Message<JsonObject> reply) {
                 JsonObject pdfResponse = reply.body();
-                if (!"ok".equals(pdfResponse.getString("status"))) {
-                    badRequest(request, pdfResponse.getString("message"));
-                    return;
-                }
-                byte[] pdf = pdfResponse.getBinary("content");
-
-                if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
-                    File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
-                    OutputStream outStream = null;
-                    try {
-                        outStream = new FileOutputStream(pdfFile);
-                    } catch (FileNotFoundException e) {
-                        log.error("[DefaultExportBulletinService | getPdfRenderHandler 1 ]" + e.getMessage() + " "
-                                + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                        e.printStackTrace();
+                try {
+                    if (!"ok".equals(pdfResponse.getString("status"))) {
+                        badRequest(request, pdfResponse.getString("message"));
+                        finalHandler.handle(new Either.Left("getPdfRenderHandler pdfResponse status " + pdfResponse.getString("message")
+                         + " "
+                                + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+                        return;
                     }
-                    try {
-                        outStream.write(pdf);
-                    } catch (IOException e) {
-                        log.error("[DefaultExportBulletinService | getPdfRenderHandler 2] " + e.getMessage() + " " +
-                                eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                        e.printStackTrace();
-                    }
+                    byte[] pdf = pdfResponse.getBinary("content");
 
-                    handleCreateFile(pdfFile, outStream, templateProps, prefixPdfName, dateDebut, eleve, finalHandler);
-                } else {
-                    Buffer buffer = Buffer.buffer(pdf);
-                    savePdfDefault(buffer, eleve, finalHandler);
+                    if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
+                        File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
+                        OutputStream outStream = null;
+                        try {
+                            outStream = new FileOutputStream(pdfFile);
+                        } catch (FileNotFoundException e) {
+                            log.error("[DefaultExportBulletinService | getPdfRenderHandler 1 ]" + e.getMessage() + " "
+                                    + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                            e.printStackTrace();
+                            finalHandler.handle(new Either.Left("[DefaultExportBulletinService | getPdfRenderHandler 1 ]" + e.getMessage() + " "
+                                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+                            return;
+                        }
+                        try {
+                            outStream.write(pdf);
+                            handleCreateFile(pdfFile, outStream, templateProps, prefixPdfName, dateDebut, eleve, finalHandler);
+                        } catch (IOException e) {
+                            log.error("[DefaultExportBulletinService | getPdfRenderHandler 2] " + e.getMessage() + " " +
+                                    eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                            e.printStackTrace();
+                            finalHandler.handle(new Either.Left("[DefaultExportBulletinService | IOException  ]" + e.getMessage() + " "
+                                    + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+                        }
+                    } else {
+                        Buffer buffer = Buffer.buffer(pdf);
+                        savePdfDefault(buffer, eleve, finalHandler);
+                    }
+                }catch(Exception e){
+                    finalHandler.handle(new Either.Left("[DefaultExportBulletinService | Exception  ]" + e.getMessage() + " "
+                            + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                 }
             }
         };
@@ -3219,13 +3303,22 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         savePdfInStorage(eleve, buffer, new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> event) {
-                if (event.isLeft()) {
-                    log.error("[DefaultExportBulletinService | savePdfDefault] : Error on savePdfInStorage "
-                            + event.left().getValue() + " "
-                            + eleve.getString("idEleve") + " " + eleve.getString("lastName" ));
-                    finalHandler.handle(new Either.Left<>(event.left().getValue()));
-                } else {
-                    finalHandler.handle(new Either.Right<>(true));
+                try {
+                    if (event.isLeft()) {
+                        log.error("[DefaultExportBulletinService | savePdfDefault] : Error on savePdfInStorage "
+                                + event.left().getValue() + " "
+                                + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                        finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfDefault] : Error on savePdfInStorage "
+                                + event.left().getValue() + " "
+                                + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+                    } else {
+                        finalHandler.handle(new Either.Right<>(true));
+                    }
+                }catch (Exception e){
+                    finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfDefault] : Exception on savePdfInStorage "
+                            + e.getMessage() + " "
+                            + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+
                 }
             }
         });
