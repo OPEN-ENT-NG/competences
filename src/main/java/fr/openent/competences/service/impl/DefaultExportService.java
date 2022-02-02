@@ -894,7 +894,7 @@ public class DefaultExportService implements ExportService {
                     periodeEnding.set(periodeEnding.get(Calendar.YEAR)-1,
                             periodeEnding.get(Calendar.MONTH), periodeEnding.get(Calendar.DATE));
                 }
-                String label = i + "ème";
+                String label = i + "EME";
                 HashMap<Date, Date> periode = new HashMap<>();
                 periode.put(periodeBeginning.getTime(), periodeEnding.getTime());
                 periodes.put(label, periode);
@@ -1016,7 +1016,6 @@ public class DefaultExportService implements ExportService {
         body.put("header", bodyHeader);
 
         JsonArray bodyBody = new fr.wseduc.webutils.collections.JsonArray();
-        JsonArray bodyPeriodesAndComp = new fr.wseduc.webutils.collections.JsonArray();
         for (Map.Entry<String, Set<String>> competencesInDomain : competencesByDomainOrEnsei.entrySet()) {
             JsonObject domainObj = new JsonObject();
             if (byEnseignement) {
@@ -1030,11 +1029,11 @@ public class DefaultExportService implements ExportService {
                         .getString("libelle"));
             }
             JsonArray competencesInDomainArray = new fr.wseduc.webutils.collections.JsonArray();
-            JsonArray periodesArray = new fr.wseduc.webutils.collections.JsonArray();
 
             for (String competence : competencesInDomain.getValue()) {
                 JsonObject competenceNote = new JsonObject();
-                boolean hasCompetenceNote = false;
+                LinkedHashMap<String, Long> valuesByComp = new LinkedHashMap<>();
+                List<Long> valuesByCompActualClasse = new ArrayList<>();
                 for(Map.Entry<String,HashMap<Date, Date>> entry : periodes.entrySet()) {
                     String classe = entry.getKey();
                     HashMap<Date, Date> periode = entry.getValue();
@@ -1045,27 +1044,32 @@ public class DefaultExportService implements ExportService {
                         beginningYear = date.getKey();
                         endingYear = date.getValue();
                     }
-                    List<Long> valuesByComp = new ArrayList<>();
-                    //if (isInPeriode(competencesObjByIdComp.get(competence).getString("date"), beginningYear, endingYear)){
+
+                    if(Objects.equals(classe, eleveLevel)){
+                        for (String devoir : devoirByCompetences.get(competence)) {
+                            if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
+                                    .containsKey(competence)
+                                    && isInPeriode(devoirs.get(devoir).getString("date"), beginningYear, endingYear)){
+                                valuesByCompActualClasse.add(competenceNotesByDevoir.get(devoir).get(competence) + 1);
+                            }
+                        }
+                    }
+                    else{
                         for (String devoir : devoirByCompetences.get(competence)) {
                             if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
                                     .containsKey(competence) && devoirs.get(devoir).getBoolean("eval_lib_historise")
                                     && isInPeriode(devoirs.get(devoir).getString("date"), beginningYear, endingYear)){
-                                valuesByComp.add(competenceNotesByDevoir.get(devoir).get(competence) + 1);
+                                valuesByComp.put(classe, competenceNotesByDevoir.get(devoir).get(competence) + 1);
                             } else {
                                 //valuesByComp.add(0L);
                             }
                         }
-                    if(!valuesByComp.isEmpty()) {
-                        hasCompetenceNote = true;
-                        JsonArray competencesNotes = calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size());
-                        competenceNote.put("competenceNotes", competencesNotes);
                     }
-                        //TODO : Gérer l'ajout de compétence à une entité
-                    //}
                 }
-                if(hasCompetenceNote){
+                if(!valuesByComp.isEmpty()) {
+                    JsonArray competencesNotes = calcWidthNotePeriode(text, usePerso, maitrises, valuesByComp, valuesByCompActualClasse, devoirs.size());
                     competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
+                    competenceNote.put("competenceNotes", competencesNotes);
                     competencesInDomainArray.add(competenceNote);
                 }
 
@@ -1174,8 +1178,35 @@ public class DefaultExportService implements ExportService {
         return 0;
     }
 
+    private JsonArray calcWidthNotePeriode(Boolean text, Boolean usePerso, Map<String, JsonObject> maitrises,
+                                    Map<String, Long> competenceNotes, List<Long> competenceNotesActualClasse, Integer nbDevoir) {
+
+        JsonArray resultList = new fr.wseduc.webutils.collections.JsonArray();
+        for (Map.Entry<String, Long> notesMaitrises : competenceNotes.entrySet()) {
+            JsonObject competenceNotesObj = new JsonObject();
+            competenceNotesObj.put("number", notesMaitrises.getKey());
+            String color = text ? "white" : maitrises.get(String.valueOf(notesMaitrises.getValue())).getString("default");
+            competenceNotesObj.put("color", color);
+
+            if(usePerso && !text)
+                competenceNotesObj.put("persoColor", maitrises.get(String.valueOf(notesMaitrises.getValue())).getString("couleur"));
+
+            competenceNotesObj.put("width", "1");
+
+            resultList.add(competenceNotesObj);
+        }
+
+        JsonArray resultListActualClasse = calcWidthNote(text, usePerso, maitrises, competenceNotesActualClasse, nbDevoir);
+        resultList.addAll(resultListActualClasse);
+        /*for(int i=0; i < resultListActualClasse.size(); i++){
+            resultList.add(resultListActualClasse);
+        }*/
+        return resultList;
+    }
+
     private JsonArray calcWidthNote(Boolean text, Boolean usePerso, Map<String, JsonObject> maitrises,
                                     List<Long> competenceNotes, Integer nbDevoir) {
+
         Map<Long, Integer> occNote = new HashMap<>();
         for (Long competenceNote : competenceNotes) {
             if (!occNote.containsKey(competenceNote)) {
@@ -1188,22 +1219,13 @@ public class DefaultExportService implements ExportService {
         for (Map.Entry<Long, Integer> notesMaitrises : occNote.entrySet()) {
             JsonObject competenceNotesObj = new JsonObject();
             String number = (text ? getMaitrise(maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("lettre"), String.valueOf(notesMaitrises.getKey())) + " - " : "") + String.valueOf(notesMaitrises.getValue());
-            competenceNotesObj.put("number", number);
+            competenceNotesObj.put("number", " ");
             String color = text ? "white" : maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("default");
             competenceNotesObj.put("color", color);
 
             if(usePerso && !text)
                 competenceNotesObj.put("persoColor", maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("couleur"));
 
-
-            String width = "100"; // gestion cas 0 devoir
-            if (nbDevoir > 0) {
-                double tempWidth = notesMaitrises.getValue() / (double) nbDevoir * 100D;
-                if (tempWidth < 1) {
-                    tempWidth = 1;
-                }
-                width = String.valueOf(tempWidth);
-            }
             competenceNotesObj.put("width", "1");
 
             resultList.add(competenceNotesObj);
