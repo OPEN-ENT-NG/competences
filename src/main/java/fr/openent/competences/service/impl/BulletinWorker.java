@@ -40,6 +40,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
         vertx.eventBus().localConsumer(BulletinWorker.class.getSimpleName(), this);
     }
 
+    //TODO le worker arrete de faire des threads et utilise le mongo comme stack
     @Override
     public void handle(Message<JsonObject> message) {
         JsonObject params = message.body();
@@ -52,6 +53,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
                 stackBulletin(bulletins);
                 if(!isWorking){
                     isWorking = true;
+                    //RENMPLACER par appel mongo
                     new Thread(() -> {
                         processBulletin(params, event -> {
                             log.info("end bulletin");

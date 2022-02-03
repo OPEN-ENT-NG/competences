@@ -5,6 +5,7 @@ import fr.openent.competences.ImgLevel;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.enums.TypePDF;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.service.*;
 import fr.openent.competences.utils.BulletinUtils;
 import fr.wseduc.webutils.Either;
@@ -38,6 +39,7 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.*;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
@@ -188,6 +190,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private HttpClient httpClient;
     private DefaultNoteService noteService;
     private WorkspaceHelper workspaceHelper;
+    private MongoExportService mongoExportService;
 
     public DefaultExportBulletinService(EventBus eb, Storage storage) {
         this.eb = eb;
@@ -203,6 +206,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,
                 Competences.COMPETENCES_NOTES_TABLE);
         this.storage = storage;
+        this.mongoExportService = new DefaultMongoService();
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         workspaceHelper = new WorkspaceHelper(eb,storage);
@@ -222,6 +226,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,
                 Competences.COMPETENCES_NOTES_TABLE);
         this.storage = storage;
+        this.mongoExportService = new DefaultMongoService();
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         this.httpClient =  createHttpClient(vertx);
@@ -743,20 +748,33 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             template = "bulletin_lycee.pdf.xhtml";
                         }
 
-                        exportService.generateSchoolReportPdf(request, resultFinal, template, title, vertx, config);
-
                         JsonObject jsonRequest = new JsonObject()
                                 .put("headers", new JsonObject()
                                         .put("Accept-Language", request.headers().get("Accept-Language")))
                                 .put("Host", getHost(request));
+                        log.info("action FOOT2rue");
 
-                        JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BULLETIN)
+
+                        List<Future<String>> futureArray = insertDataInMongo(resultFinal);
+                        FutureHelper.all(futureArray).onSuccess(success ->{
+                            log.info("done");
+                            //ping le worker
+                        }).onFailure(error ->{
+                            log.info(error.getMessage());
+                        });
+
+                        JsonObject action = new JsonObject().put(ACTION, SAVE_BULLETIN)
                                 .put("request", jsonRequest)
                                 .put("resultFinal", resultFinal)
                                 .put("template", template)
                                 .put("title", title);
 
                         eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+
+                        exportService.generateSchoolReportPdf(request, resultFinal, template, title, vertx, config);
+
+//CHANGER ICI APPEL MONGO
+
                     }
                 });
             } else {
@@ -765,6 +783,23 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 return;
             }
         };
+    }
+
+    private List<Future<String>> insertDataInMongo(JsonObject resultFinal) {
+        JsonObject common  = resultFinal.copy();
+        common.remove("eleves");
+        JsonArray students = resultFinal.getJsonArray("eleves");
+        List<Future<String>> futureArray= new ArrayList<>();
+        for(Object studentJO : students){
+            JsonObject student = (JsonObject) studentJO;
+                    student.remove("u.deleteDate");
+            common.put("eleve",student);
+            Promise<String> promise = Promise.promise();
+            mongoExportService.createWhenStart("pdf", common,
+                    SAVE_BULLETIN,promise);
+            futureArray.add(promise.future());
+        }
+        return futureArray;
     }
 
     @Override
