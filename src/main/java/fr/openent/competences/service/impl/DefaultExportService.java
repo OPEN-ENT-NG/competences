@@ -648,7 +648,7 @@ public class DefaultExportService implements ExportService {
         final AtomicBoolean byEnseignement = new AtomicBoolean(pByEnseignement);
         final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, usePerso, idEleve, eleveLevel, devoirsArray,
                 maitriseArray, competencesArray, domainesArray, competencesNotesArray, enseignementArray, answered,
-                byEnseignement, handler);
+                byEnseignement, isCycle, handler);
 
         buildDevoirExport(pByEnseignement, idEleve, idGroupes, idFunctionalGroupes, idEtablissement,
                 idMatieres, idPeriodeType, isCycle, enseignementArray, devoirsArray,
@@ -770,7 +770,7 @@ public class DefaultExportService implements ExportService {
     getReleveCompFinalHandler(final Boolean text, final Boolean usePerso, final String idEleve, final String eleveLevel,
                               final JsonArray devoirs, final JsonArray maitrises, final JsonArray competences,
                               final JsonArray domaines, final JsonArray competencesNotes, final JsonArray enseignements,
-                              final AtomicBoolean answered, final AtomicBoolean byEnseignement,
+                              final AtomicBoolean answered, final AtomicBoolean byEnseignement, final Boolean isCycle,
                               final Handler<Either<String, JsonObject>> responseHandler) {
         final AtomicBoolean devoirsDone = new AtomicBoolean();
         final AtomicBoolean maitriseDone = new AtomicBoolean();
@@ -839,7 +839,7 @@ public class DefaultExportService implements ExportService {
                                     Map<String, JsonObject> enseignementsMap = extractData(enseignements, ID_KEY);
 
                                     JsonObject resToAdd = formatJsonObjectExportReleveComp(
-                                            text, usePerso, Boolean.valueOf(byEnseignement.get()), idEleve, eleveLevel,
+                                            text, usePerso, Boolean.valueOf(byEnseignement.get()), isCycle, idEleve, eleveLevel,
                                             devoirsMap, maitrisesMap, competencesMap, domainesMap,
                                             enseignementsMap,
                                             competenceNotesMap)
@@ -926,7 +926,7 @@ public class DefaultExportService implements ExportService {
     }
 
 
-    private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean usePerso, Boolean byEnseignement,
+    private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean usePerso, Boolean byEnseignement, Boolean isCycle,
                                                         String idEleve, String eleveLevel, Map<String, JsonObject> devoirs,
                                                         Map<String, JsonObject> maitrises,
                                                         Map<String, JsonObject> competences,
@@ -1034,6 +1034,7 @@ public class DefaultExportService implements ExportService {
                 JsonObject competenceNote = new JsonObject();
                 LinkedHashMap<String, Long> valuesByComp = new LinkedHashMap<>();
                 List<Long> valuesByCompActualClasse = new ArrayList<>();
+                assert periodes != null;
                 for(Map.Entry<String,HashMap<Date, Date>> entry : periodes.entrySet()) {
                     String classe = entry.getKey();
                     HashMap<Date, Date> periode = entry.getValue();
@@ -1054,19 +1055,17 @@ public class DefaultExportService implements ExportService {
                             }
                         }
                     }
-                    else{
+                    else if(isCycle){
                         for (String devoir : devoirByCompetences.get(competence)) {
                             if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
                                     .containsKey(competence) && devoirs.get(devoir).getBoolean("eval_lib_historise")
                                     && isInPeriode(devoirs.get(devoir).getString("date"), beginningYear, endingYear)){
                                 valuesByComp.put(classe, competenceNotesByDevoir.get(devoir).get(competence) + 1);
-                            } else {
-                                //valuesByComp.add(0L);
                             }
                         }
                     }
                 }
-                if(!valuesByComp.isEmpty()) {
+                if(!valuesByComp.isEmpty() || !valuesByCompActualClasse.isEmpty()) {
                     JsonArray competencesNotes = calcWidthNotePeriode(text, usePerso, maitrises, valuesByComp, valuesByCompActualClasse, devoirs.size());
                     competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
                     competenceNote.put("competenceNotes", competencesNotes);
@@ -1074,8 +1073,6 @@ public class DefaultExportService implements ExportService {
                 }
 
             }
-            //TODO : Changer la width des périodes
-
             domainObj.put("domainBody", competencesInDomainArray);
             bodyBody.add(domainObj);
         }
@@ -1198,9 +1195,6 @@ public class DefaultExportService implements ExportService {
 
         JsonArray resultListActualClasse = calcWidthNote(text, usePerso, maitrises, competenceNotesActualClasse, nbDevoir);
         resultList.addAll(resultListActualClasse);
-        /*for(int i=0; i < resultListActualClasse.size(); i++){
-            resultList.add(resultListActualClasse);
-        }*/
         return resultList;
     }
 
@@ -1218,8 +1212,8 @@ public class DefaultExportService implements ExportService {
         JsonArray resultList = new fr.wseduc.webutils.collections.JsonArray();
         for (Map.Entry<Long, Integer> notesMaitrises : occNote.entrySet()) {
             JsonObject competenceNotesObj = new JsonObject();
-            String number = (text ? getMaitrise(maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("lettre"), String.valueOf(notesMaitrises.getKey())) + " - " : "") + String.valueOf(notesMaitrises.getValue());
-            competenceNotesObj.put("number", " ");
+            String number = String.valueOf(notesMaitrises.getValue()) + " " + getMaitrise(maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("lettre"), String.valueOf(notesMaitrises.getKey()));
+            competenceNotesObj.put("number", number);
             String color = text ? "white" : maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("default");
             competenceNotesObj.put("color", color);
 

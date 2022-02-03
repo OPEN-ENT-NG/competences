@@ -213,17 +213,16 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         String query = "SELECT string_agg(domaines.codification, ', ') as code_domaine," +
                 " string_agg( cast (domaines.id as text), ',') as ids_domaine, comp.id as id_competence," +
                 " compDevoir.*, COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_type as id_type," +
-                " comp.id_parent as id_parent, compDevoir.index as index, devoirs.date as date" +
+                " comp.id_parent as id_parent, compDevoir.index as index" +
                 " FROM " + COMPETENCES_TABLE + " AS comp" +
                 " INNER JOIN " + COMPETENCES_DEVOIRS_TABLE + " AS compDevoir ON (comp.id = compDevoir.id_competence )" +
                 " LEFT JOIN " + COMPETENCES_DOMAINES_TABLE + " AS compDom ON (comp.id = compDom.id_competence)" +
                 " LEFT JOIN " + COMPETENCES_SCHEMA + ".domaines ON (domaines.id = compDom.id_domaine)" +
-                " LEFT JOIN " + DEVOIRS_TABLE + " AS devoirs ON (devoirs.id = compDevoir.id_devoir)" +
                 " LEFT JOIN (SELECT nom, id_competence FROM " + COMPETENCES_PERSO_TABLE + " WHERE id_etablissement = ?"+
                 " ) AS compPerso" +
                 " ON comp.id = compPerso.id_competence" +
                 " WHERE compDevoir.id_devoir IN " + Sql.listPrepared(devoirIds.getList()) +
-                " GROUP BY compDevoir.id, COALESCE(compPerso.nom, comp.nom), comp.id_type, comp.id_parent, comp.id, devoirs.id" +
+                " GROUP BY compDevoir.id, COALESCE(compPerso.nom, comp.nom), comp.id_type, comp.id_parent, comp.id" +
                 " ORDER BY (compDevoir.index ,compDevoir.id);";
 
         Sql.getInstance().prepared(query, new JsonArray().add(idEtablissement).addAll(devoirIds),

@@ -516,6 +516,7 @@ public class ExportPDFController extends ControllerHelper {
                         JsonObject eleve = eleves.getJsonObject(i);
                         String idEleveEl = eleve.getString(ID_ELEVE_KEY);
                         String idEtablissementEl = eleve.getString(ID_ETABLISSEMENT_KEY);
+                        String eleveLevel = eleve.getString("level");
                         idEtablissement.add(idEtablissementEl);
                         idGroupes.add(eleve.getString(ID_CLASSE_KEY));
                         final String nomClasse = eleve.getString("classeName");
@@ -526,7 +527,7 @@ public class ExportPDFController extends ControllerHelper {
                         JsonArray idFunctionalGroupes = strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
                         JsonArray idGroupesJsArr = utilsService.saUnion(idFunctionalGroupes, idManualGroupes);
                         String[] idGroupesArr = UtilsConvert.jsonArrayToStringArr(idGroupesJsArr);
-                        exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleveEl, "", _idGroupes, idGroupesArr,     //TODO : adapter le eleveLevel pour la classe
+                        exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleveEl, eleveLevel, _idGroupes, idGroupesArr,
                                 idEtablissement.get(i), listIdMatieres, finalIdPeriode, isCycle, finalHandler);
                     }
                 }
