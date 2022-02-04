@@ -158,8 +158,7 @@ export class ExportBulletins {
             }, 100);
             notify.success(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.success'));
             this.stopDebug(stopwatch, $scope, options, method);
-            if(data.status == 200)
-                await http.post(`/competences/save/bulletin/parameters`, new ExportBulletins().toJSON(options));
+
         } catch (data) {
             console.error(data);
             if(data.response != undefined && data.response.status === 500){

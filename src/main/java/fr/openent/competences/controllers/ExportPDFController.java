@@ -1421,20 +1421,6 @@ public class ExportPDFController extends ControllerHelper {
                 });
     }
 
-    @Post("/save/bulletin/parameters")
-    @ResourceFilter(AccessAdminHeadTeacherFilter.class)
-    @SecuredAction(value = "", type=ActionType.RESOURCE)
-    public void saveParameters(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, params -> {
-            Long idPeriode = params.getLong(ID_PERIODE_KEY);
-            String idStructure = params.getString(ID_STRUCTURE_KEY);
-            JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
-
-            exportBulletinService.saveParameters(idStudents, idPeriode, idStructure, params.toString(),
-                    defaultResponseHandler(request));
-        });
-    }
-
     @Get("/suiviClasse/tableau/moyenne/:idClasse/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void exportBulletinMoyennneOnly(HttpServerRequest request){
