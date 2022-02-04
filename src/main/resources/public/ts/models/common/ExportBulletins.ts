@@ -380,6 +380,7 @@ export class ExportBulletins {
             }
           return await http.post('/competences/bulletins/exists',params)
         }catch (e) {
+            notify.error('evaluations.export.bulletin.error.check.bulletins');
             console.error(e)
         }
     }

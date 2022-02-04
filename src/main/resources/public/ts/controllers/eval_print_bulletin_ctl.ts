@@ -188,8 +188,37 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 return;
             }
             await runMessageLoader();
+            let studentsToSend = []
+            let studentSelected =  _.filter($scope.allElevesClasses, function (student) {
+                return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
+            });
 
-            let classes = _.groupBy($scope.allElevesClasses, 'classeName');
+            if(studentSelected != undefined && studentSelected.length > 0) {
+                try {
+                    studentSelected.forEach(student => {
+                        let studentTemp = {
+                            id:student.id,
+                            idClasse:student.idClasse
+                        }
+                        studentsToSend.push(studentTemp)
+                    });
+                    let {status} = await ExportBulletins.checkBulletins(studentsToSend,$scope.selected.periode.id_type,options.idStructure);
+                    if(status == 201){
+                        $scope.optionsBulletins = options ;
+                        $scope.display.bulletinAlert = true;
+                        utils.safeApply($scope);
+                        return
+                    } else {
+                        $scope.sendBulletins(options);
+                    }
+
+                } catch (e) {
+                    await stopMessageLoader();
+                }
+            }
+
+
+           /* let classes = _.groupBy($scope.allElevesClasses, 'classeName');
             let hasOneArchive = false;
             for (let classe in classes) {
                 if (classes.hasOwnProperty(classe)) {
@@ -234,7 +263,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             if(!hasOneArchive) {
                 $scope.sendBulletins(options)
             }
-
+*/
 
         };
         $scope.sendBulletins = async (options) =>{
@@ -257,14 +286,6 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                     options.idStudents = _.pluck(options.students, 'id');
                     if (options.idStudents !== undefined && options.idStudents.length > 0) {
                         try {
-                            let studentsToSend = []
-                            options.students.forEach(student => {
-                                let studentTemp = {
-                                    id: student.id,
-                                    idClasse: student.idClasse
-                                }
-                                studentsToSend.push(studentTemp)
-                            })
                             await ExportBulletins.generateBulletins(options, $scope);
                         } catch (e) {
                             await stopMessageLoader();
