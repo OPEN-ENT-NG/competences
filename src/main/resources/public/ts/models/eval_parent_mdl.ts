@@ -31,6 +31,7 @@ import { Enseignement } from './parent_eleve/Enseignement';
 import http from 'axios';
 import {getTitulairesForRemplacantsCoEnseignant} from "../utils/functions/getTitulairesForRemplacantsCoEnseignant";
 import httpAxios from "axios";
+import {Service} from "./common/ServiceSnipplet";
 
 declare let location: any;
 declare let require: any;
@@ -39,6 +40,7 @@ export class Evaluations extends Model {
     eleves: Collection<Eleve>;
     matiere: Matiere;
     matieres: Collection<Matiere>;
+    services: Collection<Service>;
     classes: Collection<Classe>;
     enseignants: Collection<Enseignant>;
     enseignements: Collection<Enseignement>;
@@ -62,6 +64,7 @@ export class Evaluations extends Model {
             GET_ANNOTATION : '/viescolaire/annotations/eleve',
             GET_ARBRE_DOMAINE : '/competences/domaines?idClasse=',
             GET_ENSEIGNEMENT: '/competences/enseignements',
+            GET_SERVICES: '/viescolaire/services?idEtablissement=',
             calculMoyenne: '/competences/eleve/'
         };
     }
@@ -95,6 +98,18 @@ export class Evaluations extends Model {
                     });
                 }
             });
+            this.collection(Service, {
+                sync: async () => {
+                    return new Promise((resolve) => {
+                        let uri = Evaluations.api.GET_SERVICES + model.me.structures[0];
+                        HTTP().get(uri).done((services) => {
+                            this.services.all = services;
+                            resolve();
+                        }).bind(this);
+                    });
+                }
+            });
+
             this.collection(Matiere, {
                 sync: async () => {
                     return new Promise((resolve) => {
@@ -238,42 +253,51 @@ export class Evaluations extends Model {
                                     //releve note
                                     let devoirsWithNote = _.filter(devoirs, (d) => { return d.note !== undefined ; });
                                     let matieresDevoirs = _.pluck(devoirsWithNote, 'id_matiere');
+                                    let groupesDevoirs = _.pluck(devoirsWithNote, 'id_groupe');
                                     this.enseignants.sync(structureId).then(() => {
                                         this.matieres.sync().then(() => {
                                             if(this.eleve != undefined && this.eleve.classe != undefined && classe == undefined) {
                                                 classe = this.eleve.classe;
                                             }
-                                            _.forEach(classe.services, service => {
-                                                let _matiere = that.matieres.findWhere({id: service.id_matiere});
-                                                if(_matiere !== undefined) {
-                                                    let teachers = [];
 
-                                                    let enseignant = that.enseignants.findWhere({id: service.id_enseignant});
-                                                    if(enseignant !== undefined && service.is_visible) {
-                                                        teachers.push(enseignant);
+                                            this.services.sync().then(() => {
+                                                let filteredServices = this.services.filter((service) => {
+                                                    return _.contains(groupesDevoirs, service.id_groupe) && service.evaluable
+                                                        && service.is_visible;
+                                                });
+
+                                                _.forEach(filteredServices, service => {
+                                                    let _matiere = that.matieres.findWhere({id: service.id_matiere});
+                                                    if(_matiere !== undefined) {
+                                                        let teachers = [];
+
+                                                        let enseignant = that.enseignants.findWhere({id: service.id_enseignant});
+                                                        if(enseignant !== undefined && service.is_visible) {
+                                                            teachers.push(enseignant);
+                                                        }
+
+                                                        _.forEach(service.coTeachers, coTeacher => {
+                                                            let enseignant = that.enseignants.findWhere({id: coTeacher.second_teacher_id});
+                                                            if(coTeacher.is_visible && enseignant != undefined && !_.contains(teachers, enseignant)) {
+                                                                teachers.push(enseignant);
+                                                            }
+                                                        });
+
+                                                        _.forEach(service.substituteTeachers, substituteTeacher => {
+                                                            let enseignant = that.enseignants.findWhere({id: substituteTeacher.second_teacher_id});
+                                                            let conditionForDate = periode != undefined ? Utils.checkDateForSubTeacher(substituteTeacher, periode) : true;
+
+                                                            if(substituteTeacher.is_visible && enseignant != undefined && !_.contains(teachers, enseignant) && conditionForDate) {
+                                                                teachers.push(enseignant);
+                                                            }
+                                                        });
+
+                                                        _matiere.ens = teachers;
+                                                        _matiere.hasDevoirWithNote = _.contains(matieresDevoirs, _matiere.id);
                                                     }
-
-                                                    _.forEach(service.coTeachers, coTeacher => {
-                                                        let enseignant = that.enseignants.findWhere({id: coTeacher.second_teacher_id});
-                                                        if(coTeacher.is_visible && enseignant != undefined && !_.contains(teachers, enseignant)) {
-                                                            teachers.push(enseignant);
-                                                        }
-                                                    });
-
-                                                    _.forEach(service.substituteTeachers, substituteTeacher => {
-                                                        let enseignant = that.enseignants.findWhere({id: substituteTeacher.second_teacher_id});
-                                                        let conditionForDate = periode != undefined ? Utils.checkDateForSubTeacher(substituteTeacher, periode) : true;
-
-                                                        if(substituteTeacher.is_visible && enseignant != undefined && !_.contains(teachers, enseignant) && conditionForDate) {
-                                                            teachers.push(enseignant);
-                                                        }
-                                                    });
-
-                                                    _matiere.ens = teachers;
-                                                    _matiere.hasDevoirWithNote = _.contains(matieresDevoirs, _matiere.id);
-                                                }
-                                            });
-                                            resolve();
+                                                });
+                                                resolve();
+                                            })
                                         });
                                     });
                                 }).bind(this);
