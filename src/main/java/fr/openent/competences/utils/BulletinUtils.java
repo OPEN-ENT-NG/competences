@@ -48,11 +48,11 @@ public class BulletinUtils {
                         storage.removeFile(idToDelete, new Handler<JsonObject>() {
                             @Override
                             public void handle(JsonObject event) {
-                                handler.handle(new Either.Right<>(new JsonObject()));
+                                handler.handle(new Either.Right<>(new JsonObject().put("idFile",idFile)));
                             }
                         });
                     }else{
-                        handler.handle(new Either.Right<>(new JsonObject()));
+                        handler.handle(new Either.Right<>(new JsonObject().put("idFile",idFile)));
 
                     }
                 }else{
@@ -63,7 +63,7 @@ public class BulletinUtils {
         }));
     }
 
-    public static Handler<Either<String, JsonObject>> saveBulletinHandler(final String idEleve, final String idClasse,
+    public static Handler<Either<String, JsonObject>> saveBulletinHandler(String idFile, final String idEleve, final String idClasse,
                                                                           final String externalIdClasse,
                                                                           final String idEtablissement, final Long idPeriode,
                                                                           Handler<Either<String, JsonObject>> handler){
@@ -77,7 +77,7 @@ public class BulletinUtils {
             else{
                 log.error(noFileStored);
             }
-            handler.handle(new Either.Right<>(new JsonObject()));
+            handler.handle(new Either.Right<>(new JsonObject().put("idFile",idFile)));
         };
     }
 

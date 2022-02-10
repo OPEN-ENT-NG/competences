@@ -752,28 +752,26 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 .put("headers", new JsonObject()
                                         .put("Accept-Language", request.headers().get("Accept-Language")))
                                 .put("Host", getHost(request));
-                        log.info("action FOOT2rue");
 
 
-                        List<Future<String>> futureArray = insertDataInMongo(resultFinal);
+                        List<Future<String>> futureArray = insertDataInMongo(resultFinal,jsonRequest,title,template);
                         FutureHelper.all(futureArray).onSuccess(success ->{
-                            log.info("done");
+                            log.info("insert bulletins data in Mongo done");
+                            eb.send(BulletinWorker.class.getSimpleName(), new JsonObject(), Competences.DELIVERY_OPTIONS);
                             //ping le worker
                         }).onFailure(error ->{
                             log.info(error.getMessage());
                         });
 
-                        JsonObject action = new JsonObject().put(ACTION, SAVE_BULLETIN)
-                                .put("request", jsonRequest)
-                                .put("resultFinal", resultFinal)
-                                .put("template", template)
-                                .put("title", title);
+//                        JsonObject action = new JsonObject().put(ACTION, SAVE_BULLETIN)
+//                                .put("request", jsonRequest)
+//                                .put("resultFinal", resultFinal)
+//                                .put("template", template)
+//                                .put("title", title);
 
-                        eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
 
                         exportService.generateSchoolReportPdf(request, resultFinal, template, title, vertx, config);
 
-//CHANGER ICI APPEL MONGO
 
                     }
                 });
@@ -785,10 +783,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         };
     }
 
-    private List<Future<String>> insertDataInMongo(JsonObject resultFinal) {
-        JsonObject common  = resultFinal.copy();
+    private List<Future<String>> insertDataInMongo(JsonObject params, JsonObject request, String title, String template) {
+        JsonObject common  = params.copy();
         common.remove("eleves");
-        JsonArray students = resultFinal.getJsonArray("eleves");
+        common.put("template",template);
+        common.put("title",title);
+        common.put("request",request);
+        JsonArray students = params.getJsonArray("eleves");
         List<Future<String>> futureArray= new ArrayList<>();
         for(Object studentJO : students){
             JsonObject student = (JsonObject) studentJO;
@@ -2849,6 +2850,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     } else {
                         idYear = String.valueOf(year - 1);
                     }
+                    //LA tu dois retoruner l id
                     if (type.equals(TypePDF.BULLETINS.toString())) {
                         handleSaveBulletinInSql(eleve, file, handler, name, idEleve, idClasse, externalIdClasse,
                                 idEtablissement, idPeriode, idParent, idFile, idYear);
@@ -2923,7 +2925,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 log.error("save bulletin pdf : null parameter plop");
                 handler.handle(new Either.Right<>(new JsonObject()));
             } else {
-                Handler<Either<String, JsonObject>> saveBulletinHandler = BulletinUtils.saveBulletinHandler(idEleve,
+                Handler<Either<String, JsonObject>> saveBulletinHandler = BulletinUtils.saveBulletinHandler(idFile,idEleve,
                         idClasse, externalIdClasse, idEtablissement, idPeriode, handler);
 
                 if (isNotNull(externalIdClasse)) {
@@ -3007,10 +3009,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     @Override
     public void runSavePdf(JsonObject bulletinEleve, final JsonObject bulletin, Vertx vertx, JsonObject config,
-                           Handler<Either<String, Boolean>> bulletinHandlerWork){
+                           Handler<Either<String, String>> bulletinHandlerWork){
         try {
             final HttpServerRequest request = new JsonHttpServerRequest(bulletin.getJsonObject("request"));
-            final JsonObject templateProps = bulletin.getJsonObject("resultFinal");
+            final JsonObject templateProps = bulletin;
             final String templateName = bulletin.getString("template");
             final String prefixPdfName = bulletin.getString("title");
 
@@ -3025,7 +3027,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     @Override
     public void generateAndSavePdf(final HttpServerRequest request, JsonObject resultFinal, final String templateName,
                                    final String prefixPdfName, JsonObject eleve, Vertx vertx, JsonObject config,
-                                   Handler<Either<String, Boolean>> finalHandler) {
+                                   Handler<Either<String, String>> finalHandler) {
         try {
             final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
             final String templatePath = FileResolver.absolutePath(config.getJsonObject("exports")
@@ -3047,16 +3049,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     private void processTemplate (HttpServerRequest request, JsonObject resultFinal, String templateName,
                                   String prefixPdfName, JsonObject eleve, Vertx vertx, JsonObject config,
-                                  Handler<Either<String, Boolean>> finalHandler, String dateDebut, String templatePath,
+                                  Handler<Either<String, String>> finalHandler, String dateDebut, String templatePath,
                                   String baseUrl, String _node) {
         try {
             vertx.fileSystem().readFile(templatePath + templateName, new Handler<AsyncResult<Buffer>>() {
                 @Override
                 public void handle(AsyncResult<Buffer> result) {
                     if (!result.succeeded()) {
-                        badRequest(request, "Error while reading template : " + templatePath + templateName);
                         log.error("[DefaultExportBulletinService | processTemplate] Error while reading template : " + templatePath + templateName);
                         finalHandler.handle(new Either.Left("[DefaultExportBulletinService | processTemplate] Error while reading template : " + templatePath + templateName));
+                        badRequest(request, "Error while reading template : " + templatePath + templateName);
                         return;
                     }
                     try {
@@ -3070,7 +3072,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 getRenderProcessHandler(templateProps, baseUrl, _node, request, prefixPdfName, dateDebut, eleve, finalHandler));
                     }
                     catch (Exception e){
-                        finalHandler.handle(new Either.Left<>(" processTemplate readFile Handle"+ e.getMessage() + " "+
+                        finalHandler.handle(new Either.Left<>(" processTemplate readFile Handle "+ e.getClass().getName() + " "+
                                 eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                     }
                 }
@@ -3084,7 +3086,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     private Handler<Writer> getRenderProcessHandler(JsonObject templateProps, String baseUrl, String _node,
                                                     HttpServerRequest request, String prefixPdfName, String dateDebut,
-                                                    JsonObject eleve, Handler<Either<String, Boolean>> finalHandler) {
+                                                    JsonObject eleve, Handler<Either<String, String>> finalHandler) {
         return new Handler<Writer>() {
             @Override
             public void handle(Writer writer) {
@@ -3116,7 +3118,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     private Handler<Message<JsonObject>> getPdfRenderHandler(HttpServerRequest request, JsonObject templateProps,
                                                              String prefixPdfName, String dateDebut, JsonObject eleve,
-                                                             Handler<Either<String, Boolean>> finalHandler) {
+                                                             Handler<Either<String, String>> finalHandler) {
         return new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> reply) {
@@ -3167,7 +3169,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void handleCreateFile(File pdfFile, OutputStream outStream, JsonObject templateProps, String prefixPdfName,
-                                  String dateDebut, JsonObject eleve, Handler<Either<String, Boolean>> finalHandler) {
+                                  String dateDebut, JsonObject eleve, Handler<Either<String, String>> finalHandler) {
         try {
             String sourceDir = pdfFile.getAbsolutePath();
             File sourceFile = new File(sourceDir);
@@ -3336,7 +3338,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    private void savePdfDefault(Buffer buffer, JsonObject eleve, Handler<Either<String, Boolean>> finalHandler) {
+    private void savePdfDefault(Buffer buffer, JsonObject eleve, Handler<Either<String, String>> finalHandler) {
         savePdfInStorage(eleve, buffer, new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> event) {
@@ -3349,7 +3351,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 + event.left().getValue() + " "
                                 + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                     } else {
-                        finalHandler.handle(new Either.Right<>(true));
+                        finalHandler.handle(new Either.Right<>(event.right().getValue().getString("idFile")));
                     }
                 }catch (Exception e){
                     finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfDefault] : Exception on savePdfInStorage "
