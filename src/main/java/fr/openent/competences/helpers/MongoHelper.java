@@ -40,7 +40,6 @@ public class MongoHelper extends MongoDbCrudService {
                     if(exportProperties != null && exportProperties.containsKey(STATUS) && !exportProperties.getString(STATUS).equals("SUCCESS")) {
                         exportProperties.put("updated", dtf.format(now));
                         exportProperties.put(STATUS, status);
-                        exportProperties.put("NbIterationsLeft", exportProperties.getInteger("NbIterationsLeft") - 1);
                         if (!fileId.isEmpty())
                             exportProperties.put("fileId", fileId);
                         mongo.save(collection, exportProperties, new Handler<Message<JsonObject>>() {
