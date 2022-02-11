@@ -2818,6 +2818,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         handleSaveBFCinSQL(eleve, file, handler, name, idEleve, idClasse, idCycle, idYear,
                                 externalIdClasse, idEtablissement, idFile);
                     }
+                    throw new NullPointerException();
                 }catch (Exception e){
                     handler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfInStorage | writeBuffer] : Exception on savePdfInStorage "
                             + e.getClass().toString() + " "
