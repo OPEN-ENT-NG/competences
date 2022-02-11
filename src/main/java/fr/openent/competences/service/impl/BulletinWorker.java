@@ -36,7 +36,6 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     @Override
     public void start(){
         super.start();
-        log.info("ICI C EST LE WORKER");
         String neo4jConfig = (String) vertx.sharedData().getLocalMap("server").get("neo4jConfig");
         Neo4j.getInstance().init(vertx, new JsonObject(neo4jConfig));
         this.storage = new StorageFactory(vertx).getStorage();
@@ -130,19 +129,13 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
                 }
                 break;
             //TODO NE PAS OUBLIER LE BFC
-//            case SAVE_BFC:
-//                JsonObject datas = params.getJsonObject("resultFinal");
-//                JsonArray eleves = datas.getJsonArray("classes").getJsonObject(0).getJsonArray("eleves");
-//                stackBfc(eleves);
-//                if(!isWorking){
-//                    isWorking = true;
-//                    new Thread(() -> {
-//                        processBFC(params, event -> {
-//                            log.info("end bfc");
-//                        });
-//                    }).start();
-//                }
-//                break;
+            case SAVE_BFC:
+                if(!isWorking){
+                    isWorking = true;
+                    params.put("_id",body.getString("_id"));
+                    processBFC(params, exportHandler);
+                }
+                break;
             default:
                 catchError(exportService, body.getString("_id"), "Invalid action in worker : " + action);
                 isSleeping = true;
@@ -177,18 +170,20 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     }
 
     private void processBFC(JsonObject paramBfc ,Handler<Either<String, Boolean>> bfcHandler) {
-        JsonObject bfcToHandle = HandleStackJsonObjectBFC();
-        if (bfcToHandle == null) return;
-        log.info("start Work processBFC in Bulletins worker");
+
         JsonObject params = paramBfc.copy();
+        JsonObject bfcToHandle = paramBfc.getJsonObject("eleve").copy();
         bfcToHandle.put("typeExport", TypePDF.BFC.toString());
-        params.getJsonObject("resultFinal").getJsonArray("classes").getJsonObject(0).put("eleves",
-                new JsonArray().add(bfcToHandle));
-        bfcToHandle.put("idCycle", params.getJsonObject("resultFinal").getValue("idCycle"));
+        log.info("Process BFC");
         exportBulletinService.runSavePdf(bfcToHandle, params, vertx, config, event -> {
-            processBFC(paramBfc, bfcHandler);
+            if(event.isRight()){
+                log.info("process DONE " +event.right().getValue());
+                exportService.updateWhenSuccess( event.right().getValue(),paramBfc.getString("_id"),bfcHandler);
+            }
             if (event.isLeft()) {
-                log.error("[BulletinWorker| processBFC ] : " + event.left().getValue());
+                catchError(exportService, paramBfc.getString("_id"), "Invalid action in worker : " +  event.left().getValue());
+                log.error("ERROR [BulletinWorker | processBulletin] : " + event.left().getValue());
+                bfcHandler.handle(new Either.Left<>(event.left().getValue()));
             }
         });
     }

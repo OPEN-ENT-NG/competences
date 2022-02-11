@@ -20,6 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.security.AccessAdminHeadTeacherFilter;
 import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
@@ -61,6 +62,8 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BFC;
+import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
 import static fr.openent.competences.utils.UtilsConvert.strIdGroupesToJsonArray;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
@@ -87,6 +90,7 @@ public class ExportPDFController extends ControllerHelper {
     private final ExportService exportService;
     private final AppreciationService appreciationService;
     private final ExportBulletinService exportBulletinService;
+    private MongoExportService mongoExportService;
     private final Storage storage;
 
     public ExportPDFController(EventBus eb, EmailSender notification, Storage storage) {
@@ -98,6 +102,7 @@ public class ExportPDFController extends ControllerHelper {
         exportService = new DefaultExportService(eb, storage);
         exportBulletinService = new DefaultExportBulletinService(eb, storage);
         appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE);
+        this.mongoExportService = new DefaultMongoService();
         this.storage = storage;
     }
 
@@ -248,6 +253,28 @@ public class ExportPDFController extends ControllerHelper {
         }
     }
 
+
+
+    private List<Future<String>> insertDataInMongo(JsonObject params, JsonObject request, String title, String template) {
+        JsonObject common  = params.copy();
+        common.remove("eleves");
+        common.put("template",template);
+        common.put("title",title);
+        common.put("request",request);
+        JsonArray students =  params.getJsonArray("classes").getJsonObject(0).getJsonArray("eleves");
+        List<Future<String>> futureArray= new ArrayList<>();
+        for(Object studentJO : students){
+            JsonObject student = (JsonObject) studentJO;
+            student.remove("u.deleteDate");
+            common.put("eleve",student);
+            Promise<String> promise = Promise.promise();
+            mongoExportService.createWhenStart("pdf", common,
+                    SAVE_BFC,promise);
+            futureArray.add(promise.future());
+        }
+        return futureArray;
+    }
+
     private void saveBfcWorker(List<String> idClasses, Long idCycle, JsonObject result, String prefixPdfName,
                                String templateName, JsonObject jsonRequest) {
         if(idCycle != null){
@@ -259,28 +286,43 @@ public class ExportPDFController extends ControllerHelper {
 
                 eb.send(Competences.VIESCO_BUS_ADDRESS, actionClass, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
+                    //ICI insérer dans le mongo
+
                     if(body.getJsonObject("result").getJsonObject("c").
                             getJsonObject("metadata").getJsonArray("labels").contains("Class")){
                         result.put("idClasse" , idClasses.get(0));
-                        JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
-                                .put("request", jsonRequest)
-                                .put("resultFinal", result)
-                                .put("template", templateName)
-                                .put("title", prefixPdfName);
+//                        JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
+//                                .put("request", jsonRequest)
+//                                .put("resultFinal", result)
+//                                .put("template", templateName)
+//                                .put("title", prefixPdfName);
 
-                        eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+                        setFuturesToInsertMongo(result, prefixPdfName, templateName, jsonRequest);
+//                        eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
                     }
                 }));
             }else{
-                JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
-                        .put("request", jsonRequest)
-                        .put("resultFinal", result)
-                        .put("template", templateName)
-                        .put("title", prefixPdfName);
-
-                eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+//                JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
+//                        .put("request", jsonRequest)
+//                        .put("resultFinal", result)
+//                        .put("template", templateName)
+//                        .put("title", prefixPdfName);
+                setFuturesToInsertMongo(result, prefixPdfName, templateName, jsonRequest);
+//                eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
             }
+
         }
+    }
+
+    private void setFuturesToInsertMongo(JsonObject result, String prefixPdfName, String templateName, JsonObject jsonRequest) {
+        List<Future<String>> futureArray = insertDataInMongo(result,jsonRequest,prefixPdfName,templateName);
+        FutureHelper.all(futureArray).onSuccess(success ->{
+            log.info("insert bfc data in Mongo done");
+            eb.send(BulletinWorker.class.getSimpleName(), new JsonObject(), Competences.DELIVERY_OPTIONS);
+            //ping le worker
+        }).onFailure(error ->{
+            log.info(error.getMessage());
+        });
     }
 
     @Get("/devoirs/print/:idDevoir/formsaisie")

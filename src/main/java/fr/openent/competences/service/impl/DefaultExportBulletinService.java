@@ -2850,7 +2850,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     } else {
                         idYear = String.valueOf(year - 1);
                     }
-                    //LA tu dois retoruner l id
                     if (type.equals(TypePDF.BULLETINS.toString())) {
                         handleSaveBulletinInSql(eleve, file, handler, name, idEleve, idClasse, externalIdClasse,
                                 idEtablissement, idPeriode, idParent, idFile, idYear);
@@ -2858,9 +2857,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         handleSaveBFCinSQL(eleve, file, handler, name, idEleve, idClasse, idCycle, idYear,
                                 externalIdClasse, idEtablissement, idFile);
                     }
+                    throw new NullPointerException();
                 }catch (Exception e){
                     handler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfInStorage | writeBuffer] : Exception on savePdfInStorage "
-                            + e.getMessage() + " "
+                            + e.getClass().toString() + " "
                             + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                 }
 
@@ -2922,7 +2922,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                          String idYear) {
         try {
             if (!(isNotNull(idEleve) && isNotNull(idClasse) && isNotNull(idEtablissement) && isNotNull(idPeriode))) {
-                log.error("save bulletin pdf : null parameter plop");
+                log.error("save bulletin pdf : null parameter ");
                 handler.handle(new Either.Right<>(new JsonObject()));
             } else {
                 Handler<Either<String, JsonObject>> saveBulletinHandler = BulletinUtils.saveBulletinHandler(idFile,idEleve,
@@ -2995,11 +2995,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     storage.removeFile(idToDelete, new Handler<JsonObject>() {
                         @Override
                         public void handle(JsonObject event) {
-                            handler.handle(new Either.Right<>(new JsonObject()));
+                            handler.handle(new Either.Right<>(new JsonObject().put("idFile",idFile)));
                         }
                     });
                 }else{
-                    handler.handle(new Either.Right<>(new JsonObject()));
+                    handler.handle(new Either.Right<>(new JsonObject().put("idFile",idFile)));
                 }
             }else{
                 handler.handle(new Either.Left<>("error when putting data in sql bfc_archive"));
