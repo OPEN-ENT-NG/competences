@@ -58,7 +58,7 @@ export class Evaluations extends Model {
         return {
             EVAL_ENFANTS: `/competences/enfants?userId=${model.me.userId}`,
             GET_EVALUATIONS : '/competences/devoirs?idEtablissement=',
-            GET_MATIERES : '/viescolaire/matieres?idEtablissement=',
+            GET_MATIERES : '/viescolaire/matieresFilteredByServices?idEtablissement=',
             GET_ENSEIGNANTS : '/competences/user/list?profile=Teacher&structureId=',
             GET_COMPETENCES : '/viescolaire/competences/eleve',
             GET_ANNOTATION : '/viescolaire/annotations/eleve',
