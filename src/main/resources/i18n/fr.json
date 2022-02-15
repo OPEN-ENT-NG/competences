@@ -609,6 +609,7 @@
   "evaluations.page.one": "Page 1",
   "evaluations.page.two": "Page 2",
   "evaluations.page.three.optionnal": "Page 3 (optionnelle)",
+  "evaluations.export.bulletin.error.check.bulletins": "Une erreur est survenue lors de la vérification de l'édition du/des bulletin(s)",
   "evaluations.export.bulletin.error": "Désolé, l'application a rencontré un problème lors de l'export des bulletins",
   "evaluations.export.bulletin.communication.header.right.first":"Date, nom et signature",
   "evaluations.export.bulletin.communication.header.right.second":"du chef de l'établissement",
