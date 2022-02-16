@@ -343,7 +343,7 @@ export class ReleveNote extends  Model implements IModel {
                         if (_notesEleve && _notesEleve.length !== 0) {
                             _eval = Mix.castAs(Evaluation, _.findWhere(_notesEleve, {id_devoir: devoir.id}));
 
-                            if (_eval) {
+                            if (_eval.id_devoir != null) {
                                 _eval.oldValeur = _eval.valeur;
                                 _eval.oldAppreciation = _eval.appreciation !== undefined ? _eval.appreciation : '';
                                 if (_eval.annotation !== undefined && _eval.annotation !== null
