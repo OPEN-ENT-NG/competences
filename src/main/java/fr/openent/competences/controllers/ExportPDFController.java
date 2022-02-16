@@ -255,25 +255,6 @@ public class ExportPDFController extends ControllerHelper {
 
 
 
-    private List<Future<String>> insertDataInMongo(JsonObject params, JsonObject request, String title, String template) {
-        JsonObject common  = params.copy();
-        common.remove("eleves");
-        common.put("template",template);
-        common.put("title",title);
-        common.put("request",request);
-        JsonArray students =  params.getJsonArray("classes").getJsonObject(0).getJsonArray("eleves");
-        List<Future<String>> futureArray= new ArrayList<>();
-        for(Object studentJO : students){
-            JsonObject student = (JsonObject) studentJO;
-            student.remove("u.deleteDate");
-            common.put("eleve",student);
-            Promise<String> promise = Promise.promise();
-            mongoExportService.createWhenStart("pdf", common,
-                    SAVE_BFC,promise);
-            futureArray.add(promise.future());
-        }
-        return futureArray;
-    }
 
     private void saveBfcWorker(List<String> idClasses, Long idCycle, JsonObject result, String prefixPdfName,
                                String templateName, JsonObject jsonRequest) {
@@ -286,42 +267,28 @@ public class ExportPDFController extends ControllerHelper {
 
                 eb.send(Competences.VIESCO_BUS_ADDRESS, actionClass, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
-                    //ICI insérer dans le mongo
-
                     if(body.getJsonObject("result").getJsonObject("c").
                             getJsonObject("metadata").getJsonArray("labels").contains("Class")){
                         result.put("idClasse" , idClasses.get(0));
-//                        JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
-//                                .put("request", jsonRequest)
-//                                .put("resultFinal", result)
-//                                .put("template", templateName)
-//                                .put("title", prefixPdfName);
 
                         setFuturesToInsertMongo(result, prefixPdfName, templateName, jsonRequest);
-//                        eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
                     }
                 }));
             }else{
-//                JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
-//                        .put("request", jsonRequest)
-//                        .put("resultFinal", result)
-//                        .put("template", templateName)
-//                        .put("title", prefixPdfName);
                 setFuturesToInsertMongo(result, prefixPdfName, templateName, jsonRequest);
-//                eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
             }
 
         }
     }
 
     private void setFuturesToInsertMongo(JsonObject result, String prefixPdfName, String templateName, JsonObject jsonRequest) {
-        List<Future<String>> futureArray = insertDataInMongo(result,jsonRequest,prefixPdfName,templateName);
+        JsonArray students =  result.getJsonArray("classes").getJsonObject(0).getJsonArray("eleves");
+        List<Future<String>> futureArray = mongoExportService.insertDataInMongo(students,result,jsonRequest,prefixPdfName,templateName,SAVE_BFC);
         FutureHelper.all(futureArray).onSuccess(success ->{
-            log.info("insert bfc data in Mongo done");
+            log.info(String.format("[Competences@%s::setFuturesToInsertMongo] insert BFC data in Mongo done.", this.getClass().getSimpleName()));
             eb.send(BulletinWorker.class.getSimpleName(), new JsonObject(), Competences.DELIVERY_OPTIONS);
-            //ping le worker
         }).onFailure(error ->{
-            log.info(error.getMessage());
+            log.info(String.format("[Competences@%s::setFuturesToInsertMongo] an error has occurred during insert data in mongo: %s.", this.getClass().getSimpleName(), error.getMessage()));
         });
     }
 

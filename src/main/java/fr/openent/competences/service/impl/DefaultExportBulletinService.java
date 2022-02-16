@@ -39,6 +39,7 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BFC;
 import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.*;
@@ -752,27 +753,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 .put("headers", new JsonObject()
                                         .put("Accept-Language", request.headers().get("Accept-Language")))
                                 .put("Host", getHost(request));
-
-
-                        List<Future<String>> futureArray = insertDataInMongo(resultFinal,jsonRequest,title,template);
+                        JsonArray students = resultFinal.getJsonArray("eleves");
+                        List<Future<String>> futureArray =  mongoExportService.insertDataInMongo(students,resultFinal,jsonRequest,title,template,SAVE_BULLETIN);
                         FutureHelper.all(futureArray).onSuccess(success ->{
-                            log.info("insert bulletins data in Mongo done");
+                            log.info("[Competences DefaultExportBulletinService ] insert bulletins data in Mongo done");
                             eb.send(BulletinWorker.class.getSimpleName(), new JsonObject(), Competences.DELIVERY_OPTIONS);
-                            //ping le worker
                         }).onFailure(error ->{
                             log.info(error.getMessage());
                         });
-
-//                        JsonObject action = new JsonObject().put(ACTION, SAVE_BULLETIN)
-//                                .put("request", jsonRequest)
-//                                .put("resultFinal", resultFinal)
-//                                .put("template", template)
-//                                .put("title", title);
-
-
                         exportService.generateSchoolReportPdf(request, resultFinal, template, title, vertx, config);
-
-
                     }
                 });
             } else {
@@ -781,26 +770,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 return;
             }
         };
-    }
-
-    private List<Future<String>> insertDataInMongo(JsonObject params, JsonObject request, String title, String template) {
-        JsonObject common  = params.copy();
-        common.remove("eleves");
-        common.put("template",template);
-        common.put("title",title);
-        common.put("request",request);
-        JsonArray students = params.getJsonArray("eleves");
-        List<Future<String>> futureArray= new ArrayList<>();
-        for(Object studentJO : students){
-            JsonObject student = (JsonObject) studentJO;
-                    student.remove("u.deleteDate");
-            common.put("eleve",student);
-            Promise<String> promise = Promise.promise();
-            mongoExportService.createWhenStart("pdf", common,
-                    SAVE_BULLETIN,promise);
-            futureArray.add(promise.future());
-        }
-        return futureArray;
     }
 
     @Override
@@ -2754,7 +2723,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         CompositeFuture.all(futures).setHandler(compositeEvent ->{
             if(compositeEvent.succeeded()){
-                log.info("end students");
+                log.info("[Competences DefaultExportBulletinService ]end students");
                 finalHandler.handle(new Either.Right<>(null));
             }
         });
@@ -2773,7 +2742,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             else {
                 String error = elevesEvent.left().getValue();
                 if(error.contains(TIME)){
-                    log.error("[getElevesClasse] : "+ error);
+                    log.error("[Competences getElevesClasse] : "+ error);
                     getElevesClasse(idClasse, idPeriode, elevesFuture);
                     return;
                 }
@@ -2857,7 +2826,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         handleSaveBFCinSQL(eleve, file, handler, name, idEleve, idClasse, idCycle, idYear,
                                 externalIdClasse, idEtablissement, idFile);
                     }
-                    throw new NullPointerException();
                 }catch (Exception e){
                     handler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfInStorage | writeBuffer] : Exception on savePdfInStorage "
                             + e.getClass().toString() + " "
@@ -3293,16 +3261,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .append(" AND id_etablissement = ? AND id_annee = ? ;");
             JsonArray values = new JsonArray().addAll(idsStudent).addAll(idsClasses).add(idPeriode).add(idStructure).add(idYear);
 
-            Sql.getInstance().prepared(query.toString(), values, new Handler<Message<JsonObject>>() {
-                @Override
-                public void handle (Message<JsonObject> event) {
-                    JsonObject result = event.body();
-                    if (result.getString("status").equals("ok")) {
-                        Integer response = result.getInteger("rows");
-                        handler.handle(new Either.Right<>((response != null && response > 0) ? true : false));
-                    } else {
-                        handler.handle(new Either.Left<>(result.getString("status")));
-                    }
+            Sql.getInstance().prepared(query.toString(), values, event -> {
+                JsonObject result = event.body();
+                if (result.getString("status").equals("ok")) {
+                    Integer response =
+                        result.getInteger("rows");
+                        handler.handle(new Either.Right<>((response != null && response > 0) ? true :false));
+
+                } else {
+                    handler.handle(new Either.Left<>(result.getString("status")));
                 }
             });
         });
@@ -3339,26 +3306,23 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void savePdfDefault(Buffer buffer, JsonObject eleve, Handler<Either<String, String>> finalHandler) {
-        savePdfInStorage(eleve, buffer, new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                try {
-                    if (event.isLeft()) {
-                        log.error("[DefaultExportBulletinService | savePdfDefault] : Error on savePdfInStorage "
-                                + event.left().getValue() + " "
-                                + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                        finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfDefault] : Error on savePdfInStorage "
-                                + event.left().getValue() + " "
-                                + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
-                    } else {
-                        finalHandler.handle(new Either.Right<>(event.right().getValue().getString("idFile")));
-                    }
-                }catch (Exception e){
-                    finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfDefault] : Exception on savePdfInStorage "
-                            + e.getMessage() + " "
+        savePdfInStorage(eleve, buffer, event -> {
+            try {
+                if (event.isLeft()) {
+                    log.error("[DefaultExportBulletinService | savePdfDefault] : Error on savePdfInStorage "
+                            + event.left().getValue() + " "
+                            + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+                    finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfDefault] : Error on savePdfInStorage "
+                            + event.left().getValue() + " "
                             + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
-
+                } else {
+                    finalHandler.handle(new Either.Right<>(event.right().getValue().getString("idFile")));
                 }
+            }catch (Exception e){
+                finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | savePdfDefault] : Exception on savePdfInStorage "
+                        + e.getMessage() + " "
+                        + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+
             }
         });
     }
