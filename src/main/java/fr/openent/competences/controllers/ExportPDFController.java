@@ -20,6 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.security.AccessAdminHeadTeacherFilter;
 import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
@@ -39,7 +40,6 @@ import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -61,6 +61,7 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BFC;
 import static fr.openent.competences.utils.UtilsConvert.strIdGroupesToJsonArray;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
@@ -87,6 +88,7 @@ public class ExportPDFController extends ControllerHelper {
     private final ExportService exportService;
     private final AppreciationService appreciationService;
     private final ExportBulletinService exportBulletinService;
+    private MongoExportService mongoExportService;
     private final Storage storage;
 
     public ExportPDFController(EventBus eb, EmailSender notification, Storage storage) {
@@ -98,6 +100,7 @@ public class ExportPDFController extends ControllerHelper {
         exportService = new DefaultExportService(eb, storage);
         exportBulletinService = new DefaultExportBulletinService(eb, storage);
         appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE);
+        this.mongoExportService = new DefaultMongoExportService();
         this.storage = storage;
     }
 
@@ -248,6 +251,9 @@ public class ExportPDFController extends ControllerHelper {
         }
     }
 
+
+
+
     private void saveBfcWorker(List<String> idClasses, Long idCycle, JsonObject result, String prefixPdfName,
                                String templateName, JsonObject jsonRequest) {
         if(idCycle != null){
@@ -262,25 +268,26 @@ public class ExportPDFController extends ControllerHelper {
                     if(body.getJsonObject("result").getJsonObject("c").
                             getJsonObject("metadata").getJsonArray("labels").contains("Class")){
                         result.put("idClasse" , idClasses.get(0));
-                        JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
-                                .put("request", jsonRequest)
-                                .put("resultFinal", result)
-                                .put("template", templateName)
-                                .put("title", prefixPdfName);
 
-                        eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+                        setFuturesToInsertMongo(result, prefixPdfName, templateName, jsonRequest);
                     }
                 }));
             }else{
-                JsonObject action = new JsonObject().put(ACTION, BulletinWorker.SAVE_BFC)
-                        .put("request", jsonRequest)
-                        .put("resultFinal", result)
-                        .put("template", templateName)
-                        .put("title", prefixPdfName);
-
-                eb.send(BulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+                setFuturesToInsertMongo(result, prefixPdfName, templateName, jsonRequest);
             }
+
         }
+    }
+
+    private void setFuturesToInsertMongo(JsonObject result, String prefixPdfName, String templateName, JsonObject jsonRequest) {
+        JsonArray students =  result.getJsonArray("classes").getJsonObject(0).getJsonArray("eleves");
+        List<Future<String>> futureArray = mongoExportService.insertDataInMongo(students,result,jsonRequest,prefixPdfName,templateName,SAVE_BFC);
+        FutureHelper.all(futureArray).onSuccess(success ->{
+            log.info(String.format("[Competences@%s::setFuturesToInsertMongo] insert BFC data in Mongo done.", this.getClass().getSimpleName()));
+            eb.send(BulletinWorker.class.getSimpleName(), new JsonObject(), Competences.DELIVERY_OPTIONS);
+        }).onFailure(error ->{
+            log.info(String.format("[Competences@%s::setFuturesToInsertMongo] an error has occurred during insert data in mongo: %s.", this.getClass().getSimpleName(), error.getMessage()));
+        });
     }
 
     @Get("/devoirs/print/:idDevoir/formsaisie")

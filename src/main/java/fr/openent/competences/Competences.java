@@ -50,6 +50,7 @@ public class Competences extends BaseServer {
     public static JsonObject TRANSITION_CONFIG;
     public static JsonObject NODE_PDF_GENERATOR;
 
+    public static final String MONGO_COLLECTION = "notes_export";
     public static final String ANNOTATIONS = "annotations";
     public static final String APPRECIATION_CLASSE_TABLE = "appreciation_classe";
     public static final String APPRECIATION_CPE_BILAN_PERIODIQUE = "appreciation_cpe_bilan_periodique";
