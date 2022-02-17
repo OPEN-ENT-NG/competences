@@ -2,7 +2,6 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.service.MongoService;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

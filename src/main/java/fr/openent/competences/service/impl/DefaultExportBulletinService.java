@@ -39,7 +39,6 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
-import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BFC;
 import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.*;
