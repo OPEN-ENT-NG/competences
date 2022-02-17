@@ -19,7 +19,7 @@ import org.vertx.java.busmods.BusModBase;
 
 public class BulletinWorker extends BusModBase implements Handler<Message<JsonObject>>{
     private Storage storage;
-    private MongoExportService  exportService = new DefaultMongoService();
+    private MongoExportService  exportService = new DefaultMongoExportService();
     private boolean isWorking = false;
     private ExportBulletinService exportBulletinService;
     public static final String SAVE_BULLETIN = "saveBulletin";

@@ -39,7 +39,6 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
-import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BFC;
 import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.*;
@@ -207,7 +206,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,
                 Competences.COMPETENCES_NOTES_TABLE);
         this.storage = storage;
-        this.mongoExportService = new DefaultMongoService();
+        this.mongoExportService = new DefaultMongoExportService();
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         workspaceHelper = new WorkspaceHelper(eb,storage);
@@ -227,7 +226,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,
                 Competences.COMPETENCES_NOTES_TABLE);
         this.storage = storage;
-        this.mongoExportService = new DefaultMongoService();
+        this.mongoExportService = new DefaultMongoExportService();
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         this.httpClient =  createHttpClient(vertx);

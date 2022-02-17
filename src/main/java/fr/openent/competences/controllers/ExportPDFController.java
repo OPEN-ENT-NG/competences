@@ -40,7 +40,6 @@ import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -63,7 +62,6 @@ import java.util.stream.Collectors;
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BFC;
-import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
 import static fr.openent.competences.utils.UtilsConvert.strIdGroupesToJsonArray;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
@@ -102,7 +100,7 @@ public class ExportPDFController extends ControllerHelper {
         exportService = new DefaultExportService(eb, storage);
         exportBulletinService = new DefaultExportBulletinService(eb, storage);
         appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE);
-        this.mongoExportService = new DefaultMongoService();
+        this.mongoExportService = new DefaultMongoExportService();
         this.storage = storage;
     }
 
