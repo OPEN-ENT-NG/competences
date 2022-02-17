@@ -46,6 +46,7 @@ public class ExportBulletinController extends ControllerHelper {
     private final Storage storage;
     private WorkspaceHelper workspaceHelper;
     private EventStore eventStore;
+    private final BulletinsService bulletinsService;
 
 
     public ExportBulletinController(EventBus eb, Storage storage, EventStore eventStore) {
@@ -54,6 +55,7 @@ public class ExportBulletinController extends ControllerHelper {
         this.eventStore = eventStore;
         this.workspaceHelper = new WorkspaceHelper(eb, storage);
         exportBulletinService = new DefaultExportBulletinService(eb, storage);
+        bulletinsService = new DefaultBulletinsService();
 
     }
 
@@ -222,6 +224,20 @@ public class ExportBulletinController extends ControllerHelper {
 
         });
 
+    }
+
+    @Get("/bulletins/archive")
+    @ApiDoc("Retourne les archives de bulletins d'un établissement donné.")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    //@ResourceFilter(AccessBFCFilter.class) //TODO : Voir quel filtre faut mettre
+    public void getBulletins(final HttpServerRequest request) {
+        if (request.params().contains("idEtablissement")) {
+            String idEtablissement = request.params().get("idEtablissement");
+            bulletinsService.getBulletinsCount(idEtablissement, DefaultResponseHandler.arrayResponseHandler(request));
+
+        } else {
+            Renders.badRequest(request, "Invalid parameters");
+        }
     }
 
 
