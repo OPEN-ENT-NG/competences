@@ -105,7 +105,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
         }
     }
     public static void catchError(MongoExportService exportService, String idFile, String errorCatchTextOutput) {
-        exportService.updateWhenError(idFile, makeError -> {
+        exportService.updateWhenError(idFile,errorCatchTextOutput, makeError -> {
             if (makeError.isLeft()) {
                 log.error("[Competences BulletinWorker ]Error for create file export excel " + makeError.left().getValue() + errorCatchTextOutput);
             }

@@ -81,9 +81,9 @@ public class DefaultMongoExportService implements MongoExportService {
     }
 
 
-    public void updateWhenError (String idExport, Handler<Either<String, Boolean>> handler){
+    public void updateWhenError (String idExport,String messageError, Handler<Either<String, Boolean>> handler){
         try{
-            mongo.updateExport(idExport,"ERROR", "", event -> {
+            mongo.updateExport(idExport,"ERROR", "",messageError, event -> {
                 if(event.equals("mongoinsertfailed"))
                     handler.handle(new Either.Left<>("Error when inserting mongo"));
                 else{
@@ -98,7 +98,7 @@ public class DefaultMongoExportService implements MongoExportService {
 
     public void updateWhenErrorTimeout (String idExport, Handler<Either<String, Boolean>> handler){
         try{
-            mongo.updateExport(idExport,"ERROR", "", event -> {
+            mongo.updateExport(idExport,"ERROR", "","TimeOut", event -> {
                 if(event.equals("mongoinsertfailed"))
                     handler.handle(new Either.Left<>("Error when inserting mongo"));
                 else{
@@ -114,7 +114,7 @@ public class DefaultMongoExportService implements MongoExportService {
     public void updateWhenSuccess (String fileId, String idExport, Handler<Either<String, Boolean>> handler) {
         try {
             log.info("[Competences] updating status to SUCCESS in mongo fileId: " + fileId );
-            mongo.updateExport(idExport,"SUCCESS",fileId, event -> {
+            mongo.updateExport(idExport,"SUCCESS",fileId,"success", event -> {
                 if (event.equals("mongoinsertfailed"))
                     handler.handle(new Either.Left<>("Error when inserting mongo"));
                 else {
@@ -130,5 +130,10 @@ public class DefaultMongoExportService implements MongoExportService {
     @Override
     public void getWaitingExport(Handler<Either<String,JsonObject>> handler) {
         mongo.getWaitingExports(handler);
+    }
+
+    @Override
+    public void getErrorExport(Handler<Either<String, JsonArray>> handler) {
+        mongo.getExports(new JsonObject().put("status","ERROR"),handler);
     }
 }

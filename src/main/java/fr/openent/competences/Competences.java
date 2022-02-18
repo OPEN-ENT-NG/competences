@@ -312,6 +312,7 @@ public class Competences extends BaseServer {
         addController(new YearTransitionController());
         addController(new AppreciationSubjectPeriodController(eb));
         addController(new DigitalSkillsController());
+        addController(new SuperAdminController());
         // Devoir Controller
         DevoirController devoirController = new DevoirController(eb, eventStore);
         SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,
