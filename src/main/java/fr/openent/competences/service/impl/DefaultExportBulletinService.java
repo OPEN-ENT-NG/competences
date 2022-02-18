@@ -396,14 +396,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }));
     }
 
-    public void getParameters(String idStudent, Long idPeriode, String idStructure,
-                              final Handler<Either<String, JsonObject>> finalHandler){
-        String query = "SELECT params FROM " + COMPETENCES_SCHEMA + ".bulletin_parameters WHERE id_student = ? " +
-                "AND id_periode = ? AND id_structure = ?";
-        JsonArray params = new JsonArray().add(idStudent).add(idPeriode).add(idStructure);
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(finalHandler));
-    }
-
     private void logBegin(String method, String idEleve) {
         log.debug("------- [" + method + "]: " + idEleve + " DEBUT " );
     }

@@ -269,15 +269,6 @@ public interface ExportBulletinService {
 
 
 
- /**
-  * Récupération des paramètres de génération du bulletin de l'élève sur la période donnée
-  * @param idStudent
-  * @param idPeriode
-  * @param finalHandler
-  */
- void getParameters(String idStudent, Long idPeriode, String idStructure,
-                    final Handler<Either<String, JsonObject>> finalHandler);
-
  void savePdfInStorage(JsonObject eleve, Buffer file, Handler<Either<String, JsonObject>> handler);
 
  void runSavePdf(JsonObject bulletinEleve, JsonObject bulletin, Vertx vertx, JsonObject config,
