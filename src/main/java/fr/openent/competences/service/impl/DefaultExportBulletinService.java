@@ -3158,7 +3158,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 byte[] bytes = bos.toByteArray();
                 Buffer buffer = Buffer.buffer(bytes);
                 savePdfDefault(buffer, eleve, finalHandler);
-                outStream.close();
                 bos.close();
                 fis.close();
 
@@ -3170,6 +3169,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             log.error("[DefaultExportBulletinService | handleCreateFile] : " + e.getMessage() + " "
                     + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
             finalHandler.handle(new Either.Left<>(e.getMessage()));
+        }
+        finally {
+            try {
+                outStream.close();
+            } catch (IOException e) {
+                finalHandler.handle(new Either.Left<>(e.getMessage()));
+            }
         }
     }
 
