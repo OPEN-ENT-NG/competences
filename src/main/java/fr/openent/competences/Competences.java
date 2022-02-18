@@ -64,8 +64,6 @@ public class Competences extends BaseServer {
     public static final String BFC_SYNTHESE_TABLE = "bfc_synthese";
     public static final String BFC_TABLE = "bilan_fin_cycle";
 
-    public static final String BULLETIN_PARAMETERS_TABLE ="bulletin_parameters";
-
     public static final String CLASS_APPRECIATION_DIGITAL_SKILLS = "class_appreciation_digital_skills";
     public static final String COMPETENCE_NIVEAU_FINAL = "competence_niveau_final";
     public static final String COMPETENCE_NIVEAU_FINAL_ANNUEL = "competence_niveau_final_annuel";
