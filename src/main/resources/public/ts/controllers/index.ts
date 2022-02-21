@@ -1,1 +1,1 @@
-export * from './parameter' 
+export * from './admin-parameter'

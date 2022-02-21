@@ -88,7 +88,7 @@ public class ExportPDFController extends ControllerHelper {
     private final ExportService exportService;
     private final AppreciationService appreciationService;
     private final ExportBulletinService exportBulletinService;
-    private MongoExportService mongoExportService;
+    private final MongoExportService mongoExportService;
     private final Storage storage;
 
     public ExportPDFController(EventBus eb, EmailSender notification, Storage storage) {
@@ -280,14 +280,18 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     private void setFuturesToInsertMongo(JsonObject result, String prefixPdfName, String templateName, JsonObject jsonRequest) {
-        JsonArray students =  result.getJsonArray("classes").getJsonObject(0).getJsonArray("eleves");
-        List<Future<String>> futureArray = mongoExportService.insertDataInMongo(students,result,jsonRequest,prefixPdfName,templateName,SAVE_BFC);
-        FutureHelper.all(futureArray).onSuccess(success ->{
-            log.info(String.format("[Competences@%s::setFuturesToInsertMongo] insert BFC data in Mongo done.", this.getClass().getSimpleName()));
-            eb.send(BulletinWorker.class.getSimpleName(), new JsonObject(), Competences.DELIVERY_OPTIONS);
-        }).onFailure(error ->{
-            log.info(String.format("[Competences@%s::setFuturesToInsertMongo] an error has occurred during insert data in mongo: %s.", this.getClass().getSimpleName(), error.getMessage()));
-        });
+        try {
+            JsonArray students = result.getJsonArray("classes").getJsonObject(0).getJsonArray("eleves");
+            List<Future<String>> futureArray = mongoExportService.insertDataInMongo(students, result, jsonRequest, prefixPdfName, templateName, SAVE_BFC);
+            FutureHelper.all(futureArray).onSuccess(success -> {
+                log.info(String.format("[Competences@%s::setFuturesToInsertMongo] insert BFC data in Mongo done.", this.getClass().getSimpleName()));
+                eb.send(BulletinWorker.class.getSimpleName(), new JsonObject(), Competences.DELIVERY_OPTIONS);
+            }).onFailure(error -> {
+                log.info(String.format("[Competences@%s::setFuturesToInsertMongo] an error has occurred during insert data in mongo: %s.", this.getClass().getSimpleName(), error.getMessage()));
+            });
+        }catch (Exception e){
+            log.error(String.format("[Competnces@%s::setFuturesToInsertMongo] %s ",this.getClass().getSimpleName() , e.getMessage()));
+        }
     }
 
     @Get("/devoirs/print/:idDevoir/formsaisie")

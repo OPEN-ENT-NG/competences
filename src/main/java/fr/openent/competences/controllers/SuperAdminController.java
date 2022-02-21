@@ -21,21 +21,21 @@ import org.entcore.common.http.response.DefaultResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 
 public class SuperAdminController extends ControllerHelper {
-    private MongoExportService mongoExportService;
+    private final MongoExportService mongoExportService;
     public SuperAdminController() {
         super();
         this.mongoExportService = new DefaultMongoExportService();
     }
 
-    @Get("/rapport_archivage")
+    @Get("/admin/archives/report")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SuperAdminFilter.class)
-    @ApiDoc("Render parameter view")
+    @ApiDoc("Render SuperAdmin view")
     public void setting(HttpServerRequest request) {
-        renderView(request, null, "parameter.html", null);
+        renderView(request, null, "admin-parameter.html", null);
     }
 
-    @Get("/exports/logs")
+    @Get("/admin/exports/logs")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SuperAdminFilter.class)
     @ApiDoc("get exports logs")

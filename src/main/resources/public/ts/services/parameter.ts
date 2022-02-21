@@ -17,7 +17,7 @@ export interface ParameterService {
 export const parameterService: ParameterService =  {
     getExports: async (): Promise<Array<ExportError>> => {
         try {
-            const {data}: AxiosResponse = await http.get(`/competences/exports/logs`);
+            const {data}: AxiosResponse = await http.get(`/competences/admin/exports/logs`);
             return data;
         } catch (err) {
             throw err;

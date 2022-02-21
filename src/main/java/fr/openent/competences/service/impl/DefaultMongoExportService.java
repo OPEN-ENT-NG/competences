@@ -113,7 +113,7 @@ public class DefaultMongoExportService implements MongoExportService {
     }
     public void updateWhenSuccess (String fileId, String idExport, Handler<Either<String, Boolean>> handler) {
         try {
-            log.info("[Competences] updating status to SUCCESS in mongo fileId: " + fileId );
+            log.info("[Competences@s::updateWhenSuccess] updating status to SUCCESS in mongo fileId: " + fileId,this.getClass().getSimpleName());
             mongo.updateExport(idExport,"SUCCESS",fileId,"success", event -> {
                 if (event.equals("mongoinsertfailed"))
                     handler.handle(new Either.Left<>("Error when inserting mongo"));
@@ -122,7 +122,7 @@ public class DefaultMongoExportService implements MongoExportService {
                 }
             });
         } catch (Exception error) {
-            log.error("error when update ERROR in export" + error);
+            log.error("[Competences@s::updateWhenSuccess]error when update ERROR in export" + error , this.getClass().getSimpleName());
 
         }
     }

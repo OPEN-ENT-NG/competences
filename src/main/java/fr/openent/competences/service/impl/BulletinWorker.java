@@ -19,7 +19,7 @@ import org.vertx.java.busmods.BusModBase;
 
 public class BulletinWorker extends BusModBase implements Handler<Message<JsonObject>>{
     private Storage storage;
-    private MongoExportService  exportService = new DefaultMongoExportService();
+    private final MongoExportService  exportService = new DefaultMongoExportService();
     private boolean isWorking = false;
     private ExportBulletinService exportBulletinService;
     public static final String SAVE_BULLETIN = "saveBulletin";
@@ -42,17 +42,17 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     public void handle(Message<JsonObject> message) {
         message.reply(new JsonObject().put("status", "ok"));
         if (isSleeping) {
-            logger.info("[Competences BulletinWorker ] Calling BulletinWorker");
+            logger.info(String.format("[Competences@%s] BulletinWorker called " , this.getClass().getSimpleName()) );
             isSleeping = false;
             processExport();
         }
     }
     private void processExport() {
         Handler<Either<String, Boolean>> exportHandler = event -> {
-            logger.info("[Competences BulletinWorker ] exportHandler");
+            logger.info(String.format("[Competences@%s] exportHandler" , this.getClass().getSimpleName()));
             if (event.isRight()) {
                 isWorking = false;
-                logger.info("[Competences BulletinWorker ] export to Waiting");
+                logger.info("[Competences@BulletinWorker ] export to Waiting");
                 processExport();
             } else {
                 log.error(event.left().getValue());
@@ -60,7 +60,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
         };
         exportService.getWaitingExport(event -> {
             if(event.isRight() &&  !event.right().getValue().isEmpty() ){
-                log.info("[Competences BulletinWorker ] getWaitingExport");
+                log.info("[Competences@BulletinWorker::processExport ] getWaitingExport");
                 JsonObject waitingOrder = event.right().getValue();
                 chooseExport( waitingOrder,exportHandler);
             }else{
@@ -81,7 +81,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     private void chooseExport(JsonObject body, Handler<Either<String, Boolean>> exportHandler) {
         final String action = body.getString("action", "");
         JsonObject params = body.getJsonObject("params");
-        log.info("[Competences BulletinWorker ] "+ this.getClass().toString()+ "  Export Type : " + action);
+        log.info("[Competences@BulletinWorker::chooseExport ] "+ this.getClass().toString()+ "  Export Type : " + action);
         switch (action) {
             case SAVE_BULLETIN :
                 if(!isWorking){
@@ -107,10 +107,10 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     public static void catchError(MongoExportService exportService, String idFile, String errorCatchTextOutput) {
         exportService.updateWhenError(idFile,errorCatchTextOutput, makeError -> {
             if (makeError.isLeft()) {
-                log.error("[Competences BulletinWorker ]Error for create file export excel " + makeError.left().getValue() + errorCatchTextOutput);
+                log.error("[Competences@BulletinWorker::catchError ]Error for create file export excel " + makeError.left().getValue() + errorCatchTextOutput);
             }
         });
-        log.error("[Competences BulletinWorker ] Error for create file export excel " + errorCatchTextOutput);
+        log.error("[Competences@BulletinWorker::catchError ] Error for create file export excel " + errorCatchTextOutput);
     }
 
 
@@ -120,21 +120,21 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
             JsonObject params = paramBfc.copy();
             JsonObject bfcToHandle = paramBfc.getJsonObject("eleve").copy();
             bfcToHandle.put("typeExport", TypePDF.BFC.toString());
-            log.info("Process BFC");
+            log.info(String.format("[Competences@%s::processBFC : Process BFC", this.getClass().getSimpleName()));
             exportBulletinService.runSavePdf(bfcToHandle, params, vertx, config, event -> {
                 if (event.isRight()) {
-                    log.info("[Competences BulletinWorker ] process DONE " + event.right().getValue());
+                    log.info("[Competences@BulletinWorker::processBFC  ] process DONE " + event.right().getValue());
                     exportService.updateWhenSuccess(event.right().getValue(), paramBfc.getString("_id"), bfcHandler);
                 }
                 if (event.isLeft()) {
                     catchError(exportService, paramBfc.getString("_id"), "Error while Doing BFC : " + event.left().getValue());
-                    log.error("ERROR [Competences BulletinWorker | processBFC] : " + event.left().getValue());
+                    log.error("ERROR [Competences@BulletinWorker::processBFC] : " + event.left().getValue());
                     bfcHandler.handle(new Either.Left<>(event.left().getValue()));
                 }
             });
         }catch (Exception e){
             catchError(exportService, paramBfc.getString("_id"), "Error while processing  BFC: " + e.getMessage());
-            log.error("ERROR [Competences BulletinWorker | processBFC] : " +  e.getMessage());
+            log.error("ERROR [Competences@BulletinWorker | processBFC] : " +  e.getMessage());
 
         }
     }
@@ -143,24 +143,24 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
         try {
             JsonObject bulletinToHandle = paramBulletin.getJsonObject("eleve").copy();
             paramBulletin.remove("eleve");
-            log.info("[Competences BulletinWorker ] Process BULLETIN");
+            log.info("[Competences@BulletinWorker::processBulletin ] Process BULLETIN");
             bulletinToHandle.put("typeExport", TypePDF.BULLETINS.toString());
             exportBulletinService.runSavePdf(bulletinToHandle, paramBulletin, vertx, config, event -> {
                 isSleeping = true;
                 isWorking = false;
                 if (event.isRight()) {
-                    log.info("[Competences BulletinWorker ] process DONE");
+                    log.info("[Competences@BulletinWorker::processBulletin ] process DONE");
                     exportService.updateWhenSuccess(event.right().getValue(), paramBulletin.getString("_id"), bulletinHandlerWork);
                 }
                 if (event.isLeft()) {
                     catchError(exportService, paramBulletin.getString("_id"), "Error while processing Bulletin : " + event.left().getValue());
-                    log.error("ERROR [BulletinWorker | processBulletin] : " + event.left().getValue());
+                    log.error("ERROR [Competences@BulletinWorker::processBulletin] : " + event.left().getValue());
                     bulletinHandlerWork.handle(new Either.Left<>(event.left().getValue()));
                 }
             });
         } catch (Exception e) {
             catchError(exportService, paramBulletin.getString("_id"), "Error while processing Bulletin : "  + e.getClass().toString() );
-            log.error("ERROR [Competences BulletinWorker | processBFC] : " + e.getMessage() );
+            log.error("ERROR [Competences@BulletinWorker::processBulletin] : " + e.getMessage() );
         }
     }
 }

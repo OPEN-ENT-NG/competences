@@ -27,34 +27,12 @@
     <script type="text/ng-template" id="empty"></script>
 </head>
 
-<body id="mainController" ng-controller="parameterController" class="evaluations vsco--global">
+<body id="mainController" ng-controller="adminParameterController" class="evaluations vsco--global">
 <portal>
-    <!--    <container template="main"></container>-->
-    <!--    <lightbox show="opened.lightbox" on-close="opened.lightbox=false">-->
-    <!--        <container template="lightboxContainer"></container>-->
-    <!--    </lightbox>-->
-    <!--    <nav class="cell vertical menu-accueil mobile-navigation vsco_navigation" side-nav>-->
-    <!--        <ul>-->
-    <!--            <li><a href="#/"><i18n>home</i18n></a></li>-->
-    <!--            <li ng-if="canCreateEval()"><a href="#/devoirs/list"><i18n>evaluations.test.list</i18n></a></li>-->
-    <!--            <li ng-if="canAccessReleve()"><a href="#/releve"><i18n>evaluations.releve.title</i18n></a></li>-->
-    <!--            <li ng-if="canAccessSuiviEleve()"><a href="#/competences/eleve"><i18n>evaluations.suivi.eleve.title</i18n></a></li>-->
-    <!--            <li ng-if="canAccessSuiviClasse()"><a href="#/competences/classe"><i18n>evaluations.suivi.classe.title</i18n></a></li>-->
-    <!--            <li ng-if="canAccessProjets()"><a href="#/projets"><i18n>evaluations.saisie.projets.title</i18n></a></li>-->
-    <!--            <li ng-if="canAccessConseil()"><a href="#/conseil/de/classe"><i18n>evaluations.conseil.de.classe</i18n></a></li>-->
-    <!--            <li ng-if="canAccessExport()"><a href="#/export"><i18n>evaluations.exports</i18n></a></li>-->
-    <!--            <li ng-if="canAccessBulletin()"><a href="#/bulletin"><i18n>evaluations.generate.bulletin</i18n></a></li>-->
-    <!--        </ul>-->
-    <!--    </nav>-->
-    <!--    <structure-loader display="opened.displayStructureLoader"-->
-    <!--                      structure-name="buildLoadingMessageStructure(structure.libelle);">-->
-    <!--    </structure-loader>-->
-    <!--    <message-loader display="opened.displayMessageLoader">-->
-    <!--    </message-loader>-->
 </portal>
 
 <br/>
-<div class="row" style="padding-left: 1em;" ng-if="exports.length > 0">
+<div class="row" style="padding-left: 1em;" ng-show="exports.length > 0">
         <div class="twelve cell row">
         <div class="three cell"><b><i18n>viescolaire.utils.school</i18n></b></div>
         <div class="one cell"><b><i18n>viescolaire.utils.class</i18n></b></div>
@@ -68,7 +46,7 @@
             <div class="six cell">[[export.log]]</div>
         </div>
 </div>
-<div  style="padding-left: 1em;" class="row" ng-if="exports.length === 0">
+<div  style="padding-left: 1em;" class="row" ng-show="exports.length === 0">
 <div><i18n>no.errors.while.archive.mongo</i18n></div>
 </div>
 </body>
