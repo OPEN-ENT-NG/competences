@@ -3449,6 +3449,21 @@ body.evaluations {
       background-position: 95%;
     }
   }
+
+  .archives-margin{
+    margin:5%;
+  }
+
+  .archives-frame{
+    background-color:#f4f3f3;
+    border: solid grey;
+    margin-top: 2%;
+  }
+
+  .archives-list-margin{
+    margin-bottom:1%;
+  }
+
 }
 
 
@@ -3686,3 +3701,4 @@ i.eye-open-orange.eye-grey-color::before {
 i.eye-open-orange.eye-white-color::before {
   color: white !important;
 }
+
