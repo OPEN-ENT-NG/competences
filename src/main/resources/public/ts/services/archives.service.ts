@@ -6,18 +6,18 @@ import {Period} from "../models/common/Periode";
 
 
 export interface IArchivesService {
-    getArchivesBFC(idStructure: String): Promise<Array<any>>;
-    getArchivesBulletins(idStructure: String): Promise<Array<any>>;
+    getArchivesBFC(idStructure: String): Promise<Array<ArchiveBFC>>;
+    getArchivesBulletins(idStructure: String): Promise<Array<ArchiveBulletin>>;
 }
 
 export const archivesService: IArchivesService = {
     getArchivesBFC: async (idStructure: String): Promise<Array<ArchiveBFC>> => {
-        const {data} = await http.get(`/competences/bfc/archive?idEtablissement=${idStructure}`);
+        const {data} = await http.get(`/competences/archiveBFC?idEtablissement=${idStructure}`);
         return data as Array<ArchiveBFC>;
     },
 
     getArchivesBulletins: async (idStructure: String): Promise<Array<ArchiveBulletin>> => {
-        const {data} = await http.get(`/competences/bulletins/archive?idEtablissement=${idStructure}`);
+        const {data} = await http.get(`/competences/archiveBulletin?idEtablissement=${idStructure}`);
         return data as Array<ArchiveBulletin>;
     }
 };

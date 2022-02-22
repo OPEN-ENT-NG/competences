@@ -30,7 +30,6 @@ import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
@@ -65,7 +64,7 @@ public class BFCController extends ControllerHelper {
     private final EleveEnseignementComplementService eleveEnseignementComplement;
     private final NiveauEnsComplementService niveauEnsComplementService;
     private final Storage storage;
-    private final BulletinsService bulletinsService;
+    private final ArchiveService bulletinsService;
 
     public BFCController(EventBus eb, Storage storage) {
         this.eb = eb;
@@ -78,7 +77,7 @@ public class BFCController extends ControllerHelper {
                 ELEVE_ENSEIGNEMENT_COMPLEMENT);
         niveauEnsComplementService = new DefaultNiveauEnsComplement(COMPETENCES_SCHEMA,NIVEAU_ENS_COMPLEMENT);
         this.storage = storage;
-        bulletinsService = new DefaultBulletinsBFCService();
+        bulletinsService = new DefaultArchiveBFCService();
     }
 
     /**
@@ -584,19 +583,5 @@ public class BFCController extends ControllerHelper {
         String idStructure = request.params().get("idStructure");
         String idYear = request.params().get("idYear");
         ArchiveUtils.getArchiveBFCZip(idStructure, idYear, request, eb, storage, vertx);
-    }
-
-    @Get("/bfc/archive")
-    @ApiDoc("Retourne les archives BFC d'un établissement donné.")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    //@ResourceFilter(AccessBFCFilter.class) //TODO : Voir quel filtre faut mettre
-    public void getBFC(final HttpServerRequest request) {
-        if (request.params().contains("idEtablissement")) {
-            String idEtablissement = request.params().get("idEtablissement");
-            bulletinsService.getBulletinsCount(idEtablissement, arrayResponseHandler(request));
-
-        } else {
-            Renders.badRequest(request, "Invalid parameters");
-        }
     }
 }

@@ -297,6 +297,8 @@ public class Competences extends BaseServer {
         addController(new AnnotationController());
         addController(new AppreciationController());
         addController(new BFCController(eb, storage));
+        addController(new ArchiveBFCController(eb));
+        addController(new ArchiveBulletinController(eb));
         addController(new CompetenceController(eb));
         addController(new CompetenceNoteController(eb));
         addController(new ModaliteController());

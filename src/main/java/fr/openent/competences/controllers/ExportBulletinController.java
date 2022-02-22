@@ -1,6 +1,5 @@
 package fr.openent.competences.controllers;
 
-import fr.openent.competences.Utils;
 import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.security.AccessExportBulletinFilter;
 import fr.openent.competences.service.*;
@@ -37,7 +36,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
-import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class ExportBulletinController extends ControllerHelper {
@@ -46,7 +44,7 @@ public class ExportBulletinController extends ControllerHelper {
     private final Storage storage;
     private WorkspaceHelper workspaceHelper;
     private EventStore eventStore;
-    private final BulletinsService bulletinsService;
+    private final ArchiveService bulletinsService;
 
 
     public ExportBulletinController(EventBus eb, Storage storage, EventStore eventStore) {
@@ -55,7 +53,7 @@ public class ExportBulletinController extends ControllerHelper {
         this.eventStore = eventStore;
         this.workspaceHelper = new WorkspaceHelper(eb, storage);
         exportBulletinService = new DefaultExportBulletinService(eb, storage);
-        bulletinsService = new DefaultBulletinsService();
+        bulletinsService = new DefaultArchiveBulletinService();
 
     }
 
@@ -225,20 +223,5 @@ public class ExportBulletinController extends ControllerHelper {
         });
 
     }
-
-    @Get("/bulletins/archive")
-    @ApiDoc("Retourne les archives de bulletins d'un établissement donné.")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    //@ResourceFilter(AccessBFCFilter.class) //TODO : Voir quel filtre faut mettre
-    public void getBulletins(final HttpServerRequest request) {
-        if (request.params().contains("idEtablissement")) {
-            String idEtablissement = request.params().get("idEtablissement");
-            bulletinsService.getBulletinsCount(idEtablissement, DefaultResponseHandler.arrayResponseHandler(request));
-
-        } else {
-            Renders.badRequest(request, "Invalid parameters");
-        }
-    }
-
 
 }
