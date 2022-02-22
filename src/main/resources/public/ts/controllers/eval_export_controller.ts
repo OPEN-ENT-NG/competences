@@ -444,7 +444,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         }
 
         $scope.loadArchiveBulletinsPerPeriode = function (type_periode): String {
-            let count = $scope.archivesBulletinsActualYear.filter(function(archive){
+            let count: number = $scope.archivesBulletinsActualYear.filter(function(archive){
                 return archive.id_periode === type_periode.id;
             }).length;
 
