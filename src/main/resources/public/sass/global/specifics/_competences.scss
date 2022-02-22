@@ -3444,9 +3444,9 @@ body.evaluations {
     .backgroundExportImage{
       background-image: url(/competences/public/img/export_image.svg);
       background-repeat: no-repeat;
-      background-size: contain;
       background-origin: content-box;
-      background-position: 95%;
+      background-position: 95% 15%;
+      background-size: 40%;
     }
   }
 
@@ -3456,7 +3456,7 @@ body.evaluations {
 
   .archives-frame{
     background-color:#f4f3f3;
-    border: solid grey;
+    border: dotted grey;
     margin-top: 2%;
   }
 
