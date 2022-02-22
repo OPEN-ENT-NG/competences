@@ -12,12 +12,12 @@ export interface IArchivesService {
 
 export const archivesService: IArchivesService = {
     getArchivesBFC: async (idStructure: String): Promise<Array<ArchiveBFC>> => {
-        const {data} = await http.get(`/competences/archiveBFC?idEtablissement=${idStructure}`);
+        const {data} = await http.get(`/competences/archive-bfc?idEtablissement=${idStructure}`);
         return data as Array<ArchiveBFC>;
     },
 
     getArchivesBulletins: async (idStructure: String): Promise<Array<ArchiveBulletin>> => {
-        const {data} = await http.get(`/competences/archiveBulletin?idEtablissement=${idStructure}`);
+        const {data} = await http.get(`/competences/archive-bulletin?idEtablissement=${idStructure}`);
         return data as Array<ArchiveBulletin>;
     }
 };

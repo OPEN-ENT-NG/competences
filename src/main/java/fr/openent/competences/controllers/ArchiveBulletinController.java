@@ -24,7 +24,7 @@ public class ArchiveBulletinController extends ControllerHelper {
         archiveService = new DefaultArchiveBulletinService();
     }
 
-    @Get("/archiveBulletin")
+    @Get("/archive-bulletin")
     @ApiDoc("Retourne les archives de bulletins d'un établissement donné.")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getArchivesBulletins(final HttpServerRequest request) {

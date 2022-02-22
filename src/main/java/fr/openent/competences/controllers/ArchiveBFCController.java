@@ -24,7 +24,7 @@ public class ArchiveBFCController extends ControllerHelper {
         archiveService = new DefaultArchiveBFCService();
     }
 
-    @Get("/archiveBFC")
+    @Get("/archive-bfc")
     @ApiDoc("Retourne les archives BFC d'un établissement donné.")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getArchivesBFC(final HttpServerRequest request) {

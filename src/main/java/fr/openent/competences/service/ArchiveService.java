@@ -6,7 +6,7 @@ import io.vertx.core.json.JsonArray;
 
 public interface ArchiveService {
     /**
-     * Récupère le nombre de bulletins dans un
+     * Récupère les archives d'une structure.
      * @param idStructure
      * @param handler
      */
