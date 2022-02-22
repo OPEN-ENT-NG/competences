@@ -15,6 +15,9 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+/* Color Variables */
+$eval-lighter-grey: #f4f3f3;
+
 body.evaluations {
   .select:not(button) {
     select{
@@ -3455,7 +3458,7 @@ body.evaluations {
   }
 
   .archives-frame{
-    background-color:#f4f3f3;
+    background-color:$eval-lighter-grey;
     border: dotted grey;
     margin-top: 2%;
     margin-bottom: 1%;
