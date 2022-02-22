@@ -1,0 +1,54 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département de la Seine-et-Marne, CGI, 2016.
+  ~     This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~   This program is free software; you can redistribute it and/or modify
+  ~   it under the terms of the GNU Affero General Public License as
+  ~   published by the Free Software Foundation (version 3 of the License).
+  ~   For the sake of explanation, any module that communicate over native
+  ~   Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~   license and could be license under its own terms. This is merely considered
+  ~   normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~   This program is distributed in the hope that it will be useful,
+  ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>{{#i18n}}evaluations.title{{/i18n}}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1" />
+    <script src="/competences/public/dist/entcore/ng-app.js" id="context" type="text/javascript"></script>
+    <script src="/competences/public/dist/parameter.js" type="text/javascript"></script>
+    <script type="text/ng-template" id="empty"></script>
+</head>
+
+<body id="mainController" ng-controller="adminParameterController" class="evaluations vsco--global">
+<portal>
+</portal>
+
+<br/>
+<div class="row" style="padding-left: 1em;" ng-show="exports.length > 0">
+        <div class="twelve cell row">
+        <div class="three cell"><b><i18n>viescolaire.utils.school</i18n></b></div>
+        <div class="one cell"><b><i18n>viescolaire.utils.class</i18n></b></div>
+        <div class="two cell"><b><i18n>viescolaire.utils.student</i18n></b></div>
+        <div class="six cell"><b><i18n>competences.parameter.log.error.export</i18n></b></div>
+        </div>
+        <div class="twelve row" ng-repeat="export in exports">
+            <div class="three cell">[[export.params.eleve.structure]]</div>
+            <div class="one cell">[[export.params.eleve.classeName]]</div>
+            <div class="two cell">[[export.params.eleve.firstName]] - [[export.params.eleve.lastName]] </div>
+            <div class="six cell">[[export.log]]</div>
+        </div>
+</div>
+<div  style="padding-left: 1em;" class="row" ng-show="exports.length === 0">
+<div><i18n>no.errors.while.archive.mongo</i18n></div>
+</div>
+</body>
+
+</html>

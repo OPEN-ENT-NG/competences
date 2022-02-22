@@ -21,12 +21,14 @@ public interface MongoExportService {
 
     List<Future<String>> insertDataInMongo(JsonArray students, JsonObject params, JsonObject request, String title, String template, String typeExport);
 
-    void updateWhenError(String idExport, Handler<Either<String, Boolean>> handler);
+    void updateWhenError(String idExport,String errorMessage, Handler<Either<String, Boolean>> handler);
 
     void updateWhenSuccess(String fileId, String idExport, Handler<Either<String, Boolean>> handler);
 
 
     void getWaitingExport(Handler<Either<String, JsonObject>> handler);
+
+    void getErrorExport(Handler<Either<String, JsonArray>> handler);
 
     void updateWhenErrorTimeout(String idFile,  Handler<Either<String, Boolean>> handler);
 }
