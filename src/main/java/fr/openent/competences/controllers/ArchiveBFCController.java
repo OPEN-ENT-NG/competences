@@ -12,6 +12,8 @@ import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.SuperAdminFilter;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 
@@ -27,6 +29,7 @@ public class ArchiveBFCController extends ControllerHelper {
     @Get("/archive-bfc")
     @ApiDoc("Retourne les archives BFC d'un établissement donné.")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ResourceFilter(SuperAdminFilter.class)
     public void getArchivesBFC(final HttpServerRequest request) {
         if (request.params().contains("idEtablissement")) {
             String idEtablissement = request.params().get("idEtablissement");
