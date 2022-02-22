@@ -30,7 +30,7 @@ public class DefaultMongoService extends MongoDbCrudService implements MongoServ
         }
     }
     @Override
-    public void updateExport(String idExport, String status, String fileId, Handler<String> handler){
+    public void updateExport(String idExport, String status, String fileId,String log, Handler<String> handler){
         try {
             final JsonObject matches = new JsonObject().put("_id", idExport);
             mongo.findOne(this.collection, matches , MongoDbResult.validResultHandler(either -> {
@@ -43,6 +43,7 @@ public class DefaultMongoService extends MongoDbCrudService implements MongoServ
                         exportProperties.put(STATUS, status);
                         if (!fileId.isEmpty())
                             exportProperties.put("fileId", fileId);
+                        exportProperties.put("log",log);
                         mongo.save(collection, exportProperties, event -> {
                             if (!event.body().getString("status").equals("ok")) {
                                 handler.handle("mongoinsertfailed");
@@ -68,7 +69,7 @@ public class DefaultMongoService extends MongoDbCrudService implements MongoServ
         mongo.findOne(collection, new JsonObject().put("status","WAITING"),  MongoDbResult.validResultHandler(handler));
     }
     @Override
-    public void getExport(JsonObject params, Handler<Either<String, JsonArray>> handler) {
+    public void getExports(JsonObject params, Handler<Either<String, JsonArray>> handler) {
         mongo.find(collection, params, MongoDbResult.validResultsHandler(handler));
     }
 

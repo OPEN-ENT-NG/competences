@@ -747,6 +747,23 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         };
     }
 
+    private List<Future<String>> insertDataInMongo(JsonObject resultFinal) {
+        JsonObject common  = resultFinal.copy();
+        common.remove("eleves");
+        JsonArray students = resultFinal.getJsonArray("eleves");
+        List<Future<String>> futureArray= new ArrayList<>();
+        for(Object studentJO : students){
+            JsonObject student = (JsonObject) studentJO;
+                    student.remove("u.deleteDate");
+            common.put("eleve",student);
+            Promise<String> promise = Promise.promise();
+            mongoExportService.createWhenStart("pdf", common,
+                    SAVE_BULLETIN,promise);
+            futureArray.add(promise.future());
+        }
+        return futureArray;
+    }
+
     @Override
     public Handler<Either<String, JsonObject>> getFinalBulletinHandler(final HttpServerRequest request,
                                                                        Map<String, JsonObject> elevesMap,
@@ -3141,7 +3158,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 byte[] bytes = bos.toByteArray();
                 Buffer buffer = Buffer.buffer(bytes);
                 savePdfDefault(buffer, eleve, finalHandler);
-                outStream.close();
                 bos.close();
                 fis.close();
 
@@ -3153,6 +3169,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             log.error("[DefaultExportBulletinService | handleCreateFile] : " + e.getMessage() + " "
                     + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
             finalHandler.handle(new Either.Left<>(e.getMessage()));
+        }
+        finally {
+            try {
+                outStream.close();
+            } catch (IOException e) {
+                finalHandler.handle(new Either.Left<>(e.getMessage()));
+            }
         }
     }
 
