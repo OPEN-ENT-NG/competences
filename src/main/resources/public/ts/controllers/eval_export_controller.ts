@@ -24,6 +24,7 @@ import {LSU_TYPE_EXPORT} from "../models/common/LSU";
 import {STSFile, STSFiles} from "../models/common/STSFile";
 import {Archives} from "../models/common/Archives";
 import http from "axios";
+import {archivesService} from "../services/archives.service";
 
 export let exportControleur = ng.controller('ExportController', ['$scope',
     async function ($scope) {
@@ -422,16 +423,19 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             $scope.archivesBFC = [];
             $scope.archivesBulletins = [];
 
-            let urlBFC = '/competences/bfc/archive?idEtablissement=' + $scope.structure.id;
+            /*let urlBFC = '/competences/bfc/archive?idEtablissement=' + $scope.structure.id;
             await http.get(urlBFC).then(function (data) {
                 $scope.archiveBFC = data.data;
-            });
+            });*/
 
-            let urlBulletins = '/competences/bulletins/archive?idEtablissement=' + $scope.structure.id;
+            $scope.archiveBFC = await archivesService.getArchivesBFC($scope.structure.id);
+            $scope.archivesBulletins = await archivesService.getArchivesBulletins($scope.structure.id);
+
+           /* let urlBulletins = '/competences/bulletins/archive?idEtablissement=' + $scope.structure.id;
             await http.get(urlBulletins).then(function (data) {
                 $scope.archivesBulletins = data.data;
             });
-
+*/
             $scope.archivesBFCActualYear = _.filter($scope.archivesBFC , (bfc) => {
                 return bfc.id_annee === $scope.paramsArchive.year;
             });
