@@ -120,6 +120,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
             JsonObject params = paramBfc.copy();
             JsonObject bfcToHandle = paramBfc.getJsonObject("eleve").copy();
             bfcToHandle.put("typeExport", TypePDF.BFC.toString());
+            bfcToHandle.put("idCycle", paramBfc.getInteger("idCycle"));
             log.info(String.format("[Competences@%s::processBFC : Process BFC", this.getClass().getSimpleName()));
             exportBulletinService.runSavePdf(bfcToHandle, params, vertx, config, event -> {
                 if (event.isRight()) {
