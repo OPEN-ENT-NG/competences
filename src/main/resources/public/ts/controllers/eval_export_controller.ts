@@ -369,6 +369,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
 
         $scope.getYearsAndPeriodes = async function () {
             $scope.currentYearTypesPeriodes = [];
+            $scope.cycles = $scope.structure.cycles;
             $scope.years = [];
 
             let url = '/competences/archive/years?idStructure=' + $scope.structure.id +
@@ -423,7 +424,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             $scope.archivesBFC = [];
             $scope.archivesBulletins = [];
 
-            $scope.archiveBFC = await archivesService.getArchivesBFC($scope.structure.id);
+            $scope.archivesBFC = await archivesService.getArchivesBFC($scope.structure.id);
             $scope.archivesBulletins = await archivesService.getArchivesBulletins($scope.structure.id);
 
             $scope.archivesBFCActualYear = _.filter($scope.archivesBFC , (bfc) => {
@@ -435,12 +436,12 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
 
         }
 
-        $scope.loadArchiveBFCPerPeriode = function (type_periode): String {
+        $scope.loadArchiveBFCPerCycle = function (cycle): String {
             let count: number = $scope.archivesBFCActualYear.filter(function(archive){
-                return archive.id_periode === type_periode.id;
+                return archive.id_cycle === cycle.id_cycle;
             }).length;
 
-            return $scope.getPeriodeLibelle(type_periode) + " : " + count + lang.translate("evaluations.archives.bfc.archived");
+            return cycle.libelle + " : " + count + lang.translate("evaluations.archives.bfc.archived");
         }
 
         $scope.loadArchiveBulletinsPerPeriode = function (type_periode): String {
