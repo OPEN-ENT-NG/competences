@@ -33,21 +33,23 @@
 
 <br/>
 <div class="row" style="padding-left: 1em;" ng-show="exports.length > 0">
-        <div class="twelve cell row">
-        <div class="three cell"><b><i18n>viescolaire.utils.school</i18n></b></div>
+    <div class="twelve cell row">
+        <div class="one cell"><b><i18n>parameter.archive.date</i18n></b></div>
+        <div class="two cell"><b><i18n>viescolaire.utils.school</i18n></b></div>
         <div class="one cell"><b><i18n>viescolaire.utils.class</i18n></b></div>
         <div class="two cell"><b><i18n>viescolaire.utils.student</i18n></b></div>
         <div class="six cell"><b><i18n>competences.parameter.log.error.export</i18n></b></div>
-        </div>
-        <div class="twelve row" ng-repeat="export in exports">
-            <div class="three cell">[[export.params.eleve.structure]]</div>
-            <div class="one cell">[[export.params.eleve.classeName]]</div>
-            <div class="two cell">[[export.params.eleve.firstName]] - [[export.params.eleve.lastName]] </div>
-            <div class="six cell">[[export.log]]</div>
-        </div>
+    </div>
+    <div class="twelve row" ng-repeat="export in exports">
+        <div class="one cell">[[export.created]]</div>
+        <div class="two cell">[[export.params.eleve.structure]]</div>
+        <div class="one cell">[[export.params.eleve.classeName]]</div>
+        <div class="two cell">[[export.params.eleve.firstName]] - [[export.params.eleve.lastName]] </div>
+        <div class="six cell">[[export.log]]</div>
+    </div>
 </div>
 <div  style="padding-left: 1em;" class="row" ng-show="exports.length === 0">
-<div><i18n>no.errors.while.archive.mongo</i18n></div>
+    <div><i18n>no.errors.while.archive.mongo</i18n></div>
 </div>
 </body>
 

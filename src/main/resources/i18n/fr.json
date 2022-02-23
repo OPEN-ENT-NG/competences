@@ -801,5 +801,6 @@
   "competences.memento.widget.subject.detail.no.notes": "Il n'y a pas de notes pour les filtres sélectionnés",
   "competences.memento.notes.init.failed": "Une erreur est survenue lors du chargement du widget notes",
   "competences.parameter.log.error.export": "Message d'erreur",
-  "no.errors.while.archive.mongo": "Aucune erreur lors de l'archivage"
+  "no.errors.while.archive.mongo": "Aucune erreur lors de l'archivage",
+  "parameter.archive.date" : "Date de l'export"
 }
