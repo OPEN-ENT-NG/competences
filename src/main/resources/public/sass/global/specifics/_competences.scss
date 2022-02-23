@@ -15,6 +15,9 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+/* Color Variables */
+$eval-lighter-grey: #f4f3f3;
+
 body.evaluations {
   .select:not(button) {
     select{
@@ -3444,11 +3447,27 @@ body.evaluations {
     .backgroundExportImage{
       background-image: url(/competences/public/img/export_image.svg);
       background-repeat: no-repeat;
-      background-size: contain;
       background-origin: content-box;
-      background-position: 95%;
+      background-position: 95% 15%;
+      background-size: 40%;
     }
   }
+
+  .archives-margin{
+    margin:2.5%;
+  }
+
+  .archives-frame{
+    background-color:$eval-lighter-grey;
+    border: dotted grey;
+    margin-top: 2%;
+    margin-bottom: 1%;
+  }
+
+  .archives-list-margin{
+    margin-bottom:1%;
+  }
+
 }
 
 
@@ -3686,3 +3705,4 @@ i.eye-open-orange.eye-grey-color::before {
 i.eye-open-orange.eye-white-color::before {
   color: white !important;
 }
+

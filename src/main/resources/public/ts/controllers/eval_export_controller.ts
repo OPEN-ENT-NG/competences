@@ -24,6 +24,7 @@ import {LSU_TYPE_EXPORT} from "../models/common/LSU";
 import {STSFile, STSFiles} from "../models/common/STSFile";
 import {Archives} from "../models/common/Archives";
 import http from "axios";
+import {archivesService} from "../services/archives.service";
 
 export let exportControleur = ng.controller('ExportController', ['$scope',
     async function ($scope) {
@@ -55,7 +56,8 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                     idStructure: $scope.structure.id
                 };
             }
-            $scope.getYearsAndPeriodes();
+            await $scope.getYearsAndPeriodes();
+            await $scope.getArchives();
             await utils.safeApply($scope);
         }
 
@@ -365,13 +367,13 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             });
         };
 
-        $scope.getYearsAndPeriodes = function () {
+        $scope.getYearsAndPeriodes = async function () {
             $scope.currentYearTypesPeriodes = [];
             $scope.years = [];
 
             let url = '/competences/archive/years?idStructure=' + $scope.structure.id +
                 '&type=' + $scope.paramsArchive.type;
-            http.get(url).then(function (data) {
+            await http.get(url).then(function (data) {
                 if(data.status === 200){
                     let res = data.data;
 
@@ -416,6 +418,40 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         $scope.getPeriodeLibelle = function (type_periode) {
             return lang.translate("viescolaire.periode." + type_periode.type) + " " + type_periode.ordre
         }
+
+        $scope.getArchives = async function () {
+            $scope.archivesBFC = [];
+            $scope.archivesBulletins = [];
+
+            $scope.archiveBFC = await archivesService.getArchivesBFC($scope.structure.id);
+            $scope.archivesBulletins = await archivesService.getArchivesBulletins($scope.structure.id);
+
+            $scope.archivesBFCActualYear = _.filter($scope.archivesBFC , (bfc) => {
+                return bfc.id_annee === $scope.paramsArchive.year;
+            });
+            $scope.archivesBulletinsActualYear = _.filter($scope.archivesBulletins , (bulletin) => {
+                return bulletin.id_annee === $scope.paramsArchive.year;
+            });
+
+        }
+
+        $scope.loadArchiveBFCPerPeriode = function (type_periode): String {
+            let count: number = $scope.archivesBFCActualYear.filter(function(archive){
+                return archive.id_periode === type_periode.id;
+            }).length;
+
+            return $scope.getPeriodeLibelle(type_periode) + " : " + count + lang.translate("evaluations.archives.bfc.archived");
+        }
+
+        $scope.loadArchiveBulletinsPerPeriode = function (type_periode): String {
+            let count: number = $scope.archivesBulletinsActualYear.filter(function(archive){
+                return archive.id_periode === type_periode.id;
+            }).length;
+
+            return $scope.getPeriodeLibelle(type_periode) + " : " + count + lang.translate("evaluations.archives.bulletins.archived");
+        }
+
+        $scope.filter
         /*********************************************************************************************
          * Séquence exécuté au chargement du controleur
          *********************************************************************************************/

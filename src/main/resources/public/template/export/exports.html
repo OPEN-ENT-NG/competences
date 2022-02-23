@@ -186,6 +186,24 @@
                     <i18n>evaluations.archives.done</i18n>
                 </span>
             </div>
+
+            <div class="archives-frame six vertical-spacing">
+                <div class="archives-margin">
+                    <h3><i18n>evaluations.archives.rapport</i18n></h3>
+                </div>
+                <div class="archives-margin">
+                    <h4><i18n>evaluations.archives.bulletins</i18n></h4>
+                    <div ng-repeat="type_periode in currentYearTypesPeriodes | orderBy:'id'" class="archives-list-margin">
+                        <span>[[loadArchiveBulletinsPerPeriode(type_periode)]]</span>
+                    </div>
+                </div>
+                <div class="archives-margin">
+                    <h4><i18n>evaluations.archives.bfc</i18n></h4>
+                    <div ng-repeat="type_periode in currentYearTypesPeriodes | orderBy:'id'" class="archives-list-margin">
+                        <span>[[loadArchiveBFCPerPeriode(type_periode)]]</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </article>
 </div>

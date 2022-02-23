@@ -30,7 +30,6 @@ import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
@@ -65,6 +64,7 @@ public class BFCController extends ControllerHelper {
     private final EleveEnseignementComplementService eleveEnseignementComplement;
     private final NiveauEnsComplementService niveauEnsComplementService;
     private final Storage storage;
+    private final ArchiveService bulletinsService;
 
     public BFCController(EventBus eb, Storage storage) {
         this.eb = eb;
@@ -77,6 +77,7 @@ public class BFCController extends ControllerHelper {
                 ELEVE_ENSEIGNEMENT_COMPLEMENT);
         niveauEnsComplementService = new DefaultNiveauEnsComplement(COMPETENCES_SCHEMA,NIVEAU_ENS_COMPLEMENT);
         this.storage = storage;
+        bulletinsService = new DefaultArchiveBFCService();
     }
 
     /**
