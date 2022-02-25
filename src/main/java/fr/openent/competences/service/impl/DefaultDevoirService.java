@@ -1827,7 +1827,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         result.put("coefficient", devoirJson.getString("coefficient"));
 
         String note = devoirJson.getString("note");
-        result.put("note", note != null ? note : "NN");
+        String libelle_court = devoirJson.getString("libelle_court");
+        result.put("note", note != null ? note : (libelle_court != null ? libelle_court : "NN"));
 
         String sum_notes = devoirJson.getString("sum_notes");
         Long nbr_eleves = devoirJson.getLong("nbr_eleves");
