@@ -82,7 +82,7 @@ export class Structure extends Model {
                 synchronization: '/competences/enseignements'
             },
             MATIERE: {
-                synchronization: '/viescolaire/matieresFilteredByServices?idEtablissement=' + this.id,
+                synchronization: '/viescolaire/matieres/services-filter?idEtablissement=' + this.id,
             },
             CLASSE: {
                 synchronization: '/viescolaire/classes?idEtablissement=' + this.id,
