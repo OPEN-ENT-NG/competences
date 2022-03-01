@@ -171,6 +171,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir = $scope.initDevoir();
                     $scope.devoir.apprec_visible = false;
                     $scope.devoir.id_groupe = devoirTmp.id_groupe;
+
+                    $scope.devoir.classe = _.findWhere($scope.structure.classes.all, {id : $scope.devoir.id_groupe});
+                    if(Utils.isNotNull($scope.devoir.classe) && Utils.isNotNull($scope.devoir.classe.periodes) &&
+                        _.isEmpty($scope.devoir.classe.periodes.all)){
+                        await $scope.devoir.classe.periodes.sync();
+                    }
+                    if(Utils.isNotNull($scope.devoir.classe) && Utils.isNotNull($scope.devoir.classe.periodes)) {
+                        $scope.filteredPeriode = $scope.devoir.classe.periodes.all;
+
                     $scope.devoir.old_id_groupe = devoirTmp.id_groupe;
                     $scope.devoir.id = devoirTmp.id;
                     $scope.devoir.name = devoirTmp.name;
