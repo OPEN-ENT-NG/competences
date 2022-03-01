@@ -426,14 +426,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             textMod: true
                         };
                         $scope.showRechercheBar = false;
-                        if (!Utils.isChefEtabOrHeadTeacher()) {
-                            http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id).done(function (res) {
-                                $scope.allMatieresSorted = _.sortBy(res, 'rank');
-                                utils.safeApply($scope);
-                            });
-                        } else {
-                            $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
-                        }
 
                         if ($scope.informations.eleve === undefined) {
                             $scope.informations.eleve = null;
@@ -493,15 +485,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         template.open('main', 'enseignants/suivi_competences_classe/container');
                         await utils.safeApply($scope);
                     };
-                    if (!Utils.isChefEtabOrHeadTeacher()) {
-                        http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id)
-                            .done(async function (res) {
-                                $scope.allMatieresSorted = _.sortBy(res, 'rank');
-                                await utils.safeApply($scope);
-                            });
-                    } else {
-                        $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
-                    }
                     if (params.idClasse != undefined) {
                         let classe: Classe = evaluations.classes.findWhere({id: params.idClasse});
                         $scope.search.classe = classe;
@@ -3481,14 +3464,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     textMod: true
                 };
                 $scope.showRechercheBar = false;
-                if (!Utils.isChefEtabOrHeadTeacher()) {
-                    http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
-                        $scope.allMatieresSorted = _.sortBy(res, 'rank');
-                        utils.safeApply($scope);
-                    });
-                } else {
-                    $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'rank');
-                }
 
                 if ($scope.informations.eleve === undefined) {
                     $scope.informations.eleve = null;
