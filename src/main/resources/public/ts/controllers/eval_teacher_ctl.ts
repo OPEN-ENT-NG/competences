@@ -177,7 +177,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         _.isEmpty($scope.devoir.classe.periodes.all)){
                         await $scope.devoir.classe.periodes.sync();
                     }
-                    if(Utils.isNotNull($scope.devoir.classe) && Utils.isNotNull($scope.devoir.classe.periodes)) {
+                    if(Utils.isNotNull($scope.devoir.classe) && Utils.isNotNull($scope.devoir.classe.periodes))
                         $scope.filteredPeriode = $scope.devoir.classe.periodes.all;
 
                     $scope.devoir.old_id_groupe = devoirTmp.id_groupe;
