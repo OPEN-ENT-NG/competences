@@ -32,8 +32,8 @@ export const LSU_UNHEEDED_STUDENT_ACTION = {
 };
 
 export const LSU_TYPE_EXPORT = {
-    BILAN_PERIODIQUE : '1',
-    BFC: '2'
+    BILAN_PERIODIQUE : '2',
+    BFC: '1'
 }
 export class LSU {
     responsables: Array<Responsable>;

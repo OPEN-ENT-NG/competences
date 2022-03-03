@@ -456,7 +456,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
         /*********************************************************************************************
          * Séquence exécuté au chargement du controleur
          *********************************************************************************************/
-        await initparams("1","bfc");
+        await initparams("2","bfc");
         $scope.getResponsablesAndClasses();
         $scope.initSelectStsFiles();
     }
