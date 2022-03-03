@@ -1545,11 +1545,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                          JsonArray moyennesFinales, JsonArray matieres, JsonArray services,
                                          JsonArray allMultiTeachers, ArrayList<Future> resultsFuture,
                                          Handler<Either<String, JsonObject>> handler) {
-        devoirs.addAll(annotations).addAll(moyennesFinales).forEach(devoir -> {
+        devoirs.addAll(annotations);
+        devoirs.addAll(moyennesFinales);
+        devoirs.forEach(devoir -> {
             JsonObject devoirJson = (JsonObject) devoir;
             String idMatiere = devoirJson.getString("id_matiere");
             String idClass = devoirJson.containsKey("id_groupe") ? devoirJson.getString("id_groupe") : devoirJson.getString("id_classe");
-            String moyenneFinale = devoirJson.containsKey("moyenne") ? devoirJson.getString("moyenne") : NN;
+            String moyenneFinale = devoirJson.containsKey("moyenne")? devoirJson.getString("moyenne") : NN;
             Long idPeriodeDevoir = devoirJson.getLong("id_periode");
 
             JsonObject matiere = (JsonObject) matieres.stream()
@@ -1563,7 +1565,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
             JsonArray idsTeachers = new JsonArray();
             Long coefficient = 1L;
-            if(service != null) {
+            if (service != null) {
                 idsTeachers.add(service.getString("id_enseignant"));
                 List<Object> multiTeachers = allMultiTeachers.stream()
                         .filter(el -> idMatiere.equals(((JsonObject) el).getString("subject_id")) &&
@@ -1571,7 +1573,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         .collect(Collectors.toList());
                 multiTeachers.forEach(multiTeacher -> {
                     JsonObject multiTeacherJson = (JsonObject) multiTeacher;
-                    if(multiTeacherJson.getBoolean("is_visible")){
+                    if (multiTeacherJson.getBoolean("is_visible")) {
                         idsTeachers.add(multiTeacherJson.getString("second_teacher_id"));
                     }
                 });
@@ -1611,7 +1613,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     resultMatiere = result.getJsonObject(idMatiere);
                 }
 
-                if(!moyenneFinale.equals(NN)){
+                if(!NN.equals(moyenneFinale)){
                     JsonObject moyenne = new JsonObject()
                             .put("id_periode", idPeriodeDevoir)
                             .put("moyenne", moyenneFinale);
@@ -1876,7 +1878,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             }
 
             if(moyenneFinale != null) {
-                matiere.put("moyenne", moyenneFinale.getString("moyenne"));
+                matiere.put("moyenne", (moyenneFinale.getString("moyenne") != null)? moyenneFinale.getString("moyenne"): NN);
             } else if (!notes.isEmpty()) {
                 Double moy = utilsService.calculMoyenne(notes,false, 20, false).getDouble("moyenne");
                 matiere.put("moyenne", moy.toString());
