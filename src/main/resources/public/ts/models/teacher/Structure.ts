@@ -448,7 +448,7 @@ export class Structure extends Model {
 
     syncDevoirs(limit?:number): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.devoirs.sync(limit).then((data) => {
+            this.devoirs.sync().then((data) => {
                 this.synchronized.devoirs = true;
                 this.devoirs.trigger('devoirs-sync');
                 resolve();
