@@ -49,7 +49,6 @@ export class Structure extends Model {
     devoirs: Devoirs;
     synchronized: any;
     classes: Collection<Classe>;
-    allClasses: Collection<Classe>;
     classesBilanPeriodique: any[];
     matieres: Collection<Matiere>;
     types: Collection<Type>;
@@ -341,11 +340,10 @@ export class Structure extends Model {
             sync: () => {
                 return new Promise(async (resolve) => {
                     let allPromise = await Promise.all([httpAxios.get(this.api.CLASSE.synchronization),
-                        httpAxios.get(this.api.GET_SERVICES), httpAxios.get(this.api.CLASSE.synchronizationAllClasses)]);
+                        httpAxios.get(this.api.GET_SERVICES)]);
 
                     let classes = allPromise[0].data;
                     let services = allPromise[1].data;
-                    let allClasses = allPromise[2].data;
 
                     _.map(classes, (classe) => {
                         let servicesClasse = _.filter(services, service =>{
@@ -354,15 +352,9 @@ export class Structure extends Model {
                         });
                         classe.services = !_.isEmpty(servicesClasse) ? servicesClasse : null;
 
-                        let classeOfAllClasses = _.findWhere(allClasses, {id: classe.id});
-                        if(classeOfAllClasses != null) {
-                            classeOfAllClasses.services = !_.isEmpty(servicesClasse) ? servicesClasse : null;
-                        }
                     });
 
-                    this.allClasses = angular.copy(this.classes);
                     this.classes.addRange(castClasses(classes));
-                    this.allClasses.addRange(castClasses(allClasses));
 
                     this.eleves.sync().then(() => {
                         model.trigger('apply');
