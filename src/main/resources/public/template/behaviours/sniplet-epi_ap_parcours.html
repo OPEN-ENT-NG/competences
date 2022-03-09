@@ -329,7 +329,7 @@
                            ng-class="{disabled : search.enseignant == null || search.enseignant == undefined}">
                         <select ng-model="search.matiere"
                                 ng-change="pushData(search.enseignant, dataELem.ens_mat, search.matiere)"
-                                ng-options="matiere.name for matiere in (filteredSubjects = (options.matieres | filter:notYetSelected()))"
+                                ng-options="matiere.id as (matiere.name + ' (' + matiere.source + ')') for matiere in (filteredSubjects = (options.matieres | filter:notYetSelected()))"
                                 ng-disabled="search.enseignant == null">
                             <option class="header-opt" disabled value="">[[translate('viescolaire.utils.subject')]]</option>
                         </select>
