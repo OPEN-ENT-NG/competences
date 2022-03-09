@@ -757,7 +757,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if($location.path() === '/releve') {
                     $scope.filteredPeriode = $filter('customPeriodeTypeFilter')($scope.structure.typePeriodes.all, $scope.search);
                     $scope.setMatieresFiltered();
-                    $scope.getReleve()
+                    await $scope.getReleve()
                 }
                 utils.safeApply($scope);
             }
@@ -2426,6 +2426,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
               if(oldExternalIdClassSearch === $scope.search.matiere.externalId) $scope.search.matiere = "*";
               oldExternalIdClassSearch = $scope.search.matiere.externalId;
           }*/
+
+        $scope.changePeriode = function () {
+            if ($scope.search.periode != null) {
+                $scope.setMatieresFiltered();
+                $scope.getReleve();
+                $scope.deleteDevoirInformations();
+            }
+        }
 
         $scope.getReleve = async function () {
             if (Utils.isNotNull($scope.releveNote)) {
