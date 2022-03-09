@@ -153,7 +153,7 @@
                     <label class="select">
                         <select ng-model="search.periode"
                                 ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
-                                ng-change="setMatieresFiltered(); getReleve(); deleteDevoirInformations();"
+                                ng-change="changePeriode();"
                                 ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all | orderBy:'id_type'">
                             <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
                             </option>
