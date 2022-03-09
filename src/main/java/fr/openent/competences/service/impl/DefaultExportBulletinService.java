@@ -547,70 +547,85 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 String beforeAvisOrientation = params.getString("orientationOpinion");
                 List<Future> futures = new ArrayList<>();
 
-                //FAIRE DES PROMISES
-                Promise<List<StudentEvenement>> getEvenementsPromise = Promise.promise();
-                Promise<JsonObject> getSyntheseBilanPeriodiquePromise = Promise.promise();
-                Promise<JsonObject> getCyclePromise = Promise.promise();
-                Promise<JsonObject> getAppreciationCPEPromise  = Promise.promise();
-                Promise<JsonObject> getAvisConseilPromise = Promise.promise();
-                Promise<JsonObject> getAvisOrientationPromise = Promise.promise();
-                Promise<JsonObject>  getSuiviAcquisPromise = Promise.promise();
+                Future<JsonObject> getSuiviAcquisFuture = Future.future();
+//                Future<JsonObject> putLibelleForExportFuture = Future.future();
+//                Future<JsonObject> getEvenementsFuture = Future.future();
+//                Future<JsonObject> getSyntheseBilanPeriodiqueFuture = Future.future();
+//                Future<JsonObject> getStructureFuture = Future.future();
+//                Future<JsonObject> getLibellePeriodeFuture = Future.future();
+//                Future<JsonObject> getAnneeScolaireFuture = Future.future();
+//                Future<JsonObject> getCycleFuture = Future.future();
+//                Future<JsonObject> getAppreciationCPEFuture = Future.future();
+//                Future<JsonObject> getAvisConseilFuture = Future.future();
+//                Future<JsonObject> getAvisOrientationFuture = Future.future();
+//                Future<JsonObject> getImagesBase64Future = Future.future();
 
-                futures.add(getEvenementsPromise.future());
-                futures.add(getSyntheseBilanPeriodiquePromise.future());
-                futures.add(getCyclePromise.future());
-                futures.add(getAppreciationCPEPromise.future());
-                futures.add(getAvisConseilPromise.future());
-                futures.add(getAvisOrientationPromise.future());
-                futures.add(getSuiviAcquisPromise.future());
+//                futures.add(getImagesBase64Future);
+                futures.add(getSuiviAcquisFuture);
+//                futures.add(putLibelleForExportFuture);
+//                futures.add(getEvenementsFuture);
+//                futures.add(getSyntheseBilanPeriodiqueFuture);
+//                futures.add(getStructureFuture);
+//                futures.add(getLibellePeriodeFuture);
+//                futures.add(getAnneeScolaireFuture);
+//                futures.add(getCycleFuture);
+//                futures.add(getAppreciationCPEFuture);
+//                futures.add(getAvisConseilFuture);
+//                futures.add(getAvisOrientationFuture);
+//
+//                if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
+//                    Future<JsonObject> getHeadTeachersFuture = Future.future();
+//                    futures.add(getHeadTeachersFuture);
+//                    getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), futureGetHandler(getHeadTeachersFuture));
+//                }
+//
+//                if(params.getBoolean(GET_RESPONSABLE)) {
+//                    Future<JsonObject> getResponsablesFuture = Future.future();
+//                    futures.add(getResponsablesFuture);
+//                    getResponsables(idEleve, elevesMap, futureGetHandler(getResponsablesFuture));
+//                }
+//
+//                if(params.getBoolean(SHOW_BILAN_PER_DOMAINE)) {
+//                    Future<JsonObject> getImageGraphFuture = Future.future();
+//                    Future<JsonObject> getArbreDomainesFuture = Future.future();
+//                    futures.add(getImageGraphFuture);
+//                    futures.add(getArbreDomainesFuture);
+//                    getImageGraph(idEleve, elevesMap, futureGetHandler(getImageGraphFuture));
+//                    getArbreDomaines(idEleve, classe.getString(ID_CLASSE), elevesMap, futureGetHandler(getArbreDomainesFuture));
+//                }
+//
+//                if (params.getBoolean(SHOW_PROJECTS)) {
+//                    Future<JsonObject> getProjetsFuture = Future.future();
+//                    futures.add(getProjetsFuture);
+//                    getProjets(idEleve, classe.getString(ID_CLASSE), elevesMap, idPeriode, futureGetHandler(getProjetsFuture));
+//                }
+//
+//                if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD) != null){
+//                    if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
+//                        Future<JsonObject> getBilanPeriodiqueDomaineForGraphFuture = Future.future();
+//                        futures.add(getBilanPeriodiqueDomaineForGraphFuture);
+//                        getBilanPeriodiqueDomaineForGraph(idEleve, classe.getString(ID_CLASSE), idPeriode,
+//                                elevesMap, futureGetHandler(getBilanPeriodiqueDomaineForGraphFuture));
+//                    }
+//                }
 
-                int nbOptions = 0;
-
-
-                if(params.getBoolean(GET_RESPONSABLE)) {
-                    Promise<Object> getResponsablesPromise = Promise.promise();
-                    futures.add(getResponsablesPromise.future());
-                    getResponsables(student,getResponsablesPromise);
-                    nbOptions++;
-                }
-
-                if(params.getBoolean(SHOW_BILAN_PER_DOMAINE)) {
-                    Promise<Object> getImageGraphPromise = Promise.promise();
-                    Promise<Object> getArbreDomainesPromise = Promise.promise();
-                    futures.add(getImageGraphPromise.future());
-                    futures.add(getArbreDomainesPromise.future());
-                    getImageGraph(student, getImageGraphPromise);
-                    getArbreDomaines(student, getArbreDomainesPromise);
-                    student.getParamBulletins().addParams(new JsonObject().put("hasGraphPerDomaine", true));
-                    nbOptions += 2;
-                }
-
-                if (params.getBoolean(SHOW_PROJECTS)) {
-                    Promise<Object> getProjetsPromise = Promise.promise();
-                    futures.add(getProjetsPromise.future());
-                    getProjets(student , getProjetsPromise);
-                    nbOptions++;
-
-                }
-
-                if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD) != null){
-                    if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
-                        Promise<Object> getBilanPeriodiqueDomaineForGraphPromise = Promise.promise();
-                        futures.add(getBilanPeriodiqueDomaineForGraphPromise.future());
-                        getBilanPeriodiqueDomaineForGraph(student , getBilanPeriodiqueDomaineForGraphPromise);
-                        nbOptions++;
-                    }
-                }
-
-                getEvenements(student, getEvenementsPromise);
-                getSyntheseBilanPeriodique(student,isBulletinLycee,
-                        getSyntheseBilanPeriodiquePromise);
-                getCycle(student,getCyclePromise);
-                getAppreciationCPE(student,getAppreciationCPEPromise);
-                getAvisConseil(student ,getAvisConseilPromise, beforeAvisConseil);
-                getAvisOrientation(student,
-                        getAvisOrientationPromise, beforeAvisOrientation);
-                getSuiviAcquis(student,idEleves, classe, params, getSuiviAcquisPromise);
+                getSuiviAcquis(idEleve, elevesMap, idPeriode, classe, params, futureGetHandler(getSuiviAcquisFuture));
+//                putLibelleForExport(idEleve, elevesMap, params, futureGetHandler(putLibelleForExportFuture));
+//                getEvenements(params.getString("idStructure"), classe.getString(ID_CLASSE),
+//                        idEleve, elevesMap, idPeriode, futureGetHandler(getEvenementsFuture));
+//                getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, params.getString("idStructure"),isBulletinLycee,
+//                        futureGetHandler(getSyntheseBilanPeriodiqueFuture));
+//                getStructure(idEleve, elevesMap.get(idEleve), futureGetHandler(getStructureFuture));
+//                getLibellePeriode(idEleve, elevesMap, idPeriode, host, acceptLanguage, futureGetHandler(getLibellePeriodeFuture));
+//                getAnneeScolaire(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), futureGetHandler(getAnneeScolaireFuture));
+//                getCycle(idEleve, classe.getString(ID_CLASSE), elevesMap,idPeriode, params.getLong(TYPE_PERIODE),
+//                        futureGetHandler(getCycleFuture));
+//                getAppreciationCPE(idEleve, elevesMap, idPeriode, futureGetHandler(getAppreciationCPEFuture));
+//                getAvisConseil(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
+//                        futureGetHandler(getAvisConseilFuture), beforeAvisConseil);
+//                getAvisOrientation(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
+//                        futureGetHandler(getAvisOrientationFuture), beforeAvisOrientation);
+//                generateImagesFromPathForBulletin(elevesMap.get(idEleve), vertx,futureGetHandler(getImagesBase64Future) );
 
                 int finalNbOptions = nbOptions;
                 CompositeFuture.all(futures).setHandler(event -> {
@@ -2662,6 +2677,19 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
+    public void setIdGraphPerDomaine(Student student, JsonObject images){
+        String idEleve = student.getId();
+        if (images != null) {
+            String img = images.getString(idEleve);
+            Boolean hasGraphPerDomaine = (img != null);
+            student.getParamBulletins().setHasGraphPerDomaine(hasGraphPerDomaine);
+            if(hasGraphPerDomaine) {
+                //GRAPH_PER_DOMAINE
+                student.getParamBulletins().setImGraph(img);
+            }
+        }
+    }
+
     public void setLevel(JsonObject eleve) {
         String level = eleve.getString(LEVEL);
         if(level == null) {
@@ -2770,59 +2798,38 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     futures.add(Future.future());
                 }
 
-                for (int i = 0; i < eleves.size(); i++) {
-                    JsonObject eleve = eleves.getJsonObject(i);
-                    Student student = new Student();
-                    student.setFirstName(eleve.getString("firstName"));
-                    student.setLastName(eleve.getString("lastName"));
-                    student.setINE(eleve.getString("ine"));
-                    student.setId(eleve.getString("idEleve"));
-                    student.setDeleteDate(eleve.getString("u.deleteDate"));
-                    student.setExternalId(eleve.getString("externalId"));
-                    student.setParamBulletins(paramBulletins);
+        for (int i = 0; i < eleves.size(); i++) {
+            JsonObject eleve = eleves.getJsonObject(i);
+            log.info(eleve);
+            Student student = new Student();
+            student.setFirstName(eleve.getString("firstName"));
+            student.setLastName(eleve.getString("lastName"));
+            student.setINE(eleve.getString("ine"));
 
+            ParamsBulletins paramBulletins = new ParamsBulletins();
+            student.setParamBulletins(paramBulletins);
 
-                    structure.setId(eleve.getString("idEtablissement"));
-                    student.setStructure(structure);
+            Classe classeStudent = new Classe();
+            classeStudent.setName(eleve.getString("classeName"));
+            classeStudent.setId(eleve.getString("idClasse"));
+            student.setClasse(classeStudent);
 
-                    Classe classeStudent = new Classe();
-                    classeStudent.setName(eleve.getString("classeName"));
-                    classeStudent.setDisplayName(eleve.getString("classeNameToShow"));
-                    classeStudent.setId(eleve.getString("idClasse"));
-                    student.setClasse(classeStudent);
+            Periode periode = new Periode();
+            periode.setType(typePeriode);
+            periode.setId(idPeriode.toString());
 
-                    periode.setType(typePeriode);
-                    periode.setIdPeriode(idPeriode);
+            classeStudent.setPeriode(periode);
 
-                    //Faire le libelle
-                    classeStudent.setPeriode(periode);
-
-                    JsonArray groupes = eleve.getJsonArray("idGroupes");
-                    JsonArray manualGroupes = eleve.getJsonArray("idManualGroupes");
-
-                    for (int j = 0; j < groupes.size(); j++) {
-                        Group group = new Group();
-                        group.setId(groupes.getString(j));
-                        student.addGroupe(group);
-                    }
-
-                    for (int j = 0; j < manualGroupes.size(); j++) {
-                        Group group = new Group();
-                        group.setId(manualGroupes.getString(j));
-                        student.addManualGroupe(group);
-                    }
-
-
-                    eleve.put(TYPE_PERIODE, typePeriode);
-                    eleve.put(ID_PERIODE_KEY, idPeriode);
+            eleve.put(TYPE_PERIODE, typePeriode);
+            eleve.put(ID_PERIODE_KEY, idPeriode);
 
                     // Mise en forme de la date de naissance
                     String idEleve = eleve.getString(ID_ELEVE_KEY);
                     student.setBirthDate(eleve.getString("birthDate"));
-                    student.formatBirthDate();
+            student.formatBirthDate();
 
 
-                    setBirthDate(eleve);
+            setBirthDate(eleve);
 
                     // Classe à afficher
                     setStudentClasseToPrint(eleve, classe);
@@ -2830,8 +2837,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     // Ajout de l'image du graphe par domaine
                     if (showBilanPerDomaines) {
                         //TODO supprimer des que student est pris en compte
-                        setIdGraphPerDomaine(student, images);
-                    }
+                setIdGraphPerDomaine(student, images);
+                setIdGraphPerDomaine(student, images);
+            }
 
                     // Ajout du niveau de l'élève
                     setLevel(eleve);
@@ -2849,7 +2857,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                     //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
 
-                    getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe, host, acceptLanguage, vertx,
+                    log.info(eleve);
+            getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe, host, acceptLanguage, vertx,
                             futureGetHandler(futures.get(i)));
                 }
                 CompositeFuture.all(futures).onSuccess(compositeEvent -> {
