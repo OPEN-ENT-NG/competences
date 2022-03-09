@@ -6,6 +6,7 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.helpers.FutureHelper;
+import fr.openent.competences.model.*;
 import fr.openent.competences.service.*;
 import fr.openent.competences.utils.BulletinUtils;
 import fr.wseduc.webutils.Either;
@@ -327,10 +328,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                 classe.put("idClasse", idClasse);
                 if(params.containsKey("classeName")){
+                    log.info("if");
                     classe.put("classeName", params.getString("classeName"));
                     buildDataForStudent(answered, eleves, elevesMap, idPeriode, params, classe,
                             showBilanPerDomaines, host, acceptLanguage, finalHandler, vertx);
                 } else {
+                    log.info("else");
                     JsonArray finalEleves = eleves;
                     getClasseInfo(idClasse, classeInfoEvent -> {
                         if(classeInfoEvent.isRight()){
@@ -548,84 +551,84 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 List<Future> futures = new ArrayList<>();
 
                 Future<JsonObject> getSuiviAcquisFuture = Future.future();
-                Future<JsonObject> putLibelleForExportFuture = Future.future();
-                Future<JsonObject> getEvenementsFuture = Future.future();
-                Future<JsonObject> getSyntheseBilanPeriodiqueFuture = Future.future();
-                Future<JsonObject> getStructureFuture = Future.future();
-                Future<JsonObject> getLibellePeriodeFuture = Future.future();
-                Future<JsonObject> getAnneeScolaireFuture = Future.future();
-                Future<JsonObject> getCycleFuture = Future.future();
-                Future<JsonObject> getAppreciationCPEFuture = Future.future();
-                Future<JsonObject> getAvisConseilFuture = Future.future();
-                Future<JsonObject> getAvisOrientationFuture = Future.future();
-                Future<JsonObject> getImagesBase64Future = Future.future();
+//                Future<JsonObject> putLibelleForExportFuture = Future.future();
+//                Future<JsonObject> getEvenementsFuture = Future.future();
+//                Future<JsonObject> getSyntheseBilanPeriodiqueFuture = Future.future();
+//                Future<JsonObject> getStructureFuture = Future.future();
+//                Future<JsonObject> getLibellePeriodeFuture = Future.future();
+//                Future<JsonObject> getAnneeScolaireFuture = Future.future();
+//                Future<JsonObject> getCycleFuture = Future.future();
+//                Future<JsonObject> getAppreciationCPEFuture = Future.future();
+//                Future<JsonObject> getAvisConseilFuture = Future.future();
+//                Future<JsonObject> getAvisOrientationFuture = Future.future();
+//                Future<JsonObject> getImagesBase64Future = Future.future();
 
-                futures.add(getImagesBase64Future);
+//                futures.add(getImagesBase64Future);
                 futures.add(getSuiviAcquisFuture);
-                futures.add(putLibelleForExportFuture);
-                futures.add(getEvenementsFuture);
-                futures.add(getSyntheseBilanPeriodiqueFuture);
-                futures.add(getStructureFuture);
-                futures.add(getLibellePeriodeFuture);
-                futures.add(getAnneeScolaireFuture);
-                futures.add(getCycleFuture);
-                futures.add(getAppreciationCPEFuture);
-                futures.add(getAvisConseilFuture);
-                futures.add(getAvisOrientationFuture);
-
-                if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
-                    Future<JsonObject> getHeadTeachersFuture = Future.future();
-                    futures.add(getHeadTeachersFuture);
-                    getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), futureGetHandler(getHeadTeachersFuture));
-                }
-
-                if(params.getBoolean(GET_RESPONSABLE)) {
-                    Future<JsonObject> getResponsablesFuture = Future.future();
-                    futures.add(getResponsablesFuture);
-                    getResponsables(idEleve, elevesMap, futureGetHandler(getResponsablesFuture));
-                }
-
-                if(params.getBoolean(SHOW_BILAN_PER_DOMAINE)) {
-                    Future<JsonObject> getImageGraphFuture = Future.future();
-                    Future<JsonObject> getArbreDomainesFuture = Future.future();
-                    futures.add(getImageGraphFuture);
-                    futures.add(getArbreDomainesFuture);
-                    getImageGraph(idEleve, elevesMap, futureGetHandler(getImageGraphFuture));
-                    getArbreDomaines(idEleve, classe.getString(ID_CLASSE), elevesMap, futureGetHandler(getArbreDomainesFuture));
-                }
-
-                if (params.getBoolean(SHOW_PROJECTS)) {
-                    Future<JsonObject> getProjetsFuture = Future.future();
-                    futures.add(getProjetsFuture);
-                    getProjets(idEleve, classe.getString(ID_CLASSE), elevesMap, idPeriode, futureGetHandler(getProjetsFuture));
-                }
-
-                if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD) != null){
-                    if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
-                        Future<JsonObject> getBilanPeriodiqueDomaineForGraphFuture = Future.future();
-                        futures.add(getBilanPeriodiqueDomaineForGraphFuture);
-                        getBilanPeriodiqueDomaineForGraph(idEleve, classe.getString(ID_CLASSE), idPeriode,
-                                elevesMap, futureGetHandler(getBilanPeriodiqueDomaineForGraphFuture));
-                    }
-                }
+//                futures.add(putLibelleForExportFuture);
+//                futures.add(getEvenementsFuture);
+//                futures.add(getSyntheseBilanPeriodiqueFuture);
+//                futures.add(getStructureFuture);
+//                futures.add(getLibellePeriodeFuture);
+//                futures.add(getAnneeScolaireFuture);
+//                futures.add(getCycleFuture);
+//                futures.add(getAppreciationCPEFuture);
+//                futures.add(getAvisConseilFuture);
+//                futures.add(getAvisOrientationFuture);
+//
+//                if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
+//                    Future<JsonObject> getHeadTeachersFuture = Future.future();
+//                    futures.add(getHeadTeachersFuture);
+//                    getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), futureGetHandler(getHeadTeachersFuture));
+//                }
+//
+//                if(params.getBoolean(GET_RESPONSABLE)) {
+//                    Future<JsonObject> getResponsablesFuture = Future.future();
+//                    futures.add(getResponsablesFuture);
+//                    getResponsables(idEleve, elevesMap, futureGetHandler(getResponsablesFuture));
+//                }
+//
+//                if(params.getBoolean(SHOW_BILAN_PER_DOMAINE)) {
+//                    Future<JsonObject> getImageGraphFuture = Future.future();
+//                    Future<JsonObject> getArbreDomainesFuture = Future.future();
+//                    futures.add(getImageGraphFuture);
+//                    futures.add(getArbreDomainesFuture);
+//                    getImageGraph(idEleve, elevesMap, futureGetHandler(getImageGraphFuture));
+//                    getArbreDomaines(idEleve, classe.getString(ID_CLASSE), elevesMap, futureGetHandler(getArbreDomainesFuture));
+//                }
+//
+//                if (params.getBoolean(SHOW_PROJECTS)) {
+//                    Future<JsonObject> getProjetsFuture = Future.future();
+//                    futures.add(getProjetsFuture);
+//                    getProjets(idEleve, classe.getString(ID_CLASSE), elevesMap, idPeriode, futureGetHandler(getProjetsFuture));
+//                }
+//
+//                if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD) != null){
+//                    if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
+//                        Future<JsonObject> getBilanPeriodiqueDomaineForGraphFuture = Future.future();
+//                        futures.add(getBilanPeriodiqueDomaineForGraphFuture);
+//                        getBilanPeriodiqueDomaineForGraph(idEleve, classe.getString(ID_CLASSE), idPeriode,
+//                                elevesMap, futureGetHandler(getBilanPeriodiqueDomaineForGraphFuture));
+//                    }
+//                }
 
                 getSuiviAcquis(idEleve, elevesMap, idPeriode, classe, params, futureGetHandler(getSuiviAcquisFuture));
-                putLibelleForExport(idEleve, elevesMap, params, futureGetHandler(putLibelleForExportFuture));
-                getEvenements(params.getString("idStructure"), classe.getString(ID_CLASSE),
-                        idEleve, elevesMap, idPeriode, futureGetHandler(getEvenementsFuture));
-                getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, params.getString("idStructure"),isBulletinLycee,
-                        futureGetHandler(getSyntheseBilanPeriodiqueFuture));
-                getStructure(idEleve, elevesMap.get(idEleve), futureGetHandler(getStructureFuture));
-                getLibellePeriode(idEleve, elevesMap, idPeriode, host, acceptLanguage, futureGetHandler(getLibellePeriodeFuture));
-                getAnneeScolaire(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), futureGetHandler(getAnneeScolaireFuture));
-                getCycle(idEleve, classe.getString(ID_CLASSE), elevesMap,idPeriode, params.getLong(TYPE_PERIODE),
-                        futureGetHandler(getCycleFuture));
-                getAppreciationCPE(idEleve, elevesMap, idPeriode, futureGetHandler(getAppreciationCPEFuture));
-                getAvisConseil(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
-                        futureGetHandler(getAvisConseilFuture), beforeAvisConseil);
-                getAvisOrientation(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
-                        futureGetHandler(getAvisOrientationFuture), beforeAvisOrientation);
-                generateImagesFromPathForBulletin(elevesMap.get(idEleve), vertx,futureGetHandler(getImagesBase64Future) );
+//                putLibelleForExport(idEleve, elevesMap, params, futureGetHandler(putLibelleForExportFuture));
+//                getEvenements(params.getString("idStructure"), classe.getString(ID_CLASSE),
+//                        idEleve, elevesMap, idPeriode, futureGetHandler(getEvenementsFuture));
+//                getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, params.getString("idStructure"),isBulletinLycee,
+//                        futureGetHandler(getSyntheseBilanPeriodiqueFuture));
+//                getStructure(idEleve, elevesMap.get(idEleve), futureGetHandler(getStructureFuture));
+//                getLibellePeriode(idEleve, elevesMap, idPeriode, host, acceptLanguage, futureGetHandler(getLibellePeriodeFuture));
+//                getAnneeScolaire(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), futureGetHandler(getAnneeScolaireFuture));
+//                getCycle(idEleve, classe.getString(ID_CLASSE), elevesMap,idPeriode, params.getLong(TYPE_PERIODE),
+//                        futureGetHandler(getCycleFuture));
+//                getAppreciationCPE(idEleve, elevesMap, idPeriode, futureGetHandler(getAppreciationCPEFuture));
+//                getAvisConseil(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
+//                        futureGetHandler(getAvisConseilFuture), beforeAvisConseil);
+//                getAvisOrientation(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
+//                        futureGetHandler(getAvisOrientationFuture), beforeAvisOrientation);
+//                generateImagesFromPathForBulletin(elevesMap.get(idEleve), vertx,futureGetHandler(getImagesBase64Future) );
 
                 CompositeFuture.all(futures).setHandler(event -> {
                     if (event.succeeded()) {
@@ -2645,6 +2648,19 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
+    public void setIdGraphPerDomaine(Student student, JsonObject images){
+        String idEleve = student.getId();
+        if (images != null) {
+            String img = images.getString(idEleve);
+            Boolean hasGraphPerDomaine = (img != null);
+            student.getParamBulletins().setHasGraphPerDomaine(hasGraphPerDomaine);
+            if(hasGraphPerDomaine) {
+                //GRAPH_PER_DOMAINE
+                student.getParamBulletins().setImGraph(img);
+            }
+        }
+    }
+
     public void setLevel(JsonObject eleve) {
         String level = eleve.getString(LEVEL);
         if(level == null) {
@@ -2680,11 +2696,35 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         for (int i = 0; i < eleves.size(); i++) {
             JsonObject eleve = eleves.getJsonObject(i);
+            log.info(eleve);
+            Student student = new Student();
+            student.setFirstName(eleve.getString("firstName"));
+            student.setLastName(eleve.getString("lastName"));
+            student.setINE(eleve.getString("ine"));
+
+            ParamsBulletins paramBulletins = new ParamsBulletins();
+            student.setParamBulletins(paramBulletins);
+
+            Classe classeStudent = new Classe();
+            classeStudent.setName(eleve.getString("classeName"));
+            classeStudent.setId(eleve.getString("idClasse"));
+            student.setClasse(classeStudent);
+
+            Periode periode = new Periode();
+            periode.setType(typePeriode);
+            periode.setId(idPeriode.toString());
+
+            classeStudent.setPeriode(periode);
+
             eleve.put(TYPE_PERIODE, typePeriode);
             eleve.put(ID_PERIODE_KEY, idPeriode);
 
             // Mise en forme de la date de naissance
             String idEleve = eleve.getString(ID_ELEVE_KEY);
+            student.setBirthDate(eleve.getString("birthDate"));
+            student.formatBirthDate();
+
+
             setBirthDate(eleve);
 
             // Classe à afficher
@@ -2692,7 +2732,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             // Ajout de l'image du graphe par domaine
             if (showBilanPerDomaines) {
+                //TODO supprimer des que student est pris en compte
                 setIdGraphPerDomaine(eleve, images);
+                setIdGraphPerDomaine(student, images);
             }
 
             // Ajout du niveau de l'élève
@@ -2710,6 +2752,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
 
+            log.info(eleve);
             getExportBulletin(answered, idEleve, elevesMap, idPeriode, params, classe, host, acceptLanguage, vertx,
                     futureGetHandler(futures.get(i)));
         }
