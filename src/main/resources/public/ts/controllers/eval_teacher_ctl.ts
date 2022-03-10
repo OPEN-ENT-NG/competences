@@ -171,6 +171,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir = $scope.initDevoir();
                     $scope.devoir.apprec_visible = false;
                     $scope.devoir.id_groupe = devoirTmp.id_groupe;
+
+                    $scope.devoir.classe = _.findWhere($scope.structure.classes.all, {id : $scope.devoir.id_groupe});
+                    if(Utils.isNotNull($scope.devoir.classe) && Utils.isNotNull($scope.devoir.classe.periodes) &&
+                        _.isEmpty($scope.devoir.classe.periodes.all)){
+                        await $scope.devoir.classe.periodes.sync();
+                    }
+                    if(Utils.isNotNull($scope.devoir.classe) && Utils.isNotNull($scope.devoir.classe.periodes))
+                        $scope.filteredPeriode = $scope.devoir.classe.periodes.all;
+
                     $scope.devoir.old_id_groupe = devoirTmp.id_groupe;
                     $scope.devoir.id = devoirTmp.id;
                     $scope.devoir.name = devoirTmp.name;
@@ -3284,26 +3293,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             await Promise.all(allPromise);
 
-            let syncPeriodeClasse = async () => {
-                if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes) &&
-                    _.isEmpty($scope.search.classe.periodes.all)){
-                    await $scope.search.classe.periodes.sync();
-                }
-            };
-
-            if($location.path() === `/devoir/${$scope.currentDevoir.id}`){
-                $scope.search.classe = _.findWhere($scope.structure.classes.all, {id : $scope.currentDevoir.id_groupe});
-                await syncPeriodeClasse();
-                if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes)) {
-                    $scope.filteredPeriode = $scope.search.classe.periodes.all;
-                    $scope.search.periode = _.findWhere($scope.filteredPeriode, {id_type: idPeriode});
-                }
-            } else {
-                await syncPeriodeClasse();
+            if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes) &&
+                _.isEmpty($scope.search.classe.periodes.all)){
+                await $scope.search.classe.periodes.sync();
                 $scope.filteredPeriode = $scope.search.classe.periodes.all;
+                utils.setHistoriqueEvenement($scope, eleve, $scope.filteredPeriode);
             }
-
-            utils.setHistoriqueEvenement($scope, eleve, $scope.filteredPeriode);
 
             $scope.informations.eleve = eleve;
             template.open('leftSide-userInfo', 'enseignants/informations/display_eleve');
