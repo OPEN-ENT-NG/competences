@@ -2,17 +2,27 @@ package fr.openent.competences.model;
 
 import io.vertx.core.json.JsonObject;
 
-import java.sql.Struct;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Student  extends  Model{
 
     private String firstName;
     private String lastName;
     private String INE;
+    private boolean hasIne = false;
     private Classe classe;
     private Structure structure;
     private String birthDate;
     private ParamsBulletins paramBulletins;
+    private boolean hasLvl = false;
+    private Level level;
+    private final List<Group>  groupes = new ArrayList<>();
+    private final List<Group>  manualGroupes = new ArrayList<>();
+    private String externalId;
+    private String deleteDate;
+
 
     public  Student() {
         super();
@@ -27,8 +37,44 @@ public class Student  extends  Model{
         }
     }
 
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
+
     public Classe getClasse() {
         return classe;
+    }
+
+    public void addGroupe(Group group){
+        groupes.add(group);
+    }
+
+    public void addManualGroupe(Group group){
+        groupes.add(group);
+    }
+    public List<Group> getGroupes() {
+        return groupes;
+    }
+
+    public List<Group> getManualGroupes() {
+        return manualGroupes;
+    }
+
+    public Level getLevel() {
+        return level;
+    }
+
+    public void setLevel(Level level) {
+        this.level = level;
+        this.hasLvl = true;
+    }
+
+    public boolean hasLvl() {
+        return hasLvl;
     }
 
     public void setClasse(Classe classe) {
@@ -56,6 +102,7 @@ public class Student  extends  Model{
     }
 
     public void setINE(String INE) {
+        hasIne = true;
         this.INE = INE;
     }
 
@@ -83,8 +130,49 @@ public class Student  extends  Model{
         this.paramBulletins = paramBulletins;
     }
 
+    public boolean hasIne() {
+        return hasIne;
+    }
+
+    public String getDeleteDate() {
+        return deleteDate;
+    }
+
+    public void setDeleteDate(String deleteDate) {
+        this.deleteDate = deleteDate;
+    }
+
     @Override
     public JsonObject toJsonObject() {
-        return null;
+        JsonObject result = new JsonObject();
+        List<String> idManualGroupes = manualGroupes.stream()
+                .map(Group::getId)
+                .collect(Collectors.toList());
+        List<String> idGroupes = groupes.stream()
+                .map(Group::getId)
+                .collect(Collectors.toList());
+
+        result.put("idEleve",this.id)
+                .put("firstName",this.firstName)
+                .put("lastName",this.lastName)
+                .put("ine",this.INE)
+                .put("hasINENumber",this.hasIne)
+                .put("hasLevel",this.hasLvl)
+                .put("idClasse",this.classe.getId())
+                .put("u.deleteDate",this.deleteDate)
+                .put("classeName",this.classe.getName())
+                .put("classeNameToShow",this.classe.getDisplayName())
+                .put("idEtablissement",this.structure.getId())
+                .put("birthDate",this.birthDate)
+                .put("birthDateLibelle",this.birthDate)
+                .put("externalId",this.externalId)
+                .put("idPeriode",this.classe.getPeriode().getIdPeriode())
+                .put("typePeriode",this.classe.getPeriode().getType())
+                .put("idGroupes",idGroupes)
+                .put("idLanualGroupes",idManualGroupes)
+        ;
+        if(hasLvl)
+            result.mergeIn(level.toJsonObject());
+        return result;
     }
 }

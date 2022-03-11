@@ -1,5 +1,6 @@
 package fr.openent.competences.service;
 
+import fr.openent.competences.model.Student;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -30,6 +31,7 @@ public interface ExportBulletinService {
   * @param answered Atomic booléen seté lorsqu'on lance l'export
   * @param idEleve idEleve
   * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param students
   * @param idPeriode idPeriode
   * @param params paramètres de la requête
   * @param classe Object contenant les information sur la classe
@@ -39,7 +41,7 @@ public interface ExportBulletinService {
   * @param finalHandler handler servant à la synchronisation des services
   */
  void getExportBulletin(final AtomicBoolean answered, String idEleve,
-                        Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
+                        Map<String, JsonObject> elevesMap, Map<String, Student> students, Long idPeriode, JsonObject params,
                         final JsonObject classe, String host, String acceptLanguage,
                         Vertx vertx, Handler<Either<String, JsonObject>> finalHandler);
 
@@ -67,13 +69,14 @@ public interface ExportBulletinService {
   * Récupère le suivi des acquis d'un élève
   * @param idEleve idEleve
   * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param students
   * @param idPeriode idPeriode
   * @param classe Object contenant les information sur la classe
   * @param params  paramètre d'export
   * @param finalHandler handler servant à la synchronisation des services
   */
- void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject classe,
-                     JsonObject params, Handler<Either<String, JsonObject>> finalHandler );
+ void getSuiviAcquis(String idEleve, Map<String, JsonObject> elevesMap, Map<String, Student> students, Long idPeriode, JsonObject classe,
+                     JsonObject params, Handler<Either<String, JsonObject>> finalHandler);
 
  /**
   *  - Ordonne les élèves par classe et  par nom

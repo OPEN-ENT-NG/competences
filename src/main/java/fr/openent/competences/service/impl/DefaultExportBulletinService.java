@@ -540,7 +540,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     @Override
     public void getExportBulletin(final AtomicBoolean answered, String idEleve,
-                                  Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
+                                  Map<String, JsonObject> elevesMap, Map<String, Student> students, Long idPeriode, JsonObject params,
                                   final JsonObject classe, String host, String acceptLanguage,
                                   Vertx vertx, Handler<Either<String, JsonObject>> finalHandler){
         try {
@@ -612,7 +612,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 //                    }
 //                }
 
-                getSuiviAcquis(idEleve, elevesMap, idPeriode, classe, params, futureGetHandler(getSuiviAcquisFuture));
+                getSuiviAcquis(idEleve, elevesMap,students, idPeriode, classe, params, futureGetHandler(getSuiviAcquisFuture));
 //                putLibelleForExport(idEleve, elevesMap, params, futureGetHandler(putLibelleForExportFuture));
 //                getEvenements(params.getString("idStructure"), classe.getString(ID_CLASSE),
 //                        idEleve, elevesMap, idPeriode, futureGetHandler(getEvenementsFuture));
@@ -1945,18 +1945,22 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getSuiviAcquis(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject classe,
+    public void getSuiviAcquis(String idEleve, Map<String, JsonObject> elevesMap, Map<String, Student> students, Long idPeriode, JsonObject classe,
                                JsonObject params, Handler<Either<String, JsonObject>> finalHandler) {
         boolean getProgrammeElement = params.getBoolean(GET_PROGRAM_ELEMENT);
 
         logBegin(GET_SUIVI_ACQUIS_METHOD, idEleve);
         JsonObject eleveObject = elevesMap.get(idEleve);
+        Student student = students.get(idEleve);
+        log.info(student.getFirstName());
+        //POURQUOI?
         if (eleveObject == null) {
             logStudentNotFound(idEleve, GET_SUIVI_ACQUIS_METHOD);
             finalHandler.handle(new Either.Right<>(null));
         } else {
-            String idEtablissement = eleveObject.getString(ID_ETABLISSEMENT_KEY);
-            String idClasse = classe.getString(ID_CLASSE);
+
+            String idEtablissement = student.getStructure().getId();
+            String idClasse = student.getClasse().getId();
             if (idClasse == null || idEtablissement == null) {
                 if(idClasse == null) {
                     logidClasseNotFound(idEleve, GET_SUIVI_ACQUIS_METHOD);
@@ -2682,6 +2686,35 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
+
+    public void setLevel(Student student,JsonObject eleve) {
+        String level = eleve.getString(LEVEL);
+        Level level1 = new Level();
+
+        student.setLevel(level1);
+        if(level == null) {
+            level = eleve.getString(CLASSE_NAME_TO_SHOW);
+            level1.setName(level);
+        }
+        if(level != null) {
+            level = String.valueOf(level.charAt(0));
+            try {
+                int levelInt = Integer.parseInt(level);
+                if(levelInt >= 3 && levelInt <= 6) {
+                    level1.setName(level);
+                    level1.setImage(ImgLevel.getImgLevel(levelInt));
+
+                    eleve.put("level", level);
+                    eleve.put("hasLevel", true);
+                    eleve.put("imgLevel", ImgLevel.getImgLevel(levelInt));
+                }
+            }
+            catch (NumberFormatException e) {
+                eleve.put("hasLevel", false);
+            }
+        }
+    }
+
     public void buildDataForStudent(final AtomicBoolean answered, JsonArray eleves,
                                     Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
                                     final JsonObject classe, Boolean showBilanPerDomaines, String host,
@@ -2690,31 +2723,55 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         Long typePeriode = params.getLong(TYPE_PERIODE);
         List<Future> futures = new ArrayList<>();
 
+        //TODO passer cette map autrement
+        Map<String,Student> students = new HashMap<>();
         for (int i = 0; i < eleves.size(); i++) {
             futures.add(Future.future());
         }
 
         for (int i = 0; i < eleves.size(); i++) {
             JsonObject eleve = eleves.getJsonObject(i);
-            log.info(eleve);
             Student student = new Student();
             student.setFirstName(eleve.getString("firstName"));
             student.setLastName(eleve.getString("lastName"));
             student.setINE(eleve.getString("ine"));
-
+            student.setId(eleve.getString("idEleve"));
+            student.setDeleteDate(eleve.getString("u.deleteDate"));
+            student.setExternalId(eleve.getString("externalId"));
             ParamsBulletins paramBulletins = new ParamsBulletins();
             student.setParamBulletins(paramBulletins);
 
+            Structure structure = new Structure();
+            structure.setId(eleve.getString("idEtablissement"));
+            student.setStructure(structure);
+
             Classe classeStudent = new Classe();
             classeStudent.setName(eleve.getString("classeName"));
+            classeStudent.setDisplayName(eleve.getString("classeNameToShow"));
             classeStudent.setId(eleve.getString("idClasse"));
             student.setClasse(classeStudent);
 
             Periode periode = new Periode();
             periode.setType(typePeriode);
-            periode.setId(idPeriode.toString());
+            periode.setIdPeriode(idPeriode);
 
             classeStudent.setPeriode(periode);
+
+            JsonArray groupes = eleve.getJsonArray("idGroupes");
+            JsonArray manualGroupes =eleve.getJsonArray("idManualGroupes");
+
+            for(int j =0 ; j< groupes.size();j++){
+                Group group = new Group();
+                group.setId(groupes.getString(j));
+                student.addGroupe(group);
+            }
+
+            for(int j =0 ; j< manualGroupes.size();j++){
+                Group group = new Group();
+                group.setId(manualGroupes.getString(j));
+                student.addManualGroupe(group);
+            }
+
 
             eleve.put(TYPE_PERIODE, typePeriode);
             eleve.put(ID_PERIODE_KEY, idPeriode);
@@ -2739,6 +2796,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             // Ajout du niveau de l'élève
             setLevel(eleve);
+            setLevel(student,eleve);
 
             // Ajout de l'idEtablissement pour l'archive
             if(isNotNull(params.getString("idStructure")) && (isNull(eleve.getString(ID_ETABLISSEMENT_KEY))
@@ -2748,16 +2806,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             eleve.put("hasINENumber", eleve.containsKey("ine") && eleve.getString("ine") != null);
 
-            elevesMap.put(idEleve, eleve);
+            students.put(idEleve, student);
+            elevesMap.put(idEleve, student.toJsonObject());
 
             //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
-
-            log.info(eleve);
-            getExportBulletin(answered, idEleve, elevesMap, idPeriode, params, classe, host, acceptLanguage, vertx,
+            getExportBulletin(answered, idEleve, elevesMap,students, idPeriode, params, classe, host, acceptLanguage, vertx,
                     futureGetHandler(futures.get(i)));
         }
         CompositeFuture.all(futures).setHandler(compositeEvent ->{
             if(compositeEvent.succeeded()){
+                //ici créer le Json
                 log.info("[Competences DefaultExportBulletinService ]end students");
                 finalHandler.handle(new Either.Right<>(null));
             }
