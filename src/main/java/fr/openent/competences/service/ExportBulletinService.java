@@ -1,11 +1,9 @@
 package fr.openent.competences.service;
 
 import fr.openent.competences.model.Student;
-import fr.openent.competences.model.StudentEvenement;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
@@ -18,18 +16,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public interface ExportBulletinService {
  /**
   * Récupère les retards et absences d'un élève
-  * @param student Sttudent to handle
-  * @param promise promise renvoyant la liste des evenements
+  * @param idStructure
+  * @param idClasse
+  * @param idEleve idEleve
+  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param idPeriode idperiode
+  * @param finalHandler handler servant à la synchronisation des services
   */
- void getEvenements(Student student,
-                    Promise<List<StudentEvenement>> promise);
+ void getEvenements(String idStructure, String idClasse, String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
+                    Handler<Either<String, JsonObject>> finalHandler );
 
  /**
   * Service de récupération des donnéees nécessaires pour générer un bulletin
   * @param answered Atomic booléen seté lorsqu'on lance l'export
   * @param idEleve idEleve
   * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
-  * @param idEleves
+  * @param students
   * @param idPeriode idPeriode
   * @param params paramètres de la requête
   * @param classe Object contenant les information sur la classe
@@ -39,7 +41,7 @@ public interface ExportBulletinService {
   * @param finalHandler handler servant à la synchronisation des services
   */
  void getExportBulletin(final AtomicBoolean answered, String idEleve,
-                        Map<String, JsonObject> elevesMap, Student student, JsonArray idEleves, Long idPeriode, JsonObject params,
+                        Map<String, JsonObject> elevesMap, Map<String, Student> students, Long idPeriode, JsonObject params,
                         final JsonObject classe, String host, String acceptLanguage,
                         Vertx vertx, Handler<Either<String, JsonObject>> finalHandler);
 
@@ -56,20 +58,25 @@ public interface ExportBulletinService {
 
  /**
   * Récupération des responsables légaux d'un élève
-  * @param student élève à traiter
-  * @param promise handler servant à la synchronisation des services
+  * @param idEleve idEleve
+  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param finalHandler handler servant à la synchronisation des services
   */
- void getResponsables( Student student, Promise promise);
+ void getResponsables( String idEleve, Map<String,JsonObject> elevesMap,
+                       Handler<Either<String, JsonObject>> finalHandler);
 
  /**
   * Récupère le suivi des acquis d'un élève
-  * @param student student export
-  * @param idEleves
-  * @param params  export parameters
-  * @param promise promise called at the end of the function
+  * @param idEleve idEleve
+  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param students
+  * @param idPeriode idPeriode
+  * @param classe Object contenant les information sur la classe
+  * @param params  paramètre d'export
+  * @param finalHandler handler servant à la synchronisation des services
   */
- void getSuiviAcquis(Student student, JsonArray idEleves, JsonObject classe,
-                     JsonObject params, Promise<JsonObject> promise);
+ void getSuiviAcquis(String idEleve, Map<String, JsonObject> elevesMap, Map<String, Student> students, Long idPeriode, JsonObject classe,
+                     JsonObject params, Handler<Either<String, JsonObject>> finalHandler);
 
  /**
   *  - Ordonne les élèves par classe et  par nom
@@ -82,19 +89,25 @@ public interface ExportBulletinService {
 
  /**
   * Récupère les EPI, AP et Parcours d'un élève
-  * @param student Student to handle
-  * @param promise handler servant à la synchronisation des services
+  * @param idEleve ideleve
+  * @param idClasse identifiant de la classe
+  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param idPeriode idperiode
+  * @param finalHandler handler servant à la synchronisation des services
   */
- void getProjets (Student student,
-                  Promise<Object> promise);
+ void getProjets ( String idEleve,  String idClasse, Map<String,JsonObject> elevesMap,Long idPeriode,
+                   Handler<Either<String, JsonObject>> finalHandler);
 
  /**
   * Récupère la synthèse du bilan périodique d'un élève
-  * @param student student a handle
-  * @param promise promise recevant le resultat de la fonction
+  * @param idEleve IdEleve
+  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param idTypePeriode IdPeriode
+  * @param idStructure id de l'établissement où la synthèse a été saisie
+  * @param finalHandler handler servant à la synchronisation des services
   */
- void getSyntheseBilanPeriodique (Student student,
-                                  Boolean isBulletinLycee, Promise<JsonObject> promise);
+ void getSyntheseBilanPeriodique ( String idEleve,  Map<String,JsonObject> elevesMap, Long idTypePeriode, String idStructure,
+                                   Boolean isBulletinLycee, Handler<Either<String, JsonObject>> finalHandler);
 
  /**
   * Récupère le libelle de l'établissement de l'élève
@@ -116,11 +129,15 @@ public interface ExportBulletinService {
 
  /**
   * Récupère le cycle de la classe de l'élève
-  * @param student student
-  * @param promise handler servant à la synchronisation des services
+  * @param idEleve idEleve
+  * @param idClasse  id de la classe
+  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param idPeriode idPeriode
+  * @param typePeriode (semestre (2)/trimestre (3))
+  * @param finalHandler handler servant à la synchronisation des services
   */
- void getCycle (Student student,
-                Promise<JsonObject> promise);
+ void getCycle ( String idEleve, String idClasse, Map<String,JsonObject> elevesMap,Long idPeriode, Long typePeriode,
+                 Handler<Either<String, JsonObject>> finalHandler);
 
  /**
   * récupère le libelle de la periode idPeriode est passé en paramètre
@@ -147,26 +164,37 @@ public interface ExportBulletinService {
                        Handler<Either<String, JsonObject>> finalHandler) ;
 
  /**
-  *  @param student  student
-  * @param promise  promise with the result of the function
+  *
+  * @param idEleve  idEleve
+  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param idPeriode idType of the periode
+  * @param idStructure id de l'établissement où les avis ont été saisi
+  * @param finalHandler handler servant à la synchronisation des services
   */
- void getAvisConseil(Student student,
-                     Promise<JsonObject> promise, String beforeAvisConseil);
+ void getAvisConseil(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, String idStructure,
+                     Handler<Either<String, JsonObject>> finalHandler, String beforeAvisConseil);
 
  /**
-  *  @param student  student
-  * @param promise  promise called at the end function
+  *
+  * @param idEleve  idEleve
+  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param idPeriode idType of the periode
+  * @param idStructure l'is de l'établissement où les avis ont été saisis
+  * @param finalHandler handler servant à la synchronisation des services
   */
- void getAvisOrientation(Student student,
-                         Promise<JsonObject> promise, String beforeAvisOrientation);
+ void getAvisOrientation(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, String idStructure,
+                         Handler<Either<String, JsonObject>> finalHandler, String beforeAvisOrientation);
 
 
  /**
   * Récupération de tous les enseignements
-  * @param student Student to handle
-  * @param promise handler servant à la synchronisation des services.
+  * @param idEleve l'identifiant de l'élève.
+  * @param idClasse l'identifiant de la classe
+  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param finalHandler handler servant à la synchronisation des services.
   */
- void getArbreDomaines(Student student, Promise<Object> promise);
+ void getArbreDomaines(String idEleve, String idClasse, Map<String, JsonObject> elevesMap,
+                       Handler<Either<String, JsonObject>> finalHandler);
 
 
  /**

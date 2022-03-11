@@ -2,13 +2,12 @@ package fr.openent.competences.model;
 
 import io.vertx.core.json.JsonObject;
 
-public class Classe extends Model{
+public class Classe  extends  Model{
     private String name;
     private Cycle cycle;
     private Periode periode;
     private String displayName;
-
-    public Classe() {
+    public Classe(){
         super();
     }
 
@@ -37,7 +36,7 @@ public class Classe extends Model{
     }
 
     public String getDisplayName() {
-       return displayName != null ? displayName : name;
+        return displayName;
     }
 
     public void setDisplayName(String displayName) {

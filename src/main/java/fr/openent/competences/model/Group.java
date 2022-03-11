@@ -2,7 +2,7 @@ package fr.openent.competences.model;
 
 import io.vertx.core.json.JsonObject;
 
-public class Group extends Model {
+public class Group extends  Model {
     private String name;
     private Cycle cycle;
     private Periode periode;
