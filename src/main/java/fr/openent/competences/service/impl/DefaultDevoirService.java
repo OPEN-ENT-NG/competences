@@ -846,7 +846,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
             if (idMatieres.length != 0) {
                 query.append(" ((devoirs.id_matiere = '' OR devoirs.id_matiere IN " + Sql.listPrepared(idMatieres) + ")");
-                query.append(")  AND");
+                query.append("  AND");
                 for (String idMatiere : idMatieres) {
                     params.add(idMatiere);
                 }
@@ -855,7 +855,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         }
         if (historise) {
-            query.append("OR ( devoirs.eval_lib_historise = ? )");
+            query.append("OR ( devoirs.eval_lib_historise = ? ))");
             params.add(historise);
         }
 
