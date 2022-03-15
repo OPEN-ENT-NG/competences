@@ -1348,13 +1348,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             moyFinalesEleves.forEach(moyFinale -> {
                 JsonObject moyFinaleJson = (JsonObject) moyFinale;
                 Long idP = moyFinaleJson.getLong("id_periode");
-                NoteDevoir noteEleve = new NoteDevoir(Double.valueOf(moyFinaleJson.getString("moyenne")),
-                        20.0, false, 1.0, moyFinaleJson.getString("id_eleve"));
-                if(!notesByDevoirByPeriodeClasse.containsKey(idP))
-                    notesByDevoirByPeriodeClasse.put(idP, new HashMap<>());
-                if(!notesByDevoirByPeriodeClasse.get(idP).containsKey(idP))
-                    notesByDevoirByPeriodeClasse.get(idP).put(idP, new ArrayList<>());
-                notesByDevoirByPeriodeClasse.get(idP).get(idP).add(noteEleve);
+                if(moyFinaleJson.getString("moyenne") != null){
+                    NoteDevoir noteEleve = new NoteDevoir(Double.valueOf(moyFinaleJson.getString("moyenne")),
+                            20.0, false, 1.0, moyFinaleJson.getString("id_eleve"));
+                    if(!notesByDevoirByPeriodeClasse.containsKey(idP))
+                        notesByDevoirByPeriodeClasse.put(idP, new HashMap<>());
+                    if(!notesByDevoirByPeriodeClasse.get(idP).containsKey(idP))
+                        notesByDevoirByPeriodeClasse.get(idP).put(idP, new ArrayList<>());
+                    notesByDevoirByPeriodeClasse.get(idP).get(idP).add(noteEleve);
+                }
             });
         }
 
