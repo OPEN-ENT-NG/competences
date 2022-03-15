@@ -2628,7 +2628,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 for (Map.Entry<String, JsonObject> student : eleveMapObject.entrySet()) {
                     if(idPeriode != null) {
                         student.getValue().put(MOYENNE, NN);
-                        if (!"NN".equals(student.getValue().getString("moyenneFinale"))) {
+                        if (student.getValue().getString("moyenneFinale") != null && !"NN".equals(student.getValue().getString("moyenneFinale"))) {
 
                             NoteDevoir moyF = new NoteDevoir(Double.valueOf(student.getValue().getString("moyenneFinale")),
                                     false, 1.0);
