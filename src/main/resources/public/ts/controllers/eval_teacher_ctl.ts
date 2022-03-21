@@ -3681,9 +3681,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 utils.safeApply($scope);
             } else if ($route.current.originalPath === '/conseil/de/classe'){
                 evaluations.structure.syncAllClasses().then((res) => {
-                       $scope.filteredClassesGroups = _.filter(res, classe => {
+                    $scope.linkGroupsToAllClasses(res).then(() => {
+                        $scope.classes.all = res;
+                        $scope.filteredClassesGroups = _.filter($scope.classes.all, classe => {
                             return $scope.filterValidClasseGroups(classe);
-                       });
+                        });
+                    });
                 });
             }
             utils.safeApply($scope);
