@@ -514,4 +514,16 @@ export class Structure extends Model {
         }
         this.synchronized.typeSousMatieres = true;
     }
+
+    async syncAllClasses() {
+        return new Promise ( ((resolve, reject) => {
+            http().getJson(this.api.CLASSE.synchronizationAllClasses)
+                .done((res)=> {
+                    resolve(res);
+                })
+                .error(() => {
+                    reject();
+                });
+        }));
+    }
 }
