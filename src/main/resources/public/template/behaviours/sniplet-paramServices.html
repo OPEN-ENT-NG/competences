@@ -279,7 +279,8 @@
                     <label class="select">
                         <select ng-model="matiereSelected"
                                 ng-change="setMatiere(matiereSelected)"
-                                ng-options="matiere.id as matiere.name for matiere in columns.matiere.data">
+                                ng-options="matiere.id as (matiere.name + ' (' + matiere.externalId + ' - ' + matiere.source + ')') for matiere in columns.matiere.data">
+
                         </select>
                     </label>
                 </div>
