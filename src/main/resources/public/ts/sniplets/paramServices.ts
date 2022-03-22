@@ -244,7 +244,7 @@ export const paramServices = {
                 let missingParams = {
                     id_etablissement: paramServices.that.idStructure,
                     nom_enseignant: enseignant ? enseignant.displayName : null,
-                    topicName: matiere ? matiere.name + " (" + matiere.externalId + ")" : null,
+                    topicName: matiere ? matiere.name + " (" + matiere.externalId + " - " + matiere.source + ")" : null,
                     groups: groups ? groups : null,
                     groups_name: groups_name ? groups_name : "",
                     coTeachers_name : coTeachers_name,
