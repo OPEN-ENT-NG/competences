@@ -3776,6 +3776,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 console.log('redirect');
                 utils.safeApply($scope);
             }
+            else if ($route.current.originalPath === '/conseil/de/classe') {
+                evaluations.structure.syncAllClasses().then(() => {
+                    $scope.allClasses = evaluations.structure.allClasses;
+                    $scope.linkGroupsToClasses().then(() => {
+                        $scope.filteredClassesGroups = _.filter($scope.allClasses, classe => {
+                            return $scope.filterValidClasseGroups(classe);
+                        });
+                    });
+                });
+            }
             utils.safeApply($scope);
         });
 
