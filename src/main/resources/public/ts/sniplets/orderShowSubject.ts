@@ -99,7 +99,8 @@ export const orderShowSubject = {
                     name: subjectMap.name,
                     id: subjectMap.id,
                     rank: subjectMap.rank,
-                    code: subjectMap.externalId
+                    code: subjectMap.externalId,
+                    source: subjectMap.source
                 }
             })
         },
