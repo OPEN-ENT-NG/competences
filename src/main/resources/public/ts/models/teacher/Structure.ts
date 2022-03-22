@@ -15,31 +15,40 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {Model, Collection, http, _, model, idiom as lang, angular} from 'entcore';
+import {_, Collection, http, idiom as lang, model, Model, angular} from 'entcore';
 import * as utils from '../../utils/teacher';
 import {
+    Annotation,
+    Classe,
+    Cycle,
+    Defaultcolors,
+    Devoir,
+    Devoirs,
+    DevoirsCollection,
     Eleve,
     Enseignant,
-    evaluations,
-    Devoir,
-    DevoirsCollection,
-    Devoirs,
-    Classe,
-    Matiere,
-    Type,
     Enseignement,
-    Annotation,
-    ReleveNote,
-    Cycle,
-    Responsable,
+    evaluations,
+    Matiere,
     NiveauCompetence,
-    Defaultcolors,
+    ReleveNote,
+    Responsable,
+    Type,
     TypePeriode,
     TypeSousMatiere,
     Utils
 } from './index';
 import {Mix} from "entcore-toolkit";
-import httpAxios, {AxiosRequestConfig} from 'axios';
+import httpAxios from 'axios';
+
+function castClasses(classes: any) {
+    return _.map(classes, (classe) => {
+        classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
+        if (!classe.hasOwnProperty("remplacement")) classe.remplacement = false;
+        classe = new Classe(classe);
+        return classe;
+    });
+}
 
 export class Structure extends Model {
     id: string;
@@ -313,15 +322,6 @@ export class Structure extends Model {
         });
         this.collection(ReleveNote);
 
-        const castClasses = (classes) => {
-            return _.map(classes, (classe) => {
-                classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
-                if (!classe.hasOwnProperty("remplacement")) classe.remplacement = false;
-                classe = new Classe(classe);
-                return classe;
-            });
-        };
-
         this.syncRemplacement = function () {
             return new Promise((resolve, reject) => {
                 http().getJson(that.api.CLASSE.synchronizationRemplacement)
@@ -341,11 +341,10 @@ export class Structure extends Model {
             sync: () => {
                 return new Promise(async (resolve) => {
                     let allPromise = await Promise.all([httpAxios.get(this.api.CLASSE.synchronization),
-                        httpAxios.get(this.api.GET_SERVICES), httpAxios.get(this.api.CLASSE.synchronizationAllClasses)]);
+                        httpAxios.get(this.api.GET_SERVICES)]);
 
                     let classes = allPromise[0].data;
                     let services = allPromise[1].data;
-                    let allClasses = allPromise[2].data;
 
                     _.map(classes, (classe) => {
                         let servicesClasse = _.filter(services, service =>{
@@ -354,15 +353,9 @@ export class Structure extends Model {
                         });
                         classe.services = !_.isEmpty(servicesClasse) ? servicesClasse : null;
 
-                        let classeOfAllClasses = _.findWhere(allClasses, {id: classe.id});
-                        if(classeOfAllClasses != null) {
-                            classeOfAllClasses.services = !_.isEmpty(servicesClasse) ? servicesClasse : null;
-                        }
                     });
 
-                    this.allClasses = angular.copy(this.classes);
                     this.classes.addRange(castClasses(classes));
-                    this.allClasses.addRange(castClasses(allClasses));
 
                     this.eleves.sync().then(() => {
                         model.trigger('apply');
@@ -521,5 +514,19 @@ export class Structure extends Model {
             this.typeSousMatieres = data;
         }
         this.synchronized.typeSousMatieres = true;
+    }
+
+    async syncAllClasses() {
+
+        return new Promise ((resolve, reject) => {
+            http().getJson(this.api.CLASSE.synchronizationAllClasses)
+                .done((res)=> {
+                    this.allClasses = castClasses(res);
+                    resolve();
+                })
+                .error(() => {
+                    reject();
+                });
+        });
     }
 }
