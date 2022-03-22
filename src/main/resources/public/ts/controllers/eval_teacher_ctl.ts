@@ -3341,12 +3341,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.filterValidClasseGroups = (item) => {
-            let valid = isValidClasse(item.id, item.id_matiere, $scope.allClasses.all);
+            let valid = isValidClasse(item.id, item.id_matiere, $scope.allClasses);
 
             if(!valid && item.type_groupe === Classe.type.CLASSE && item.idGroups) {
                 for(let i = 0; i < item.idGroups.length; i++) {
                     let group = item.idGroups[i];
-                    if(isValidClasse(group, item.id_matiere, $scope.allClasses.all)){
+                    if(isValidClasse(group, item.id_matiere, $scope.allClasses)){
                         valid = true;
                         break;
                     }
@@ -3390,7 +3390,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let url = '/competences/classe/groupes?idStructure=' + $scope.structure.id;
                 http().getJson(url).done((mapGroups) => {
                     for (let i = 0; i < mapGroups.length; i++) {
-                        let classe = _.findWhere($scope.allClasses.all, {id: mapGroups[i].id_classe});
+                        let classe = _.findWhere($scope.allClasses, {id: mapGroups[i].id_classe});
                         if (classe != null) {
                             classe.idGroups = mapGroups[i].id_groupes;
                         }
@@ -3674,6 +3674,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 console.log('redirect');
                 utils.safeApply($scope);
             }
+            else if ($route.current.originalPath === '/conseil/de/classe') {
+                evaluations.structure.syncAllClasses().then(() => {
+                    $scope.allClasses = evaluations.structure.allClasses;
+                    $scope.linkGroupsToClasses().then(() => {
+                        $scope.filteredClassesGroups = _.filter($scope.allClasses, classe => {
+                            return $scope.filterValidClasseGroups(classe);
+                        });
+                    });
+                });
+            }
             utils.safeApply($scope);
         });
 
@@ -3825,11 +3835,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.allClasses = evaluations.structure.allClasses;
             $scope.filteredClasses = _.filter($scope.classes.all, classe => {
                 return $scope.filterValidClasse(classe);
-            });
-            $scope.linkGroupsToClasses().then(() => {
-                $scope.filteredClassesGroups = _.filter($scope.allClasses.all, classe => {
-                    return $scope.filterValidClasseGroups(classe);
-                });
             });
 
             $scope.devoirs = evaluations.structure.devoirs;
