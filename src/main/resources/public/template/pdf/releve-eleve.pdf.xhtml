@@ -144,6 +144,8 @@
             font-size: 70%;
         }
 
+        table.font-50 tr td { font-size: 70%; }
+
         .div-note {
             display:inline-block;
         }
@@ -168,7 +170,7 @@
 <body>
 <div class="page_fin">
 
-    <table class="head">
+    <table class="head font-50">
         <tr><td><strong>{{#etablissement}}{{name}}{{/etablissement}}</strong></td><td class="align-right">Elève : <strong>{{#user}}{{displayName}}{{/user}}</strong></td></tr>
         <tr><td><strong>{{#etablissement}}{{address}}{{/etablissement}}</strong></td><td class="align-right">Classe : <strong>{{#classe}}{{name}}{{/classe}}</strong></td></tr>
         <tr><td><strong>{{#etablissement}}{{zipcode}} {{city}}{{/etablissement}}</strong></td><td class="align-right">Période : <strong>{{#periode}}{{libelle}}{{/periode}}</strong></td></tr>
