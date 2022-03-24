@@ -2175,6 +2175,15 @@ body.evaluations {
     }
   }
 
+  //Relevé périodique
+  .releve_periodique {
+    .column-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
   .criterion {
     background: $white;
     padding: 8px;
@@ -3705,4 +3714,21 @@ i.eye-open-orange.eye-grey-color::before {
 i.eye-open-orange.eye-white-color::before {
   color: white !important;
 }
+
+.marginTop10 {
+  margin-top: 10%;
+}
+// Lightbox Relevé Périodique
+lightbox#delete-periodic div.content {
+  width: 600px;
+}
+.lightbox-releve-period {
+  .margin-button {
+    margin-top: 2%;
+    margin-right: 5%;
+  }
+}
+
+
+
 
