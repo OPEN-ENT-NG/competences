@@ -49,7 +49,7 @@
         .display-bulletin{
             text-align: center;
             border-spacing: 0 !important;
-            margin: 50px 0 0 0;
+            margin: 20px 0 0 0;
         }
         .display-bulletin tr{
             padding: 0;
@@ -128,9 +128,23 @@
             font-size: 90%;
         }
 
+        .width-15 {
+            width: 15%;
+        }
+
+        .width-40 {
+            width: 40%;
+        }
+
+        .width-45 {
+            width: 45%;
+        }
+
         .coeff{
             font-size: 70%;
         }
+
+        table.font-50 tr td { font-size: 70%; }
 
         .div-note {
             display:inline-block;
@@ -156,7 +170,7 @@
 <body>
 <div class="page_fin">
 
-    <table class="head">
+    <table class="head font-50">
         <tr><td><strong>{{#etablissement}}{{name}}{{/etablissement}}</strong></td><td class="align-right">Elève : <strong>{{#user}}{{displayName}}{{/user}}</strong></td></tr>
         <tr><td><strong>{{#etablissement}}{{address}}{{/etablissement}}</strong></td><td class="align-right">Classe : <strong>{{#classe}}{{name}}{{/classe}}</strong></td></tr>
         <tr><td><strong>{{#etablissement}}{{zipcode}} {{city}}{{/etablissement}}</strong></td><td class="align-right">Période : <strong>{{#periode}}{{libelle}}{{/periode}}</strong></td></tr>
@@ -175,16 +189,15 @@
             <td class="right-bottom" colspan="2"><strong>Moyenne</strong></td>
             {{/printSousMatiere}}
             {{^printSousMatiere}}
-            <td class="align-left left"><strong>Matière</strong></td>
-            <td class="left-right"><strong>Notes</strong></td>
-            <td class="right-bottom"><strong>Moyenne</strong></td>
+            <td class="align-left left width-40"><strong>Matière</strong></td>
+            <td class="left-right width-45"><strong>Notes</strong></td>
+            <td class="right-bottom width-15"><strong>Moyenne</strong></td>
             {{/printSousMatiere}}
         </tr>
 
         {{^printSousMatiere}}
         {{#matieres}}
         <tr class="avoid-page-break top">
-
             <td class="upper align-left matiere top">
                 <span class="align-left">{{name}}</span>
                 <span class="align-left professeur">
