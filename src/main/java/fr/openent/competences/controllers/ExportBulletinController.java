@@ -215,7 +215,7 @@ public class ExportBulletinController extends ControllerHelper {
                        }
                    }
                     else {
-                        badRequest(request);
+                        badRequest(request, event.left().getValue());
                    }
                 }
             });

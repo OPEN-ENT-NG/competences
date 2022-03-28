@@ -3252,24 +3252,28 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         ;
         utilsService.getYearsAndPeriodes(idStructure, true, yearEvent -> {
-            String idYear = yearEvent.right().getValue().getString("start_date").substring(0, 4);
-            StringBuilder query = new StringBuilder();
-            query.append("SELECT * FROM notes.archive_bulletins WHERE id_eleve IN ").append(Sql.listPrepared(idsStudent.getList()))
-                    .append(" AND id_classe IN ").append(Sql.listPrepared(idsClasses.getList())).append(" AND id_periode = ? ")
-                    .append(" AND id_etablissement = ? AND id_annee = ? ;");
-            JsonArray values = new JsonArray().addAll(idsStudent).addAll(idsClasses).add(idPeriode).add(idStructure).add(idYear);
+            try {
+                String idYear = yearEvent.right().getValue().getString("start_date").substring(0, 4);
+                StringBuilder query = new StringBuilder();
+                query.append("SELECT * FROM notes.archive_bulletins WHERE id_eleve IN ").append(Sql.listPrepared(idsStudent.getList()))
+                        .append(" AND id_classe IN ").append(Sql.listPrepared(idsClasses.getList())).append(" AND id_periode = ? ")
+                        .append(" AND id_etablissement = ? AND id_annee = ? ;");
+                JsonArray values = new JsonArray().addAll(idsStudent).addAll(idsClasses).add(idPeriode).add(idStructure).add(idYear);
 
-            Sql.getInstance().prepared(query.toString(), values, event -> {
-                JsonObject result = event.body();
-                if (result.getString("status").equals("ok")) {
-                    Integer response =
-                        result.getInteger("rows");
-                        handler.handle(new Either.Right<>((response != null && response > 0) ? true :false));
+                Sql.getInstance().prepared(query.toString(), values, event -> {
+                    JsonObject result = event.body();
+                    if (result.getString("status").equals("ok")) {
+                        Integer response =
+                                result.getInteger("rows");
+                        handler.handle(new Either.Right<>((response != null && response > 0) ? true : false));
 
-                } else {
-                    handler.handle(new Either.Left<>(result.getString("status")));
-                }
-            });
+                    } else {
+                        handler.handle(new Either.Left<>(result.getString("status")));
+                    }
+                });
+            }catch (Exception e){
+                handler.handle(new Either.Left<>(e.getMessage()));
+            }
         });
     }
 

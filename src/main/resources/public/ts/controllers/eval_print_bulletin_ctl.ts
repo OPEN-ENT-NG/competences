@@ -202,7 +202,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                         }
                         studentsToSend.push(studentTemp)
                     });
-                    let {status} = await ExportBulletins.checkBulletins(studentsToSend,$scope.selected.periode.id_type,options.idStructure);
+                    let {status} = await ExportBulletins.checkBulletins(studentsToSend,$scope.selected.periode.id_type,$scope.structure.id);
                     if(status == 201){
                         $scope.optionsBulletins = options ;
                         $scope.display.bulletinAlert = true;
