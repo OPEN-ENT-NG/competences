@@ -2976,7 +2976,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             isWorkingProgress = false;
         }
 
-        $scope.saveNoteDevoirEleve = async function (evaluation, $event, eleve, listAnnotations, isAnnotation?) {
+        $scope.saveNoteDevoirEleve = async function (evaluation, $event, eleve, isAnnotation?) {
             // todo refacto make this function more readable
             let isInReleve = $location.$$path === '/releve';
             if (isInReleve)
@@ -3010,7 +3010,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         if (evaluation.data !== undefined && evaluation.data.id !== undefined && evaluation.id === undefined) {
                             evaluation.id = evaluation.data.id;
                         }
-                        let annotation = _.findWhere(listAnnotations, {libelle_court: evaluation.valeur});
+                        let annotation = _.findWhere($scope.evaluations.annotations.all, {libelle_court: evaluation.valeur});
                         if (isSaveAnnotationDevoir(evaluation, annotation)) {
                             evaluation.id_annotation = annotation.id;
                             $scope.saveAnnotationDevoirEleve(evaluation, $event, eleve, isAnnotation);
@@ -3826,6 +3826,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             evaluations.classes = evaluations.structure.classes;
             evaluations.devoirs = evaluations.structure.devoirs;
             evaluations.types = evaluations.structure.types;
+            evaluations.annotations = evaluations.structure.annotations;
             $scope.enseignements = evaluations.structure.enseignements;
             $scope.filteredEnseignements = _.filter($scope.enseignements.all, enseignement => {
                 return $scope.enseignementsWithCompetences(enseignement);
