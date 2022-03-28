@@ -3826,6 +3826,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             evaluations.classes = evaluations.structure.classes;
             evaluations.devoirs = evaluations.structure.devoirs;
             evaluations.types = evaluations.structure.types;
+            evaluations.annotations = evaluations.structure.annotations;
             $scope.enseignements = evaluations.structure.enseignements;
             $scope.filteredEnseignements = _.filter($scope.enseignements.all, enseignement => {
                 return $scope.enseignementsWithCompetences(enseignement);

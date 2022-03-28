@@ -349,8 +349,9 @@ export class ReleveNote extends  Model implements IModel {
                                 if (_eval.annotation !== undefined && _eval.annotation !== null
                                     && _eval.annotation > 0) {
                                     _eval.oldAnnotation = _eval.annotation;
-                                    _eval.annotation_libelle_court = evaluations.structure.annotations.findWhere(
-                                        {id: _eval.annotation}).libelle_court;
+                                    var lib = evaluations.structure.annotations.findWhere(
+                                        {id: _eval.annotation});
+                                    _eval.annotation_libelle_court = (lib != null ? lib.libelle_court : "ERR");
                                     _eval.is_annotation = true;
                                 }
                                 _eval.endSaisie = endSaisie;
