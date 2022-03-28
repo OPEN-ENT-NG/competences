@@ -740,7 +740,7 @@
   "import.homonyme.message": " Les retards et absences des élèves suivants n'ont pas été insérés car des homonymes ont été détectés : ",
   "in.file": "Dans le fichier ",
   "viescolaire.utils.classes": "classes",
-  "evaluation.notation.explanation": "Note ayant pour coefficient n, ou 1 le cas échéant, suivie de la moyenne de classe sur le devoir m.",
+  "evaluation.notation.explanation": "Note de coefficient n (1 le cas échéant), suivie de la moyenne de classe sur le devoir m.",
   "competance.error.iframe.error": "Erreur lors de la récupération du PDF",
   "competance.error.iframe.statusText": "Le contenu est vide",
   "competance.information.noExport": "Problème rencontré lors de la génération de l'export",
