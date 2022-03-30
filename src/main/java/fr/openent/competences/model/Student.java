@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static fr.openent.competences.Utils.getLibelle;
+
 public class Student  extends  Model{
 
     private String firstName;
@@ -170,9 +172,15 @@ public class Student  extends  Model{
                 .put("typePeriode",this.classe.getPeriode().getType())
                 .put("idGroupes",idGroupes)
                 .put("idLanualGroupes",idManualGroupes)
+                .put("periode",classe.getPeriode().getName())
+                .put("schoolYear", getLibelle("school.year")
+                        + classe.getPeriode().getStartDate()
+                        + "-" + classe.getPeriode().getEndDate())
         ;
         if(hasLvl)
             result.mergeIn(level.toJsonObject());
+        result.mergeIn(paramBulletins.toJson());
+        result.put("structureLibelle",structure.toJsonObject());
         return result;
     }
 }

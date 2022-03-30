@@ -100,6 +100,19 @@ public class Structure  extends  Model{
         this.phone = phone;
     }
 
+    //     if(structure.getAcademy() != null) {
+    //                                    structureLibelle.add(new JsonObject().put("academy", structure.getAcademy()));}
+    //                                if(structure.getType() != null) {
+    //                                    structureLibelle.add(new JsonObject().put("type", structure.getType()));}
+    //                                if(structure.getName() != null) {
+    //                                    structureLibelle.add(new JsonObject().put(NAME_STRUCTURE,structure.getName()));
+    ////                                            eleveObject.put(STRUCTURE, name);
+    //                                }
+    //                                if(structure.getAddress() != null) {
+    //                                    structureLibelle.add(new JsonObject().put("address", structure.getAddress()));}
+    //                                if(structure.getPhone() != null) {structureLibelle.add(new JsonObject().put("phone", structure.getPhone()));}
+    //                                if(structure.getMail() != null) {
+    //                                    structureLibelle.add(new JsonObject().put("couriel", structure.getMail()));}
     @Override
     public JsonObject toJsonObject() {
         JsonObject result = new JsonObject();
