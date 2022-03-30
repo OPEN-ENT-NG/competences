@@ -14,6 +14,7 @@ public class Structure  extends  Model{
     private String phone;
     private String citeMixte;
     private String type;
+    private String mail;
 
     public Structure(){
         super();
@@ -25,6 +26,14 @@ public class Structure  extends  Model{
 
     public void setUAI(String UAI) {
         this.UAI = UAI;
+    }
+
+    public String getMail() {
+        return mail;
+    }
+
+    public void setMail(String mail) {
+        this.mail = mail;
     }
 
     public String getType() {
@@ -91,9 +100,39 @@ public class Structure  extends  Model{
         this.phone = phone;
     }
 
+    //     if(structure.getAcademy() != null) {
+    //                                    structureLibelle.add(new JsonObject().put("academy", structure.getAcademy()));}
+    //                                if(structure.getType() != null) {
+    //                                    structureLibelle.add(new JsonObject().put("type", structure.getType()));}
+    //                                if(structure.getName() != null) {
+    //                                    structureLibelle.add(new JsonObject().put(NAME_STRUCTURE,structure.getName()));
+    ////                                            eleveObject.put(STRUCTURE, name);
+    //                                }
+    //                                if(structure.getAddress() != null) {
+    //                                    structureLibelle.add(new JsonObject().put("address", structure.getAddress()));}
+    //                                if(structure.getPhone() != null) {structureLibelle.add(new JsonObject().put("phone", structure.getPhone()));}
+    //                                if(structure.getMail() != null) {
+    //                                    structureLibelle.add(new JsonObject().put("couriel", structure.getMail()));}
     @Override
     public JsonObject toJsonObject() {
-        return null;
+        JsonObject result = new JsonObject();
+        result.put("academy",this.academy)
+                .put("type",type)
+                .put("nameStructure",name)
+                .put("address",address)
+                .put("phone",phone)
+                .put("couriel",mail);
+        String town = null;
+        if(this.getZipCode() != null) {
+            town = this.getZipCode();
+        }
+        if(this.getCity() != null) {
+            town = (town!=null)? (town + ' ' + this.getCity()) : this.getCity();
+        }
+        if (town!= null) {
+            result.put("town",town);
+        }
+        return result;
     }
 
 }
