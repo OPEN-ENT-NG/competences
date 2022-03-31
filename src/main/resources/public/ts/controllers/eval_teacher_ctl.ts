@@ -611,7 +611,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 suppressionMsg1: false,
                 suppressionMsg2: false,
                 suppression : {
-                    soloMsg1: false,
+                    uniqueMsg1: false,
                 }
             },
             displayStructureLoader: false,
@@ -1083,9 +1083,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             Text4: lang.translate('evaluations.devoir.recaputilatif.suppression.text4'),
             Text5: lang.translate('evaluations.devoir.recaputilatif.suppression.text5'),
             Text6: lang.translate('evaluations.devoir.recaputilatif.suppression.text6'),
-            Text7: lang.translate('evaluations.devoir.recaputilatif.suppression.solo.text1'),
-            Text8: lang.translate('evaluations.devoir.recaputilatif.suppression.solo.text2'),
-            Text9: lang.translate('evaluations.devoir.recaputilatif.suppression.solo.text3'),
+            Text7: lang.translate('evaluations.devoir.recaputilatif.suppression.unique.text1'),
+            Text8: lang.translate('evaluations.devoir.recaputilatif.suppression.unique.text2'),
+            Text9: lang.translate('evaluations.devoir.recaputilatif.suppression.unique.text3'),
             TexTUncancelable: lang.translate('evaluations.devoir.recaputilatif.suppression.Uncacelable'),
             TextFin: lang.translate('evaluations.devoir.recaputilatif.suppression.confirmation')
         };
@@ -1093,7 +1093,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.firstConfirmationSuppDevoir = function () {
             if ($scope.selected.devoirs.list.length > 0) {
-                $scope.opened.evaluation.suppression.soloMsg1 = true;
+                $scope.opened.evaluation.suppression.uniqueMsg1 = true;
 
                 let idDevoir = [];
                 _.map($scope.selected.devoirs.list, function (devoir) {
@@ -1204,7 +1204,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.annulerSuppression = function () {
             $scope.opened.evaluation.suppressionMsg2 = false;
             $scope.opened.evaluation.suppressionMsg1 = false;
-            $scope.opened.evaluation.suppression.soloMsg1 = false;
+            $scope.opened.evaluation.suppression.uniqueMsg1 = false;
         };
 
         $scope.releveNote = undefined;
@@ -2166,7 +2166,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 );
             }
             $scope.opened.evaluation.suppressionMsg2 = false;
-            $scope.opened.evaluation.suppression.soloMsg1 = false;
+            $scope.opened.evaluation.suppression.uniqueMsg1 = false;
         };
 
         $scope.cancelUpdateDevoir = function () {

@@ -58,69 +58,38 @@
         </div>
     </div>
 
-<!--    <lightbox id="delete-period" show="display.lightbox.evaluation"-->
-<!--              on-close="cancelEvalDeleteConfirmation()">-->
-<!--        <container template="evaluation.lightbox"></container>-->
-<!--    </lightbox>-->
-<!--        <lightbox ng-if="selected.devoirs.list.length == 1 || devoirsUncancelable.length == 1"-->
-<!--                  show="opened.evaluation.suppression.soloMsg1" on-close="opened.evaluation.suppression.soloMsg1=false">-->
-<!--            <div class="lightbox-releve-period">-->
-<!--                <h2>-->
-<!--                    <i18n>evaluations.delete.evaluation.title</i18n>-->
-<!--                </h2>-->
-<!--                <p ng-if="devoirsUncancelable.length == 1 ">-->
-<!--                    <i18n>evaluations.devoir.recaputilatif.suppression.uncancelable</i18n>-->
-<!--                    <b>[[informations.devoir.name]]</b>-->
-<!--                </p>-->
-<!--                <p ng-if="selected.devoirs.list.length == 1">-->
-<!--                    <i18n>evaluations.devoir.information.suppression.solo</i18n>-->
-<!--                    <b>[[informations.devoir.name]]</b><br><br>-->
-<!--                    <i18n>evaluations.delete.evaluation.question</i18n>-->
-<!--                </p>-->
-<!--                <div class="right-magnet margin-button">-->
-<!--                    <button class="marginFive" ng-click="annulerSuppression()">-->
-<!--                        <i18n>evaluations.devoir.annuler</i18n>-->
-<!--                    </button>-->
-<!--                    <button  ng-if="selected.devoirs.list.length > 0 "-->
-<!--                             class="marginFive" ng-click="firstConfirmationSuppDevoir()">-->
-<!--                        <i18n>evaluations.devoir.confirmation</i18n>-->
-<!--                    </button>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </lightbox>-->
-
-        <lightbox id="delete-periodic" ng-if="selected.devoirs.list.length == 1 || devoirsUncancelable.length == 1" show="opened.evaluation.suppression.soloMsg1" on-close="opened.evaluation.suppression.soloMsg1=false">
-            <div class="lightbox-releve-period">
-                <h2>
-                    <i18n>evaluations.delete.evaluation.title</i18n>
-                </h2>
-                <div ng-if="conditionAffichageText(7)">
-                    <p><i18n>evaluations.devoir.recaputilatif.suppression.solo</i18n>
-                        <b>[[informations.devoir.name]]</b>
-                        [[textSuppressionMsg2.Text7]]
-                    </p>
-                </div>
-                <div ng-if="conditionAffichageText(8)">
-                    <p><i18n>evaluations.devoir.recaputilatif.suppression.solo</i18n>
-                        <b>[[informations.devoir.name]]</b>
-                        [[textSuppressionMsg2.Text8]]
-                    </p>
-                </div>
-                <div  ng-if="conditionAffichageText(9)" >
-                    <p><i18n>evaluations.devoir.recaputilatif.suppression.solo</i18n>
-                        <b>[[informations.devoir.name]]</b>
-                        [[textSuppressionMsg2.Text9]]
-                    </p>
-                </div>
-                <p>[[textSuppressionMsg2.TextFin]]</p>
-                <div class="right-magnet margin-button">
-                    <button class="marginFive" ng-click="annulerSuppression()">
-                        <i18n>evaluations.devoir.annuler</i18n>
-                    </button>
-                    <button class="marginFive" ng-click="deleteDevoir()">
-                        <i18n>evaluations.devoir.confirmation</i18n>
-                    </button>
-                </div>
+    <lightbox id="delete-periodic" ng-if="selected.devoirs.list.length == 1 || devoirsUncancelable.length == 1" show="opened.evaluation.suppression.uniqueMsg1" on-close="opened.evaluation.suppression.uniqueMsg1=false">
+        <div class="lightbox-releve-period">
+            <h2>
+                <i18n>evaluations.delete.evaluation.title</i18n>
+            </h2>
+            <div ng-if="conditionAffichageText(7)">
+                <p><i18n>evaluations.devoir.recaputilatif.suppression.unique</i18n>
+                    <b>[[informations.devoir.name]]</b>
+                    [[textSuppressionMsg2.Text7]]
+                </p>
             </div>
-        </lightbox>
+            <div ng-if="conditionAffichageText(8)">
+                <p><i18n>evaluations.devoir.recaputilatif.suppression.unique</i18n>
+                    <b>[[informations.devoir.name]]</b>
+                    [[textSuppressionMsg2.Text8]]
+                </p>
+            </div>
+            <div  ng-if="conditionAffichageText(9)" >
+                <p><i18n>evaluations.devoir.recaputilatif.suppression.unique</i18n>
+                    <b>[[informations.devoir.name]]</b>
+                    [[textSuppressionMsg2.Text9]]
+                </p>
+            </div>
+            <p>[[textSuppressionMsg2.TextFin]]</p>
+            <div class="right-magnet margin-button">
+                <button class="marginFive" ng-click="annulerSuppression()">
+                    <i18n>evaluations.devoir.annuler</i18n>
+                </button>
+                <button class="marginFive" ng-click="deleteDevoir()">
+                    <i18n>evaluations.devoir.confirmation</i18n>
+                </button>
+            </div>
+        </div>
+    </lightbox>
 </div>
