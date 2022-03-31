@@ -36,7 +36,10 @@ public class Classe  extends  Model{
     }
 
     public String getDisplayName() {
-        return displayName;
+        if(displayName != null)
+            return displayName;
+        else
+            return name;
     }
 
     public void setDisplayName(String displayName) {
