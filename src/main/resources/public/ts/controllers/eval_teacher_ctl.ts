@@ -596,6 +596,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             evaluation: {
                 suppressionMsg1: false,
                 suppressionMsg2: false,
+                suppression : {
+                    uniqueMsg1: false,
+                }
             },
             displayStructureLoader: false,
             displayMessageLoader: false,
@@ -1066,6 +1069,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             Text4: lang.translate('evaluations.devoir.recaputilatif.suppression.text4'),
             Text5: lang.translate('evaluations.devoir.recaputilatif.suppression.text5'),
             Text6: lang.translate('evaluations.devoir.recaputilatif.suppression.text6'),
+            Text7: lang.translate('evaluations.devoir.recaputilatif.suppression.unique.text1'),
+            Text8: lang.translate('evaluations.devoir.recaputilatif.suppression.unique.text2'),
+            Text9: lang.translate('evaluations.devoir.recaputilatif.suppression.unique.text3'),
             TexTUncancelable: lang.translate('evaluations.devoir.recaputilatif.suppression.Uncacelable'),
             TextFin: lang.translate('evaluations.devoir.recaputilatif.suppression.confirmation')
         };
@@ -1073,6 +1079,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.firstConfirmationSuppDevoir = function () {
             if ($scope.selected.devoirs.list.length > 0) {
+                $scope.opened.evaluation.suppression.uniqueMsg1 = true;
 
                 let idDevoir = [];
                 _.map($scope.selected.devoirs.list, function (devoir) {
@@ -1156,7 +1163,26 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 } else {
                     return false;
                 }
-            } else {
+            } else if (NumText === 7) {
+                if ($scope.selected.devoirs.listwithEvaluatedSkills.length < 16 && $scope.selected.devoirs.listwithEvaluatedMarks.length === 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if (NumText === 8) {
+                if ($scope.selected.devoirs.listwithEvaluatedMarks.length < 16 && $scope.selected.devoirs.listwithEvaluatedSkills.length === 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if (NumText === 9) {
+                if (($scope.selected.devoirs.listwithEvaluatedSkills.length + $scope.selected.devoirs.listwithEvaluatedMarks.length) < 16 && $scope.selected.devoirs.listwithEvaluatedSkills.length !== 0 && $scope.selected.devoirs.listwithEvaluatedMarks.length !== 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            else {
                 return false;
             }
 
@@ -1164,6 +1190,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.annulerSuppression = function () {
             $scope.opened.evaluation.suppressionMsg2 = false;
             $scope.opened.evaluation.suppressionMsg1 = false;
+            $scope.opened.evaluation.suppression.uniqueMsg1 = false;
         };
 
         $scope.releveNote = undefined;
@@ -2114,6 +2141,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                     devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
                                     return $scope.filterValidDevoir(devoir);
                                 });
+                                $scope.getReleve();
+                                $scope.deleteDevoirInformations()
                                 utils.safeApply($scope);
                             });
                         }).catch(() => {
@@ -2123,6 +2152,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 );
             }
             $scope.opened.evaluation.suppressionMsg2 = false;
+            $scope.opened.evaluation.suppression.uniqueMsg1 = false;
         };
 
         $scope.cancelUpdateDevoir = function () {
@@ -5102,5 +5132,26 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             }
         });
+
+        $scope.display = {
+            lightbox : {
+                evaluation: false,
+            }
+        };
+
+        $scope.openEvalDeleteConfrmation = () => {
+            $scope.display.lightbox.evaluation = true;
+            template.open('evaluation.lightbox', 'enseignants/informations/lightbox_delete_evaluation');
+        }
+
+        $scope.cancelEvalDeleteConfirmation = () => {
+            $scope.display.lightbox.evaluation = false;
+        }
+
+        $scope.addDevoirList = () => {
+            if($scope.informations.devoir){
+                $scope.selected.devoirs.list[0] = $scope.informations.devoir;
+            }
+        }
     }
 ]);
