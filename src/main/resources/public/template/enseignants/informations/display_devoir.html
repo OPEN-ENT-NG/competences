@@ -51,7 +51,45 @@
     <div>
         <progress-bar max="100" filled="informations.devoir.statistiques.percentDone" unit="%"></progress-bar>
     </div>
-    <div class="center">
-        <a class="button twelve-mobile" href="/competences#/devoir/[[informations.devoir.id]]"><i18n>open.devoir</i18n></a>
+    <div class="releve_periodique">
+        <div class="column-center marginTop10 center">
+            <a class="button twelve-mobile" href="/competences#/devoir/[[informations.devoir.id]]"><i18n>open.devoir</i18n></a>
+            <a href ng-init="addDevoirList()" ng-click="firstConfirmationSuppDevoir()"><i18n>evaluations.delete.evaluation</i18n></a>
+        </div>
     </div>
+
+    <lightbox id="delete-periodic" ng-if="selected.devoirs.list.length == 1 || devoirsUncancelable.length == 1" show="opened.evaluation.suppression.uniqueMsg1" on-close="opened.evaluation.suppression.uniqueMsg1=false">
+        <div class="lightbox-releve-period">
+            <h2>
+                <i18n>evaluations.delete.evaluation.title</i18n>
+            </h2>
+            <div ng-if="conditionAffichageText(7)">
+                <p><i18n>evaluations.devoir.recaputilatif.suppression.unique</i18n>
+                    <b>[[informations.devoir.name]]</b>
+                    [[textSuppressionMsg2.Text7]]
+                </p>
+            </div>
+            <div ng-if="conditionAffichageText(8)">
+                <p><i18n>evaluations.devoir.recaputilatif.suppression.unique</i18n>
+                    <b>[[informations.devoir.name]]</b>
+                    [[textSuppressionMsg2.Text8]]
+                </p>
+            </div>
+            <div  ng-if="conditionAffichageText(9)" >
+                <p><i18n>evaluations.devoir.recaputilatif.suppression.unique</i18n>
+                    <b>[[informations.devoir.name]]</b>
+                    [[textSuppressionMsg2.Text9]]
+                </p>
+            </div>
+            <p>[[textSuppressionMsg2.TextFin]]</p>
+            <div class="right-magnet margin-button">
+                <button class="marginFive" ng-click="annulerSuppression()">
+                    <i18n>evaluations.devoir.annuler</i18n>
+                </button>
+                <button class="marginFive" ng-click="deleteDevoir()">
+                    <i18n>evaluations.devoir.confirmation</i18n>
+                </button>
+            </div>
+        </div>
+    </lightbox>
 </div>
