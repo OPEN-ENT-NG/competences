@@ -21,6 +21,7 @@ public class Student  extends  Model{
     private boolean hasLvl = false;
     private Level level;
     private final List<Group>  groupes = new ArrayList<>();
+    private final List<StudentEvenement>  evenements = new ArrayList<>();
     private final List<Group>  manualGroupes = new ArrayList<>();
     private String externalId;
     private String deleteDate;
@@ -107,6 +108,9 @@ public class Student  extends  Model{
         hasIne = true;
         this.INE = INE;
     }
+    public void addEvenement (StudentEvenement evenement){
+        evenements.add(evenement);
+    }
 
     public Structure getStructure() {
         return structure;
@@ -144,6 +148,10 @@ public class Student  extends  Model{
         this.deleteDate = deleteDate;
     }
 
+    public List<StudentEvenement> getEvenements() {
+        return evenements;
+    }
+
     @Override
     public JsonObject toJsonObject() {
         JsonObject result = new JsonObject();
@@ -176,6 +184,7 @@ public class Student  extends  Model{
                 .put("schoolYear", getLibelle("school.year")
                         + classe.getPeriode().getStartDate()
                         + "-" + classe.getPeriode().getEndDate())
+        .put("evenements",evenements.stream().map(StudentEvenement::toString).collect(Collectors.toList()))
         ;
         if(hasLvl)
             result.mergeIn(level.toJsonObject());
