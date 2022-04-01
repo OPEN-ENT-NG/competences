@@ -634,12 +634,12 @@ public class LSUController extends ControllerHelper {
 
                             Future<JsonArray> servicesFuture = Future.future();
                             listGetProjectAndCompNum.add(servicesFuture);
-                            utilsService.getServices(idStructure, new JsonArray(idsClasse),
+                            utilsService.getServices(idStructure, new JsonArray(idsGroupsClasses),
                                     servicesEvent -> formate(servicesFuture, servicesEvent));
 
                             Future<JsonArray> multiTeachersFuture = Future.future();
                             listGetProjectAndCompNum.add(multiTeachersFuture);
-                            utilsService.getMultiTeachers(idStructure, new JsonArray(idsClasse), null,
+                            utilsService.getMultiTeachers(idStructure, new JsonArray(idsGroupsClasses), null,
                                     multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
 
                             CompositeFuture.all(listGetProjectAndCompNum).setHandler(eventProjectCompNum -> {
@@ -2517,7 +2517,8 @@ public class LSUController extends ControllerHelper {
             JsonArray idClasseGroups = mapIdsGroupsClasses.get(idClasse);
 
             JsonArray servicesClasse = new JsonArray(services.stream()
-                    .filter(el -> idClasse.equals(((JsonObject) el).getString("id_groupe")))
+                    .filter(el -> idClasse.equals(((JsonObject) el).getString("id_groupe")) ||
+                            (idClasseGroups.getList()).contains(((JsonObject) el).getString("id_groupe")))
                     .collect(Collectors.toList()));
 
             for (int j = 0; j < periodes.size(); j++) {
@@ -2539,7 +2540,9 @@ public class LSUController extends ControllerHelper {
 
                 JsonArray multiTeachersClasse = new JsonArray(multiTeachers.stream()
                         .filter(el -> idClasse.equals(((JsonObject) el).getString("class_or_group_id")) &&
-                                idPeriode.equals(((JsonObject) el).getLong("id_type")))
+                                idPeriode.equals(((JsonObject) el).getLong("id_type")) ||
+                                (idClasseGroups.getList()).contains(((JsonObject) el).getString("id_groupe")) &&
+                                        idPeriode.equals(((JsonObject) el).getLong("id_type")))
                         .collect(Collectors.toList()));
 
                 if(isgnorated || !(createDateEleve == null || createDateEleve.before(dateFnPeriode)) &&
