@@ -402,6 +402,23 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
                     $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+                    if (Utils.isTeacher()) {
+                        evaluations.structure.syncAllClasses().then(() => {
+                            $scope.allClasses = evaluations.structure.allClasses;
+                            $scope.linkGroupsToClasses().then(() => {
+                                $scope.filteredClassesGroups = _.filter($scope.allClasses, classe => {
+                                    return $scope.filterValidClasseGroups(classe);
+                                });
+                            });
+                        });
+                    } else {
+                        $scope.allClasses = evaluations.structure.classes.all;
+                        $scope.linkGroupsToClasses().then(() => {
+                            $scope.filteredClassesGroups = _.filter($scope.allClasses, classe => {
+                                return $scope.filterValidClasseGroups(classe);
+                            });
+                        });
+                    }
 
                     delete $scope.informations.eleve;
                     utils.safeApply($scope);
@@ -3703,16 +3720,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.goTo('/');
                 console.log('redirect');
                 utils.safeApply($scope);
-            }
-            else if ($route.current.originalPath === '/conseil/de/classe') {
-                evaluations.structure.syncAllClasses().then(() => {
-                    $scope.allClasses = evaluations.structure.allClasses;
-                    $scope.linkGroupsToClasses().then(() => {
-                        $scope.filteredClassesGroups = _.filter($scope.allClasses, classe => {
-                            return $scope.filterValidClasseGroups(classe);
-                        });
-                    });
-                });
             }
             utils.safeApply($scope);
         });
