@@ -64,6 +64,9 @@ export class Utils {
         return model.me.type === "PERSEDUCNAT";
     }
 
+    static isTeacher () {
+        return model.me.profiles.indexOf('Teacher') != -1;
+    }
     static canUpdateRetardAndAbsence () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateRetardAndAbsence);
     }
