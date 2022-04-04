@@ -18,51 +18,61 @@
 
 <div class="row">
     <div class="cell twelve legend">
-        <h4>
+        <h3>
             <i18n>competence.createCompetence.item</i18n>
-        </h4>
+        </h3>
         <div class="separator"></div>
     </div>
 
     <div  class="cell twelve">
         <!-- Libelle -->
-        <section class="row twelve-mobile">
-            <div class="three cell twelve-mobile">
+        <section class="row twelve-mobile lightbox-creation-competences">
+            <div class="three cell twelve-mobile element">
                 <i18n>competence.createCompetence.libelle</i18n>
                 <i class="asterisk obligatoire"></i>
             </div>
 
-            <div class="nine cell twelve-mobile">
+            <div class="nine cell twelve-mobile input-no-bold">
                 <input type="text" class="eleven twelve-mobile" ng-model="newItem.libelle">
             </div>
         </section>
         <!-- Cycle -->
-        <section class="row twelve-mobile">
-            <div class="three cell twelve-mobile">
+        <section class="row twelve-mobile lightbox-creation-competences">
+            <div class="three cell twelve-mobile element">
+                <i18n>competence.createCompetence.cycle</i18n>
+            </div>
+            <div class="nine cell twelve-mobile element-no-bold">
                 [[newItem.cycle]]
             </div>
         </section>
         <!-- Enseignement -->
-        <section class="row twelve-mobile">
-            <div class="three cell twelve-mobile">
+        <section class="row twelve-mobile lightbox-creation-competences">
+            <div class="three cell twelve-mobile element">
+                <i18n>competence.createCompetence.enseignement</i18n>
+            </div>
+            <div class="nine cell twelve-mobile element-no-bold">
                 [[newItem.enseignement.nom]]
             </div>
         </section>
         <!-- Element signifiant -->
-        <section class="row twelve-mobile">
-            <div class="three cell twelve-mobile">
+        <section class="row twelve-mobile lightbox-creation-competences">
+            <div class="three cell twelve-mobile element">
+                <i18n>competence.createCompetence.elementSignifiant</i18n>
+            </div>
+            <div class="nine cell twelve-mobile element-no-bold">
                 [[newItem.elementSignifiant.nom]]
             </div>
         </section>
-        <section ng-include="'/competences/public/template/personnels/param_items/showDomaine.html'">
+        <section class="margin-bottom-5p" ng-include="'/competences/public/template/personnels/param_items/lightbox_competences_domaines.html'">
         </section>
         <div class="twelve cell">
             <input type="button"
                    ng-disabled="isStringUndefinedOrEmpty(newItem.libelle) || newItem.ids_domaine.length === 0"
                    ng-click="saveItem(newItem)"
-                   i18n-value="viescolaire.utils.save">
+                   i18n-value="viescolaire.utils.save"
+                    class="right-magnet">
 
-            <div ng-if="!isModif" class="three cell right-magnet">
+            <div ng-if="!isModif" class="cell right-magnet">
                 <button data-ng-click="opened.lightboxCreateItem = false" class="right-magnet cancel">
                     <span><i18n>evaluations.remplacement.cancel</i18n></span>
                 </button>

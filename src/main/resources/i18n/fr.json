@@ -815,6 +815,7 @@
   "competence.createCompetence.item" : "Créer une compétence",
   "competence.createCompetence.libelle" : "Libellé",
   "competence.createCompetence.cycle" : "Cycle",
-  "competence.createCompetence.enseignement" : "Enseignement"
-
+  "competence.createCompetence.enseignement" : "Enseignement",
+  "competence.createCompetence.elementSignifiant" : "Elément signifiant",
+  "competence.createCompetence.domaine" : "Domaines"
 }
