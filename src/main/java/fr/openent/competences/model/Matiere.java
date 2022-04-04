@@ -9,7 +9,7 @@ public class Matiere {
     private String id;
     private String libelle;
     private static final String BACKGROUND_COLOR = "backgroundColor";
-    private static final String LIBELLE_MATIERE = "libelleMatiere";
+    private final String LIBELLE_MATIERE = "libelleMatiere";
 
     public Matiere() {
     }
@@ -38,7 +38,11 @@ public class Matiere {
         this.libelle = libelle;
     }
 
-    public JsonObject toJsonObject() {
-        return new JsonObject().put(BACKGROUND_COLOR,backgroundColor).put(LIBELLE_MATIERE,libelle);
+    public JsonObject toJsonObject(){
+        JsonObject result = new JsonObject()
+                .put(BACKGROUND_COLOR,backgroundColor)
+                .put(LIBELLE_MATIERE,libelle);
+
+        return result;
     }
 }

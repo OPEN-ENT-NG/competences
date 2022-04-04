@@ -1,7 +1,6 @@
 package fr.openent.competences.service;
 
 import fr.openent.competences.model.Student;
-import fr.openent.competences.model.StudentEvenement;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -29,6 +28,7 @@ public interface ExportBulletinService {
   * @param answered Atomic booléen seté lorsqu'on lance l'export
   * @param idEleve idEleve
   * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+  * @param idEleves
   * @param idPeriode idPeriode
   * @param params paramètres de la requête
   * @param classe Object contenant les information sur la classe
@@ -38,7 +38,7 @@ public interface ExportBulletinService {
   * @param finalHandler handler servant à la synchronisation des services
   */
  void getExportBulletin(final AtomicBoolean answered, String idEleve,
-                        Map<String, JsonObject> elevesMap, Student student, Long idPeriode, JsonObject params,
+                        Map<String, JsonObject> elevesMap, Student student, JsonArray idEleves, Long idPeriode, JsonObject params,
                         final JsonObject classe, String host, String acceptLanguage,
                         Vertx vertx, Handler<Either<String, JsonObject>> finalHandler);
 
@@ -65,10 +65,11 @@ public interface ExportBulletinService {
  /**
   * Récupère le suivi des acquis d'un élève
   * @param student student export
+  * @param idEleves
   * @param params  paramètre d'export
   * @param promise promise apellée à la fin de la fonction
   */
- void getSuiviAcquis(Student student,JsonObject classe,
+ void getSuiviAcquis(Student student, JsonArray idEleves, JsonObject classe,
                      JsonObject params, Promise<Object> promise);
 
  /**
