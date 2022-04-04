@@ -48,6 +48,7 @@
                       class="skills-text-overflow">
                     <i class="skills-open-icon"></i>
                     <span ng-bind-html="competencesFilter[competence.id + '_' + competence.id_enseignement].nomHtml"></span>
+                    <i ng-show=true class="plus-input" ng-click="openLightboxCreationCompetence(enseignement, competence);"></i>
                 </span>
                 <ul class="twelve">
                     <li ng-repeat="sousCompetence in competence.competences.all"
@@ -75,4 +76,7 @@
             </li>
         </ul>
     </li>
+    <lightbox show="creatingCompetence" on-close="creatingCompetence = false;">
+        <container template="lightboxCreationCompetence"></container>
+    </lightbox>
 </ul>

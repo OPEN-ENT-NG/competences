@@ -18,7 +18,9 @@
 /**
  * Created by ledunoiss on 21/09/2016.
  */
-import { ng, appPrefix, _ } from 'entcore';
+import {ng, appPrefix, _, template, http, notify} from 'entcore';
+import * as utils from "../utils/teacher";
+import {Domaine} from "../models/teacher";
 
 /**
  * function-filter : méthode qui va checker si l'enseignement parcouru doit être affiché ou non
@@ -72,6 +74,109 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 if ($location.path() === "/devoir/create") {
                     item.isSelected = false;
                 }
+            };
+
+            $scope.openLightboxCreationCompetence = function(enseignement, competence) {
+                $scope.creatingCompetence = true;
+                $scope.newItem = $scope.initNewCompetence();
+                $scope.id_cycle = competence.id_cycle;
+                $scope.newItem.cycle = competence.id_cycle == 1 ? "Cycle 4" : "Cycle 3"; //TODO : Faire une récupération du libellé de cycle proprement
+                $scope.newItem.enseignement = enseignement;
+                $scope.newItem.elementSignifiant = competence;
+                $scope.newItem.id_parent = competence.id;
+                $scope.newItem.id_enseignement = enseignement.id;
+                $scope.idEtablissement = $scope.devoir.id_etablissement;
+                $scope.getDomaines();
+                template.open('lightboxCreationCompetence', 'enseignants/creation_competence/lightbox_creation_competence');
+                utils.safeApply($scope);
+            };
+
+            $scope.initNewCompetence = function() {
+                return {
+                    cycle: null,
+                    enseignement: null,
+                    elementSignifiant: null,
+                    domaines: null,
+                    libelle: "",
+                    ids_domaine: [],
+                    id_type: 2,
+                    ismanuelle: true
+                }
+            };
+
+            $scope.getDomaines = async function () {
+                $scope.idEtablissement = $scope.devoir.id_etablissement;
+                await http().getJson(`/competences/domaines?idStructure=${$scope.idEtablissement}&idCycle=${$scope.id_cycle}`)
+                    .done((resDomaines) => {
+                        if (resDomaines) {
+                            let _res = [];
+                            for (let i = 0; i < resDomaines.length; i++) {
+
+                                let domaine = new Domaine(resDomaines[i]);
+                                _res.push(domaine);
+                            }
+                            $scope.newItem.domaines = _res;
+                            $scope.printDomaines = {
+                                all: _res
+                            };
+                        }
+                    })
+                    .error(function () {
+                        console.error('domaine not founded');
+                        $scope.newItem.domaines = [];
+                    })
+            };
+
+            $scope.isStringUndefinedOrEmpty = function(name) {
+                return (name === undefined || name.trim().length === 0)
+            };
+
+            $scope.selectDomaine = function (domaine) {
+                if (domaine.selected && !_.contains($scope.newItem.ids_domaine, domaine.id)) {
+                    $scope.newItem.ids_domaine.push(domaine.id);
+                }
+                else if (!domaine.selected) {
+                    $scope.newItem.ids_domaine =
+                        _.without($scope.newItem.ids_domaine, domaine.id);
+                }
+                if ($scope.newItem.hasOwnProperty('id')) {
+                    $scope.updatedDomaineId = domaine.id;
+                    $scope.saveItem($scope.newItem, 'updateDomaine');
+                }
+            };
+
+            $scope.saveItem = function (item) {
+                http().postJson(`competences/competence`, $scope.jsonCreateItem(item))
+                    .done(() => {
+                        $scope.creatingCompetence = false;
+                        $scope.getDomaines();
+                        notify.info('item.success.create');
+                        utils.safeApply(this);
+                    })
+                    .error((res) => {
+                        console.error(res);
+                        $scope.creatingCompetence = false;
+                        if (res.status === 401) {
+                            notify.error('item.error.unautorize.create');
+                            utils.safeApply(this);
+                        }
+                        else {
+                            notify.error('item.error.create');
+                            utils.safeApply(this);
+                        }
+                    })
+            };
+
+            $scope.jsonCreateItem = function (item) {
+                return {
+                    nom: item.libelle,
+                    id_etablissement: $scope.idEtablissement,
+                    id_parent: item.id_parent,
+                    id_type: item.id_type,
+                    id_enseignement: item.id_enseignement,
+                    ids_domaine: item.ids_domaine,
+                    id_cycle: $scope.id_cycle
+                };
             };
 
             $scope.initHeader = function(item){

@@ -810,5 +810,11 @@
   "competences.memento.notes.init.failed": "Une erreur est survenue lors du chargement du widget notes",
   "competences.parameter.log.error.export": "Message d'erreur",
   "no.errors.while.archive.mongo": "Aucune erreur lors de l'archivage",
-  "parameter.archive.date" : "Date de l'export"
+  "parameter.archive.date" : "Date de l'export",
+
+  "competence.createCompetence.item" : "Créer une compétence",
+  "competence.createCompetence.libelle" : "Libellé",
+  "competence.createCompetence.cycle" : "Cycle",
+  "competence.createCompetence.enseignement" : "Enseignement"
+
 }
