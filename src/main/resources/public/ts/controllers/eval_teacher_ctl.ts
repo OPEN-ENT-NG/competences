@@ -308,40 +308,26 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             await evaluations.structure.classes.sync();
                         }
                         $scope.structure.classes = evaluations.structure.classes;
-                        $scope.currentDevoir.groupe = _.findWhere($scope.structure.classes.all,
-                            {id: $scope.currentDevoir.id_groupe});
-
-                        let allPromise = [$scope.currentDevoir.calculStats(), $scope.currentDevoir.competences.sync()];
-                        if ($scope.currentDevoir.groupe.periodes.empty()) {
-                            allPromise.push($scope.currentDevoir.groupe.periodes.sync(),
-                                $scope.currentDevoir.groupe.eleves.sync());
-                        }
-                        if ($scope.structure.typePeriodes.empty()) {
-                            allPromise.push($scope.structure.typePeriodes.sync());
-                        }
-
-                        await Promise.all(allPromise);
-
-                        $scope.currentDevoir.periode = _.findWhere($scope.currentDevoir.groupe.periodes.all,
-                            {id_type: $scope.currentDevoir.id_periode});
-
-                        $scope.currentDevoir.endSaisie = await $scope.checkEndSaisieSeul($scope.currentDevoir);
-
-                        template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
-                        let syncStudents = async () => {
+                        let _classe = evaluations.structure.classes.findWhere({id: $scope.currentDevoir.id_groupe});
+                        if (_classe !== undefined) {
+                            if (_classe.periodes.empty()) {
+                               await _classe.periodes.sync() ;
+                            }
+                            $scope.currentDevoir.periode = _.findWhere(_classe.periodes.all,
+                                {id_type: $scope.currentDevoir.id_periode})
                             $scope.openedDetails = true;
                             $scope.openedStatistiques = true;
                             $scope.openedStudentInfo = true;
-                            if ($scope.currentDevoir !== undefined) {
-                                await $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode);
+                            await $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode);
+                            let allPromise = [$scope.currentDevoir.calculStats(), $scope.currentDevoir.competences.sync()];
+                           if ($scope.structure.typePeriodes.empty()) {
+                                allPromise.push($scope.structure.typePeriodes.sync());
                             }
-
+                            await Promise.all(allPromise);
+                           $scope.currentDevoir.endSaisie = await $scope.checkEndSaisieSeul($scope.currentDevoir);
+                            template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
+                            await utils.safeApply($scope);
                             await Utils.stopMessageLoader($scope);
-                        };
-
-                        let _classe = evaluations.structure.classes.findWhere({id: $scope.currentDevoir.id_groupe});
-                        if (_classe !== undefined) {
-                            await syncStudents();
                         } else {
                             await Utils.stopMessageLoader($scope);
                         }

@@ -157,7 +157,6 @@ export class Devoir extends Model implements IModel {
                         allPromise.push(_classe.eleves.sync());
                     }
                     let response = await Promise.all(allPromise);
-
                     _classe = _classe.filterEvaluableEleve(periode);
 
                     let e = $.map($.extend(true, {}, _classe.eleves.all), function (el) {
