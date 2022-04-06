@@ -147,8 +147,10 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
 
             $scope.saveItem = function (item) {
                 http().postJson(`competences/competence`, $scope.jsonCreateItem(item))
-                    .done(() => {
+                    .done(async (res) => {
                         $scope.creatingCompetence = false;
+                        $scope.id = res.id;
+                        await $scope.$emit('loadEnseignementsByClasse');
                         $scope.getDomaines();
                         notify.info('item.success.create');
                         utils.safeApply(this);
@@ -167,6 +169,10 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                     })
             };
 
+            $scope.$on('checkboxNewCompetence', function () {
+                $scope.checkboxNewCompetence($scope.id);
+            })
+
             $scope.jsonCreateItem = function (item) {
                 return {
                     nom: item.libelle,
@@ -178,6 +184,14 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                     id_cycle: $scope.id_cycle
                 };
             };
+
+            $scope.checkboxNewCompetence = function (idItem) {
+                let enseignement = _.findWhere($scope.data, {id: $scope.newItem.elementSignifiant.id_enseignement});
+                let elemSign = _.findWhere(enseignement.competences.all, {id: $scope.newItem.elementSignifiant.id});
+                let item = _.findWhere(elemSign.competences.all, {id: idItem});
+                $scope.toggleCheckbox(item, $scope.newItem.elementSignifiant, true)
+                $scope.doNotApplySearchFilter();
+            }
 
             $scope.initHeader = function(item){
                 if(item.open === undefined) {
@@ -200,7 +214,11 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 $scope.search.haschange=false;
             };
 
-            $scope.toggleCheckbox = function(item, parentItem){
+            $scope.toggleCheckbox = function(item, parentItem, created?){
+                if (created){
+                    $scope.competencesFilter[item.id + '_' + item.id_enseignement].isSelected = true;
+                }
+
                 $scope.emitToggleCheckbox(item, parentItem);
                 var items = document.getElementsByClassName("competence_"+item.id);
 

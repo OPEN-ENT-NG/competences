@@ -1840,7 +1840,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Charge les enseignements et les compétences en fonction de la classe.
          */
-        $scope.loadEnseignementsByClasse = function (changeEtab?) {
+        $scope.loadEnseignementsByClasse = async function (changeEtab?) {
             let classe_Id = $scope.devoir.id_groupe;
             let newIdCycle = $scope.getClasseData(classe_Id, 'id_cycle');
             if (newIdCycle === null) {
@@ -1861,7 +1861,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             }
             if (currentIdCycle !== newIdCycle || changeEtab === true) {
-                evaluations.enseignements.sync(classe_Id).then(function () {
+                await evaluations.enseignements.sync(classe_Id).then(function () {
                     // suppression des compétences qui n'appartiennent pas au cycle
                     if($scope.devoir.enseignements.all.length === 0) {
                         _.extend($scope.devoir.enseignements, $scope.enseignements);
@@ -1880,6 +1880,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.cleanItems = false;
             }
         };
+
+        $scope.$on('loadEnseignementsByClasse', async function () {
+            await $scope.loadEnseignementsByClasse(true);
+            $scope.$broadcast('checkboxNewCompetence');
+        });
 
         $scope.setCSkillsList = (searchChanged, enseignementsChanged) => {
             if(enseignementsChanged){
