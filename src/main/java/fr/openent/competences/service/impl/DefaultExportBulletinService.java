@@ -328,16 +328,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                 classe.put("idClasse", idClasse);
                 if(params.containsKey("classeName")){
-                    log.info("if");
                     classe.put("classeName", params.getString("classeName"));
                     buildDataForStudent(answered, eleves, elevesMap, idPeriode, params, classe,
                             showBilanPerDomaines, host, acceptLanguage, finalHandler, vertx);
                 } else {
-                    log.info("else");
                     JsonArray finalEleves = eleves;
                     getClasseInfo(idClasse, classeInfoEvent -> {
                         if(classeInfoEvent.isRight()){
-                            log.info(classeInfoEvent.right().getValue());
                             classe.put("classeName", classeInfoEvent.right().getValue());
 
                             buildDataForStudent(answered, finalEleves, elevesMap, idPeriode, params, classe,
@@ -2246,8 +2243,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 matiereJO.put(LIBELLE_MATIERE, libelleMatiere);
             }
         }
-        log.info(matiereJO);
-        log.info(matiere.toJsonObject());
     }
 
     private Float getMoyenneForSousMat(Object object, Long idPeriode, Long idSousMat){
