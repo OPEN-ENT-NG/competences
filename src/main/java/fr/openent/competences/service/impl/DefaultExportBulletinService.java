@@ -567,41 +567,47 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 futures.add(getAvisOrientationPromise.future());
                 futures.add(getSuiviAcquisPromise.future());
 
-//                if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
-//                    Future<JsonObject> getHeadTeachersFuture = Future.future();
-//                    futures.add(getHeadTeachersFuture);
-//                    getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), futureGetHandler(getHeadTeachersFuture));
-//                }
+                int nbOptions = 0;
+                if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
+                    Promise<Object> getHeadTeachersPromise = Promise.promise();
+                    futures.add(getHeadTeachersPromise.future());
+                    getHeadTeachers(student,getHeadTeachersPromise);
+                    nbOptions++;
+                }
+
+                if(params.getBoolean(GET_RESPONSABLE)) {
+                    Promise<Object> getResponsablesPromise = Promise.promise();
+                    futures.add(getResponsablesPromise.future());
+                    getResponsables(student,getResponsablesPromise);
+                    nbOptions++;
+                }
+
+                if(params.getBoolean(SHOW_BILAN_PER_DOMAINE)) {
+                    Promise<Object> getImageGraphPromise = Promise.promise();
+                    Promise<Object> getArbreDomainesPromise = Promise.promise();
+                    futures.add(getImageGraphPromise.future());
+                    futures.add(getArbreDomainesPromise.future());
+                    getImageGraph(student, getImageGraphPromise);
+                    getArbreDomaines(student, getArbreDomainesPromise);
+                    nbOptions+=2;
+                }
 //
-//                if(params.getBoolean(GET_RESPONSABLE)) {
-//                    Future<JsonObject> getResponsablesFuture = Future.future();
-//                    futures.add(getResponsablesFuture);
-//                    getResponsables(idEleve, elevesMap, futureGetHandler(getResponsablesFuture));
-//                }
-//
-//                if(params.getBoolean(SHOW_BILAN_PER_DOMAINE)) {
-//                    Future<JsonObject> getImageGraphFuture = Future.future();
-//                    Future<JsonObject> getArbreDomainesFuture = Future.future();
-//                    futures.add(getImageGraphFuture);
-//                    futures.add(getArbreDomainesFuture);
-//                    getImageGraph(idEleve, elevesMap, futureGetHandler(getImageGraphFuture));
-//                    getArbreDomaines(idEleve, classe.getString(ID_CLASSE), elevesMap, futureGetHandler(getArbreDomainesFuture));
-//                }
-//
-//                if (params.getBoolean(SHOW_PROJECTS)) {
-//                    Future<JsonObject> getProjetsFuture = Future.future();
-//                    futures.add(getProjetsFuture);
-//                    getProjets(idEleve, classe.getString(ID_CLASSE), elevesMap, idPeriode, futureGetHandler(getProjetsFuture));
-//                }
-//
-//                if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD) != null){
-//                    if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
-//                        Future<JsonObject> getBilanPeriodiqueDomaineForGraphFuture = Future.future();
-//                        futures.add(getBilanPeriodiqueDomaineForGraphFuture);
-//                        getBilanPeriodiqueDomaineForGraph(idEleve, classe.getString(ID_CLASSE), idPeriode,
-//                                elevesMap, futureGetHandler(getBilanPeriodiqueDomaineForGraphFuture));
-//                    }
-//                }
+                if (params.getBoolean(SHOW_PROJECTS)) {
+                    Promise<Object> getProjetsPromise = Promise.promise();
+                    futures.add(getProjetsPromise.future());
+                    getProjets(student , getProjetsPromise);
+                    nbOptions++;
+
+                }
+
+                if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD) != null){
+                    if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
+                        Promise<Object> getBilanPeriodiqueDomaineForGraphPromise = Promise.promise();
+                        futures.add(getBilanPeriodiqueDomaineForGraphPromise.future());
+                        getBilanPeriodiqueDomaineForGraph(student , getBilanPeriodiqueDomaineForGraphPromise);
+                        nbOptions++;
+                    }
+                }
 
                 getEvenements(student, getEvenementsPromise);
                 getSyntheseBilanPeriodique(student,isBulletinLycee,
@@ -613,14 +619,24 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         getAvisOrientationPromise, beforeAvisOrientation);
                 getSuiviAcquis(student,idEleves, classe, params, getSuiviAcquisPromise);
 
+                int finalNbOptions = nbOptions;
                 FutureHelper.all(futures).setHandler(event -> {
                     if (event.succeeded()) {
                         try {
                             List<StudentEvenement> studentEvenements = (List<StudentEvenement>) event.result().list().get(0);
+                            student.getParamBulletins().addParams((JsonObject) event.result().list().get(3));
+                            student.getParamBulletins().addParams((JsonObject) event.result().list().get(4));
+                            student.getParamBulletins().addParams((JsonObject) event.result().list().get(5));
                             student.getParamBulletins().addParams((JsonObject) event.result().list().get(6));
                             for(StudentEvenement studentEvenement : studentEvenements){
                                 student.addEvenement(studentEvenement);
                             }
+
+                            log.info("fin");
+                            //OPTIONS
+                            for (int i = 1; i <= finalNbOptions ; i++ )
+                                student.getParamBulletins().addParams((JsonObject) event.result().list().get(6 + i));
+
                             //NE PAS LAISSER CA SVP
                             elevesMap.put(student.getId(),student.toJsonObject());
                             log.info("------------------"+idEleve + " end get datas for export bulletin  ---------------------");
@@ -631,7 +647,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         }
 
                     }else {
-                        log.error("[Competences] at getExportBulletin error when getting datas for export bulletins : stuedent :" + idEleve);
+                        log.error("[Competences] at getExportBulletin error when getting datas for export bulletins : student :" + idEleve);
                     }
                 });
             } else {
@@ -728,13 +744,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         .put("Accept-Language", request.headers().get("Accept-Language")))
                                 .put("Host", getHost(request));
                         JsonArray students = resultFinal.getJsonArray("eleves");
-//                        List<Future<String>> futureArray =  mongoExportService.insertDataInMongo(students,resultFinal,jsonRequest,title,template,SAVE_BULLETIN);
-//                        FutureHelper.all(futureArray).onSuccess(success ->{
-//                            log.info("[Competences DefaultExportBulletinService ] insert bulletins data in Mongo done");
-//                            eb.send(BulletinWorker.class.getSimpleName(), new JsonObject(), Competences.DELIVERY_OPTIONS);
-//                        }).onFailure(error ->{
-//                            log.info(error.getMessage());
-//                        });
+                        List<Future<String>> futureArray =  mongoExportService.insertDataInMongo(students,resultFinal,jsonRequest,title,template,SAVE_BULLETIN);
+                        FutureHelper.all(futureArray).onSuccess(success ->{
+                            log.info("[Competences DefaultExportBulletinService ] insert bulletins data in Mongo done");
+                            eb.send(BulletinWorker.class.getSimpleName(), new JsonObject(), Competences.DELIVERY_OPTIONS);
+                        }).onFailure(error ->{
+                            log.info(error.getMessage());
+                        });
                         exportService.generateSchoolReportPdf(request, resultFinal, template, title, vertx, config);
                     }
                 });
@@ -772,63 +788,51 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return createFinalHandler(request, elevesMap, vertx, config, elevesFuture, params,false,null);
     }
 
-    private void getBilanPeriodiqueDomaineForGraph(final String idEleve,
-                                                   final String idClasse,
-                                                   final Long idPeriode,
-                                                   Map<String, JsonObject> elevesMap,
-                                                   Handler<Either<String, JsonObject>> finalHandler){
+    private void getBilanPeriodiqueDomaineForGraph(Student student,
+                                                   Promise<Object> promise){
 
-        JsonObject eleveObject = elevesMap.get(idEleve);
-        if (eleveObject == null) {
-            logStudentNotFound(idEleve, GET_DATA_FOR_GRAPH_DOMAINE_METHOD);
-            finalHandler.handle(new Either.Right<>(null));
-        } else {
-            String idEtablissement = eleveObject.getString(ID_ETABLISSEMENT_KEY);
-            final Integer typeClasse = 0;
-            final String idPeriodeString = idPeriode.toString();
 
-            bilanPeriodiqueService.getBilanPeriodiqueDomaineForGraph(idEleve, idEtablissement, idClasse, typeClasse,
-                    idPeriodeString,
-                    new Handler<Either<String, JsonArray>>(){
-                        private int count = 1;
-                        private AtomicBoolean answer = new AtomicBoolean(false);
+        String idEtablissement = student.getStructure().getId();
+        String idEleve = student.getId();
+        String idClasse = student.getClasse().getId();
+        JsonObject result = new JsonObject();
+        final Integer typeClasse = 0;
+        final String idPeriodeString = student.getClasse().getPeriode().getId();
 
-                        @Override
-                        public void handle(Either<String, JsonArray> datasEvent){
-                            if(datasEvent.isLeft()){
-                                String error = datasEvent.left().getValue();
-                                log.error("[" + GET_DATA_FOR_GRAPH_DOMAINE_METHOD + "] : " + error + " " + count);
-                                if(error.contains(TIME)){
-                                    count++;
-                                    bilanPeriodiqueService.getBilanPeriodiqueDomaineForGraph(idEleve,idEtablissement,
-                                            idClasse, typeClasse, idPeriodeString, this);
-                                }
-                                else{
-                                    if (eleveObject.getJsonArray(ERROR) == null) {
-                                        eleveObject.put(ERROR, new JsonArray());
-                                    }
-                                    JsonArray errors = eleveObject.getJsonArray(ERROR);
-                                    errors.add(GET_DATA_FOR_GRAPH_DOMAINE_METHOD);
-                                    serviceResponseOK(answer, finalHandler, count, idEleve,
-                                            GET_DATA_FOR_GRAPH_DOMAINE_METHOD);
-                                }
+        bilanPeriodiqueService.getBilanPeriodiqueDomaineForGraph(idEleve, idEtablissement, idClasse, typeClasse,
+                idPeriodeString,
+                new Handler<Either<String, JsonArray>>(){
+                    private int count = 1;
+                    private AtomicBoolean answer = new AtomicBoolean(false);
+
+                    @Override
+                    public void handle(Either<String, JsonArray> datasEvent){
+                        if(datasEvent.isLeft()){
+                            String error = datasEvent.left().getValue();
+                            log.error("[" + GET_DATA_FOR_GRAPH_DOMAINE_METHOD + "] : " + error + " " + count);
+                            if(error.contains(TIME)){
+                                count++;
+                                bilanPeriodiqueService.getBilanPeriodiqueDomaineForGraph(idEleve,idEtablissement,
+                                        idClasse, typeClasse, idPeriodeString, this);
                             }
                             else{
-                                JsonArray domainsDatas = datasEvent.right().getValue();
-                                String datas = "[";
-                                for(int i=0; i< domainsDatas.size(); i++){
-                                    datas += domainsDatas.getJsonObject(i).encode() + ",";
-                                }
-                                if(datas.length() > 1 ) datas = datas.substring(0, datas.length()-1);
-                                datas += "]";
-                                eleveObject.put("_data", datas);
-                                log.info( "data put on jsobjectEleve " +datas );
-                                serviceResponseOK(answer, finalHandler, count, idEleve,
-                                        GET_DATA_FOR_GRAPH_DOMAINE_METHOD);
+                                promise.fail("[" + GET_DATA_FOR_GRAPH_DOMAINE_METHOD + "] : " + error + " " + count);
                             }
                         }
-                    });
-        }
+                        else{
+                            JsonArray domainsDatas = datasEvent.right().getValue();
+                            String datas = "[";
+                            for(int i=0; i< domainsDatas.size(); i++){
+                                datas += domainsDatas.getJsonObject(i).encode() + ",";
+                            }
+                            if(datas.length() > 1 ) datas = datas.substring(0, datas.length()-1);
+                            datas += "]";
+                            result.put("_data", datas);
+                            log.info( "data put on jsobjectEleve " +datas );
+                            promise.complete(result);
+                        }
+                    }
+                });
     }
 
     @Override
@@ -1020,10 +1024,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         action.put(ACTION, "periode.getPeriodes")
                 .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    private int count = 1;
-                    private AtomicBoolean answer = new AtomicBoolean(false);
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
@@ -1061,40 +1063,30 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     }
                 }));
     }
-    private void getImageGraph(String idEleve, Map<String, JsonObject> elevesMap,
-                               Handler<Either<String, JsonObject>> finalHandler) {
-        JsonObject eleve = elevesMap.get(idEleve);
-        if (eleve == null) {
-            logStudentNotFound(idEleve, GET_IMAGE_GRAPH_METHOD);
-            finalHandler.handle(new Either.Right<>(null));
-        } else {
-            String idFile = eleve.getString(GRAPH_PER_DOMAINE);
+    private void getImageGraph(Student student, Promise<Object> promise) {
+        String idFile =   student.getParamBulletins().getImGraph();
+        JsonObject result = new JsonObject();
+        if(idFile != null) {
+            storage.readFile(idFile, new Handler<Buffer>() {
+                private int count = 1;
+                private AtomicBoolean answer = new AtomicBoolean(false);
 
-            if(idFile != null) {
-                storage.readFile(idFile, new Handler<Buffer>() {
-                    private int count = 1;
-                    private AtomicBoolean answer = new AtomicBoolean(false);
+                @Override
+                public void handle(Buffer eventBuffer) {
+                    if (eventBuffer != null) {
+                        String graphPerDomaine = eventBuffer.getString(0, eventBuffer.length());
 
-                    @Override
-                    public void handle(Buffer eventBuffer) {
-                        if (eventBuffer != null) {
-                            String graphPerDomaine = eventBuffer.getString(0, eventBuffer.length());
-
-                            eleve.remove(GRAPH_PER_DOMAINE);
-                            eleve.put(GRAPH_PER_DOMAINE, graphPerDomaine);
-
-                            serviceResponseOK(answer, finalHandler, count, idEleve, GET_IMAGE_GRAPH_METHOD);
-                        } else {
-                            log.error("["+ GET_IMAGE_GRAPH_METHOD + "] : " + idEleve + " fail " + count);
-                        }
-
+                        result.put(GRAPH_PER_DOMAINE, graphPerDomaine);
+                        promise.complete(result);
+                    } else {
+                        promise.fail("["+ GET_IMAGE_GRAPH_METHOD + "] : " + student.getId() + " fail " + count);
                     }
-                });
-            }
-            else {
-                log.debug("["+ GET_IMAGE_GRAPH_METHOD + "] : File not found ");
-                finalHandler.handle(new Either.Right<>(null));
-            }
+
+                }
+            });
+        }
+        else {
+            promise.complete(result);
         }
     }
 
@@ -1190,183 +1182,170 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     //A decouper
     @Override
-    public void getProjets (String idEleve, String idClasse, Map<String,JsonObject> elevesMap,Long idPeriode,
-                            Handler<Either<String, JsonObject>> finalHandler) {
-        JsonObject eleveObject = elevesMap.get(idEleve);
-        logBegin(GET_PROJECTS_METHOD, idEleve);
-        if (eleveObject == null) {
-            logStudentNotFound(idEleve, GET_PROJECTS_METHOD);
-            finalHandler.handle(new Either.Right<>(null));
-        }
-        else {
-            // gets Projects
-            String idEtablissement = eleveObject.getString(ID_ETABLISSEMENT_KEY);
-
-            elementBilanPeriodiqueService.getElementsBilanPeriodique(null,  Arrays.asList(idClasse),
-                    idEtablissement, new Handler<Either<String, JsonArray>>() {
-                        private int count = 1;
-                        private AtomicBoolean answer = new AtomicBoolean(false);
-                        @Override
-                        public void handle(Either<String, JsonArray> event) {
-                            if (event.isLeft()) {
-                                String message = event.left().getValue();
-                                log.error("["+ GET_PROJECTS_METHOD +"] :" + idEleve + " " + message + " " + count);
-                                if (message.contains(TIME) && !answer.get()) {
-                                    count++;
-                                    elementBilanPeriodiqueService.getElementsBilanPeriodique(null,
-                                            Arrays.asList(idClasse), idEtablissement, this);
-                                }
-                                else {
-                                    if (eleveObject.getJsonArray(ERROR) == null) {
-                                        eleveObject.put(ERROR, new JsonArray());
-                                    }
-                                    JsonArray errors = eleveObject.getJsonArray(ERROR);
-                                    errors.add(GET_PROJECTS_METHOD);
-                                    serviceResponseOK(answer, finalHandler, count, idEleve, GET_PROJECTS_METHOD);
-                                }
-
+    public void getProjets (Student student,
+                            Promise<Object> promise) {
+        // gets Projects
+        String idEleve = student.getId();
+        String idClasse = student.getClasse().getId();
+        Long idPeriode = student.getClasse().getPeriode().getIdPeriode();
+        String idEtablissement = student.getStructure().getId();
+        JsonObject result = new JsonObject();
+        elementBilanPeriodiqueService.getElementsBilanPeriodique(null,  Arrays.asList(idClasse),
+                idEtablissement, new Handler<Either<String, JsonArray>>() {
+                    private int count = 1;
+                    private AtomicBoolean answer = new AtomicBoolean(false);
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if (event.isLeft()) {
+                            String message = event.left().getValue();
+                            log.error("["+ GET_PROJECTS_METHOD +"] :" + idEleve + " " + message + " " + count);
+                            if (message.contains(TIME) && !answer.get()) {
+                                count++;
+                                elementBilanPeriodiqueService.getElementsBilanPeriodique(null,
+                                        Arrays.asList(idClasse), idEtablissement, this);
                             }
                             else {
-                                if (count > 1 ) {
-                                    log.debug("[getProjets] : " + idEleve + " success " + count);
-                                }
-                                List<String> idClasses = new ArrayList<String>();
-                                idClasses.add(idClasse);
-                                JsonArray elementBilanPeriodique = event.right().getValue();
-                                List<String> idElements = new ArrayList<String>();
-                                Map<Long, JsonObject> mapElement = new HashMap<>();
-                                JsonObject epi = new JsonObject().put(LIBELLE,
-                                        getLibelle("enseignements.pratiques.interdisciplinaires"))
-                                        .put(HAS_PROJECT, false);
-                                JsonObject ap = new JsonObject().put(LIBELLE,
-                                        getLibelle("accompagnements.personnalises"))
-                                        .put(HAS_PROJECT, false);
-                                JsonObject parcours = new JsonObject().put(LIBELLE,
-                                        getLibelle("parcours.educatifs"))
-                                        .put(HAS_PROJECT, false);
+                                promise.fail("["+ GET_PROJECTS_METHOD +"] :" + idEleve + " " + message + " " + count);
+                            }
 
-                                if (elementBilanPeriodique == null) {
-                                    serviceResponseOK(answer, finalHandler, count, idEleve, GET_PROJECTS_METHOD);
-                                }
-                                else {
-                                    for(int i = 0; i< elementBilanPeriodique.size(); i++) {
-                                        JsonObject element = elementBilanPeriodique.getJsonObject(i);
-                                        if (element != null) {
-                                            Long idElement = element.getLong("id");
-                                            Long typeElement = element.getLong("type");
-                                            idElements.add(idElement.toString());
-                                            element.put("hasCommentaire", false);
-                                            mapElement.put(idElement, element);
-                                            if (3L == typeElement) {
-                                                element.put("hasLibelle", false);
-                                                if(parcours.getJsonArray("elements") == null) {
-                                                    parcours.put("elements", new JsonArray().add(element));
-                                                }
-                                                else {
-                                                    parcours.getJsonArray("elements").add(element);
-                                                }
-                                            }
-                                            else if (2L == typeElement) {
-                                                element.put("hasLibelle", true);
-                                                if(ap.getJsonArray("elements") == null) {
-                                                    ap.put("elements", new JsonArray().add(element));
-                                                }
-                                                else {
-                                                    ap.getJsonArray("elements").add(element);
-                                                }
-                                            }
-                                            else if (1L == typeElement) {
-                                                element.put("hasLibelle", true);
-                                                if(epi.getJsonArray("elements") == null) {
-                                                    epi.put("elements", new JsonArray().add(element));
-                                                }
-                                                else {
-                                                    epi.getJsonArray("elements").add(element);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    eleveObject.put("projects", new JsonArray().add(epi).add(ap).add(parcours));
-                                    if(idElements.size() > 0) {
-                                        elementBilanPeriodiqueService.getAppreciations(idClasses,
-                                                idPeriode.toString(), idElements, idEleve,
-                                                new Handler<Either<String, JsonArray>>() {
-                                                    private int count = 1;
-                                                    @Override
-                                                    public void handle(Either<String, JsonArray> event) {
-                                                        if (event.isLeft()) {
+                        }
+                        else {
+                            if (count > 1 ) {
+                                log.debug("[getProjets] : " + idEleve + " success " + count);
+                            }
+                            List<String> idClasses = new ArrayList<String>();
+                            idClasses.add(idClasse);
+                            JsonArray elementBilanPeriodique = event.right().getValue();
+                            List<String> idElements = new ArrayList<String>();
+                            Map<Long, JsonObject> mapElement = new HashMap<>();
+                            JsonObject epi = new JsonObject().put(LIBELLE,
+                                    getLibelle("enseignements.pratiques.interdisciplinaires"))
+                                    .put(HAS_PROJECT, false);
+                            JsonObject ap = new JsonObject().put(LIBELLE,
+                                    getLibelle("accompagnements.personnalises"))
+                                    .put(HAS_PROJECT, false);
+                            JsonObject parcours = new JsonObject().put(LIBELLE,
+                                    getLibelle("parcours.educatifs"))
+                                    .put(HAS_PROJECT, false);
+
+                            if (elementBilanPeriodique == null) {
+                                promise.complete(result);
+                            }
+                            else {
+                                generateElementBilanPeriodique(elementBilanPeriodique, idElements, mapElement, epi, ap, parcours, result);
+                                if(idElements.size() > 0) {
+                                    elementBilanPeriodiqueService.getAppreciations(idClasses,
+                                            idPeriode.toString(), idElements, idEleve,
+                                            new Handler<Either<String, JsonArray>>() {
+                                                private int count = 1;
+                                                @Override
+                                                public void handle(Either<String, JsonArray> event) {
+                                                    if (event.isLeft()) {
 
 
-                                                            String message = event.left().getValue();
-                                                            log.error("[getProjets | getAppreciations ] : " +
-                                                                    idEleve + " " + message + " " + count);
-                                                            if (message.contains(TIME) && !answer.get()) {
-                                                                count++;
-                                                                elementBilanPeriodiqueService
-                                                                        .getAppreciations(idClasses,
-                                                                                idPeriode.toString(),
-                                                                                idElements, idEleve, this);
-                                                            }
-                                                            else {
-                                                                if (eleveObject.getJsonArray(ERROR) == null) {
-                                                                    eleveObject.put(ERROR, new JsonArray());
-                                                                }
-                                                                JsonArray errors = eleveObject
-                                                                        .getJsonArray(ERROR);
-                                                                errors.add(GET_PROJECTS_METHOD);
-                                                                serviceResponseOK(answer,finalHandler,
-                                                                        count, idEleve, GET_PROJECTS_METHOD);
-                                                            }
+                                                        String message = event.left().getValue();
+                                                        log.error("[getProjets | getAppreciations ] : " +
+                                                                idEleve + " " + message + " " + count);
+                                                        if (message.contains(TIME) && !answer.get()) {
+                                                            count++;
+                                                            elementBilanPeriodiqueService
+                                                                    .getAppreciations(idClasses,
+                                                                            idPeriode.toString(),
+                                                                            idElements, idEleve, this);
                                                         }
                                                         else {
-                                                            JsonArray appreciations = event.right().getValue();
-                                                            for(int i=0; i< appreciations.size(); i++) {
-                                                                JsonObject app = appreciations.getJsonObject(i);
-                                                                Long periodeId = app.getLong(ID_PERIODE);
-                                                                if(periodeId == idPeriode) {
-                                                                    String com = app.getString("commentaire");
-
-                                                                    Long idElem = app.getLong(
-                                                                            "id_elt_bilan_periodique");
-                                                                    JsonObject elem = mapElement.get(idElem);
-                                                                    elem.remove("hasCommentaire");
-
-                                                                    elem.put("hasCommentaire", true)
-                                                                            .put("commentaire",
-                                                                                    troncateLibelle(com,
-                                                                                            MAX_SIZE_LIBELLE_PROJECT))
-                                                                            .put("commentaireStyle",
-                                                                                    fontSizeProject(com,
-                                                                                            MAX_SIZE_LIBELLE_PROJECT));
-                                                                    Long typeElem = elem.getLong("type");
-                                                                    if (3L == typeElem) {
-                                                                        sethasProject(parcours,true);
-                                                                    }
-                                                                    else if (2L == typeElem) {
-
-                                                                        sethasProject(ap,true);
-                                                                    }
-                                                                    else if (1L == typeElem) {
-                                                                        sethasProject(epi,true);
-                                                                    }
-                                                                }
-                                                            }
-                                                            serviceResponseOK(answer, finalHandler,
-                                                                    count, idEleve, GET_PROJECTS_METHOD);
+                                                            promise.fail("[getProjets | getAppreciations ] : " + idEleve + " " + message + " " + count);
                                                         }
                                                     }
-                                                });
-                                    }
-                                    else {
-                                        log.debug(" [getProjets] | NO elements founds for classe " + idClasse);
-                                        serviceResponseOK(answer,finalHandler, count, idEleve, GET_PROJECTS_METHOD);
-                                    }
-                                }
+                                                    else {
+                                                        JsonArray appreciations = event.right().getValue();
+                                                        for(int i=0; i< appreciations.size(); i++) {
+                                                            JsonObject app = appreciations.getJsonObject(i);
+                                                            Long periodeId = app.getLong(ID_PERIODE);
+                                                            if(periodeId == idPeriode) {
+                                                                String com = app.getString("commentaire");
 
+                                                                Long idElem = app.getLong(
+                                                                        "id_elt_bilan_periodique");
+                                                                JsonObject elem = mapElement.get(idElem);
+                                                                elem.remove("hasCommentaire");
+
+                                                                elem.put("hasCommentaire", true)
+                                                                        .put("commentaire",
+                                                                                troncateLibelle(com,
+                                                                                        MAX_SIZE_LIBELLE_PROJECT))
+                                                                        .put("commentaireStyle",
+                                                                                fontSizeProject(com,
+                                                                                        MAX_SIZE_LIBELLE_PROJECT));
+                                                                Long typeElem = elem.getLong("type");
+                                                                if (3L == typeElem) {
+                                                                    sethasProject(parcours,true);
+                                                                }
+                                                                else if (2L == typeElem) {
+
+                                                                    sethasProject(ap,true);
+                                                                }
+                                                                else if (1L == typeElem) {
+                                                                    sethasProject(epi,true);
+                                                                }
+                                                            }
+                                                        }
+                                                        promise.complete(result);
+                                                    }
+                                                }
+                                            });
+                                }
+                                else {
+                                    log.debug(" [getProjets] | NO elements founds for classe " + idClasse);
+                                    promise.complete(result);
+                                }
                             }
+
                         }
-                    });
+                    }
+                });
+    }
+
+    private void generateElementBilanPeriodique(JsonArray elementBilanPeriodique, List<String> idElements, Map<Long, JsonObject> mapElement,
+                                                JsonObject epi, JsonObject ap, JsonObject parcours, JsonObject result) {
+        for(int i = 0; i< elementBilanPeriodique.size(); i++) {
+            JsonObject element = elementBilanPeriodique.getJsonObject(i);
+            if (element != null) {
+                Long idElement = element.getLong("id");
+                Long typeElement = element.getLong("type");
+                idElements.add(idElement.toString());
+                element.put("hasCommentaire", false);
+                mapElement.put(idElement, element);
+                if (3L == typeElement) {
+                    element.put("hasLibelle", false);
+                    if(parcours.getJsonArray("elements") == null) {
+                        parcours.put("elements", new JsonArray().add(element));
+                    }
+                    else {
+                        parcours.getJsonArray("elements").add(element);
+                    }
+                }
+                else if (2L == typeElement) {
+                    element.put("hasLibelle", true);
+                    if(ap.getJsonArray("elements") == null) {
+                        ap.put("elements", new JsonArray().add(element));
+                    }
+                    else {
+                        ap.getJsonArray("elements").add(element);
+                    }
+                }
+                else if (1L == typeElement) {
+                    element.put("hasLibelle", true);
+                    if(epi.getJsonArray("elements") == null) {
+                        epi.put("elements", new JsonArray().add(element));
+                    }
+                    else {
+                        epi.getJsonArray("elements").add(element);
+                    }
+                }
+            }
         }
+        result.put("projects", new JsonArray().add(epi).add(ap).add(parcours));
     }
 
     @Override
@@ -1669,43 +1648,90 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    @Override
-    public void getResponsables( String idEleve, Map<String,JsonObject> elevesMap,
-                                 Handler<Either<String, JsonObject>> finalHandler) {
 
-        logBegin(GET_RESPONSABLE_METHOD, idEleve);
-        JsonObject eleveObject = elevesMap.get(idEleve);
-        if (eleveObject == null) {
-            logStudentNotFound(idEleve, GET_RESPONSABLE_METHOD);
-            finalHandler.handle(new Either.Right<>(null));
-        }
-        else {
-            JsonObject action = new JsonObject();
-            action.put(ACTION, "eleve.getResponsables")
-                    .put(ID_ELEVE_KEY, idEleve);
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                    Competences.DELIVERY_OPTIONS,
-                    handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                        private int count = 1;
-                        private AtomicBoolean answer = new AtomicBoolean(false);
-                        @Override
-                        public void handle(Message<JsonObject> message) {
-                            JsonObject body = message.body();
-                            if (!"ok".equals(body.getString(STATUS))) {
-                                String mess = body.getString(MESSAGE);
-                                log.error("[" + GET_RESPONSABLE_METHOD + "] : " + idEleve + " " + mess + " " + count);
+    public void getHeadTeachers(Student student,
+                                Promise<Object> promise) {
 
-                                buildErrorReponseForEb(idEleve, mess, answer, count, action,
-                                        this, finalHandler, eleveObject,
-                                        GET_RESPONSABLE_METHOD);
-                            } else {
-                                JsonArray responsables = body.getJsonArray(RESULTS);
-                                eleveObject.put("responsables", responsables);
-                                serviceResponseOK(answer, finalHandler, count, idEleve, GET_RESPONSABLE_METHOD);
+        String idClasse = student.getClasse().getId();
+        JsonObject action = new JsonObject();
+
+        action.put(ACTION, "classe.getHeadTeachersClasse")
+                .put(ID_CLASSE, idClasse);
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler( new Handler<Message<JsonObject>>() {
+                    private int count = 1;
+                    private AtomicBoolean answer = new AtomicBoolean(false);
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+//                        if (!"ok".equals(body.getString(STATUS))) {
+//                            String mess = body.getString(MESSAGE);
+//                            log.error("[" + GET_HEAD_TEACHERS_METHOD + "] : " + idEleve + " "
+//                                    + mess + " " + count);
+//
+//                            buildErrorReponseForEb(idEleve, mess, answer, count, action,
+//                                    this, finalHandler, eleveObject,
+//                                    GET_HEAD_TEACHERS_METHOD);
+//                        } else {
+                        JsonArray res = body.getJsonArray(RESULTS);
+                        JsonObject result = new JsonObject();
+                        if (res != null) {
+                            JsonArray headTeachers = new JsonArray();
+                            for(int i=0; i < res.size(); i++){
+                                JsonObject headTeacher = res.getJsonObject(i);
+                                String firstName = headTeacher.getString(FIRST_NAME_KEY);
+                                String initial = "";
+
+                                if(firstName != null && firstName.length() > 0) {
+                                    initial = firstName.charAt(0) + ". ";
+                                }
+                                headTeacher.put("initial", initial);
+
+                                if(!headTeachers.contains(headTeacher)){
+                                    headTeachers.add(headTeacher);
+                                }
                             }
+                            String headTeachersLibelle = getLibelle(
+                                    (headTeachers.size() > 1) ? "headTeachers" : "headTeacher");
+                            result.put("headTeacherLibelle", headTeachersLibelle + " : ")
+                                    .put("headTeachers", headTeachers);
                         }
-                    }));
-        }
+                        promise.complete(result);
+//                        }
+                    }
+                }));
+    }
+
+    @Override
+    public void getResponsables( Student student, Promise promise)
+    {
+        String idEleve = student.getId();
+        JsonObject action = new JsonObject();
+        action.put(ACTION, "eleve.getResponsables")
+                .put(ID_ELEVE_KEY, idEleve);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                    private int count = 1;
+                    private AtomicBoolean answer = new AtomicBoolean(false);
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        if (!"ok".equals(body.getString(STATUS))) {
+                            String mess = body.getString(MESSAGE);
+                            promise.fail("[" + GET_RESPONSABLE_METHOD + "] : " + idEleve + " " + mess + " " + count);
+//                                buildErrorReponseForEb(idEleve, mess, answer, count, action,
+//                                        this, finalHandler, eleveObject,
+//                                        GET_RESPONSABLE_METHOD);
+                        } else {
+                            JsonObject result = new JsonObject();
+                            JsonArray responsables = body.getJsonArray(RESULTS);
+                            result.put("responsables", responsables);
+                            promise.complete(result);
+                        }
+                    }
+                }));
     }
 
     @Override
@@ -1763,12 +1789,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             listEvenements.add(absJustEvenement);
                             listEvenements.add(absNotJustEvenement);
                             listEvenements.add(absTotalEvenement);
-
-                            student.addEvenement(retardEvenement);
-                            student.addEvenement(absJustEvenement);
-                            student.addEvenement(absNotJustEvenement);
-                            student.addEvenement(absTotalEvenement);
-
                             promise.complete(listEvenements);
                         }
                     }
@@ -2155,75 +2175,57 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getArbreDomaines(String idEleve, String idClasse, Map<String, JsonObject> elevesMap,
-                                 Handler<Either<String, JsonObject>> finalHandler){
+    public void getArbreDomaines(Student student, Promise<Object> promise){
+        String idClasse = student.getClasse().getId();
+        String idEleve = student.getId();
+        JsonObject result = new JsonObject();
 
-        logBegin(GET_ARBRE_DOMAINE_METHOD, idEleve);
-        JsonObject eleveObject = elevesMap.get(idEleve);
-        if (eleveObject == null) {
-            logStudentNotFound(idEleve, GET_ARBRE_DOMAINE_METHOD);
-            finalHandler.handle(new Either.Right<>(null));
-        }
-        else {
-            if (isNull(idClasse)) {
-                logidClasseNotFound(idEleve, GET_ARBRE_DOMAINE_METHOD);
-                finalHandler.handle(new Either.Right<>(null));
-            } else {
+        domainesService.getArbreDomaines(idClasse, idEleve, null,
+                new Handler<Either<String, JsonArray>>() {
+                    private int count = 1;
+                    private AtomicBoolean answer = new AtomicBoolean(false);
 
-                domainesService.getArbreDomaines(idClasse, idEleve, null,
-                        new Handler<Either<String, JsonArray>>() {
-                            private int count = 1;
-                            private AtomicBoolean answer = new AtomicBoolean(false);
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if (event.isLeft()) {
+                            String message = event.left().getValue();
 
-                            @Override
-                            public void handle(Either<String, JsonArray> event) {
-                                if (event.isLeft()) {
-                                    String message = event.left().getValue();
+                            if (message.contains(TIME) && !answer.get()) {
+                                count++;
+                                domainesService.getArbreDomaines(idClasse, idEleve, null, this);
 
-                                    if (message.contains(TIME) && !answer.get()) {
-                                        count++;
-                                        domainesService.getArbreDomaines(idClasse, idEleve, null, this);
+                            } else {
+                                promise.fail("Error when handling getArbreDomaine  ");
+                            }
+                        } else {
+                            JsonArray domaines = event.right().getValue();
+                            JsonArray domainesToDisplay = new JsonArray();
 
-                                    } else {
-                                        if (eleveObject.getJsonArray(ERROR) == null) {
-                                            eleveObject.put(ERROR, new JsonArray());
-                                        }
-                                        JsonArray errors = eleveObject.getJsonArray(ERROR);
-                                        errors.add(GET_ARBRE_DOMAINE_METHOD);
-                                        serviceResponseOK(answer, finalHandler, count, idEleve,
-                                                GET_ARBRE_DOMAINE_METHOD);
+                            Map<Long,Boolean> idDomaineParent = new HashMap<>();
+                            for (int i=0; i<domaines.size(); i++) {
+                                JsonObject domaine = domaines.getJsonObject(i);
+                                Boolean isEvaluable = domaine.getBoolean(EVALUATED);
+                                Long idParent = domaine.getLong(ID_PARENT);
+                                Boolean isDomaineParent = (idParent == 0L);
+                                domaine.put(IS_DOMAINE_PARENT, isDomaineParent);
+
+                                if (isDomaineParent == true){
+                                    idDomaineParent.put(domaine.getLong(ID), isEvaluable);
+                                }
+                                if (isEvaluable == true) {
+                                    if (isDomaineParent == true) {
+                                        domainesToDisplay.add(domaine);
                                     }
-                                } else {
-                                    JsonArray domaines = event.right().getValue();
-                                    JsonArray domainesToDisplay = new JsonArray();
-
-                                    Map<Long,Boolean> idDomaineParent = new HashMap<>();
-                                    for (int i=0; i<domaines.size(); i++) {
-                                        JsonObject domaine = domaines.getJsonObject(i);
-                                        Boolean isEvaluable = domaine.getBoolean(EVALUATED);
-                                        Long idParent = domaine.getLong(ID_PARENT);
-                                        Boolean isDomaineParent = (idParent == 0L);
-                                        domaine.put(IS_DOMAINE_PARENT, isDomaineParent);
-
-                                        if (isDomaineParent == true){
-                                            idDomaineParent.put(domaine.getLong(ID), isEvaluable);
-                                        }
-                                        if (isEvaluable == true) {
-                                            if (isDomaineParent == true) {
-                                                domainesToDisplay.add(domaine);
-                                            }
-                                            else if (idDomaineParent.get(idParent) == false){
-                                                domainesToDisplay.add(domaine);
-                                            }
-                                        }
+                                    else if (idDomaineParent.get(idParent) == false){
+                                        domainesToDisplay.add(domaine);
                                     }
-                                    eleveObject.put("domaines", domainesToDisplay);
-                                    serviceResponseOK(answer, finalHandler, count, idEleve, GET_ARBRE_DOMAINE_METHOD);
                                 }
                             }
-                        });
-            }
-        }
+                            result.put("domaines", domainesToDisplay);
+                            promise.complete(result);
+                        }
+                    }
+                });
     }
 
     private JsonObject getObjectForPeriode(JsonArray array, Long idPeriode, String key) {
@@ -2888,7 +2890,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     // Ajout de l'image du graphe par domaine
                     if (showBilanPerDomaines) {
                         //TODO supprimer des que student est pris en compte
-                        setIdGraphPerDomaine(eleve, images);
                         setIdGraphPerDomaine(student, images);
                     }
 

@@ -55,12 +55,10 @@ public interface ExportBulletinService {
 
  /**
   * Récupération des responsables légaux d'un élève
-  * @param idEleve idEleve
-  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
-  * @param finalHandler handler servant à la synchronisation des services
+  * @param student élève à traiter
+  * @param promise handler servant à la synchronisation des services
   */
- void getResponsables( String idEleve, Map<String,JsonObject> elevesMap,
-                       Handler<Either<String, JsonObject>> finalHandler);
+ void getResponsables( Student student, Promise promise);
 
  /**
   * Récupère le suivi des acquis d'un élève
@@ -83,14 +81,11 @@ public interface ExportBulletinService {
 
  /**
   * Récupère les EPI, AP et Parcours d'un élève
-  * @param idEleve ideleve
-  * @param idClasse identifiant de la classe
-  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
-  * @param idPeriode idperiode
-  * @param finalHandler handler servant à la synchronisation des services
+  * @param student Student to handle
+  * @param promise handler servant à la synchronisation des services
   */
- void getProjets ( String idEleve,  String idClasse, Map<String,JsonObject> elevesMap,Long idPeriode,
-                   Handler<Either<String, JsonObject>> finalHandler);
+ void getProjets (Student student,
+                  Promise<Object> promise);
 
  /**
   * Récupère la synthèse du bilan périodique d'un élève
@@ -169,13 +164,10 @@ public interface ExportBulletinService {
 
  /**
   * Récupération de tous les enseignements
-  * @param idEleve l'identifiant de l'élève.
-  * @param idClasse l'identifiant de la classe
-  * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
-  * @param finalHandler handler servant à la synchronisation des services.
+  * @param student Student to handle
+  * @param promise handler servant à la synchronisation des services.
   */
- void getArbreDomaines(String idEleve, String idClasse, Map<String, JsonObject> elevesMap,
-                       Handler<Either<String, JsonObject>> finalHandler);
+ void getArbreDomaines(Student student, Promise<Object> promise);
 
 
  /**
