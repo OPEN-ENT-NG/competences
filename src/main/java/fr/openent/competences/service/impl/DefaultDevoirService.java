@@ -46,10 +46,8 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
@@ -350,6 +348,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     o = HomeworkUtils.formatDevoirForDuplication(devoir);
                     o.put("id_groupe", g.getString("id"));
                     o.put("type_groupe", g.getInteger("type_groupe"));
+                    o.put("date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+                    o.put("date_publication", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
                     JsonArray tempStatements = this.createStatement(ids.getLong(i), o, user);
                     for (int j = 0; j < tempStatements.size(); j++) {
                         statements.add(tempStatements.getValue(j));
