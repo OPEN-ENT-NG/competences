@@ -72,7 +72,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
 
             $scope.doNotCheckIfCreation = function(item){
                 if ($location.path() === "/devoir/create") {
-                    item.isSelected = false;
+                    //item.isSelected = false;
                 }
             };
 
@@ -150,6 +150,9 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                     .done(async (res) => {
                         $scope.creatingCompetence = false;
                         $scope.id = res.id;
+                        $scope.selectedTab = _.filter($scope.competencesFilter, function(item){
+                            return item.isSelected;
+                        });
                         await $scope.$emit('loadEnseignementsByClasse');
                         $scope.getDomaines();
                         notify.info('item.success.create');
@@ -217,6 +220,9 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
             $scope.toggleCheckbox = function(item, parentItem, created?){
                 if (created){
                     $scope.competencesFilter[item.id + '_' + item.id_enseignement].isSelected = true;
+                    $scope.selectedTab.forEach(comp => {
+                        $scope.competencesFilter[comp.data.id + '_' + comp.data.id_enseignement].isSelected = true;
+                    });
                 }
 
                 $scope.emitToggleCheckbox(item, parentItem);
