@@ -378,6 +378,7 @@
   "evaluations.competences.satisfying":"Maîtrise satisfaisante",
   "evaluations.competences.fragile":"Maîtrise fragile",
   "evaluations.competences.poor":"Maîtrise insuffisante",
+  "evaluations.competences.search" : "Rechercher une compétence",
   "evaluations.competence.evaluate" : "Évaluation de la compétence",
   "evaluations.competence.unevaluated":"Compétence non évaluée",
   "evaluations.competence.level.and.number":"Niveau des compétences et Nombre d'évaluations",
