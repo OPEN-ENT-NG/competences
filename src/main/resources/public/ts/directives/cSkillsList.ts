@@ -72,7 +72,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
 
             $scope.doNotCheckIfCreation = function(item){
                 if ($location.path() === "/devoir/create") {
-                    //item.isSelected = false;
+                    item.isSelected = false;
                 }
             };
 
