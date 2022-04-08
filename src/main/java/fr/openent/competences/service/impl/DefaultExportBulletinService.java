@@ -588,7 +588,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     getArbreDomaines(student, getArbreDomainesPromise);
                     nbOptions+=2;
                 }
-//
+
                 if (params.getBoolean(SHOW_PROJECTS)) {
                     Promise<Object> getProjetsPromise = Promise.promise();
                     futures.add(getProjetsPromise.future());
@@ -634,7 +634,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             for (int i = 1; i <= finalNbOptions ; i++ )
                                 student.getParamBulletins().addParams((JsonObject) event.result().list().get(6 + i));
 
-                            //NE PAS LAISSER CA SVP
                             elevesMap.put(student.getId(),student.toJsonObject());
                             log.info("------------------"+idEleve + " end get datas for export bulletin  ---------------------");
                             finalHandler.handle(new Either.Right<>(student.toJsonObject()));
@@ -2902,7 +2901,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                     students.put(idEleve, student);
                     elevesMap.put(idEleve, student.toJsonObject());
-                    elevesMap.put(idEleve, student.toJsonObject());
 
                     //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
 
@@ -2915,6 +2913,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         eleves.clear();
                         eleves.addAll(new JsonArray(compositeEvent.result().list()));
                         log.info("[Competences DefaultExportBulletinService ]end students" );
+                        log.info(elevesMap.size());
                         finalHandler.handle(new Either.Right<>(null));
                     }
                 });
@@ -3402,9 +3401,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         futureList.add(imgSignatureFuture);
         futureList.add(logoFuture);
 
-        log.info(eleve.getString(IMG_STRUCTURE));
-        log.info(eleve.getString("imgSignature"));
-        log.info(eleve.getString(LOGO_PATH));
         CompositeFuture.all(futureList).setHandler(new Handler<AsyncResult<CompositeFuture>>() {
             @Override
             public void handle(AsyncResult<CompositeFuture> event) {
@@ -3453,9 +3449,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         futureList.add(imgSignatureFuture);
         futureList.add(logoFuture);
 
-        log.info(params.getString(IMG_STRUCTURE));
-        log.info(params.getString("imgSignature"));
-        log.info(params.getString(LOGO_PATH));
         if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)){
             params.put(LOGO_PATH, "img/ministere_agriculture.png");
         } else {
