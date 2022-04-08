@@ -67,6 +67,9 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                     }
                     $scope.safeApply();
                 }
+                $scope.opened = {
+                    lightboxCreationCompetence : false
+                };
                 return (item.selected = parentItem.enseignement && parentItem.enseignement.selected || item.selected || false);
             };
 
@@ -77,7 +80,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
             };
 
             $scope.openLightboxCreationCompetence = function(enseignement, competence) {
-                $scope.creatingCompetence = true;
+                $scope.opened.lightboxCreationCompetence = true;
                 $scope.newItem = $scope.initNewCompetence();
                 $scope.id_cycle = competence.id_cycle;
                 $scope.newItem.cycle = competence.id_cycle == 1 ? "Cycle 4" : "Cycle 3"; //TODO : Faire une récupération du libellé de cycle proprement
@@ -148,7 +151,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
             $scope.saveItem = function (item) {
                 http().postJson(`competences/competence`, $scope.jsonCreateItem(item))
                     .done(async (res) => {
-                        $scope.creatingCompetence = false;
+                        $scope.opened.lightboxCreationCompetence = false;
                         $scope.id = res.id;
                         $scope.selectedTab = _.filter($scope.competencesFilter, function(item){
                             return item.isSelected;
@@ -160,7 +163,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                     })
                     .error((res) => {
                         console.error(res);
-                        $scope.creatingCompetence = false;
+                        $scope.opened.lightboxCreationCompetence = false;
                         if (res.status === 401) {
                             notify.error('item.error.unautorize.create');
                             utils.safeApply(this);
@@ -201,6 +204,10 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                     return (item.open = false);
                 }
             };
+
+            $scope.initAction = function(){
+                $scope.action = false;
+            }
 
             $scope.safeApply = function(fn) {
                 var phase = this.$root.$$phase;

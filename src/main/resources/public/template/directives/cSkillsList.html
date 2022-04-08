@@ -18,7 +18,7 @@
     <li class="skills-header skill-30 skills-section"
         ng-class="{opened : enseignement.open}"
         ng-repeat="enseignement in data"
-        ng-init="initHeader(enseignement)">
+        ng-init="initHeader(enseignement); initAction();">
         <span class="skills-text-overflow skills-teach bold"
               title="Enseignement"
               ng-click="enseignement.open = !enseignement.open; doNotApplySearchFilter();">
@@ -42,13 +42,14 @@
                 </label>
                 <span ng-class="{whiteSpaceNormal : competence.hovering}"
                       ng-mouseenter="showIt(competence)"
-                      ng-mouseleave="hideIt(competence)"
+                      ng-mouseleave="hideIt(competence); action = false;"
+                      ng-mouseover="action = true"
                       ng-click="competence.open = !competence.open; doNotApplySearchFilter();"
                       title="Connaissance"
                       class="skills-text-overflow">
                     <i class="skills-open-icon"></i>
                     <span ng-bind-html="competencesFilter[competence.id + '_' + competence.id_enseignement].nomHtml"></span>
-                    <i ng-show=true class="plus-input" ng-click="openLightboxCreationCompetence(enseignement, competence);"></i>
+                    <i class="plus-input" ng-show="action" ng-click="openLightboxCreationCompetence(enseignement, competence);"></i>
                 </span>
                 <ul class="twelve">
                     <li ng-repeat="sousCompetence in competence.competences.all"
@@ -76,7 +77,7 @@
             </li>
         </ul>
     </li>
-    <lightbox show="creatingCompetence" on-close="creatingCompetence = false;">
+    <lightbox show="opened.lightboxCreationCompetence" on-close="opened.lightboxCreationCompetence = false;">
         <container template="lightboxCreationCompetence"></container>
     </lightbox>
 </ul>
