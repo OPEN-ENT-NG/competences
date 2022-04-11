@@ -42,6 +42,7 @@ import { LengthLimit} from "../constants/ConstantCommonLength"
 import {isValidClasse} from "../utils/functions/isValidClasse";
 import {isValidDevoir} from "../utils/filters/isValidDevoir";
 import {AppreciationSubjectPeriodStudent} from "../models/teacher/AppreciationSubjectPeriodStudent";
+import {Periode} from "../models/common/Periode";
 
 declare let $: any;
 declare let document: any;
@@ -200,7 +201,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir.apprec_visible = devoirTmp.apprec_visible;
                     $scope.devoir.dateDevoir = new Date($scope.devoir.date);
                     $scope.devoir.datePublication = new Date($scope.devoir.date_publication);
-                    $scope.devoir.id_periode = devoirTmp.id_periode;
                     $scope.devoir.controlledDate = true;
                     $scope.firstConfirmSuppSkill = false;
                     $scope.secondConfirmSuppSkill = false;
@@ -211,6 +211,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.notYearPeriodes = _.filter($scope.filteredPeriode, (periode) => {
                         return $scope.notYear(periode);
                     });
+                    $scope.devoir.id_periode = $scope.getCurrentPeriodEval($scope.notYearPeriodes, $scope.devoir.dateDevoir).id_type;
                     $scope.devoir.competences.sync().then(async () => {
                         await $scope.createDevoir();
                         template.open('main', 'enseignants/creation_devoir/display_creation_devoir');
@@ -5098,6 +5099,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         angular.merge = function (s1,s2) {
             return $.extend(true,s1,s2);
+        };
+
+        /*
+        Permet de définir la période actuelle en fonction de la date du devoir
+         */
+        $scope.getCurrentPeriodEval = function(periodes: Array<Periode>, date: Date): Periode{
+            let currentPeriod: Periode = periodes.find((periode: Periode) => moment(date).isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]'));
+            return currentPeriod || periodes[0];
         };
 
         Chart.plugins.register({
