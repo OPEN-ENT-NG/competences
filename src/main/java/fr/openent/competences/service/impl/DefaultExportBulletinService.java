@@ -621,6 +621,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if (event.succeeded()) {
                         try {
                             List<StudentEvenement> studentEvenements = (List<StudentEvenement>) event.result().list().get(0);
+                            student.getParamBulletins().addParams((JsonObject) event.result().list().get(1));
+                            student.getParamBulletins().addParams((JsonObject) event.result().list().get(2));
                             student.getParamBulletins().addParams((JsonObject) event.result().list().get(3));
                             student.getParamBulletins().addParams((JsonObject) event.result().list().get(4));
                             student.getParamBulletins().addParams((JsonObject) event.result().list().get(5));
@@ -866,6 +868,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     promise.complete(new JsonObject().put("bilanCycle",
                                             getLibelle("evaluations.bilan.periodique.of." + typePeriode)
                                                     + libelle));
+                                    log.info("bilanCycle ici " +   getLibelle("evaluations.bilan.periodique.of." + typePeriode)
+                                            + libelle);
                                 }
                                 else {
 
@@ -2900,7 +2904,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     eleve.put("hasINENumber", eleve.containsKey("ine") && eleve.getString("ine") != null);
 
                     students.put(idEleve, student);
-                    elevesMap.put(idEleve, student.toJsonObject());
 
                     //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
 
