@@ -103,7 +103,10 @@ public class DefaultElementProgramme implements ElementProgramme {
         }
         query.append("ORDER BY libelle");
 
-        values.add(idCycle);
+        if(idCycle != null){
+            values.add(idCycle);
+        }
+
         sql.prepared(query.toString(), values, validResultHandler(handler));
     }
 
@@ -118,7 +121,10 @@ public class DefaultElementProgramme implements ElementProgramme {
         }
         query.append("ORDER BY libelle");
 
-        values.add(idDomaine);
+        if(idDomaine != null) {
+            values.add(idDomaine);
+        }
+
         sql.prepared(query.toString(), values, validResultHandler(handler));
     }
 
