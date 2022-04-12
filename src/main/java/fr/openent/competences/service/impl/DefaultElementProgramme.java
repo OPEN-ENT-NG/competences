@@ -100,12 +100,9 @@ public class DefaultElementProgramme implements ElementProgramme {
         query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".domaine_enseignement ");
         if(idCycle != null){
             query.append("WHERE id_cycle = ? ");
-        }
-        query.append("ORDER BY libelle");
-
-        if(idCycle != null){
             values.add(idCycle);
         }
+        query.append("ORDER BY libelle");
 
         sql.prepared(query.toString(), values, validResultHandler(handler));
     }
@@ -118,12 +115,9 @@ public class DefaultElementProgramme implements ElementProgramme {
         query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA +".sous_domaine_enseignement ");
         if(idDomaine != null){
             query.append("WHERE id_domaine = ? ");
-        }
-        query.append("ORDER BY libelle");
-
-        if(idDomaine != null) {
             values.add(idDomaine);
         }
+        query.append("ORDER BY libelle");
 
         sql.prepared(query.toString(), values, validResultHandler(handler));
     }
