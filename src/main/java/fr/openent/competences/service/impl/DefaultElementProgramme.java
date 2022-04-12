@@ -95,24 +95,30 @@ public class DefaultElementProgramme implements ElementProgramme {
     @Override
     public void getDomainesEnseignement(String idCycle, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
         query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".domaine_enseignement ");
         if(idCycle != null){
-            query.append("WHERE id_cycle = " + idCycle + " ");
+            query.append("WHERE id_cycle = ? ");
+            values.add(idCycle);
         }
         query.append("ORDER BY libelle");
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
         sql.prepared(query.toString(), values, validResultHandler(handler));
     }
 
     @Override
     public void getSousDomainesEnseignement(String idDomaine, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
         query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA +".sous_domaine_enseignement ");
         if(idDomaine != null){
-            query.append("WHERE id_domaine = " + idDomaine + " ");
+            query.append("WHERE id_domaine = ? ");
+            values.add(idDomaine);
         }
         query.append("ORDER BY libelle");
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
         sql.prepared(query.toString(), values, validResultHandler(handler));
     }
 
