@@ -21,6 +21,7 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.file.FileSystemException;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -565,12 +566,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 futures.add(getSuiviAcquisPromise.future());
 
                 int nbOptions = 0;
-                if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
-                    Promise<Object> getHeadTeachersPromise = Promise.promise();
-                    futures.add(getHeadTeachersPromise.future());
-                    getHeadTeachers(student,getHeadTeachersPromise);
-                    nbOptions++;
-                }
+
 
                 if(params.getBoolean(GET_RESPONSABLE)) {
                     Promise<Object> getResponsablesPromise = Promise.promise();
@@ -586,6 +582,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     futures.add(getArbreDomainesPromise.future());
                     getImageGraph(student, getImageGraphPromise);
                     getArbreDomaines(student, getArbreDomainesPromise);
+                    student.getParamBulletins().addParams(new JsonObject().put("hasGraphPerDomaine",true));
                     nbOptions+=2;
                 }
 
@@ -633,11 +630,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                             log.info("fin");
                             //OPTIONS
-                            for (int i = 1; i <= finalNbOptions ; i++ )
+                            for (int i = 1; i <= finalNbOptions ; i++ ) {
                                 student.getParamBulletins().addParams((JsonObject) event.result().list().get(6 + i));
-
-                            elevesMap.put(student.getId(),student.toJsonObject());
-                            log.info("------------------"+idEleve + " end get datas for export bulletin  ---------------------");
+                                log.info(event.result().list().get(6 + i));
+                            }
+//                            elevesMap.put(student.getId(),student.toJsonObject());
+                            log.info("------------------"+ idEleve + " end get datas for export bulletin  ---------------------");
                             finalHandler.handle(new Either.Right<>(student.toJsonObject()));
                         }catch (Exception e){
                             finalHandler.handle(new Either.Left<>(e.getMessage()));
@@ -1649,10 +1647,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
 
-    public void getHeadTeachers(Student student,
+    public void getHeadTeachers(String idClasse,
                                 Promise<Object> promise) {
 
-        String idClasse = student.getClasse().getId();
         JsonObject action = new JsonObject();
 
         action.put(ACTION, "classe.getHeadTeachersClasse")
@@ -2803,7 +2800,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             promises.add(periodeYearPromise.future());
             promises.add(imgPromise.future());
             promises.add(listStudentsPromise.future());
-
+            int nbOptions= 0;
+            if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
+                Promise<Object> getHeadTeachersPromise = Promise.promise();
+                promises.add(getHeadTeachersPromise.future());
+                getHeadTeachers(firstStudent.getString("idClasse"),getHeadTeachersPromise);
+                nbOptions++;
+            }
 
             getStructure(firstStudent.getString("idEtablissement"),structurePromise);
             getLibellePeriode(idPeriode,host,acceptLanguage,periodeLibellePromise);
@@ -2811,6 +2814,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             generateImagesFromPathForBulletin(params,vertx,imgPromise);
             Utils.getElevesClasse(eb, firstStudent.getString("idClasse"), idPeriode, listStudentsPromise);
 
+            int finalNbOptions = nbOptions;
             FutureHelper.all(promises).onSuccess(success -> {
                 Structure structure = (Structure) success.result().list().get(0);
                 Periode periode = (Periode) success.result().list().get(1);
@@ -2820,10 +2824,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 paramBulletins.setParams(params);
                 paramBulletins.setHasImgLoaded(true);
                 paramBulletins.addParams((JsonObject) success.result().list().get(3));
-
                 JsonArray idEleves = new JsonArray(((JsonArray) success.result().list().get(4)).stream()
                         .map(e -> ((JsonObject) e).getString(ID_ELEVE_KEY)).collect(Collectors.toList()));
                 Map<String, Student> students = new HashMap<>();
+
+                for(int i = 1; i <= finalNbOptions; i++) {
+                    paramBulletins.addParams((JsonObject) success.result().list().get(4 + i));
+                }
                 for (int i = 0; i < eleves.size(); i++) {
                     futures.add(Future.future());
                 }
@@ -2915,6 +2922,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         //ici créer le Json
                         eleves.clear();
                         eleves.addAll(new JsonArray(compositeEvent.result().list()));
+                        for(Object eleve : eleves){
+                            JsonObject ob = (JsonObject) eleve;
+                            elevesMap.put(ob.getString("idEleve"),ob);
+                        }
                         log.info("[Competences DefaultExportBulletinService ]end students" );
                         log.info(elevesMap.size());
                         finalHandler.handle(new Either.Right<>(null));
