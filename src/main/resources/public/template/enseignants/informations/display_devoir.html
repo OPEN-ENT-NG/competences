@@ -35,7 +35,7 @@
             <li ng-if="informations.devoir.is_evaluated"><span class="bold"><i18n>evaluations.test.coefficient</i18n></span> : [[informations.devoir.coefficient]]</li>
             <li ng-if="informations.devoir.is_evaluated"><span class="bold"><i18n>evaluations.test.grade.on</i18n></span> : [[informations.devoir.diviseur]]</li>
             <li><span class="bold"><i18n>evaluations.test.date</i18n></span>: [[getDateFormated(informations.devoir.date)]]</li>
-            <li><span class="bold"><i18n>evaluations.test.date.publication</i18n></span>: [[getDateFormated(informations.devoir.datepublication)]]</li>
+            <li><span class="bold"><i18n>evaluations.test.date.publication</i18n></span>: [[getDateFormated(informations.devoir.date_publication)]]</li>
         </ul>
     </div>
     <div ng-if="informations.devoir.is_evaluated">
