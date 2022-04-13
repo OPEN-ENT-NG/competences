@@ -103,9 +103,9 @@ public interface CompetencesService extends CrudService {
      *                 compétences d'un cycle différent du cycle de la classe
      * @param handler handler portant le résultat de la requête
      */
-    void getCompetencesByLevel(String filter, String idClasse, String idCycle, Handler<Either<String, JsonArray>> handler);
+    void getCompetencesByLevel(String filter, String valueToFilter, String idClasse, String idCycle, Handler<Either<String, JsonArray>> handler);
 
-    void getCompetencesByLevel(String idEtablissement, String filter, String idClasse,
+    void getCompetencesByLevel(String idEtablissement, String filter, String valueToFilter, String idClasse,
                                String idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
