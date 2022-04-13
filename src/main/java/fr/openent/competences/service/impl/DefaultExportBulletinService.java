@@ -624,6 +624,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             student.getParamBulletins().addParams((JsonObject) event.result().list().get(4));
                             student.getParamBulletins().addParams((JsonObject) event.result().list().get(5));
                             student.getParamBulletins().addParams((JsonObject) event.result().list().get(6));
+
                             for(StudentEvenement studentEvenement : studentEvenements){
                                 student.addEvenement(studentEvenement);
                             }
@@ -632,7 +633,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             //OPTIONS
                             for (int i = 1; i <= finalNbOptions ; i++ ) {
                                 student.getParamBulletins().addParams((JsonObject) event.result().list().get(6 + i));
-                                log.info(event.result().list().get(6 + i));
                             }
 //                            elevesMap.put(student.getId(),student.toJsonObject());
                             log.info("------------------"+ idEleve + " end get datas for export bulletin  ---------------------");
@@ -866,8 +866,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     promise.complete(new JsonObject().put("bilanCycle",
                                             getLibelle("evaluations.bilan.periodique.of." + typePeriode)
                                                     + libelle));
-                                    log.info("bilanCycle ici " +   getLibelle("evaluations.bilan.periodique.of." + typePeriode)
-                                            + libelle);
                                 }
                                 else {
 
@@ -1111,7 +1109,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     }
                 } else {
                     JsonArray result = event.right().getValue();
-                    JsonObject resultData = new JsonObject();
+                    JsonObject resultData = new JsonObject().put("avisConseil","").put("beforeAvisConseil","").put("hasAvisConseil",false);
                     JsonObject avisConseil = new JsonObject();
                     if(!result.isEmpty())
                         avisConseil = result.getJsonObject(0);
@@ -1150,7 +1148,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 }else{
                     JsonArray result = event.right().getValue();
                     JsonObject avisOrientation = new JsonObject();
-                    JsonObject resultsJsonObject = new JsonObject();
+                    JsonObject resultsJsonObject = new JsonObject().put("avisOrientation","").put("hasAvisOrientation",false).put("beforeAvisOrientation","");
                     if(!result.isEmpty())
                         avisOrientation = result.getJsonObject(0);
                     if(avisOrientation != null && !avisOrientation.isEmpty() ) {
@@ -2927,7 +2925,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             elevesMap.put(ob.getString("idEleve"),ob);
                         }
                         log.info("[Competences DefaultExportBulletinService ]end students" );
-                        log.info(elevesMap.size());
                         finalHandler.handle(new Either.Right<>(null));
                     }
                 });
