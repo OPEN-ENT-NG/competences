@@ -26,12 +26,12 @@
             <span ng-bind-html="enseignementsFilter[enseignement.id].nomHtml"></span>
         </span>
         <ul class="twelve-mobile">
-            <li class="twelve skills-header skill-40 underline"
+            <li class="twelve skills-header skill-40"
                 ng-repeat="competence in enseignement.competences.all"
                 ng-init="initHeader(competence); initCheckBox(competence, $parent.enseignement)"
                 ng-if="isVisibleAndHasVisibleChildren(competence)"
                 ng-class="{opened: competence.open}">
-                <label class="one checkbox skills-checkbox skills-headers-checkbox">
+                <label class="one checkbox skills-checkbox skills-headers-checkbox underline">
                     <input id="[[competence.id]]_[[competence.id_enseignement]]"
                            class="competence_[[competence.id]]"
                            type="checkbox"
@@ -42,14 +42,14 @@
                 </label>
                 <span ng-class="{whiteSpaceNormal : competence.hovering}"
                       ng-mouseenter="showIt(competence)"
-                      ng-mouseleave="hideIt(competence); action = false;"
-                      ng-mouseover="action = true"
+                      ng-mouseleave="hideIt(competence); mouseHovering = false;"
+                      ng-mouseover="mouseHovering = true"
                       ng-click="competence.open = !competence.open; doNotApplySearchFilter();"
                       title="Connaissance"
                       class="skills-text-overflow">
                     <i class="skills-open-icon"></i>
                     <span ng-bind-html="competencesFilter[competence.id + '_' + competence.id_enseignement].nomHtml"></span>
-                    <i class="plus-input" ng-show="action" ng-click="openLightboxCreationCompetence(enseignement, competence);"></i>
+                    <i class="plus-input" ng-show="mouseHovering" ng-click="openLightboxCreationCompetence(enseignement, competence);"></i>
                 </span>
                 <ul class="twelve">
                     <li ng-repeat="sousCompetence in competence.competences.all"

@@ -1881,7 +1881,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.loadTruc = async function () {
+        $scope.loadEnseignementsForCompetenceCreation = async function () {
             let classe_Id = $scope.devoir.id_groupe;
             let newIdCycle = $scope.getClasseData(classe_Id, 'id_cycle');
             if (newIdCycle === null) {
@@ -1913,7 +1913,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.$on('loadEnseignementsByClasse', async function () {
-            await $scope.loadTruc();
+            await $scope.loadEnseignementsForCompetenceCreation();
             $scope.$broadcast('checkboxNewCompetence');
         });
 

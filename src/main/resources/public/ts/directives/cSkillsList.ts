@@ -83,7 +83,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 $scope.opened.lightboxCreationCompetence = true;
                 $scope.newItem = $scope.initNewCompetence();
                 $scope.id_cycle = competence.id_cycle;
-                $scope.newItem.cycle = competence.id_cycle == 1 ? "Cycle 4" : "Cycle 3"; //TODO : Faire une récupération du libellé de cycle proprement
+                $scope.newItem.cycle = competence.id_cycle === 1 ? "Cycle 4" : "Cycle 3";
                 $scope.newItem.enseignement = enseignement;
                 $scope.newItem.elementSignifiant = competence;
                 $scope.newItem.id_parent = competence.id;
@@ -119,9 +119,6 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                                 _res.push(domaine);
                             }
                             $scope.newItem.domaines = _res;
-                            $scope.printDomaines = {
-                                all: _res
-                            };
                         }
                     })
                     .error(function () {
@@ -158,18 +155,18 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                         });
                         await $scope.$emit('loadEnseignementsByClasse');
                         $scope.getDomaines();
-                        notify.info('item.success.create');
+                        notify.info('competence.createCompetence.success');
                         utils.safeApply(this);
                     })
                     .error((res) => {
                         console.error(res);
                         $scope.opened.lightboxCreationCompetence = false;
                         if (res.status === 401) {
-                            notify.error('item.error.unautorize.create');
+                            notify.error('competence.createCompetence.error.unautorize');
                             utils.safeApply(this);
                         }
                         else {
-                            notify.error('item.error.create');
+                            notify.error('competence.createCompetence.error');
                             utils.safeApply(this);
                         }
                     })
@@ -206,7 +203,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
             };
 
             $scope.initAction = function(){
-                $scope.action = false;
+                $scope.mouseHovering = false;
             }
 
             $scope.safeApply = function(fn) {
