@@ -62,7 +62,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         await model.me.workflow.load(['viescolaire']);
         await PreferencesUtils.initPreference();
-
         $scope.buildLoadingMessageStructure = function (libelle) {
             return  `${  libelle  }`;
         };
@@ -293,6 +292,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 return;
                             }
                         }
+
                         $scope.usePerso = evaluations.structure.usePerso;
                         $scope.updateColorAndLetterForSkills();
                         if ($scope.printOption === undefined) {
@@ -313,28 +313,35 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             if (_classe.periodes.empty()) {
                                await _classe.periodes.sync() ;
                             }
+                            await $scope.currentDevoir.competences.sync();
                             $scope.currentDevoir.periode = _.findWhere(_classe.periodes.all,
                                 {id_type: $scope.currentDevoir.id_periode})
                             $scope.openedDetails = true;
-                            $scope.openedStatistiques = true;
+                            $scope.openedStatistiques = true
                             $scope.openedStudentInfo = true;
                             await $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode);
-                            let allPromise = [$scope.currentDevoir.calculStats(), $scope.currentDevoir.competences.sync()];
+                            await $scope.currentDevoir.calculStats();
                            if ($scope.structure.typePeriodes.empty()) {
-                                allPromise.push($scope.structure.typePeriodes.sync());
+                                await $scope.structure.typePeriodes.sync();
                             }
-                            await Promise.all(allPromise);
-                           $scope.currentDevoir.endSaisie = await $scope.checkEndSaisieSeul($scope.currentDevoir);
-                            template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
-                            await utils.safeApply($scope);
-                            await Utils.stopMessageLoader($scope);
+                           $scope.currentDevoir.endSaisie = await $scope.checkEndSaisieSeul($scope.currentDevoir)
+                           template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
+                           await utils.safeApply($scope);
+                           await Utils.stopMessageLoader($scope);
                         } else {
                             await Utils.stopMessageLoader($scope);
+                            $scope.goTo('/');
+                            return;
                         }
                     }
                 } catch (e){
                     await Utils.stopMessageLoader($scope);
+                    $scope.goTo('/');
+                    return;
                 }
+                await Utils.stopMessageLoader($scope);
+
+
             },
 
             displayReleveNotes: function (params) {
