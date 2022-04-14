@@ -34,8 +34,8 @@ public class DefaultNiveauEnsComplement extends SqlCrudService implements Niveau
     @Override
     public void getNiveauEnsComplement(Handler<Either<String, JsonArray>> handler) {
 
-       String query = "SELECT id, libelle, niveau, bareme_brevet FROM "+ Competences.COMPETENCES_SCHEMA +".niveau_ens_complement";
-
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        String query = "SELECT id, libelle, niveau, bareme_brevet FROM "+ Competences.COMPETENCES_SCHEMA +".niveau_ens_complement";
+        JsonArray values = new JsonArray();
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
 }

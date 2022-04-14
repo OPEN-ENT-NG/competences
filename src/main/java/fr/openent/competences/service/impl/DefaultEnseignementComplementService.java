@@ -38,9 +38,9 @@ public class DefaultEnseignementComplementService extends SqlCrudService impleme
 
 
     public void getEnseignementsComplement(Handler<Either<String, JsonArray>> handler) {
-       String query = "SELECT id, libelle, code FROM "+ Competences.COMPETENCES_SCHEMA + ".enseignement_complement";
-
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        String query = "SELECT id, libelle, code FROM "+ Competences.COMPETENCES_SCHEMA + ".enseignement_complement";
+        JsonArray values = new JsonArray();
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
 
     }
 
