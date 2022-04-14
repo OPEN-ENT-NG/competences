@@ -1363,8 +1363,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
                 " WHERE elPro.id_matiere = dev.id_matiere AND elPro.id_periode = dev.id_periode " +
                 "AND elPro.id_classe = relDevGr.id_groupe);"*/;
-
-        Sql.getInstance().raw(query, SqlResult.validRowsResultHandler(result));
+        JsonArray values = new JsonArray();
+        Sql.getInstance().prepared(query, values, SqlResult.validRowsResultHandler(result));
     }
 
     @Override

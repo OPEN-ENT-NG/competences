@@ -36,7 +36,8 @@ public class DefaultLanguesCultureRegionaleService extends SqlCrudService implem
 
     public void getLanguesCultureRegionaleService(Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT id, libelle, code FROM "+ Competences.COMPETENCES_SCHEMA + ".langues_culture_regionale";
-        Sql.getInstance().raw(query, SqlResult.validResultHandler(handler));
+        JsonArray values = new JsonArray();
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
 
