@@ -33,6 +33,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 
 import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
@@ -280,7 +281,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     }
 
     @Override
-    public void getCompetencesByLevel(final String filter, final String idClasse, final String idCycle, final Handler<Either<String, JsonArray>> handler) {
+    public void getCompetencesByLevel(final String filter, final String valueToFilter, final String idClasse, final String idCycle, final Handler<Either<String, JsonArray>> handler) {
         final JsonObject action = new JsonObject()
                 .put("action", "classe.getEtabClasses")
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
@@ -297,7 +298,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     if (results.size() > 0 ){
                         idEtablissement = ((JsonObject)results.getJsonObject(0)).getString("idStructure");
                     }
-                    getCompetencesByLevel(idEtablissement, filter, idClasse, idCycle, handler);
+                    getCompetencesByLevel(idEtablissement, filter, valueToFilter, idClasse, idCycle, handler);
                 } else {
                     log.error(body.getString("message"));
                     handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
@@ -307,14 +308,19 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     }
 
     @Override
-    public void getCompetencesByLevel(final String idEtablissement, final String filter, final String idClasse,
+    public void getCompetencesByLevel(final String idEtablissement, final String filter, final String valueToFilter, final String idClasse,
                                       final String idCycle, final Handler<Either<String, JsonArray>> handler) {
 
         if (idEtablissement == null) {
-            getCompetencesByLevel(filter, idClasse, idCycle, handler);
+            getCompetencesByLevel(filter, valueToFilter, idClasse, idCycle, handler);
         } else {
 
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+
+            String filterQuery = "";
+            if(Objects.equals(filter, "id_type") && valueToFilter != null){
+                filterQuery = "comp." + filter + " = ? AND";
+            }
 
             String query = "SELECT DISTINCT string_agg(domaines.codification, ', ') as code_domaine," +
                     " string_agg( cast (domaines.id as text), ',') as ids_domaine, comp.id," +
@@ -342,9 +348,11 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     " LEFT JOIN (SELECT nom, id_competence, masque  FROM " + COMPETENCES_PERSO_TABLE +
                     "  WHERE id_etablissement = ? ) AS compPerso" +
                     " ON comp.id = compPerso.id_competence " +
-                    " WHERE comp." + filter +
-                    " AND (comp.id_etablissement = ? OR comp.id_etablissement IS NULL ) ";
+                    " WHERE " + filterQuery + " (comp.id_etablissement = ? OR comp.id_etablissement IS NULL ) ";
             params.add(idEtablissement);
+            if(!filterQuery.equals("")){
+                params.add(valueToFilter);
+            }
             params.add(idEtablissement);
             if(idCycle != null){
                 query += "AND comp.id_cycle = ?";

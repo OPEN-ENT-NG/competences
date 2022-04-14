@@ -17,40 +17,7 @@
 
 package fr.openent.competences.service.impl;
 
-import static fr.openent.competences.Competences.APPRECIATIONS;
-import static fr.openent.competences.Competences.APPRECIATION_CLASSE;
-import static fr.openent.competences.Competences.CLASSE_NAME_KEY;
-import static fr.openent.competences.Competences.COMPETENCES_NOTES_TABLE;
-import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
-import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
-import static fr.openent.competences.Competences.DISPLAY_NAME_KEY;
-import static fr.openent.competences.Competences.ELEMENT_PROGRAMME_KEY;
-import static fr.openent.competences.Competences.ELEVES;
-import static fr.openent.competences.Competences.FIRST_NAME_KEY;
-import static fr.openent.competences.Competences.HAS_NOTE;
-import static fr.openent.competences.Competences.ID_ELEVE;
-import static fr.openent.competences.Competences.ID_ELEVE_KEY;
-import static fr.openent.competences.Competences.ID_ETABLISSEMENT_KEY;
-import static fr.openent.competences.Competences.ID_MATIERE;
-import static fr.openent.competences.Competences.ID_PERIODE;
-import static fr.openent.competences.Competences.ID_PERIODE_KEY;
-import static fr.openent.competences.Competences.LAST_NAME_KEY;
-import static fr.openent.competences.Competences.LEVEL;
-import static fr.openent.competences.Competences.LIBELLE;
-import static fr.openent.competences.Competences.MATIERE_TABLE;
-import static fr.openent.competences.Competences.MESSAGE;
-import static fr.openent.competences.Competences.MOYENNE;
-import static fr.openent.competences.Competences.NAME;
-import static fr.openent.competences.Competences.NN;
-import static fr.openent.competences.Competences.NOTES;
-import static fr.openent.competences.Competences.OK;
-import static fr.openent.competences.Competences.POSITIONNEMENT;
-import static fr.openent.competences.Competences.POSITIONNEMENTS_AUTO;
-import static fr.openent.competences.Competences.POSITIONNEMENT_AUTO;
-import static fr.openent.competences.Competences.REL_ANNOTATIONS_DEVOIRS_TABLE;
-import static fr.openent.competences.Competences.RESULTS;
-import static fr.openent.competences.Competences.STATUS;
-import static fr.openent.competences.Competences.TRANSITION_CONFIG;
+import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
@@ -663,14 +630,19 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // ou de ses groupes (positionnement global)
         // on le recupere donc sans filtre sur la classe
         if (colonne.equals(POSITIONNEMENT)) {
-            query.append("SELECT id_periode, id_eleve," + colonne + ", id_matiere ");
-        } else if(colonne.equals("appreciation_matiere_periode")){
-            query.append("SELECT id_periode, id_eleve," + colonne + ", id_classe, id_matiere, appreciation_matiere_periode.id AS id_appreciation_matiere_periode ");
-        } else {
-            query.append("SELECT id_periode, id_eleve," + colonne + ", id_classe, id_matiere ");
+            query.append("SELECT id_periode, id_eleve, " + POSITIONNEMENT + ", id_matiere ");
+            query.append(" FROM " + COMPETENCES_SCHEMA + "." + POSITIONNEMENT);
+        } else if(colonne.equals(APPRECIATION_MATIERE_PERIODE)){
+            query.append("SELECT id_periode, id_eleve, " + APPRECIATION_MATIERE_PERIODE + ", id_classe, id_matiere, appreciation_matiere_periode.id AS id_appreciation_matiere_periode ");
+            query.append(" FROM " + COMPETENCES_SCHEMA + "." + APPRECIATION_MATIERE_PERIODE);
+        } else if(colonne.equals(MOYENNE)){
+            query.append("SELECT id_periode, id_eleve, " + MOYENNE + ", id_classe, id_matiere ");
+            query.append(" FROM " + COMPETENCES_SCHEMA + "." + MOYENNE_FINALE_TABLE);
+        } else{
+            String textError = "Error when trying to get data, selected column is not supported.";
+            log.error(textError);
+            handler.handle(new Either.Left<>(textError));
         }
-
-        query.append(" FROM ").append(COMPETENCES_SCHEMA + "." + colonne + (MOYENNE.equals(colonne) ? "_finale" : " "));
 
         if(colonne.equals("appreciation_matiere_periode")){
             query.append(" LEFT JOIN notes.rel_appreciations_users_neo AS ao ON appreciation_matiere_periode.id = ao.appreciation_matiere_periode_id ");

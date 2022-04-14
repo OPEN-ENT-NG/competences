@@ -106,12 +106,12 @@ public class EnseignementController extends ControllerHelper {
                     final String finalIdClasse = idClasse;
 
 
-                    competencesService.getCompetencesByLevel(idStructure,"id_type = 1", finalIdClasse, idCycle, new Handler<Either<String, JsonArray>>() {
+                    competencesService.getCompetencesByLevel(idStructure, "id_type", "1", finalIdClasse, idCycle, new Handler<Either<String, JsonArray>>() {
                         @Override
                         public void handle(Either<String, JsonArray> eventCompetences_1) {
                             if (eventCompetences_1.right().isRight()) {
                                 _datas.put("_competences_1", eventCompetences_1.right().getValue());
-                                competencesService.getCompetencesByLevel(idStructure,"id_type = 2", finalIdClasse, idCycle, new Handler<Either<String, JsonArray>>() {
+                                competencesService.getCompetencesByLevel(idStructure, "id_type", "2", finalIdClasse, idCycle, new Handler<Either<String, JsonArray>>() {
                                     @Override
                                     public void handle(Either<String, JsonArray> eventCompetences_2) {
                                         if (eventCompetences_2.right().isRight()) {
