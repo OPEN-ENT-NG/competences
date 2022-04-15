@@ -887,6 +887,20 @@ public class DefaultExportService implements ExportService {
             }
 
             TreeMap<String, HashMap<Date, Date>> periodes = new TreeMap<>(Collections.reverseOrder());
+
+            int debut = 5, fin = 3;
+
+            /*int debut, fin;
+            if (id_cycle == 1){
+                debut = 5;
+                fin = 3;
+            }
+            else if (id_cycle == 2){
+                debut = fin = 6;
+            }
+            else{
+                debut = fin = 0;
+            }*/
             for (int i = niveau; i <= 6; i++) {
                 if (i != niveau) {
                     periodeBeginning.set(periodeBeginning.get(Calendar.YEAR)-1,
@@ -894,10 +908,13 @@ public class DefaultExportService implements ExportService {
                     periodeEnding.set(periodeEnding.get(Calendar.YEAR)-1,
                             periodeEnding.get(Calendar.MONTH), periodeEnding.get(Calendar.DATE));
                 }
-                String label = i + "EME";
-                HashMap<Date, Date> periode = new HashMap<>();
-                periode.put(periodeBeginning.getTime(), periodeEnding.getTime());
-                periodes.put(label, periode);
+                if(i <= debut && i >= fin){
+                    String label = i + "EME";
+                    HashMap<Date, Date> periode = new HashMap<>();
+                    periode.put(periodeBeginning.getTime(), periodeEnding.getTime());
+                    periodes.put(label, periode);
+                }
+
             }
             return periodes;
         }

@@ -424,7 +424,6 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         if(idPeriode != null) {
             query.append("AND devoirs.id_periode = ? AND devoirs.owner <> 'id-user-transition-annee'");
             values.add(idPeriode);
-            values.add(idPeriode);
         }else if(isYear){
             query.append("AND devoirs.owner <> 'id-user-transition-annee'");
         }

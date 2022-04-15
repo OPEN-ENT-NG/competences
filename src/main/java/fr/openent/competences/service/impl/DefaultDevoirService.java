@@ -855,12 +855,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         }
         if (historise) {
-            query.append("OR ( devoirs.eval_lib_historise = ? ))");
+            query.append("OR ( devoirs.eval_lib_historise = ? )");
             params.add(historise);
         }
-
-
-
+        query.append(")");
 
         Sql.getInstance().prepared(query.toString(), params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
