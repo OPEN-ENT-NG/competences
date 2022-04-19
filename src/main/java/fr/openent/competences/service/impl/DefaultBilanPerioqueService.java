@@ -120,8 +120,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 List<Integer> reasonIds = ((List<JsonObject>) reasons.getList()).stream()
                         .map(reason -> reason.getLong("id").intValue())
                         .collect(Collectors.toList());
-
-                log.info("periode : " + periodes.getJsonObject(0));
+                log.info("periode : " + periodes);
+                log.info("periode : " + periodes.getJsonObject(0).getString("timestamp_dt"));
                 String beginningDateYear = periodes.getJsonObject(0).getString("timestamp_dt").substring(0, 10);
                 String endDateYear = periodes.getJsonObject(periodes.size() - 1).getString("timestamp_fn").substring(0, 10);
 
