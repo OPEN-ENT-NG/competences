@@ -34,6 +34,7 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.storage.Storage;
+
 import javax.imageio.ImageIO;
 
 import static fr.openent.competences.Competences.*;
@@ -2017,30 +2018,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if(groupsClassResult != null && !groupsClassResult.isEmpty()){
                         idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray("id_groupes"));
                     }
+                    JsonArray services = new JsonArray(student.getClasse().getServices().stream().map(Service::toJson).collect(Collectors.toList()));
+                    JsonArray multiTeachers = new JsonArray(student.getClasse().getMultiTeachers().stream().map(MultiTeaching::toJsonObject).collect(Collectors.toList()));
 
-                    Future<JsonArray> servicesFuture = Future.future();
-                    utilsService.getServices(idEtablissement, idGroupClasse,
-                            servicesEvent -> formate(servicesFuture, servicesEvent));
-
-                    Future<JsonArray> multiTeachersFuture = Future.future();
-                    utilsService.getMultiTeachers(idEtablissement, idGroupClasse, idPeriode != null ? idPeriode.intValue() : null,
-                            multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
-
-                    CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(futuresEvent -> {
-                        if (futuresEvent.failed()) {
-                            String error = futuresEvent.cause().getMessage();
-                            promise.fail(error);
-                        } else {
-                            JsonArray services = servicesFuture.result();
-                            JsonArray multiTeachers = multiTeachersFuture.result();
-
-                            log.info("[Competences:@getAcquis] before bilan") ;
-                            bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
-                                    idGroupClasse, services, multiTeachers,
-                                    getSuiviAcquisHandler(student, params, promise,classe,idEleves,
-                                            getProgrammeElement,  idGroupClasse, services, multiTeachers));
-                        }
-                    });
+                    bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
+                            idGroupClasse, services, multiTeachers,
+                            getSuiviAcquisHandler(student, params, promise,classe,idEleves,
+                                    getProgrammeElement,  idGroupClasse, services, multiTeachers));
                 }
             });
         }
@@ -2722,150 +2706,247 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         List<Future> futures = new ArrayList<>();
         if (eleves.size() > 0) {
             JsonObject firstStudent = eleves.getJsonObject(0);
-            Promise<Object> structurePromise = Promise.promise();
-            Promise<Object> periodeLibellePromise = Promise.promise();
-            Promise<Object> periodeYearPromise = Promise.promise();
-            Promise<Object> imgPromise = Promise.promise();
-            Promise<Object> listStudentsPromise = Promise.promise();
-
-            List<Future<Object>> promises = new ArrayList<>();
-
-            promises.add(structurePromise.future());
-            promises.add(periodeLibellePromise.future());
-            promises.add(periodeYearPromise.future());
-            promises.add(imgPromise.future());
-            promises.add(listStudentsPromise.future());
-            int nbOptions= 0;
-            if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
-                Promise<Object> getHeadTeachersPromise = Promise.promise();
-                promises.add(getHeadTeachersPromise.future());
-                getHeadTeachers(firstStudent.getString("idClasse"),getHeadTeachersPromise);
-                nbOptions++;
-            }
-
-            getStructure(firstStudent.getString("idEtablissement"),structurePromise);
-            getLibellePeriode(idPeriode,host,acceptLanguage,periodeLibellePromise);
-            getAnneeScolaire(firstStudent.getString("idClasse"),periodeYearPromise);
-            generateImagesFromPathForBulletin(params,vertx,imgPromise);
-            Utils.getElevesClasse(eb, firstStudent.getString("idClasse"), idPeriode, listStudentsPromise);
-
-            int finalNbOptions = nbOptions;
-            FutureHelper.all(promises).onSuccess(success -> {
-                Structure structure = (Structure) success.result().list().get(0);
-                Periode periode = (Periode) success.result().list().get(1);
-                periode.setEndDate( ((Periode) success.result().list().get(2)).getEndDate());
-                periode.setStartDate( ((Periode) success.result().list().get(2)).getStartDate());
-                ParamsBulletins paramBulletins = new ParamsBulletins();
-                paramBulletins.setParams(params);
-                paramBulletins.setHasImgLoaded(true);
-                paramBulletins.addParams((JsonObject) success.result().list().get(3));
-                JsonArray idEleves = new JsonArray(((JsonArray) success.result().list().get(4)).stream()
-                        .map(e -> ((JsonObject) e).getString(ID_ELEVE_KEY)).collect(Collectors.toList()));
-                Map<String, Student> students = new HashMap<>();
-
-                for(int i = 1; i <= finalNbOptions; i++) {
-                    paramBulletins.addParams((JsonObject) success.result().list().get(4 + i));
-                }
-                for (int i = 0; i < eleves.size(); i++) {
-                    futures.add(Future.future());
-                }
-
-                for (int i = 0; i < eleves.size(); i++) {
-                    JsonObject eleve = eleves.getJsonObject(i);
-                    Student student = new Student();
-                    student.setFirstName(eleve.getString("firstName"));
-                    student.setLastName(eleve.getString("lastName"));
-                    student.setINE(eleve.getString("ine"));
-                    student.setId(eleve.getString("idEleve"));
-                    student.setDeleteDate(eleve.getString("u.deleteDate"));
-                    student.setExternalId(eleve.getString("externalId"));
-                    student.setParamBulletins(paramBulletins);
-
-
-                    structure.setId(eleve.getString("idEtablissement"));
-                    student.setStructure(structure);
-
-                    Classe classeStudent = new Classe();
-                    classeStudent.setName(eleve.getString("classeName"));
-                    classeStudent.setDisplayName(eleve.getString("classeNameToShow"));
-                    classeStudent.setId(eleve.getString("idClasse"));
-                    student.setClasse(classeStudent);
-
-                    periode.setType(typePeriode);
-                    periode.setIdPeriode(idPeriode);
-
-                    //Faire le libelle
-                    classeStudent.setPeriode(periode);
-
-                    JsonArray groupes = eleve.getJsonArray("idGroupes");
-                    JsonArray manualGroupes = eleve.getJsonArray("idManualGroupes");
-
-                    for (int j = 0; j < groupes.size(); j++) {
-                        Group group = new Group();
-                        group.setId(groupes.getString(j));
-                        student.addGroupe(group);
-                    }
-
-                    for (int j = 0; j < manualGroupes.size(); j++) {
-                        Group group = new Group();
-                        group.setId(manualGroupes.getString(j));
-                        student.addManualGroupe(group);
-                    }
-
-
-                    eleve.put(TYPE_PERIODE, typePeriode);
-                    eleve.put(ID_PERIODE_KEY, idPeriode);
-
-                    // Mise en forme de la date de naissance
-                    String idEleve = eleve.getString(ID_ELEVE_KEY);
-                    student.setBirthDate(eleve.getString("birthDate"));
-                    student.formatBirthDate();
-
-
-                    setBirthDate(eleve);
-
-                    // Classe à afficher
-                    setStudentClasseToPrint(eleve, classe);
-
-                    // Ajout de l'image du graphe par domaine
-                    if (showBilanPerDomaines) {
-                        //TODO supprimer des que student est pris en compte
-                        setIdGraphPerDomaine(student, images);
-                    }
-
-                    // Ajout du niveau de l'élève
-                    setLevel(eleve);
-                    setLevel(student, eleve);
-
-                    // Ajout de l'idEtablissement pour l'archive
-                    if (isNotNull(params.getString("idStructure")) && (isNull(eleve.getString(ID_ETABLISSEMENT_KEY))
-                            || !eleve.getString(ID_ETABLISSEMENT_KEY).equals(params.getString(ID_ETABLISSEMENT_KEY)))) {
-                        eleve.put(ID_ETABLISSEMENT_KEY, params.getString("idStructure"));
-                    }
-
-                    eleve.put("hasINENumber", eleve.containsKey("ine") && eleve.getString("ine") != null);
-
-                    students.put(idEleve, student);
-
-                    //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
-
-                    getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe, host, acceptLanguage, vertx,
-                            futureGetHandler(futures.get(i)));
-                }
-                CompositeFuture.all(futures).onSuccess(compositeEvent -> {
-                        //ici créer le Json
-                        eleves.clear();
-                        eleves.addAll(new JsonArray(compositeEvent.result().list()));
-                        for(Object eleve : eleves){
-                            JsonObject ob = (JsonObject) eleve;
-                            elevesMap.put(ob.getString("idEleve"),ob);
+            String idClasse = firstStudent.getString("idClasse");
+            Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), new Handler<Either<String, JsonArray>>() {
+                @Override
+                public void handle(Either<String, JsonArray> event) {
+                    if(event.isRight() ) {
+                        List<String> groupIds = new ArrayList<>(event.right().getValue().getJsonObject(0).getJsonArray("id_groupes").getList());
+                        groupIds.add(idClasse);
+                        Promise<Object> structurePromise = Promise.promise();
+                        Promise<Object> periodeLibellePromise = Promise.promise();
+                        Promise<Object> periodeYearPromise = Promise.promise();
+                        Promise<Object> imgPromise = Promise.promise();
+                        Promise<Object> listStudentsPromise = Promise.promise();
+                        Promise<Object> servicesPromise = Promise.promise();
+                        Promise<Object> multiTeachingPromise = Promise.promise();
+                        List<Future<Object>> promises = new ArrayList<>();
+                        promises.add(structurePromise.future());
+                        promises.add(periodeLibellePromise.future());
+                        promises.add(periodeYearPromise.future());
+                        promises.add(imgPromise.future());
+                        promises.add(listStudentsPromise.future());
+                        promises.add(servicesPromise.future());
+                        promises.add(multiTeachingPromise.future());
+                        int nbOptions= 0;
+                        if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
+                            Promise<Object> getHeadTeachersPromise = Promise.promise();
+                            promises.add(getHeadTeachersPromise.future());
+                            getHeadTeachers(firstStudent.getString("idClasse"),getHeadTeachersPromise);
+                            nbOptions++;
                         }
-                        log.info("[Competences DefaultExportBulletinService ]end students" );
-                        finalHandler.handle(new Either.Right<>(null));
-                }).onFailure(event ->
-                        finalHandler.handle(new Either.Left<>("[Competences DefaultExportBulletinService] error when composite " + event.getMessage())));
 
+                        getStructure(firstStudent.getString("idEtablissement"),structurePromise);
+                        getLibellePeriode(idPeriode,host,acceptLanguage,periodeLibellePromise);
+                        getAnneeScolaire(idClasse,periodeYearPromise);
+                        generateImagesFromPathForBulletin(params,vertx,imgPromise);
+                        Utils.getElevesClasse(eb, idClasse, idPeriode, listStudentsPromise);
+                        utilsService.getServices(firstStudent.getString("idEtablissement"),
+                                new JsonArray(groupIds),FutureHelper.handlerJsonArray(servicesPromise));
+                        utilsService.getMultiTeachers(firstStudent.getString("idEtablissement"),
+                                new JsonArray(groupIds),idPeriode.intValue() ,FutureHelper.handlerJsonArray(multiTeachingPromise));
+
+                        int finalNbOptions = nbOptions;
+                        FutureHelper.all(promises).onSuccess(success -> {
+                            Structure structure = (Structure) success.result().list().get(0);
+                            Periode periode = (Periode) success.result().list().get(1);
+                            periode.setEndDate( ((Periode) success.result().list().get(2)).getEndDate());
+                            periode.setStartDate( ((Periode) success.result().list().get(2)).getStartDate());
+                            ParamsBulletins paramBulletins = new ParamsBulletins();
+                            paramBulletins.setParams(params);
+                            paramBulletins.setHasImgLoaded(true);
+                            paramBulletins.addParams((JsonObject) success.result().list().get(3));
+                            JsonArray idEleves = new JsonArray(((JsonArray) success.result().list().get(4)).stream()
+                                    .map(e -> ((JsonObject) e).getString(ID_ELEVE_KEY)).collect(Collectors.toList()));
+                            Map<String, Student> students = new HashMap<>();
+
+                            JsonArray servicesJson = (JsonArray) success.result().list().get(5);
+                            JsonArray multiTeachinJsonArray = (JsonArray) success.result().list().get(6);
+                            for(int i = 1; i <= finalNbOptions; i++) {
+                                paramBulletins.addParams((JsonObject) success.result().list().get(6 + i));
+                            }
+                            List<Service> services = new ArrayList<>();
+                            List<MultiTeaching> multiTeachings = new ArrayList<>();
+
+                            setMultiTeaching(structure, multiTeachinJsonArray, multiTeachings, idClasse);
+                            setServices(structure, servicesJson, services);
+
+                            for (int i = 0; i < eleves.size(); i++) {
+                                futures.add(Future.future());
+                            }
+
+                            for (int i = 0; i < eleves.size(); i++) {
+                                JsonObject eleve = eleves.getJsonObject(i);
+                                String idEleve = eleve.getString(ID_ELEVE_KEY);
+
+                                Student student = initStudent(structure, periode, paramBulletins, services, multiTeachings,
+                                        eleve, typePeriode, idPeriode, classe, showBilanPerDomaines, images, params);
+
+                                students.put(idEleve, student);
+
+                                //METTRE FUTURE pour handle final -> suppr l ancienne méthode d appel finalHandler
+
+                                getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe, host, acceptLanguage, vertx,
+                                        futureGetHandler(futures.get(i)));
+                            }
+                            CompositeFuture.all(futures).setHandler(compositeEvent -> {
+                                if (compositeEvent.succeeded()) {
+                                    //ici créer le Json
+                                    eleves.clear();
+                                    eleves.addAll(new JsonArray(compositeEvent.result().list()));
+                                    for(Object eleve : eleves){
+                                        JsonObject ob = (JsonObject) eleve;
+                                        elevesMap.put(ob.getString("idEleve"),ob);
+                                    }
+                                    log.info("[Competences DefaultExportBulletinService ]end students" );
+                                    finalHandler.handle(new Either.Right<>(null));
+                                }
+                            });
+
+                        });
+                    }
+                }
             });
+        }
+    }
+
+    private Student initStudent(Structure structure, Periode periode, ParamsBulletins paramBulletins, List<Service> services, List<MultiTeaching> multiTeachings, JsonObject eleve, Long typePeriode, Long idPeriode, JsonObject classe, Boolean showBilanPerDomaines, JsonObject images, JsonObject params) {
+        Student student = new Student();
+        student.setFirstName(eleve.getString("firstName"));
+        student.setLastName(eleve.getString("lastName"));
+        student.setINE(eleve.getString("ine"));
+        student.setId(eleve.getString("idEleve"));
+        student.setDeleteDate(eleve.getString("u.deleteDate"));
+        student.setExternalId(eleve.getString("externalId"));
+        student.setParamBulletins(paramBulletins);
+
+
+        structure.setId(eleve.getString("idEtablissement"));
+        student.setStructure(structure);
+
+        Classe classeStudent = new Classe();
+        classeStudent.addMultiTeaching(multiTeachings);
+        classeStudent.addServices(services);
+        classeStudent.setName(eleve.getString("classeName"));
+        classeStudent.setDisplayName(eleve.getString("classeNameToShow"));
+        classeStudent.setId(eleve.getString("idClasse"));
+        student.setClasse(classeStudent);
+
+        periode.setType(typePeriode);
+        periode.setIdPeriode(idPeriode);
+
+        //Faire le libelle
+        classeStudent.setPeriode(periode);
+
+        JsonArray groupes = eleve.getJsonArray("idGroupes");
+        JsonArray manualGroupes = eleve.getJsonArray("idManualGroupes");
+
+        for (int j = 0; j < groupes.size(); j++) {
+            Group group = new Group();
+            group.setId(groupes.getString(j));
+            student.addGroupe(group);
+        }
+
+        for (int j = 0; j < manualGroupes.size(); j++) {
+            Group group = new Group();
+            group.setId(manualGroupes.getString(j));
+            student.addManualGroupe(group);
+        }
+
+
+        eleve.put(TYPE_PERIODE, typePeriode);
+        eleve.put(ID_PERIODE_KEY, idPeriode);
+
+        // Mise en forme de la date de naissance
+        student.setBirthDate(eleve.getString("birthDate"));
+        student.formatBirthDate();
+
+
+        setBirthDate(eleve);
+
+        // Classe à afficher
+        setStudentClasseToPrint(eleve, classe);
+
+        // Ajout de l'image du graphe par domaine
+        if (showBilanPerDomaines) {
+            //TODO supprimer des que student est pris en compte
+            setIdGraphPerDomaine(student, images);
+        }
+
+        // Ajout du niveau de l'élève
+        setLevel(eleve);
+        setLevel(student, eleve);
+
+        // Ajout de l'idEtablissement pour l'archive
+        if (isNotNull(params.getString("idStructure")) && (isNull(eleve.getString(ID_ETABLISSEMENT_KEY))
+                || !eleve.getString(ID_ETABLISSEMENT_KEY).equals(params.getString(ID_ETABLISSEMENT_KEY)))) {
+            eleve.put(ID_ETABLISSEMENT_KEY, params.getString("idStructure"));
+        }
+
+        eleve.put("hasINENumber", eleve.containsKey("ine") && eleve.getString("ine") != null);
+        return student;
+    }
+
+    private void setMultiTeaching(Structure structure, JsonArray multiTeachinJsonArray, List<MultiTeaching> multiTeachings, String idClasse) {
+        for(int i = 0 ; i < multiTeachinJsonArray.size(); i++){
+            JsonObject multiTeachinJo = multiTeachinJsonArray.getJsonObject(i);
+            MultiTeaching multiTeaching = new MultiTeaching();
+            multiTeaching.setStructure(structure);
+
+            Teacher mainTeacher = new Teacher();
+            Teacher secondTeacher = new Teacher();
+            mainTeacher.setId(multiTeachinJo.getString("main_teacher_id"));
+            secondTeacher.setId(multiTeachinJo.getString("second_teacher_id"));
+
+            multiTeaching.setMainTeacher(mainTeacher);
+            multiTeaching.setSecondTeacher(secondTeacher);
+
+            Subject subject = new Subject();
+            subject.setId(multiTeachinJo.getString("subject_id"));
+            Classe classe = new Classe();
+            classe.setId(idClasse);
+
+            multiTeaching.setSubject(subject);
+
+            log.info(multiTeachinJo);
+            multiTeaching.setIdInteger(multiTeachinJo.getInteger("id"));
+            multiTeaching.setGroupOrClassId(multiTeachinJo.getString("class_or_group_id"));
+            multiTeaching.setStartDate(multiTeachinJo.getString("start_date",""));
+            multiTeaching.setEndDate(multiTeachinJo.getString("end_date",""));
+            multiTeaching.setEnteredEndDate(multiTeachinJo.getString("entered_end_date"));
+            multiTeaching.setCoTeaching(multiTeachinJo.getBoolean("is_coteaching"));
+            multiTeaching.setVisible(multiTeachinJo.getBoolean("is_visible"));
+            multiTeaching.setLibelle(multiTeachinJo.getString("libelle",""));
+            multiTeaching.setTimestampDt(multiTeachinJo.getString("timestamp_dt",""));
+            multiTeaching.setTimestampFn(multiTeachinJo.getString("timestamp_Fn",""));
+            multiTeaching.setEndDateSaisie(multiTeachinJo.getString("date_fin_saisie"));
+            multiTeaching.setDateConseilClass(multiTeachinJo.getString("date_conseil_classe"));
+            multiTeaching.setClasse(classe);
+            multiTeaching.setType(multiTeachinJo.getInteger("id_type"));
+            multiTeaching.setPublicationBulletin(multiTeachinJo.getBoolean("publication_bulletin"));
+            multiTeachings.add(multiTeaching);
+        }
+    }
+
+    private void setServices(Structure structure, JsonArray servicesJson, List<Service> services) {
+        for (int i = 0 ; i < servicesJson.size();i++){
+            JsonObject serviceJo = servicesJson.getJsonObject(i);
+            Service service = new Service();
+            service.setStructure(structure);
+            Group group = new Group();
+            group.setId(serviceJo.getString("id_groupe"));
+            service.setGroup(group);
+            Matiere matiere = new Matiere();
+            matiere.setId(serviceJo.getString("id_matiere"));
+            service.setMatiere(matiere);
+            Teacher teacher =  new Teacher();
+            teacher.setId(serviceJo.getString("id_enseignant"));
+            service.setTeacher(teacher);
+            service.setEvaluable(serviceJo.getBoolean("evaluable"));
+            service.setVisible(serviceJo.getBoolean("is_visible"));
+            service.setModalite(serviceJo.getString("modalite",""));
+            service.setCoefficient(serviceJo.getLong("coefficient"));
+            services.add(service);
         }
     }
 
