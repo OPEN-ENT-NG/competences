@@ -102,8 +102,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private void getRetardsAndAbsencesFromPresences(String structureId, List<String> idEleves, List<String> idClasses,
                                                     Handler<Either<String, JsonArray>> handler) {
         Future<JsonArray> periodesFuture = Future.future();
-        log.info("idClasses : " + idClasses);
-        log.info("structureId : " + structureId);
+
         utilsService.getPeriodes(idClasses, structureId, event -> formate(periodesFuture, event));
 
         Future<JsonArray> reasonsFuture = Future.future();
@@ -120,6 +119,9 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 List<Integer> reasonIds = ((List<JsonObject>) reasons.getList()).stream()
                         .map(reason -> reason.getLong("id").intValue())
                         .collect(Collectors.toList());
+                log.info("idClasses : " + idClasses);
+                log.info("structureId : " + structureId);
+
                 log.info("periode : " + periodes);
                 log.info("periode : " + periodes.getJsonObject(0).getString("timestamp_dt"));
                 String beginningDateYear = periodes.getJsonObject(0).getString("timestamp_dt").substring(0, 10);
