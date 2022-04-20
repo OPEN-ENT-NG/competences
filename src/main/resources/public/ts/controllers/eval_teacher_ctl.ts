@@ -320,8 +320,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             $scope.openedDetails = true;
                             $scope.openedStatistiques = true
                             $scope.openedStudentInfo = true;
-                            await $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode);
-                            await $scope.currentDevoir.calculStats();
+                            $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode).then(async () => {
+                                await $scope.currentDevoir.calculStats();
+                            })
                            if ($scope.structure.typePeriodes.empty()) {
                                 await $scope.structure.typePeriodes.sync();
                             }
