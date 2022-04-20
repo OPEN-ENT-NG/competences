@@ -646,15 +646,24 @@ public class DefaultExportService implements ExportService {
         String[] idMatieresTab = idMatieres.toArray(new String[0]);
         final AtomicBoolean answered = new AtomicBoolean();
         final AtomicBoolean byEnseignement = new AtomicBoolean(pByEnseignement);
-        final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, usePerso, idEleve, eleveLevel, devoirsArray,
-                maitriseArray, competencesArray, domainesArray, competencesNotesArray, enseignementArray, answered,
-                byEnseignement, isCycle, handler);
 
-        buildDevoirExport(pByEnseignement, idEleve, idGroupes, idFunctionalGroupes, idEtablissement,
-                idMatieres, idPeriodeType, isCycle, enseignementArray, devoirsArray,
-                competencesArray, domainesArray, competencesNotesArray, idMatieresTab, finalHandler);
+        utilsService.getCycle(Arrays.asList(idGroupes),  stringJsonArrayEither -> {
+            if (stringJsonArrayEither.isRight() && isNotNull(stringJsonArrayEither.right().getValue()) &&
+                    !stringJsonArrayEither.right().getValue().isEmpty()) {
+                Long idCycle = stringJsonArrayEither.right().getValue().getJsonObject(0)
+                        .getLong("id_cycle");
 
-        buildNiveauReleveComp(idGroupes, idEtablissement, maitriseArray, finalHandler);
+                final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, usePerso, idEleve, eleveLevel, devoirsArray,
+                        maitriseArray, competencesArray, domainesArray, competencesNotesArray, enseignementArray, answered,
+                        byEnseignement, isCycle, idCycle, handler);
+
+                buildDevoirExport(pByEnseignement, idEleve, idGroupes, idFunctionalGroupes, idEtablissement,
+                        idMatieres, idPeriodeType, isCycle, enseignementArray, devoirsArray,
+                        competencesArray, domainesArray, competencesNotesArray, idMatieresTab, finalHandler);
+
+                buildNiveauReleveComp(idGroupes, idEtablissement, maitriseArray, finalHandler);
+            }
+        });
     }
 
     @Override
@@ -771,7 +780,7 @@ public class DefaultExportService implements ExportService {
                               final JsonArray devoirs, final JsonArray maitrises, final JsonArray competences,
                               final JsonArray domaines, final JsonArray competencesNotes, final JsonArray enseignements,
                               final AtomicBoolean answered, final AtomicBoolean byEnseignement, final Boolean isCycle,
-                              final Handler<Either<String, JsonObject>> responseHandler) {
+                              final Long idCycle, final Handler<Either<String, JsonObject>> responseHandler) {
         final AtomicBoolean devoirsDone = new AtomicBoolean();
         final AtomicBoolean maitriseDone = new AtomicBoolean();
         final AtomicBoolean competencesDone = new AtomicBoolean();
@@ -839,7 +848,7 @@ public class DefaultExportService implements ExportService {
                                     Map<String, JsonObject> enseignementsMap = extractData(enseignements, ID_KEY);
 
                                     JsonObject resToAdd = formatJsonObjectExportReleveComp(
-                                            text, usePerso, Boolean.valueOf(byEnseignement.get()), isCycle, idEleve, eleveLevel,
+                                            text, usePerso, Boolean.valueOf(byEnseignement.get()), isCycle, idCycle, idEleve, eleveLevel,
                                             devoirsMap, maitrisesMap, competencesMap, domainesMap,
                                             enseignementsMap,
                                             competenceNotesMap)
@@ -868,7 +877,7 @@ public class DefaultExportService implements ExportService {
     }
 
 
-    private TreeMap<String, HashMap<Date, Date>> calculPeriodesAnnees (String eleveLevel) {
+    private TreeMap<String, HashMap<Date, Date>> calculPeriodesAnnees (String eleveLevel, Long idCycle) {
         int niveau = Integer.parseInt(eleveLevel.replaceAll("[^\\d.]", ""));
         if (niveau != -1) { //TODO : Changer la condition
             Calendar date = Calendar.getInstance();
@@ -888,19 +897,17 @@ public class DefaultExportService implements ExportService {
 
             TreeMap<String, HashMap<Date, Date>> periodes = new TreeMap<>(Collections.reverseOrder());
 
-            int debut = 5, fin = 3;
-
-            /*int debut, fin;
-            if (id_cycle == 1){
+            int debut, fin;
+            if (idCycle == 1){
                 debut = 5;
                 fin = 3;
             }
-            else if (id_cycle == 2){
+            else if (idCycle == 2){
                 debut = fin = 6;
             }
             else{
                 debut = fin = 0;
-            }*/
+            }
             for (int i = niveau; i <= 6; i++) {
                 if (i != niveau) {
                     periodeBeginning.set(periodeBeginning.get(Calendar.YEAR)-1,
@@ -943,7 +950,7 @@ public class DefaultExportService implements ExportService {
     }
 
 
-    private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean usePerso, Boolean byEnseignement, Boolean isCycle,
+    private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean usePerso, Boolean byEnseignement, Boolean isCycle, Long idCycle,
                                                         String idEleve, String eleveLevel, Map<String, JsonObject> devoirs,
                                                         Map<String, JsonObject> maitrises,
                                                         Map<String, JsonObject> competences,
@@ -955,7 +962,7 @@ public class DefaultExportService implements ExportService {
         result.put("text", text);
         result.put("idEleve", idEleve);
 
-        TreeMap<String, HashMap<Date, Date>> periodes = calculPeriodesAnnees(eleveLevel);
+        TreeMap<String, HashMap<Date, Date>> periodes = calculPeriodesAnnees(eleveLevel, idCycle);
 
         JsonObject header = new JsonObject();
         JsonObject body = new JsonObject();
