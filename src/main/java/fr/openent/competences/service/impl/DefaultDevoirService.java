@@ -43,6 +43,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.joda.time.DateTime;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -342,6 +343,30 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             JsonObject o, g;
             JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
             JsonArray devoirs = new JsonArray();
+            utilsService.getPeriodes(classes, devoir, new Handler<Either<String, JsonArray>>(o){
+                @Override
+                public void handle(Either<String, JsonArray> event) {
+                    if(event.isLeft()){
+                        leftToResponse(event.left());
+                        log.error(event.left().getValue());
+                    } else{
+                        JsonArray periodes = event.right().getValue();
+                        for(int i = 0; i < periodes.size(); i++){
+                            JsonObject periode = periodes.getJsonObject(i);
+                            String timestamp_begin = periode.getString("timestamp_dt");
+                            String timestamp_end = periode.getString("timestamp_fn");
+                            DateTime begin = new DateTime(timestamp_begin);
+                            DateTime end = new DateTime(timestamp_end);
+                            if(begin.isAfterNow() && end.isBeforeNow()){
+                                JsonArray result = new JsonArray();
+                                result.add(periode);
+                                handler.handle(new Either.Right<String, JsonArray>(result));
+                            }
+                        }
+                    }
+                }
+            });
+
             for (int i = 0; i < ids.size(); i++) {
                 try {
                     g = classes.getJsonObject(i);

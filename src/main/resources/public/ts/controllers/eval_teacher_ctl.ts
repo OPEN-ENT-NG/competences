@@ -808,6 +808,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.confirmerDuplication = () => {
             if ($scope.selected.devoirs.list.length === 1) {
                 let devoir: Devoir = $scope.selected.devoirs.list[0];
+                devoir.id_periode = $scope.getCurrentPeriodEval($scope.notYearPeriodes, new Date()).id_type;
                 devoir.duplicate($scope.selected.classes).then(() => {
                     $scope.devoirs.sync().then(() => {
                         $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
