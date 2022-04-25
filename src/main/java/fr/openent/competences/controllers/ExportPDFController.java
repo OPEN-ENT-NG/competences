@@ -417,6 +417,7 @@ public class ExportPDFController extends ControllerHelper {
         final Boolean byEnseignement = Boolean.parseBoolean(request.params().get("byEnseignement"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final Boolean isCycle = Boolean.parseBoolean(request.params().get("isCycle"));
+        final long idCycle = Long.parseLong(request.params().get("idCycle"));
         final List<String> listIdMatieres = request.params().getAll("idMatiere");
         final String idStructure = request.params().get(Competences.ID_ETABLISSEMENT_KEY);
 
@@ -500,7 +501,7 @@ public class ExportPDFController extends ControllerHelper {
                 final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap,
                         nomGroupes, matieres, libellePeriode, json, answered, resultFinal);
                 exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleves[0], eleveLevel, idGroupes.toArray(new String[0]),
-                        _iGroupesdArr, idEtablissementEl, listIdMatieres, finalIdPeriode, isCycle, finalHandler);
+                        _iGroupesdArr, idEtablissementEl, listIdMatieres, finalIdPeriode, isCycle, idCycle, finalHandler);
             } else {
                 JsonArray eleves = (JsonArray) elevesFuture.result();
                 if(eleves.size() != elevesMap.size()) {
@@ -528,7 +529,7 @@ public class ExportPDFController extends ControllerHelper {
                         JsonArray idGroupesJsArr = utilsService.saUnion(idFunctionalGroupes, idManualGroupes);
                         String[] idGroupesArr = UtilsConvert.jsonArrayToStringArr(idGroupesJsArr);
                         exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleveEl, eleveLevel, _idGroupes, idGroupesArr,
-                                idEtablissement.get(i), listIdMatieres, finalIdPeriode, isCycle, finalHandler);
+                                idEtablissement.get(i), listIdMatieres, finalIdPeriode, isCycle, idCycle, finalHandler);
                     }
                 }
             }

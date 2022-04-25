@@ -43,7 +43,7 @@ public interface ExportService {
 
     void getExportReleveComp(final Boolean text, final Boolean usePerso, final Boolean pByEnseignement, final String idEleve,
                              final String eleveLevel, String[] idGroupes,String[] idFunctionalGroupes, final String idEtablissement,
-                             final List<String> idMatieres, Long idPeriodeType, final Boolean isCycle,
+                             final List<String> idMatieres, Long idPeriodeType, final Boolean isCycle, final long idCycle,
                              final Handler<Either<String, JsonObject>> handler);
 
     void getLegendeRecapEval(final Boolean text, final Boolean usePerso, final Long idCycle,

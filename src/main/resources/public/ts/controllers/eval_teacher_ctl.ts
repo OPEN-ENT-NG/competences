@@ -79,6 +79,23 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             inColor: false,
         };
 
+        $scope.cycle3 = {
+            id: 2,
+            libelle: "Cycle 3",
+            value_cycle: "3",
+        };
+
+        $scope.cycle4 = {
+            id: 1,
+            libelle: "Cycle 4",
+            value_cycle: "4",
+        };
+
+        $scope.cycles = [
+            $scope.cycle3,
+            $scope.cycle4,
+        ];
+
         $scope.getI18nPeriode = (periode : any): string => {
             let result = lang.translate("viescolaire.utils.annee");
             if (periode) {
@@ -4092,7 +4109,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await Utils.runMessageLoader($scope);
             }
 
-            ($scope.releveComp.periode.libelle  === "cycle") ? url += "&isCycle=" + true : "&isCycle=" + false;
+            ($scope.releveComp.periode.libelle === "cycle" && $scope.releveComp.idCycle != null) ?
+                url += "&isCycle=" + true + "&idCycle=" + $scope.releveComp.idCycle : "&isCycle=" + false + "&idCycle=0";
 
             url += "&byEnseignement=" + exportByEnseignement;
 

@@ -60,6 +60,24 @@
     </div>
     <div class="row">
         <div class="twelve cell twelve-mobile">
+            <label ng-show="releveComp.periode.libelle === 'cycle'">
+                <p class="inline-block">
+                    <input type="radio" ng-model="releveComp.idCycle" ng-value="cycles[0].id">
+                    <span>
+                            [[cycles[0].libelle]]
+                    </span>
+                </p>
+                <p class="inline-block">
+                    <input type="radio" ng-model="releveComp.idCycle" ng-value="cycles[1].id">
+                    <span>
+                            [[cycles[1].libelle]]
+                    </span>
+                </p>
+            </label>
+        </div>
+    </div>
+    <div class="row">
+        <div class="twelve cell twelve-mobile">
             <label><i18n class="titre-libelle">viescolaire.utils.export.choose</i18n></label>
             <p class="inline-block">
                 <input type="radio" ng-model="exportByEnseignement" value="false">

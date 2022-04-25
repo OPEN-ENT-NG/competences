@@ -636,7 +636,7 @@ public class DefaultExportService implements ExportService {
     public void getExportReleveComp(final Boolean text, final Boolean usePerso, final Boolean pByEnseignement,
                                     final String idEleve, final String eleveLevel, final String[] idGroupes,
                                     String[] idFunctionalGroupes, final String idEtablissement, final List<String> idMatieres,
-                                    Long idPeriodeType, Boolean isCycle, final Handler<Either<String, JsonObject>> handler) {
+                                    Long idPeriodeType, Boolean isCycle, final long idCycle, final Handler<Either<String, JsonObject>> handler) {
         final JsonArray maitriseArray = new fr.wseduc.webutils.collections.JsonArray();
         final JsonArray enseignementArray = new fr.wseduc.webutils.collections.JsonArray();
         final JsonArray devoirsArray = new fr.wseduc.webutils.collections.JsonArray();
@@ -647,23 +647,16 @@ public class DefaultExportService implements ExportService {
         final AtomicBoolean answered = new AtomicBoolean();
         final AtomicBoolean byEnseignement = new AtomicBoolean(pByEnseignement);
 
-        utilsService.getCycle(Arrays.asList(idGroupes),  stringJsonArrayEither -> {
-            if (stringJsonArrayEither.isRight() && isNotNull(stringJsonArrayEither.right().getValue()) &&
-                    !stringJsonArrayEither.right().getValue().isEmpty()) {
-                Long idCycle = stringJsonArrayEither.right().getValue().getJsonObject(0)
-                        .getLong("id_cycle");
+        final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, usePerso, idEleve, eleveLevel, devoirsArray,
+                maitriseArray, competencesArray, domainesArray, competencesNotesArray, enseignementArray, answered,
+                byEnseignement, isCycle, idCycle, handler);
 
-                final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, usePerso, idEleve, eleveLevel, devoirsArray,
-                        maitriseArray, competencesArray, domainesArray, competencesNotesArray, enseignementArray, answered,
-                        byEnseignement, isCycle, idCycle, handler);
+        buildDevoirExport(pByEnseignement, idEleve, idGroupes, idFunctionalGroupes, idEtablissement,
+                idMatieres, idPeriodeType, isCycle, enseignementArray, devoirsArray,
+                competencesArray, domainesArray, competencesNotesArray, idMatieresTab, finalHandler);
 
-                buildDevoirExport(pByEnseignement, idEleve, idGroupes, idFunctionalGroupes, idEtablissement,
-                        idMatieres, idPeriodeType, isCycle, enseignementArray, devoirsArray,
-                        competencesArray, domainesArray, competencesNotesArray, idMatieresTab, finalHandler);
+        buildNiveauReleveComp(idGroupes, idEtablissement, maitriseArray, finalHandler);
 
-                buildNiveauReleveComp(idGroupes, idEtablissement, maitriseArray, finalHandler);
-            }
-        });
     }
 
     @Override
