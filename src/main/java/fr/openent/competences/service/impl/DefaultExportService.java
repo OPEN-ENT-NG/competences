@@ -80,6 +80,10 @@ public class DefaultExportService implements ExportService {
     public final static String  COEFFICIENT = "coefficient";
     private final static String DEVOIRS = "devoirs";
     private final static String PRINT_SOUS_MATIERE = "printSousMatiere";
+    private final static int DEBUT_CYCLE_3 = 6;
+    private final static int FIN_CYCLE_3 = 6;
+    private final static int DEBUT_CYCLE_4 = 5;
+    private final static int FIN_CYCLE_4 = 3;
     private final DefaultMatiereService defaultMatiereService;
     /**
      * Déclaration des services
@@ -649,7 +653,7 @@ public class DefaultExportService implements ExportService {
 
         final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, usePerso, idEleve, eleveLevel, devoirsArray,
                 maitriseArray, competencesArray, domainesArray, competencesNotesArray, enseignementArray, answered,
-                byEnseignement, isCycle, idCycle, handler);
+                byEnseignement, idCycle, handler);
 
         buildDevoirExport(pByEnseignement, idEleve, idGroupes, idFunctionalGroupes, idEtablissement,
                 idMatieres, idPeriodeType, isCycle, enseignementArray, devoirsArray,
@@ -772,8 +776,8 @@ public class DefaultExportService implements ExportService {
     getReleveCompFinalHandler(final Boolean text, final Boolean usePerso, final String idEleve, final String eleveLevel,
                               final JsonArray devoirs, final JsonArray maitrises, final JsonArray competences,
                               final JsonArray domaines, final JsonArray competencesNotes, final JsonArray enseignements,
-                              final AtomicBoolean answered, final AtomicBoolean byEnseignement, final Boolean isCycle,
-                              final Long idCycle, final Handler<Either<String, JsonObject>> responseHandler) {
+                              final AtomicBoolean answered, final AtomicBoolean byEnseignement, final Long idCycle,
+                              final Handler<Either<String, JsonObject>> responseHandler) {
         final AtomicBoolean devoirsDone = new AtomicBoolean();
         final AtomicBoolean maitriseDone = new AtomicBoolean();
         final AtomicBoolean competencesDone = new AtomicBoolean();
@@ -841,7 +845,7 @@ public class DefaultExportService implements ExportService {
                                     Map<String, JsonObject> enseignementsMap = extractData(enseignements, ID_KEY);
 
                                     JsonObject resToAdd = formatJsonObjectExportReleveComp(
-                                            text, usePerso, Boolean.valueOf(byEnseignement.get()), isCycle, idCycle, idEleve, eleveLevel,
+                                            text, usePerso, Boolean.valueOf(byEnseignement.get()), idCycle, idEleve, eleveLevel,
                                             devoirsMap, maitrisesMap, competencesMap, domainesMap,
                                             enseignementsMap,
                                             competenceNotesMap)
@@ -872,7 +876,7 @@ public class DefaultExportService implements ExportService {
 
     private TreeMap<String, HashMap<Date, Date>> calculPeriodesAnnees (String eleveLevel, Long idCycle) {
         int niveau = Integer.parseInt(eleveLevel.replaceAll("[^\\d.]", ""));
-        if (niveau != -1) { //TODO : Changer la condition
+        if (niveau != -1) {
             Calendar date = Calendar.getInstance();
             int actualMonth = date.get(Calendar.MONTH);
             int actualYear = date.get(Calendar.YEAR);
@@ -890,18 +894,15 @@ public class DefaultExportService implements ExportService {
 
             TreeMap<String, HashMap<Date, Date>> periodes = new TreeMap<>(Collections.reverseOrder());
 
-            int debut, fin;
+            int debut = 0, fin = 0;
             if (idCycle == 1){
-                debut = 5;
-                fin = 3;
+                debut = DEBUT_CYCLE_4;
+                fin = FIN_CYCLE_4;
             }
             else if (idCycle == 2){
-                debut = fin = 6;
+                debut = fin = DEBUT_CYCLE_3;
             }
-            else{
-                debut = fin = 0;
-            }
-            for (int i = niveau; i <= 6; i++) {
+            for (int i = niveau; i <= DEBUT_CYCLE_3; i++) {
                 if (i != niveau) {
                     periodeBeginning.set(periodeBeginning.get(Calendar.YEAR)-1,
                             periodeBeginning.get(Calendar.MONTH), periodeBeginning.get(Calendar.DATE));
@@ -943,7 +944,7 @@ public class DefaultExportService implements ExportService {
     }
 
 
-    private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean usePerso, Boolean byEnseignement, Boolean isCycle, Long idCycle,
+    private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean usePerso, Boolean byEnseignement, Long idCycle,
                                                         String idEleve, String eleveLevel, Map<String, JsonObject> devoirs,
                                                         Map<String, JsonObject> maitrises,
                                                         Map<String, JsonObject> competences,
@@ -954,8 +955,6 @@ public class DefaultExportService implements ExportService {
         JsonObject result = new JsonObject();
         result.put("text", text);
         result.put("idEleve", idEleve);
-
-        TreeMap<String, HashMap<Date, Date>> periodes = calculPeriodesAnnees(eleveLevel, idCycle);
 
         JsonObject header = new JsonObject();
         JsonObject body = new JsonObject();
@@ -1033,65 +1032,101 @@ public class DefaultExportService implements ExportService {
         body.put("header", bodyHeader);
 
         JsonArray bodyBody = new fr.wseduc.webutils.collections.JsonArray();
-        for (Map.Entry<String, Set<String>> competencesInDomain : competencesByDomainOrEnsei.entrySet()) {
-            JsonObject domainObj = new JsonObject();
-            if (byEnseignement) {
-                if (enseignements.get(competencesInDomain.getKey()) != null) {
-                    domainObj.put("domainHeader", enseignements.get(competencesInDomain.getKey())
-                            .getString("nom"));
+        if(idCycle != -1){
+            TreeMap<String, HashMap<Date, Date>> periodes = calculPeriodesAnnees(eleveLevel, idCycle);
+            for (Map.Entry<String, Set<String>> competencesInDomain : competencesByDomainOrEnsei.entrySet()) {
+                JsonObject domainObj = new JsonObject();
+                if (byEnseignement) {
+                    if (enseignements.get(competencesInDomain.getKey()) != null) {
+                        domainObj.put("domainHeader", enseignements.get(competencesInDomain.getKey())
+                                .getString("nom"));
+                    }
+                } else {
+                    domainObj.put("domainHeader", domaines.get(competencesInDomain.getKey())
+                            .getString("codification") + " " + domaines.get(competencesInDomain.getKey())
+                            .getString("libelle"));
                 }
-            } else {
-                domainObj.put("domainHeader", domaines.get(competencesInDomain.getKey())
-                        .getString("codification") + " " + domaines.get(competencesInDomain.getKey())
-                        .getString("libelle"));
+                JsonArray competencesInDomainArray = new fr.wseduc.webutils.collections.JsonArray();
+
+                for (String competence : competencesInDomain.getValue()) {
+                    JsonObject competenceNote = new JsonObject();
+                    LinkedHashMap<String, Long> valuesByComp = new LinkedHashMap<>();
+                    List<Long> valuesByCompActualClasse = new ArrayList<>();
+                    assert periodes != null;
+                    for(Map.Entry<String,HashMap<Date, Date>> entry : periodes.entrySet()) {
+                        String classe = entry.getKey();
+                        HashMap<Date, Date> periode = entry.getValue();
+                        Date beginningYear = new Date();
+                        Date endingYear = new Date();
+
+                        for (Map.Entry<Date, Date> date : periode.entrySet()) {
+                            beginningYear = date.getKey();
+                            endingYear = date.getValue();
+                        }
+
+                        if(Objects.equals(classe, eleveLevel)){
+                            for (String devoir : devoirByCompetences.get(competence)) {
+                                if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
+                                        .containsKey(competence)
+                                        && isInPeriode(devoirs.get(devoir).getString("date"), beginningYear, endingYear)){
+                                    valuesByCompActualClasse.add(competenceNotesByDevoir.get(devoir).get(competence) + 1);
+                                }
+                            }
+                        }
+                        else{
+                            for (String devoir : devoirByCompetences.get(competence)) {
+                                if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
+                                        .containsKey(competence) && devoirs.get(devoir).getBoolean("eval_lib_historise")
+                                        && isInPeriode(devoirs.get(devoir).getString("date"), beginningYear, endingYear)){
+                                    valuesByComp.put(classe, competenceNotesByDevoir.get(devoir).get(competence) + 1);
+                                }
+                            }
+                        }
+                    }
+                    if(!valuesByComp.isEmpty() || !valuesByCompActualClasse.isEmpty()) {
+                        JsonArray competencesNotes = calcWidthNotePeriode(text, usePerso, maitrises, valuesByComp, valuesByCompActualClasse, devoirs.size());
+                        competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
+                        competenceNote.put("competenceNotes", competencesNotes);
+                        competencesInDomainArray.add(competenceNote);
+                    }
+
+                }
+                domainObj.put("domainBody", competencesInDomainArray);
+                bodyBody.add(domainObj);
             }
-            JsonArray competencesInDomainArray = new fr.wseduc.webutils.collections.JsonArray();
-
-            for (String competence : competencesInDomain.getValue()) {
-                JsonObject competenceNote = new JsonObject();
-                LinkedHashMap<String, Long> valuesByComp = new LinkedHashMap<>();
-                List<Long> valuesByCompActualClasse = new ArrayList<>();
-                assert periodes != null;
-                for(Map.Entry<String,HashMap<Date, Date>> entry : periodes.entrySet()) {
-                    String classe = entry.getKey();
-                    HashMap<Date, Date> periode = entry.getValue();
-                    Date beginningYear = new Date();
-                    Date endingYear = new Date();
-
-                    for (Map.Entry<Date, Date> date : periode.entrySet()) {
-                        beginningYear = date.getKey();
-                        endingYear = date.getValue();
+        }
+        else{
+            for (Map.Entry<String, Set<String>> competencesInDomain : competencesByDomainOrEnsei.entrySet()) {
+                JsonObject domainObj = new JsonObject();
+                if (byEnseignement) {
+                    if (enseignements.get(competencesInDomain.getKey()) != null) {
+                        domainObj.put("domainHeader", enseignements.get(competencesInDomain.getKey())
+                                .getString("nom"));
                     }
-
-                    if(Objects.equals(classe, eleveLevel)){
-                        for (String devoir : devoirByCompetences.get(competence)) {
-                            if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
-                                    .containsKey(competence)
-                                    && isInPeriode(devoirs.get(devoir).getString("date"), beginningYear, endingYear)){
-                                valuesByCompActualClasse.add(competenceNotesByDevoir.get(devoir).get(competence) + 1);
-                            }
-                        }
-                    }
-                    else if(isCycle){
-                        for (String devoir : devoirByCompetences.get(competence)) {
-                            if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
-                                    .containsKey(competence) && devoirs.get(devoir).getBoolean("eval_lib_historise")
-                                    && isInPeriode(devoirs.get(devoir).getString("date"), beginningYear, endingYear)){
-                                valuesByComp.put(classe, competenceNotesByDevoir.get(devoir).get(competence) + 1);
-                            }
-                        }
-                    }
+                } else {
+                    domainObj.put("domainHeader", domaines.get(competencesInDomain.getKey())
+                            .getString("codification") + " " + domaines.get(competencesInDomain.getKey())
+                            .getString("libelle"));
                 }
-                if(!valuesByComp.isEmpty() || !valuesByCompActualClasse.isEmpty()) {
-                    JsonArray competencesNotes = calcWidthNotePeriode(text, usePerso, maitrises, valuesByComp, valuesByCompActualClasse, devoirs.size());
+                JsonArray competencesInDomainArray = new fr.wseduc.webutils.collections.JsonArray();
+                for (String competence : competencesInDomain.getValue()) {
+                    List<Long> valuesByComp = new ArrayList<>();
+                    for (String devoir : devoirByCompetences.get(competence)) {
+                        if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
+                                .containsKey(competence)) {
+                            valuesByComp.add(competenceNotesByDevoir.get(devoir).get(competence) + 1);
+                        } else {
+                            valuesByComp.add(0L);
+                        }
+                    }
+                    JsonObject competenceNote = new JsonObject();
                     competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
-                    competenceNote.put("competenceNotes", competencesNotes);
+                    competenceNote.put("competenceNotes", calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size()));
                     competencesInDomainArray.add(competenceNote);
                 }
-
+                domainObj.put("domainBody", competencesInDomainArray);
+                bodyBody.add(domainObj);
             }
-            domainObj.put("domainBody", competencesInDomainArray);
-            bodyBody.add(domainObj);
         }
 
         body.put("body", bodyBody);

@@ -4110,7 +4110,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
             ($scope.releveComp.periode.libelle === "cycle" && $scope.releveComp.idCycle != null) ?
-                url += "&isCycle=" + true + "&idCycle=" + $scope.releveComp.idCycle : "&isCycle=" + false + "&idCycle=0";
+                url += "&isCycle=" + true + "&idCycle=" + $scope.releveComp.idCycle : url += "&isCycle=" + false + "&idCycle=-1";
 
             url += "&byEnseignement=" + exportByEnseignement;
 
