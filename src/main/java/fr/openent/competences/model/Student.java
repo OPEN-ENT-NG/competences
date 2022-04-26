@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.Utils.getLibelle;
 
-public class Student  extends  Model{
+public class Student extends Model{
 
     private String firstName;
     private String lastName;
@@ -20,9 +20,9 @@ public class Student  extends  Model{
     private ParamsBulletins paramBulletins;
     private boolean hasLvl = false;
     private Level level;
-    private final List<Group>  groupes = new ArrayList<>();
-    private final List<StudentEvenement>  evenements = new ArrayList<>();
-    private final List<Group>  manualGroupes = new ArrayList<>();
+    private final List<Group> groupes = new ArrayList<>();
+    private final List<StudentEvenement> evenements = new ArrayList<>();
+    private final List<Group> manualGroupes = new ArrayList<>();
     private String externalId;
     private String deleteDate;
 
@@ -30,7 +30,7 @@ public class Student  extends  Model{
     public  Student() {
         super();
     }
-    public void formatBirthDate(){
+    public void formatBirthDate() {
         try {
             if (birthDate != null) {
                 String[] be = birthDate.split("-");
@@ -52,11 +52,11 @@ public class Student  extends  Model{
         return classe;
     }
 
-    public void addGroupe(Group group){
+    public void addGroupe(Group group) {
         groupes.add(group);
     }
 
-    public void addManualGroupe(Group group){
+    public void addManualGroupe(Group group) {
         groupes.add(group);
     }
     public List<Group> getGroupes() {
@@ -108,7 +108,7 @@ public class Student  extends  Model{
         hasIne = true;
         this.INE = INE;
     }
-    public void addEvenement (StudentEvenement evenement){
+    public void addEvenement (StudentEvenement evenement) {
         evenements.add(evenement);
     }
 

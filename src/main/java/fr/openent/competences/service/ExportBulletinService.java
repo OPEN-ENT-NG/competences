@@ -1,6 +1,7 @@
 package fr.openent.competences.service;
 
 import fr.openent.competences.model.Student;
+import fr.openent.competences.model.StudentEvenement;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -21,7 +22,7 @@ public interface ExportBulletinService {
   * @param promise promise renvoyant la liste des evenements
   */
  void getEvenements(Student student,
-                    Promise<Object> promise);
+                    Promise<List<StudentEvenement>> promise);
 
  /**
   * Service de récupération des donnéees nécessaires pour générer un bulletin
@@ -64,11 +65,11 @@ public interface ExportBulletinService {
   * Récupère le suivi des acquis d'un élève
   * @param student student export
   * @param idEleves
-  * @param params  paramètre d'export
-  * @param promise promise apellée à la fin de la fonction
+  * @param params  export parameters
+  * @param promise promise called at the end of the function
   */
  void getSuiviAcquis(Student student, JsonArray idEleves, JsonObject classe,
-                     JsonObject params, Promise<Object> promise);
+                     JsonObject params, Promise<JsonObject> promise);
 
  /**
   *  - Ordonne les élèves par classe et  par nom
@@ -93,7 +94,7 @@ public interface ExportBulletinService {
   * @param promise promise recevant le resultat de la fonction
   */
  void getSyntheseBilanPeriodique (Student student,
-                                   Boolean isBulletinLycee, Promise<Object> promise);
+                                  Boolean isBulletinLycee, Promise<JsonObject> promise);
 
  /**
   * Récupère le libelle de l'établissement de l'élève
@@ -119,7 +120,7 @@ public interface ExportBulletinService {
   * @param promise handler servant à la synchronisation des services
   */
  void getCycle (Student student,
-                Promise<Object> promise);
+                Promise<JsonObject> promise);
 
  /**
   * récupère le libelle de la periode idPeriode est passé en paramètre
@@ -146,20 +147,18 @@ public interface ExportBulletinService {
                        Handler<Either<String, JsonObject>> finalHandler) ;
 
  /**
-  *
-  * @param student  student
+  *  @param student  student
   * @param promise  promise with the result of the function
   */
  void getAvisConseil(Student student,
-                     Promise<Object> promise, String beforeAvisConseil);
+                     Promise<JsonObject> promise, String beforeAvisConseil);
 
  /**
-  *
-  * @param student  student
+  *  @param student  student
   * @param promise  promise called at the end function
   */
  void getAvisOrientation(Student student,
-                         Promise<Object> promise, String beforeAvisOrientation);
+                         Promise<JsonObject> promise, String beforeAvisOrientation);
 
 
  /**
