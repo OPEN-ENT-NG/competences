@@ -119,6 +119,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                                 _res.push(domaine);
                             }
                             $scope.newItem.domaines = _res;
+                            $scope.initializeDomainesSelected($scope.newItem);
                         }
                     })
                     .error(function () {
@@ -130,6 +131,21 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
             $scope.isStringUndefinedOrEmpty = function(name) {
                 return (name === undefined || name.trim().length === 0)
             };
+
+            $scope.initializeDomainesSelected = function (item) {
+               item.domaines.forEach(domaine => {
+                    if(_.contains(item.elementSignifiant.ids_domaine_int, domaine.id)){
+                        domaine.selected = true;
+                        $scope.selectDomaine(domaine);
+                    }
+                    domaine.domaines.all.forEach(sousDomaine => {
+                        if(_.contains(item.elementSignifiant.ids_domaine_int, sousDomaine.id)){
+                            sousDomaine.selected = true;
+                            $scope.selectDomaine(sousDomaine);
+                        }
+                    });
+                });
+            }
 
             $scope.selectDomaine = function (domaine) {
                 if (domaine.selected && !_.contains($scope.newItem.ids_domaine, domaine.id)) {
