@@ -118,10 +118,9 @@ public class ParamsBulletins {
                 .put(COEFFICIENT_LIBELLE, getLibelle("viescolaire.utils.coef"))
                 .put(MOYENNE_ANUELLE_LIBELLE, getLibelle("average.annual"))
                 .put(MOYENNE_GENERALE_LIBELLE, getLibelle("average.general"));
-
     }
 
-    public void setParams(JsonObject otherParams){
+    public void setParams(JsonObject otherParams) {
         params.put(GET_RESPONSABLE, otherParams.getBoolean(GET_RESPONSABLE))
                 .put(GET_MOYENNE_CLASSE, otherParams.getBoolean(MOYENNE_CLASSE))
                 .put(GET_MOYENNE_ELEVE, otherParams.getBoolean(MOYENNE_ELEVE))
@@ -147,32 +146,32 @@ public class ParamsBulletins {
                 .put(OTHER_TEACHER_NAME, otherParams.getString(OTHER_TEACHER_NAME,""))
                 .put(AGRICULTURE_LOGO, otherParams.getBoolean(AGRICULTURE_LOGO,false));
         JsonArray niveauCompetences;
-        try{
+        try {
             niveauCompetences = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
-
-        }catch (java.lang.ClassCastException e){
+        }catch (ClassCastException e) {
             niveauCompetences = new JsonArray(params.getString(NIVEAU_COMPETENCE));
         }
         JsonArray footerArray = new JsonArray();
-        if(niveauCompetences != null && !niveauCompetences.isEmpty()){
+        if(niveauCompetences != null && !niveauCompetences.isEmpty()) {
             for (int i = niveauCompetences.size() - 1; i >= 0; i--) { //reverse Array
                 footerArray.add(niveauCompetences.getJsonObject(i));
             }
         }
+
         String caption = "";
-        if(!footerArray.isEmpty()){
+        if(!footerArray.isEmpty()) {
             for (int i = 0; i < footerArray.size(); i++) {
                 JsonObject niv = footerArray.getJsonObject(i);
 
                 String lib = niv.getString(LIBELLE);
                 Integer id_niv;
                 Integer id_cycle = niv.getInteger("id_cycle");
-                try{
+                try {
                     id_niv = niv.getInteger("id_niveau");
-                    if(id_cycle == 2){
+                    if(id_cycle == 2) {
                         id_niv -= 4;
                     }
-                }catch (NullPointerException e){
+                }catch (NullPointerException e) {
                     id_niv = id_cycle;
                 }
 
@@ -183,7 +182,7 @@ public class ParamsBulletins {
 
         params.put(NIVEAU_COMPETENCE, niveauCompetences).put("caption", "* " + caption);
 
-        if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)){
+        if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)) {
             params.put(LOGO_PATH, "img/ministere_agriculture.png");
         } else {
             params.put(LOGO_PATH, "img/education_nationale.png");
@@ -204,7 +203,7 @@ public class ParamsBulletins {
         return imGraph;
     }
 
-    public void addParams(JsonObject othersParams){
+    public void addParams(JsonObject othersParams) {
         params.mergeIn(othersParams);
     }
 
@@ -219,7 +218,8 @@ public class ParamsBulletins {
     public void setHasGraphPerDomaine(boolean hasGraphPerDomaine) {
         this.hasGraphPerDomaine = hasGraphPerDomaine;
     }
-    public JsonObject toJson(){
+
+    public JsonObject toJson() {
         return params;
     }
 }

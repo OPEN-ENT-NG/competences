@@ -44,7 +44,7 @@ public class StudentEvenement {
         this.unit = unit;
     }
 
-    public String toString(){
+    public String toString() {
         return name + " : [" + count + "]" + unit;
     }
 }
