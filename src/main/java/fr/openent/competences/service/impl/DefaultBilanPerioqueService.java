@@ -587,6 +587,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             subjectsMissingTeachers.add(idMatiere);
         else if(!teachers.isEmpty())
             subjectsMissingTeachers.remove(idMatiere);
+        log.info(" subjectsMissingTeachers size " + subjectsMissingTeachers.size());
     }
 
     private void getMissingTeachers(JsonArray idsTeachers, List<String> subjectsMissingTeachers,
