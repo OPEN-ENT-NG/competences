@@ -20,7 +20,7 @@
  */
 import {ng, appPrefix, _, template, http, notify} from 'entcore';
 import * as utils from "../utils/teacher";
-import {Domaine} from "../models/teacher";
+import {Cycle, Domaine} from "../models/teacher";
 
 /**
  * function-filter : méthode qui va checker si l'enseignement parcouru doit être affiché ou non
@@ -83,8 +83,8 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 $event.stopPropagation();
                 $scope.opened.lightboxCreationCompetence = true;
                 $scope.newItem = $scope.initNewCompetence();
-                $scope.id_cycle = competence.id_cycle;
-                $scope.newItem.cycle = competence.id_cycle === 1 ? "Cycle 4" : "Cycle 3";
+                $scope.newItem.cycle.id_cycle = competence.id_cycle;
+                $scope.newItem.cycle.libelle = competence.id_cycle === 1 ? "Cycle 4" : "Cycle 3";
                 $scope.newItem.enseignement = enseignement;
                 $scope.newItem.elementSignifiant = competence;
                 $scope.newItem.id_parent = competence.id;
@@ -97,7 +97,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
 
             $scope.initNewCompetence = function() {
                 return {
-                    cycle: null,
+                    cycle: new Cycle(),
                     enseignement: null,
                     elementSignifiant: null,
                     domaines: null,
@@ -110,7 +110,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
 
             $scope.getDomaines = async function () {
                 $scope.idEtablissement = $scope.devoir.id_etablissement;
-                await http().getJson(`/competences/domaines?idStructure=${$scope.idEtablissement}&idCycle=${$scope.id_cycle}`)
+                await http().getJson(`/competences/domaines?idStructure=${$scope.idEtablissement}&idCycle=${$scope.newItem.cycle.id_cycle}`)
                     .done((resDomaines) => {
                         if (resDomaines) {
                             let _res = [];
@@ -201,7 +201,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                     id_type: item.id_type,
                     id_enseignement: item.id_enseignement,
                     ids_domaine: item.ids_domaine,
-                    id_cycle: $scope.id_cycle
+                    id_cycle: item.cycle.id_cycle
                 };
             };
 
