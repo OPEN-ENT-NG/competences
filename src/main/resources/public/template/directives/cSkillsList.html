@@ -49,7 +49,7 @@
                       class="skills-text-overflow">
                     <i class="skills-open-icon"></i>
                     <span ng-bind-html="competencesFilter[competence.id + '_' + competence.id_enseignement].nomHtml"></span>
-                    <i class="plus-input" ng-show="mouseHovering" ng-click="openLightboxCreationCompetence(enseignement, competence);"></i>
+                    <i class="plus-input" ng-show="mouseHovering" ng-click="openLightboxCreationCompetence(enseignement, competence, $event);"></i>
                 </span>
                 <ul class="twelve">
                     <li ng-repeat="sousCompetence in competence.competences.all"

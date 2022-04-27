@@ -79,7 +79,8 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 }
             };
 
-            $scope.openLightboxCreationCompetence = function(enseignement, competence) {
+            $scope.openLightboxCreationCompetence = function(enseignement, competence, $event) {
+                $event.stopPropagation();
                 $scope.opened.lightboxCreationCompetence = true;
                 $scope.newItem = $scope.initNewCompetence();
                 $scope.id_cycle = competence.id_cycle;
@@ -208,8 +209,10 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 let enseignement = _.findWhere($scope.data, {id: $scope.newItem.elementSignifiant.id_enseignement});
                 let elemSign = _.findWhere(enseignement.competences.all, {id: $scope.newItem.elementSignifiant.id});
                 let item = _.findWhere(elemSign.competences.all, {id: idItem});
-                $scope.toggleCheckbox(item, $scope.newItem.elementSignifiant, true)
+                $scope.toggleCheckbox(item, $scope.newItem.elementSignifiant, true);
+                elemSign.open = true;
                 $scope.doNotApplySearchFilter();
+                utils.safeApply(this);
             }
 
             $scope.initHeader = function(item){
