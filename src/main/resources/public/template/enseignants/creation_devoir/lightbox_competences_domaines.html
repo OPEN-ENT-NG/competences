@@ -17,8 +17,7 @@
 
 <script type="text/ng-template"  id="tree_items_renderer.html">
   <div
-          class="margin-top-1em twelve cell " ng-if="domaine.niveau === 1"
-          ng-click="domaine.OpenDom = !domaine.OpenDom" ng-init="domaine.OpenDom = false">
+          class="margin-top-1em twelve cell " ng-if="domaine.niveau === 1">
 
     <label ng-if="domaine.competences.all.length > 0" class="checkbox">
       <input type="checkbox"
@@ -28,8 +27,7 @@
       <span></span>
     </label> [[domaine.codification]] - [[domaine.libelle]]
   </div>
-  <div ng-class="{'openedSectionDom' : domaine.OpenDom}"
-       ng-if="domaine.competences.all.length > 0"
+  <div   ng-if="domaine.competences.all.length > 0"
        class="twelve cell margin-left-5%"
        style='height: auto;'>
 
