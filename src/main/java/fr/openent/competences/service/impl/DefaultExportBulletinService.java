@@ -2092,6 +2092,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             // Une matière sera affichée si on a au moins un élement sur la période
 
                             buildMatiereForSuiviAcquis(matiereJO,matiere, idPeriode, classe, params);
+                            log.info(matiere);
                             checkCoefficientConflict(result, matiereJO.getJsonObject(COEFFICIENT), params);
                             if(Boolean.TRUE.equals(matiereJO.getBoolean(PRINT_MATIERE_KEY))) {
                                 res.add(matiereJO);
