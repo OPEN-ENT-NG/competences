@@ -338,16 +338,17 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
 
-    private void insertDuplication(JsonArray ids, JsonObject devoir, JsonArray classes, UserInfos user, Integer errors, Handler<Either<String, JsonArray>> handler) {
+    private void insertDuplication(JsonArray ids, JsonObject devoir, JsonArray classes, UserInfos user,
+                                   Integer errors, Handler<Either<String, JsonArray>> handler) {
         if (errors == 0 && ids.size() == classes.size()) {
             JsonObject o, g;
             JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
             JsonArray devoirs = new JsonArray();
-            utilsService.getPeriodes(classes, devoir, new Handler<Either<String, JsonArray>>(o){
+            log.info(devoir);
+            utilsService.getPeriodes(classes, devoir.getString("id_etablissement"), new Handler<Either<String, JsonArray>>(){
                 @Override
                 public void handle(Either<String, JsonArray> event) {
                     if(event.isLeft()){
-                        leftToResponse(event.left());
                         log.error(event.left().getValue());
                     } else{
                         JsonArray periodes = event.right().getValue();
