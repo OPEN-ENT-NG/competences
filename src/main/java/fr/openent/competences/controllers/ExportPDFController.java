@@ -484,7 +484,7 @@ public class ExportPDFController extends ControllerHelper {
                 JsonObject eleve = (JsonObject) elevesFuture.result();
                 final String nomClasse = eleve.getString("classeName");
                 final String idEtablissementEl = eleve.getString(ID_ETABLISSEMENT_KEY);
-                final String eleveLevel = eleve.getString("level");
+                final int eleveLevel = getEleveLevel(eleve);
                 JsonArray idManualGroupes = strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
                 JsonArray idFunctionalGroupes = strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
 
@@ -517,7 +517,7 @@ public class ExportPDFController extends ControllerHelper {
                         JsonObject eleve = eleves.getJsonObject(i);
                         String idEleveEl = eleve.getString(ID_ELEVE_KEY);
                         String idEtablissementEl = eleve.getString(ID_ETABLISSEMENT_KEY);
-                        String eleveLevel = eleve.getString("level");
+                        int eleveLevel = getEleveLevel(eleve);
                         idEtablissement.add(idEtablissementEl);
                         idGroupes.add(eleve.getString(ID_CLASSE_KEY));
                         final String nomClasse = eleve.getString("classeName");
@@ -534,6 +534,19 @@ public class ExportPDFController extends ControllerHelper {
                 }
             }
         });
+    }
+
+    private int getEleveLevel(JsonObject eleve) {
+        int eleveLevel = -1;
+        String eleveLevelString = (eleve.getString("level").split(" "))[0];
+        if(eleveLevelString != null){
+            eleveLevel = Integer.parseInt(eleveLevelString.replaceAll("[^\\d.]", ""));
+        }
+        else{
+            eleveLevelString = eleve.getString("classeName");
+            eleveLevel = Integer.parseInt(eleveLevelString.substring(0, 1));
+        }
+        return eleveLevel;
     }
 
     @Get("/recapAppreciations/print/:idClasse/export")

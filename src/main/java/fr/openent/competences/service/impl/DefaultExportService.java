@@ -638,7 +638,7 @@ public class DefaultExportService implements ExportService {
 
     @Override
     public void getExportReleveComp(final Boolean text, final Boolean usePerso, final Boolean pByEnseignement,
-                                    final String idEleve, final String eleveLevel, final String[] idGroupes,
+                                    final String idEleve, final int eleveLevel, final String[] idGroupes,
                                     String[] idFunctionalGroupes, final String idEtablissement, final List<String> idMatieres,
                                     Long idPeriodeType, Boolean isCycle, final long idCycle, final Handler<Either<String, JsonObject>> handler) {
         final JsonArray maitriseArray = new fr.wseduc.webutils.collections.JsonArray();
@@ -773,7 +773,7 @@ public class DefaultExportService implements ExportService {
 
 
     private Handler<Either<String, JsonArray>>
-    getReleveCompFinalHandler(final Boolean text, final Boolean usePerso, final String idEleve, final String eleveLevel,
+    getReleveCompFinalHandler(final Boolean text, final Boolean usePerso, final String idEleve, final int eleveLevel,
                               final JsonArray devoirs, final JsonArray maitrises, final JsonArray competences,
                               final JsonArray domaines, final JsonArray competencesNotes, final JsonArray enseignements,
                               final AtomicBoolean answered, final AtomicBoolean byEnseignement, final Long idCycle,
@@ -874,9 +874,8 @@ public class DefaultExportService implements ExportService {
     }
 
 
-    private TreeMap<String, HashMap<Date, Date>> calculPeriodesAnnees (String eleveLevel, Long idCycle) {
-        int niveau = Integer.parseInt(eleveLevel.replaceAll("[^\\d.]", ""));
-        if (niveau != -1) {
+    private TreeMap<String, HashMap<Date, Date>> calculPeriodesAnnees (int eleveLevel, Long idCycle) {
+        if (eleveLevel != -1) {
             Calendar date = Calendar.getInstance();
             int actualMonth = date.get(Calendar.MONTH);
             int actualYear = date.get(Calendar.YEAR);
@@ -902,8 +901,8 @@ public class DefaultExportService implements ExportService {
             else if (idCycle == 2){
                 debut = fin = DEBUT_CYCLE_3;
             }
-            for (int i = niveau; i <= DEBUT_CYCLE_3; i++) {
-                if (i != niveau) {
+            for (int i = eleveLevel; i <= DEBUT_CYCLE_3; i++) {
+                if (i != eleveLevel) {
                     periodeBeginning.set(periodeBeginning.get(Calendar.YEAR)-1,
                             periodeBeginning.get(Calendar.MONTH), periodeBeginning.get(Calendar.DATE));
                     periodeEnding.set(periodeEnding.get(Calendar.YEAR)-1,
@@ -945,7 +944,7 @@ public class DefaultExportService implements ExportService {
 
 
     private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean usePerso, Boolean byEnseignement, Long idCycle,
-                                                        String idEleve, String eleveLevel, Map<String, JsonObject> devoirs,
+                                                        String idEleve, int eleveLevel, Map<String, JsonObject> devoirs,
                                                         Map<String, JsonObject> maitrises,
                                                         Map<String, JsonObject> competences,
                                                         Map<String, JsonObject> domaines,
