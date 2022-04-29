@@ -540,7 +540,7 @@ public class ExportPDFController extends ControllerHelper {
         int eleveLevel = -1;
         String eleveLevelString = eleve.getString("level");
         if(eleveLevelString != null){
-            eleveLevel = Integer.parseInt(eleveLevelString.replaceAll("[^\\d.]", "").split(" ")[0]);
+            eleveLevel = Integer.parseInt(eleveLevelString.split(" ")[0].replaceAll("[^\\d.]", ""));
         }
         else{
             eleveLevelString = eleve.getString("classeName");

@@ -1063,7 +1063,7 @@ public class DefaultExportService implements ExportService {
                             endingYear = date.getValue();
                         }
 
-                        if(Objects.equals(classe, eleveLevel)){
+                        if(Objects.equals(Integer.parseInt(classe.substring(0, 1)), eleveLevel)){
                             for (String devoir : devoirByCompetences.get(competence)) {
                                 if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
                                         .containsKey(competence)
