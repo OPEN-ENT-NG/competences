@@ -1616,10 +1616,15 @@ public class DefaultExportService implements ExportService {
     }
 
     public void getLibellePeriodeExportReleveComp(final HttpServerRequest request, final Long finalIdPeriode,
-                                                  Boolean isCycle, Handler<Either<String, String>> handler) {
+                                                  Boolean isCycle, long idCycle, Handler<Either<String, String>> handler) {
 
         if (isCycle) {
-            handler.handle(new Either.Right(getLibelle("viescolaire.utils.cycle")));
+            if (idCycle == 1 )
+                handler.handle(new Either.Right(getLibelle("viescolaire.utils.cycle4")));
+            else if (idCycle == 2)
+                handler.handle(new Either.Right(getLibelle("viescolaire.utils.cycle3")));
+            else
+                handler.handle(new Either.Right(getLibelle("viescolaire.utils.cycle")));
             return;
         }
 

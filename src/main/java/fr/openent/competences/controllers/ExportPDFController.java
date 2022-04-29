@@ -460,7 +460,7 @@ public class ExportPDFController extends ControllerHelper {
 
         // Récupération du libelle des périodes
         Future<String> periodeFuture = Future.future();
-        exportService.getLibellePeriodeExportReleveComp(request, finalIdPeriode, isCycle, event ->
+        exportService.getLibellePeriodeExportReleveComp(request, finalIdPeriode, isCycle, idCycle, event ->
                 formate(periodeFuture, event));
 
         // Récupération des élèves

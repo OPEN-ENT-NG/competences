@@ -68,7 +68,7 @@ public interface ExportService {
     void getMatiereExportReleveComp(final JsonArray idMatieres, Handler<Either<String, String>> handler);
 
     void getLibellePeriodeExportReleveComp(final HttpServerRequest request, final Long finalIdPeriode,
-                                           Boolean isCycle, Handler<Either<String, String>> handler);
+                                           Boolean isCycle, long idCycle, Handler<Either<String, String>> handler);
 
     void getElevesExportReleveComp(final String finalIdClasse, String idStructure, String finalIdEleve,
                                    final Long finalIdPeriode, final Map<String, String> elevesMap,
