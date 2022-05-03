@@ -82,6 +82,8 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
             $scope.openLightboxCreationCompetence = function(enseignement, competence, $event) {
                 $event.stopPropagation();
                 $scope.opened.lightboxCreationCompetence = true;
+                $scope.openedEnseignementsIds = [];
+                $scope.openedElementSignifiantsIds = [];
                 $scope.newItem = $scope.initNewCompetence();
                 $scope.newItem.cycle.id_cycle = competence.id_cycle;
                 $scope.newItem.cycle.libelle = competence.id_cycle === 1 ? "Cycle 4" : "Cycle 3";
@@ -163,6 +165,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
             };
 
             $scope.saveItem = function (item) {
+                $scope.registerOpened();
                 http().postJson(`competences/competence`, $scope.jsonCreateItem(item))
                     .done(async (res) => {
                         $scope.opened.lightboxCreationCompetence = false;
@@ -193,6 +196,32 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 $scope.checkboxNewCompetence($scope.id);
             })
 
+            $scope.registerOpened = function () {
+                _.forEach($scope.data, ens => {
+                    if(ens.open){
+                        $scope.openedEnseignementsIds.push(ens.id);
+                        _.forEach(ens.competences.all, elemSign => {
+                            if(elemSign.open) {
+                                $scope.openedElementSignifiantsIds.push(elemSign.id);
+                            }
+                        });
+                    }
+                });
+            };
+
+            $scope.reassignOpened = function() {
+                _.forEach($scope.data, ens => {
+                    if (_.contains($scope.openedEnseignementsIds, ens.id)){
+                        ens.open = true;
+                        _.forEach(ens.competences.all, elemSign => {
+                            if(_.contains($scope.openedElementSignifiantsIds, elemSign.id)) {
+                                elemSign.open = true;
+                            }
+                        });
+                    }
+                });
+            };
+
             $scope.jsonCreateItem = function (item) {
                 return {
                     nom: item.libelle,
@@ -210,7 +239,9 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 let elemSign = _.findWhere(enseignement.competences.all, {id: $scope.newItem.elementSignifiant.id});
                 let item = _.findWhere(elemSign.competences.all, {id: idItem});
                 $scope.toggleCheckbox(item, $scope.newItem.elementSignifiant, true);
+                enseignement.open = true;
                 elemSign.open = true;
+                $scope.reassignOpened();
                 $scope.doNotApplySearchFilter();
                 utils.safeApply(this);
             }
