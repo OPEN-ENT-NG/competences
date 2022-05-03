@@ -310,33 +310,33 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             await evaluations.structure.classes.sync();
                         }
                         $scope.structure.classes = evaluations.structure.classes;
-                        let _classe = evaluations.structure.classes.findWhere({id: $scope.currentDevoir.id_groupe});
-                        if (_classe !== undefined) {
-                            if (_classe.periodes.empty()) {
-                               await _classe.periodes.sync() ;
+                       $scope.search.classe = evaluations.structure.classes.findWhere({id: $scope.currentDevoir.id_groupe});
+                        if ($scope.search.classe !== undefined) {
+                            if ($scope.search.classe.periodes.empty()) {
+                               await $scope.search.classe.periodes.sync() ;
                             }
                             await $scope.currentDevoir.competences.sync();
-                            $scope.currentDevoir.periode = _.findWhere(_classe.periodes.all,
+                            $scope.search.periode = $scope.currentDevoir.periode = _.findWhere($scope.search.classe.periodes.all,
                                 {id_type: $scope.currentDevoir.id_periode})
+
+                            $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode).then(async () => {
+                               await $scope.currentDevoir.calculStats();
+
+                            });
+                            $scope.currentDevoir.endSaisie = await $scope.checkEndSaisieSeul($scope.currentDevoir)
+                            template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
                             $scope.openedDetails = true;
                             $scope.openedStatistiques = true
                             $scope.openedStudentInfo = true;
-                            $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode).then(async () => {
-                                await $scope.currentDevoir.calculStats();
-                            })
-                           if ($scope.structure.typePeriodes.empty()) {
-                                await $scope.structure.typePeriodes.sync();
-                            }
-                           $scope.currentDevoir.endSaisie = await $scope.checkEndSaisieSeul($scope.currentDevoir)
-                           template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
-                           await utils.safeApply($scope);
-                           await Utils.stopMessageLoader($scope);
+                            //await Utils.stopMessageLoader($scope);
+                            await utils.safeApply($scope);
                         } else {
                             await Utils.stopMessageLoader($scope);
                             $scope.goTo('/');
                             return;
                         }
                     }
+
                 } catch (e){
                     await Utils.stopMessageLoader($scope);
                     $scope.goTo('/');
@@ -2759,7 +2759,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.getLibellePositionnement = function (informationEleve,number) {
             let positionnementCalcule;
-            if(informationEleve.positionnements_auto) {
+            if(informationEleve && informationEleve.positionnements_auto) {
                 let positionnementFind = _.find(informationEleve.positionnements_auto,
                     function (positionnement) {
                         return positionnement.id_periode == $scope.search.periode.id_type
@@ -3297,8 +3297,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             let idPeriode = null;
             if(Utils.isNotNull($scope.search.periode)) {
                 idPeriode = $scope.search.periode.id_type
-            } else if(Utils.isNotNull($scope.currentDevoir)) {
-                idPeriode = $scope.currentDevoir.id_periode;
             }
 
             if(!$scope.opened.lightboxConfirmCleanAppreciation) {
@@ -3336,13 +3334,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             await Promise.all(allPromise);
 
-            if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes) &&
+            /*if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes) &&
                 _.isEmpty($scope.search.classe.periodes.all)){
                 await $scope.search.classe.periodes.sync();
                 $scope.filteredPeriode = $scope.search.classe.periodes.all;
-                utils.setHistoriqueEvenement($scope, eleve, $scope.filteredPeriode);
-            }
-
+            } */
+            $scope.filteredPeriode = $scope.search.classe.periodes.all;
+            utils.setHistoriqueEvenement($scope, eleve, $scope.filteredPeriode);
             $scope.informations.eleve = eleve;
             template.open('leftSide-userInfo', 'enseignants/informations/display_eleve');
             await utils.safeApply($scope);
