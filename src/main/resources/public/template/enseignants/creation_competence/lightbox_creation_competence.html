@@ -1,0 +1,83 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département de la Seine-et-Marne, CGI, 2016.
+  ~     This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~   This program is free software; you can redistribute it and/or modify
+  ~   it under the terms of the GNU Affero General Public License as
+  ~   published by the Free Software Foundation (version 3 of the License).
+  ~   For the sake of explanation, any module that communicate over native
+  ~   Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~   license and could be license under its own terms. This is merely considered
+  ~   normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~   This program is distributed in the hope that it will be useful,
+  ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+
+
+<div class="row">
+    <div class="cell twelve legend">
+        <h3>
+            <i18n>competence.createCompetence.item</i18n>
+        </h3>
+        <div class="separator"></div>
+    </div>
+
+    <div  class="cell twelve">
+        <!-- Libelle -->
+        <section class="row twelve-mobile lightbox-creation-competences">
+            <div class="three cell twelve-mobile element">
+                <i18n>evaluations.libelle</i18n>
+                <i class="asterisk obligatoire"></i>
+            </div>
+
+            <div class="nine cell twelve-mobile input-no-bold">
+                <input type="text" class="eleven twelve-mobile" ng-model="newItem.libelle">
+            </div>
+        </section>
+        <!-- Cycle -->
+        <section class="row twelve-mobile lightbox-creation-competences">
+            <div class="three cell twelve-mobile element">
+                <i18n>viescolaire.utils.cycle</i18n>
+            </div>
+            <div class="nine cell twelve-mobile element-no-bold">
+                [[newItem.cycle.libelle]]
+            </div>
+        </section>
+        <!-- Enseignement -->
+        <section class="row twelve-mobile lightbox-creation-competences">
+            <div class="three cell twelve-mobile element">
+                <i18n>competence.createCompetence.enseignement</i18n>
+            </div>
+            <div class="nine cell twelve-mobile element-no-bold">
+                [[newItem.enseignement.nom]]
+            </div>
+        </section>
+        <!-- Element signifiant -->
+        <section class="row twelve-mobile lightbox-creation-competences">
+            <div class="three cell twelve-mobile element">
+                <i18n>competence.createCompetence.elementSignifiant</i18n>
+            </div>
+            <div class="nine cell twelve-mobile element-no-bold">
+                [[newItem.elementSignifiant.nom]]
+            </div>
+        </section>
+        <section class="margin-bottom-5p" ng-include="'/competences/public/template/enseignants/creation_devoir/lightbox_competences_domaines.html'">
+        </section>
+        <div class="twelve cell">
+            <input type="button"
+                   ng-disabled="isStringUndefinedOrEmpty(newItem.libelle) || newItem.ids_domaine.length === 0"
+                   ng-click="saveItem(newItem)"
+                   i18n-value="viescolaire.utils.save"
+                    class="right-magnet">
+
+            <div ng-if="!isModif" class="cell right-magnet">
+                <button data-ng-click="opened.lightboxCreationCompetence = false;" class="right-magnet cancel">
+                    <span><i18n>evaluations.remplacement.cancel</i18n></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+

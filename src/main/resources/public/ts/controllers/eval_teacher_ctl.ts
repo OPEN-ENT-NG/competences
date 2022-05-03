@@ -1840,7 +1840,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Charge les enseignements et les compétences en fonction de la classe.
          */
-        $scope.loadEnseignementsByClasse = function (changeEtab?) {
+        $scope.loadEnseignementsByClasse = async function (changeEtab?) {
             let classe_Id = $scope.devoir.id_groupe;
             let newIdCycle = $scope.getClasseData(classe_Id, 'id_cycle');
             if (newIdCycle === null) {
@@ -1861,7 +1861,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             }
             if (currentIdCycle !== newIdCycle || changeEtab === true) {
-                evaluations.enseignements.sync(classe_Id).then(function () {
+                await evaluations.enseignements.sync(classe_Id).then(function () {
                     // suppression des compétences qui n'appartiennent pas au cycle
                     if($scope.devoir.enseignements.all.length === 0) {
                         _.extend($scope.devoir.enseignements, $scope.enseignements);
@@ -1880,6 +1880,42 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.cleanItems = false;
             }
         };
+
+        $scope.loadEnseignementsForCompetenceCreation = async function () {
+            let classe_Id = $scope.devoir.id_groupe;
+            let newIdCycle = $scope.getClasseData(classe_Id, 'id_cycle');
+            if (newIdCycle === null) {
+                $scope.oldCompetencesDevoir = _.extend(evaluations.competencesDevoir);
+                evaluations.competencesDevoir = [];
+                $scope.cleanItems = true;
+                utils.safeApply($scope);
+                return;
+            }
+            let currentIdCycle = null;
+            for (let i = 0; i < $scope.enseignements.all.length && currentIdCycle === null; i++) {
+                if ($scope.enseignements.all[i].data.competences_1 !== undefined &&
+                    $scope.enseignements.all[i].data.competences_1 !== null) {
+                    for (let j = 0; j < $scope.enseignements.all[i].data.competences_1.length
+                    && currentIdCycle === null; j++) {
+                        currentIdCycle = $scope.enseignements.all[i].data.competences_1[j].id_cycle;
+                    }
+                }
+            }
+            await evaluations.enseignements.sync(classe_Id).then(function () {
+                // suppression des compétences qui n'appartiennent pas au cycle
+                if($scope.devoir.enseignements.all.length === 0) {
+                    _.extend($scope.devoir.enseignements, $scope.enseignements);
+                }
+                $scope.initFilter(true);
+                $scope.setCSkillsList(false, true);
+                utils.safeApply($scope);
+            });
+        };
+
+        $scope.$on('loadEnseignementsByClasse', async function () {
+            await $scope.loadEnseignementsForCompetenceCreation();
+            $scope.$broadcast('checkboxNewCompetence');
+        });
 
         $scope.setCSkillsList = (searchChanged, enseignementsChanged) => {
             if(enseignementsChanged){

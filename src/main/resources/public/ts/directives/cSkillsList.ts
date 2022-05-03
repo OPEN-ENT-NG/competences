@@ -18,7 +18,9 @@
 /**
  * Created by ledunoiss on 21/09/2016.
  */
-import { ng, appPrefix, _ } from 'entcore';
+import {ng, appPrefix, _, template, http, notify} from 'entcore';
+import * as utils from "../utils/teacher";
+import {Cycle, Domaine} from "../models/teacher";
 
 /**
  * function-filter : méthode qui va checker si l'enseignement parcouru doit être affiché ou non
@@ -65,6 +67,9 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                     }
                     $scope.safeApply();
                 }
+                $scope.opened = {
+                    lightboxCreationCompetence : false
+                };
                 return (item.selected = parentItem.enseignement && parentItem.enseignement.selected || item.selected || false);
             };
 
@@ -74,11 +79,182 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 }
             };
 
+            $scope.openLightboxCreationCompetence = function(enseignement, competence, $event) {
+                $event.stopPropagation();
+                $scope.opened.lightboxCreationCompetence = true;
+                $scope.openedEnseignementsIds = [];
+                $scope.openedElementSignifiantsIds = [];
+                $scope.newItem = $scope.initNewCompetence();
+                $scope.newItem.cycle.id_cycle = competence.id_cycle;
+                $scope.newItem.cycle.libelle = competence.id_cycle === 1 ? "Cycle 4" : "Cycle 3";
+                $scope.newItem.enseignement = enseignement;
+                $scope.newItem.elementSignifiant = competence;
+                $scope.newItem.id_parent = competence.id;
+                $scope.newItem.id_enseignement = enseignement.id;
+                $scope.idEtablissement = $scope.devoir.id_etablissement;
+                $scope.getDomaines();
+                template.open('lightboxCreationCompetence', 'enseignants/creation_competence/lightbox_creation_competence');
+                utils.safeApply($scope);
+            };
+
+            $scope.initNewCompetence = function() {
+                return {
+                    cycle: new Cycle(),
+                    enseignement: null,
+                    elementSignifiant: null,
+                    domaines: null,
+                    libelle: "",
+                    ids_domaine: [],
+                    id_type: 2,
+                    ismanuelle: true
+                }
+            };
+
+            $scope.getDomaines = async function () {
+                $scope.idEtablissement = $scope.devoir.id_etablissement;
+                await http().getJson(`/competences/domaines?idStructure=${$scope.idEtablissement}&idCycle=${$scope.newItem.cycle.id_cycle}`)
+                    .done((resDomaines) => {
+                        if (resDomaines) {
+                            let _res = [];
+                            for (let i = 0; i < resDomaines.length; i++) {
+
+                                let domaine = new Domaine(resDomaines[i]);
+                                _res.push(domaine);
+                            }
+                            $scope.newItem.domaines = _res;
+                            $scope.initializeDomainesSelected($scope.newItem);
+                        }
+                    })
+                    .error(function () {
+                        console.error('domaine not founded');
+                        $scope.newItem.domaines = [];
+                    })
+            };
+
+            $scope.isStringUndefinedOrEmpty = function(name) {
+                return (name === undefined || name.trim().length === 0)
+            };
+
+            $scope.initializeDomainesSelected = function (item) {
+               item.domaines.forEach(domaine => {
+                    if(_.contains(item.elementSignifiant.ids_domaine_int, domaine.id)){
+                        domaine.selected = true;
+                        $scope.selectDomaine(domaine);
+                    }
+                    domaine.domaines.all.forEach(sousDomaine => {
+                        if(_.contains(item.elementSignifiant.ids_domaine_int, sousDomaine.id)){
+                            sousDomaine.selected = true;
+                            $scope.selectDomaine(sousDomaine);
+                        }
+                    });
+                });
+            }
+
+            $scope.selectDomaine = function (domaine) {
+                if (domaine.selected && !_.contains($scope.newItem.ids_domaine, domaine.id)) {
+                    $scope.newItem.ids_domaine.push(domaine.id);
+                }
+                else if (!domaine.selected) {
+                    $scope.newItem.ids_domaine =
+                        _.without($scope.newItem.ids_domaine, domaine.id);
+                }
+                if ($scope.newItem.hasOwnProperty('id')) {
+                    $scope.updatedDomaineId = domaine.id;
+                    $scope.saveItem($scope.newItem, 'updateDomaine');
+                }
+            };
+
+            $scope.saveItem = function (item) {
+                $scope.registerOpened();
+                http().postJson(`competences/competence`, $scope.jsonCreateItem(item))
+                    .done(async (res) => {
+                        $scope.opened.lightboxCreationCompetence = false;
+                        $scope.id = res.id;
+                        $scope.selectedTab = _.filter($scope.competencesFilter, function(item){
+                            return item.isSelected;
+                        });
+                        await $scope.$emit('loadEnseignementsByClasse');
+                        $scope.getDomaines();
+                        notify.info('competence.createCompetence.success');
+                        utils.safeApply(this);
+                    })
+                    .error((res) => {
+                        console.error(res);
+                        $scope.opened.lightboxCreationCompetence = false;
+                        if (res.status === 401) {
+                            notify.error('competence.createCompetence.error.unautorize');
+                            utils.safeApply(this);
+                        }
+                        else {
+                            notify.error('competence.createCompetence.error');
+                            utils.safeApply(this);
+                        }
+                    })
+            };
+
+            $scope.$on('checkboxNewCompetence', function () {
+                $scope.checkboxNewCompetence($scope.id);
+            })
+
+            $scope.registerOpened = function () {
+                _.forEach($scope.data, ens => {
+                    if(ens.open){
+                        $scope.openedEnseignementsIds.push(ens.id);
+                        _.forEach(ens.competences.all, elemSign => {
+                            if(elemSign.open) {
+                                $scope.openedElementSignifiantsIds.push(elemSign.id);
+                            }
+                        });
+                    }
+                });
+            };
+
+            $scope.reassignOpened = function() {
+                _.forEach($scope.data, ens => {
+                    if (_.contains($scope.openedEnseignementsIds, ens.id)){
+                        ens.open = true;
+                        _.forEach(ens.competences.all, elemSign => {
+                            if(_.contains($scope.openedElementSignifiantsIds, elemSign.id)) {
+                                elemSign.open = true;
+                            }
+                        });
+                    }
+                });
+            };
+
+            $scope.jsonCreateItem = function (item) {
+                return {
+                    nom: item.libelle,
+                    id_etablissement: $scope.idEtablissement,
+                    id_parent: item.id_parent,
+                    id_type: item.id_type,
+                    id_enseignement: item.id_enseignement,
+                    ids_domaine: item.ids_domaine,
+                    id_cycle: item.cycle.id_cycle
+                };
+            };
+
+            $scope.checkboxNewCompetence = function (idItem) {
+                let enseignement = _.findWhere($scope.data, {id: $scope.newItem.elementSignifiant.id_enseignement});
+                let elemSign = _.findWhere(enseignement.competences.all, {id: $scope.newItem.elementSignifiant.id});
+                let item = _.findWhere(elemSign.competences.all, {id: idItem});
+                $scope.toggleCheckbox(item, $scope.newItem.elementSignifiant, true);
+                enseignement.open = true;
+                elemSign.open = true;
+                $scope.reassignOpened();
+                $scope.doNotApplySearchFilter();
+                utils.safeApply(this);
+            }
+
             $scope.initHeader = function(item){
                 if(item.open === undefined) {
                     return (item.open = false);
                 }
             };
+
+            $scope.initAction = function(){
+                $scope.mouseHovering = false;
+            }
 
             $scope.safeApply = function(fn) {
                 var phase = this.$root.$$phase;
@@ -95,7 +271,14 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                 $scope.search.haschange=false;
             };
 
-            $scope.toggleCheckbox = function(item, parentItem){
+            $scope.toggleCheckbox = function(item, parentItem, created?){
+                if (created){
+                    $scope.competencesFilter[item.id + '_' + item.id_enseignement].isSelected = true;
+                    $scope.selectedTab.forEach(comp => {
+                        $scope.competencesFilter[comp.data.id + '_' + comp.data.id_enseignement].isSelected = true;
+                    });
+                }
+
                 $scope.emitToggleCheckbox(item, parentItem);
                 var items = document.getElementsByClassName("competence_"+item.id);
 
