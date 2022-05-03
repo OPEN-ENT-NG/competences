@@ -321,14 +321,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                             $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode).then(async () => {
                                await $scope.currentDevoir.calculStats();
-
+                               await Utils.stopMessageLoader($scope);
                             });
                             $scope.currentDevoir.endSaisie = await $scope.checkEndSaisieSeul($scope.currentDevoir)
                             template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
                             $scope.openedDetails = true;
                             $scope.openedStatistiques = true
                             $scope.openedStudentInfo = true;
-                            //await Utils.stopMessageLoader($scope);
+
                             await utils.safeApply($scope);
                         } else {
                             await Utils.stopMessageLoader($scope);
@@ -342,9 +342,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.goTo('/');
                     return;
                 }
-                await Utils.stopMessageLoader($scope);
-
-
             },
 
             displayReleveNotes: function (params) {
