@@ -808,8 +808,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.confirmerDuplication = () => {
             if ($scope.selected.devoirs.list.length === 1) {
                 let devoir: Devoir = $scope.selected.devoirs.list[0];
-                devoir.id_periode = $scope.getCurrentPeriodEval($scope.notYearPeriodes, new Date()).id_type;
-                devoir.duplicate($scope.selected.classes).then(() => {
+                devoir.duplicate($scope.selected.classes).then(async () => {
                     $scope.devoirs.sync().then(() => {
                         $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
                             devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
@@ -817,6 +816,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         });
                         $scope.resetSelected();
                         $scope.opened.lightboxs.duplication = false;
+                        utils.safeApply($scope);
                     });
                 }).catch(() => {
                     notify.error(lang.translate('evaluation.duplicate.devoir.error'));

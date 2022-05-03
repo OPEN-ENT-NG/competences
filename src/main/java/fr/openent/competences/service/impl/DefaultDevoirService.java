@@ -341,63 +341,58 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     private void insertDuplication(JsonArray ids, JsonObject devoir, JsonArray classes, UserInfos user,
                                    Integer errors, Handler<Either<String, JsonArray>> handler) {
         if (errors == 0 && ids.size() == classes.size()) {
-            JsonObject o, g;
             JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
             JsonArray devoirs = new JsonArray();
-            log.info(devoir);
-            utilsService.getPeriodes(classes, devoir.getString("id_etablissement"), new Handler<Either<String, JsonArray>>(){
-                @Override
-                public void handle(Either<String, JsonArray> event) {
-                    if(event.isLeft()){
-                        log.error(event.left().getValue());
-                    } else{
-                        JsonArray periodes = event.right().getValue();
-                        for(int i = 0; i < periodes.size(); i++){
-                            JsonObject periode = periodes.getJsonObject(i);
-                            String timestamp_begin = periode.getString("timestamp_dt");
-                            String timestamp_end = periode.getString("timestamp_fn");
-                            DateTime begin = new DateTime(timestamp_begin);
-                            DateTime end = new DateTime(timestamp_end);
-                            if(begin.isAfterNow() && end.isBeforeNow()){
-                                JsonArray result = new JsonArray();
-                                result.add(periode);
-                                handler.handle(new Either.Right<String, JsonArray>(result));
-                            }
+            List<String> listClasses = classes.stream()
+                    .filter(classe -> classe instanceof JsonObject)
+                    .map(classe -> ((JsonObject)classe).getString("id"))
+                    .collect(Collectors.toList());
+
+            utilsService.getPeriodes(listClasses, devoir.getString("id_etablissement")).onSuccess(periodes -> {
+                JsonObject actualPeriode = new JsonObject();
+                for(int i = 0; i < periodes.size(); i++) {
+                    JsonObject periode = periodes.getJsonObject(i);
+                    String timestamp_begin = periode.getString("timestamp_dt");
+                    String timestamp_end = periode.getString("timestamp_fn");
+                    DateTime begin = new DateTime(timestamp_begin);
+                    DateTime end = new DateTime(timestamp_end);
+                    if (!begin.isAfterNow() && !end.isBeforeNow()) {
+                        actualPeriode = periode;
+                    }
+                }
+                JsonObject o, g;
+                for (int i = 0; i < ids.size(); i++) {
+                    try {
+                        g = classes.getJsonObject(i);
+                        o = HomeworkUtils.formatDevoirForDuplication(devoir);
+                        o.put("id_groupe", g.getString("id"));
+                        o.put("type_groupe", g.getInteger("type_groupe"));
+                        o.put("date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+                        o.put("date_publication", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+                        o.put("id_periode", actualPeriode.getInteger("id_type"));
+                        JsonArray tempStatements = this.createStatement(ids.getLong(i), o, user);
+                        for (int j = 0; j < tempStatements.size(); j++) {
+                            statements.add(tempStatements.getValue(j));
+                        }
+                        JsonObject devoirtoAdd = new JsonObject().put("id",ids.getLong(i)).put("devoir",o);
+                        devoirs.add(devoirtoAdd);
+                    } catch (ClassCastException e) {
+                        log.error("Next id devoir must be a long Object.");
+                        log.error(e);
+                    }
+
+                }
+                Sql.getInstance().transaction(statements, new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> event) {
+                        JsonObject result = event.body();
+                        if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
+                            handler.handle(new Either.Right<String, JsonArray>(devoirs));
+                        } else {
+                            handler.handle(new Either.Left<String, JsonArray>(result.getString("status")));
                         }
                     }
-                }
-            });
-
-            for (int i = 0; i < ids.size(); i++) {
-                try {
-                    g = classes.getJsonObject(i);
-                    o = HomeworkUtils.formatDevoirForDuplication(devoir);
-                    o.put("id_groupe", g.getString("id"));
-                    o.put("type_groupe", g.getInteger("type_groupe"));
-                    o.put("date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-                    o.put("date_publication", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-                    JsonArray tempStatements = this.createStatement(ids.getLong(i), o, user);
-                    for (int j = 0; j < tempStatements.size(); j++) {
-                        statements.add(tempStatements.getValue(j));
-                    }
-                    JsonObject devoirtoAdd = new JsonObject().put("id",ids.getLong(i)).put("devoir",o);
-                    devoirs.add(devoirtoAdd);
-                } catch (ClassCastException e) {
-                    log.error("Next id devoir must be a long Object.");
-                    log.error(e);
-                }
-
-            }
-            Sql.getInstance().transaction(statements, new Handler<Message<JsonObject>>() {
-                @Override
-                public void handle(Message<JsonObject> event) {
-                    JsonObject result = event.body();
-                    if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
-                        handler.handle(new Either.Right<String, JsonArray>(devoirs));
-                    } else {
-                        handler.handle(new Either.Left<String, JsonArray>(result.getString("status")));
-                    }
-                }
+                });
             });
         } else {
             log.error("An error occured when collecting ids in duplication sequence.");
