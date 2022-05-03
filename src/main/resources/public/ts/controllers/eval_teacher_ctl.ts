@@ -3331,11 +3331,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             await Promise.all(allPromise);
 
-            /*if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes) &&
-                _.isEmpty($scope.search.classe.periodes.all)){
-                await $scope.search.classe.periodes.sync();
-                $scope.filteredPeriode = $scope.search.classe.periodes.all;
-            } */
             $scope.filteredPeriode = $scope.search.classe.periodes.all;
             utils.setHistoriqueEvenement($scope, eleve, $scope.filteredPeriode);
             $scope.informations.eleve = eleve;
