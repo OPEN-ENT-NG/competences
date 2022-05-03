@@ -1430,6 +1430,7 @@ public class DefaultUtilsService implements UtilsService {
     public void getPresencesReasonsId(String idStructure, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "get-reasons")
+                .put("reasonType", 0)
                 .put("structure", idStructure);
 
         eb.send("fr.openent.presences", action, MessageResponseHandler.messageJsonArrayHandler(handler));

@@ -135,7 +135,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 Future<JsonArray> retardsFuture = Future.future();
                 sendEventBusGetEvent(EventType.LATENESS.getType(), idEleves, structureId,
                         beginningDateYear, endDateYear, "HOUR", null, true,
-                        null, null, event -> formate(retardsFuture, event));
+                        reasonIds, true, event -> formate(retardsFuture, event));
 
                 CompositeFuture.all(absencesRegularizedFuture, absencesUnregularizedFuture, retardsFuture).setHandler(event -> {
                     if (event.failed()) {
