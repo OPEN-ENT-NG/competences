@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.security.PrivilegedAction;
+import java.util.Collections;
 
 import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNotNull;
@@ -153,34 +154,28 @@ public class ParamsBulletins {
         }
         JsonArray footerArray = new JsonArray();
         if(niveauCompetences != null && !niveauCompetences.isEmpty()) {
-            for (int i = niveauCompetences.size() - 1; i >= 0; i--) { //reverse Array
-                footerArray.add(niveauCompetences.getJsonObject(i));
-            }
+            footerArray = niveauCompetences.copy();
+            Collections.reverse(footerArray.getList());
         }
 
-        String caption = "";
-        if(!footerArray.isEmpty()) {
-            for (int i = 0; i < footerArray.size(); i++) {
-                JsonObject niv = footerArray.getJsonObject(i);
-
-                String lib = niv.getString(LIBELLE);
-                Integer id_niv;
-                Integer id_cycle = niv.getInteger("id_cycle");
-                try {
-                    id_niv = niv.getInteger("id_niveau");
-                    if(id_cycle == 2) {
-                        id_niv -= 4;
-                    }
-                }catch (NullPointerException e) {
-                    id_niv = id_cycle;
+        final String[] caption = {""};
+        footerArray.stream().forEach(nivO ->{
+            JsonObject niv = (JsonObject)nivO;
+            String lib = niv.getString(LIBELLE);
+            Integer id_niv;
+            Integer id_cycle = niv.getInteger("id_cycle");
+            try {
+                id_niv = niv.getInteger("id_niveau");
+                if(id_cycle == 2) {
+                    id_niv -= 4;
                 }
-
-                caption += id_niv + " : " + lib + " - ";
+            }catch (NullPointerException e) {
+                id_niv = id_cycle;
             }
-            caption = caption.substring(0, caption.length() - 2);
-        }
-
-        params.put(NIVEAU_COMPETENCE, niveauCompetences).put("caption", "* " + caption);
+            caption[0] += id_niv + " : " + lib + " - ";
+            caption[0] = caption[0].substring(0, caption[0].length() - 2);
+        });
+        params.put(NIVEAU_COMPETENCE, niveauCompetences).put("caption", "* " + caption[0]);
 
         if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)) {
             params.put(LOGO_PATH, "img/ministere_agriculture.png");
@@ -196,7 +191,7 @@ public class ParamsBulletins {
 
     public void setHasImgLoaded(boolean hasImgLoaded) {
         this.hasImgLoaded = hasImgLoaded;
-        params.put("hasImgLoaded",hasImgLoaded);
+        params.put("hasImgLoaded", hasImgLoaded);
     }
 
     public String getImGraph() {
