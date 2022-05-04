@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.Utils.getLibelle;
 
-public class Student extends Model{
+public class Student extends Model {
 
     private String firstName;
     private String lastName;
@@ -27,7 +27,7 @@ public class Student extends Model{
     private String deleteDate;
 
 
-    public  Student() {
+    public Student() {
         super();
     }
     public void formatBirthDate() {
@@ -162,25 +162,25 @@ public class Student extends Model{
                 .map(Group::getId)
                 .collect(Collectors.toList());
 
-        result.put("idEleve",this.id)
-                .put("firstName",this.firstName)
-                .put("lastName",this.lastName)
-                .put("ine",this.INE)
-                .put("hasINENumber",this.hasIne)
-                .put("hasLevel",this.hasLvl)
-                .put("idClasse",this.classe.getId())
-                .put("u.deleteDate",this.deleteDate)
-                .put("classeName",this.classe.getName())
-                .put("classeNameToShow",this.classe.getDisplayName())
-                .put("idEtablissement",this.structure.getId())
-                .put("birthDate",this.birthDate)
-                .put("birthDateLibelle",this.birthDate)
-                .put("externalId",this.externalId)
-                .put("idPeriode",this.classe.getPeriode().getIdPeriode())
-                .put("typePeriode",this.classe.getPeriode().getType())
-                .put("idGroupes",idGroupes)
-                .put("idLanualGroupes",idManualGroupes)
-                .put("periode",classe.getPeriode().getName())
+        result.put("idEleve", this.id)
+                .put("firstName", this.firstName)
+                .put("lastName", this.lastName)
+                .put("ine", this.INE)
+                .put("hasINENumber", this.hasIne)
+                .put("hasLevel", this.hasLvl)
+                .put("idClasse", this.classe.getId())
+                .put("u.deleteDate", this.deleteDate)
+                .put("classeName", this.classe.getName())
+                .put("classeNameToShow", this.classe.getDisplayName())
+                .put("idEtablissement", this.structure.getId())
+                .put("birthDate", this.birthDate)
+                .put("birthDateLibelle", this.birthDate)
+                .put("externalId", this.externalId)
+                .put("idPeriode", this.classe.getPeriode().getIdPeriode())
+                .put("typePeriode", this.classe.getPeriode().getType())
+                .put("idGroupes", idGroupes)
+                .put("idLanualGroupes", idManualGroupes)
+                .put("periode", classe.getPeriode().getName())
                 .put("schoolYear", getLibelle("school.year")
                         + classe.getPeriode().getStartDate()
                         + "-" + classe.getPeriode().getEndDate())
@@ -189,7 +189,7 @@ public class Student extends Model{
         if(hasLvl)
             result.mergeIn(level.toJsonObject());
         result.mergeIn(paramBulletins.toJson());
-        result.put("structureLibelle",structure.toJsonObject());
+        result.put("structureLibelle", structure.toJsonObject());
         return result;
     }
 }
