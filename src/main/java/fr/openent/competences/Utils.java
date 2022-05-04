@@ -25,9 +25,7 @@ import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -369,6 +367,28 @@ public class Utils {
             } else {
                 handler.handle(new Either.Left<>(body.getString(MESSAGE)));
                 log.error("getElevesClasses : " + body.getString(MESSAGE));
+            }
+        }));
+    }
+
+
+
+    public static void getElevesClasse(EventBus eb, String idClasse, Long idPeriode,
+                                       final Promise<Object> promise) {
+        JsonObject action = new JsonObject()
+                .put(ACTION, "classe.getElevesClasses")
+                .put(ID_PERIODE_KEY, idPeriode)
+                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
+
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray queryResult = body.getJsonArray(RESULTS);
+               promise.complete(queryResult);
+            } else {
+              promise.fail(body.getString(MESSAGE));
+
             }
         }));
     }

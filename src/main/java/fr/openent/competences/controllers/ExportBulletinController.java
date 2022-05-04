@@ -1,6 +1,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.enums.EventStoresCompetences;
+import fr.openent.competences.model.Student;
 import fr.openent.competences.security.AccessExportBulletinFilter;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
