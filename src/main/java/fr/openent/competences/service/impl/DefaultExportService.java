@@ -532,7 +532,7 @@ public class DefaultExportService implements ExportService {
 
     private  void buildDevoirExport(final Boolean pByEnseignement, final String idEleve, final String[] idGroupes,
                                     String[] idFunctionalGroupes, final String idEtablissement,
-                                    final List<String> idMatieres, Long idPeriodeType, Boolean isCycle,
+                                    final List<String> idMatieres, Long idPeriodeType, Boolean isCycle, final Long idCycle,
                                     final JsonArray enseignementArray, final JsonArray devoirsArray,
                                     final JsonArray competencesArray, final JsonArray domainesArray,
                                     final JsonArray competencesNotesArray, String[] idMatieresTab,
@@ -568,8 +568,14 @@ public class DefaultExportService implements ExportService {
                         competenceNoteService.getCompetencesNotes(idDevoirs, idEleve,
                                 true,
                                 getIntermediateHandler(idDevoirs, competencesNotesArray, finalHandler));
-                        domaineService.getDomainesRacines(idGroupes[0], null,
-                                getIntermediateHandler(domainesArray, finalHandler));
+                        if (idCycle != -1){
+                            domaineService.getDomainesRacines(idGroupes[0], idCycle,
+                                    getIntermediateHandler(domainesArray, finalHandler));
+                        }
+                        else{
+                            domaineService.getDomainesRacines(idGroupes[0], null,
+                                    getIntermediateHandler(domainesArray, finalHandler));
+                        }
                         enseignementService.getEnseignementsOrdered(
                                 getIntermediateHandler(enseignementArray, finalHandler));
                     } else if (isNotNull(stringJsonArrayEither.right()) &&
@@ -585,8 +591,14 @@ public class DefaultExportService implements ExportService {
                         }
                         competenceNoteService.getCompetencesNotes((Long)null, idEleve,true,
                                 getIntermediateHandler((Long)null, competencesNotesArray, finalHandler));
-                        domaineService.getDomainesRacines(idGroupes[0], null,
-                                getIntermediateHandler(domainesArray, finalHandler));
+                        if (idCycle != -1){
+                            domaineService.getDomainesRacines(idGroupes[0], idCycle,
+                                    getIntermediateHandler(domainesArray, finalHandler));
+                        }
+                        else{
+                            domaineService.getDomainesRacines(idGroupes[0], null,
+                                    getIntermediateHandler(domainesArray, finalHandler));
+                        }
                         enseignementService.getEnseignementsOrdered(
                                 getIntermediateHandler(enseignementArray, finalHandler));
                     } else {
@@ -595,7 +607,7 @@ public class DefaultExportService implements ExportService {
                         if(error.contains("Timeout") || error.contains("Timed out")){
                             log.info(" reset buildDevoirExport");
                             buildDevoirExport(pByEnseignement, idEleve, idGroupes, idFunctionalGroupes, idEtablissement,
-                                    idMatieres, idPeriodeType, isCycle, enseignementArray, devoirsArray,
+                                    idMatieres, idPeriodeType, isCycle, idCycle, enseignementArray, devoirsArray,
                                     competencesArray, domainesArray, competencesNotesArray, idMatieresTab, finalHandler);
                         }
                         else {
@@ -656,7 +668,7 @@ public class DefaultExportService implements ExportService {
                 byEnseignement, idCycle, handler);
 
         buildDevoirExport(pByEnseignement, idEleve, idGroupes, idFunctionalGroupes, idEtablissement,
-                idMatieres, idPeriodeType, isCycle, enseignementArray, devoirsArray,
+                idMatieres, idPeriodeType, isCycle, idCycle, enseignementArray, devoirsArray,
                 competencesArray, domainesArray, competencesNotesArray, idMatieresTab, finalHandler);
 
         buildNiveauReleveComp(idGroupes, idEtablissement, maitriseArray, finalHandler);

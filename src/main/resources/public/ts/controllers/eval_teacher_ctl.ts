@@ -4097,8 +4097,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             url += "&idEleve=" + idEleve;
             url += "&idEtablissement=" + $scope.structure.id;
 
-            for (var m = 0; m < $scope.selected.matieres.length; m++) {
-                url += "&idMatiere=" + $scope.selected.matieres[m];
+            if($scope.releveComp.periode.libelle === "cycle"){
+                for (var m = 0; m < $scope.allMatieresSorted.length; m++) {
+                    url += "&idMatiere=" + $scope.allMatieresSorted[m];
+                }
+            }
+            else{
+                for (var m = 0; m < $scope.selected.matieres.length; m++) {
+                    url += "&idMatiere=" + $scope.selected.matieres[m];
+                }
             }
             if (idPeriode) {
                 url += "&idPeriode=" + idPeriode;
@@ -4239,7 +4246,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.disabledExport = function () {
-            return (_.findIndex($scope.allMatieresSorted, {select: true}) === -1) || typeof($scope.releveComp.periode) === 'undefined'
+            if ($scope.releveComp.periode != null){
+                return ((_.findIndex($scope.allMatieresSorted, {select: true}) === -1) || typeof($scope.releveComp.periode) === 'undefined')
+                    && ($scope.releveComp.periode.libelle !== 'cycle')
+            }
+            else{
+                return ((_.findIndex($scope.allMatieresSorted, {select: true}) === -1) || typeof($scope.releveComp.periode) === 'undefined')
+            }
         };
 
 
@@ -4268,6 +4281,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.selectUnselectMatieres(false);
             classe ? $scope.forClasse = true : $scope.forClasse = false;
         };
+
+        $scope.changeIdCycle = function () {
+            if($scope.releveComp.periode.libelle != null &&
+                $scope.releveComp.periode.libelle === 'cycle' && $scope.releveComp.idCycle == null) {
+                $scope.releveComp.idCycle = $scope.cycles[0].id;
+            }
+        }
 
         $scope.getFormatedDate = function (date) {
             return moment(date).format("DD/MM/YYYY");
