@@ -119,11 +119,29 @@
                 <li ng-repeat="devoir in selected.devoirs.list">[[devoir.name]]</li>
             </ul>
         </div>
+        <div ng-if="conditionAffichageText(7)">
+            <p><i18n>evaluations.devoir.recaputilatif.suppression.unique</i18n>
+                <b>[[informations.devoir.name]]</b>
+                [[textSuppressionMsg2.Text7]]
+            </p>
+        </div>
+        <div ng-if="conditionAffichageText(8)">
+            <p><i18n>evaluations.devoir.recaputilatif.suppression.unique</i18n>
+                <b>[[informations.devoir.name]]</b>
+                [[textSuppressionMsg2.Text8]]
+            </p>
+        </div>
+        <div  ng-if="conditionAffichageText(9)" >
+            <p><i18n>evaluations.devoir.recaputilatif.suppression.unique</i18n>
+                <b>[[informations.devoir.name]]</b>
+                [[textSuppressionMsg2.Text9]]
+            </p>
+        </div>
         <p ng-if="selected.devoirs.list.length > 0 ">
             <i18n>evaluations.devoir.confirmation.question</i18n>
         </p>
         <button  ng-if="selected.devoirs.list.length > 0 "
-                 class="marginFive" ng-click="firstConfirmationSuppDevoir()">
+                 class="marginFive" ng-click="deleteDevoir()">
             <i18n>evaluations.devoir.confirmation</i18n>
         </button>
         <button class="marginFive" ng-click="annulerSuppression()">
