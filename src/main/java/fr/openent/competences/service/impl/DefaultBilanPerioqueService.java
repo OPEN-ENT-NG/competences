@@ -587,7 +587,6 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             subjectsMissingTeachers.add(idMatiere);
         else if(!teachers.isEmpty())
             subjectsMissingTeachers.remove(idMatiere);
-        log.info(" subjectsMissingTeachers size " + subjectsMissingTeachers.size());
     }
 
     private void getMissingTeachers(JsonArray idsTeachers, List<String> subjectsMissingTeachers,
@@ -660,11 +659,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         if(isNotNull(eltsProg) && eltsProg.size() > 0) {
             for (int i = 0; i < eltsProg.size(); i++) {
                 JsonObject element = eltsProg.getJsonObject(i);
-                String texte = element.getString("texte");
+                String texte = element.getString("texte","");
                 String idClasse = element.getString("id_classe");
 
                 if(idClasse != null && IdsClassWithNoteAppCompNoteStudent.contains(idClasse)) {
-                    if(elementsProg.isEmpty()) {
+                    if (elementsProg.isEmpty()) {
                         elementsProg = texte;
                     } else {
                         elementsProg += " " + texte;
