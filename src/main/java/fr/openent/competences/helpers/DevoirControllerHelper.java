@@ -6,10 +6,7 @@ import fr.openent.competences.service.DevoirService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -74,7 +71,10 @@ public class DevoirControllerHelper {
             public void handle(Either<String, JsonArray> event) {
                 if (event.isRight()) {
                     final JsonArray devoirs = event.right().getValue();
+                    ArrayList<Future> futures = new ArrayList<>();
                     for(Object devoirO : devoirs) {
+                        Promise promise = Promise.promise();
+                        futures.add(promise.future());
                         // recuperation des professeurs que l'utilisateur connecté remplacent
                         JsonObject devoirJO = (JsonObject)devoirO;
                         Devoir devoir = new Devoir(devoirJO.getJsonObject("devoir"));
@@ -84,7 +84,7 @@ public class DevoirControllerHelper {
                                 .put("structureId", devoir.getStructureId())
                                 .put("groupId", devoir.getGroupId())
                                 .put("userId", user.getUserId());
-                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirJO, shareService, user, request));
+                        eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirJO, shareService, user, request));
                     }
                 } else {
                     Renders.badRequest(request);

@@ -59,6 +59,7 @@ import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.badRequest;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
@@ -313,34 +314,47 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     @Override
     public void duplicateDevoir(final JsonObject devoir, final JsonArray classes, final UserInfos user,
                                 ShareService shareService, HttpServerRequest request, EventBus eb) {
-        final JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
-        String queryNewDevoirId;
-        final Integer[] counter = {0};
-        final Integer[] errors = {0};
+        final JsonArray ids = new JsonArray();
+        JsonArray statements = new JsonArray();
         for (int i = 0; i < classes.size(); i++) {
-            queryNewDevoirId = "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".devoirs_id_seq') as id";
-            sql.raw(queryNewDevoirId, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
-                @Override
-                public void handle(Either<String, JsonObject> event) {
-                    counter[0]++;
-                    if (event.isRight()) {
-                        JsonObject o = event.right().getValue();
-                        ids.add(o.getLong("id"));
-                        if (counter[0] == classes.size()) {
-                            insertDuplication(ids, devoir, classes, user, errors[0], getDuplicationDevoirHandler(user,shareService, request,eb));
-                        }
-                    } else {
-                        errors[0]++;
-                    }
-                }
-            }));
+            String statement = "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".devoirs_id_seq') as id";
+            JsonObject statementJO = new JsonObject()
+                    .put("statement", statement)
+                    .put("values", new JsonArray())
+                    .put("action", "prepared");
+            statements.add(statementJO);
         }
+        Sql.getInstance().transaction(statements, event -> {
+            //TODO if/else gérer les erreurs (badRequest) et récupérer les ids
+            JsonObject result = event.body();
+            if(result.containsKey("status") && "ok".equals(result.getString("status"))){
+                JsonArray resultSql = result.getJsonArray("results");
+                for(int j = 0; j < resultSql.size(); j++){
+                    ids.add(resultSql.getJsonObject(j).getJsonArray("results").getJsonArray(0).getInteger(0));
+                }
+                //TODO insertDuplication();
+                insertDuplication(ids, devoir, classes, user, getDuplicationDevoirHandler(user, shareService, request, eb));
+            } else {
+                badRequest(request);
+            }
+
+        });
+//                    counter[0]++;
+//                    if (event.isRight()) {
+//                        JsonObject o = event.right().getValue();
+//                        ids.add(o.getLong("id"));
+//                        if (counter[0] == classes.size()) {
+//                            insertDuplication(ids, devoir, classes, user, errors[0], getDuplicationDevoirHandler(user,shareService, request,eb));
+//                        }
+//                    } else {
+//                        errors[0]++;
+//                    }
+
     }
 
 
-    private void insertDuplication(JsonArray ids, JsonObject devoir, JsonArray classes, UserInfos user,
-                                   Integer errors, Handler<Either<String, JsonArray>> handler) {
-        if (errors == 0 && ids.size() == classes.size()) {
+    private void insertDuplication(JsonArray ids, JsonObject devoir, JsonArray classes, UserInfos user, Handler<Either<String, JsonArray>> handler) {
+        if (ids.size() == classes.size()) {
             JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
             JsonArray devoirs = new JsonArray();
             List<String> listClasses = classes.stream()
