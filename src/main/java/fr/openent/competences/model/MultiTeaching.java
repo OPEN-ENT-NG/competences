@@ -171,26 +171,7 @@ public class MultiTeaching extends Model {
         this.subject = subject;
     }
 
-    //    "id":23549,
-//            "structure_id":"92feb6f1-2016-4215-b53f-5337fbcba244",
-//            "main_teacher_id":"3cbf7852-8e60-4934-9a63-f534a0c1232c",
-//            "second_teacher_id":"2f5ef34b-dc45-4cfc-82ae-baad55a60706",
-//            "subject_id":"1790293-1566493593334",
-//            "class_or_group_id":"36e6eeb8-3a90-497b-8b6a-18ac9d0f3cb0",
-//            "start_date":null,
-//            "end_date":null,
-//            "entered_end_date":null,
-//            "is_coteaching":true,
-//            "is_visible":true,
-//            "id_etablissement":"92feb6f1-2016-4215-b53f-5337fbcba244",
-//            "libelle":null,
-//            "timestamp_dt":"2021-09-02T00:00:00.000",
-//            "timestamp_fn":"2021-12-08T00:00:00.000",
-//            "date_fin_saisie":"2021-12-08T00:00:00.000",
-//            "id_classe":"36e6eeb8-3a90-497b-8b6a-18ac9d0f3cb0",
-//            "id_type":3,
-//            "date_conseil_classe":"2021-12-08T00:00:00.000",
-//            "publication_bulletin":false
+
     @Override
     public JsonObject toJsonObject() {
 

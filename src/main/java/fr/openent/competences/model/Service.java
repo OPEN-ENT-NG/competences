@@ -88,7 +88,7 @@ public class Service {
         this.coefficient = coefficient;
     }
 
-    public JsonObject toJson(){
+    public JsonObject toJson() {
         return new JsonObject()
                 .put("id_etablissement",structure.getId())
                 .put("id_enseignant",teacher.getId())
