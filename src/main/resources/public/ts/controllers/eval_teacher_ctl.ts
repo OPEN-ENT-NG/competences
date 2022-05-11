@@ -4099,7 +4099,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             if($scope.releveComp.periode.libelle === "cycle"){
                 for (var m = 0; m < $scope.allMatieresSorted.length; m++) {
-                    url += "&idMatiere=" + $scope.allMatieresSorted[m];
+                    url += "&idMatiere=" + $scope.allMatieresSorted[m].id;
                 }
             }
             else{
@@ -4117,7 +4117,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
             ($scope.releveComp.periode.libelle === "cycle" && $scope.releveComp.idCycle != null) ?
-                url += "&isCycle=" + true + "&idCycle=" + $scope.releveComp.idCycle : url += "&isCycle=" + false + "&idCycle=-1";
+                url += "&isCycle=" + true + "&idCycle=" + $scope.releveComp.idCycle : url += "&isCycle=" + false;
 
             url += "&byEnseignement=" + exportByEnseignement;
 

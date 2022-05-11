@@ -163,7 +163,7 @@ public class ExportEvaluationHelper {
             future.complete();
         }
         else {
-            new DefaultCompetencesService(eb).getDevoirCompetences(idDevoir, event -> {
+            new DefaultCompetencesService(eb).getDevoirCompetences(idDevoir, null, event -> {
                 if(event.isLeft()){
                     future.fail(event.left().getValue());
                 }

@@ -417,7 +417,13 @@ public class ExportPDFController extends ControllerHelper {
         final Boolean byEnseignement = Boolean.parseBoolean(request.params().get("byEnseignement"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final Boolean isCycle = Boolean.parseBoolean(request.params().get("isCycle"));
-        final long idCycle = Long.parseLong(request.params().get("idCycle"));
+        final Long idCycle;
+        if (request.params().contains("idCycle")) {
+            idCycle = Long.parseLong(request.params().get("idCycle"));
+        }
+        else {
+            idCycle = null;
+        }
         final List<String> listIdMatieres = request.params().getAll("idMatiere");
         final String idStructure = request.params().get(Competences.ID_ETABLISSEMENT_KEY);
 
