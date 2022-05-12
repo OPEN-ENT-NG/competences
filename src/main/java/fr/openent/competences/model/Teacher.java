@@ -4,6 +4,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 //creer une classe mère dont Teacher et Student héritent
 public class Teacher extends Model{
@@ -29,6 +30,19 @@ public class Teacher extends Model{
 
     @Override
     public JsonObject toJsonObject() {
-        return null;
+        JsonObject result = new JsonObject();
+        List<String> idGroupes = groupes.stream()
+                .map(Group::getId)
+                .collect(Collectors.toList());
+        List<String> idClasses = classes.stream()
+                .map(Classe::getId)
+                .collect(Collectors.toList());
+        result.put("idTeacher", this.id)
+                .put("firstName", this.firstName)
+                .put("lastName", this.lastName)
+                .put("idGroupes", idGroupes)
+                .put("idClasses", idClasses);
+
+        return result;
     }
 }

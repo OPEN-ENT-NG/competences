@@ -20,11 +20,12 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.service.*;
 import fr.openent.competences.helpers.ExportEvaluationHelper;
 import fr.openent.competences.helpers.FormateFutureEvent;
+import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.Either.*;
+import fr.wseduc.webutils.Either.Left;
+import fr.wseduc.webutils.Either.Right;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
@@ -48,30 +49,24 @@ import org.apache.pdfbox.util.PDFMergerUtility;
 import org.entcore.common.storage.Storage;
 
 import javax.imageio.ImageIO;
-
-import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Competences.RESULTS;
-import static fr.openent.competences.Utils.*;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static fr.openent.competences.helpers.ExportEvaluationHelper.*;
-
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static fr.wseduc.webutils.http.Renders.badRequest;
-import static fr.wseduc.webutils.http.Renders.getHost;
-import static fr.wseduc.webutils.http.Renders.getScheme;
-
-import java.text.DecimalFormat;
 import java.util.stream.Collectors;
+
+import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.*;
+import static fr.openent.competences.helpers.ExportEvaluationHelper.*;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.*;
 
 public class DefaultExportService implements ExportService {
 

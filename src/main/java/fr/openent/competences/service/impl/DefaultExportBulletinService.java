@@ -589,6 +589,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                 }
 
+
+                //utiles?
                 if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD) != null){
                     if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
                         Promise<Object> getBilanPeriodiqueDomaineForGraphPromise = Promise.promise();
@@ -612,14 +614,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 CompositeFuture.all(futures).setHandler(event -> {
                     if (event.succeeded()) {
                         try {
-                            List<StudentEvenement> studentEvenements = (List<StudentEvenement>) event.result().list().get(0);
-                            student.getParamBulletins().addParams((JsonObject) event.result().list().get(1));
-                            student.getParamBulletins().addParams((JsonObject) event.result().list().get(2));
-                            student.getParamBulletins().addParams((JsonObject) event.result().list().get(3));
-                            student.getParamBulletins().addParams((JsonObject) event.result().list().get(4));
-                            student.getParamBulletins().addParams((JsonObject) event.result().list().get(5));
-                            student.getParamBulletins().addParams((JsonObject) event.result().list().get(6));
-
+                            List<StudentEvenement> studentEvenements = getEvenementsPromise.future().result();
+                            student.getParamBulletins().addParams(getSyntheseBilanPeriodiquePromise.future().result());
+                            student.getParamBulletins().addParams(getCyclePromise.future().result());
+                            student.getParamBulletins().addParams(getAppreciationCPEPromise.future().result());
+                            student.getParamBulletins().addParams(getAvisConseilPromise.future().result());
+                            student.getParamBulletins().addParams(getAvisOrientationPromise.future().result());
+                            student.getParamBulletins().addParams(getSuiviAcquisPromise.future().result());
                             for(StudentEvenement studentEvenement : studentEvenements){
                                 student.addEvenement(studentEvenement);
                             }
@@ -914,7 +915,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     public void getLibellePeriode(Long idPeriode,
                                   String host, String acceptLanguage,
-                                  Promise<Object> promise) {
+                                  Promise<Periode> promise) {
         JsonObject jsonRequest = new JsonObject()
                 .put("headers", new JsonObject().put("Accept-Language", acceptLanguage))
                 .put("Host",host);
@@ -1001,7 +1002,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    public void getAnneeScolaire( String idClasse, Promise<Object> promise) {
+    public void getAnneeScolaire(String idClasse, Promise<Periode> promise) {
 
         JsonObject action = new JsonObject();
         action.put(ACTION, "periode.getPeriodes")
@@ -1516,8 +1517,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
 
-    public void getStructure( String idStructure,
-                              Promise<Object> promise) {
+    public void getStructure(String idStructure,
+                             Promise<Structure> promise) {
 
         JsonObject action = new JsonObject();
         Structure structure = new Structure();
@@ -2707,14 +2708,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if(event.isRight() ) {
                         List<String> groupIds = new ArrayList<>(event.right().getValue().getJsonObject(0).getJsonArray("id_groupes").getList());
                         groupIds.add(idClasse);
-                        Promise<Object> structurePromise = Promise.promise();
-                        Promise<Object> periodeLibellePromise = Promise.promise();
-                        Promise<Object> periodeYearPromise = Promise.promise();
+                        Promise<Structure> structurePromise = Promise.promise();
+                        Promise<Periode> periodeLibellePromise = Promise.promise();
+                        Promise<Periode> periodeYearPromise = Promise.promise();
                         Promise<Object> imgPromise = Promise.promise();
                         Promise<Object> listStudentsPromise = Promise.promise();
                         Promise<Object> servicesPromise = Promise.promise();
                         Promise<Object> multiTeachingPromise = Promise.promise();
-                        List<Future<Object>> promises = new ArrayList<>();
+                        List<Future> promises = new ArrayList<>();
                         promises.add(structurePromise.future());
                         promises.add(periodeLibellePromise.future());
                         promises.add(periodeYearPromise.future());
@@ -2741,11 +2742,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 new JsonArray(groupIds),idPeriode.intValue() ,FutureHelper.handlerJsonArray(multiTeachingPromise));
 
                         int finalNbOptions = nbOptions;
-                        FutureHelper.all(promises).onSuccess(success -> {
-                            Structure structure = (Structure) success.result().list().get(0);
-                            Periode periode = (Periode) success.result().list().get(1);
-                            periode.setEndDate( ((Periode) success.result().list().get(2)).getEndDate());
-                            periode.setStartDate( ((Periode) success.result().list().get(2)).getStartDate());
+                        CompositeFuture.all(promises).onSuccess(success -> {
+                            Structure structure = structurePromise.future().result();
+                            Periode periode = periodeLibellePromise.future().result();
+                            periode.setEndDate( periodeYearPromise.future().result().getEndDate());
+                            periode.setStartDate( periodeYearPromise.future().result().getStartDate());
                             ParamsBulletins paramBulletins = new ParamsBulletins();
                             paramBulletins.setParams(params);
                             paramBulletins.setHasImgLoaded(true);
@@ -2767,18 +2768,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                             for (int i = 0; i < eleves.size(); i++) {
                                 futures.add(Future.future());
-                            }
-
-                            for (int i = 0; i < eleves.size(); i++) {
                                 JsonObject eleve = eleves.getJsonObject(i);
                                 String idEleve = eleve.getString(ID_ELEVE_KEY);
 
                                 Student student = initStudent(structure, periode, paramBulletins, services, multiTeachings,
                                         eleve, typePeriode, idPeriode, classe, showBilanPerDomaines, images, params);
-
                                 students.put(idEleve, student);
-
-
                                 getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe, host, acceptLanguage, vertx,
                                         futureGetHandler(futures.get(i)));
                             }
