@@ -105,7 +105,7 @@ public class HomeworkUtils {
         // le pourcentage d'avancement n'est pas conservé lors de la duplication d'un devoir
         o.put("percent", 0);
         try {
-            o.put("coefficient", Double.valueOf(o.getString("coefficient")));
+            o.put("coefficient", safeGetDouble(devoir, "coefficient"));
         } catch (ClassCastException e) {
             log.error("An error occured when casting devoir object to duplication format.");
             log.error(e);
@@ -117,6 +117,15 @@ public class HomeworkUtils {
             o.remove("id_sousmatiere");
         }
         return o;
+    }
+    public static Double safeGetDouble(JsonObject jo, String key) {
+        Double result;
+        try {
+            result = jo.getDouble(key);
+        }catch (Exception e){
+            result = Double.parseDouble(jo.getString(key).replaceAll(",", "."));
+        }
+        return  result;
     }
 
 }

@@ -363,15 +363,17 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     .collect(Collectors.toList());
 
             utilsService.getPeriodes(listClasses, devoir.getString("id_etablissement")).onSuccess(periodes -> {
-                JsonObject actualPeriode = new JsonObject();
-                for(int i = 0; i < periodes.size(); i++) {
-                    JsonObject periode = periodes.getJsonObject(i);
-                    String timestamp_begin = periode.getString("timestamp_dt");
-                    String timestamp_end = periode.getString("timestamp_fn");
-                    DateTime begin = new DateTime(timestamp_begin);
-                    DateTime end = new DateTime(timestamp_end);
-                    if (!begin.isAfterNow() && !end.isBeforeNow()) {
-                        actualPeriode = periode;
+                Map<String, JsonObject> periodesResult = new HashMap();
+                for(int i = 0; i < listClasses.size(); i++){
+                    for(int j = 0; j < periodes.size(); j++) {
+                        JsonObject periode = periodes.getJsonObject(j);
+                        String timestamp_begin = periode.getString("timestamp_dt");
+                        String timestamp_end = periode.getString("timestamp_fn");
+                        DateTime begin = new DateTime(timestamp_begin);
+                        DateTime end = new DateTime(timestamp_end);
+                        if (!begin.isAfterNow() && !end.isBeforeNow() && listClasses.get(i).equals(periode.getString("id_classe"))) {
+                            periodesResult.put(listClasses.get(i), periode);
+                        }
                     }
                 }
                 JsonObject o, g;
@@ -383,12 +385,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         o.put("type_groupe", g.getInteger("type_groupe"));
                         o.put("date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
                         o.put("date_publication", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-                        o.put("id_periode", actualPeriode.getInteger("id_type"));
-                        JsonArray tempStatements = this.createStatement(ids.getLong(i), o, user);
+                        o.put("id_periode", periodesResult.get(g.getString("id")).getLong("id_type"));
+                        JsonArray tempStatements = this.createStatement(Long.valueOf(ids.getInteger(i)), o, user);
                         for (int j = 0; j < tempStatements.size(); j++) {
                             statements.add(tempStatements.getValue(j));
                         }
-                        JsonObject devoirtoAdd = new JsonObject().put("id",ids.getLong(i)).put("devoir",o);
+                        JsonObject devoirtoAdd = new JsonObject().put("id",(Long.valueOf(ids.getInteger(i)))).put("devoir",o);
                         devoirs.add(devoirtoAdd);
                     } catch (ClassCastException e) {
                         log.error("Next id devoir must be a long Object.");
