@@ -87,11 +87,9 @@ public class DevoirControllerHelper {
                                 .put("userId", user.getUserId());
                         eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirJO, shareService, user, promise));
                     }
-                    FutureHelper.all(futures).onSuccess(success -> {
-                        request.response().setStatusCode(200).end();
-                    }).onFailure(failure -> {
-                        badRequest(request, failure.getMessage());
-                    });
+                    FutureHelper.all(futures)
+                            .onSuccess(success -> request.response().setStatusCode(200).end())
+                            .onFailure(failure -> badRequest(request, failure.getMessage()));
 
                 } else {
                     badRequest(request);
@@ -115,11 +113,9 @@ public class DevoirControllerHelper {
                     shareService.userShare(user.getUserId(), id, devoirWithId.getLong("id").toString(),
                             actions, getFutureHandler(shareServiceFuture));
                 }
-                CompositeFuture.all(futures).onSuccess(compositeEvent -> {
-                    promise.complete(devoirWithId);
-                }).onFailure(failure -> {
-                    promise.fail(failure.getMessage());
-                }
+                CompositeFuture.all(futures)
+                        .onSuccess(compositeEvent -> promise.complete(devoirWithId))
+                        .onFailure(failure -> promise.fail(failure.getMessage())
 
                 );
             }

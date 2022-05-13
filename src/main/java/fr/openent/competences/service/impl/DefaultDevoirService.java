@@ -325,31 +325,18 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             statements.add(statementJO);
         }
         Sql.getInstance().transaction(statements, event -> {
-            //TODO if/else gérer les erreurs (badRequest) et récupérer les ids
             JsonObject result = event.body();
             if(result.containsKey("status") && "ok".equals(result.getString("status"))){
                 JsonArray resultSql = result.getJsonArray("results");
                 for(int j = 0; j < resultSql.size(); j++){
                     ids.add(resultSql.getJsonObject(j).getJsonArray("results").getJsonArray(0).getInteger(0));
                 }
-                //TODO insertDuplication();
                 insertDuplication(ids, devoir, classes, user, getDuplicationDevoirHandler(user, shareService, request, eb));
             } else {
                 badRequest(request);
             }
 
         });
-//                    counter[0]++;
-//                    if (event.isRight()) {
-//                        JsonObject o = event.right().getValue();
-//                        ids.add(o.getLong("id"));
-//                        if (counter[0] == classes.size()) {
-//                            insertDuplication(ids, devoir, classes, user, errors[0], getDuplicationDevoirHandler(user,shareService, request,eb));
-//                        }
-//                    } else {
-//                        errors[0]++;
-//                    }
-
     }
 
 
