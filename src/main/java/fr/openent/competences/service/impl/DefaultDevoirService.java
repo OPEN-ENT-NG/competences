@@ -373,11 +373,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         o.put("date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
                         o.put("date_publication", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
                         o.put("id_periode", periodesResult.get(g.getString("id")).getLong("id_type"));
-                        JsonArray tempStatements = this.createStatement(Long.valueOf(ids.getInteger(i)), o, user);
+                        JsonArray tempStatements = this.createStatement(ids.getLong(i), o, user);
                         for (int j = 0; j < tempStatements.size(); j++) {
                             statements.add(tempStatements.getValue(j));
                         }
-                        JsonObject devoirtoAdd = new JsonObject().put("id",(Long.valueOf(ids.getInteger(i)))).put("devoir",o);
+                        JsonObject devoirtoAdd = new JsonObject().put("id",(ids.getLong(i))).put("devoir",o);
                         devoirs.add(devoirtoAdd);
                     } catch (ClassCastException e) {
                         log.error("Next id devoir must be a long Object.");

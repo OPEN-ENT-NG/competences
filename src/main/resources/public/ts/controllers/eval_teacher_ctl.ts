@@ -808,7 +808,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.confirmerDuplication = () => {
             if ($scope.selected.devoirs.list.length === 1) {
                 let devoir: Devoir = $scope.selected.devoirs.list[0];
-                devoir.duplicate($scope.selected.classes).then(async () => {
+                devoir.duplicate($scope.selected.classes).then(() => {
                     $scope.devoirs.sync().then(() => {
                         $scope.filteredDevoirs = _.filter($scope.devoirs.all, devoir => {
                             devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
