@@ -2795,7 +2795,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonArray groupes,manualGroupes = new JsonArray();
                     try {
                          groupes = eleve.getJsonArray("idGroupes");
-                    }catch (ClassCastException e){
+                    } catch (ClassCastException e){
                         String groupesStr = eleve.getString("idGroupes");
                         String[] array = groupesStr.split(",");
                         groupes = new JsonArray();
