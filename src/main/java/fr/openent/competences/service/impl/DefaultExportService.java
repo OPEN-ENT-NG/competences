@@ -273,7 +273,7 @@ public class DefaultExportService implements ExportService {
         }
     }
 
-    private void getResultsEleves(Long idDevoir, String idStructure, Map mapResult, Handler<Either<String,Boolean>> handler) {}
+    private void getResultsEleves(Long idDevoir, String idStructure, Map mapResult, Handler<Either<String,Boolean>> handler) {
 
         Future<JsonArray> competencesNotesFuture = Future.future();
         competenceNoteService.getCompetencesNotesDevoir(idDevoir, event -> {
@@ -536,7 +536,7 @@ public class DefaultExportService implements ExportService {
                                     final JsonArray enseignementArray, final JsonArray devoirsArray,
                                     final JsonArray competencesArray, final JsonArray domainesArray,
                                     final JsonArray competencesNotesArray, String[] idMatieresTab,
-                                    final Handler<Either<String, JsonArray>> finalHandler) {}
+                                    final Handler<Either<String, JsonArray>> finalHandler) {
 
 
         //on recupere la liste des devoirs des classes mais aussi des groupes de l'eleve
@@ -607,7 +607,7 @@ public class DefaultExportService implements ExportService {
     }
 
     private void buildNiveauReleveComp(final String[] idGroupes, final String idEtablissement, JsonArray maitriseArray,
-                                       final Long idCycle, final Handler<Either<String, JsonArray>> finalHandler) {}
+                                       final Long idCycle, final Handler<Either<String, JsonArray>> finalHandler) {
         if(idCycle == null) {
             utilsService.getCycle(Arrays.asList(idGroupes),  stringJsonArrayEither -> {
                 if (stringJsonArrayEither.isRight() && isNotNull(stringJsonArrayEither.right().getValue()) &&
@@ -2155,7 +2155,7 @@ public class DefaultExportService implements ExportService {
 
     public void getDataForExportReleveClasse(String idClasse, String idEtablissement, Long idPeriode,
                                              Long idTypePeriode, final Long ordre,
-                                             Handler<Either<String, JsonObject>> handler) {}
+                                             Handler<Either<String, JsonObject>> handler) {
         Utils.getElevesClasse(eb, idClasse, idPeriode, elevesEvent -> {
             if (elevesEvent.isLeft()) {
                 String error = elevesEvent.left().getValue();
@@ -2164,7 +2164,7 @@ public class DefaultExportService implements ExportService {
                 return;
             }
             JsonArray elevesClasse = elevesEvent.right().getValue();
-            if(isNull(elevesClasse)) {}
+            if(isNull(elevesClasse)) {
                 log.error("[getDataForExportReleveClasse] : NO student in classe");
                 handler.handle(new Either.Left<>(getLibelle("evaluations.export.releve.no.student")));
                 return;
