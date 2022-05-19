@@ -102,14 +102,14 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                         nb: 0
                     });
                 }
-                var unique = [];
-                var distinct = [];
-                for( let i = 0; i < $scope.competencesEvaluations.length; i++ ){
-                    if( !unique[$scope.competencesEvaluations[i].id_competences_notes]){
-                        distinct.push($scope.competencesEvaluations[i]);
-                        unique[$scope.competencesEvaluations[i].id_competences_notes] = 1;
+                let unique = [];
+                let distinct = [];
+                $scope.competencesEvaluations.forEach((comp) => {
+                    if (!unique[comp.id_competences_notes]) {
+                        distinct.push(comp);
+                        unique[comp.id_competences_notes] = 1;
                     }
-                }
+                });
                 $scope.competencesEvaluations = distinct;
                 if (Utils.isNotNull($scope.competencesEvaluations) && $scope.competencesEvaluations.length > 0) {
                     var nbEleves = 0;
