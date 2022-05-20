@@ -4,7 +4,7 @@
 * Financeur(s) : Département de la Seine-et-Marne, CGI, Région Hauts-de-France (ex Picardie)
 * Description : Application de gestion des compétences
 
-##Configuration
+## Configuration
 <pre>
     {
       "config": {
