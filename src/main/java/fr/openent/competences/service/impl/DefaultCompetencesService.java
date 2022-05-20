@@ -257,7 +257,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 
-    public void getDevoirCompetencesByEnseignement(JsonArray devoirIds, Long idCycle, final Handler<Either<String, JsonArray>> handler) {
+    public void getDevoirCompetencesByEnseignement(JsonArray devoirIds, Long idCycle, String idEtablissement, final Handler<Either<String, JsonArray>> handler) {
 
         String query = "SELECT comp.id as id_competence," +
                 " compDevoir.id AS id, compDevoir.id_devoir, COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_type as id_type," +
@@ -265,9 +265,11 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " FROM " + COMPETENCES_TABLE + " AS comp" +
                 " INNER JOIN " + COMPETENCES_DEVOIRS_TABLE + " AS compDevoir ON (comp.id = compDevoir.id_competence )" +
                 " INNER JOIN " + COMPETENCES_SCHEMA + ".rel_competences_enseignements AS compEns ON (comp.id = compEns.id_competence)" +
-                " LEFT JOIN " + COMPETENCES_SCHEMA + ".perso_competences AS compPerso ON comp.id = compPerso.id_competence" +
-                " WHERE compDevoir.id_devoir IN " + Sql.listPrepared(devoirIds.getList());
-        JsonArray values = new JsonArray().addAll(devoirIds);
+                " LEFT JOIN (SELECT nom, id_competence FROM " + COMPETENCES_SCHEMA +
+                ".perso_competences WHERE id_etablissement = ?) AS compPerso ON comp.id = compPerso.id_competence " +
+                " WHERE compDevoir.id_devoir IN " + Sql.listPrepared(devoirIds.getList()) ;
+
+        JsonArray values = new JsonArray().add(idEtablissement).addAll(devoirIds);
         if (idCycle != null) {
             query += " AND comp.id_cycle = ?";
             values.add(idCycle);

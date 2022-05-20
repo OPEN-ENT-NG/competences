@@ -559,7 +559,7 @@ public class DefaultExportService implements ExportService {
                         }
 
                         if (pByEnseignement) {
-                            competencesService.getDevoirCompetencesByEnseignement(idDevoirs, idCycle,
+                            competencesService.getDevoirCompetencesByEnseignement(idDevoirs, idCycle, idEtablissement,
                                     getIntermediateHandler(idDevoirs, competencesArray, finalHandler));
                         } else {
                             competencesService.getDevoirCompetences(idDevoirs, idEtablissement, idCycle,

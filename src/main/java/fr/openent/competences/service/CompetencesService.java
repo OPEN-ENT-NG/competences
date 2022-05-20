@@ -90,7 +90,7 @@ public interface CompetencesService extends CrudService {
      * @param idCycle identifiant du cycle sélectionné
      * @param handler
      */
-    void getDevoirCompetencesByEnseignement(JsonArray devoirIds, Long idCycle, final Handler<Either<String, JsonArray>> handler);
+    void getDevoirCompetencesByEnseignement(JsonArray devoirIds, Long idCycle, String idEtablissement, final Handler<Either<String, JsonArray>> handler);
     /**
      * Getter : Récupération des compétences sélectionné sur le dernier devoir créé par
      * l'utilisateur
