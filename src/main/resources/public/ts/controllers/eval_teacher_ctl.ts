@@ -5204,5 +5204,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.selected.devoirs.list[0] = $scope.informations.devoir;
             }
         }
+
+        $scope.initSousMatiere = function(devoir) {
+            if (devoir.matiere.sousMatieres.all.length > 0){
+                devoir.sousMatiere = devoir.matiere.sousMatieres.all[0];
+                $scope.switchIdSousMatiere(devoir);
+            }
+        }
+
+        $scope.switchIdSousMatiere = function(devoir) {
+            devoir.id_sousmatiere = devoir.sousMatiere.id_type_sousmatiere;
+        }
     }
 ]);
