@@ -4125,23 +4125,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 textMod: true
             };
 
-            await httpAxios.get(url, {responseType: 'arraybuffer' })
-            .then(async(data) => {
-                let blob;
-                let link = document.createElement('a');
-                let response = data.data;
-                blob = new Blob([response]);
-                link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download = data.headers['content-disposition'].split('filename=')[1];
-                document.body.appendChild(link);
-                link.click();
-                if(url.includes('&idClasse=')){
-                    await Utils.stopMessageLoader($scope);
-                    notify.success('evaluations.export.bulletin.success');
-                }
-            })
-                .catch( async(result)=>{
+            await http().getJson(url + "&json=true")
+                .error( async(result)=>{
                     if(url.includes('&idClasse=')){
                         await Utils.stopMessageLoader($scope);
                         $scope.opened.releveComp = true;
@@ -4149,6 +4134,29 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.errorResult(result);
                     console.error(result);
                     utils.safeApply($scope);
+                })
+                .done( async() => {
+                    delete $scope.releveComp;
+                    $scope.releveComp = {
+                        textMod: true
+                    };
+                    if($scope.opened.releveComp) $scope.opened.releveComp = false;
+
+                    await httpAxios.get(url, {responseType: 'arraybuffer' }).then(async(data) => {
+                        let blob;
+                        let link = document.createElement('a');
+                        let response = data.data;
+                        blob = new Blob([response]);
+                        link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = data.headers['content-disposition'].split('filename=')[1];
+                        document.body.appendChild(link);
+                        link.click();
+                        if(url.includes('&idClasse=')){
+                            await Utils.stopMessageLoader($scope);
+                            notify.success('evaluations.export.bulletin.success');
+                        }
+                    });
                 });
             utils.safeApply($scope);
         };
