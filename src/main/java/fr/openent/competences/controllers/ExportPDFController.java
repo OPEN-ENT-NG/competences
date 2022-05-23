@@ -545,10 +545,10 @@ public class ExportPDFController extends ControllerHelper {
     private int getEleveLevel(JsonObject eleve) {
         int eleveLevel = -1;
         String eleveLevelString = eleve.getString("level");
-        if(eleveLevelString != null){
+        if(eleveLevelString != null) {
             eleveLevel = Integer.parseInt(eleveLevelString.split(" ")[0].replaceAll("[^\\d.]", ""));
         }
-        else{
+        else {
             eleveLevelString = eleve.getString("classeName");
             eleveLevel = Integer.parseInt(eleveLevelString.substring(0, 1));
         }
