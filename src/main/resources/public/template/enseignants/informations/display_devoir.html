@@ -54,7 +54,7 @@
     <div class="releve_periodique">
         <div class="column-center marginTop10 center">
             <a class="button twelve-mobile" href="/competences#/devoir/[[informations.devoir.id]]"><i18n>open.devoir</i18n></a>
-            <a href ng-init="addDevoirList()" ng-if="informations.devoir.endSaisie" ng-click="confirmSuppression()"><i18n>evaluations.delete.evaluation</i18n></a>
+            <a href ng-init="addDevoirList()" ng-if="!informations.devoir.endSaisie" ng-click="confirmSuppression()"><i18n>evaluations.delete.evaluation</i18n></a>
         </div>
     </div>
 
