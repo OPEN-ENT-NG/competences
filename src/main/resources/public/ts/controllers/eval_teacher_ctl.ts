@@ -3306,12 +3306,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($location.$$path === '/releve') {
                 $scope.showInfosEval = true;
                 $scope.openLeftMenu("openedDevoirInfo", false);
-                if ($scope.informations.devoir !== undefined &&
-                    $scope.informations.devoir.statistiques === undefined) {
-                    $scope.informations.devoir.statistiques = {
-                        percentDone: $scope.informations.devoir.percent
-                    };
-
+                if ($scope.informations.devoir !== undefined){
+                    $scope.informations.devoir.endSaisie = await $scope.checkEndSaisie($scope.informations.devoir);
+                    if ($scope.informations.devoir.statistiques === undefined) {
+                        $scope.informations.devoir.statistiques = {
+                            percentDone: $scope.informations.devoir.percent
+                        };
+                    }
                 }
                 await utils.safeApply($scope);
             }
