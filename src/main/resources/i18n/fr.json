@@ -406,6 +406,7 @@
   "evaluations.devoir.recaputilatif.suppression.unique.text1":" contient des compétences évaluées.",
   "evaluations.devoir.recaputilatif.suppression.unique.text2":" contient des notes.",
   "evaluations.devoir.recaputilatif.suppression.unique.text3":" contient des notes et des compétences évaluées.",
+  "evaluations.devoir.recaputilatif.suppression.unique.text4":" va être supprimé.",
   "evaluations.devoir.recaputilatif.suppression.confirmation":"Confirmez-vous la suppression ?",
   "evaluations.devoir.recaputilatif.EvaluatedSkills":"Récapitulatif des devoirs avec compétences évaluées ",
   "evaluations.devoir.recaputilatif.EvaluatedMarks":"Récapitulatif des devoirs notés",
