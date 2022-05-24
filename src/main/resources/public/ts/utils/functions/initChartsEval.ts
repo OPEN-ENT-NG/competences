@@ -70,6 +70,15 @@ export let initChartsEval = async function ($scope) {
         let ListEval = _.filter($scope.detailCompetence.competencesEvaluations, function (evalu) {
             return $scope.filterOwnerSuivi(evalu);
         });
+        let unique = [];
+        let distinct = [];
+        ListEval.forEach((comp) => {
+            if (!unique[comp.id_competences_notes]) {
+                distinct.push(comp);
+                unique[comp.id_competences_notes] = 1;
+            }
+        });
+        ListEval = distinct;
         if($scope.displayCycle)
             calculPeriodesAnnees($scope);
         else if(!$scope.search.periode.id && !$scope.search.periode.libelle)
