@@ -25,6 +25,7 @@ import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.webutils.Either;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -319,17 +320,17 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         for (int i = 0; i < classes.size(); i++) {
             String statement = "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".devoirs_id_seq') as id";
             JsonObject statementJO = new JsonObject()
-                    .put("statement", statement)
-                    .put("values", new JsonArray())
-                    .put("action", "prepared");
+                    .put(Field.STATEMENT, statement)
+                    .put(Field.VALUES, new JsonArray())
+                    .put(Field.ACTION, "prepared");
             statements.add(statementJO);
         }
         Sql.getInstance().transaction(statements, event -> {
             JsonObject result = event.body();
-            if(result.containsKey("status") && "ok".equals(result.getString("status"))){
-                JsonArray resultSql = result.getJsonArray("results");
+            if(result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))){
+                JsonArray resultSql = result.getJsonArray(Field.RESULTS);
                 for(int j = 0; j < resultSql.size(); j++){
-                    ids.add(resultSql.getJsonObject(j).getJsonArray("results").getJsonArray(0).getInteger(0));
+                    ids.add(resultSql.getJsonObject(j).getJsonArray(Field.RESULTS).getJsonArray(0).getInteger(0));
                 }
                 insertDuplication(ids, devoir, classes, user, getDuplicationDevoirHandler(user, shareService, request, eb));
             } else {
@@ -346,7 +347,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             JsonArray devoirs = new JsonArray();
             List<String> listClasses = classes.stream()
                     .filter(classe -> classe instanceof JsonObject)
-                    .map(classe -> ((JsonObject)classe).getString("id"))
+                    .map(classe -> ((JsonObject)classe).getString(Field.ID))
                     .collect(Collectors.toList());
 
             utilsService.getPeriodes(listClasses, devoir.getString("id_etablissement")).onSuccess(periodes -> {
@@ -358,7 +359,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         String timestamp_end = periode.getString("timestamp_fn");
                         DateTime begin = new DateTime(timestamp_begin);
                         DateTime end = new DateTime(timestamp_end);
-                        if (!begin.isAfterNow() && !end.isBeforeNow() && listClasses.get(i).equals(periode.getString("id_classe"))) {
+                        if (!begin.isAfterNow() && !end.isBeforeNow() && listClasses.get(i).equals(periode.getString("id_classe")) || listClasses.get(i).equals(periode.getString("id_groupe"))) {
                             periodesResult.put(listClasses.get(i), periode);
                         }
                     }
@@ -385,17 +386,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     }
 
                 }
-                Sql.getInstance().transaction(statements, new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> event) {
-                        JsonObject result = event.body();
-                        if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
-                            handler.handle(new Either.Right<String, JsonArray>(devoirs));
-                        } else {
-                            handler.handle(new Either.Left<String, JsonArray>(result.getString("status")));
-                        }
-                    }
-                });
+                Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
             });
         } else {
             log.error("An error occured when collecting ids in duplication sequence.");

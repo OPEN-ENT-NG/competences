@@ -98,27 +98,24 @@ public class DevoirControllerHelper {
         };
     }
     private static Handler<AsyncResult<Message<JsonObject>>> getReplyHandler(JsonObject devoirWithId, ShareService shareService, UserInfos user, Promise<JsonObject> promise) {
-        return new Handler<AsyncResult<Message<JsonObject>>>() {
-            @Override
-            public void handle(AsyncResult<Message<JsonObject>> event) {
-                JsonArray results = event.result().body().getJsonArray("results");
-                List<Future> futures = new ArrayList<>();
-                List<String> actions = new ArrayList<String>();
-                actions.add(Competences.DEVOIR_ACTION_UPDATE);
-                for(int i = 0; i < results.size() ; i++){
-                    Future<JsonObject> shareServiceFuture = Future.future();
-                    futures.add(shareServiceFuture);
+        return event -> {
+            JsonArray results = event.result().body().getJsonArray("results");
+            List<Future> futures = new ArrayList<>();
+            List<String> actions = new ArrayList<String>();
+            actions.add(Competences.DEVOIR_ACTION_UPDATE);
+            for(int i = 0; i < results.size() ; i++){
+                Future<JsonObject> shareServiceFuture = Future.future();
+                futures.add(shareServiceFuture);
 
-                    String id = results.getJsonObject(i).getString("teacher_id");
-                    shareService.userShare(user.getUserId(), id, devoirWithId.getLong("id").toString(),
-                            actions, getFutureHandler(shareServiceFuture));
-                }
-                CompositeFuture.all(futures)
-                        .onSuccess(compositeEvent -> promise.complete(devoirWithId))
-                        .onFailure(failure -> promise.fail(failure.getMessage())
-
-                );
+                String id = results.getJsonObject(i).getString("teacher_id");
+                shareService.userShare(user.getUserId(), id, devoirWithId.getLong("id").toString(),
+                        actions, getFutureHandler(shareServiceFuture));
             }
+            CompositeFuture.all(futures)
+                    .onSuccess(compositeEvent -> promise.complete(devoirWithId))
+                    .onFailure(failure -> promise.fail(failure.getMessage())
+
+            );
         };
     }
     private static Handler<AsyncResult<Message<JsonObject>>> getReplyHandler(JsonObject devoirWithId, ShareService shareService, UserInfos user, HttpServerRequest request) {
