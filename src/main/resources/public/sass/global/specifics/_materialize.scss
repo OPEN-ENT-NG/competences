@@ -1,0 +1,12 @@
+// material icon
+i {
+
+  &.mdi-book::before{
+    font-family:  'material-icons';
+    content: "\F0BC";
+    cursor: pointer;
+    color: lightgrey;
+    font-size: 21px;
+  }
+
+}

@@ -140,14 +140,12 @@
     display: flex;
     align-items:center;
 
-    input {
+    input,i {
       padding-top: 5px;
+      margin-left: 1em;
     }
     .image-center{
       margin-left: 40%;
-    }
-    input,i{
-      margin-left: 1em;
     }
   }
 
