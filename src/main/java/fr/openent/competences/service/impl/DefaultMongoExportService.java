@@ -68,7 +68,7 @@ public class DefaultMongoExportService implements MongoExportService {
         }catch (Exception e){
             log.info(String.format("[Competences@%s::setFuturesToInsertMongo] an error has occurred during insert data in mongo: %s.", this.getClass().getSimpleName(), e.getMessage()));
         }
-        List<Future<String>> futureArray= new ArrayList<>();
+        List<Future<String>> futureArray = new ArrayList<>();
         for(Object studentJO : students){
             JsonObject student = (JsonObject) studentJO;
 

@@ -2792,7 +2792,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                     //Faire le libelle
                     classeStudent.setPeriode(periode);
-                    JsonArray groupes,manualGroupes = new JsonArray();
+                    JsonArray groupes, manualGroupes = new JsonArray();
                     try {
                          groupes = eleve.getJsonArray("idGroupes");
                     } catch (ClassCastException e){
@@ -2803,7 +2803,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             groupes.add(s);
                         }
                     }
-                    manualGroupes.addAll(eleve.getJsonArray("idManualGroupes",new JsonArray()));
+                    manualGroupes.addAll(eleve.getJsonArray("idManualGroupes", new JsonArray()));
 
                     for (int j = 0; j < groupes.size(); j++) {
                         Group group = new Group();
