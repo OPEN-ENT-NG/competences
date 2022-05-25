@@ -68,7 +68,7 @@
                     </span>
                 </p>
             </label>
-            <label ng-show="releveComp.periode.libelle === 'cycle'">
+            <label ng-show="releveComp.periode.libelle === 'cycle'" ng-if="search.eleve.id_cycle !== cycle3.id">
                 <p class="inline-block">
                     <input type="radio" ng-model="releveComp.idCycle" ng-value="cycles[1].id">
                     <span>
