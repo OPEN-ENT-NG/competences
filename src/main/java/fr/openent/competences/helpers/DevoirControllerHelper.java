@@ -103,7 +103,7 @@ public class DevoirControllerHelper {
             List<Future> futures = new ArrayList<>();
             List<String> actions = new ArrayList<String>();
             actions.add(Competences.DEVOIR_ACTION_UPDATE);
-            for(int i = 0; i < results.size() ; i++){
+            for (int i = 0; i < results.size(); i++) {
                 Future<JsonObject> shareServiceFuture = Future.future();
                 futures.add(shareServiceFuture);
 

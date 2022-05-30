@@ -327,9 +327,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
         Sql.getInstance().transaction(statements, event -> {
             JsonObject result = event.body();
-            if(result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))){
+            if (result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))) {
                 JsonArray resultSql = result.getJsonArray(Field.RESULTS);
-                for(int j = 0; j < resultSql.size(); j++){
+                for (int j = 0; j < resultSql.size(); j++) {
                     ids.add(resultSql.getJsonObject(j).getJsonArray(Field.RESULTS).getJsonArray(0).getInteger(0));
                 }
                 insertDuplication(ids, devoir, classes, user, getDuplicationDevoirHandler(user, shareService, request, eb));

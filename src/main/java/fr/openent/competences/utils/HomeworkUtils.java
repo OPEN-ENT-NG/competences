@@ -122,10 +122,10 @@ public class HomeworkUtils {
         Double result;
         try {
             result = jo.getDouble(key);
-        }catch (Exception e){
+        } catch (Exception e) {
             result = Double.parseDouble(jo.getString(key).replaceAll(",", "."));
         }
-        return  result;
+        return result;
     }
 
 }
