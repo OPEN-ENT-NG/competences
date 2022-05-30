@@ -34,19 +34,8 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.storage.Storage;
+
 import javax.imageio.ImageIO;
-
-import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Utils.getLibelle;
-import static fr.openent.competences.Utils.isNotNull;
-import static fr.openent.competences.Utils.isNull;
-import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
-import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
-import static fr.openent.competences.service.impl.DefaultNoteService.*;
-import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
-
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.RoundingMode;
@@ -55,11 +44,18 @@ import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.*;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
+import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
+import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
+import static fr.openent.competences.service.impl.DefaultNoteService.*;
+import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.utils.BulletinUtils.getIdParentForStudent;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -2796,9 +2792,18 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                     //Faire le libelle
                     classeStudent.setPeriode(periode);
-
-                    JsonArray groupes = eleve.getJsonArray("idGroupes");
-                    JsonArray manualGroupes = eleve.getJsonArray("idManualGroupes");
+                    JsonArray groupes, manualGroupes = new JsonArray();
+                    try {
+                         groupes = eleve.getJsonArray("idGroupes");
+                    } catch (ClassCastException e){
+                        String groupesStr = eleve.getString("idGroupes");
+                        String[] array = groupesStr.split(",");
+                        groupes = new JsonArray();
+                        for(String s : array){
+                            groupes.add(s);
+                        }
+                    }
+                    manualGroupes.addAll(eleve.getJsonArray("idManualGroupes", new JsonArray()));
 
                     for (int j = 0; j < groupes.size(); j++) {
                         Group group = new Group();
