@@ -833,6 +833,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         });
                         $scope.resetSelected();
                         $scope.opened.lightboxs.duplication = false;
+                        utils.safeApply($scope);
                     });
                 }).catch(() => {
                     notify.error(lang.translate('evaluation.duplicate.devoir.error'));

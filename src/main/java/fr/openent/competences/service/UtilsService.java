@@ -19,6 +19,7 @@ package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import org.entcore.common.user.UserInfos;
@@ -211,6 +212,13 @@ public interface UtilsService {
      * @param handler periodes of the class
      */
     void getPeriodes(List<String> idClasse, String idEtablissement, Handler<Either<String,JsonArray>> handler);
+
+    /**
+     * Future getPeriodes
+     * @param idClasse id Class
+     * @param idEtablissement id Eteblissement
+     */
+    Future<JsonArray> getPeriodes(List<String> idClasse, String idEtablissement);
 
     /**
      *

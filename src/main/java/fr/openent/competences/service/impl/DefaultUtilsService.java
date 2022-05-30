@@ -20,6 +20,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
@@ -883,6 +884,12 @@ public class DefaultUtilsService implements UtilsService {
                 handler.handle(new Either.Left<>("no periode for this class : " + body.getString("message")) );
             }
         }));
+    }
+
+    public Future<JsonArray> getPeriodes(List<String> idClasses, String idEtablissement) {
+        Promise<JsonArray> promise = Promise.promise();
+        getPeriodes(idClasses, idEtablissement, FutureHelper.handlerJsonArray(promise.future()));
+        return promise.future();
     }
 
     protected void calculAvailableId(String idClasse, Integer typeClasse, Long idPeriode,

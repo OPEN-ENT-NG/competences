@@ -25,6 +25,7 @@ import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.webutils.Either;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -43,6 +44,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.joda.time.DateTime;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -58,6 +60,7 @@ import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.badRequest;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
@@ -312,66 +315,78 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     @Override
     public void duplicateDevoir(final JsonObject devoir, final JsonArray classes, final UserInfos user,
                                 ShareService shareService, HttpServerRequest request, EventBus eb) {
-        final JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
-        String queryNewDevoirId;
-        final Integer[] counter = {0};
-        final Integer[] errors = {0};
+        final JsonArray ids = new JsonArray();
+        JsonArray statements = new JsonArray();
         for (int i = 0; i < classes.size(); i++) {
-            queryNewDevoirId = "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".devoirs_id_seq') as id";
-            sql.raw(queryNewDevoirId, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
-                @Override
-                public void handle(Either<String, JsonObject> event) {
-                    counter[0]++;
-                    if (event.isRight()) {
-                        JsonObject o = event.right().getValue();
-                        ids.add(o.getLong("id"));
-                        if (counter[0] == classes.size()) {
-                            insertDuplication(ids, devoir, classes, user, errors[0], getDuplicationDevoirHandler(user,shareService, request,eb));
-                        }
-                    } else {
-                        errors[0]++;
-                    }
-                }
-            }));
+            String statement = "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".devoirs_id_seq') as id";
+            JsonObject statementJO = new JsonObject()
+                    .put(Field.STATEMENT, statement)
+                    .put(Field.VALUES, new JsonArray())
+                    .put(Field.ACTION, "prepared");
+            statements.add(statementJO);
         }
+        Sql.getInstance().transaction(statements, event -> {
+            JsonObject result = event.body();
+            if (result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))) {
+                JsonArray resultSql = result.getJsonArray(Field.RESULTS);
+                for (int j = 0; j < resultSql.size(); j++) {
+                    ids.add(resultSql.getJsonObject(j).getJsonArray(Field.RESULTS).getJsonArray(0).getInteger(0));
+                }
+                insertDuplication(ids, devoir, classes, user, getDuplicationDevoirHandler(user, shareService, request, eb));
+            } else {
+                badRequest(request);
+            }
+
+        });
     }
 
 
-    private void insertDuplication(JsonArray ids, JsonObject devoir, JsonArray classes, UserInfos user, Integer errors, Handler<Either<String, JsonArray>> handler) {
-        if (errors == 0 && ids.size() == classes.size()) {
-            JsonObject o, g;
+    private void insertDuplication(JsonArray ids, JsonObject devoir, JsonArray classes, UserInfos user, Handler<Either<String, JsonArray>> handler) {
+        if (ids.size() == classes.size()) {
             JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
             JsonArray devoirs = new JsonArray();
-            for (int i = 0; i < ids.size(); i++) {
-                try {
-                    g = classes.getJsonObject(i);
-                    o = HomeworkUtils.formatDevoirForDuplication(devoir);
-                    o.put("id_groupe", g.getString("id"));
-                    o.put("type_groupe", g.getInteger("type_groupe"));
-                    o.put("date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-                    o.put("date_publication", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-                    JsonArray tempStatements = this.createStatement(ids.getLong(i), o, user);
-                    for (int j = 0; j < tempStatements.size(); j++) {
-                        statements.add(tempStatements.getValue(j));
-                    }
-                    JsonObject devoirtoAdd = new JsonObject().put("id",ids.getLong(i)).put("devoir",o);
-                    devoirs.add(devoirtoAdd);
-                } catch (ClassCastException e) {
-                    log.error("Next id devoir must be a long Object.");
-                    log.error(e);
-                }
+            List<String> listClasses = classes.stream()
+                    .filter(classe -> classe instanceof JsonObject)
+                    .map(classe -> ((JsonObject)classe).getString(Field.ID))
+                    .collect(Collectors.toList());
 
-            }
-            Sql.getInstance().transaction(statements, new Handler<Message<JsonObject>>() {
-                @Override
-                public void handle(Message<JsonObject> event) {
-                    JsonObject result = event.body();
-                    if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
-                        handler.handle(new Either.Right<String, JsonArray>(devoirs));
-                    } else {
-                        handler.handle(new Either.Left<String, JsonArray>(result.getString("status")));
+            utilsService.getPeriodes(listClasses, devoir.getString("id_etablissement")).onSuccess(periodes -> {
+                Map<String, JsonObject> periodesResult = new HashMap();
+                for(int i = 0; i < listClasses.size(); i++){
+                    for(int j = 0; j < periodes.size(); j++) {
+                        JsonObject periode = periodes.getJsonObject(j);
+                        String timestamp_begin = periode.getString("timestamp_dt");
+                        String timestamp_end = periode.getString("timestamp_fn");
+                        DateTime begin = new DateTime(timestamp_begin);
+                        DateTime end = new DateTime(timestamp_end);
+                        if (!begin.isAfterNow() && !end.isBeforeNow() && (listClasses.get(i).equals(periode.getString("id_classe")) || listClasses.get(i).equals(periode.getString("id_groupe")))) {
+                            periodesResult.put(listClasses.get(i), periode);
+                        }
                     }
                 }
+                JsonObject o, g;
+                for (int i = 0; i < ids.size(); i++) {
+                    try {
+                        g = classes.getJsonObject(i);
+                        o = HomeworkUtils.formatDevoirForDuplication(devoir);
+                        o.put("id_groupe", g.getString("id"));
+                        o.put("type_groupe", g.getInteger("type_groupe"));
+                        o.put("date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+                        o.put("date_publication", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+                        o.put("id_periode", periodesResult.get(g.getString("id")).getLong("id_type"));
+                        JsonArray tempStatements = this.createStatement(ids.getLong(i), o, user);
+                        for (int j = 0; j < tempStatements.size(); j++) {
+                            statements.add(tempStatements.getValue(j));
+                        }
+                        JsonObject devoirtoAdd = new JsonObject().put("id",(ids.getLong(i))).put("devoir",o);
+                        devoirs.add(devoirtoAdd);
+                    } catch (ClassCastException e) {
+                        log.error("Next id devoir must be a long Object.");
+                        log.error(e);
+                    }
+
+                }
+                Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
             });
         } else {
             log.error("An error occured when collecting ids in duplication sequence.");
