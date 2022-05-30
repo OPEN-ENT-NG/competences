@@ -359,7 +359,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         String timestamp_end = periode.getString("timestamp_fn");
                         DateTime begin = new DateTime(timestamp_begin);
                         DateTime end = new DateTime(timestamp_end);
-                        if (!begin.isAfterNow() && !end.isBeforeNow() && listClasses.get(i).equals(periode.getString("id_classe")) || listClasses.get(i).equals(periode.getString("id_groupe"))) {
+                        if (!begin.isAfterNow() && !end.isBeforeNow() && (listClasses.get(i).equals(periode.getString("id_classe")) || listClasses.get(i).equals(periode.getString("id_groupe")))) {
                             periodesResult.put(listClasses.get(i), periode);
                         }
                     }
