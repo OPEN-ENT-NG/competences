@@ -524,7 +524,7 @@ public class DevoirController extends ControllerHelper {
                                     public void handle(Either<String, JsonObject> result) {
                                         if (result.isRight()) {
                                             final JsonObject devoir = result.right().getValue();
-                                            competencesService.getDevoirCompetences(idDevoir,new Handler<Either<String, JsonArray>>() {
+                                            competencesService.getDevoirCompetences(idDevoir, null, new Handler<Either<String, JsonArray>>() {
                                                 @Override
                                                 public void handle(Either<String, JsonArray> result) {
                                                     if (result.isRight()) {

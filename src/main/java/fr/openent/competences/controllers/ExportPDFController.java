@@ -417,6 +417,13 @@ public class ExportPDFController extends ControllerHelper {
         final Boolean byEnseignement = Boolean.parseBoolean(request.params().get("byEnseignement"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final Boolean isCycle = Boolean.parseBoolean(request.params().get("isCycle"));
+        final Long idCycle;
+        if (request.params().contains("idCycle")) {
+            idCycle = Long.parseLong(request.params().get("idCycle"));
+        }
+        else {
+            idCycle = null;
+        }
         final List<String> listIdMatieres = request.params().getAll("idMatiere");
         final String idStructure = request.params().get(Competences.ID_ETABLISSEMENT_KEY);
 
@@ -459,7 +466,7 @@ public class ExportPDFController extends ControllerHelper {
 
         // Récupération du libelle des périodes
         Future<String> periodeFuture = Future.future();
-        exportService.getLibellePeriodeExportReleveComp(request, finalIdPeriode, isCycle, event ->
+        exportService.getLibellePeriodeExportReleveComp(request, finalIdPeriode, isCycle, idCycle, event ->
                 formate(periodeFuture, event));
 
         // Récupération des élèves
@@ -483,6 +490,7 @@ public class ExportPDFController extends ControllerHelper {
                 JsonObject eleve = (JsonObject) elevesFuture.result();
                 final String nomClasse = eleve.getString("classeName");
                 final String idEtablissementEl = eleve.getString(ID_ETABLISSEMENT_KEY);
+                final int eleveLevel = getEleveLevel(eleve);
                 JsonArray idManualGroupes = strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
                 JsonArray idFunctionalGroupes = strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
 
@@ -498,8 +506,8 @@ public class ExportPDFController extends ControllerHelper {
                 JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
                 final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap,
                         nomGroupes, matieres, libellePeriode, json, answered, resultFinal);
-                exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]),
-                        _iGroupesdArr, idEtablissementEl, listIdMatieres, finalIdPeriode, isCycle, finalHandler);
+                exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleves[0], eleveLevel, idGroupes.toArray(new String[0]),
+                        _iGroupesdArr, idEtablissementEl, listIdMatieres, finalIdPeriode, isCycle, idCycle, finalHandler);
             } else {
                 JsonArray eleves = (JsonArray) elevesFuture.result();
                 if(eleves.size() != elevesMap.size()) {
@@ -515,6 +523,7 @@ public class ExportPDFController extends ControllerHelper {
                         JsonObject eleve = eleves.getJsonObject(i);
                         String idEleveEl = eleve.getString(ID_ELEVE_KEY);
                         String idEtablissementEl = eleve.getString(ID_ETABLISSEMENT_KEY);
+                        int eleveLevel = getEleveLevel(eleve);
                         idEtablissement.add(idEtablissementEl);
                         idGroupes.add(eleve.getString(ID_CLASSE_KEY));
                         final String nomClasse = eleve.getString("classeName");
@@ -525,12 +534,25 @@ public class ExportPDFController extends ControllerHelper {
                         JsonArray idFunctionalGroupes = strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
                         JsonArray idGroupesJsArr = utilsService.saUnion(idFunctionalGroupes, idManualGroupes);
                         String[] idGroupesArr = UtilsConvert.jsonArrayToStringArr(idGroupesJsArr);
-                        exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleveEl, _idGroupes, idGroupesArr,
-                                idEtablissement.get(i), listIdMatieres, finalIdPeriode, isCycle, finalHandler);
+                        exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleveEl, eleveLevel, _idGroupes, idGroupesArr,
+                                idEtablissement.get(i), listIdMatieres, finalIdPeriode, isCycle, idCycle, finalHandler);
                     }
                 }
             }
         });
+    }
+
+    private int getEleveLevel(JsonObject eleve) {
+        int eleveLevel = -1;
+        String eleveLevelString = eleve.getString("level");
+        if(eleveLevelString != null) {
+            eleveLevel = Integer.parseInt(eleveLevelString.split(" ")[0].replaceAll("[^\\d.]", ""));
+        }
+        else {
+            eleveLevelString = eleve.getString("classeName");
+            eleveLevel = Integer.parseInt(eleveLevelString.substring(0, 1));
+        }
+        return eleveLevel;
     }
 
     @Get("/recapAppreciations/print/:idClasse/export")

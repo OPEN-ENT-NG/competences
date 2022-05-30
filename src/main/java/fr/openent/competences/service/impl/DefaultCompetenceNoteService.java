@@ -92,7 +92,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
     @Override
     public void getCompetencesNotes(Long idDevoir, String idEleve, Boolean returnNotEvaluatedcompetences,
-                                    Handler<Either<String, JsonArray>> handler) {
+                                    Long idCycle, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
         query.append("SELECT competences_notes.*,competences.nom as nom, competences.id_type as id_type, ")
@@ -115,6 +115,10 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         params.add(idEleve).add(idDevoir).add(idEleve);
+        if (idCycle != null) {
+            query.append(" AND competences.id_cycle = ?");
+            params.add(idCycle);
+        }
         if (returnNotEvaluatedcompetences) {
             query.append(" UNION SELECT null as id, competences_devoirs.id_devoir, ")
                     .append(" competences_devoirs.id_competence, null as evaluation, ")
@@ -139,6 +143,10 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                     .append(" (SELECT id_competence FROM notes.competences_notes ")
                     .append("  WHERE competences_notes.id_eleve = ? AND competences_notes.id_devoir = ? )");
             params.add(idEleve).add(idEleve).add(idDevoir).add(idEleve).add(idDevoir);
+            if (idCycle != null) {
+                query.append(" AND competences.id_cycle = ?");
+                params.add(idCycle);
+            }
 
         }
 
@@ -147,7 +155,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     }
 
     public void getCompetencesNotes(JsonArray idDevoirs, String idEleve, Boolean returnNotEvaluatedcompetences,
-                                    Handler<Either<String, JsonArray>> handler) {
+                                    Long idCycle, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         String idDevoirsForQuery = Sql.listPrepared(idDevoirs.getList());
 
@@ -172,6 +180,10 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         params.add(idEleve).addAll(idDevoirs).add(idEleve);
+        if (idCycle != null) {
+            query.append(" AND competences.id_cycle = ?");
+            params.add(idCycle);
+        }
         if (returnNotEvaluatedcompetences) {
             query.append(" UNION SELECT null as id, competences_devoirs.id_devoir, ")
                     .append(" competences_devoirs.id_competence, null as evaluation, ")
@@ -197,6 +209,10 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                     .append("  WHERE competences_notes.id_eleve = ? AND competences_notes.id_devoir IN ")
                     .append(idDevoirsForQuery + " )");
             params.add(idEleve).add(idEleve).addAll(idDevoirs).add(idEleve).addAll(idDevoirs);
+            if (idCycle != null) {
+                query.append(" AND competences.id_cycle = ?");
+                params.add(idCycle);
+            }
         }
 
         query.append(" ORDER BY id ASC ");

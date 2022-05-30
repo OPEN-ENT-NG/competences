@@ -88,7 +88,7 @@ public class CompetenceNoteController extends ControllerHelper {
         }
 
         competencesNotesService.getCompetencesNotes(idDevoir,
-                request.params().get("ideleve"), false, arrayResponseHandler(request));
+                request.params().get("ideleve"), false, null, arrayResponseHandler(request));
     }
 
     /**

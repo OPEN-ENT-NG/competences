@@ -50,12 +50,32 @@
             <br/><label><i18n class="titre-libelle">viescolaire.utils.periode</i18n></label><br/>
             <label class=" six select">
                 <select ng-model="releveComp.periode"
-                        ng-init="releveComp.periode=search.periode"
-                        ng-change="exportRelCompObj.errExport = false; closeWarningMessages();"
+                        ng-init="releveComp.periode=search.periode; changeIdCycle();"
+                        ng-change="changeIdCycle(); exportRelCompObj.errExport = false; closeWarningMessages();"
                         ng-options="periode as getI18nPeriode(periode) for periode in search.classe.periodes.all">
                     <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
                 </select>
             </label><br/>
+        </div>
+    </div>
+    <div class="row">
+        <div class="twelve cell twelve-mobile">
+            <label ng-show="releveComp.periode.libelle === 'cycle'">
+                <p class="inline-block">
+                    <input type="radio" ng-model="releveComp.idCycle" ng-value="cycles[0].id">
+                    <span>
+                            [[cycles[0].libelle]]
+                    </span>
+                </p>
+            </label>
+            <label ng-show="releveComp.periode.libelle === 'cycle'" ng-if="search.eleve.id_cycle !== cycle3.id">
+                <p class="inline-block">
+                    <input type="radio" ng-model="releveComp.idCycle" ng-value="cycles[1].id">
+                    <span>
+                            [[cycles[1].libelle]]
+                    </span>
+                </p>
+            </label>
         </div>
     </div>
     <div class="row">
@@ -75,7 +95,7 @@
             </p>
         </div>
     </div>
-    <div class="row">
+    <div class="row" ng-show="releveComp.periode.libelle !== 'cycle'">
         <div class="twelve cell twelve-mobile">
             <label><i18n class="titre-libelle">viescolaire.utils.subjects</i18n></label><br/>
             <label class="chip multiselect all">
@@ -84,7 +104,7 @@
             </label>
         </div>
     </div>
-    <div class="row">
+    <div class="row" ng-show="releveComp.periode.libelle !== 'cycle'">
         <div class="twelve cell twelve-mobile">
             <div class="three cell horizontal-spacing vertical-spacing expandable-content"
                  ng-repeat="matiere in allMatieresSorted | unique:'name'">
