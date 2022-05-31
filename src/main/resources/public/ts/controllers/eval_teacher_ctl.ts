@@ -995,6 +995,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.annulerDuplication = () => {
             $scope.selected.classes = [];
+            for (let classe of $scope.classes.all) {
+                if (classe.selected) {
+                    classe.selected = false;
+                }
+            }
             $scope.opened.lightboxs.duplication = false;
         };
 
@@ -1033,10 +1038,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     return classe.id === selectedClasseId;
                 });
             }
-        };
-
-        $scope.isSelected = function (id) {
-            return _.indexOf($scope.selected.classes, id) !== -1;
         };
 
         // for (let i = 0; i < evaluations.classes.all.length; i++) {
