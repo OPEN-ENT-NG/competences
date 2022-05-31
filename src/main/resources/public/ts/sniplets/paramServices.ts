@@ -457,6 +457,7 @@ export const paramServices = {
             }
         },
         getServices: function () {
+            console.log("plpo")
             try {
                 if(!paramServices.that.filter)
                     paramServices.that.filter = "classes=true&groups=true&manualGroups=true&evaluable=true&notEvaluable=false";
