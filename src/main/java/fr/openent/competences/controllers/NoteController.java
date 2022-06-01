@@ -330,7 +330,7 @@ public class NoteController extends ControllerHelper {
                     CompositeFuture.all(listFuturesEachPeriode).setHandler(exportPeriodeEvent -> {
                         try{
                             if (exportPeriodeEvent.succeeded()) {
-                                DecimalFormat decimalFormat = new DecimalFormat("#.00");
+                                DecimalFormat decimalFormat = new DecimalFormat("#.0");
                                 decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
 
                                 for (int i=0; i < idPeriodes.size(); i++) {

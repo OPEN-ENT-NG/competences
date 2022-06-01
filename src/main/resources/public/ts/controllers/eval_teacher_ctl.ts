@@ -2780,7 +2780,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
                 if(periodes != 0){
-                    return (Number(sum/periodes).toFixed(2));
+                    return (Number(sum/periodes).toFixed(1));
                 }
             }
             let _moyenneFinale = _.findWhere(eleve.moyennesFinales, {id_periode: idPeriode});
@@ -2826,14 +2826,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (positionnementCalcule === utils.getNN()) {
                     return "";
                 } else {
-                    return +(positionnementCalcule).toFixed(2);
+                    return +(positionnementCalcule).toFixed(1);
                 }
             }else {
                 if (positionnementCalcule === utils.getNN()) {
                     return lang.translate('evaluations.no.positionnement.calculee');
                 } else {
                     return lang.translate("evaluations.positionnement.calculee")
-                        + " : " + +(positionnementCalcule).toFixed(2);
+                        + " : " + +(positionnementCalcule).toFixed(1);
                 }
             }
         };
@@ -3236,13 +3236,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             moyenne = moyenne / nbEleve;
             moyenneFinal = moyenneFinal / nbEleveFinal;
             if ($scope.releveNote._tmp._moyenne_classe.null.moyenne != "NN") {
-                $scope.releveNote._tmp._moyenne_classe.null.moyenne = moyenne.toFixed(2);
+                $scope.releveNote._tmp._moyenne_classe.null.moyenne = moyenne.toFixed(1);
                 $scope.releveNote._tmp._moyenne_classe.null.min = min;
                 $scope.releveNote._tmp._moyenne_classe.null.max = max;
             }
 
             if (!isNaN(moyenneFinal)) {
-                $scope.releveNote._tmp._moyenne_classe.nullFinal.moyenne = moyenneFinal.toFixed(2);
+                $scope.releveNote._tmp._moyenne_classe.nullFinal.moyenne = moyenneFinal.toFixed(1);
                 $scope.releveNote._tmp._moyenne_classe.nullFinal.min = minFinal;
                 $scope.releveNote._tmp._moyenne_classe.nullFinal.max = maxFinal;
             } else {
@@ -4689,7 +4689,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         function getMoyenneData(nbMoyenneAnnee: number, moyenneAnnee: number) {
             let moyenneFinaleAnnee;
             if (nbMoyenneAnnee !== 0) {
-                moyenneFinaleAnnee = (moyenneAnnee / nbMoyenneAnnee).toFixed(2);
+                moyenneFinaleAnnee = (moyenneAnnee / nbMoyenneAnnee).toFixed(1);
             } else {
                 moyenneFinaleAnnee = "NN";
             }

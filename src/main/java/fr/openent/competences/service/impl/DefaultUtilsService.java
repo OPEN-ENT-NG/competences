@@ -471,7 +471,7 @@ public class DefaultUtilsService implements UtilsService {
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("fr", "FR"));
         symbols.setDecimalSeparator('.');
 
-        DecimalFormat df = new DecimalFormat("#.00", symbols);
+        DecimalFormat df = new DecimalFormat("#.0", symbols);
         df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
         try {
             moyenne = Double.valueOf(df.format(moyenne));

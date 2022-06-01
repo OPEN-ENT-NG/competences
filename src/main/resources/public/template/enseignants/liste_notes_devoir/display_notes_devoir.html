@@ -186,9 +186,9 @@
                         <h2 ng-click="openedStatistiques = !openedStatistiques"><i18n>viescolaire.utils.stats</i18n></h2>
                     </div>
                     <div ng-if="currentDevoir.is_evaluated">
-                        <section><i18n class="bold">evaluation.classe.average</i18n> : <span style="color: #1785E6;font-weight: bold;">[[currentDevoir.statistiques.moyenne | number:2]]</span></section>
-                        <section><i18n class="bold">evaluations.grade.min</i18n> : <span style="color: #E61758;font-weight: bold;">[[currentDevoir.statistiques.noteMin | number:2]]</span></section>
-                        <section><i18n class="bold">evaluations.grade.max</i18n> : <span style="color: #48C593;font-weight: bold;">[[currentDevoir.statistiques.noteMax | number:2]]</span></section>
+                        <section><i18n class="bold">evaluation.classe.average</i18n> : <span style="color: #1785E6;font-weight: bold;">[[currentDevoir.statistiques.moyenne | number:1]]</span></section>
+                        <section><i18n class="bold">evaluations.grade.min</i18n> : <span style="color: #E61758;font-weight: bold;">[[currentDevoir.statistiques.noteMin | number:1]]</span></section>
+                        <section><i18n class="bold">evaluations.grade.max</i18n> : <span style="color: #48C593;font-weight: bold;">[[currentDevoir.statistiques.noteMax | number:1]]</span></section>
                     </div>
                     <div>
                         <progress-bar max="100" filled="currentDevoir.statistiques.percentDone" unit="%"></progress-bar>
