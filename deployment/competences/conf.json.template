@@ -19,7 +19,8 @@
         "sql": true,
         "lsun": {
             "xsd_path": "./public/lsun/import-complet-strict.xsd",
-            "civilite_regex" : "^[Mm][^mM]*[Mm][^mM]*\$"
+            "civilite_regex" : "^[Mm][^mM]*[Mm][^mM]*\$",
+             "withDigitalSkillsError" : false
         },
         "exports" : {
            "template-path" : "./public/template/pdf/"
