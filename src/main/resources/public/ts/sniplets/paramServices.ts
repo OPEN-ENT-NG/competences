@@ -5,6 +5,8 @@ import {Classe, TypeSousMatieres} from "../models/teacher";
 import {Service} from "../models/common/ServiceSnipplet";
 import {safeApply} from "../utils/teacher";
 import {MultiTeaching} from "../models/common/MultiTeaching";
+import {SubTopicsService, SubTopicsServices} from "../models/sniplets";
+import {SubTopicsServiceService} from "../services/SubTopicServiceService";
 
 export const paramServices = {
     title: 'Configuration des services',
@@ -37,6 +39,8 @@ export const paramServices = {
                 manualGroupes : {isSelected: true, filterName:"manualGroups", name:"evaluation.service.filter.manualGroupes", type:2}
             };
 
+            this.subTopicsServices = new SubTopicsServices([])
+            this.subTopicsServiceService = new SubTopicsServiceService();
             this.subTopics = new TypeSousMatieres([]);
             this.columns = {
                 matiere: {size: "two", data: [], name: "evaluation.service.columns.matiere", filtered: true},
@@ -192,8 +196,12 @@ export const paramServices = {
             }
             return null;
         },
-
+        updateCoeffSubTopics: async function(subtopic){
+            await paramServices.that.subTopicsServiceService.set(subtopic);
+        }
+        ,
         setServicesWithGroups: async function (data) {
+            await paramServices.that.subTopicsServices.get(paramServices.that.idStructure)
             await paramServices.that.subTopics.get(paramServices.that.idStructure);
             paramServices.that.services = _.reject(_.map(data, service => {
                 let enseignant = _.findWhere(paramServices.that.columns.enseignant.data, {id: service.id_enseignant});
@@ -206,8 +214,27 @@ export const paramServices = {
                 if (matiere && matiere.sous_matieres && matiere.sous_matieres.length > 0)
                     matiere.sous_matieres.forEach(sm => {
                         paramServices.that.subTopics.all.map(sb => {
+                            let sbt =  paramServices.that.subTopicsServices.all.find(subTopicsService =>{
+                                return subTopicsService.id_teacher === service.id_enseignant
+                                    && subTopicsService.id_topic === service.id_matiere
+                                    && subTopicsService.id_group === service.id_groupe
+                                    && subTopicsService.id_subtopic === sm.id_type_sousmatiere
+                            });
                             if (sm.id_type_sousmatiere == sb.id) {
-                                subTopics.push(sb)
+                                if(sbt !== undefined){
+                                    sbt.libelle =   sb.libelle ;
+                                 }else{
+                                    sbt = new SubTopicsService()
+                                    sbt.libelle =   sb.libelle ;
+                                    sbt.id_teacher = service.id_enseignant ;
+                                    sbt.id_group = service.id_groupe ;
+                                    sbt.groups = service.groups ;
+                                    sbt.id_topic = service.id_matiere ;
+                                    sbt.id_subtopic = sm.id_type_sousmatiere
+                                    sbt.id_structure = paramServices.that.idStructure;
+                                    sbt.coefficient = 1 ;
+                                }
+                                subTopics.push(sbt)
                             }
                         });
                     });
@@ -457,7 +484,6 @@ export const paramServices = {
             }
         },
         getServices: function () {
-            console.log("plpo")
             try {
                 if(!paramServices.that.filter)
                     paramServices.that.filter = "classes=true&groups=true&manualGroups=true&evaluable=true&notEvaluable=false";

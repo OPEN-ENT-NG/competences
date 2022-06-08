@@ -171,8 +171,10 @@
                         </div>
                     </div>
                     <!--SUBTOPICS -->
-                    <div class="twelve row serviceList subList" ng-repeat="subTopic in service.subTopics" ng-show="service.deploy" >
-                        <div class="[[columns.matiere.size]] cellTab ellipsis cellTab-left" tooltip="[[subTopic.libelle]"><span class="tabulation">[[subTopic.libelle]]</span></div>
+                    <div class="twelve row serviceList subList" ng-repeat="subTopic in service.subTopics" ng-show="service.deploy"
+                    ng-init="subTopic.groups = service.groups">
+                        <div class="[[columns.matiere.size]] cellTab ellipsis cellTab-left" tooltip="[[subTopic.libelle]">
+                            <span class="tabulation">[[subTopic.libelle]]</span></div>
                         <div class="[[columns.classe.size]]  cellTab ellipsis cellTab-left" tooltip="[[service.groups_name]]"><span>[[service.groups_name]]</span></div>
                         <div class="four cellTab ellipsis cellTab-left" ></div>
                         <div class="[[columns.coefficient.size]] ellipsis cellTab cellTab-center">
@@ -181,11 +183,11 @@
                             <div class="[[columns.remplacement.size]] cellTab ellipsis cellTab-center">
                             </div>
                             <input  type="number" class="eleven cellTab three-mobile cellTab-center"
-                                    ng-blur="service.updateServices(false,true)"
+                                    ng-blur="updateCoeffSubTopics(subTopic);"
+                                    ng-change="updateCoeffSubTopics(subTopic);"
                                     placeholder="[[service.coefficientPlaceHolder]]"
                                     ng-click="$event.stopPropagation()"
-                                    ng-model="subtopic.coefficient" min="0"></div>
-                        <span>[[subtopic.coefficient]]</span>
+                                    ng-model="subTopic.coefficient" min="0" step="0.25"></div>
                     </div>
                 </div>
             </div>
