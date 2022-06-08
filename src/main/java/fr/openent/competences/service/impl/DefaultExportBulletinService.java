@@ -57,6 +57,7 @@ import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIE
 import static fr.openent.competences.service.impl.DefaultNoteService.*;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.utils.BulletinUtils.getIdParentForStudent;
+import static fr.openent.competences.utils.HomeworkUtils.safeGetDouble;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class DefaultExportBulletinService implements ExportBulletinService{
@@ -186,6 +187,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private final DefaultNiveauDeMaitriseService defaultNiveauDeMaitriseService;
     private HttpClient httpClient;
     private DefaultNoteService noteService;
+    private SubTopicService subTopicService;
     private WorkspaceHelper workspaceHelper;
     private MongoExportService mongoExportService;
 
@@ -207,6 +209,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         workspaceHelper = new WorkspaceHelper(eb,storage);
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, "services_subtopic");
+
     }
 
     public DefaultExportBulletinService(EventBus eb, Storage storage, Vertx vertx) {
@@ -228,6 +232,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         this.httpClient =  createHttpClient(vertx);
         workspaceHelper = new WorkspaceHelper(eb,storage);
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, "services_subtopic");
 
     }
 
@@ -2020,11 +2025,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if(groupsClassResult != null && !groupsClassResult.isEmpty()){
                         idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray("id_groupes"));
                     }
-                    JsonArray services = new JsonArray(student.getClasse().getServices().stream().map(Service::toJson).collect(Collectors.toList()));
+                    JsonArray servicesJson = new JsonArray(student.getClasse().getServices().stream().map(Service::toJson).collect(Collectors.toList()));
                     JsonArray multiTeachers = new JsonArray(student.getClasse().getMultiTeachers().stream().map(MultiTeaching::toJsonObject).collect(Collectors.toList()));
+                    List<Service> services = student.getClasse().getServices();
 
                     bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
-                            idGroupClasse, services, multiTeachers,
+                            idGroupClasse, servicesJson, multiTeachers,
                             getSuiviAcquisHandler(student, params, promise,classe,idEleves,
                                     getProgrammeElement,  idGroupClasse, services, multiTeachers));
                 }
@@ -2037,7 +2043,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     getSuiviAcquisHandler(Student student, JsonObject params,
                           Promise<JsonObject> promise, JsonObject classe, JsonArray idEleves, boolean getProgrammeElement,
                           JsonArray idGroupClasse,
-                          JsonArray services, JsonArray multiTeachers) {
+                          List<Service> services, JsonArray multiTeachers) {
         return new Handler<Either<String, JsonArray>>() {
             private int count = 1;
             private AtomicBoolean answer = new AtomicBoolean(false);
@@ -2052,8 +2058,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if (message.contains(TIME) && !answer.get())
                     {
                         count ++;
+                        JsonArray servicesJson = new JsonArray(services.stream().map(Service::toJson).collect(Collectors.toList()));
                         bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve, idGroupClasse,
-                                services, multiTeachers,this);
+                                servicesJson, multiTeachers,this);
                     } else {
                         promise.fail("["+ GET_SUIVI_ACQUIS_METHOD + "] :" + idEleve + " " + message + count);
                     }
@@ -2066,6 +2073,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         // On considèrera qu'on a un suivi des acquis si on affiche au moins une matière
                         for (int i = 0; i < suiviAcquis.size() ; i++) {
                             final JsonObject matiereJO = suiviAcquis.getJsonObject(i);
+
                             Matiere matiere = new Matiere();
                             if(Boolean.TRUE.equals(params.getBoolean(NEUTRE, false))){
                                 result.put(BACKGROUND_COLOR, "#ffffff");
@@ -2077,7 +2085,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             }
                             // Une matière sera affichée si on a au moins un élement sur la période
 
-                            buildMatiereForSuiviAcquis(matiereJO,matiere, idPeriode, classe, params);
+                            buildMatiereForSuiviAcquis(matiereJO,matiere, idPeriode, classe, params,services);
                             checkCoefficientConflict(result, matiereJO.getJsonObject(COEFFICIENT), params);
                             if(Boolean.TRUE.equals(matiereJO.getBoolean(PRINT_MATIERE_KEY))) {
                                 res.add(matiereJO);
@@ -2188,7 +2196,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return res;
     }
 
-    private void buildSousMatieres(JsonObject matiere, JsonArray tableauDeConversion, Long idPeriode, JsonObject params){
+    private void buildSousMatieres(JsonObject matiere, JsonArray tableauDeConversion, Long idPeriode, JsonObject params, List<Service> services){
         JsonArray sousMatiere = matiere.getJsonArray(SOUS_MATIERES);
         Boolean printPosi = params.getBoolean(POSITIONNEMENT_SOUS_MAT);
         Boolean printMoyEl = params.getBoolean(MOYENNE_ELEVE_SOUS_MAT);
@@ -2237,6 +2245,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonObject moyenClasseSous = matiere.getJsonObject("_moyennesClasse");
                     Float moyCl = getMoyenneForSousMat(moyenClasseSous, idPeriode, idSousMat);
                     sousMat.put(MOYENNE_CLASSE, isNull(moyCl)? NN : moyCl);
+                    sousMat.put("subCoef",1);
+                    for(Service service : services){
+                        for(SubTopic subTopic : service.getSubtopics()){
+                            if(subTopic.getId().equals(sousMat.getInteger("id_type_sousmatiere"))){
+                                sousMat.put("subCoef",subTopic.getCoefficient());
+                            }
+                        }
+                    }
                     if(i!=0){
                         sousMatiereWithoutFirst.add(sousMat);
                     }
@@ -2274,9 +2290,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
      * @param matiere
      * @param idPeriode période sélectionnée
      * @param classe JsonObject contenant les informations de la classe de l'élève dont on contruit le bulletin
+     * @param services
      */
     private void buildMatiereForSuiviAcquis(final JsonObject matiereJO, Matiere matiere, Long idPeriode, final JsonObject classe,
-                                            JsonObject params) {
+                                            JsonObject params, List<Service> services) {
         boolean printMatiere = false;
 
         JsonArray models = classe.getJsonArray("models");
@@ -2344,7 +2361,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
 
         // Mise Remplissage des données des sousMatières
-        buildSousMatieres(matiereJO, tableauDeconversion, idPeriode , params);
+        buildSousMatieres(matiereJO, tableauDeconversion, idPeriode , params,services);
 
         String elementsProgramme = troncateLibelle(matiereJO.getString(ELEMENTS_PROGRAMME), MAX_SIZE_LIBELLE);
 
@@ -2721,6 +2738,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         Promise<Object> listStudentsPromise = Promise.promise();
                         Promise<Object> servicesPromise = Promise.promise();
                         Promise<Object> multiTeachingPromise = Promise.promise();
+                        Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
                         List<Future> promises = new ArrayList<>();
                         promises.add(structurePromise.future());
                         promises.add(periodeLibellePromise.future());
@@ -2729,6 +2747,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         promises.add(listStudentsPromise.future());
                         promises.add(servicesPromise.future());
                         promises.add(multiTeachingPromise.future());
+                        promises.add(subTopicCoefPromise.future());
                         int nbOptions= 0;
                         if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
                             Promise<Object> getHeadTeachersPromise = Promise.promise();
@@ -2737,6 +2756,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             nbOptions++;
                         }
 
+                        getSubTopicCoeff(firstStudent.getString("idEtablissement"),firstStudent.getString("idClasse"),subTopicCoefPromise);
                         getStructure(firstStudent.getString("idEtablissement"),structurePromise);
                         getLibellePeriode(idPeriode,host,acceptLanguage,periodeLibellePromise);
                         getAnneeScolaire(idClasse,periodeYearPromise);
@@ -2749,6 +2769,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                         int finalNbOptions = nbOptions;
                         CompositeFuture.all(promises).onSuccess(success -> {
+
+                            List<SubTopic> subTopics = subTopicCoefPromise.future().result();
                             Structure structure = structurePromise.future().result();
                             Periode periode = periodeLibellePromise.future().result();
                             periode.setEndDate( periodeYearPromise.future().result().getEndDate());
@@ -2770,13 +2792,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             List<MultiTeaching> multiTeachings = new ArrayList<>();
 
                             setMultiTeaching(structure, multiTeachinJsonArray, multiTeachings, idClasse);
-                            setServices(structure, servicesJson, services);
+                            setServices(structure, servicesJson, services,subTopics);
 
                             for (int i = 0; i < eleves.size(); i++) {
                                 futures.add(Future.future());
                                 JsonObject eleve = eleves.getJsonObject(i);
                                 String idEleve = eleve.getString(ID_ELEVE_KEY);
-
                                 Student student = initStudent(structure, periode, paramBulletins, services, multiTeachings,
                                         eleve, typePeriode, idPeriode, classe, showBilanPerDomaines, images, params);
                                 students.put(idEleve, student);
@@ -2802,6 +2823,35 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 }
             });
         }
+    }
+
+    private void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<List<SubTopic>> promise) {
+        subTopicService.getSubtopicServices(idEtablissement,idClasse,event -> {
+            if(event.isRight()){
+                List<SubTopic> subTopics= new ArrayList<>();
+                for(Object subTopicobj : event.right().getValue()){
+                    SubTopic subTopic = new SubTopic();
+                    JsonObject subTopicJo = (JsonObject) subTopicobj;
+                    Service service = new Service();
+                    Matiere matiere = new Matiere();
+                    Group group = new Group();
+                    Teacher teacher = new Teacher();
+                    group.setId(subTopicJo.getString("id_group"));
+                    matiere.setId(subTopicJo.getString("id_topic"));
+                    teacher.setId(subTopicJo.getString("id_teacher"));
+                    service.setMatiere(matiere);
+                    service.setGroup(group);
+                    service.setTeacher(teacher);
+                    subTopic.setService(service);
+                    subTopic.setId(subTopicJo.getInteger("id_subtopic"));
+                    subTopic.setCoefficient(safeGetDouble(subTopicJo,"coefficient"));
+                    subTopics.add(subTopic);
+                }
+                promise.complete(subTopics);
+            }else{
+                promise.fail(event.left().getValue());
+            }
+        });
     }
 
     private Student initStudent(Structure structure, Periode periode, ParamsBulletins paramBulletins, List<Service> services, List<MultiTeaching> multiTeachings, JsonObject eleve, Long typePeriode, Long idPeriode, JsonObject classe, Boolean showBilanPerDomaines, JsonObject images, JsonObject params) {
@@ -2909,7 +2959,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             multiTeaching.setSubject(subject);
 
-            log.info(multiTeachinJo);
             multiTeaching.setIdInteger(multiTeachinJo.getInteger("id"));
             multiTeaching.setGroupOrClassId(multiTeachinJo.getString("class_or_group_id"));
             multiTeaching.setStartDate(multiTeachinJo.getString("start_date",""));
@@ -2929,7 +2978,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    private void setServices(Structure structure, JsonArray servicesJson, List<Service> services) {
+    private void setServices(Structure structure, JsonArray servicesJson, List<Service> services, List<SubTopic> subTopics) {
         for (int i = 0 ; i < servicesJson.size();i++){
             JsonObject serviceJo = servicesJson.getJsonObject(i);
             Service service = new Service();
@@ -2947,7 +2996,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             service.setVisible(serviceJo.getBoolean("is_visible"));
             service.setModalite(serviceJo.getString("modalite",""));
             service.setCoefficient(serviceJo.getLong("coefficient"));
+            for(SubTopic subTopic : subTopics){
+                if(subTopic.getService().equals(service)){
+                    service.addSubtopics(subTopic);
+                }
+            }
             services.add(service);
+
         }
     }
 
