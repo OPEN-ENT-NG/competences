@@ -165,19 +165,18 @@
                                 </div>
                             </div>
                             <div class="three inline-block">
-                                <div class="svg-image" >
+                                <div class="svg-image">
                                     <input ng-show="service.hasCompetencesParams()" type="image" src="/competences/public/img/scss/cog.svg"
                                            ng-click="openUpdateLightbox(service);$event.stopPropagation()"alt="i18nAfaire">
                                 </div>
                             </div>
                             <div class="two inline-block">
-                                <div ng-show="service.subTopics && service.subTopics.length > 0 " class="svg-image" >
+                                <div ng-show="service.subTopics && service.subTopics.length > 0" class="svg-image">
                                     <i class="mdi-book"></i>
                                 </div>
                             </div>
                         </div>
-
-                    </div>
+                        </div>
                     <!--SUBTOPICS -->
                     <div class="twelve row serviceList subList" ng-repeat="subTopic in service.subTopics" ng-show="service.deploy" >
                         <div class="[[columns.matiere.size]] cellTab ellipsis cellTab-left" tooltip="[[subTopic.libelle]"><span class="tabulation">[[subTopic.libelle]]</span></div>
@@ -242,7 +241,6 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
