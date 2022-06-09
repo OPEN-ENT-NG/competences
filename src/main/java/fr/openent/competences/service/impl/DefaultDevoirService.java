@@ -866,14 +866,21 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     params.add(idMatiere);
                 }
             }
+
             query.delete(query.length() - 3, query.length());
 
+            if(!historise && idMatieres.length != 0 ) {
+                query.append(")");
+            }
+            if (historise) {
+                query.append("OR ( devoirs.eval_lib_historise = ? )");
+                params.add(historise);
+                if(idMatieres.length != 0)  query.append(")");
+            }
+
         }
-        if (historise) {
-            query.append("OR ( devoirs.eval_lib_historise = ? )");
-            params.add(historise);
-        }
-        query.append(")");
+
+
 
         Sql.getInstance().prepared(query.toString(), params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
