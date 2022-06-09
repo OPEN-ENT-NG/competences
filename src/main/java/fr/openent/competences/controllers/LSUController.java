@@ -2484,7 +2484,7 @@ public class LSUController extends ControllerHelper {
         final AtomicInteger nbIgnoratedStudents = new AtomicInteger(0);
         final AtomicInteger originalSize = new AtomicInteger();
         final AtomicInteger idElementProgramme = new AtomicInteger();
-
+        boolean withDigitalSkillsError = Boolean.TRUE.equals(Competences.LSUN_CONFIG.getBoolean("withDigitalSkillsError"));
         Handler getOut = (Handler<Either<String, JsonObject>>) suiviAcquisResponse -> {
             originalSize.getAndDecrement();
             if (originalSize.get() == 0) {
@@ -3039,11 +3039,12 @@ public class LSUController extends ControllerHelper {
                                     JsonObject studentAppreciation = digitalSkills.getJsonObject("studentAppreciation");
                                     JsonArray evaluatedDigitalSkills = digitalSkills.getJsonArray("evaluatedDigitalSkills");
                                     CompetencesNumeriquesCommun appClassCompNum = getAppClassCompNum(donnees, currentEleve.getCodeDivision());
-                                    if( appClassCompNum == null && studentAppreciation.isEmpty() && evaluatedDigitalSkills.isEmpty()) {
+                                    if( appClassCompNum == null && studentAppreciation.isEmpty() &&
+                                            evaluatedDigitalSkills.isEmpty() && withDigitalSkillsError) {
                                         String messageError = getLibelle("evaluation.lsu.error.no.digital.skills") + currentPeriode.getLabel();
                                         setError(errorsExport, currentEleve, messageError, null);
                                     }
-
+                                    if(!studentAppreciation.isEmpty() || !evaluatedDigitalSkills.isEmpty() || appClassCompNum != null )
                                     bilanPeriodique.setCompetencesNumeriques(objectFactory.createBilanPeriodiqueCompetencesNumeriques());
 
                                     if(appClassCompNum != null) bilanPeriodique.getCompetencesNumeriques()

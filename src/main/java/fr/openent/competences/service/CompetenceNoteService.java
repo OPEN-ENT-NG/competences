@@ -59,21 +59,23 @@ public interface CompetenceNoteService extends CrudService {
      * Recupère toutes les notes des compétences pour un devoir donné et un élève donné
      * @param idDevoir identifiant du devoir
      * @param idEleve identifiant de l'élève
-     * @param returnNotEvaluatedcompetences  si on retourne les compétences non évaluées               
+     * @param returnNotEvaluatedcompetences  si on retourne les compétences non évaluées
+     * @param idCycle identifiant du cycle sélectionné
      * @param handler handler portant le résultat de la requête
      */
-    void getCompetencesNotes(Long idDevoir, String idEleve, Boolean returnNotEvaluatedcompetences, 
-                                    Handler<Either<String, JsonArray>> handler);
+    void getCompetencesNotes(Long idDevoir, String idEleve, Boolean returnNotEvaluatedcompetences,
+                             Long idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Recupère toutes les notes des compétences pour un devoir donné et un élève donné
      * @param idDevoirs identifiant du devoir
      * @param idEleve identifiant de l'élève
      * @param returnNotEvaluatedcompetences  si on retourne les compétences non évaluées
+     * @param idCycle identifiant du cycle sélectionné
      * @param handler handler portant le résultat de la requête
      */
     void getCompetencesNotes(JsonArray idDevoirs, String idEleve, Boolean returnNotEvaluatedcompetences,
-                             Handler<Either<String, JsonArray>> handler);
+                             Long idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne toutes les notes des compétences pour un devoir donné

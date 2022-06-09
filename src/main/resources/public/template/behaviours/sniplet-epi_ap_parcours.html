@@ -315,8 +315,7 @@
                 <div class="five cell twelve-mobile">
                     <label class="select">
                         <select ng-model="search.enseignant"
-                                ng-options="enseignant.displayName for enseignant in enseignants.all"
-                                ng-change="syncMatieresEnseignant(search.enseignant)">
+                                ng-options="enseignant.displayName for enseignant in enseignants.all">
                             <option class="header-opt" disabled value="">[[translate('viescolaire.utils.teacher')]]
                             </option>
                         </select>
@@ -329,7 +328,8 @@
                            ng-class="{disabled : search.enseignant == null || search.enseignant == undefined}">
                         <select ng-model="search.matiere"
                                 ng-change="pushData(search.enseignant, dataELem.ens_mat, search.matiere)"
-                                ng-options="matiere.id as (matiere.name + ' (' + matiere.externalId + ' - ' + matiere.source + ')') for matiere in (filteredSubjects = (options.matieres | filter:notYetSelected()))"
+                                ng-options="matiere as (matiere.name + ' (' + matiere.externalId + ' - ' + matiere.source + ')')
+                                 for matiere in (filteredSubjects = (options.matieres | filter:notYetSelected())) track by matiere.id"
                                 ng-disabled="search.enseignant == null">
                             <option class="header-opt" disabled value="">[[translate('viescolaire.utils.subject')]]</option>
                         </select>

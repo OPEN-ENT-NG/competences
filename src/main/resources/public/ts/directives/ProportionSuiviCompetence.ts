@@ -102,6 +102,15 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                         nb: 0
                     });
                 }
+                let unique = [];
+                let distinct = [];
+                $scope.competencesEvaluations.forEach((comp) => {
+                    if (!unique[comp.id_competences_notes]) {
+                        distinct.push(comp);
+                        unique[comp.id_competences_notes] = 1;
+                    }
+                });
+                $scope.competencesEvaluations = distinct;
                 if (Utils.isNotNull($scope.competencesEvaluations) && $scope.competencesEvaluations.length > 0) {
                     var nbEleves = 0;
                     if ($scope.isClasse == true) {

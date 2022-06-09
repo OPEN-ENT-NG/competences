@@ -18,7 +18,6 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -42,8 +41,8 @@ public interface ExportService {
                        Handler<Either<String, JsonObject>> handler);
 
     void getExportReleveComp(final Boolean text, final Boolean usePerso, final Boolean pByEnseignement, final String idEleve,
-                             String[] idGroupes,String[] idFunctionalGroupes, final String idEtablissement,
-                             final List<String> idMatieres, Long idPeriodeType, final Boolean isCycle,
+                             final int eleveLevel, String[] idGroupes,String[] idFunctionalGroupes, final String idEtablissement,
+                             final List<String> idMatieres, Long idPeriodeType, final Boolean isCycle, final Long idCycle,
                              final Handler<Either<String, JsonObject>> handler);
 
     void getLegendeRecapEval(final Boolean text, final Boolean usePerso, final Long idCycle,
@@ -68,7 +67,7 @@ public interface ExportService {
     void getMatiereExportReleveComp(final JsonArray idMatieres, Handler<Either<String, String>> handler);
 
     void getLibellePeriodeExportReleveComp(final HttpServerRequest request, final Long finalIdPeriode,
-                                           Boolean isCycle, Handler<Either<String, String>> handler);
+                                           Boolean isCycle, Long idCycle, Handler<Either<String, String>> handler);
 
     void getElevesExportReleveComp(final String finalIdClasse, String idStructure, String finalIdEleve,
                                    final Long finalIdPeriode, final Map<String, String> elevesMap,

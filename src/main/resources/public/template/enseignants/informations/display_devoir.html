@@ -54,11 +54,30 @@
     <div class="releve_periodique">
         <div class="column-center marginTop10 center">
             <a class="button twelve-mobile" href="/competences#/devoir/[[informations.devoir.id]]"><i18n>open.devoir</i18n></a>
-            <a href ng-init="addDevoirList()" ng-click="firstConfirmationSuppDevoir()"><i18n>evaluations.delete.evaluation</i18n></a>
+            <a href ng-init="addDevoirList()" ng-if="!informations.devoir.endSaisie" ng-click="confirmSuppression()"><i18n>evaluations.delete.evaluation</i18n></a>
         </div>
     </div>
 
-    <lightbox id="delete-periodic" ng-if="selected.devoirs.list.length == 1 || devoirsUncancelable.length == 1" show="opened.evaluation.suppression.uniqueMsg1" on-close="opened.evaluation.suppression.uniqueMsg1=false">
+    <lightbox ng-if="selected.devoirs.list.length > 0 || devoirsUncancelable.length > 0"
+              show="opened.evaluation.suppressionMsg1" on-close="opened.evaluation.suppressionMsg1=false">
+        <p ng-if="selected.devoirs.list.length > 0 ">
+            <i18n>evaluations.devoir.recaputilatif.suppression.unique</i18n>
+            <b>[[selected.devoirs.list[0].name]]</b>
+            <i18n>evaluations.devoir.recaputilatif.suppression.unique.text4</i18n>
+        </p>
+        <p ng-if="selected.devoirs.list.length > 0 ">
+            <i18n>evaluations.devoir.confirmation.question</i18n>
+        </p>
+        <button  ng-if="selected.devoirs.list.length > 0 "
+                 class="marginFive" ng-click="firstConfirmationSuppDevoir()">
+            <i18n>evaluations.devoir.confirmation</i18n>
+        </button>
+        <button class="marginFive" ng-click="annulerSuppression()">
+            <i18n>evaluations.devoir.annuler</i18n>
+        </button>
+    </lightbox>
+
+    <lightbox id="delete-periodic" ng-if="selected.devoirs.list.length === 1 || devoirsUncancelable.length === 1" show="opened.evaluation.suppressionMsg2" on-close="opened.evaluation.suppressionMsg2=false">
         <div class="lightbox-releve-period">
             <h2>
                 <i18n>evaluations.delete.evaluation.title</i18n>

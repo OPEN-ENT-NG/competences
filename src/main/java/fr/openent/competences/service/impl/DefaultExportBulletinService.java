@@ -2822,13 +2822,20 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         periode.setType(typePeriode);
         periode.setIdPeriode(idPeriode);
-
         //Faire le libelle
         classeStudent.setPeriode(periode);
-
-        JsonArray groupes = eleve.getJsonArray("idGroupes");
-        JsonArray manualGroupes = eleve.getJsonArray("idManualGroupes");
-
+        JsonArray groupes, manualGroupes = new JsonArray();
+          try {
+            groupes = eleve.getJsonArray("idGroupes");
+              } catch (ClassCastException e) {
+             String groupesStr = eleve.getString("idGroupes");
+             String[] array = groupesStr.split(",");
+              groupes = new JsonArray();
+            for(String s : array){
+              groupes.add(s);
+            }
+          }
+        manualGroupes.addAll(eleve.getJsonArray("idManualGroupes", new JsonArray()));
         for (int j = 0; j < groupes.size(); j++) {
             Group group = new Group();
             group.setId(groupes.getString(j));

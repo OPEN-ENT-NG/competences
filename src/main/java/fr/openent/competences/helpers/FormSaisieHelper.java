@@ -103,7 +103,7 @@ public class FormSaisieHelper {
     public static Future getCompFuture (Long idDevoir, JsonObject devoirInfos, JsonObject result, EventBus eb) {
         Future compFuture = Future.future();
         if(devoirInfos.getInteger("nbrcompetence") > 0) {
-            new DefaultCompetencesService(eb).getDevoirCompetences(idDevoir,
+            new DefaultCompetencesService(eb).getDevoirCompetences(idDevoir, null,
                     CompetencesObject -> {
                         if(CompetencesObject.isRight()){
                             JsonArray CompetencesOld = CompetencesObject.right().getValue();

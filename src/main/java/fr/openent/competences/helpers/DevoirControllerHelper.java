@@ -6,10 +6,7 @@ import fr.openent.competences.service.DevoirService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -23,6 +20,7 @@ import org.entcore.common.user.UserInfos;
 import java.util.ArrayList;
 import java.util.List;
 
+import static fr.wseduc.webutils.http.Renders.badRequest;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 public class DevoirControllerHelper {
@@ -62,7 +60,7 @@ public class DevoirControllerHelper {
                             .put("userId", user.getUserId());
                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirWithId, shareService, user, request));
                 } else {
-                    Renders.badRequest(request);
+                    badRequest(request);
                 }
             }
         };
@@ -74,7 +72,10 @@ public class DevoirControllerHelper {
             public void handle(Either<String, JsonArray> event) {
                 if (event.isRight()) {
                     final JsonArray devoirs = event.right().getValue();
+                    ArrayList<Future<JsonObject>> futures = new ArrayList<>();
                     for(Object devoirO : devoirs) {
+                        Promise<JsonObject> promise = Promise.promise();
+                        futures.add(promise.future());
                         // recuperation des professeurs que l'utilisateur connecté remplacent
                         JsonObject devoirJO = (JsonObject)devoirO;
                         Devoir devoir = new Devoir(devoirJO.getJsonObject("devoir"));
@@ -84,15 +85,39 @@ public class DevoirControllerHelper {
                                 .put("structureId", devoir.getStructureId())
                                 .put("groupId", devoir.getGroupId())
                                 .put("userId", user.getUserId());
-                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirJO, shareService, user, request));
+                        eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirJO, shareService, user, promise));
                     }
+                    FutureHelper.all(futures)
+                            .onSuccess(success -> request.response().setStatusCode(200).end())
+                            .onFailure(failure -> badRequest(request, failure.getMessage()));
+
                 } else {
-                    Renders.badRequest(request);
+                    badRequest(request);
                 }
             }
         };
     }
+    private static Handler<AsyncResult<Message<JsonObject>>> getReplyHandler(JsonObject devoirWithId, ShareService shareService, UserInfos user, Promise<JsonObject> promise) {
+        return event -> {
+            JsonArray results = event.result().body().getJsonArray("results");
+            List<Future> futures = new ArrayList<>();
+            List<String> actions = new ArrayList<String>();
+            actions.add(Competences.DEVOIR_ACTION_UPDATE);
+            for (int i = 0; i < results.size(); i++) {
+                Future<JsonObject> shareServiceFuture = Future.future();
+                futures.add(shareServiceFuture);
 
+                String id = results.getJsonObject(i).getString("teacher_id");
+                shareService.userShare(user.getUserId(), id, devoirWithId.getLong("id").toString(),
+                        actions, getFutureHandler(shareServiceFuture));
+            }
+            CompositeFuture.all(futures)
+                    .onSuccess(compositeEvent -> promise.complete(devoirWithId))
+                    .onFailure(failure -> promise.fail(failure.getMessage())
+
+            );
+        };
+    }
     private static Handler<AsyncResult<Message<JsonObject>>> getReplyHandler(JsonObject devoirWithId, ShareService shareService, UserInfos user, HttpServerRequest request) {
         return new Handler<AsyncResult<Message<JsonObject>>>() {
             @Override

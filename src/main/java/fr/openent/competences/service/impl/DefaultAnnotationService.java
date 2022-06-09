@@ -143,7 +143,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
 
         // Récupération des competences notes sur le devoir
         Future<JsonArray> competencesNotesFuture = Future.future();
-        competenceNoteService.getCompetencesNotes(idDevoir,idEleve,false, event -> {
+        competenceNoteService.getCompetencesNotes(idDevoir,idEleve,false, null, event -> {
             FormateFutureEvent.formate(competencesNotesFuture, event);
         });
 

@@ -79,6 +79,7 @@ export class Structure extends Model {
     baremeDNBvisible: number;
     detailsUser: any;
     composer: any; // Set By infra
+    services: any[];
 
     get api() {
         return {
@@ -345,7 +346,7 @@ export class Structure extends Model {
 
                     let classes = allPromise[0].data;
                     let services = allPromise[1].data;
-
+                    this.services = services;
                     _.map(classes, (classe) => {
                         let servicesClasse = _.filter(services, service =>{
                             return service.id_groups ? service.id_groups.includes(classe.id)
@@ -520,8 +521,15 @@ export class Structure extends Model {
 
         return new Promise ((resolve, reject) => {
             http().getJson(this.api.CLASSE.synchronizationAllClasses)
-                .done((res)=> {
-                    this.allClasses = castClasses(res);
+                .done((classesRep)=> {
+                    _.map(classesRep, (classe) => {
+                        let servicesClasse = _.filter(this.services, service =>{
+                            return service.id_groups ? service.id_groups.includes(classe.id)
+                                : service.id_groupe === classe.id;
+                        });
+                        classe.services = !_.isEmpty(servicesClasse) ? servicesClasse : null;
+                    });
+                    this.allClasses = castClasses(classesRep);
                     resolve();
                 })
                 .error(() => {

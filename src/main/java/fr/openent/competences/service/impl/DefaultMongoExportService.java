@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class DefaultMongoExportService implements MongoExportService {
     private Logger log = LoggerFactory.getLogger(DefaultMongoExportService.class);
@@ -67,10 +68,20 @@ public class DefaultMongoExportService implements MongoExportService {
         }catch (Exception e){
             log.info(String.format("[Competences@%s::setFuturesToInsertMongo] an error has occurred during insert data in mongo: %s.", this.getClass().getSimpleName(), e.getMessage()));
         }
-        List<Future<String>> futureArray= new ArrayList<>();
+        List<Future<String>> futureArray = new ArrayList<>();
         for(Object studentJO : students){
             JsonObject student = (JsonObject) studentJO;
-            student.remove("u.deleteDate");
+
+            //besoin 2 loops sinon erreur de json
+            List<String> keysToDelete = new ArrayList<>();
+            for (Map.Entry<String, Object> map : student) {
+                String key = map.getKey();
+                if(key.startsWith("$") || key.contains("."))
+                    keysToDelete.add(key);
+            }
+            for(String key : keysToDelete){
+                student.remove(key);
+            }
             common.put("eleve",student);
             Promise<String> promise = Promise.promise();
             this.createWhenStart("pdf", common,

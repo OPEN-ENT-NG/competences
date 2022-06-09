@@ -75,6 +75,7 @@ export const bilanPeriodique = {
             await bilanPeriodique.that.getThematique(bilanPeriodique.that.getTypeElement());
             bilanPeriodique.that.classes = evaluations.structure.classes;
             bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
+            await bilanPeriodique.that.syncMatieres();
             bilanPeriodique.that.modifElem = param;
             bilanPeriodique.that.openedLightbox = true;
             bilanPeriodique.that.epiAp.classesSelected = [];
@@ -324,10 +325,7 @@ export const bilanPeriodique = {
             return utils.translate(key);
         },
 
-
-        /////       Filtre les matières en fonction de l'enseignant sélectionné      /////
-
-        syncMatieresEnseignant: async function (enseignant) {
+        syncMatieres: async function () {
             try {
                 let data = await http.get(`/viescolaire/matieres?idEtablissement=${evaluations.structure.id}`);
                 bilanPeriodique.that.options.matieres = data.data;

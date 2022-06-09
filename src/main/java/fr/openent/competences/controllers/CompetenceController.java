@@ -135,7 +135,7 @@ public class CompetenceController extends ControllerHelper {
             return;
         }
 
-        competencesService.getDevoirCompetences(lIdDevoir, new Handler<Either<String, JsonArray>>() {
+        competencesService.getDevoirCompetences(lIdDevoir, null, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
                 if(event.isRight()){

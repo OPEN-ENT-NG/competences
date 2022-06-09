@@ -79,6 +79,23 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             inColor: false,
         };
 
+        $scope.cycle3 = {
+            id: 2,
+            libelle: "Cycle 3",
+            value_cycle: "3",
+        };
+
+        $scope.cycle4 = {
+            id: 1,
+            libelle: "Cycle 4",
+            value_cycle: "4",
+        };
+
+        $scope.cycles = [
+            $scope.cycle3,
+            $scope.cycle4,
+        ];
+
         $scope.getI18nPeriode = (periode : any): string => {
             let result = lang.translate("viescolaire.utils.annee");
             if (periode) {
@@ -816,6 +833,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         });
                         $scope.resetSelected();
                         $scope.opened.lightboxs.duplication = false;
+                        utils.safeApply($scope);
                     });
                 }).catch(() => {
                     notify.error(lang.translate('evaluation.duplicate.devoir.error'));
@@ -3306,12 +3324,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($location.$$path === '/releve') {
                 $scope.showInfosEval = true;
                 $scope.openLeftMenu("openedDevoirInfo", false);
-                if ($scope.informations.devoir !== undefined &&
-                    $scope.informations.devoir.statistiques === undefined) {
-                    $scope.informations.devoir.statistiques = {
-                        percentDone: $scope.informations.devoir.percent
-                    };
-
+                if ($scope.informations.devoir !== undefined){
+                    $scope.informations.devoir.endSaisie = await $scope.checkEndSaisie($scope.informations.devoir);
+                    if ($scope.informations.devoir.statistiques === undefined) {
+                        $scope.informations.devoir.statistiques = {
+                            percentDone: $scope.informations.devoir.percent
+                        };
+                    }
                 }
                 await utils.safeApply($scope);
             }
@@ -4080,8 +4099,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             url += "&idEleve=" + idEleve;
             url += "&idEtablissement=" + $scope.structure.id;
 
-            for (var m = 0; m < $scope.selected.matieres.length; m++) {
-                url += "&idMatiere=" + $scope.selected.matieres[m];
+            if($scope.releveComp.periode.libelle === "cycle"){
+                for (var m = 0; m < $scope.allMatieresSorted.length; m++) {
+                    url += "&idMatiere=" + $scope.allMatieresSorted[m].id;
+                }
+            }
+            else{
+                for (var m = 0; m < $scope.selected.matieres.length; m++) {
+                    url += "&idMatiere=" + $scope.selected.matieres[m];
+                }
             }
             if (idPeriode) {
                 url += "&idPeriode=" + idPeriode;
@@ -4092,9 +4118,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await Utils.runMessageLoader($scope);
             }
 
-            ($scope.search.periode.libelle  === "cycle") ? url += "&isCycle=" + true : "&isCycle=" + false;
+            ($scope.releveComp.periode.libelle === "cycle" && $scope.releveComp.idCycle != null) ?
+                url += "&isCycle=" + true + "&idCycle=" + $scope.releveComp.idCycle : url += "&isCycle=" + false;
 
             url += "&byEnseignement=" + exportByEnseignement;
+
+            $scope.releveComp = {
+                textMod: true
+            };
 
             await http().getJson(url + "&json=true")
                 .error( async(result)=>{
@@ -4225,7 +4256,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.disabledExport = function () {
-            return (_.findIndex($scope.allMatieresSorted, {select: true}) === -1) || typeof($scope.releveComp.periode) === 'undefined'
+            if ($scope.releveComp.periode != null){
+                return ((_.findIndex($scope.allMatieresSorted, {select: true}) === -1) || typeof($scope.releveComp.periode) === 'undefined')
+                    && ($scope.releveComp.periode.libelle !== 'cycle')
+            }
+            else{
+                return ((_.findIndex($scope.allMatieresSorted, {select: true}) === -1) || typeof($scope.releveComp.periode) === 'undefined')
+            }
         };
 
 
@@ -4254,6 +4291,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.selectUnselectMatieres(false);
             classe ? $scope.forClasse = true : $scope.forClasse = false;
         };
+
+        $scope.changeIdCycle = function () {
+            if($scope.releveComp.periode.libelle != null &&
+                $scope.releveComp.periode.libelle === 'cycle' && $scope.releveComp.idCycle == null) {
+                $scope.releveComp.idCycle = $scope.cycles[0].id;
+            }
+        }
 
         $scope.getFormatedDate = function (date) {
             return moment(date).format("DD/MM/YYYY");
@@ -5203,6 +5247,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if($scope.informations.devoir){
                 $scope.selected.devoirs.list[0] = $scope.informations.devoir;
             }
+        }
+
+        $scope.initSousMatiere = function(devoir) {
+            if (devoir.matiere.sousMatieres.all.length > 0){
+                devoir.sousMatiere = devoir.matiere.sousMatieres.all[0];
+                $scope.switchIdSousMatiere(devoir);
+            }
+        }
+
+        $scope.switchIdSousMatiere = function(devoir) {
+            devoir.id_sousmatiere = devoir.sousMatiere.id_type_sousmatiere;
         }
     }
 ]);

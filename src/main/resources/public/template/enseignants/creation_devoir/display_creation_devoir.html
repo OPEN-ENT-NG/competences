@@ -119,13 +119,11 @@
                                         <div class="three cell twelve-mobile">
                                             <label class="select twelve-mobile"
                                                    ng-class="{disabled : devoir.matiere === undefined || devoir.matiere.sousMatieres.all.length === 0}">
-                                                <select ng-model="devoir.id_sousmatiere"
-                                                        ng-disabled="devoir.matiere === undefined || devoir.matiere.sousMatieres.all.length === 0">
-                                                    <option ng-selected="sousMatiere.id_type_sousmatiere == devoir.id_sousmatiere"
-                                                            ng-repeat="sousMatiere in devoir.matiere.sousMatieres.all"
-                                                            value="[[sousMatiere.id_type_sousmatiere]]">
-                                                        [[sousMatiere.libelle]]
-                                                    </option>
+                                                <select ng-model="devoir.sousMatiere"
+                                                        ng-init="initSousMatiere(devoir);"
+                                                        ng-change="switchIdSousMatiere(devoir);"
+                                                        ng-disabled="devoir.matiere === undefined || devoir.matiere.sousMatieres.all.length === 0"
+                                                        ng-options="sousMatiere as sousMatiere.libelle for sousMatiere in devoir.matiere.sousMatieres.all">
                                                 </select>
                                             </label>
                                         </div>
