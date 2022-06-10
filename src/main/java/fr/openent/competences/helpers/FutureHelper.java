@@ -32,17 +32,6 @@ public class FutureHelper {
         };
     }
 
-    public static Handler<Either<String, JsonArray>> handlerJsonArray(Future<JsonArray> future) {
-        return event -> {
-            if (event.isRight()) {
-                future.complete(event.right().getValue());
-            } else {
-                LOGGER.error(event.left().getValue());
-                future.fail(event.left().getValue());
-            }
-        };
-    }
-
     public static Handler<Either<String, JsonObject>> handlerJsonObject(Promise<Object> promise) {
         return event -> {
             if (event.isRight()) {
