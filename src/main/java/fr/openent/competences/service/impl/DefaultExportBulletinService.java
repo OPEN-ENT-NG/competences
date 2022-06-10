@@ -295,11 +295,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         // Lorsqu'on a le suivi des Acquis et le tableau de conversion, on lance la récupération
         // complète des données de l'export
         CompositeFuture.all(tableauDeConversionFuture, elevesFuture, modelsLibelleFuture).setHandler(
-                initClassObjectInfo(idClasse, idPeriode, params, elevesMap, answered, host, acceptLanguage, finalHandler,
+                initClassObjectInfo(idEtablissement, idClasse, idPeriode, params, elevesMap, answered, host, acceptLanguage, finalHandler,
                         elevesFuture, tableauDeConversionFuture, modelsLibelleFuture, useModel, vertx));
     }
 
-    private Handler<AsyncResult<CompositeFuture>> initClassObjectInfo(String idClasse,
+    private Handler<AsyncResult<CompositeFuture>> initClassObjectInfo(String  idEtablissement, String idClasse,
                                                                       Long idPeriode, JsonObject params, Map<String, JsonObject> elevesMap,
                                                                       AtomicBoolean answered, String host, String acceptLanguage,
                                                                       Handler<Either<String, JsonObject>> finalHandler,
@@ -310,6 +310,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return event -> {
             if (event.succeeded()) {
                 JsonArray eleves = elevesFuture.result();
+                eleves.stream().forEach( eleve -> {
+                    JsonObject o_eleve = (JsonObject) eleve;
+                    // if student is deleted and moved to another structure, his idStructure is different with front idStructure
+                    if(o_eleve.containsKey("deleteDate") && !idEtablissement.equals(o_eleve.getString("idEtablissement")))
+                        o_eleve.put("idEtablissement", idEtablissement );
+                });
                 eleves = Utils.sortElevesByDisplayName(eleves);
                 final JsonObject classe = new JsonObject().put("tableauDeConversion", tableauDeConversionFuture.result());
                 if (useModel) {
@@ -2167,7 +2173,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         for (int i=0; i<models.size(); i++) {
             JsonObject libelleSubject = models.getJsonObject(i);
             String id = libelleSubject.getString("id");
-            if (id.equals(idMatiere)){
+            if (idMatiere.equals(id)){
                 String libelleMatiere = libelleSubject.getString(LIBELLE);
                 matiereJO.remove(LIBELLE_MATIERE);
                 matiere.setLibelle(libelleMatiere);
