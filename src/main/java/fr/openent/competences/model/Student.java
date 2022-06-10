@@ -57,7 +57,7 @@ public class Student extends Model {
     }
 
     public void addManualGroupe(Group group) {
-        groupes.add(group);
+        manualGroupes.add(group);
     }
     public List<Group> getGroupes() {
         return groupes;

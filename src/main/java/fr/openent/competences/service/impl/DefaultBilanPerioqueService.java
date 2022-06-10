@@ -663,7 +663,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 String idClasse = element.getString("id_classe");
 
                 if(idClasse != null && IdsClassWithNoteAppCompNoteStudent.contains(idClasse)) {
-                    if(elementsProg.isEmpty()) {
+                    if (elementsProg.isEmpty()) {
                         elementsProg = texte;
                     } else {
                         elementsProg += " " + texte;
