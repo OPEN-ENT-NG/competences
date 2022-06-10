@@ -5,6 +5,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.impl.CompositeFutureImpl;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -20,24 +21,24 @@ public class FutureHelper {
     private FutureHelper() {
     }
 
-    public static Handler<Either<String, JsonArray>> handlerJsonArray(Future<JsonArray> future) {
+    public static Handler<Either<String, JsonArray>> handlerJsonArray(Promise<Object> promise) {
         return event -> {
             if (event.isRight()) {
-                future.complete(event.right().getValue());
+                promise.complete(event.right().getValue());
             } else {
                 LOGGER.error(event.left().getValue());
-                future.fail(event.left().getValue());
+                promise.fail(event.left().getValue());
             }
         };
     }
 
-    public static Handler<Either<String, JsonObject>> handlerJsonObject(Future<JsonObject> future) {
+    public static Handler<Either<String, JsonObject>> handlerJsonObject(Promise<Object> promise) {
         return event -> {
             if (event.isRight()) {
-                future.complete(event.right().getValue());
+                promise.complete(event.right().getValue());
             } else {
                 LOGGER.error(event.left().getValue());
-                future.fail(event.left().getValue());
+                promise.fail(event.left().getValue());
             }
         };
     }
