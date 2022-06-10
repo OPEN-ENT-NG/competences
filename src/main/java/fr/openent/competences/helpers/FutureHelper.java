@@ -53,4 +53,15 @@ public class FutureHelper {
     public static <T> CompositeFuture any(List<Future<T>> futures) {
         return CompositeFutureImpl.any(futures.toArray(new Future[0]));
     }
+
+    public static Handler<Either<String, JsonArray>> handlerJsonArray(Future<JsonArray> future) {
+        return event -> {
+            if (event.isRight()) {
+                future.complete(event.right().getValue());
+            } else {
+                LOGGER.error(event.left().getValue());
+                future.fail(event.left().getValue());
+            }
+        };
+    }
 }
