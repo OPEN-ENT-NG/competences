@@ -2231,6 +2231,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonObject moyenClasseSous = matiere.getJsonObject("_moyennesClasse");
                     Float moyCl = getMoyenneForSousMat(moyenClasseSous, idPeriode, idSousMat);
                     sousMat.put(MOYENNE_CLASSE, isNull(moyCl)? NN : moyCl);
+                    sousMat.put("sousCoef",10);
                     if(i!=0){
                         sousMatiereWithoutFirst.add(sousMat);
                     }
