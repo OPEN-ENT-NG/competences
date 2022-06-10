@@ -260,7 +260,7 @@ export class Evaluations extends Model {
                                             if(this.eleve != undefined && this.eleve.classe != undefined && classe == undefined) {
                                                 classe = this.eleve.classe;
                                             }
-
+                                            let teachers = [];
                                             this.services.sync().then(() => {
                                                 let filteredServices = this.services.filter((service) => {
                                                     return _.contains(groupesDevoirs, service.id_groupe) && service.evaluable;
@@ -269,7 +269,6 @@ export class Evaluations extends Model {
                                                 _.forEach(filteredServices, service => {
                                                     let _matiere = that.matieres.findWhere({id: service.id_matiere});
                                                     if(_matiere !== undefined) {
-
                                                         let enseignant = that.enseignants.findWhere({id: service.id_enseignant});
                                                         if(enseignant !== undefined && service.is_visible && _.contains(homeworksOwner, enseignant.id)) {
                                                             _matiere.ens.push(enseignant);
