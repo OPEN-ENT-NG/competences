@@ -9,4 +9,6 @@ public interface SubTopicService {
     public void upsertCoefficent(JsonObject data, Handler<Either<String, JsonArray>> handler) ;
 
     void getSubtopicServices(String idStructure, Handler<Either<String, JsonArray>> defaultResponseHandler);
+
+    void getSubtopicServices(String idStructure,String idClasse, Handler<Either<String, JsonArray>> defaultResponseHandler);
 }

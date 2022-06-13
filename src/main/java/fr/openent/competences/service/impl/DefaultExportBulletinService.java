@@ -186,6 +186,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private final DefaultNiveauDeMaitriseService defaultNiveauDeMaitriseService;
     private HttpClient httpClient;
     private DefaultNoteService noteService;
+    private SubTopicService subTopicService;
     private WorkspaceHelper workspaceHelper;
     private MongoExportService mongoExportService;
 
@@ -207,6 +208,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         workspaceHelper = new WorkspaceHelper(eb,storage);
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, "services_subtopic");
+
     }
 
     public DefaultExportBulletinService(EventBus eb, Storage storage, Vertx vertx) {
@@ -228,6 +231,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         this.httpClient =  createHttpClient(vertx);
         workspaceHelper = new WorkspaceHelper(eb,storage);
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, "services_subtopic");
 
     }
 
@@ -2231,7 +2235,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonObject moyenClasseSous = matiere.getJsonObject("_moyennesClasse");
                     Float moyCl = getMoyenneForSousMat(moyenClasseSous, idPeriode, idSousMat);
                     sousMat.put(MOYENNE_CLASSE, isNull(moyCl)? NN : moyCl);
-                    sousMat.put("sousCoef",10);
+                    sousMat.put("subCoef",10.5);
                     if(i!=0){
                         sousMatiereWithoutFirst.add(sousMat);
                     }
@@ -2716,6 +2720,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         Promise<Object> listStudentsPromise = Promise.promise();
                         Promise<Object> servicesPromise = Promise.promise();
                         Promise<Object> multiTeachingPromise = Promise.promise();
+                        Promise<Object> subTopicCoefPromise = Promise.promise();
                         List<Future> promises = new ArrayList<>();
                         promises.add(structurePromise.future());
                         promises.add(periodeLibellePromise.future());
@@ -2724,6 +2729,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         promises.add(listStudentsPromise.future());
                         promises.add(servicesPromise.future());
                         promises.add(multiTeachingPromise.future());
+                        promises.add(subTopicCoefPromise.future());
                         int nbOptions= 0;
                         if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
                             Promise<Object> getHeadTeachersPromise = Promise.promise();
@@ -2732,6 +2738,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             nbOptions++;
                         }
 
+                        getSubTopicCoeff(firstStudent.getString("idEtablissement"),firstStudent.getString("idClasse"),subTopicCoefPromise);
                         getStructure(firstStudent.getString("idEtablissement"),structurePromise);
                         getLibellePeriode(idPeriode,host,acceptLanguage,periodeLibellePromise);
                         getAnneeScolaire(idClasse,periodeYearPromise);
@@ -2744,6 +2751,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                         int finalNbOptions = nbOptions;
                         CompositeFuture.all(promises).onSuccess(success -> {
+                            log.info(subTopicCoefPromise.future().result());
                             Structure structure = structurePromise.future().result();
                             Periode periode = periodeLibellePromise.future().result();
                             periode.setEndDate( periodeYearPromise.future().result().getEndDate());
@@ -2771,7 +2779,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 futures.add(Future.future());
                                 JsonObject eleve = eleves.getJsonObject(i);
                                 String idEleve = eleve.getString(ID_ELEVE_KEY);
-
+                                log.info(services);
                                 Student student = initStudent(structure, periode, paramBulletins, services, multiTeachings,
                                         eleve, typePeriode, idPeriode, classe, showBilanPerDomaines, images, params);
                                 students.put(idEleve, student);
@@ -2797,6 +2805,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 }
             });
         }
+    }
+
+    private void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<Object> promise) {
+        subTopicService.getSubtopicServices(idEtablissement,idClasse,event -> {
+            if(event.isRight()){
+                promise.complete(event.right().getValue());
+            }else{
+                promise.fail(event.left().getValue());
+            }
+        });
     }
 
     private Student initStudent(Structure structure, Periode periode, ParamsBulletins paramBulletins, List<Service> services, List<MultiTeaching> multiTeachings, JsonObject eleve, Long typePeriode, Long idPeriode, JsonObject classe, Boolean showBilanPerDomaines, JsonObject images, JsonObject params) {

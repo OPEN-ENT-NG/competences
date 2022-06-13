@@ -59,4 +59,13 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
         Sql.getInstance().prepared(query,params,validResultHandler(handler));
 
     }
+
+    @Override
+    public void getSubtopicServices(String idStructure, String idClasse, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT  id_subtopic, id_teacher, id_topic, id_group, coefficient::numeric, id_structure " +
+                " From " + this.resourceTable + " WHERE id_structure = ? AND id_group = ? ";
+        JsonArray params = new JsonArray().add(idStructure).add(idClasse);
+        Sql.getInstance().prepared(query,params,validResultHandler(handler));
+
+    }
 }

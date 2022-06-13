@@ -2,6 +2,9 @@ package fr.openent.competences.model;
 
 import io.vertx.core.json.JsonObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Service {
     private Structure structure;
     private Group group;
@@ -12,6 +15,7 @@ public class Service {
     private boolean visible;
     private Teacher teacher;
     private Long coefficient;
+    private List<SubTopic> subtopics = new ArrayList<>();
 
     public Service() {
     }
@@ -99,5 +103,13 @@ public class Service {
                 .put("evaluable",evaluable)
                 .put("modalite",modalite)
                 .put("coefficient",coefficient);
+    }
+
+    public List<SubTopic> getSubtopics() {
+        return subtopics;
+    }
+
+    public void addSubtopics(SubTopic subtopic) {
+        this.subtopics.add(subtopic);
     }
 }
