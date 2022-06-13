@@ -117,10 +117,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                             @Override
                             public void handle(Message<JsonObject> event) {
                                 JsonObject result = event.body();
-                                if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
+                                if (result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))) {
                                     handler.handle(new Either.Right<String, JsonObject>(new JsonObject().put("id", devoirId)));
                                 } else {
-                                    handler.handle(new Either.Left<String, JsonObject>(result.getString("status")));
+                                    handler.handle(new Either.Left<String, JsonObject>(result.getString(Field.STATUS)));
                                 }
                             }
                         });
@@ -199,9 +199,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder queryForMerge = new StringBuilder()
                 .append("SELECT " + schema + "merge_users(?,?)");
         statements.add(new JsonObject()
-                .put("statement", queryForMerge.toString())
-                .put("values", paramsForMerge)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryForMerge.toString())
+                .put(Field.VALUES, paramsForMerge)
+                .put(Field.ACTION, "prepared"));
 
 
         //Ajout de la creation du devoir dans la pile de transaction
@@ -235,9 +235,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder()
                 .append("INSERT INTO " + resourceTable + queryParams.toString());
         statements.add(new JsonObject()
-                .put("statement", query.toString())
-                .put("values", params)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, query.toString())
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, "prepared"));
 
 
         //Ajout de chaque compétence dans la pile de transaction
@@ -257,9 +257,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 }
             }
             statements.add(new JsonObject()
-                    .put("statement", queryComp.toString())
-                    .put("values", paramsComp)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, queryComp.toString())
+                    .put(Field.VALUES, paramsComp)
+                    .put(Field.ACTION, "prepared"));
         }
 
         // ajoute de l'évaluation de la compéténce (cas évaluation libre)
@@ -289,9 +289,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             valueParamsLibre.append(" ) ");
             queryCompLibre.append(" VALUES ").append(valueParamsLibre.toString());
             statements.add(new JsonObject()
-                    .put("statement", queryCompLibre.toString())
-                    .put("values", paramsCompLibre)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, queryCompLibre.toString())
+                    .put(Field.VALUES, paramsCompLibre)
+                    .put(Field.ACTION, "prepared"));
         }
 
         // Ajoute une relation notes.rel_devoirs_groupes
@@ -303,9 +303,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             paramsAddRelDevoirsGroupes.add(idDevoir);
             paramsAddRelDevoirsGroupes.add(devoir.getInteger(attributeTypeGroupe).intValue());
             statements.add(new JsonObject()
-                    .put("statement", queryAddRelDevoirsGroupes)
-                    .put("values", paramsAddRelDevoirsGroupes)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, queryAddRelDevoirsGroupes)
+                    .put(Field.VALUES, paramsAddRelDevoirsGroupes)
+                    .put(Field.ACTION, "prepared"));
         }else{
             log.info("Attribut type_groupe non renseigné pour le devoir relation avec la classe inexistante : Evaluation Libre:  " + idDevoir);
         }
@@ -426,9 +426,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 }
             }
             statements.add(new JsonObject()
-                    .put("statement", query.toString())
-                    .put("values", params)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, query.toString())
+                    .put(Field.VALUES, params)
+                    .put(Field.ACTION, "prepared"));
         }
         if (devoir.containsKey("competencesRem") &&
                 devoir.getJsonArray("competencesRem").size() > 0) {
@@ -452,13 +452,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 }
             }
             statements.add(new JsonObject()
-                    .put("statement", query.toString())
-                    .put("values", params)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, query.toString())
+                    .put(Field.VALUES, params)
+                    .put(Field.ACTION, "prepared"));
             statements.add(new JsonObject()
-                    .put("statement", queryDelNote.toString())
-                    .put("values", params)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, queryDelNote.toString())
+                    .put(Field.VALUES, params)
+                    .put(Field.ACTION, "prepared"));
 
         }
 
@@ -482,9 +482,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             params.add(Integer.parseInt(id));
 
             statements.add(new JsonObject()
-                    .put("statement", query.toString())
-                    .put("values", params)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, query.toString())
+                    .put(Field.VALUES, params)
+                    .put(Field.ACTION, "prepared"));
         }
 
         StringBuilder queryParams = new StringBuilder();
@@ -519,9 +519,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             paramsUpdateRelDevoirGroupe.add(devoir.getString(attributeIdGroupe));
             paramsUpdateRelDevoirGroupe.add(Integer.parseInt(id));
             statements.add(new JsonObject()
-                    .put("statement", queryUpdateRelDevoirGroupe)
-                    .put("values", paramsUpdateRelDevoirGroupe)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, queryUpdateRelDevoirGroupe)
+                    .put(Field.VALUES, paramsUpdateRelDevoirGroupe)
+                    .put(Field.ACTION, "prepared"));
         }else{
             log.info("Attribut type_groupe non renseigné pour le devoir relation avec la classe inexistante : Evaluation Libre :  " + id);
         }
@@ -536,38 +536,38 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             StringBuilder queryDeleteNote = new StringBuilder()
                     .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".notes WHERE id_devoir = ? ");
             statements.add(new JsonObject()
-                    .put("statement", queryDeleteNote.toString())
-                    .put("values", paramsDelete)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, queryDeleteNote.toString())
+                    .put(Field.VALUES, paramsDelete)
+                    .put(Field.ACTION, "prepared"));
 
             StringBuilder queryDeleteAnnotations = new StringBuilder()
                     .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs WHERE id_devoir = ? ");
             statements.add(new JsonObject()
-                    .put("statement", queryDeleteAnnotations.toString())
-                    .put("values", paramsDelete)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, queryDeleteAnnotations.toString())
+                    .put(Field.VALUES, paramsDelete)
+                    .put(Field.ACTION, "prepared"));
 
             StringBuilder queryDeleteAppreciations = new StringBuilder()
                     .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".appreciations WHERE id_devoir = ? ");
             statements.add(new JsonObject()
-                    .put("statement", queryDeleteAppreciations.toString())
-                    .put("values", paramsDelete)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, queryDeleteAppreciations.toString())
+                    .put(Field.VALUES, paramsDelete)
+                    .put(Field.ACTION, "prepared"));
 
             StringBuilder queryDeleteCompetences = new StringBuilder()
                     .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id_devoir = ? ");
             statements.add(new JsonObject()
-                    .put("statement", queryDeleteCompetences.toString())
-                    .put("values", paramsDelete)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, queryDeleteCompetences.toString())
+                    .put(Field.VALUES, paramsDelete)
+                    .put(Field.ACTION, "prepared"));
         }
 
         StringBuilder query = new StringBuilder()
                 .append("UPDATE " + resourceTable +" SET " + queryParams.toString() + "modified = NOW() WHERE id = ? ");
         statements.add(new JsonObject()
-                .put("statement", query.toString())
-                .put("values", params.add(Integer.parseInt(id)))
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, query.toString())
+                .put(Field.VALUES, params.add(Integer.parseInt(id)))
+                .put(Field.ACTION, "prepared"));
 
 
 
@@ -889,18 +889,18 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void listDevoirsWithAnnotations(String idEleve, Long idPeriode, String idMatiere,
                                            Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put(ACTION, "eleve.getAnnotations")
+                .put(Field.ACTION, "eleve.getAnnotations")
                 .put("idEleve", idEleve)
                 .put("idPeriode", idPeriode)
                 .put("idMatiere", idMatiere);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray result = body.getJsonArray(RESULTS);
+            if (Field.OK.equals(body.getString(STATUS))) {
+                JsonArray result = body.getJsonArray(Field.RESULTS);
                 handler.handle(new Either.Right<>(result));
             } else {
-                handler.handle(new Either.Left<>(body.getString("message")));
-                log.error("listDevoirsWithAnnotations : " + body.getString("message"));
+                handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
+                log.error("listDevoirsWithAnnotations : " + body.getString(Field.MESSAGE));
             }
         }));
     }
@@ -916,12 +916,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .put("idGroups", groups);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray result = body.getJsonArray(RESULTS);
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                JsonArray result = body.getJsonArray(Field.RESULTS);
                 handler.handle(new Either.Right<String, JsonArray>(result));
             } else {
-                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                log.error("listDevoirsWithCompetences : " + body.getString("message"));
+                handler.handle(new Either.Left<String, JsonArray>(body.getString(Field.MESSAGE)));
+                log.error("listDevoirsWithCompetences : " + body.getString(Field.MESSAGE));
             }
         }));
     }

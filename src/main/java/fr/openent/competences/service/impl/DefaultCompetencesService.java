@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.CompetencesService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -78,7 +79,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             getCompetencesItem(idEtablissement, (Long) null, handler);
         } else {
             JsonObject action = new JsonObject()
-                    .put("action", "classe.getEtabClasses")
+                    .put(Field.ACTION, "classe.getEtabClasses")
                     .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
 
             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -87,14 +88,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();
 
-                    if ("ok".equals(body.getString("status"))) {
-                        final String idEtablissement = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getString("idStructure");
+                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                        final String idEtablissement = ((JsonObject) body.getJsonArray(Field.RESULTS).getJsonObject(0)).getString("idStructure");
 
                         if (idCycle != null) {
                             getCompetencesItem(idEtablissement, idCycle, handler);
                         } else {
                             JsonObject action = new JsonObject()
-                                    .put("action", "eleve.getCycle")
+                                    .put(Field.ACTION, "eleve.getCycle")
                                     .put("idClasse", idClasse);
 
                             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -102,19 +103,19 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                                 public void handle(Message<JsonObject> message) {
                                     JsonObject body = message.body();
 
-                                    if ("ok".equals(body.getString("status")) && body.getJsonArray("results").size() > 0) {
-                                        final Number idCycle = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getInteger("id_cycle");
+                                    if (Field.OK.equals(body.getString(Field.STATUS)) && body.getJsonArray(Field.RESULTS).size() > 0) {
+                                        final Number idCycle = ((JsonObject) body.getJsonArray(Field.RESULTS).getJsonObject(0)).getInteger("id_cycle");
                                         getCompetencesItem(idEtablissement, idCycle, handler);
                                     } else {
-                                        log.error(body.getString("message"));
-                                        handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                                        log.error(body.getString(Field.MESSAGE));
+                                        handler.handle(new Either.Left<String, JsonArray>(body.getString(Field.MESSAGE)));
                                     }
                                 }
                             }));
                         }
                     } else {
-                        log.error(body.getString("message"));
-                        handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                        log.error(body.getString(Field.MESSAGE));
+                        handler.handle(new Either.Left<String, JsonArray>(body.getString(Field.MESSAGE)));
                     }
                 }
             }));
@@ -301,7 +302,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     @Override
     public void getCompetencesByLevel(final String filter, final String valueToFilter, final String idClasse, final String idCycle, final Handler<Either<String, JsonArray>> handler) {
         final JsonObject action = new JsonObject()
-                .put("action", "classe.getEtabClasses")
+                .put(Field.ACTION, "classe.getEtabClasses")
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -309,17 +310,17 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status"))) {
+                if (Field.OK.equals(body.getString(Field.STATUS))) {
 
-                    JsonArray results =  body.getJsonArray("results");
+                    JsonArray results =  body.getJsonArray(Field.RESULTS);
                     String idEtablissement = null;
                     if (results.size() > 0 ){
                         idEtablissement = ((JsonObject)results.getJsonObject(0)).getString("idStructure");
                     }
                     getCompetencesByLevel(idEtablissement, filter, valueToFilter, idClasse, idCycle, handler);
                 } else {
-                    log.error(body.getString("message"));
-                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                    log.error(body.getString(Field.MESSAGE));
+                    handler.handle(new Either.Left<String, JsonArray>(body.getString(Field.MESSAGE)));
                 }
             }
         }));
@@ -394,7 +395,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     public void getCompetencesDomaines(String idClasse, final Long[] idDomaines, final Handler<Either<String, JsonArray>> handler) {
 
         final JsonObject action = new JsonObject()
-                .put("action", "classe.getEtabClasses")
+                .put(Field.ACTION, "classe.getEtabClasses")
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -402,8 +403,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status"))) {
-                    String idEtablissement = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getString("idStructure");
+                if (Field.OK.equals(body.getString(Field.STATUS))) {
+                    String idEtablissement = ((JsonObject) body.getJsonArray(Field.RESULTS).getJsonObject(0)).getString("idStructure");
                     JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
                     String query = "SELECT * FROM " + COMPETENCES_DOMAINES_TABLE + " AS compEns" +
@@ -416,8 +417,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
                     Sql.getInstance().prepared(query, params.add(idEtablissement), SqlResult.validResultHandler(handler));
                 } else {
-                    log.error(body.getString("message"));
-                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                    log.error(body.getString(Field.MESSAGE));
+                    handler.handle(new Either.Left<String, JsonArray>(body.getString(Field.MESSAGE)));
                 }
             }
         }));
@@ -581,9 +582,9 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         params.add(idEtablissement);
         statements.add(new JsonObject()
-                .put("statement", query.toString())
-                .put("values", params)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, query.toString())
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, "prepared"));
 
         // SUPPRESSION D'INFO PERSONNALISATION
         StringBuilder queryPerso = new StringBuilder().append("DELETE FROM " + COMPETENCES_PERSO_TABLE)
@@ -592,9 +593,9 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
         paramsPerso.add(idEtablissement);
         statements.add(new JsonObject()
-                .put("statement", queryPerso.toString())
-                .put("values", paramsPerso)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryPerso.toString())
+                .put(Field.VALUES, paramsPerso)
+                .put(Field.ACTION, "prepared"));
 
         // CREER PERSO DE MASQUAGE
         StringBuilder queryMask = new StringBuilder()
@@ -608,9 +609,9 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
         paramsMask.add(idEtablissement);
         statements.add(new JsonObject()
-                .put("statement", queryMask.toString())
-                .put("values", paramsMask)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryMask.toString())
+                .put(Field.VALUES, paramsMask)
+                .put(Field.ACTION, "prepared"));
 
         // SUPPRESSION D'INFO PERSONNALISATION D'ORDRE
         StringBuilder queryPersoOrdre = new StringBuilder().append("DELETE FROM " + COMPETENCES_PERSO_ORDRE_TABLE)
@@ -619,9 +620,9 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
         paramsPersoOrdre.add(idEtablissement);
         statements.add(new JsonObject()
-                .put("statement", queryPersoOrdre.toString())
-                .put("values", paramsPersoOrdre)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryPersoOrdre.toString())
+                .put(Field.VALUES, paramsPersoOrdre)
+                .put(Field.ACTION, "prepared"));
 
         Sql.getInstance().transaction(statements, SqlResult.validRowsResultHandler(handler));
     }

@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.Subject;
 import fr.openent.competences.service.MatiereService;
 import fr.wseduc.webutils.Either;
@@ -88,9 +89,9 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         values.add(idModel).add(title).add(idStructure);
 
         return new JsonObject()
-                .put("statement", query)
-                .put("values", values)
-                .put("action", "prepared");
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, values)
+                .put(Field.ACTION, "prepared");
     }
 
     private JsonObject updateModel(String title, Long idModel, String idStructure) {
@@ -103,9 +104,9 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         values.add(title).add(idStructure).add(idModel);
 
         return new JsonObject()
-                .put("statement", query)
-                .put("values", values)
-                .put("action", "prepared");
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, values)
+                .put(Field.ACTION, "prepared");
     }
 
     private JsonObject saveLibelleSubjectModel(String libelle, Long idModel, String idSubject) {
@@ -118,9 +119,9 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         values.add(idModel).add(libelle).add(idSubject).add(libelle);
 
         return new JsonObject()
-                .put("statement", query)
-                .put("values", values)
-                .put("action", "prepared");
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, values)
+                .put(Field.ACTION, "prepared");
     }
 
     private void buildStatement(String idStructure, String title, Long idModel, JsonArray libelleMatiere,
@@ -318,16 +319,16 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
 
     private void listMatieresEtab(String idStructure, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put(ACTION, "matiere.listMatieresEtab")
+                .put(Field.ACTION, "matiere.listMatieresEtab")
                 .put(ID_STRUCTURE_KEY, idStructure)
                 .put("onlyId", false);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
-                    if (OK.equals(body.getString(STATUS))) {
-                        handler.handle(new Either.Right<>(body.getJsonArray(RESULTS)));
+                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                        handler.handle(new Either.Right<>(body.getJsonArray(Field.RESULTS)));
                     } else {
-                        handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                        handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
                     }
 
                 }));
@@ -357,15 +358,15 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     public void getMatieresEtab(String idEtablissement, Handler<Either<String, JsonArray>> handler) {
         //vu qu on use pas le user peut être appeller un autre fonction de viesco?
         JsonObject action = new JsonObject()
-                .put("action", "matiere.getMatieresForUser")
+                .put(Field.ACTION, "matiere.getMatieresForUser")
                 .put("userType", "Personnel")
                 .put("idUser", "null")
                 .put("idStructure", idEtablissement)
                 .put("onlyId", false);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                handler.handle(new Either.Right<>(body.getJsonArray(RESULTS)));
+            if (Field.OK.equals(body.getString(STATUS))) {
+                handler.handle(new Either.Right<>(body.getJsonArray(Field.RESULTS)));
             } else {
                 handler.handle(new Either.Left<>(body.getString(MESSAGE)));
             }
@@ -411,7 +412,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                 .add(sousMatiere.getLong("id_sousmatiere"))
                 .add(devoir.getLong(ID_KEY));
 
-        return new JsonObject().put("statement", query).put("values", values).put("action", "prepared");
+        return new JsonObject().put(Field.STATEMENT, query).put(Field.VALUES, values).put(Field.ACTION, "prepared");
     }
 
     public void updateDevoirs(JsonArray idsMatieres, Handler<Either<String, JsonArray>> handler) {

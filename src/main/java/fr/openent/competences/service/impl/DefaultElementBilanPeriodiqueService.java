@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
@@ -358,8 +359,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
 
-                    if ("ok".equals(body.getString("status"))) {
-                        JsonArray matieres = body.getJsonArray("results");
+                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                        JsonArray matieres = body.getJsonArray(Field.RESULTS);
                         Map<String, String> matieresMap = new HashMap<>();
 
                         for(Object o : matieres){
@@ -373,7 +374,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                         getClassesGroupesName(idMatieres, idClasses, idUsers, matieres, matieresMap, result,
                                 handler);
                     } else{
-                        String _message = body.getString("message");
+                        String _message = body.getString(Field.MESSAGE);
                         log.error(_message);
                         handler.handle(new Either.Left<>(_message));
                     }
@@ -392,8 +393,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 handlerToAsyncHandler( message -> {
                     JsonObject body = message.body();
 
-                    if ("ok".equals(body.getString("status"))) {
-                        JsonArray classes = body.getJsonArray("results");
+                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                        JsonArray classes = body.getJsonArray(Field.RESULTS);
                         Map<String, String> classesNameMap =
                                 new HashMap<>();
                         Map<String, String> classesExternalIdMap =
@@ -411,7 +412,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                         getTeacherName(idMatieres, idClasses, idUsers, matieres, matieresMap, result,
                                 classes, classesNameMap, classesExternalIdMap, handler);
                     } else{
-                        String _message = body.getString("message");
+                        String _message = body.getString(Field.MESSAGE);
                         log.error(_message);
                         handler.handle(new Either.Left<>(_message));
                     }
@@ -426,16 +427,16 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                                 Map<String, String> classesExternalIdMap, Handler<Either<String, JsonArray>> handler) {
 
         JsonObject action = new JsonObject()
-                .put("action", "user.getUsers")
+                .put(Field.ACTION, "user.getUsers")
                 .put("idUsers", idUsers);
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler( message -> {
                     JsonObject body = message.body();
 
-                    if ("ok".equals(body
-                            .getString("status"))) {
-                        JsonArray users = body.getJsonArray("results");
+                    if (Field.OK.equals(body
+                            .getString(Field.STATUS))) {
+                        JsonArray users = body.getJsonArray(Field.RESULTS);
                         Map<String, String> usersMap = new HashMap<>();
                         for(Object o : users){
                             JsonObject user = (JsonObject)o;
@@ -503,7 +504,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                         }
                         handler.handle(new Either.Right<>(parsedElems));
                     } else{
-                        String _message = body.getString("message");
+                        String _message = body.getString(Field.MESSAGE);
                         log.error(_message);
                         handler.handle(new Either.Left<>(_message));
                     }
@@ -585,12 +586,12 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         // On récupère la liste des classes de l'établissement
         Future<JsonArray> classesEtab = Future.future();
         JsonObject action = new JsonObject()
-                .put(ACTION, "classe.listAllGroupes")
+                .put(Field.ACTION, "classe.listAllGroupes")
                 .put(ID_STRUCTURE_KEY, idStructure);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler( message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                classesEtab.complete(body.getJsonArray(RESULTS));
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                classesEtab.complete(body.getJsonArray(Field.RESULTS));
             }
             else {
                 classesEtab.fail("error while retreiving classes getClassesElementBilanPeriodique");
@@ -1053,21 +1054,21 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique WHERE id IN " + Sql.listPrepared(idsEltBilanPeriodique);
 
         statements.add(new JsonObject()
-                .put("statement", queryDelAppEleve)
-                .put("values", params)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryDelAppEleve)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, "prepared"));
         statements.add(new JsonObject()
-                .put("statement", queryDelRelAppEleveGroup)
-                .put("values", params)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryDelRelAppEleveGroup)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, "prepared"));
         statements.add(new JsonObject()
-                .put("statement", queryDelAppClasse)
-                .put("values", params)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryDelAppClasse)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, "prepared"));
         statements.add(new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, "prepared"));
         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
     }
 

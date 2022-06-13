@@ -1,5 +1,6 @@
 package fr.openent.competences.service.impl;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -29,7 +30,7 @@ public class CompetencesTransitionWorker extends BusModBase implements Handler<M
     public void handle(Message<JsonObject> eventMessage) {
         log.info("["+ this.getClass().getSimpleName()+"] receiving");
 
-        eventMessage.reply(new JsonObject().put("status", "ok"));
+        eventMessage.reply(new JsonObject().put(Field.STATUS, Field.OK));
 
         stackStructure(eventMessage.body().getJsonObject("structure"));
         if(!isWorking){

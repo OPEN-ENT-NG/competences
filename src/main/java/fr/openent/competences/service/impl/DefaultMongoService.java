@@ -1,5 +1,6 @@
 package fr.openent.competences.service.impl;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.MongoService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -16,7 +17,6 @@ import java.time.format.DateTimeFormatter;
 public class DefaultMongoService extends MongoDbCrudService implements MongoService {
     private static final Logger logger = LoggerFactory.getLogger(DefaultMongoService.class);
 
-    private static final String  STATUS = "status";
     public DefaultMongoService(String collection) {
         super(collection);
     }
@@ -38,21 +38,21 @@ public class DefaultMongoService extends MongoDbCrudService implements MongoServ
                     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
                     LocalDateTime now = LocalDateTime.now();
                     JsonObject exportProperties = either.right().getValue();
-                    if(exportProperties != null && exportProperties.containsKey(STATUS) && !exportProperties.getString(STATUS).equals("SUCCESS")) {
+                    if(exportProperties != null && exportProperties.containsKey(Field.STATUS) && !exportProperties.getString(Field.STATUS).equals("SUCCESS")) {
                         exportProperties.put("updated", dtf.format(now));
-                        exportProperties.put(STATUS, status);
+                        exportProperties.put(Field.STATUS, status);
                         if (!fileId.isEmpty())
                             exportProperties.put("fileId", fileId);
                         exportProperties.put("log",log);
                         mongo.save(collection, exportProperties, event -> {
-                            if (!event.body().getString("status").equals("ok")) {
+                            if (!event.body().getString(Field.STATUS).equals(Field.OK)) {
                                 handler.handle("mongoinsertfailed");
                             } else {
-                                handler.handle("ok");
+                                handler.handle(Field.OK);
                             }
                         });
                     }else{
-                        handler.handle("ok");
+                        handler.handle(Field.OK);
                     }
                 }
             }));

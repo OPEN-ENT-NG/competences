@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.*;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -153,9 +154,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         JsonArray paramsDeleteAnnotation = new fr.wseduc.webutils.collections.JsonArray();
         paramsDeleteAnnotation.add(id_devoir).add(id_eleve);
         statements.add(new JsonObject()
-                .put("statement", query)
-                .put("values",paramsDeleteAnnotation)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES,paramsDeleteAnnotation)
+                .put(Field.ACTION, "prepared"));
     }
 
     private void addStatmentNote(JsonArray statements, Long id_devoir, String id_eleve, Object valeur, String id_user){
@@ -167,9 +168,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         paramsNote.add( id_eleve ).add( id_devoir ).add( valeur ).add( id_user).add( valeur ).add( id_user );
 
         statements.add( new JsonObject()
-                .put("statement", query)
-                .put("values", paramsNote)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, paramsNote)
+                .put(Field.ACTION, "prepared"));
     }
 
     @Override
@@ -3052,8 +3053,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         new DefaultUtilsService(this.eb).studentAvailableForPeriode(idClasse, idPeriode, typeClasse,
                 message -> {
                     JsonObject body = message.body();
-                    if ("ok".equals(body.getString("status"))) {
-                        JsonArray eleves = body.getJsonArray("results");
+                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                        JsonArray eleves = body.getJsonArray(Field.RESULTS);
                         eleves = Utils.sortElevesByDisplayName(eleves);
                         for (int i = 0; i < eleves.size(); i++) {
                             JsonObject eleve = eleves.getJsonObject(i);
@@ -3491,14 +3492,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         // 3. On récupère toutes les matières de l'établissement
         Future<JsonArray> subjectF = Future.future();
-        JsonObject action = new JsonObject().put("action", "matiere.getMatieresForUser").put("userType", "Personnel")
+        JsonObject action = new JsonObject().put(Field.ACTION, "matiere.getMatieresForUser").put("userType", "Personnel")
                 .put("idUser", "null").put("idStructure", idEtablissement).put("onlyId", false);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                subjectF.complete(body.getJsonArray(RESULTS));
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                subjectF.complete(body.getJsonArray(Field.RESULTS));
             } else {
-                subjectF.fail(body.getString(MESSAGE));
+                subjectF.fail(body.getString(Field.MESSAGE));
             }
         }));
 

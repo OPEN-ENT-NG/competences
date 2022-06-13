@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.DevoirService;
 import fr.openent.competences.service.ShareCompetencesService;
 import fr.wseduc.webutils.Either;
@@ -84,9 +85,9 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
         JsonArray paramsDeleteAnnotation = new fr.wseduc.webutils.collections.JsonArray();
         paramsDeleteAnnotation.add(userIdSecondTeacher).add(devoirID).add(actions.get(0));
         return new JsonObject()
-                .put("statement", query)
-                .put("values",paramsDeleteAnnotation)
-                .put("action", "prepared");
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES,paramsDeleteAnnotation)
+                .put(Field.ACTION, "prepared");
     }
 
     @Override

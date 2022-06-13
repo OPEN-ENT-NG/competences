@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.BfcSyntheseService;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
@@ -143,9 +144,9 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status"))) {
-                    utilsService.getCycle(body.getJsonObject("result").getJsonObject("c").getJsonObject("data")
-                            .getString("id"), new Handler<Either<String, JsonObject>>() {
+                if (Field.OK.equals(body.getString(Field.STATUS))) {
+                    utilsService.getCycle(body.getJsonObject(Field.RESULT).getJsonObject("c").getJsonObject("data")
+                            .getString(Field.ID), new Handler<Either<String, JsonObject>>() {
                         @Override
                         public void handle(Either<String, JsonObject> idCycleObject) {
                             if (idCycleObject.isRight()) {
@@ -158,8 +159,8 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
                         }
                     });
                 } else {
-                    log.error("Class not found" + body.getString("message"));
-                    handler.handle(new Either.Left<String,Integer>("idClass not found : " + body.getString("message")));
+                    log.error("Class not found" + body.getString(Field.MESSAGE));
+                    handler.handle(new Either.Left<String,Integer>("idClass not found : " + body.getString(Field.MESSAGE)));
                 }
             }
         }));

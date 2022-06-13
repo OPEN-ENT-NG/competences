@@ -5,6 +5,7 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.lsun.CodeDomaineSocle;
 import fr.openent.competences.bean.lsun.Discipline;
 import fr.openent.competences.bean.lsun.Donnees;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.LSUService;
 import fr.openent.competences.service.UtilsService;
 import io.vertx.core.AsyncResult;
@@ -42,7 +43,6 @@ public class DefaultLSUService implements LSUService {
     protected EventBus eb;
 
     private static final String TIME = "Time";
-    private static final String MESSAGE = "message";
     public DefaultLSUService(EventBus eb){
         utilsService = new DefaultUtilsService();
         this.eb = eb;
@@ -177,7 +177,7 @@ public class DefaultLSUService implements LSUService {
             Future classFuture = Future.future();
             listFutureClass.add(classFuture);
             JsonObject action = new JsonObject()
-                    .put("action", "user.getCodeDomaine")
+                    .put(Field.ACTION, "user.getCodeDomaine")
                     .put("idClass", idClass);
 
             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -189,8 +189,8 @@ public class DefaultLSUService implements LSUService {
                 @Override
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();
-                    if ("ok".equals(body.getString("status"))) {
-                        JsonArray domainesJson = message.body().getJsonArray("results");
+                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                        JsonArray domainesJson = message.body().getJsonArray(Field.RESULTS);
                         Map<Long, String> mapDomaines = new HashMap<>();
                         try {
                             for (int i = 0; i < domainesJson.size(); i++) {
@@ -223,7 +223,7 @@ public class DefaultLSUService implements LSUService {
                             serviceResponseOK(answer, count, thread, method);
                         }
                     } else {
-                        String error = body.getString(MESSAGE);
+                        String error = body.getString(Field.MESSAGE);
                         count++;
                         serviceResponseOK(answer, count, thread, method);
                         if (error != null && error.contains(TIME)) {
@@ -319,16 +319,16 @@ public class DefaultLSUService implements LSUService {
                     // Récupération des infos sur les élèves ignorés
                     Future<JsonArray> infosElevesIgnores = Future.future();
                     JsonObject action = new JsonObject()
-                            .put("action", "eleve.getInfoEleve")
+                            .put(Field.ACTION, "eleve.getInfoEleve")
                             .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
                             .put("idEleves", new JsonArray(Arrays.asList(ignoredInfos.keySet().toArray())));
 
                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(studentsInfo -> {
                         JsonObject body = studentsInfo.body();
-                        if (!"ok".equals(body.getString("status"))) {
-                            handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                        if (!Field.OK.equals(body.getString(Field.STATUS))) {
+                            handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
                         } else {
-                            infosElevesIgnores.complete(body.getJsonArray("results"));
+                            infosElevesIgnores.complete(body.getJsonArray(Field.RESULTS));
                         }
                     }));
                     futures.add(infosElevesIgnores);
@@ -336,15 +336,15 @@ public class DefaultLSUService implements LSUService {
                     // Récupération des infos sur les classes
                     Future<JsonArray> infosClasses = Future.future();
                     action = new JsonObject()
-                            .put(ACTION, "classe.getClassesInfo")
+                            .put(Field.ACTION, "classe.getClassesInfo")
                             .put("idClasses", idClasses);
                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                         JsonObject body = message.body();
-                        if (OK.equals(body.getString(STATUS))) {
-                            infosClasses.complete(body.getJsonArray("results"));
+                        if (Field.OK.equals(body.getString(Field.STATUS))) {
+                            infosClasses.complete(body.getJsonArray(Field.RESULTS));
                         } else {
-                            handler.handle(new Either.Left<>(body.getString("message")));
-                            log.error("getInfosGroupes : " + body.getString("message"));
+                            handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
+                            log.error("getInfosGroupes : " + body.getString(Field.MESSAGE));
                         }
                     }));
                     futures.add(infosClasses);
@@ -410,7 +410,7 @@ public class DefaultLSUService implements LSUService {
     public void getStudents(final List<String> classids, Future<Message<JsonObject>> studentsFuture,
                             AtomicInteger count, AtomicBoolean answer, final String thread, final String method){
         JsonObject action = new JsonObject()
-                .put("action", "user.getElevesRelatives")
+                .put(Field.ACTION, "user.getElevesRelatives")
                 .put("idsClass", new fr.wseduc.webutils.collections.JsonArray(classids));
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
@@ -418,9 +418,9 @@ public class DefaultLSUService implements LSUService {
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        if (!("ok".equals(body.getString("status"))
-                                && body.getJsonArray("results").size() != 0)) {
-                            String error = body.getString(MESSAGE);
+                        if (!(Field.OK.equals(body.getString(Field.STATUS))
+                                && body.getJsonArray(Field.RESULTS).size() != 0)) {
+                            String error = body.getString(Field.MESSAGE);
                             count.addAndGet(1);
                             serviceResponseOK(answer, count.get(), thread, method);
                             if (error != null && error.contains(TIME)) {
@@ -458,7 +458,7 @@ public class DefaultLSUService implements LSUService {
                 String beginingPeriode = Utils.getPeriode(classPeriodes.getValue(),true);
 
                 JsonObject action = new JsonObject()
-                        .put("action", "eleve.getDeletedStudentByPeriodeByClass")
+                        .put(Field.ACTION, "eleve.getDeletedStudentByPeriodeByClass")
                         .put("idClass",classPeriodes.getKey())
                         .put("beginningPeriode",beginingPeriode);
                 final String finalBeginingPeriode = beginingPeriode;
@@ -473,9 +473,9 @@ public class DefaultLSUService implements LSUService {
                             @Override
                             public void handle(Message<JsonObject> message) {
 
-                                if("ok".equals(message.body().getString("status"))){
+                                if(Field.OK.equals(message.body().getString(Field.STATUS))){
 
-                                    JsonArray deletedStudentsPostgresByClasse = message.body().getJsonArray("results");
+                                    JsonArray deletedStudentsPostgresByClasse = message.body().getJsonArray(Field.RESULTS);
 
                                     if(deletedStudentsPostgresByClasse != null && deletedStudentsPostgresByClasse.size()>0){
 
@@ -504,7 +504,7 @@ public class DefaultLSUService implements LSUService {
                                     serviceResponseOK(answer, count.get(),thread,method);
                                     futureDeletedStudentsByClass.complete();
                                 }else{
-                                    String error =  message.body().getString(MESSAGE);
+                                    String error =  message.body().getString(Field.MESSAGE);
                                     if (error!=null && error.contains(TIME)){
                                         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                                 handlerToAsyncHandler(this));
@@ -539,7 +539,7 @@ public class DefaultLSUService implements LSUService {
     public void getAllStudentWithRelatives(String idStructure, List<String> idsClass, List<String> idsDeletedStudent,
                                            Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "user.getAllElevesWithTheirRelatives")
+                .put(Field.ACTION, "user.getAllElevesWithTheirRelatives")
                 .put("idStructure",idStructure)
                 .put("idsClass",new fr.wseduc.webutils.collections.JsonArray(idsClass))
                 .put("idsDeletedStudent",new fr.wseduc.webutils.collections.JsonArray(idsDeletedStudent));
@@ -552,15 +552,15 @@ public class DefaultLSUService implements LSUService {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
-                if("ok".equals(body.getString("status"))){
-                    JsonArray allStudentsWithRelative = body.getJsonArray("results");
+                if(Field.OK.equals(body.getString(Field.STATUS))){
+                    JsonArray allStudentsWithRelative = body.getJsonArray(Field.RESULTS);
 
                     handler.handle(new Either.Right<>(allStudentsWithRelative));
 
                     answer.set(true);
                     serviceResponseOK(answer,count.get(),thread,method);
                 }else{
-                    String error = body.getString(MESSAGE);
+                    String error = body.getString(Field.MESSAGE);
                     serviceResponseOK(answer,count.incrementAndGet(),thread,method);
                     if(error != null && error.contains(TIME)){
                         eb.send(Competences.VIESCO_BUS_ADDRESS, action,Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(this));

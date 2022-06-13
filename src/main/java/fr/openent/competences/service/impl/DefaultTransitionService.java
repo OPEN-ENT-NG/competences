@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -265,7 +266,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             log.warn("WARN : transactions pour la transition année vListIdsGroupesATraiter : Aucun groupe ");
         }
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
-        
+
         // Suppresssion : Conservation des  compétences max par l'élève, suppresion des devoirs
         manageDevoirsAndCompetences(idStructureATraiter, vMapGroupesATraiter, vMapGroupesIdsDevoirATraiter,
                 classeIdsEleves, statements);
@@ -277,7 +278,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         JsonArray valuesTransition = new fr.wseduc.webutils.collections.JsonArray();
         valuesTransition.add(idStructureATraiter);
         String queryInsertTransition ="INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".transition(id_etablissement) VALUES (?)";
-        statements.add(new JsonObject().put("statement", queryInsertTransition).put("values", valuesTransition).put("action", "prepared"));
+        statements.add(new JsonObject().put(Field.STATEMENT, queryInsertTransition).put(Field.VALUES, valuesTransition).put(Field.ACTION, "prepared"));
 
         Sql.getInstance().transaction(statements,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
                 SqlResult.validResultHandler(handler));
@@ -292,7 +293,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         // Suppresion des relations groupes d'enseignement - cycle
         String queryRelGroupeType= "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle WHERE type_groupe > 0";
-        statements.add(new JsonObject().put("statement", queryRelGroupeType).put("values", values).put("action", "prepared"));
+        statements.add(new JsonObject().put(Field.STATEMENT, queryRelGroupeType).put(Field.VALUES, values).put(Field.ACTION, "prepared"));
 
         // Suppresion des users
         values = new fr.wseduc.webutils.collections.JsonArray();
@@ -305,7 +306,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 "    WHERE " +
                 "     devoirs.owner = users.id " +
                 " )";
-        statements.add(new JsonObject().put("statement", queryUsers).put("values", values).put("action", "prepared"));
+        statements.add(new JsonObject().put(Field.STATEMENT, queryUsers).put(Field.VALUES, values).put(Field.ACTION, "prepared"));
 
     }
 
@@ -326,7 +327,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         values = new fr.wseduc.webutils.collections.JsonArray();
         values.add(_id_user_transition_annee).add(username).add(username);
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".users(id, username) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET username = ?";
-        statements.add(new JsonObject().put("statement", query).put("values", values).put("action", "prepared"));
+        statements.add(new JsonObject().put(Field.STATEMENT, query).put(Field.VALUES, values).put(Field.ACTION, "prepared"));
 
         if(vMapGroupesATraiter.size() > 0) {
             // Création des évaluations libre par classe de l'établissement
@@ -353,9 +354,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             queryInsertDevoir = queryInsertDevoir.substring(0,queryInsertDevoir.length()-10);
 
             statements.add(new JsonObject()
-                    .put("statement", queryInsertDevoir)
-                    .put("values", values)
-                    .put("action", "prepared"));
+                    .put(Field.STATEMENT, queryInsertDevoir)
+                    .put(Field.VALUES, values)
+                    .put(Field.ACTION, "prepared"));
         }
 
         for (Map.Entry<String, String> entry : vMapGroupesATraiter.entrySet()) {
@@ -429,9 +430,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "(" + queryConversionAverage + ")";
 
                 statements.add(new JsonObject()
-                        .put("statement", queryInsertMaxCompetenceNoteG)
-                        .put("values", valuesMaxCompetence)
-                        .put("action", "prepared"));
+                        .put(Field.STATEMENT, queryInsertMaxCompetenceNoteG)
+                        .put(Field.VALUES, valuesMaxCompetence)
+                        .put(Field.ACTION, "prepared"));
 
                 // Suppression Dispenses domaine
                 String querySuppressionDispenseDomaine = "" +
@@ -445,9 +446,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                     valuesDeleteDispenseEleve.add(idEleve);
                 }
                 statements.add(new JsonObject()
-                        .put("statement", querySuppressionDispenseDomaine)
-                        .put("values", valuesDeleteDispenseEleve)
-                        .put("action", "prepared"));
+                        .put(Field.STATEMENT, querySuppressionDispenseDomaine)
+                        .put(Field.VALUES, valuesDeleteDispenseEleve)
+                        .put(Field.ACTION, "prepared"));
             }
         }
 
@@ -466,9 +467,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 ")";
 
         statements.add(new JsonObject()
-                .put("statement", queryInsertCompetenceDevoir)
-                .put("values", values)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryInsertCompetenceDevoir)
+                .put(Field.VALUES, values)
+                .put(Field.ACTION, "prepared"));
 
         // Suppression devoir non historisé
         String queryDeleteDevoirNonHistorise = "" +
@@ -478,9 +479,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 " AND id_etablissement = ? ";
 
         statements.add(new JsonObject()
-                .put("statement", queryDeleteDevoirNonHistorise)
-                .put("values", values)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryDeleteDevoirNonHistorise)
+                .put(Field.VALUES, values)
+                .put(Field.ACTION, "prepared"));
     }
 
 
@@ -566,35 +567,35 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .append("SELECT function_clone_schema_with_sequences(?::text, ?::text, TRUE)");
 
         statements.add(new JsonObject()
-                .put("statement", "ALTER SCHEMA " + Competences.VSCO_SCHEMA + " RENAME TO " + Competences.VSCO_SCHEMA + "_" + currentYear)
-                .put("values", new fr.wseduc.webutils.collections.JsonArray())
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, "ALTER SCHEMA " + Competences.VSCO_SCHEMA + " RENAME TO " + Competences.VSCO_SCHEMA + "_" + currentYear)
+                .put(Field.VALUES, new fr.wseduc.webutils.collections.JsonArray())
+                .put(Field.ACTION, "prepared"));
 
         JsonArray valuesForCloneVieSco = new fr.wseduc.webutils.collections.JsonArray()
                 .add(Competences.VSCO_SCHEMA + "_" + currentYear).add(Competences.VSCO_SCHEMA);
 
         statements.add(new JsonObject()
-                .put("statement", queryForClone.toString())
-                .put("values", valuesForCloneVieSco)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryForClone.toString())
+                .put(Field.VALUES, valuesForCloneVieSco)
+                .put(Field.ACTION, "prepared"));
 
         statements.add(new JsonObject()
-                .put("statement", "ALTER SCHEMA " + Competences.COMPETENCES_SCHEMA + " RENAME TO " + Competences.COMPETENCES_SCHEMA + "_" + currentYear)
-                .put("values", new fr.wseduc.webutils.collections.JsonArray())
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, "ALTER SCHEMA " + Competences.COMPETENCES_SCHEMA + " RENAME TO " + Competences.COMPETENCES_SCHEMA + "_" + currentYear)
+                .put(Field.VALUES, new fr.wseduc.webutils.collections.JsonArray())
+                .put(Field.ACTION, "prepared"));
 
         JsonArray valuesForCloneNotes = new fr.wseduc.webutils.collections.JsonArray()
                 .add(Competences.COMPETENCES_SCHEMA + "_" + currentYear).add(Competences.COMPETENCES_SCHEMA);
 
         statements.add(new JsonObject()
-                .put("statement", queryForClone.toString())
-                .put("values", valuesForCloneNotes)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryForClone.toString())
+                .put(Field.VALUES, valuesForCloneNotes)
+                .put(Field.ACTION, "prepared"));
 
         statements.add(new JsonObject()
-                .put("statement", "SELECT " + Competences.COMPETENCES_SCHEMA + ".function_renameConstraintFromViescoAfterClonning() ")
-                .put("values", new fr.wseduc.webutils.collections.JsonArray())
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, "SELECT " + Competences.COMPETENCES_SCHEMA + ".function_renameConstraintFromViescoAfterClonning() ")
+                .put(Field.VALUES, new fr.wseduc.webutils.collections.JsonArray())
+                .put(Field.ACTION, "prepared"));
 
         return statements;
     }
@@ -753,9 +754,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .append(" WHERE id_matiere NOT IN ").append(Sql.listPrepared(matieres.getList()));
 
         statements.add(new JsonObject()
-                .put("statement", query.toString())
-                .put("values", values)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, query.toString())
+                .put(Field.VALUES, values)
+                .put(Field.ACTION, "prepared"));
 
         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
     }
@@ -778,9 +779,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             }
         }
         statements.add(new JsonObject()
-                .put("statement", query.toString())
-                .put("values", values)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, query.toString())
+                .put(Field.VALUES, values)
+                .put(Field.ACTION, "prepared"));
     }
 
     private void updateRelationGroupeCycle(JsonArray statements) {
@@ -790,9 +791,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 "WHERE m.old_class_id = r.id_groupe AND new_class_id IS NOT NULL;";
 
         statements.add(new JsonObject()
-                .put("statement", query)
-                .put("values", new fr.wseduc.webutils.collections.JsonArray())
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, new fr.wseduc.webutils.collections.JsonArray())
+                .put(Field.ACTION, "prepared"));
     }
 
     private void deleteRelationGroupCycleWhitoutNewIdClass(JsonArray statements){
@@ -800,9 +801,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 "(SELECT old_class_id FROM "+ Competences.COMPETENCES_SCHEMA +".match_class_id_transition m " +
                 "WHERE m.old_class_id = r.id_groupe AND m.new_class_id IS NULL);";
         statements.add(new JsonObject()
-                .put("statement", query)
-                .put("values", new fr.wseduc.webutils.collections.JsonArray())
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, new fr.wseduc.webutils.collections.JsonArray())
+                .put(Field.ACTION, "prepared"));
     };
 
     public void updateTablesTransition(JsonArray classesFromNeo, final Handler<Either<String,JsonArray>> handler) {

@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Domaine;
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
@@ -1030,12 +1031,12 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
             eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                     handlerToAsyncHandler(message -> {
                         JsonObject body = message.body();
-                        if (OK.equals(body.getString(STATUS))) {
-                            String periodeNameStr = body.getString(RESULT);
+                        if (Field.OK.equals(body.getString(Field.STATUS))) {
+                            String periodeNameStr = body.getString(Field.RESULT);
                             periodeNameStr = periodeNameStr.replace(" ", "_");
                             periodeName.complete(periodeNameStr);
                         } else {
-                            periodeName.fail(body.getString(MESSAGE));
+                            periodeName.fail(body.getString(Field.MESSAGE));
                             log.error("getPeriode : Unable to get the label of the specified entity (idPeriode).");
                         }
                     }));

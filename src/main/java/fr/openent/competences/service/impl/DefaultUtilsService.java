@@ -20,6 +20,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.service.UtilsService;
@@ -130,18 +131,18 @@ public class DefaultUtilsService implements UtilsService {
     public void getMultiTeachersByClass(final String idEtablissement, final String idClasse, final Integer idPeriode,
                                         Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "multiTeaching.getMultiTeachersByClass")
+                .put(Field.ACTION, "multiTeaching.getMultiTeachersByClass")
                 .put("structureId", idEtablissement)
                 .put("groupId", idClasse)
                 .put("periodId", idPeriode != null ? idPeriode.toString() : null);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray result = body.getJsonArray(RESULTS);
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                JsonArray result = body.getJsonArray(Field.RESULTS);
                 handler.handle(new Either.Right<>(result));
             } else {
-                handler.handle(new Either.Left<>(body.getString("message")));
-                log.error("[Competences] DefaultUtilsService at getMultiTeachersByClass : " + body.getString("message"));
+                handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
+                log.error("[Competences] DefaultUtilsService at getMultiTeachersByClass : " + body.getString(Field.MESSAGE));
             }
         }));
     }
@@ -150,18 +151,18 @@ public class DefaultUtilsService implements UtilsService {
     public void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
                                  Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "multiTeaching.getMultiteachers")
+                .put(Field.ACTION, "multiTeaching.getMultiteachers")
                 .put("structureId", structureId)
                 .put("groupIds", groupIds)
                 .put("periodId", PeriodeId != null ? PeriodeId.toString() : null);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray result = body.getJsonArray(RESULTS);
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                JsonArray result = body.getJsonArray(Field.RESULTS);
                 handler.handle(new Either.Right<>(result));
             } else {
-                handler.handle(new Either.Left<>(body.getString("message")));
-                log.error("[Competences] DefaultUtilsService at getMultiteachers : " + body.getString("message"));
+                handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
+                log.error("[Competences] DefaultUtilsService at getMultiteachers : " + body.getString(Field.MESSAGE));
             }
         }));
     }
@@ -176,18 +177,18 @@ public class DefaultUtilsService implements UtilsService {
     public void getServices(final String structureId, final JsonArray idsClass,
                             Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "service.getServices")
+                .put(Field.ACTION, "service.getServices")
                 .put("idStructure", structureId)
                 .put("aIdGroupe", idsClass)
                 .put("evaluable", true);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray results = body.getJsonArray(RESULTS);
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                JsonArray results = body.getJsonArray(Field.RESULTS);
                 handler.handle(new Either.Right<String, JsonArray>(results));
             } else {
-                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                log.error("getServices : " + body.getString("message"));
+                handler.handle(new Either.Left<String, JsonArray>(body.getString(Field.MESSAGE)));
+                log.error("getServices : " + body.getString(Field.MESSAGE));
             }
         }));
     }
@@ -195,17 +196,17 @@ public class DefaultUtilsService implements UtilsService {
     @Override
     public void getDefaultServices (final String structureId, final JsonArray groupIds, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "service.getDefaultServices")
+                .put(Field.ACTION, "service.getDefaultServices")
                 .put("idEtablissement", structureId)
                 .put("idsGroupe", groupIds);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray results = body.getJsonArray(RESULTS);
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                JsonArray results = body.getJsonArray(Field.RESULTS);
                 handler.handle(new Either.Right<String, JsonArray>(results));
             } else {
-                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                log.error("getDefaultServices : " + body.getString("message"));
+                handler.handle(new Either.Left<String, JsonArray>(body.getString(Field.MESSAGE)));
+                log.error("getDefaultServices : " + body.getString(Field.MESSAGE));
             }
         }));
     }
@@ -223,18 +224,18 @@ public class DefaultUtilsService implements UtilsService {
     public void getDefaultServices (final String structureId, final JsonArray groupIds, final JsonObject filters,
                                     Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "service.getDefaultServices")
+                .put(Field.ACTION, "service.getDefaultServices")
                 .put("idEtablissement", structureId)
                 .put("idsGroupe", groupIds)
                 .put("filters",filters);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray results = body.getJsonArray(RESULTS);
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                JsonArray results = body.getJsonArray(Field.RESULTS);
                 handler.handle(new Either.Right<String, JsonArray>(results));
             } else {
-                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                log.error("[Competences] getDefaultServices : " + body.getString("message"));
+                handler.handle(new Either.Left<String, JsonArray>(body.getString(Field.MESSAGE)));
+                log.error("[Competences] getDefaultServices : " + body.getString(Field.MESSAGE));
             }
         }));
     }
@@ -659,8 +660,8 @@ public class DefaultUtilsService implements UtilsService {
     private Handler<Message<JsonObject>> nameHandler(String[] name, String field,
                                                      Handler<Either<String, JsonArray>> handler){
         return event -> {
-            if (!OK.equals(( event.body()).getString(STATUS))) {
-                String error = event.body().getString(MESSAGE);
+            if (!Field.OK.equals(( event.body()).getString(Field.STATUS))) {
+                String error = event.body().getString(Field.MESSAGE);
                 log.error("nameHandler : " + error);
                 if(error.contains(CONNECTION_WAS_CLOSED) || error.contains(TIME)){
                     log.info("RESTART "+ name);
@@ -670,7 +671,7 @@ public class DefaultUtilsService implements UtilsService {
                 handler.handle(new Either.Left<>("Error While get User in Neo4J "));
             } else {
 
-                JsonArray rNeo =  event.body().getJsonArray(RESULT, new fr.wseduc.webutils.collections.JsonArray());
+                JsonArray rNeo =  event.body().getJsonArray(Field.RESULT, new fr.wseduc.webutils.collections.JsonArray());
                 if (rNeo.size() > 0) {
                     handler.handle(new Either.Right<>(rNeo));
                 } else {
@@ -736,9 +737,9 @@ public class DefaultUtilsService implements UtilsService {
                             }
 
                             statements.add(new JsonObject()
-                                    .put("statement", queryDeleteDevoir.toString())
-                                    .put("values", idDevoirs)
-                                    .put("action", "prepared"));
+                                    .put(Field.STATEMENT, queryDeleteDevoir.toString())
+                                    .put(Field.VALUES, idDevoirs)
+                                    .put(Field.ACTION, "prepared"));
                         }
 
                         // CREATION DU LIEN VERS LE NOUVEAU CYCLE
@@ -768,9 +769,9 @@ public class DefaultUtilsService implements UtilsService {
                         }
 
                         statements.add(new JsonObject()
-                                .put("statement", queryLink.toString())
-                                .put("values", values)
-                                .put("action", "prepared"));
+                                .put(Field.STATEMENT, queryLink.toString())
+                                .put(Field.VALUES, values)
+                                .put(Field.ACTION, "prepared"));
 
                         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
                     } else {
@@ -815,7 +816,7 @@ public class DefaultUtilsService implements UtilsService {
             return;
         } else {
             JsonObject action = new JsonObject();
-            action.put("action", "periode.getPeriodes")
+            action.put(Field.ACTION, "periode.getPeriodes")
                     .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
             eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
@@ -823,10 +824,10 @@ public class DefaultUtilsService implements UtilsService {
                         @Override
                         public void handle(Message<JsonObject> message) {
                             JsonObject body = message.body();
-                            JsonArray periodes = body.getJsonArray("result");
+                            JsonArray periodes = body.getJsonArray(Field.RESULT);
                             JsonArray idAvailableEleve = new JsonArray();
 
-                            if ("ok".equals(body.getString("status"))) {
+                            if (Field.OK.equals(body.getString(Field.STATUS))) {
                                 // On récupére la période de la classe
                                 JsonObject periode = null;
                                 for (int i = 0; i < periodes.size(); i++) {
@@ -871,17 +872,17 @@ public class DefaultUtilsService implements UtilsService {
     }
     public void getPeriodes(List<String> idClasses, String idEtablissement, Handler<Either<String,JsonArray>> handler){
         JsonObject action = new JsonObject()
-                .put("action", "periode.getPeriodes")
+                .put(Field.ACTION, "periode.getPeriodes")
                 .put("idGroupes", idClasses)
                 .put("idEtablissement", idEtablissement);
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            JsonArray periodes = body.getJsonArray("result");
-            if ("ok".equals(body.getString("status"))) {
+            JsonArray periodes = body.getJsonArray(Field.RESULT);
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
                 handler.handle(new Either.Right<>(periodes));
             } else {
-                handler.handle(new Either.Left<>("no periode for this class : " + body.getString("message")) );
+                handler.handle(new Either.Left<>("no periode for this class : " + body.getString(Field.MESSAGE)) );
             }
         }));
     }
@@ -901,10 +902,10 @@ public class DefaultUtilsService implements UtilsService {
         }
         studentAvailableForPeriode(idClasse, null, typeClasse, message -> {
             JsonObject body = message.body();
-            JsonArray students = body.getJsonArray("results");
+            JsonArray students = body.getJsonArray(Field.RESULTS);
             JsonArray idAvailableEleve = new JsonArray();
 
-            if ("ok".equals(body.getString("status"))) {
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
                 // Si aucune période n'est sélectionnée, on rajoute tous les élèves
                 for (int i = 0; i < students.size(); i++) {
                     JsonObject student = (JsonObject) students.getValue(i);
@@ -1289,10 +1290,10 @@ public class DefaultUtilsService implements UtilsService {
                                            Handler<Message<JsonObject>> handler) {
         JsonObject action = new JsonObject();
         if (typeClasse == 0) {
-            action.put("action", "classe.getEleveClasse")
+            action.put(Field.ACTION, "classe.getEleveClasse")
                     .put("idClasse", idClasse);
         } else if (typeClasse == 1 || typeClasse == 2) {
-            action.put("action", "groupe.listUsersByGroupeEnseignementId")
+            action.put(Field.ACTION, "groupe.listUsersByGroupeEnseignementId")
                     .put("groupEnseignementId", idClasse)
                     .put("profile", "Student");
         }
@@ -1304,19 +1305,19 @@ public class DefaultUtilsService implements UtilsService {
 
     public void getClassInfo ( final String idClass, Handler<Either<String,JsonObject>> handler){
         JsonObject action = new JsonObject()
-                .put("action", "classe.getClasseInfo")
+                .put(Field.ACTION, "classe.getClasseInfo")
                 .put("idClasse", idClass);
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
-                if ("ok".equals(body.getString("status"))) {
-                    JsonObject classInfo = body.getJsonObject("result").getJsonObject("c").getJsonObject("data");
+                if (Field.OK.equals(body.getString(Field.STATUS))) {
+                    JsonObject classInfo = body.getJsonObject(Field.RESULT).getJsonObject("c").getJsonObject("data");
                     handler.handle(new Either.Right<>(classInfo));
                 } else {
                     log.error("GetClassInfo : can not get class info : "+ idClass);
-                    handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                    handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
                 }
             }
         }));
@@ -1326,17 +1327,17 @@ public class DefaultUtilsService implements UtilsService {
         // Récupération de la config vie scolaire
         Promise<JsonObject> configFuture = Promise.promise();
         JsonObject action = new JsonObject()
-                .put("action", "config.generale");
+                .put(Field.ACTION, "config.generale");
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
-                if (OK.equals(body.getString(STATUS))) {
-                    JsonObject queryResult = body.getJsonObject(RESULT);
+                if (Field.OK.equals(body.getString(Field.STATUS))) {
+                    JsonObject queryResult = body.getJsonObject(Field.RESULT);
                     configFuture.complete(queryResult);
                 } else {
-                    log.error("getRetardsAndAbsences-getconfigVieScolaire failed : " + body.getString("message"));
-                    configFuture.fail(body.getString("message"));
+                    log.error("getRetardsAndAbsences-getconfigVieScolaire failed : " + body.getString(Field.MESSAGE));
+                    configFuture.fail(body.getString(Field.MESSAGE));
 
                 }
             }
@@ -1436,7 +1437,7 @@ public class DefaultUtilsService implements UtilsService {
     @Override
     public void getPresencesReasonsId(String idStructure, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "get-reasons")
+                .put(Field.ACTION, "get-reasons")
                 .put("reasonType", 0)
                 .put("structure", idStructure);
 
@@ -1454,7 +1455,7 @@ public class DefaultUtilsService implements UtilsService {
     @Override
     public void getPeriodesClasses (String idEtablissement, JsonArray idClasses, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "periode.getPeriodesClasses")
+                .put(Field.ACTION, "periode.getPeriodesClasses")
                 .put("idEtablissement", idEtablissement)
                 .put("idsClasse", idClasses)
                 .put("idPeriode", idPeriode);
@@ -1464,11 +1465,11 @@ public class DefaultUtilsService implements UtilsService {
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        JsonArray periodes = body.getJsonArray("results");
-                        if ("ok".equals(body.getString("status"))) {
+                        JsonArray periodes = body.getJsonArray(Field.RESULTS);
+                        if (Field.OK.equals(body.getString(Field.STATUS))) {
                             handler.handle(new Either.Right<String,JsonArray>(periodes) );
                         }else{
-                            handler.handle(new Either.Left<String,JsonArray>("no periode for this class : " + body.getString("message")) );
+                            handler.handle(new Either.Left<String,JsonArray>("no periode for this class : " + body.getString(Field.MESSAGE)) );
                         }
 
                     }

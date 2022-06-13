@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.AnnotationService;
 import fr.openent.competences.service.CompetenceNoteService;
 import fr.openent.competences.service.NoteService;
@@ -97,9 +98,9 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         params.add(idDevoir).add(idAnnotation).add(idEleve).add(idAnnotation);
         statements.add(new JsonObject()
-                .put("statement", query.toString())
-                .put("values", params)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, query.toString())
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, "prepared"));
     }
 
     private void addStatementdeleteCompetenceNote(JsonArray statements,final Long idDevoir, final String idEleve ) {
@@ -109,9 +110,9 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
         JsonArray paramsDeleteCompetenceNote = new fr.wseduc.webutils.collections.JsonArray();
         paramsDeleteCompetenceNote.add(idDevoir).add(idEleve);
         statements.add(new JsonObject()
-                .put("statement", queryDeleteCompetenceNote.toString())
-                .put("values", paramsDeleteCompetenceNote)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryDeleteCompetenceNote.toString())
+                .put(Field.VALUES, paramsDeleteCompetenceNote)
+                .put(Field.ACTION, "prepared"));
     }
 
     private void addStatementdeleteNote(JsonArray statements,final Long idDevoir, final String idEleve ) {
@@ -121,9 +122,9 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
         JsonArray paramsDeleteNote = new fr.wseduc.webutils.collections.JsonArray();
         paramsDeleteNote.add(idDevoir).add(idEleve);
         statements.add(new JsonObject()
-                .put("statement", queryDeleteNote.toString())
-                .put("values", paramsDeleteNote)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryDeleteNote.toString())
+                .put(Field.VALUES, paramsDeleteNote)
+                .put(Field.ACTION, "prepared"));
     }
 
     private Boolean isAnnotationNN(JsonObject annotation) {
