@@ -254,6 +254,7 @@ export class Evaluations extends Model {
                                     let devoirsWithNote = _.filter(devoirs, (d) => { return d.note !== undefined ; });
                                     let matieresDevoirs = _.pluck(devoirsWithNote, 'id_matiere');
                                     let groupesDevoirs = _.pluck(devoirsWithNote, 'id_groupe');
+                                    let homeworksOwner = _.pluck(devoirs, 'owner');
                                     this.enseignants.sync(structureId).then(() => {
                                         this.matieres.sync().then(() => {
                                             if(this.eleve != undefined && this.eleve.classe != undefined && classe == undefined) {
@@ -268,17 +269,16 @@ export class Evaluations extends Model {
                                                 _.forEach(filteredServices, service => {
                                                     let _matiere = that.matieres.findWhere({id: service.id_matiere});
                                                     if(_matiere !== undefined) {
-                                                        let teachers = [];
 
                                                         let enseignant = that.enseignants.findWhere({id: service.id_enseignant});
-                                                        if(enseignant !== undefined && service.is_visible) {
-                                                            teachers.push(enseignant);
+                                                        if(enseignant !== undefined && service.is_visible && _.contains(homeworksOwner, enseignant.id)) {
+                                                            _matiere.ens.push(enseignant);
                                                         }
 
                                                         _.forEach(service.coTeachers, coTeacher => {
                                                             let enseignant = that.enseignants.findWhere({id: coTeacher.second_teacher_id});
-                                                            if(coTeacher.is_visible && enseignant != undefined && !_.contains(teachers, enseignant)) {
-                                                                teachers.push(enseignant);
+                                                            if(coTeacher.is_visible && enseignant != undefined && !_.contains(_matiere.ens, enseignant)) {
+                                                                _matiere.ens.push(enseignant);
                                                             }
                                                         });
 
@@ -286,12 +286,10 @@ export class Evaluations extends Model {
                                                             let enseignant = that.enseignants.findWhere({id: substituteTeacher.second_teacher_id});
                                                             let conditionForDate = periode != undefined ? Utils.checkDateForSubTeacher(substituteTeacher, periode) : true;
 
-                                                            if(substituteTeacher.is_visible && enseignant != undefined && !_.contains(teachers, enseignant) && conditionForDate) {
-                                                                teachers.push(enseignant);
+                                                            if(substituteTeacher.is_visible && enseignant != undefined && !_.contains(_matiere.ens, enseignant) && conditionForDate) {
+                                                                _matiere.ens.push(enseignant);
                                                             }
                                                         });
-
-                                                        _matiere.ens = teachers;
                                                         _matiere.hasDevoirWithNote = _.contains(matieresDevoirs, _matiere.id);
                                                     }
                                                 });
