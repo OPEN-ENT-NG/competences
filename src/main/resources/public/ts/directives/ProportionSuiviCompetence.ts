@@ -105,7 +105,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                 let unique = [];
                 let distinct = [];
                 $scope.competencesEvaluations.forEach((comp) => {
-                    if (!unique[comp.id_competences_notes]) {
+                    if (!unique[(comp.id_competences_notes) ? comp.id_competences_notes : comp.id]) {
                         distinct.push(comp);
                         unique[comp.id_competences_notes] = 1;
                     }
