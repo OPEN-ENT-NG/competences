@@ -2,11 +2,11 @@ package fr.openent.competences.model;
 
 import io.vertx.core.json.JsonObject;
 
-public class SubTopic extends Model{
+public class SubTopic {
     private String libelle;
-    private String id;
+    private Integer id;
     private Service service;
-    private int coefficient = 1;
+    private Double coefficient = 1.d;
 
     public SubTopic() {
     }
@@ -19,7 +19,6 @@ public class SubTopic extends Model{
         this.libelle = libelle;
     }
 
-    @Override
     public JsonObject toJsonObject() {
         return new JsonObject()
                 .put("id",this.id)
@@ -27,11 +26,11 @@ public class SubTopic extends Model{
                 .put("coefficient",coefficient);
     }
 
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -43,11 +42,11 @@ public class SubTopic extends Model{
         this.service = service;
     }
 
-    public int getCoefficient() {
+    public double getCoefficient() {
         return coefficient;
     }
 
-    public void setCoefficient(int coefficient) {
+    public void setCoefficient(double coefficient) {
         this.coefficient = coefficient;
     }
 }

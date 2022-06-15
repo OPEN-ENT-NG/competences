@@ -4,6 +4,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Service {
     private Structure structure;
@@ -90,6 +91,13 @@ public class Service {
 
     public void setCoefficient(Long coefficient) {
         this.coefficient = coefficient;
+    }
+
+
+    public boolean equals(Service service){
+        return Objects.equals(this.matiere.getId(), service.getMatiere().getId())
+                && Objects.equals(this.teacher.getId(), service.getTeacher().getId())
+                && Objects.equals(this.group.getId(), service.getGroup().getId());
     }
 
     public JsonObject toJson() {
