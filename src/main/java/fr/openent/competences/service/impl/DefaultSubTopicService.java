@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.entcore.common.sql.SqlResult.validResultHandler;
+import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 public class DefaultSubTopicService extends SqlCrudService implements SubTopicService {
 
@@ -66,6 +67,15 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
                 " From " + this.resourceTable + " WHERE id_structure = ? AND id_group = ? ";
         JsonArray params = new JsonArray().add(idStructure).add(idClasse);
         Sql.getInstance().prepared(query,params,validResultHandler(handler));
+
+    }
+
+    @Override
+    public void getSubtopicServices(String idStructure, String idClasse, String idTeacher, String idMatiere, Handler<Either<String, JsonObject>> handler) {
+        String query = "SELECT  id_subtopic, id_teacher, id_topic, id_group, coefficient::numeric, id_structure " +
+                " From " + this.resourceTable + " WHERE id_structure = ? AND id_group = ? AND id_teacher = ? AND id_topic = ?";
+        JsonArray params = new JsonArray().add(idStructure).add(idClasse).add(idTeacher).add(idMatiere);
+        Sql.getInstance().prepared(query,params, validUniqueResultHandler(handler));
 
     }
 }

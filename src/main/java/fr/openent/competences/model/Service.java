@@ -21,10 +21,11 @@ public class Service {
     public Service() {
     }
 
-    public Service(Matiere matiere, Teacher teacher, Group group){
+    public Service(Matiere matiere, Teacher teacher, Group group, Structure structure){
         this.matiere = matiere;
         this.teacher = teacher;
         this.group = group;
+        this.structure = structure;
     }
 
     public Structure getStructure() {

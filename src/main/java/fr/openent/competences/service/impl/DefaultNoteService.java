@@ -21,6 +21,7 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
+import static fr.openent.competences.utils.HomeworkUtils.safeGetDouble;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.badRequest;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
@@ -40,10 +41,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
 
-import fr.openent.competences.model.Group;
-import fr.openent.competences.model.Matiere;
-import fr.openent.competences.model.Service;
-import fr.openent.competences.model.Teacher;
+import fr.openent.competences.model.*;
 import fr.openent.competences.service.*;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -103,6 +101,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private UtilsService utilsService;
     private AnnotationService annotationService;
     private CompetenceNoteService competenceNoteService;
+    private SubTopicService subTopicService;
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultNoteService.class);
 
@@ -116,6 +115,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         utilsService = new DefaultUtilsService(eb);
         annotationService = new DefaultAnnotationService(COMPETENCES_SCHEMA, REL_ANNOTATIONS_DEVOIRS_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE);
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, "services_subtopic");
     }
 
     @Override
@@ -925,6 +925,32 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         for (int i = 0; i < listNotes.size(); i++) {
             JsonObject note = listNotes.getJsonObject(i);
 
+            subTopicService.getSubtopicServices(note.getString("id_etablissement"), note.getString("id_groupe"),event -> {
+                if(event.isRight()){
+                    List<SubTopic> subTopics = new ArrayList<>();
+                    for(Object subTopicobj : event.right().getValue()){
+                        SubTopic subTopic = new SubTopic();
+                        JsonObject subTopicJo = (JsonObject) subTopicobj;
+                        Service service = new Service();
+                        Matiere matiere = new Matiere();
+                        Group group = new Group();
+                        Teacher teacher = new Teacher();
+                        group.setId(subTopicJo.getString("id_group"));
+                        matiere.setId(subTopicJo.getString("id_topic"));
+                        teacher.setId(subTopicJo.getString("id_teacher"));
+                        service.setMatiere(matiere);
+                        service.setGroup(group);
+                        service.setTeacher(teacher);
+                        subTopic.setService(service);
+                        subTopic.setId(subTopicJo.getInteger("id_subtopic"));
+                        subTopic.setCoefficient(safeGetDouble(subTopicJo,"coefficient"));
+                        subTopics.add(subTopic);
+                    }
+                }else{
+                    log.error("Pas de subtopics du tout.");
+                }
+            });
+
             if (note.getString("valeur") != null && note.getBoolean("is_evaluated")
                     && note.getString("coefficient") != null && !"0".equals(note.getString("coefficient"))) {
                 Long id_periode = note.getLong("id_periode");
@@ -951,8 +977,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 Matiere matiere = new Matiere(note.getString("id_matiere"));
                 Teacher teacher = new Teacher(note.getString("owner"));
                 Group group = new Group(note.getString("id_groupe"));
+                Structure structure = new Structure(note.getString("id_etablissement"));
 
-                Service service = new Service(matiere, teacher, group);
+                Service service = new Service(matiere, teacher, group, structure);
 
                 NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(note.getString("valeur")),
                         Double.valueOf(note.getLong("diviseur")), note.getBoolean("ramener_sur"),
@@ -1001,17 +1028,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 double totalCoeff = 0;
                 for (Map.Entry<Long, ArrayList<NoteDevoir>> smEntry : notesSubMatForPeriode.entrySet()) {
                     Long idSousMatiere = smEntry.getKey();
+                    Service serv = smEntry.getValue().get(0).getService();
 
                     JsonObject service = (JsonObject) services.stream()
-                            .filter(el -> smEntry.getValue().get(0).getService().getTeacher().getId().equals(((JsonObject) el).getString("owner"))
-                                    && smEntry.getValue().get(0).getService().getMatiere().getId().equals(((JsonObject) el).getString("id_matiere"))
-                                    && smEntry.getValue().get(0).getService().getGroup().getId().equals(((JsonObject) el).getString("id_groupe")))
+                            .filter(el -> serv.getTeacher().getId().equals(((JsonObject) el).getString("owner"))
+                                    && serv.getMatiere().getId().equals(((JsonObject) el).getString("id_matiere"))
+                                    && serv.getGroup().getId().equals(((JsonObject) el).getString("id_groupe")))
                             .findFirst().orElse(null);
-
+                    double coeff = 0;
                     if(service != null) {
-
                     }
-
+                    //TODO330 : Utiliser les subservices ici en les filtrant puis en récupérant leur coeff (et faire en sorte de bien les récupérer)
                     int coeff = (int)(Math.random() * 10); //TODO330 : RECUPERER LE BON COEFF EN FONCTION DU SERVICE LIE AU NOTEDEVOIR
                     System.out.println("coeff = " + coeff);
                     if (isNotNull(idSousMatiere)) {

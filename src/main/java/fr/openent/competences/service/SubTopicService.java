@@ -11,4 +11,6 @@ public interface SubTopicService {
     void getSubtopicServices(String idStructure, Handler<Either<String, JsonArray>> defaultResponseHandler);
 
     void getSubtopicServices(String idStructure,String idClasse, Handler<Either<String, JsonArray>> defaultResponseHandler);
+
+    void getSubtopicServices(String idStructure, String idClasse, String idTeacher, String idMatiere, Handler<Either<String, JsonObject>> handler);
 }
