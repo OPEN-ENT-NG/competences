@@ -12,6 +12,15 @@ public class Teacher extends Model{
     private String lastName;
     private final List<Group> groupes = new ArrayList<>();
     private final List<Classe> classes = new ArrayList<>();
+
+    public Teacher() {
+        super();
+    }
+
+    public Teacher(String id) {
+        super(id);
+    }
+
     public String getFirstName() {
         return firstName;
     }

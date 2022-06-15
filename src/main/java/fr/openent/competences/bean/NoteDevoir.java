@@ -17,6 +17,8 @@
 
 package fr.openent.competences.bean;
 
+import fr.openent.competences.model.Service;
+
 /**
  * Created by ledunoiss on 05/08/2016.
  */
@@ -49,6 +51,8 @@ public class NoteDevoir {
     public static final Double DIVISEUR_DEFAULT_VALUE = 20.0;
 
     private Long idPeriode;
+
+    private Service service;
 
     /**
      * @param note valeur de la note
@@ -101,6 +105,16 @@ public class NoteDevoir {
         this.idEleve = idEleve;
     }
 
+    public NoteDevoir(Double note, Double diviseur, Boolean ramenerSur, Double coefficient,String idEleve, Long idPeriode, Service service) {
+        this.note = note;
+        this.diviseur = diviseur;
+        this.ramenerSur = ramenerSur;
+        this.coefficient = coefficient;
+        this.idPeriode = idPeriode;
+        this.idEleve = idEleve;
+        this.service = service;
+    }
+
 
     public Double getNote() {
         return note;
@@ -143,4 +157,12 @@ public class NoteDevoir {
     }
 
     public Long getIdPeriode() {return this.idPeriode;}
+
+    public Service getService() {
+        return service;
+    }
+
+    public void setService(Service service) {
+        this.service = service;
+    }
 }

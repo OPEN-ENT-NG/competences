@@ -337,7 +337,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
                     CompositeFuture.all(futures).setHandler(
                             setSubjectLibelleAndTeachersHandler(idEtablissement, idPeriode, idEleve,
-                                    handler, idsMatieresIdsTeachers, idClasseGroups, groupsStudent, futures)
+                                    handler, idsMatieresIdsTeachers, idClasseGroups, groupsStudent, futures, services)
                     );
                 }
             } else {
@@ -352,13 +352,13 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     setSubjectLibelleAndTeachersHandler(String idEtablissement, Long idPeriode, String idEleve,
                                         Handler<Either<String, JsonArray>> handler,
                                         Map<String, JsonObject> idsMatieresIdsTeachers,
-                                        JsonArray idClasseGroups, JsonArray groupsStudent, List<Future> futures) {
+                                        JsonArray idClasseGroups, JsonArray groupsStudent, List<Future> futures, JsonArray services) {
         return event -> {
             if(event.succeeded()) {
                 Map<String, JsonObject> idsMatLibelle = (Map<String, JsonObject>) futures.get(0).result();
                 Map<String, JsonObject> teachersInfos = (Map<String, JsonObject>) futures.get(1).result();
                 setSubjectLibelleAndTeachers(idEleve, idClasseGroups, idEtablissement, groupsStudent,
-                        idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, handler);
+                        idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, services, handler);
             } else {
                 handler.handle(new Either.Right<>(new JsonArray()));
             }
@@ -415,7 +415,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                               JsonArray groupsStudent, Map<String, JsonObject> idsMatieresIdsTeachers,
                                               Map<String, JsonObject> idsMatLibelle,
                                               Map<String, JsonObject> teachersInfos, Long idPeriod,
-                                              Handler<Either<String, JsonArray>> handler) {
+                                              JsonArray services, Handler<Either<String, JsonArray>> handler) {
         ArrayList<Future> subjectsFuture = new ArrayList<>();
         JsonArray results = new JsonArray();
 
@@ -482,7 +482,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     setAppreciationMoyFinalePositionnementEleve(result, appreciationMoyFinalePosFuture.result(),
                             idsClassWithNoteAppCompNoteStudent);
                     setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(), moyenneFinaleFuture.result(),
-                            result, idEleve, idPeriod, tableauDeConversionFuture.result(), idsClassWithNoteAppCompNoteStudent);
+                            result, idEleve, idPeriod, tableauDeConversionFuture.result(), idsClassWithNoteAppCompNoteStudent, services);
                     setElementProgramme(result, elementsProgFuture.result(), idsClassWithNoteAppCompNoteStudent);
                     results.add(result);
                     subjectFuture.complete();
@@ -763,11 +763,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     private void setMoyAndPosForSuivi(JsonArray notes, JsonArray compNotes, JsonArray moyFinalesEleves,
                                       JsonObject result, String idEleve, Long idPeriodAsked,
-                                      JsonArray tableauConversion, List<String> idsClassWithNoteAppCompNoteStudent) {
+                                      JsonArray tableauConversion, List<String> idsClassWithNoteAppCompNoteStudent, JsonArray services) {
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
                 noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves,
-                        idsClassWithNoteAppCompNoteStudent, idPeriodAsked);
+                        idsClassWithNoteAppCompNoteStudent, idPeriodAsked, services);
         noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves);
         noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false, tableauConversion,
                 idsClassWithNoteAppCompNoteStudent, idPeriodAsked);
