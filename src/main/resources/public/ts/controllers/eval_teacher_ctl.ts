@@ -832,6 +832,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             return $scope.filterValidDevoir(devoir);
                         });
                         $scope.resetSelected();
+                        $scope.resetClasseBool();
                         $scope.opened.lightboxs.duplication = false;
                         utils.safeApply($scope);
                     });
@@ -995,11 +996,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.annulerDuplication = () => {
             $scope.selected.classes = [];
-            for (let classe of $scope.classes.all) {
-                if (classe.selected) {
-                    classe.selected = false;
-                }
-            }
+            $scope.resetClasseBool();
             $scope.opened.lightboxs.duplication = false;
         };
 
@@ -1283,6 +1280,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 classes: []
             };
         };
+
+        $scope.resetClasseBool = () => {
+            for (let classe of $scope.classes.all) {
+                if (classe.selected) {
+                    classe.selected = false;
+                }
+            }
+        }
 
         /**
          * Initialise un nouveau devoir.
