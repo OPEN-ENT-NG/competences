@@ -69,7 +69,7 @@ function getMoyenne (devoirs) {
 
             if (null == moyenne) moyenne = 0.0;
 
-            return +(moyenne).toFixed(2);
+            return +(moyenne).toFixed(1);
         }else{
             return "NN";
         }

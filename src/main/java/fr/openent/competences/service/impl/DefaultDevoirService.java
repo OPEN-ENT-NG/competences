@@ -1831,7 +1831,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         String sum_notes = devoirJson.getString("sum_notes");
         Long nbr_eleves = devoirJson.getLong("nbr_eleves");
-        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        DecimalFormat decimalFormat = new DecimalFormat("#.0");
         decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
         String moyenne = sum_notes != null && nbr_eleves != null ?
                 decimalFormat.format(Double.parseDouble(sum_notes) / nbr_eleves) : "NN";

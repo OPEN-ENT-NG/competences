@@ -33,13 +33,13 @@
                             <div ng-if="isChefEtabOrHeadTeacher(search.classe) && domaine.bfc !== undefined">
                                 <i class="reset" aria-hidden="true" ng-click="deleteBFC()" ng-if="domaine.moyenne !== -1"
                                    tooltip="<i18n>evaluation.domaine.average.refresh</i18n>
-                                   [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])"></i>
+                                   [[Conversion.libelle]] ([[domaine.moyenne.toFixed(1)]])"></i>
                                 <i class="reset" aria-hidden="true" ng-click="deleteBFC()" ng-if="domaine.moyenne === -1"
                                    tooltip="<i18n>evaluation.domaine.niveau.bfc.manuel</i18n>"></i>
                             </div>
                             <div ng-if="domaine.moyenne !== -1 && ((!isChefEtabOrHeadTeacher(search.classe) &&
                              domaine.bfc !== undefined) || domaine.bfc === undefined)">
-                                [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
+                                [[Conversion.libelle]] ([[domaine.moyenne.toFixed(1)]])
                             </div>
                             <div ng-if="domaine.moyenne === -1 && domaine.bfc !== undefined && !isChefEtabOrHeadTeacher(search.classe)">
                                 [[Conversion.libelle]] <i18n>évaluation.domaine.bfc.nonevalue</i18n>
