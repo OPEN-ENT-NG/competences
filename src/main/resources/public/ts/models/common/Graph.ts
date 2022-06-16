@@ -32,7 +32,7 @@ export class Graph extends Model{
             summ++;
         });
 
-        return (summ === 0) ? 0 : parseFloat((res / summ).toFixed(2));
+        return (summ === 0) ? 0 : parseFloat((res / summ).toFixed(1));
     }
 
     static buildDatasets(configMixedChart, niveauCompetences) : Array<object> {
@@ -151,7 +151,7 @@ export class Graph extends Model{
         if (sumCoef > 0) {
             res = sum / sumCoef;
         }
-        return parseFloat(res.toFixed(2));
+        return parseFloat(res.toFixed(1));
     }
 
     static tooltipsFunction(tooltipModel, forDomaine, eleve) : any{
@@ -414,14 +414,14 @@ export class Graph extends Model{
                     averageClass.push(0);
                 }
                 if(matiereOrDomaine.classMin !== null && matiereOrDomaine.classMin !== undefined){
-                    minClass.push(matiereOrDomaine.classMin.toFixed(2).toString());
+                    minClass.push(matiereOrDomaine.classMin.toFixed(1).toString());
                 }else{
-                    minClass.push("0.00");
+                    minClass.push("0.0");
                 }
                 if(matiereOrDomaine.classMax!== null && matiereOrDomaine.classMax !== undefined){
-                    maxClass.push(matiereOrDomaine.classMax.toFixed(2).toString());
+                    maxClass.push(matiereOrDomaine.classMax.toFixed(1).toString());
                 }else{
-                    maxClass.push("0.00");
+                    maxClass.push("0.0");
                 }
 
                 let nbrCompNotesUnevaluated = _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: -1});
@@ -434,34 +434,34 @@ export class Graph extends Model{
                     _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 0}));
                 nbrCompNotes_set1 = !(nbrCompNotes_set1) ? 0 : nbrCompNotes_set1.length;
                 let set1_val = Math.min(diviseur, diviseur * (nbrCompNotes_set1 / (nbrCompNotes)));
-                let set1_percent = `${(nbrCompNotes_set1 * 100 / (nbrCompNotes)).toFixed(2)} %`;
+                let set1_percent = `${(nbrCompNotes_set1 * 100 / (nbrCompNotes)).toFixed(1)} %`;
 
                 let nbrCompNotes_set2 = _.union(
                     _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 1, niveau_final: null}),
                     _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 1}));
                 nbrCompNotes_set2 = !(nbrCompNotes_set2) ? 0 : nbrCompNotes_set2.length;
                 let set2_val = Math.min(diviseur, diviseur * (nbrCompNotes_set2 / (nbrCompNotes)) + set1_val);
-                let set2_percent = `${(nbrCompNotes_set2 * 100 / (nbrCompNotes)).toFixed(2)} %`;
+                let set2_percent = `${(nbrCompNotes_set2 * 100 / (nbrCompNotes)).toFixed(1)} %`;
 
                 let nbrCompNotes_set3 = _.union(
                     _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 2, niveau_final: null}),
                     _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 2}));
                 nbrCompNotes_set3 = !(nbrCompNotes_set3) ? 0 : nbrCompNotes_set3.length;
                 let set3_val = Math.min(diviseur, diviseur * (nbrCompNotes_set3 / (nbrCompNotes)) + set2_val);
-                let set3_percent = `${(nbrCompNotes_set3 * 100 / (nbrCompNotes)).toFixed(2)} %`;
+                let set3_percent = `${(nbrCompNotes_set3 * 100 / (nbrCompNotes)).toFixed(1)} %`;
 
                 let nbrCompNotes_set4 = _.union(
                     _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 3, niveau_final: null}),
                     _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 3}));
                 nbrCompNotes_set4 = !(nbrCompNotes_set4) ? 0 : nbrCompNotes_set4.length;
                 let set4_val = Math.min(diviseur, diviseur * (nbrCompNotes_set4 / (nbrCompNotes)) + set3_val);
-                let set4_percent = `${(nbrCompNotes_set4 * 100 / (nbrCompNotes)).toFixed(2)} %`;
+                let set4_percent = `${(nbrCompNotes_set4 * 100 / (nbrCompNotes)).toFixed(1)} %`;
 
                 // données des niveaux de maitrise
-                data_set1.push(set1_val.toFixed(2));
-                data_set2.push(set2_val.toFixed(2));
-                data_set3.push(set3_val.toFixed(2));
-                data_set4.push(set4_val.toFixed(2));
+                data_set1.push(set1_val.toFixed(1));
+                data_set2.push(set2_val.toFixed(1));
+                data_set3.push(set3_val.toFixed(1));
+                data_set4.push(set4_val.toFixed(1));
 
                 // Pourcentage des niveaux de maitrise
                 percentage_set1.push(set1_percent);

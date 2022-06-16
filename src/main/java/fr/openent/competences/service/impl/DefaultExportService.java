@@ -2005,7 +2005,7 @@ public class DefaultExportService implements ExportService {
      * @param matiere la matière dont on cherche les devoirs.
      */
     private void getDevoirsByMatiere(JsonArray devoirsJson, JsonObject matiere, JsonObject moyenneFinale) {
-        DecimalFormat df = new DecimalFormat("0.##");
+        DecimalFormat df = new DecimalFormat("0.#");
         df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
 
         JsonArray devoirsMatiereJson = new JsonArray();

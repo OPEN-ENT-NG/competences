@@ -2883,7 +2883,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
 
             Object moyClasse;
-            DecimalFormat decimalFormat = new DecimalFormat("#.00");
+            DecimalFormat decimalFormat = new DecimalFormat("#.0");
             decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
             if(!annual) {
                 moyClasse = (nbMoyenneClasse > 0) ? decimalFormat.format((sumMoyClasse / nbMoyenneClasse)) : " ";
@@ -3181,7 +3181,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
         }
 
-        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        DecimalFormat decimalFormat = new DecimalFormat("#.0");
         decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
 
         JsonObject statsToAdd = new JsonObject();
@@ -3323,7 +3323,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         double moyenneMin = 0.0;
         double moyenneMax = 0.0;
         boolean initialisationMoyenne = false;
-        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        DecimalFormat decimalFormat = new DecimalFormat("#.0");
         decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
 
         for (Map.Entry<String, JsonObject> student : eleveMapObject.entrySet()) {
