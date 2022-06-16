@@ -1,10 +1,11 @@
 package fr.openent.competences.model;
 
+import fr.openent.competences.constants.Field;
 import io.vertx.core.json.JsonObject;
 
 public class SubTopic {
     private String libelle;
-    private Integer id;
+    private Long id;
     private Service service;
     private Double coefficient = 1.d;
 
@@ -23,14 +24,14 @@ public class SubTopic {
         return new JsonObject()
                 .put("id",this.id)
                 .put("id_matiere",this.service.getMatiere().getId())
-                .put("coefficient",coefficient);
+                .put(Field.COEFFICIENT,coefficient);
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

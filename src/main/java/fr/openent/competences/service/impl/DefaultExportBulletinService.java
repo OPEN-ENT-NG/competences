@@ -4,6 +4,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.ImgLevel;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
@@ -1889,7 +1890,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 Long periode = moyenneJson.getLong("id");
                 if(periode != null && !periodes.contains(periode)){
                     if(!moyenneJson.getValue("moyenne").equals(NN)){
-                        moyMatiere[0] += moyenneJson.getDouble("moyenne");
+                        moyMatiere[0] += safeGetDouble(moyenneJson,"moyenne");
                         periodes.add(periode);
                     }
                 }
@@ -2239,14 +2240,18 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonObject moyenClasseSous = matiere.getJsonObject("_moyennesClasse");
                     Float moyCl = getMoyenneForSousMat(moyenClasseSous, idPeriode, idSousMat);
                     sousMat.put(MOYENNE_CLASSE, isNull(moyCl)? NN : moyCl);
-                    sousMat.put("subCoef",1);
-                    for(Service service : services){
-                        for(SubTopic subTopic : service.getSubtopics()){
-                            if(subTopic.getId().equals(sousMat.getInteger("id_type_sousmatiere"))){
-                                sousMat.put("subCoef",subTopic.getCoefficient());
+                    sousMat.put("subCoef",1.d);//FIXME PETIT PB AFFICHAGE
+
+                    List<Service> matiereServices = setMatiereServices(matiere, params);
+                    for(Service matiereService : matiereServices)
+                        for(Service service : services){
+                            for(SubTopic subTopic : service.getSubtopics()){
+                                if(subTopic.getId().equals(sousMat.getLong("id_type_sousmatiere")) &&
+                                        subTopic.getService().equals(matiereService) ){
+                                    sousMat.put("subCoef",subTopic.getCoefficient());
+                                }
                             }
                         }
-                    }
                     if(i!=0){
                         sousMatiereWithoutFirst.add(sousMat);
                     }
@@ -2259,6 +2264,25 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             matiere.put(SOUS_MATIERES, sousMatiereWithoutFirst);
         }
     }
+
+    private List<Service> setMatiereServices(JsonObject matiere, JsonObject params) {
+        List<Service> matiereServices = new ArrayList<>();
+        for(Object o : matiere.getJsonArray("teachers")){
+            Teacher teacher = new Teacher();
+            teacher.setId(((JsonObject)o).getString("id"));
+            Service matiereService = new Service();
+            Group group = new Group();
+            group.setId(params.getString("idClasse"));
+            Matiere matiere1 = new Matiere();
+            matiere1.setId(matiere.getString("id_matiere"));
+            matiereService.setTeacher(teacher);
+            matiereService.setMatiere(matiere1);
+            matiereService.setGroup(group);
+            matiereServices.add(matiereService);
+        }
+        return matiereServices;
+    }
+
     private void setPrintCoefficient(JsonObject matiere, JsonObject params){
         matiere.put(PRINT_COEFFICIENT, params.getBoolean(COEFFICIENT));
         matiere.put("coef", matiere.getValue("coef", "1"));
@@ -2837,8 +2861,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     service.setGroup(group);
                     service.setTeacher(teacher);
                     subTopic.setService(service);
-                    subTopic.setId(subTopicJo.getInteger("id_subtopic"));
-                    subTopic.setCoefficient(safeGetDouble(subTopicJo,"coefficient"));
+                    subTopic.setId(subTopicJo.getLong("id_subtopic"));
+                    subTopic.setCoefficient(safeGetDouble(subTopicJo, Field.COEFFICIENT));
                     subTopics.add(subTopic);
                 }
                 promise.complete(subTopics);
@@ -2875,16 +2899,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         //Faire le libelle
         classeStudent.setPeriode(periode);
         JsonArray groupes, manualGroupes = new JsonArray();
-          try {
+        try {
             groupes = eleve.getJsonArray("idGroupes");
-              } catch (ClassCastException e) {
-             String groupesStr = eleve.getString("idGroupes");
-             String[] array = groupesStr.split(",");
-              groupes = new JsonArray();
+        } catch (ClassCastException e) {
+            String groupesStr = eleve.getString("idGroupes");
+            String[] array = groupesStr.split(",");
+            groupes = new JsonArray();
             for(String s : array){
-              groupes.add(s);
+                groupes.add(s);
             }
-          }
+        }
         manualGroupes.addAll(eleve.getJsonArray("idManualGroupes", new JsonArray()));
         for (int j = 0; j < groupes.size(); j++) {
             Group group = new Group();
