@@ -93,7 +93,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         String queryDevoir = "SELECT id FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs WHERE id_etablissement= ? AND owner !='id-user-transition-annee' ";
 
-        String queryPeriode = "SELECT id FROM " + Competences.VSCO_SCHEMA + ".periode WHERE id_etablissement = ? ";
+        String queryPeriode = "SELECT id FROM " + Competences.VIESCO_SCHEMA + ".periode WHERE id_etablissement = ? ";
 
         String queryTransition = "SELECT id_etablissement FROM " + Competences.COMPETENCES_SCHEMA + ".transition WHERE id_etablissement = ? ";
 
@@ -156,7 +156,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     }
 
     private void classesWithPeriode(String id_etablissement, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT id_classe FROM "+ Competences.VSCO_SCHEMA +".periode WHERE id_etablissement = ?";
+        String query = "SELECT DISTINCT id_classe FROM "+ Competences.VIESCO_SCHEMA +".periode WHERE id_etablissement = ?";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(id_etablissement);
         Sql.getInstance().prepared(query, values,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
                 getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
@@ -201,10 +201,10 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter, vMapGroupesATraiter,
                         idStructureATraiter, finalHandler);
             }else{
-                log.warn("transition année :  erreur lors de la récupération des classes dans la table " + Competences.VSCO_SCHEMA + ".periode :" +
+                log.warn("transition année :  erreur lors de la récupération des classes dans la table " + Competences.VIESCO_SCHEMA + ".periode :" +
                         " id Etablissement : " + idStructureATraiter);
                 finalHandler.handle(new Either.Left<>(
-                        "transition année :  erreur lors de la récupération des classes dans la table " + Competences.VSCO_SCHEMA + ".periode :" +
+                        "transition année :  erreur lors de la récupération des classes dans la table " + Competences.VIESCO_SCHEMA + ".periode :" +
                                 " id Etablissement : " + idStructureATraiter));
             }
         };
@@ -335,7 +335,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             String queryInsertDevoir = "WITH temp_periode AS ( " +
                     "SELECT type.id as id_type, MAX(periode.id_type) as max_periode_id_type, MAX(periode.date_fin_saisie) as max_periode_date_fin_saisie," +
                     "periode.id_classe as periode_id_classe " +
-                    "FROM " + Competences.COMPETENCES_SCHEMA + ".type , " + Competences.VSCO_SCHEMA + ".periode WHERE type.default_type = ? AND type.id_etablissement = ? AND periode.id_etablissement = ? " +
+                    "FROM " + Competences.COMPETENCES_SCHEMA + ".type , " + Competences.VIESCO_SCHEMA + ".periode WHERE type.default_type = ? AND type.id_etablissement = ? AND periode.id_etablissement = ? " +
                     "GROUP BY periode.id_etablissement,type.id, periode.id_classe ) " +
                     "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".devoirs(id,owner, name, id_type, id_etablissement, diviseur, ramener_sur, date_publication," +
                     " is_evaluated, id_etat, percent, apprec_visible, eval_lib_historise,id_periode, date) ";
@@ -511,10 +511,10 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 Competences.COMPETENCES_SCHEMA + "." + Competences.CLASS_APPRECIATION_DIGITAL_SKILLS + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.STUDENT_APPRECIATION_DIGITAL_SKILLS + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.STUDENT_DIGITAL_SKILLS_TABLE + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_ABSENCES_ET_RETARDS + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_PERIODE + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_MULTI_TEACHING + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_SERVICES_TABLE;
+                Competences.VIESCO_SCHEMA + "." + Competences.VSCO_ABSENCES_ET_RETARDS + ", " +
+                Competences.VIESCO_SCHEMA + "." + Competences.VSCO_PERIODE + ", " +
+                Competences.VIESCO_SCHEMA + "." + Competences.VSCO_MULTI_TEACHING + ", " +
+                Competences.VIESCO_SCHEMA + "." + Competences.VSCO_SERVICES_TABLE;
 
         statements.prepared(queryTruncate, params);
         String queryTruncateCascade = "TRUNCATE TABLE " + Competences.COMPETENCES_SCHEMA + "."
@@ -545,9 +545,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     public void cleanTableSql(Handler<Either<String, JsonArray>> handler) {
         JsonArray emptyParams = new JsonArray();
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
-        String truncateQuery = "TRUNCATE " + VSCO_SCHEMA + ".rel_structures_personne_supp," +
-                VSCO_SCHEMA + ".rel_groupes_personne_supp," +
-                VSCO_SCHEMA + ".personnes_supp," +
+        String truncateQuery = "TRUNCATE " + VIESCO_SCHEMA + ".rel_structures_personne_supp," +
+                VIESCO_SCHEMA + ".rel_groupes_personne_supp," +
+                VIESCO_SCHEMA + ".personnes_supp," +
                 COMPETENCES_SCHEMA + ".transition," +
                 COMPETENCES_SCHEMA + ".match_class_id_transition CASCADE";
 
@@ -566,12 +566,12 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .append("SELECT function_clone_schema_with_sequences(?::text, ?::text, TRUE)");
 
         statements.add(new JsonObject()
-                .put("statement", "ALTER SCHEMA " + Competences.VSCO_SCHEMA + " RENAME TO " + Competences.VSCO_SCHEMA + "_" + currentYear)
+                .put("statement", "ALTER SCHEMA " + Competences.VIESCO_SCHEMA + " RENAME TO " + Competences.VIESCO_SCHEMA + "_" + currentYear)
                 .put("values", new fr.wseduc.webutils.collections.JsonArray())
                 .put("action", "prepared"));
 
         JsonArray valuesForCloneVieSco = new fr.wseduc.webutils.collections.JsonArray()
-                .add(Competences.VSCO_SCHEMA + "_" + currentYear).add(Competences.VSCO_SCHEMA);
+                .add(Competences.VIESCO_SCHEMA + "_" + currentYear).add(Competences.VIESCO_SCHEMA);
 
         statements.add(new JsonObject()
                 .put("statement", queryForClone.toString())
@@ -749,7 +749,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 values.add(id);
         }
 
-        query.append("DELETE FROM ").append(Competences.VSCO_SCHEMA).append(".").append(Competences.VSCO_SOUS_MATIERE_TABLE)
+        query.append("DELETE FROM ").append(Competences.VIESCO_SCHEMA).append(".").append(Competences.VSCO_SOUS_MATIERE_TABLE)
                 .append(" WHERE id_matiere NOT IN ").append(Sql.listPrepared(matieres.getList()));
 
         statements.add(new JsonObject()

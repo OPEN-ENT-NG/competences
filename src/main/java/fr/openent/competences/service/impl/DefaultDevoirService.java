@@ -148,13 +148,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append(" FROM notes.competences_devoirs c" )
                 .append(" WHERE c.id_devoir =?) comp")
                 .append(" INNER JOIN  notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id")
-                .append(" LEFT JOIN "+ Competences.VSCO_SCHEMA +".sousmatiere")
+                .append(" LEFT JOIN "+ Competences.VIESCO_SCHEMA +".sousmatiere")
                 .append("            ON devoir.id_sousmatiere = sousmatiere.id ")
-                .append(" LEFT JOIN "+ Competences.VSCO_SCHEMA +".type_sousmatiere ")
+                .append(" LEFT JOIN "+ Competences.VIESCO_SCHEMA +".type_sousmatiere ")
                 .append("            ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
-                .append(" LEFT JOIN "+ Competences.EVAL_SCHEMA +".rel_devoirs_groupes ")
+                .append(" LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ")
                 .append("            ON rel_devoirs_groupes.id_devoir = devoir.id ")
-                .append(" LEFT JOIN "+ Competences.EVAL_SCHEMA +".rel_groupe_cycle ")
+                .append(" LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_groupe_cycle ")
                 .append("            ON rel_groupe_cycle.id_groupe = rel_devoirs_groupes.id_groupe ")
                 .append(" WHERE devoir.id = ? ;");
 
@@ -593,14 +593,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("FROM ").append(COMPETENCES_SCHEMA).append(".devoirs ")
                 .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".type ON devoirs.id_type = type.id ")
                 .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".competences_devoirs ON devoirs.id = competences_devoirs.id_devoir ")
-                .append("LEFT JOIN ").append(VSCO_SCHEMA).append(".sousmatiere ON devoirs.id_sousmatiere = sousmatiere.id ")
-                .append("LEFT JOIN ").append(VSCO_SCHEMA).append(".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
+                .append("LEFT JOIN ").append(VIESCO_SCHEMA).append(".sousmatiere ON devoirs.id_sousmatiere = sousmatiere.id ")
+                .append("LEFT JOIN ").append(VIESCO_SCHEMA).append(".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
                 .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ")
                 .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".users ON users.id = devoirs.owner ")
                 .append("WHERE rel_devoirs_groupes.id_devoir = devoirs.id AND devoirs.id_etablissement = ? ")
                 .append("AND devoirs.eval_lib_historise = false AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
                 .append("devoirs.owner IN (SELECT DISTINCT main_teacher_id ") // ou dont l'un de mes titulaires le sont (de l'établissement passé en paramètre)
-                .append("FROM ").append(VSCO_SCHEMA).append(".multi_teaching ")
+                .append("FROM ").append(VIESCO_SCHEMA).append(".multi_teaching ")
                 .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".devoirs ON devoirs.id_matiere = multi_teaching.subject_id ")
                 .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON devoirs.id = rel_devoirs_groupes.id_devoir ")
                 .append("AND multi_teaching.class_or_group_id = rel_devoirs_groupes.id_groupe ")
@@ -686,7 +686,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
 
         query.append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ")
-                .append("LEFT JOIN ").append(Competences.VSCO_SCHEMA).append(".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
+                .append("LEFT JOIN ").append(Competences.VIESCO_SCHEMA).append(".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type on devoirs.id_type = type.id ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users on users.id = devoirs.owner ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ");
@@ -934,8 +934,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("SELECT devoirs.*,type_sousmatiere.libelle as _sousmatiere_libelle,sousmatiere.id as _sousmatiere_id " +
                 "FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs " +
-                "LEFT JOIN "+ Competences.VSCO_SCHEMA +".sousmatiere ON devoirs.id_sousmatiere = sousmatiere.id " +
-                "LEFT JOIN "+ Competences.VSCO_SCHEMA +".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id " +
+                "LEFT JOIN "+ Competences.VIESCO_SCHEMA +".sousmatiere ON devoirs.id_sousmatiere = sousmatiere.id " +
+                "LEFT JOIN "+ Competences.VIESCO_SCHEMA +".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id " +
                 "WHERE devoirs.id_etablissement = ?" +
                 "AND devoirs.id_periode = ? " +
                 "AND devoirs.owner = ? " +

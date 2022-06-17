@@ -257,7 +257,7 @@ public class DefaultLSUService implements LSUService {
     public void addUnheededStudents(JsonArray idsStudents, Long idPeriode, String idClasse,
                                     final Handler<Either<String, JsonArray>> handler){
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
-        String query = " INSERT INTO " + Competences.EVAL_SCHEMA + "." + LSU_UNHEEDED_STUDENTS_TABLE
+        String query = " INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + LSU_UNHEEDED_STUDENTS_TABLE
                 + " (id_eleve, id_classe, id_periode, created) "
                 + " VALUES (?, ?, " + ((idPeriode != null) ? " ?,": "-1," ) + " NOW()) "
                 + " ON CONFLICT (id_eleve, id_classe,id_periode) DO UPDATE SET created = NOW() ";
@@ -270,7 +270,7 @@ public class DefaultLSUService implements LSUService {
                                     final Handler<Either<String, JsonArray>> handler){
 
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
-        String query = " DELETE FROM " + Competences.EVAL_SCHEMA + "." + LSU_UNHEEDED_STUDENTS_TABLE
+        String query = " DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + LSU_UNHEEDED_STUDENTS_TABLE
                 + " WHERE id_eleve =? AND  id_classe = ? "
                 + ((idPeriode!=null)?" AND id_periode =? ;": " AND id_periode =-1 ;");
 
@@ -282,7 +282,7 @@ public class DefaultLSUService implements LSUService {
     public void getUnheededStudents(JsonArray idPeriodes, JsonArray idClasses,
                                     final Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder().append(" SELECT * ").append(" FROM ")
-                .append(Competences.EVAL_SCHEMA).append(".").append(LSU_UNHEEDED_STUDENTS_TABLE)
+                .append(Competences.COMPETENCES_SCHEMA).append(".").append(LSU_UNHEEDED_STUDENTS_TABLE)
                 .append(" WHERE id_classe IN ").append(Sql.listPrepared(idClasses.getList()))
                 .append(" AND id_periode ");
 

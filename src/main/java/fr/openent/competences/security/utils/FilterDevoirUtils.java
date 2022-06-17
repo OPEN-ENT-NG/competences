@@ -61,7 +61,7 @@ public class FilterDevoirUtils  extends ControllerHelper {
     public void validateDevoirFinSaisie(Long idDevoir, UserInfos user, final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
                 .append("SELECT count(devoir.id) " +
-                        "FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs, " + Competences.VSCO_SCHEMA + ".periode "+
+                        "FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs, " + Competences.VIESCO_SCHEMA + ".periode "+
                         "WHERE devoirs.id = ? " +
                         "AND devoirs.owner = ?  " +
                         "AND now() < periode.date_fin_saisie;" );

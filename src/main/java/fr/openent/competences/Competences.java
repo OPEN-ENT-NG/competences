@@ -17,6 +17,7 @@
 
 package fr.openent.competences;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.controllers.*;
 import fr.openent.competences.service.impl.BulletinWorker;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
@@ -43,8 +44,7 @@ public class Competences extends BaseServer {
 
     public static String COMPETENCES_SCHEMA = "notes";
 
-    public static String VSCO_SCHEMA = "viesco";
-    public final static String EVAL_SCHEMA = "notes";
+    public static String VIESCO_SCHEMA = "viesco";
 
     public static JsonObject LSUN_CONFIG;
     public static JsonObject TRANSITION_CONFIG;
@@ -273,8 +273,8 @@ public class Competences extends BaseServer {
     public void start() throws Exception {
         super.start();
 
-        COMPETENCES_SCHEMA = config.getString("db-schema");
-        VSCO_SCHEMA = config.getString("vsco-schema");
+        COMPETENCES_SCHEMA = config.getString(Field.DB_SCHEMA);
+        VIESCO_SCHEMA = config.getString(Field.VIESCO_SCHEMA);
         LSUN_CONFIG = config.getJsonObject("lsun");
         TRANSITION_CONFIG = config.getJsonObject("transition");
         DELIVERY_OPTIONS = new DeliveryOptions()

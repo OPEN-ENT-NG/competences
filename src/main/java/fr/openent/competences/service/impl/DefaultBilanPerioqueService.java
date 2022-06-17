@@ -89,7 +89,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 "coalesce(abs_non_just, 0) as abs_non_just, coalesce(abs_non_just_heure, 0) as abs_non_just_heure, " +
                 "coalesce(abs_totale, 0) as abs_totale, coalesce(abs_totale_heure, 0) as abs_totale_heure, " +
                 "coalesce(retard, 0) as retard " +
-                "FROM " + VSCO_SCHEMA + ".absences_et_retards WHERE id_eleve IN " + Sql.listPrepared(idEleves);
+                "FROM " + VIESCO_SCHEMA + ".absences_et_retards WHERE id_eleve IN " + Sql.listPrepared(idEleves);
 
         JsonArray params = new JsonArray();
         for(String idEleve : idEleves) {

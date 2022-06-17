@@ -31,10 +31,10 @@ import static org.entcore.common.sql.Sql.listPrepared;
 public class DefaultMatiereService extends SqlCrudService implements MatiereService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultMatiereService.class);
-    private static final String subjectLibelleTable = VSCO_SCHEMA + "." + VSCO_MATIERE_LIBELLE_TABLE;
-    private static final String modelSubjectLibelleTable = VSCO_SCHEMA + "." + VSCO_MODEL_MATIERE_LIBELLE_TABLE;
-    private static final String underSubjectTable = VSCO_SCHEMA + "." + VSCO_SOUS_MATIERE_TABLE;
-    private static final String typeUnderSubjectTable = VSCO_SCHEMA + "." + VSCO_TYPE_SOUS_MATIERE_TABLE;
+    private static final String subjectLibelleTable = VIESCO_SCHEMA + "." + VSCO_MATIERE_LIBELLE_TABLE;
+    private static final String modelSubjectLibelleTable = VIESCO_SCHEMA + "." + VSCO_MODEL_MATIERE_LIBELLE_TABLE;
+    private static final String underSubjectTable = VIESCO_SCHEMA + "." + VSCO_SOUS_MATIERE_TABLE;
+    private static final String typeUnderSubjectTable = VIESCO_SCHEMA + "." + VSCO_TYPE_SOUS_MATIERE_TABLE;
 
     private final EventBus eb;
     private static final String LIBELLE_COURT = "libelle_court";
@@ -146,7 +146,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     public void saveModel(String idStructure, String title, final Long idModel, JsonArray libelleMatiere,
                           Handler<Either<String, JsonObject>> handler) {
         if (idModel == null) {
-            final String queryNewCours = "SELECT nextval('" + VSCO_SCHEMA + ".model_subject_libelle_id_seq') as id";
+            final String queryNewCours = "SELECT nextval('" + VIESCO_SCHEMA + ".model_subject_libelle_id_seq') as id";
 
             sql.raw(queryNewCours, SqlResult.validUniqueResultHandler(event -> {
                 if (event.isRight()) {
@@ -180,7 +180,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     }
 
     private void getDefaultLibele(Handler<Either<String, JsonArray>> handler) {
-        String query = " SELECT * FROM " + EVAL_SCHEMA + "." + VSCO_MATIERE_TABLE;
+        String query = " SELECT * FROM " + COMPETENCES_SCHEMA + "." + VSCO_MATIERE_TABLE;
         sql.prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
     }
 
@@ -376,7 +376,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         String query = "SELECT DISTINCT devoirs.*\n" +
                 " FROM " + COMPETENCES_SCHEMA + ".devoirs\n" +
                 " INNER JOIN " +
-                "      " + VSCO_SCHEMA + ".sousmatiere " +
+                "      " + VIESCO_SCHEMA + ".sousmatiere " +
                 "       ON devoirs.id_matiere = sousmatiere.id_matiere  AND " +
                 (isNull(idsMatieres) ? "true" : listPrepared(idsMatieres.getList())) +
                 "       AND devoirs.id_sousmatiere IS NULL;";
@@ -390,8 +390,8 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
 
     private void getSubJectInfos(JsonArray idsMatieres, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT id_type_sousmatiere as id_sousmatiere, id_matiere, libelle, id_structure " +
-                " FROM " + VSCO_SCHEMA + ".sousmatiere " +
-                " INNER JOIN " + VSCO_SCHEMA + ".type_sousmatiere " +
+                " FROM " + VIESCO_SCHEMA + ".sousmatiere " +
+                " INNER JOIN " + VIESCO_SCHEMA + ".type_sousmatiere " +
                 " ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id AND " +
                 (isNull(idsMatieres) ? "true" : listPrepared(idsMatieres.getList()));
 

@@ -3162,7 +3162,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private void saveBFCfile(String idEleve, String idClasse, String externalIdClasse, String idEtablissement,
                              Integer idCycle, String idYear, String filename, String idFile,
                              Handler<Either<String, JsonObject>> handler) {
-        String query = "INSERT INTO " + Competences.EVAL_SCHEMA +
+        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
                 ".archive_bfc (id_eleve, external_id_classe, id_classe, id_etablissement, id_cycle, id_annee, id_file, file_name, modified ) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, Now()) " +
                 "ON CONFLICT (id_classe, id_etablissement, id_cycle, id_eleve, id_annee) " +
@@ -3554,7 +3554,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
 
     private JsonObject checkStatements(String idStudent, String idClasse, Integer idPeriode, String idYear) {
-        String query = "SELECT 1 from " + Competences.EVAL_SCHEMA + ".archive_bulletins " +
+        String query = "SELECT 1 from " + Competences.COMPETENCES_SCHEMA + ".archive_bulletins " +
                 " WHERE id_classe = ? AND id_eleve = ? AND id_periode = ? AND id_annee = ? ; ";
         JsonArray params = new JsonArray().add(idClasse).add(idStudent).add(idPeriode).add(idYear);
         return  new JsonObject()

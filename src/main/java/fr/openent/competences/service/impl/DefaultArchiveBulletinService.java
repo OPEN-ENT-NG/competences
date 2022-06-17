@@ -14,7 +14,7 @@ public class DefaultArchiveBulletinService implements ArchiveService {
     @Override
     public void getArchives(String idStructure, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
-        String query = "SELECT * FROM "+ Competences.EVAL_SCHEMA + "." + Competences.BULLETIN_ARCHIVE_TABLE +
+        String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + "." + Competences.BULLETIN_ARCHIVE_TABLE +
                 " WHERE id_etablissement = ? ";
 
         params.add(idStructure);

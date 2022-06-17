@@ -140,7 +140,7 @@ public class FilterPeriodeUtils {
     public void validateStructure(final String idEtablissement, Long idPeriode, final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
                 .append("SELECT count(periode.*) " +
-                        "FROM " + Competences.VSCO_SCHEMA + ".periode " +
+                        "FROM " + Competences.VIESCO_SCHEMA + ".periode " +
                         "WHERE periode.id_etablissement = ?");
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idEtablissement);
 

@@ -334,7 +334,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ")
                 .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe IN ")
                 .append(Sql.listPrepared(idsClass.getList())).append(" LEFT JOIN ")
-                .append(Competences.VSCO_SCHEMA).append(".services ")
+                .append(Competences.VIESCO_SCHEMA).append(".services ")
                 .append(" ON (rel_devoirs_groupes.id_groupe = services.id_groupe ")
                 .append(" AND devoirs.owner = services.id_enseignant AND devoirs.id_matiere = services.id_matiere) ")
                 .append(" WHERE devoirs.id_etablissement = ? ")
