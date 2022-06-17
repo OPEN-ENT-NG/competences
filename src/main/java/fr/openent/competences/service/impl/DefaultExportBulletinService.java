@@ -56,6 +56,7 @@ import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
 import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.*;
+import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.utils.BulletinUtils.getIdParentForStudent;
 import static fr.openent.competences.utils.HomeworkUtils.safeGetDouble;
@@ -2996,33 +2997,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    private void setServices(Structure structure, JsonArray servicesJson, List<Service> services, List<SubTopic> subTopics) {
-        for (int i = 0 ; i < servicesJson.size();i++){
-            JsonObject serviceJo = servicesJson.getJsonObject(i);
-            Service service = new Service();
-            service.setStructure(structure);
-            Group group = new Group();
-            group.setId(serviceJo.getString("id_groupe"));
-            service.setGroup(group);
-            Matiere matiere = new Matiere();
-            matiere.setId(serviceJo.getString("id_matiere"));
-            service.setMatiere(matiere);
-            Teacher teacher =  new Teacher();
-            teacher.setId(serviceJo.getString("id_enseignant"));
-            service.setTeacher(teacher);
-            service.setEvaluable(serviceJo.getBoolean("evaluable"));
-            service.setVisible(serviceJo.getBoolean("is_visible"));
-            service.setModalite(serviceJo.getString("modalite",""));
-            service.setCoefficient(serviceJo.getLong("coefficient"));
-            for(SubTopic subTopic : subTopics){
-                if(subTopic.getService().equals(service)){
-                    service.addSubtopics(subTopic);
-                }
-            }
-            services.add(service);
 
-        }
-    }
 
     private void setStudentClasseToPrint(JsonObject student, JsonObject classe){
         student.put(CLASSE_NAME_TO_SHOW, classe.getString("classeName"));

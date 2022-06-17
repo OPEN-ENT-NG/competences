@@ -3,6 +3,8 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.enums.EventType;
+import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
@@ -15,24 +17,22 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
-import fr.openent.competences.enums.*;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-
-import fr.openent.competences.message.MessageResponseHandler;
-
 import static org.entcore.common.sql.SqlResult.validResultHandler;
-import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private static final Logger log = LoggerFactory.getLogger(DefaultBilanPerioqueService.class);
@@ -768,7 +768,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
                 noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves,
                         idsClassWithNoteAppCompNoteStudent, idPeriodAsked, services);
-        noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves);
+        noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves,services);
+
         noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false, tableauConversion,
                 idsClassWithNoteAppCompNoteStudent, idPeriodAsked);
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);

@@ -171,9 +171,10 @@ public interface NoteService extends CrudService {
      * @param result JsonObject of result
      * @param idEleve idEleve
      * @param idEleves id des Eleves ayant une note dans la lisNotes
+     * @param services
      */
     void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes, final JsonObject result,
-                                          String idEleve, JsonArray idEleves);
+                                          String idEleve, JsonArray idEleves, JsonArray services);
     /**
      *Calcul la moyenne d'un eleve a
      * @param listNotes response of request

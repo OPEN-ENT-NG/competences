@@ -22,22 +22,22 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.message.MessageResponseHandler;
+import fr.openent.competences.model.*;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
-import org.entcore.common.neo4j.Neo4j;
-import org.entcore.common.neo4j.Neo4jResult;
-import org.entcore.common.service.impl.SqlCrudService;
-import org.entcore.common.sql.Sql;
-import org.entcore.common.sql.SqlResult;
-import org.entcore.common.user.UserInfos;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.neo4j.Neo4jResult;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
+import org.entcore.common.user.UserInfos;
 
 import java.math.RoundingMode;
 import java.text.*;
@@ -45,15 +45,14 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.CONNECTION_WAS_CLOSED;
-import static org.entcore.common.sql.SqlResult.validResultHandler;
+import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 
@@ -166,13 +165,41 @@ public class DefaultUtilsService implements UtilsService {
         }));
     }
 
+    public static void setServices(Structure structure, JsonArray servicesJson, List<Service> services, List<SubTopic> subTopics) {
+        for (int i = 0 ; i < servicesJson.size();i++){
+            JsonObject serviceJo = servicesJson.getJsonObject(i);
+            Service service = new Service();
+            service.setStructure(structure);
+            Group group = new Group();
+            group.setId(serviceJo.getString("id_groupe"));
+            service.setGroup(group);
+            Matiere matiere = new Matiere();
+            matiere.setId(serviceJo.getString("id_matiere"));
+            service.setMatiere(matiere);
+            Teacher teacher =  new Teacher();
+            teacher.setId(serviceJo.getString("id_enseignant"));
+            service.setTeacher(teacher);
+            service.setEvaluable(serviceJo.getBoolean("evaluable"));
+            service.setVisible(serviceJo.getBoolean("is_visible"));
+            service.setModalite(serviceJo.getString("modalite",""));
+            service.setCoefficient(serviceJo.getLong("coefficient"));
+            for(SubTopic subTopic : subTopics){
+                if(subTopic.getService().equals(service)){
+                    service.addSubtopics(subTopic);
+                }
+            }
+            services.add(service);
+
+        }
+    }
+
+
     /**
      * get only evaluable sql services
      * @param structureId
      * @param idsClass groups or/and classes ids
      * @param handler request response
      */
-
     public void getServices(final String structureId, final JsonArray idsClass,
                             Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
