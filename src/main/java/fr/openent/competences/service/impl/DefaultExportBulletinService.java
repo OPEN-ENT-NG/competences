@@ -2805,7 +2805,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             JsonArray servicesJson = (JsonArray) success.result().list().get(5);
                             JsonArray multiTeachinJsonArray = (JsonArray) success.result().list().get(6);
                             for(int i = 1; i <= finalNbOptions; i++) {
-                                paramBulletins.addParams((JsonObject) success.result().list().get(6 + i));
+                                paramBulletins.addParams((JsonObject) success.result().list().get(7 + i));
                             }
                             List<Service> services = new ArrayList<>();
                             List<MultiTeaching> multiTeachings = new ArrayList<>();

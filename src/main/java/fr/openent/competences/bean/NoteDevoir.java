@@ -54,6 +54,8 @@ public class NoteDevoir {
 
     private Service service;
 
+    private Long idSousMatiere;
+
     /**
      * @param note valeur de la note
      * @param diviseur sur combien est la note.
@@ -105,7 +107,7 @@ public class NoteDevoir {
         this.idEleve = idEleve;
     }
 
-    public NoteDevoir(Double note, Double diviseur, Boolean ramenerSur, Double coefficient,String idEleve, Long idPeriode, Service service) {
+    public NoteDevoir(Double note, Double diviseur, Boolean ramenerSur, Double coefficient,String idEleve, Long idPeriode, Service service, Long idSousMatiere) {
         this.note = note;
         this.diviseur = diviseur;
         this.ramenerSur = ramenerSur;
@@ -113,6 +115,7 @@ public class NoteDevoir {
         this.idPeriode = idPeriode;
         this.idEleve = idEleve;
         this.service = service;
+        this.idSousMatiere = idSousMatiere;
     }
 
 

@@ -1,5 +1,6 @@
 package fr.openent.competences.model;
 
+import fr.openent.competences.constants.Field;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
