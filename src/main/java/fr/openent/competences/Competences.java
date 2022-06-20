@@ -53,11 +53,7 @@ public class Competences extends BaseServer {
     public static final String MONGO_COLLECTION = "notes_export";
     public static final String ANNOTATIONS = "annotations";
     public static final String APPRECIATION_CPE_BILAN_PERIODIQUE = "appreciation_cpe_bilan_periodique";
-
-    public static final String BFC_SYNTHESE_TABLE = "bfc_synthese";
-    public static final String BFC_TABLE = "bilan_fin_cycle";
-
-    public static final String BFC_ARCHIVE_TABLE = "archive_bfc";
+    
     public static final String BULLETIN_ARCHIVE_TABLE = "archive_bulletins";
 
     public static final String BULLETIN_PARAMETERS_TABLE ="bulletin_parameters";
