@@ -31,8 +31,7 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
-import static fr.openent.competences.Competences.MESSAGE;
+import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 
@@ -54,7 +53,7 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
     public void updateEnsCpl(Integer id, JsonObject data, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "UPDATE " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement " +
+        String query = "UPDATE " + COMPETENCES_SCHEMA + ".eleve_enseignement_complement " +
                 "SET id_enscpl = ?, id_niveau = ?, id_langue = ?, niveau_lcr = ? " +
                 "WHERE id = ?";
 
@@ -71,8 +70,8 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
     public void getNiveauEnsCplByEleve(String idEleve, Long idCycle, Handler<Either<String, JsonObject>> handler) {
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT eleve_enseignement_complement.*, enseignement_complement.libelle " +
-                "FROM " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement " +
-                "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".enseignement_complement ON enseignement_complement.id = eleve_enseignement_complement.id_enscpl " +
+                "FROM " + COMPETENCES_SCHEMA + ".eleve_enseignement_complement " +
+                "INNER JOIN " + COMPETENCES_SCHEMA + ".enseignement_complement ON enseignement_complement.id = eleve_enseignement_complement.id_enscpl " +
                 "WHERE id_eleve = ?" ;
 
         values.add(idEleve);
@@ -89,9 +88,9 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
     public void listNiveauCplByEleves( final String[] idsEleve, final  Handler<Either<String, JsonArray>> handler) {
         JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
         String queryCount = "SELECT count(*) FROM " +
-                Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement INNER JOIN " +
-                Competences.COMPETENCES_SCHEMA +".enseignement_complement " +
-                " ON notes.eleve_enseignement_complement.id_enscpl = notes.enseignement_complement.id " +
+                COMPETENCES_SCHEMA + ".eleve_enseignement_complement INNER JOIN " +
+                COMPETENCES_SCHEMA +".enseignement_complement " +
+                " ON " + COMPETENCES_SCHEMA + ".eleve_enseignement_complement.id_enscpl = " + COMPETENCES_SCHEMA + ".enseignement_complement.id " +
                 " WHERE id_eleve IN "+ Sql.listPrepared(idsEleve);
         for(String idEleve : idsEleve){
             valuesCount.add(idEleve);
@@ -103,13 +102,13 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
                 String query = "SELECT langues_culture_regionale.code as code_lcr, " +
                         " langues_culture_regionale.libelle as libelle_lcr ,eleve_enseignement_complement.*, " +
                         " enseignement_complement.libelle,enseignement_complement.code, niveau_ens_complement.niveau " +
-                        " FROM " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement" +
-                        " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".enseignement_complement " +
-                        "    ON notes.eleve_enseignement_complement.id_enscpl = notes.enseignement_complement.id " +
-                        " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".niveau_ens_complement " +
+                        " FROM " + COMPETENCES_SCHEMA + ".eleve_enseignement_complement" +
+                        " INNER JOIN " + COMPETENCES_SCHEMA + ".enseignement_complement " +
+                        "    ON " + COMPETENCES_SCHEMA + ".eleve_enseignement_complement.id_enscpl = " + COMPETENCES_SCHEMA + ".enseignement_complement.id " +
+                        " INNER JOIN "+ COMPETENCES_SCHEMA + ".niveau_ens_complement " +
                         "    ON niveau_ens_complement.id = eleve_enseignement_complement.id_niveau "+
 
-                        "LEFT JOIN "+ Competences.COMPETENCES_SCHEMA + ".langues_culture_regionale " +
+                        "LEFT JOIN "+ COMPETENCES_SCHEMA + ".langues_culture_regionale " +
                         "    ON eleve_enseignement_complement.id_langue = langues_culture_regionale.id "+
 
                         " WHERE id_eleve IN " + Sql.listPrepared(idsEleve);

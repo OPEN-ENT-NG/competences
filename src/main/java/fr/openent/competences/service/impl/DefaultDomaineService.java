@@ -26,6 +26,7 @@ import org.entcore.common.sql.SqlResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
 
 public class DefaultDomaineService extends SqlCrudService implements DomainesService {
@@ -33,7 +34,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
         super(schema, table);
     }
     public DefaultDomaineService() {
-        super(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
+        super(COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
     }
 
     @Override
@@ -47,20 +48,20 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
                 .append(" ( ")
                 .append(" SELECT 1 as niveau, id, id_parent, libelle, codification, evaluated, array[id] as pathinfo ")
                 .append(" , id_cycle, dispensable")
-                .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".domaines ")
+                .append(" FROM "+ COMPETENCES_SCHEMA +".domaines ")
                 .append(" WHERE id_parent = 0 ");
 
         if(null != idCycle) {
             query.append(" AND id_cycle = ? ");
         } else if(null != idClasse) {
-            query.append(" AND id_cycle = (SELECT id_cycle FROM " + Competences.COMPETENCES_SCHEMA)
+            query.append(" AND id_cycle = (SELECT id_cycle FROM " + COMPETENCES_SCHEMA)
                     .append(".rel_groupe_cycle WHERE id_groupe = ?) ");
         }
 
         query.append(" UNION ")
                 .append(" SELECT sg.niveau + 1  as niveau , dom.id, dom.id_parent, dom.libelle, ")
                 .append(" dom.codification, dom.evaluated, sg.pathinfo||dom.id, dom.id_cycle, dom.dispensable ")
-                .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".domaines dom , search_graph sg ")
+                .append(" FROM "+ COMPETENCES_SCHEMA +".domaines dom , search_graph sg ")
                 .append(" WHERE dom.id_parent = sg.id ")
                 .append(") ")
                 .append(" SELECT niveau, id, id_parent, libelle, codification, evaluated, id_cycle, dispensable, " )
@@ -70,7 +71,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
         }
         query .append("FROM search_graph");
         if(idEleve !=null){
-            query.append(" LEFT JOIN notes.dispense_domaine_eleve  ON search_graph.id = dispense_domaine_eleve.id_domaines ")
+            query.append(" LEFT JOIN " + COMPETENCES_SCHEMA + ".dispense_domaine_eleve  ON search_graph.id = dispense_domaine_eleve.id_domaines ")
                     .append("AND dispense_domaine_eleve.id_eleve = ?");
         }
         query.append(" GROUP BY niveau, id, id_parent, libelle, codification, evaluated, id_cycle, dispensable, nom, nomHtml, pathinfo");
@@ -97,7 +98,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
 
 
         query.append("SELECT id, id_parent, libelle, codification ");
-        query.append("FROM notes.domaines ");
+        query.append("FROM " + COMPETENCES_SCHEMA + ".domaines ");
         query.append("WHERE id IN " + listIntPrepared(idDomaines));
 
         for(int s : idDomaines) {
@@ -125,9 +126,9 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
         //On extrait d'abord les domaines evalués et dont le cycle correspond à celui de la classe
         query.append("WITH evaluated_domaines AS ")
                 .append("(SELECT id, id_parent, libelle, codification ")
-                .append("FROM notes.domaines ");
+                .append("FROM " + COMPETENCES_SCHEMA + ".domaines ");
         if(idCycle == null) {
-            query.append("LEFT JOIN notes.rel_groupe_cycle ON notes.domaines.id_cycle = notes.rel_groupe_cycle.id_cycle")
+            query.append("LEFT JOIN " + COMPETENCES_SCHEMA + ".rel_groupe_cycle ON " + COMPETENCES_SCHEMA + ".domaines.id_cycle = " + COMPETENCES_SCHEMA + ".rel_groupe_cycle.id_cycle")
                     .append(" WHERE domaines.evaluated = TRUE AND rel_groupe_cycle.id_groupe = ?) ");
             params.add(idClasse);
         }else {
@@ -154,8 +155,8 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
 
         params.add(idClasse);
         String query = " SELECT id, domaines.id_cycle, codification, libelle, type, evaluated, code_domaine " +
-                " FROM " + Competences.COMPETENCES_SCHEMA + ".domaines " +
-                " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle " +
+                " FROM " + COMPETENCES_SCHEMA + ".domaines " +
+                " INNER JOIN " + COMPETENCES_SCHEMA + ".rel_groupe_cycle " +
                 " ON domaines.id_cycle = rel_groupe_cycle.id_cycle " +
                 " WHERE  id_groupe = ? " +
                 " AND evaluated = true " +

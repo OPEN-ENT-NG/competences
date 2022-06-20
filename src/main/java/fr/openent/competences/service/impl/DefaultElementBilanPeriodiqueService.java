@@ -534,14 +534,14 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         query
                 .append("SELECT id_groupe ")
-                .append(" FROM notes.rel_elt_bilan_periodique_intervenant_matiere ")
-                .append("  INNER JOIN notes.rel_elt_bilan_periodique_groupe ")
+                .append(" FROM " + COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
+                .append("  INNER JOIN " + COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe ")
                 .append("  ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique ")
                 .append(" WHERE id_intervenant = ? ")
                 .append(" UNION ")
                 .append("SELECT id_groupe ")
-                .append(" FROM notes.rel_elt_bilan_periodique_groupe ")
-                .append("  INNER JOIN notes.elt_bilan_periodique ")
+                .append(" FROM " + COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe ")
+                .append("  INNER JOIN " + COMPETENCES_SCHEMA + ".elt_bilan_periodique ")
                 .append("  ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ")
                 .append(" WHERE type_elt_bilan_periodique = ? ")
                 .append("  AND id_etablissement = ? ");
@@ -558,13 +558,13 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         query
                 .append("SELECT id_groupe ")
-                .append(" FROM notes.rel_elt_bilan_periodique_intervenant_matiere ")
-                .append("  INNER JOIN notes.rel_elt_bilan_periodique_groupe ")
+                .append(" FROM " + COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
+                .append("  INNER JOIN " + COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe ")
                 .append("  ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique ")
                 .append(" UNION ")
                 .append("SELECT id_groupe ")
-                .append(" FROM notes.rel_elt_bilan_periodique_groupe ")
-                .append("  INNER JOIN notes.elt_bilan_periodique ")
+                .append(" FROM " + COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe ")
+                .append("  INNER JOIN " + COMPETENCES_SCHEMA + ".elt_bilan_periodique ")
                 .append("  ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ")
                 .append(" WHERE type_elt_bilan_periodique = ? ")
                 .append("  AND id_etablissement = ? ");
@@ -1088,7 +1088,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query ="UPDATE notes.thematique_bilan_periodique " +
+        String query ="UPDATE " + COMPETENCES_SCHEMA + ".thematique_bilan_periodique " +
                 "SET libelle = ?, code = ? WHERE id = ?";
         params.add(thematique.getString("libelle"))
                 .add(thematique.getString("code"))

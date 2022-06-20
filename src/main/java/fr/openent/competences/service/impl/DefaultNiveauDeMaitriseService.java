@@ -30,6 +30,7 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
@@ -41,7 +42,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
 
 
     public DefaultNiveauDeMaitriseService() {
-        super(Competences.COMPETENCES_SCHEMA, Competences.PERSO_NIVEAU_COMPETENCES_TABLE);
+        super(COMPETENCES_SCHEMA, Competences.PERSO_NIVEAU_COMPETENCES_TABLE);
     }
 
     /**
@@ -56,11 +57,11 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         query.append("SELECT niv.libelle, t1.libelle as default_lib, t1.ordre, t1.couleur AS default,")
                 .append(" t1.id_cycle, t1.id AS id_niveau,")
                 .append(" niv.id_etablissement, niv.couleur, niv.lettre, niv.id AS id, t2.libelle AS cycle")
-                .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.NIVEAU_COMPETENCES_TABLE + " AS t1")
-                .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.CYCLE_TABLE + " AS t2")
+                .append(" FROM " + COMPETENCES_SCHEMA + "." + Competences.NIVEAU_COMPETENCES_TABLE + " AS t1")
+                .append(" INNER JOIN " + COMPETENCES_SCHEMA + "." + Competences.CYCLE_TABLE + " AS t2")
                 .append(" ON t1.id_cycle = t2.id ")
                 .append(" LEFT JOIN ")
-                .append(" (SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + "." + Competences.PERSO_NIVEAU_COMPETENCES_TABLE)
+                .append(" (SELECT * FROM "+ COMPETENCES_SCHEMA + "." + Competences.PERSO_NIVEAU_COMPETENCES_TABLE)
                 .append(" WHERE id_etablissement = ? ) AS niv")
                 .append(" ON (niv.id_niveau = t1.id) ");
 
@@ -81,7 +82,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT niv1.libelle, niv1.ordre, niv1.couleur couleurDefault, niv1.id_cycle ")
-                .append("FROM notes.niveau_competences niv1 ")
+                .append("FROM " + COMPETENCES_SCHEMA + ".niveau_competences niv1 ")
                 .append("WHERE id_cycle = ? ")
                 .append("ORDER BY (ordre);");
 
@@ -96,8 +97,8 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
 
         query.append("SELECT niveau_competences.libelle, niveau_competences.ordre, ")
                 .append(" niveau_competences.couleur couleurDefault, niveau_competences.id_cycle  ")
-                .append(" FROM notes.niveau_competences")
-                .append(" INNER JOIN " +   Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
+                .append(" FROM " + COMPETENCES_SCHEMA + ".niveau_competences")
+                .append(" INNER JOIN " +   COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
                 .append(" ON id_groupe = ? AND rel_groupe_cycle.id_cycle = niveau_competences.id_cycle ")
                 .append(" order By (ordre);" );
 
@@ -110,7 +111,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE)
+        query.append("SELECT * FROM " + COMPETENCES_SCHEMA + "." + Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE)
                 .append(" WHERE id_user = ? ");
 
         values.add(idUser);
@@ -119,7 +120,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
 
     public void markUsePerso(final JsonObject idUser, final Handler<Either<String, JsonArray>> handler) {
         final String queryNewUserId =
-                "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + "."+ Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE
+                "SELECT nextval('" + COMPETENCES_SCHEMA + "."+ Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE
                         +"_id_seq') as id";
 
         sql.raw(queryNewUserId, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
@@ -127,7 +128,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
             public void handle(Either<String, JsonObject> event) {
                 if (event.isRight()) {
                     final Long userId = event.right().getValue().getLong("id");
-                    final String table = Competences.COMPETENCES_SCHEMA + "."+
+                    final String table = COMPETENCES_SCHEMA + "."+
                             Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE;
                     doCreate(handler, userId, idUser, table);
                 }
@@ -140,7 +141,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
     public void createMaitrise(final JsonObject maitrise, UserInfos user, final Handler<Either<String, JsonArray>> handler) {
 
         final String queryNewNivCompetenceId =
-                "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".perso_niveau_competences_id_seq') as id";
+                "SELECT nextval('" + COMPETENCES_SCHEMA + ".perso_niveau_competences_id_seq') as id";
 
         sql.raw(queryNewNivCompetenceId, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
             @Override
@@ -188,7 +189,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
     }
 
     public void deleteUserFromPerso(String idUser,Handler<Either<String, JsonObject>> handler ) {
-        final String table = Competences.COMPETENCES_SCHEMA + "."+
+        final String table = COMPETENCES_SCHEMA + "."+
                 Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE;
 
         String query = "DELETE FROM " + table + " WHERE id_user = ?";

@@ -32,6 +32,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.util.*;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
 
 /**
@@ -47,10 +48,10 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
     @Override
     public void createCompetenceNote(final JsonObject competenceNote, final String idUser, final Handler<Either<String, JsonObject>> handler) {
-        String query = "INSERT INTO " +  Competences.COMPETENCES_SCHEMA +"." + Competences.COMPETENCES_NOTES_TABLE +
+        String query = "INSERT INTO " +  COMPETENCES_SCHEMA +"." + Competences.COMPETENCES_NOTES_TABLE +
                 "( id_devoir, id_competence, evaluation, owner, id_eleve ) " +
                 "SELECT id AS id_devoir, ? AS id_competence, ? AS evaluation, owner, ? AS id_eleve " +
-                "FROM "+ Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE +
+                "FROM "+ COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE +
                 " WHERE " + Competences.DEVOIR_TABLE + ".id = ? ON CONFLICT ( id_devoir, id_competence, id_eleve ) " +
                 " DO UPDATE SET evaluation = ? RETURNING id ;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
@@ -67,7 +68,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     }
 
     private void update(JsonObject competenceNote, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE notes.competences_notes SET evaluation = ? " +
+        String query = "UPDATE" + COMPETENCES_SCHEMA + ".competences_notes SET evaluation = ? " +
                 "WHERE id_competence = ? AND id_devoir = ? AND id_eleve = ?;";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
@@ -98,12 +99,12 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         query.append("SELECT competences_notes.*,competences.nom as nom, competences.id_type as id_type, ")
                 .append(" competences.id_parent as id_parent, ")
                 .append(" competence_niveau_final.niveau_final AS niveau_final  ")
-                .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes, ")
-                .append( Competences.COMPETENCES_SCHEMA +".devoirs, ")
-                .append( Competences.COMPETENCES_SCHEMA +".competences ")
+                .append(" FROM "+ COMPETENCES_SCHEMA +".competences_notes, ")
+                .append( COMPETENCES_SCHEMA +".devoirs, ")
+                .append( COMPETENCES_SCHEMA +".competences ")
 
                 // Jointure pour le niveau final
-                .append(" LEFT JOIN notes.competence_niveau_final ON ")
+                .append(" LEFT JOIN " + COMPETENCES_SCHEMA + ".competence_niveau_final ON ")
                 .append(" competence_niveau_final.id_competence = competences.id ")
                 .append(" AND competence_niveau_final.id_eleve = ? ")
 
@@ -125,12 +126,12 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                     .append(" null as owner, ? as id_eleve,null as created, null as modified, competences.nom as nom, ")
                     .append(" competences.id_type as id_type, competences.id_parent as id_parent,  ")
                     .append(" competence_niveau_final.niveau_final AS niveau_final  ")
-                    .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs, ")
-                    .append( Competences.COMPETENCES_SCHEMA +".devoirs, ")
-                    .append( Competences.COMPETENCES_SCHEMA +".competences ")
+                    .append(" FROM "+ COMPETENCES_SCHEMA +".competences_devoirs, ")
+                    .append( COMPETENCES_SCHEMA +".devoirs, ")
+                    .append( COMPETENCES_SCHEMA +".competences ")
 
                     // Jointure pour le niveau final
-                    .append(" LEFT JOIN notes.competence_niveau_final ON ")
+                    .append(" LEFT JOIN " + COMPETENCES_SCHEMA + ".competence_niveau_final ON ")
                     .append(" competence_niveau_final.id_competence = competences.id ")
                     .append(" AND competence_niveau_final.id_eleve = ? ")
 
@@ -140,7 +141,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                     .append("       OR  competence_niveau_final.id_matiere IS NULL) ")
                     .append(" AND competences_devoirs.id_devoir = ? AND    ")
                     .append(" NOT competences_devoirs.id_competence IN  ")
-                    .append(" (SELECT id_competence FROM notes.competences_notes ")
+                    .append(" (SELECT id_competence FROM " + COMPETENCES_SCHEMA + ".competences_notes ")
                     .append("  WHERE competences_notes.id_eleve = ? AND competences_notes.id_devoir = ? )");
             params.add(idEleve).add(idEleve).add(idDevoir).add(idEleve).add(idDevoir);
             if (idCycle != null) {
@@ -162,12 +163,12 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         query.append("SELECT competences_notes.*,competences.nom as nom, competences.id_type as id_type, ")
                 .append(" competences.id_parent as id_parent, ")
                 .append(" competence_niveau_final.niveau_final AS niveau_final  ")
-                .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes, ")
-                .append( Competences.COMPETENCES_SCHEMA +".devoirs, ")
-                .append( Competences.COMPETENCES_SCHEMA +".competences ")
+                .append(" FROM "+ COMPETENCES_SCHEMA +".competences_notes, ")
+                .append( COMPETENCES_SCHEMA +".devoirs, ")
+                .append( COMPETENCES_SCHEMA +".competences ")
 
                 // Jointure pour le niveau final
-                .append(" LEFT JOIN notes.competence_niveau_final ON ")
+                .append(" LEFT JOIN " + COMPETENCES_SCHEMA + ".competence_niveau_final ON ")
                 .append(" competence_niveau_final.id_competence = competences.id ")
                 .append(" AND competence_niveau_final.id_eleve = ? ")
 
@@ -190,12 +191,12 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                     .append(" null as owner, ? as id_eleve,null as created, null as modified, competences.nom as nom, ")
                     .append(" competences.id_type as id_type, competences.id_parent as id_parent,  ")
                     .append(" competence_niveau_final.niveau_final AS niveau_final  ")
-                    .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs, ")
-                    .append( Competences.COMPETENCES_SCHEMA +".devoirs, ")
-                    .append( Competences.COMPETENCES_SCHEMA +".competences ")
+                    .append(" FROM "+ COMPETENCES_SCHEMA +".competences_devoirs, ")
+                    .append( COMPETENCES_SCHEMA +".devoirs, ")
+                    .append( COMPETENCES_SCHEMA +".competences ")
 
                     // Jointure pour le niveau final
-                    .append(" LEFT JOIN notes.competence_niveau_final ON ")
+                    .append(" LEFT JOIN " + COMPETENCES_SCHEMA + ".competence_niveau_final ON ")
                     .append(" competence_niveau_final.id_competence = competences.id ")
                     .append(" AND competence_niveau_final.id_eleve = ? ")
 
@@ -205,7 +206,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                     .append("       OR  competence_niveau_final.id_matiere IS NULL) ")
                     .append(" AND competences_devoirs.id_devoir  IN " + idDevoirsForQuery)
                     .append(" AND  NOT competences_devoirs.id_competence IN  ")
-                    .append(" (SELECT id_competence FROM notes.competences_notes ")
+                    .append(" (SELECT id_competence FROM " + COMPETENCES_SCHEMA + ".competences_notes ")
                     .append("  WHERE competences_notes.id_eleve = ? AND competences_notes.id_devoir IN ")
                     .append(idDevoirsForQuery + " )");
             params.add(idEleve).add(idEleve).addAll(idDevoirs).add(idEleve).addAll(idDevoirs);
@@ -224,10 +225,10 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     public void getCompetencesNotesDevoir(Long idDevoir, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder()
                 .append("SELECT C.nom, CN.id, CN.id_devoir, codification, CN.id_eleve, CN.id_competence, CN.evaluation ")
-                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".competences_notes CN ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences C ON CN.id_competence = C.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_competences_domaines RCD ON RCD.id_competence = C.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".domaines D ON RCD.id_domaine = D.id ")
+                .append("FROM ").append(COMPETENCES_SCHEMA).append(".competences_notes CN ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".competences C ON CN.id_competence = C.id ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_competences_domaines RCD ON RCD.id_competence = C.id ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".domaines D ON RCD.id_domaine = D.id ")
                 .append("WHERE CN.id_devoir = ? ");
 
         Sql.getInstance().prepared(query.toString(),
@@ -240,7 +241,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         for (int i = 0; i < _datas.size(); i++) {
             JsonObject o = _datas.getJsonObject(i);
-            query.append("UPDATE "+ Competences.COMPETENCES_SCHEMA +".competences_notes SET evaluation = ?, modified = now() WHERE id = ?;");
+            query.append("UPDATE "+ COMPETENCES_SCHEMA +".competences_notes SET evaluation = ?, modified = now() WHERE id = ?;");
             values.add(o.getLong("evaluation")).add(o.getInteger("id"));
         }
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
@@ -252,7 +253,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         for (int i = 0; i < _datas.size(); i++) {
             JsonObject o = _datas.getJsonObject(i);
-            query.append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".competences_notes ")
+            query.append("INSERT INTO "+ COMPETENCES_SCHEMA +".competences_notes ")
                     .append(" (id_devoir, id_competence, evaluation, owner, id_eleve, created) ")
                     .append(" VALUES (?, ?, ?, ?, ?, now()) ")
                     .append(" ON CONFLICT (id_devoir, id_competence, id_eleve) DO UPDATE SET evaluation = ? ;");
@@ -268,7 +269,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     public void dropCompetencesNotesDevoir(JsonArray oIdsJsonArray, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
-            query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id IN " + Sql.listPrepared(oIdsJsonArray.getList()) + ";");
+            query.append("DELETE FROM "+ COMPETENCES_SCHEMA +".competences_notes WHERE id IN " + Sql.listPrepared(oIdsJsonArray.getList()) + ";");
         Sql.getInstance().prepared(query.toString(), oIdsJsonArray, SqlResult.validResultHandler(handler));
     }
 
@@ -280,9 +281,9 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                         "max(competences_notes.evaluation) as evaluation , competence_niveau_final.niveau_final ," +
                         "competence_niveau_final_annuel.niveau_final AS niveau_final_annuel, " +
                         "rel_competences_domaines.id_domaine, devoirs.id_matiere, competences_notes.owner ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id AND competences_notes.id_eleve IN (");
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
+                .append("INNER JOIN "+ COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
+                .append("INNER JOIN "+ COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id AND competences_notes.id_eleve IN (");
 
         for (int i=0; i<idEleves.size()-1 ; i++){
             query.append("?,");
@@ -291,20 +292,20 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         query.append("?)) ");
         values.add(idEleves.get(idEleves.size()-1));
 
-        query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) AND devoirs.eval_lib_historise = false ");
+        query.append("INNER JOIN "+ COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) AND devoirs.eval_lib_historise = false ");
 
         if (idPeriode != null) {
             query.append("AND devoirs.id_periode = ? ");
             values.add(idPeriode);
         }
 
-        query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type ON (type.id = devoirs.id_type) ");
-        query.append("LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".competence_niveau_final " +
+        query.append("INNER JOIN "+ COMPETENCES_SCHEMA +".type ON (type.id = devoirs.id_type) ");
+        query.append("LEFT JOIN "+ COMPETENCES_SCHEMA +".competence_niveau_final " +
                 "ON (competence_niveau_final.id_eleve = competences_notes.id_eleve " +
                 "AND competence_niveau_final.id_periode = devoirs.id_periode " +
                 "AND competence_niveau_final.id_competence = competences.id " +
                 "AND competence_niveau_final.id_matiere= devoirs.id_matiere) ");
-        query.append("LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".competence_niveau_final_annuel " +
+        query.append("LEFT JOIN "+ COMPETENCES_SCHEMA +".competence_niveau_final_annuel " +
                 "ON (competence_niveau_final_annuel.id_eleve = competences_notes.id_eleve " +
                 "AND competence_niveau_final_annuel.id_competence = competences.id " +
                 "AND competence_niveau_final_annuel.id_matiere= devoirs.id_matiere) ");
@@ -320,8 +321,8 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT competences_notes.id_eleve AS id_eleve, competences.id as id_competence, max(competences_notes.evaluation) as evaluation,rel_competences_domaines.id_domaine, competences_notes.owner ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence " +
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
+                .append("INNER JOIN "+ COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence " +
                         "AND rel_competences_domaines.id_domaine IN ( " );
 
         for (int i=0; i<idDomaines.size()-1 ; i++){
@@ -331,7 +332,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         query.append("?)) ");
         values.add(Integer.valueOf(idDomaines.get(idDomaines.size()-1)));
 
-        query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id AND competences_notes.id_eleve IN (");
+        query.append("INNER JOIN "+ COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id AND competences_notes.id_eleve IN (");
 
         for (int i=0; i<idEleves.size()-1 ; i++){
             query.append("?,");
@@ -340,7 +341,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         query.append("?)) ");
         values.add(idEleves.get(idEleves.size()-1));
 
-        query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) ");
+        query.append("INNER JOIN "+ COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) ");
 
         if (idPeriode != null) {
             query.append("AND devoirs.id_periode = ? ");
@@ -358,11 +359,11 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         StringBuilder query = new StringBuilder()
                 .append("SELECT valmin, valmax, coalesce(perso.libelle, niv.libelle) as libelle, ordre, niv.couleur, bareme_brevet ")
                 .append("FROM notes.niveau_competences AS niv ")
-                .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau ")
-                .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle ")
+                .append("INNER JOIN  " + COMPETENCES_SCHEMA + ".echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau ")
+                .append("INNER JOIN  " + COMPETENCES_SCHEMA + ".rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle ")
                 .append("AND cc.id_groupe = ? ")
                 .append("AND echelle.id_structure = ? ")
-                .append("LEFT JOIN (SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".perso_niveau_competences ")
+                .append("LEFT JOIN (SELECT * FROM " + COMPETENCES_SCHEMA + ".perso_niveau_competences ")
                 .append("WHERE id_etablissement = ?) AS perso ON (perso.id_niveau = niv.id) ")
                 .append("ORDER BY  ordre DESC");
         values.add(idClasse);
@@ -378,8 +379,8 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("SELECT id_groupe, json_agg(json_build_object(\'valmin\',valmin,\'valmax\', valmax, \'libelle\', libelle," +
                         "\'ordre\', ordre,\'couleur\', couleur,\'bareme_brevet\', bareme_brevet )) as table_conversion ")
                 .append("FROM notes.niveau_competences AS niv ")
-                .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau ")
-                .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle ")
+                .append("INNER JOIN  " + COMPETENCES_SCHEMA + ".echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau ")
+                .append("INNER JOIN  " + COMPETENCES_SCHEMA + ".rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle ")
                 .append("AND cc.id_groupe IN " + Sql.listPrepared(idsClasses))
                 .append(" AND echelle.id_structure = ? ")
                 .append("GROUP BY  id_groupe");
@@ -412,17 +413,17 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
             query.append(", competence_niveau_final_annuel.niveau_final AS niveau_final_annuel ");
         }
 
-        query.append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".competences_notes ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_competences_domaines ON competences_notes.id_competence = rel_competences_domaines.id_competence ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences ON competences_notes.id_competence = competences.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ON competences_notes.id_devoir = devoirs.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type ON (type.id = devoirs.id_type) ")
-                .append("LEFT JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competence_niveau_final ")
+        query.append("FROM ").append(COMPETENCES_SCHEMA).append(".competences_notes ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_competences_domaines ON competences_notes.id_competence = rel_competences_domaines.id_competence ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".competences ON competences_notes.id_competence = competences.id ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".devoirs ON competences_notes.id_devoir = devoirs.id ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".type ON (type.id = devoirs.id_type) ")
+                .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".competence_niveau_final ")
                 .append("ON (competence_niveau_final.id_periode = devoirs.id_periode AND competence_niveau_final.id_eleve = competences_notes.id_eleve ")
                 .append("AND competence_niveau_final.id_competence = competences.id AND competence_niveau_final.id_matiere = devoirs.id_matiere ) ");
 
         if(idPeriode == null) {
-            query.append("LEFT JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competence_niveau_final_annuel ")
+            query.append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".competence_niveau_final_annuel ")
                     .append("ON (competence_niveau_final_annuel.id_competence = competences.id ")
                     .append("AND competence_niveau_final_annuel.id_eleve = competences_notes.id_eleve ")
                     .append("AND competence_niveau_final_annuel.id_matiere = devoirs.id_matiere ) ");
@@ -469,11 +470,11 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append(", devoirs.eval_lib_historise as eval_lib_historise, users.username as owner_name ")
                 .append("FROM notes.competences ")
 
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences_notes ON (competences_notes.id_competence = competences.id) ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ON (competences_notes.id_devoir = devoirs.id) ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type ON (type.id = devoirs.id_type) ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users ON users.id = competences_notes.owner ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".competences_notes ON (competences_notes.id_competence = competences.id) ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".devoirs ON (competences_notes.id_devoir = devoirs.id) ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".type ON (type.id = devoirs.id_type) ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".users ON users.id = competences_notes.owner ")
 
                 .append("LEFT JOIN notes.competence_niveau_final ON (competence_niveau_final.id_competence = competences.id ")
                 .append("AND competence_niveau_final.id_periode = devoirs.id_periode ")
@@ -510,14 +511,14 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("SELECT competences_notes.id_eleve, competences.id as id_competence, ")
                 .append("MAX(competences_notes.evaluation) as evaluation, MAX(competence_niveau_final.niveau_final) AS niveau_final, ")
                 .append("devoirs.id_matiere, devoirs.owner ,competence_niveau_final_annuel.niveau_final AS niveau_final_annuel ")
-                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".competences_notes ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences ON competences_notes.id_competence = competences.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ON competences_notes.id_devoir = devoirs.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type ON (type.id = devoirs.id_type) ")
-                .append("LEFT JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competence_niveau_final ")
+                .append("FROM ").append(COMPETENCES_SCHEMA).append(".competences_notes ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".competences ON competences_notes.id_competence = competences.id ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".devoirs ON competences_notes.id_devoir = devoirs.id ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".type ON (type.id = devoirs.id_type) ")
+                .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".competence_niveau_final ")
                 .append("ON (competence_niveau_final.id_periode = devoirs.id_periode AND competence_niveau_final.id_eleve = competences_notes.id_eleve ")
                 .append("AND competence_niveau_final.id_competence = competences.id AND competence_niveau_final.id_matiere = devoirs.id_matiere ) ")
-                .append("LEFT JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competence_niveau_final_annuel ")
+                .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".competence_niveau_final_annuel ")
                 .append("ON (competence_niveau_final_annuel.id_competence = competences.id ")
                 .append("AND competence_niveau_final_annuel.id_eleve = competences_notes.id_eleve ")
                 .append("AND competence_niveau_final_annuel.id_matiere = devoirs.id_matiere ) ")
@@ -535,14 +536,14 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append(" UNION ") // les dernières evaluations archivees
                 .append("SELECT competences_notes.id_eleve,competences.id AS id_competence, competences_notes.evaluation,")
                 .append(" NULL AS niveau_final, devoirs.id_matiere, devoirs.owner, NULL AS niveau_final_annual ")
-                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".competences_notes ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences ON competences_notes.id_competence = competences.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ON competences_notes.id_devoir = devoirs.id ")
+                .append("FROM ").append(COMPETENCES_SCHEMA).append(".competences_notes ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".competences ON competences_notes.id_competence = competences.id ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".devoirs ON competences_notes.id_devoir = devoirs.id ")
                 .append("INNER JOIN ")
                 .append("(SELECT MAX (devoirs.created) AS created,competences_notes.id_eleve,competences.id AS id_competence ")
-                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".competences_notes ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences ON competences_notes.id_competence = competences.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ON competences_notes.id_devoir = devoirs.id ")
+                .append("FROM ").append(COMPETENCES_SCHEMA).append(".competences_notes ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".competences ON competences_notes.id_competence = competences.id ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".devoirs ON competences_notes.id_devoir = devoirs.id ")
                 .append("WHERE competences_notes.id_eleve IN ").append(Sql.listPrepared(idEleves))
                 .append(" AND competences.id_cycle = ? AND devoirs.owner = 'id-user-transition-annee' ")
                 .append("GROUP BY competences_notes.id_eleve,competences.id ) AS maxDate ON maxDate.id_competence= competences_notes.id_competence ")
@@ -593,10 +594,10 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT cycle.id AS id_cycle, cycle.libelle ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".cycle ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".competences ")
+                .append("FROM " + COMPETENCES_SCHEMA + ".cycle ")
+                .append("INNER JOIN " + COMPETENCES_SCHEMA + ".competences ")
                 .append("ON competences.id_cycle = cycle.id ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".competences_notes ")
+                .append("INNER JOIN " + COMPETENCES_SCHEMA + ".competences_notes ")
                 .append("ON competences.id = competences_notes.id_competence ")
                 .append("WHERE competences_notes.id_eleve = ? ")
                 .append("GROUP BY cycle.id; ");

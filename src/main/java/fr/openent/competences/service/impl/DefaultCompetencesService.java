@@ -472,14 +472,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
     private void updateDomain(Number idComp, String idEtablissement, Number idDomaine,
                               Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT notes.function_updateDomaineCompetence(?, ?, ?);";
+        String query = "SELECT " + COMPETENCES_SCHEMA + ".function_updateDomaineCompetence(?, ?, ?);";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(idComp).add(idEtablissement).add(idDomaine);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
     }
 
     private void updateMasqueComp(Number id, String idEtablissement, Boolean masque, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT notes.function_masqueCompetence(?, ?, ?);";
+        String query = "SELECT " + COMPETENCES_SCHEMA + ".function_masqueCompetence(?, ?, ?);";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(id).add(idEtablissement).add(masque);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
@@ -563,7 +563,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
     @Override
     public void delete(final Number id, final String idEtablissement, final Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT notes.function_deleteCompetence(?, ?);";
+        String query = "SELECT " + COMPETENCES_SCHEMA + ".function_deleteCompetence(?, ?);";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(id).add(idEtablissement);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
