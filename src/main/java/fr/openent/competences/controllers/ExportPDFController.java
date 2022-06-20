@@ -99,7 +99,7 @@ public class ExportPDFController extends ControllerHelper {
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
         exportService = new DefaultExportService(eb, storage);
         exportBulletinService = new DefaultExportBulletinService(eb, storage);
-        appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE);
+        appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Field.APPRECIATIONS_TABLE);
         this.mongoExportService = new DefaultMongoExportService();
         this.storage = storage;
     }

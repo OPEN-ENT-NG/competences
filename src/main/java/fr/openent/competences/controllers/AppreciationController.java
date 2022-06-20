@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.AccessAppreciationClasseFilter;
 import fr.openent.competences.security.AccessAppreciationFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
@@ -68,7 +69,7 @@ public class AppreciationController extends ControllerHelper {
 
     public AppreciationController() {
         appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA,
-                Competences.APPRECIATIONS_TABLE);
+                Field.APPRECIATIONS_TABLE);
     }
 
 

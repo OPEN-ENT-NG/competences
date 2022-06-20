@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -490,13 +491,13 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
 
         String queryTruncate = "TRUNCATE TABLE " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATIONS_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CLASSE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATIONS_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_CLASSE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CPE_BILAN_PERIODIQUE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_DE_CLASSE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_ORIENTATION_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_DE_CLASSE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_ORIENTATION_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.ELEMENT_PROGRAMME_TABLE + ", " +
@@ -518,7 +519,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         statements.prepared(queryTruncate, params);
         String queryTruncateCascade = "TRUNCATE TABLE " + Competences.COMPETENCES_SCHEMA + "."
-                + Competences.APPRECIATION_MATIERE_PERIODE_TABLE + " CASCADE ";
+                + Field.APPRECIATION_MATIERE_PERIODE_TABLE + " CASCADE ";
         statements.prepared(queryTruncateCascade, params);
 
         Sql.getInstance().transaction(statements.build() ,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.

@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.*;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -177,7 +178,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         //tables
-        String table_appreciation = COMPETENCES_SCHEMA + "." +Competences.APPRECIATIONS_TABLE;
+        String table_appreciation = COMPETENCES_SCHEMA + "." + Field.APPRECIATIONS_TABLE;
         String table_note         = COMPETENCES_SCHEMA + "." +Competences.NOTES_TABLE;
         String table_annotations  = COMPETENCES_SCHEMA + "." +Competences.REL_ANNOTATIONS_DEVOIRS_TABLE;
 
@@ -2242,7 +2243,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // Récupération de l'appréciation de la classe
         Future<JsonArray> appreciationClassFuture = Future.future();
         if (idPeriode != null) {
-            new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE)
+            new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Field.APPRECIATIONS_TABLE)
                     .getAppreciationClasse(new String[]{idClasse}, idPeriode.intValue(), new String[]{idMatiere},
                             appreciationsEither -> formate(appreciationClassFuture, appreciationsEither));
         } else {

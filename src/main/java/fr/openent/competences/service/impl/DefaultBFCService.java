@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Domaine;
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
@@ -79,7 +80,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     private static final String NOM_CLASSE ="nomClasse";
 
     public DefaultBFCService(EventBus eb, Storage storage) {
-        super(COMPETENCES_SCHEMA,  BFC_TABLE);
+        super(COMPETENCES_SCHEMA,  Field.BFC_TABLE);
         this.eb = eb;
         this.storage = storage;
 
@@ -87,7 +88,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         domaineService = new DefaultDomaineService(COMPETENCES_SCHEMA, DOMAINES_TABLE);
         competenceService = new DefaultCompetencesService(eb);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(COMPETENCES_SCHEMA,DISPENSE_DOMAINE_ELEVE);
-        bfcSynthseService = new DefaultBfcSyntheseService(COMPETENCES_SCHEMA, BFC_SYNTHESE_TABLE, eb);
+        bfcSynthseService = new DefaultBfcSyntheseService(COMPETENCES_SCHEMA, Field.BFC_SYNTHESE_TABLE, eb);
         eleveEnseignementComplementService = new DefaultEleveEnseignementComplementService(COMPETENCES_SCHEMA,
                 ELEVE_ENSEIGNEMENT_COMPLEMENT);
         utilsService = new DefaultUtilsService(eb);
@@ -95,7 +96,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     }
 
     public DefaultBFCService(EventBus eb) {
-        super(COMPETENCES_SCHEMA,  BFC_TABLE);
+        super(COMPETENCES_SCHEMA,  Field.BFC_TABLE);
         this.eb = eb;
         this.storage = null;
 
@@ -103,7 +104,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         domaineService = new DefaultDomaineService(COMPETENCES_SCHEMA, DOMAINES_TABLE);
         competenceService = new DefaultCompetencesService(eb);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(COMPETENCES_SCHEMA,DISPENSE_DOMAINE_ELEVE);
-        bfcSynthseService = new DefaultBfcSyntheseService(COMPETENCES_SCHEMA, BFC_SYNTHESE_TABLE, eb);
+        bfcSynthseService = new DefaultBfcSyntheseService(COMPETENCES_SCHEMA, Field.BFC_SYNTHESE_TABLE, eb);
         eleveEnseignementComplementService = new DefaultEleveEnseignementComplementService(COMPETENCES_SCHEMA,
                 ELEVE_ENSEIGNEMENT_COMPLEMENT);
         utilsService = new DefaultUtilsService(eb);

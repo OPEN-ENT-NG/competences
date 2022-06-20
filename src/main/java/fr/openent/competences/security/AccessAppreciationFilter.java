@@ -18,6 +18,7 @@
 package fr.openent.competences.security;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.utils.FilterAppreciationUtils;
 import fr.openent.competences.security.utils.FilterNoteUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
@@ -59,7 +60,7 @@ public class AccessAppreciationFilter implements ResourcesProvider {
                         return;
                     }
                     WorkflowActionUtils.hasHeadTeacherRight(user, null, new JsonArray().add(idAppreciation),
-                            Competences.APPRECIATIONS_TABLE, null, null, null,
+                            Field.APPRECIATIONS_TABLE, null, null, null,
                             new Handler<Either<String, Boolean>>() {
                                 @Override
                                 public void handle(Either<String, Boolean> event) {

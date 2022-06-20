@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.lsun.ElementProgramme;
 import fr.openent.competences.bean.lsun.*;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.LevelCycle;
 import fr.openent.competences.security.HasExportLSURight;
 import fr.openent.competences.service.*;
@@ -130,7 +131,7 @@ public class LSUController extends ControllerHelper {
         utilsService = new DefaultUtilsService(eb);
         bfcService = new DefaultBFCService(eb);
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
-        bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
+        bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Field.BFC_SYNTHESE_TABLE, eb);
         eleveEnsCpl = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA,
                 Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,
