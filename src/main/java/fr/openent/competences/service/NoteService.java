@@ -173,9 +173,10 @@ public interface NoteService extends CrudService {
      * @param idEleve idEleve
      * @param idEleves id des Eleves ayant une note dans la lisNotes
      * @param services
+     * @param multiTeachers
      */
     void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes, final JsonObject result,
-                                          String idEleve, JsonArray idEleves, List<Service> services);
+                                          String idEleve, JsonArray idEleves, List<Service> services, JsonArray multiTeachers);
     /**
      *Calcul la moyenne d'un eleve a
      * @param listNotes response of request
@@ -185,6 +186,7 @@ public interface NoteService extends CrudService {
      * @param idsClassWithNoteAppCompNoteStudent idsClassWithNoteAppCompNoteStudent
      * @param idPriodeAsked idPriodeAsked
      * @param services
+     * @param multiTeachers
      * @return retourne une map avec
      */
     HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> calculMoyennesEleveByPeriode(JsonArray listNotes,
@@ -192,7 +194,7 @@ public interface NoteService extends CrudService {
                                                                                      String idEleve,
                                                                                      JsonArray idEleves,
                                                                                      List<String> idsClassWithNoteAppCompNoteStudent,
-                                                                                     Long idPriodeAsked, List<Service> services);
+                                                                                     Long idPriodeAsked, List<Service> services, JsonArray multiTeachers);
 
     /**
      * Récupère toutes les appreciations, les moyennes finales et les positionnement pour un eleve, une matiere, une periode
