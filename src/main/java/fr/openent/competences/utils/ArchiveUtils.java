@@ -1,6 +1,7 @@
 package fr.openent.competences.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.folders.FolderExporterZip;
 import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.model.PdfFile;
@@ -187,7 +188,7 @@ public class ArchiveUtils {
     private static void getListToDownloadBFCSQL(String idStructure, String idYear, EventBus eb, Storage storage,
                                                 Vertx vertx, HttpServerRequest request) {
         String query = "SELECT id_classe, id_etablissement, id_eleve, id_file, file_name as name" +
-                " FROM " + COMPETENCES_SCHEMA + ".archive_bfc" +
+                " FROM " + COMPETENCES_SCHEMA + "." + Field.BFC_ARCHIVE_TABLE +
                 " WHERE id_etablissement = ? AND id_annee = ?;";
         JsonArray params = new JsonArray().add(idStructure).add(idYear);
         executeSqlRequest(eb, storage, vertx, request, query, params, null, null);

@@ -1,5 +1,6 @@
 package fr.openent.competences.service;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.DefaultBFCService;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -27,7 +28,7 @@ public class BFCServiceTest {
         Sql.getInstance().init(Vertx.vertx().eventBus(), "");
         this.bfcService = new DefaultBFCService(Vertx.vertx().eventBus());
         FieldSetter.setField(bfcService, bfcService.getClass().getSuperclass().getDeclaredField("sql"), sql);
-        FieldSetter.setField(bfcService, bfcService.getClass().getSuperclass().getDeclaredField("resourceTable"), "notes.bilan_fin_cycle");
+        FieldSetter.setField(bfcService, bfcService.getClass().getSuperclass().getDeclaredField("resourceTable"), "notes." + Field.BFC_TABLE);
     }
 
     @Test
@@ -35,7 +36,7 @@ public class BFCServiceTest {
         long idBFC = 5;
         String idEleve = "studentId_454545";
 
-        String expectedQuery = "DELETE FROM notes.bilan_fin_cycle WHERE id_domaine = ? AND id_eleve = ?";
+        String expectedQuery = "DELETE FROM notes." + Field.BFC_TABLE + " WHERE id_domaine = ? AND id_eleve = ?";
         JsonArray expectedParams = new JsonArray()
                 .add(idBFC)
                 .add(idEleve);

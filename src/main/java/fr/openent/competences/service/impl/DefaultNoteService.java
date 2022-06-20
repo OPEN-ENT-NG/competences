@@ -634,7 +634,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             query.append("SELECT id_periode, id_eleve, " + POSITIONNEMENT + ", id_matiere ");
             query.append(" FROM " + COMPETENCES_SCHEMA + "." + POSITIONNEMENT);
         } else if(colonne.equals(APPRECIATION_MATIERE_PERIODE)){
-            query.append("SELECT id_periode, id_eleve, " + APPRECIATION_MATIERE_PERIODE + ", id_classe, id_matiere, appreciation_matiere_periode.id AS id_appreciation_matiere_periode ");
+            query.append("SELECT id_periode, id_eleve, " + APPRECIATION_MATIERE_PERIODE + ", id_classe, id_matiere, " + Field.APPRECIATION_MATIERE_PERIODE_TABLE + ".id AS id_appreciation_matiere_periode ");
             query.append(" FROM " + COMPETENCES_SCHEMA + "." + APPRECIATION_MATIERE_PERIODE);
         } else if(colonne.equals(MOYENNE)){
             query.append("SELECT id_periode, id_eleve, " + MOYENNE + ", id_classe, id_matiere ");
@@ -646,7 +646,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         if(colonne.equals("appreciation_matiere_periode")){
-            query.append(" LEFT JOIN notes.rel_appreciations_users_neo AS ao ON appreciation_matiere_periode.id = ao.appreciation_matiere_periode_id ");
+            query.append(" LEFT JOIN notes.rel_appreciations_users_neo AS ao ON " + Field.APPRECIATION_MATIERE_PERIODE_TABLE + ".id = ao.appreciation_matiere_periode_id ");
         }
 
         query.append(" WHERE ");
@@ -1090,15 +1090,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
     private void getAppreciationMatierePeriode(String idEleve, String idMatiere, Long idPeriode, JsonArray idGroups,
                                                Handler<Either<String, JsonArray>> handler){
-        String query = "SELECT appreciation_matiere_periode.appreciation_matiere_periode, " +
-                " appreciation_matiere_periode.id_classe AS id_classe_appreciation, " +
+        String query = "SELECT " + Field.APPRECIATION_MATIERE_PERIODE_TABLE + ".appreciation_matiere_periode, " +
+                Field.APPRECIATION_MATIERE_PERIODE_TABLE + ".id_classe AS id_classe_appreciation, " +
                 nullMoyenneFinale() + nullPositionnemetFinal() +
-                " appreciation_matiere_periode.id_periode AS id_periode_appreciation " +
-                " FROM notes.appreciation_matiere_periode " +
+                Field.APPRECIATION_MATIERE_PERIODE_TABLE + ".id_periode AS id_periode_appreciation " +
+                " FROM notes." + Field.APPRECIATION_MATIERE_PERIODE_TABLE +
                 " WHERE " +
-                ((idPeriode!=null)?"(appreciation_matiere_periode.id_periode = ? ) AND ": "") +
-                "    (appreciation_matiere_periode.id_eleve = ?) " +
-                "     AND (appreciation_matiere_periode.id_matiere = ?) " +
+                ((idPeriode!=null)?"(" + Field.APPRECIATION_MATIERE_PERIODE_TABLE + ".id_periode = ? ) AND ": "") +
+                "    (" + Field.APPRECIATION_MATIERE_PERIODE_TABLE + ".id_eleve = ?) " +
+                "     AND (" + Field.APPRECIATION_MATIERE_PERIODE_TABLE + ".id_matiere = ?) " +
                 "AND id_classe IN "+ Sql.listPrepared(idGroups.getList());
 
         JsonArray params = new JsonArray();

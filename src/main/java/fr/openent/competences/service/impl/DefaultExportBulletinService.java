@@ -4,6 +4,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.ImgLevel;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
@@ -3163,12 +3164,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                              Integer idCycle, String idYear, String filename, String idFile,
                              Handler<Either<String, JsonObject>> handler) {
         String query = "INSERT INTO " + Competences.EVAL_SCHEMA +
-                ".archive_bfc (id_eleve, external_id_classe, id_classe, id_etablissement, id_cycle, id_annee, id_file, file_name, modified ) " +
+                "." + Field.BFC_ARCHIVE_TABLE + "(id_eleve, external_id_classe, id_classe, id_etablissement, id_cycle, id_annee, id_file, file_name, modified ) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, Now()) " +
                 "ON CONFLICT (id_classe, id_etablissement, id_cycle, id_eleve, id_annee) " +
                 "DO UPDATE SET id_eleve = ?, external_id_classe = ?, id_classe = ?, id_etablissement = ?, id_cycle = ?, " +
                 "id_annee = ?, id_file = ?, file_name = ? , modified = Now() " +
-                "RETURNING (SELECT id_file from notes.archive_bfc " +
+                "RETURNING (SELECT id_file from notes." + Field.BFC_ARCHIVE_TABLE +
                 "WHERE file_name = ? AND external_id_classe = ? AND id_classe = ? AND id_etablissement = ? " +
                 "AND id_cycle = ? AND id_annee = ? AND id_eleve = ?);";
 

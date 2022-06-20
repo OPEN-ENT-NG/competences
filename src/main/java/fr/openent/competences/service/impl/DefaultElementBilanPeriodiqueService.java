@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
@@ -668,22 +669,22 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe.* " +
-                "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe ";
+        String query = "SELECT " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ".* " +
+                "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE;
 
-        query += " WHERE " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe.id_elt_bilan_periodique IN " + Sql.listPrepared(idElements);
+        query += " WHERE " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ".id_elt_bilan_periodique IN " + Sql.listPrepared(idElements);
 
         for (String idElement : idElements) {
             params.add(idElement);
         }
 
         if(idPeriode != null){
-            query += " AND " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe.id_periode = ? ";
+            query += " AND " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ".id_periode = ? ";
             params.add(idPeriode);
         }
 
         if(idsClasses != null && idsClasses.size() > 0){
-            query += " AND " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe.id_groupe IN " + Sql.listPrepared(idsClasses);
+            query += " AND " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ".id_groupe IN " + Sql.listPrepared(idsClasses);
             for (String idsClass : idsClasses) {
                 params.add(idsClass);
             }
@@ -714,7 +715,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         if (idElements == null) {
             query.append(", rGpeAppEleve.id_groupe , thematiqueBP.code, elBP.type_elt_bilan_periodique ");
         }
-        query.append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".appreciation_elt_bilan_periodique_eleve AS appEltBPeleve");
+        query.append("FROM ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE + " AS appEltBPeleve");
 
         if(idsClasses != null && idsClasses.size() > 0){
             query.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_groupe_appreciation_elt_eleve AS rGpeAppEleve")
@@ -781,12 +782,12 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
                     params.add(idAppreciation);
                     if(idEleve != null){
-                        query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve" +
+                        query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE +
                                 "(id, id_eleve, id_elt_bilan_periodique, id_periode, commentaire) VALUES (?, ?, ?, ?, ?)" +
                                 " ON CONFLICT (id_elt_bilan_periodique, id_eleve, id_periode) DO UPDATE SET commentaire = ?";
                         params.add(idEleve);
                     } else {
-                        query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe" +
+                        query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE +
                                 "(id, id_groupe, externalid_groupe, id_elt_bilan_periodique, id_periode, commentaire) VALUES (?, ?, ?, ?, ?, ?)" +
                                 " ON CONFLICT (id_elt_bilan_periodique, id_periode, id_groupe) DO UPDATE SET commentaire = ?";
                         params.add(idClasse)
@@ -844,12 +845,12 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder();
         if(idEleve != null){
-            query.append("DELETE FROM ").append(Competences.COMPETENCES_SCHEMA).append(".appreciation_elt_bilan_periodique_eleve ")
+            query.append("DELETE FROM ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE)
                     .append(" WHERE id_eleve = ? AND id_elt_bilan_periodique = ? AND id_periode = ? ");
             params.add(idEleve);
         }
         else {
-            query.append("DELETE FROM ").append(Competences.COMPETENCES_SCHEMA).append(".appreciation_elt_bilan_periodique_classe")
+            query.append("DELETE FROM ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE)
                     .append(" WHERE id_groupe = ? AND id_elt_bilan_periodique = ? AND id_periode = ? ");
             params.add(idClasse);
         }
@@ -869,14 +870,14 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         String query ;
 
         if(idEleve != null){
-            query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve " +
+            query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE +
                     " WHERE id_eleve = ?" +
                     " AND id_elt_bilan_periodique = ? " +
                     " AND id_periode = ? ";
             params.add(idEleve);
         }
         else {
-            query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe" +
+            query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE +
                     " WHERE id_groupe = ?" +
                     " AND id_elt_bilan_periodique = ? " +
                     " AND id_periode = ? ";
@@ -1041,13 +1042,13 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             params.add(id);
         }
 
-        String queryDelAppEleve = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve WHERE id_elt_bilan_periodique IN "
+        String queryDelAppEleve = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE + " WHERE id_elt_bilan_periodique IN "
                 + Sql.listPrepared(idsEltBilanPeriodique);
 
         String queryDelRelAppEleveGroup = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_appreciation_elt_eleve WHERE id_elt_bilan_periodique IN "
                 + Sql.listPrepared(idsEltBilanPeriodique);
 
-        String queryDelAppClasse = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe WHERE id_elt_bilan_periodique IN "
+        String queryDelAppClasse = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + " WHERE id_elt_bilan_periodique IN "
                 + Sql.listPrepared(idsEltBilanPeriodique);
 
         String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique WHERE id IN " + Sql.listPrepared(idsEltBilanPeriodique);

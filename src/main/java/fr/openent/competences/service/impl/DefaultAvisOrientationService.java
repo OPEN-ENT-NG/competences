@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.AvisOrientationService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -13,7 +14,7 @@ public class DefaultAvisOrientationService implements AvisOrientationService {
 
     public void createOrUpdateAvisOrientation (String idEleve, Long idPeriode,  Long id_avis_conseil_bilan, String idStructure,
                                                Handler<Either<String, JsonObject>> handler){
-            String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".avis_conseil_orientation " +
+            String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_ORIENTATION_TABLE +
                     "(id_eleve, id_periode, id_avis_conseil_bilan, id_etablissement) VALUES (?, ?, ?, ?) " +
                     "ON CONFLICT (id_eleve, id_periode, id_etablissement) DO UPDATE SET id_avis_conseil_bilan = ? ";
             JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
@@ -30,7 +31,7 @@ public class DefaultAvisOrientationService implements AvisOrientationService {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "";
 
-        query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".avis_conseil_orientation " +
+        query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_ORIENTATION_TABLE +
                 " WHERE id_eleve = ?" +
                 " AND id_periode = ? " +
                 " AND id_etablissement = ? ";
@@ -46,17 +47,17 @@ public class DefaultAvisOrientationService implements AvisOrientationService {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "";
 
-        query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_orientation " +
+        query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_ORIENTATION_TABLE +
                 "INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_bilan_periodique " +
-                "ON(avis_conseil_bilan_periodique.id = avis_conseil_orientation.id_avis_conseil_bilan)  " +
-                "WHERE "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_orientation.id_eleve = ? " +
-                "AND "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_orientation.id_etablissement = ? ";
+                "ON(avis_conseil_bilan_periodique.id = " + Field.AVIS_CONSEIL_ORIENTATION_TABLE + ".id_avis_conseil_bilan)  " +
+                "WHERE "+ Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_ORIENTATION_TABLE + ".id_eleve = ? " +
+                "AND "+ Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_ORIENTATION_TABLE + ".id_etablissement = ? ";
 
         params.add(idEleve);
         params.add(idStructure);
 
         if(idPeriode != null){
-            query += "AND "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_orientation.id_periode = ? ";
+            query += "AND "+ Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_ORIENTATION_TABLE + ".id_periode = ? ";
             params.add(idPeriode);
         }
 

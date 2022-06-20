@@ -167,10 +167,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT * ")
-                .append(" FROM notes.bilan_fin_cycle")
-                .append(" INNER JOIN notes.domaines ON bilan_fin_cycle.id_domaine = domaines.id")
-                .append(" WHERE bilan_fin_cycle.id_eleve IN " + Sql.listPrepared(idEleves))
-                .append(" AND bilan_fin_cycle.id_etablissement = ? AND valeur >= 0 ");
+                .append(" FROM notes." + Field.BFC_TABLE)
+                .append(" INNER JOIN notes.domaines ON " + Field.BFC_TABLE + ".id_domaine = domaines.id")
+                .append(" WHERE " + Field.BFC_TABLE + ".id_eleve IN " + Sql.listPrepared(idEleves))
+                .append(" AND " + Field.BFC_TABLE + ".id_etablissement = ? AND valeur >= 0 ");
 
         for(String s : idEleves) {
             values.add(s);

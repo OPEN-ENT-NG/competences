@@ -548,7 +548,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     .put("action", "prepared"));
 
             StringBuilder queryDeleteAppreciations = new StringBuilder()
-                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".appreciations WHERE id_devoir = ? ");
+                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATIONS_TABLE + "WHERE id_devoir = ? ");
             statements.add(new JsonObject()
                     .put("statement", queryDeleteAppreciations.toString())
                     .put("values", paramsDelete)
@@ -1254,9 +1254,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("SELECT res.id_matiere, res.owner, res.is_visible, res.coefficient, res.id_periode, res.id_groupe ")
                 .append("FROM res ")
-                .append("INNER JOIN notes.appreciation_matiere_periode ON (appreciation_matiere_periode.id_matiere = res.id_matiere ")
-                .append("AND res.id_groupe = appreciation_matiere_periode.id_classe) ")
-                .append("WHERE appreciation_matiere_periode.id_eleve = ? ");
+                .append("INNER JOIN notes." + Field.APPRECIATION_MATIERE_PERIODE_TABLE + " ON (" + Field.APPRECIATION_MATIERE_PERIODE_TABLE + ".id_matiere = res.id_matiere ")
+                .append("AND res.id_groupe = " + Field.APPRECIATION_MATIERE_PERIODE_TABLE + ".id_classe) ")
+                .append("WHERE " + Field.APPRECIATION_MATIERE_PERIODE_TABLE + ".id_eleve = ? ");
         values.add(idEleve);
 
         query.append("UNION ");
@@ -1275,7 +1275,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("SELECT DISTINCT appreciation.id_matiere, raun.user_id_neo AS OWNER, NULL ::boolean AS is_visible, ")
                 .append("NULL ::integer AS coefficient, appreciation.id_periode, appreciation.id_classe AS id_groupe ")
-                .append("FROM notes.appreciation_matiere_periode AS appreciation ")
+                .append("FROM notes." + Field.APPRECIATION_MATIERE_PERIODE_TABLE + " AS appreciation ")
                 .append("LEFT JOIN notes.rel_appreciations_users_neo AS raun ON appreciation.id = raun.appreciation_matiere_periode_id ")
                 .append("WHERE appreciation.id_classe IN ").append(Sql.listPrepared(idsClass));
         for(int i= 0; i < idsClass.size(); i++) values.add(idsClass.getString(i));

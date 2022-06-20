@@ -18,6 +18,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
@@ -34,8 +35,8 @@ public class FilterAppreciationUtils {
             StringBuilder query = new StringBuilder()
                     .append("SELECT count(devoirs.*) " +
                             "FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
-                            "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".appreciations ON (appreciations.id_devoir = devoirs.id) " +
-                            "WHERE appreciations.id = ? " +
+                            "INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATIONS_TABLE + " ON (appreciations.id_devoir = devoirs.id) " +
+                            "WHERE " + Field.APPRECIATIONS_TABLE + ".id = ? " +
                             "AND devoirs.owner = ?;");
 
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idAppreciation).add(owner);
@@ -56,15 +57,15 @@ public class FilterAppreciationUtils {
 
             StringBuilder query = new StringBuilder()
                     .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs ")
-                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".appreciations ON " +
-                            "(appreciations.id_devoir = devoirs.id) ")
-                    .append("WHERE appreciations.id = ? ")
+                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATIONS_TABLE + " ON " +
+                            "(" + Field.APPRECIATIONS_TABLE + ".id_devoir = devoirs.id) ")
+                    .append("WHERE " + Field.APPRECIATIONS_TABLE + ".id = ? ")
                     .append("AND (devoirs.owner = ? OR ")
                     .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ")
                     .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
                     .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement  ")
-                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".appreciations ON (appreciations.id_devoir = devoirs.id) ")
-                    .append("WHERE appreciations.id = ? ")
+                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATIONS_TABLE + " ON (" + Field.APPRECIATIONS_TABLE + ".id_devoir = devoirs.id) ")
+                    .append("WHERE " + Field.APPRECIATIONS_TABLE + ".id = ? ")
                     .append("AND id_remplacant = ? ")
                     .append(") OR ")
 

@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -58,7 +59,7 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
 
 
             StringBuilder query = new StringBuilder().append("DELETE FROM ")
-                    .append(Competences.COMPETENCES_SCHEMA + ".appreciation_classe ")
+                    .append(Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_CLASSE_TABLE)
                     .append("WHERE ")
                     .append("id_classe = ? AND id_periode = ? AND id_matiere = ?;");
             JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
@@ -77,7 +78,7 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
         } else {
 
             StringBuilder query = new StringBuilder().append("INSERT INTO ")
-                    .append(Competences.COMPETENCES_SCHEMA + ".appreciation_classe (appreciation, id_classe, id_periode, id_matiere) ")
+                    .append(Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_CLASSE_TABLE + "(appreciation, id_classe, id_periode, id_matiere) ")
                     .append(" VALUES ")
                     .append(" ( ?, ?, ?, ?)")
                     .append(" ON CONFLICT (id_classe, id_periode, id_matiere) DO UPDATE SET appreciation = ?");
@@ -97,7 +98,7 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
 
         Boolean params = (id_classes != null && id_classes.length > 0) || (id_matieres != null && id_matieres.length > 0) || id_periode != null;
 
-        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_classe  ";
+        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_CLASSE_TABLE;
         JsonArray values = new JsonArray();
 
         if(params) {

@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.BfcSyntheseService;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
@@ -69,7 +70,7 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT * FROM ").append(Competences.COMPETENCES_SCHEMA)
-                .append(".bfc_synthese WHERE id_eleve = ?");
+                .append("." + Field.BFC_SYNTHESE_TABLE + "WHERE id_eleve = ?");
         values.add(idEleve);
 
         if(idCycle != null) {
@@ -83,7 +84,7 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
     @Override
     public void getBfcSyntheseByIdsEleve(final String[] idsEleve, final Long idCycle,final Handler<Either<String, JsonArray>> handler) {
         JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
-        String queryCount = "SELECT count(*) FROM "+ Competences.COMPETENCES_SCHEMA +".bfc_synthese WHERE id_eleve IN "+ Sql.listPrepared(idsEleve)+"  AND id_Cycle = ? ";
+        String queryCount = "SELECT count(*) FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.BFC_SYNTHESE_TABLE + " WHERE id_eleve IN "+ Sql.listPrepared(idsEleve)+"  AND id_Cycle = ? ";
 
         for(String idEleve:idsEleve){
             valuesCount.add(idEleve);
@@ -95,7 +96,7 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
                 Long nbSyntheseBFC = SqlResult.countResult(sqlResultCount);
                 if (nbSyntheseBFC > 0) {
                     JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-                    String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".bfc_synthese WHERE id_eleve IN "+ Sql.listPrepared(idsEleve)+"  AND id_Cycle = ? ";
+                    String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.BFC_SYNTHESE_TABLE + " WHERE id_eleve IN "+ Sql.listPrepared(idsEleve)+"  AND id_Cycle = ? ";
 
                     for(String s:idsEleve){
                         values.add(s);
@@ -115,11 +116,11 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
     @Override
     public void getBfcSyntheseByIdsEleveAndClasse(final String[] idsEleve, final String idClasse,final Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT bfc_synthese.*, rel_groupe_cycle.id_groupe " +
-                " FROM " + Competences.COMPETENCES_SCHEMA + ".bfc_synthese " +
+        String query = "SELECT " + Field.BFC_SYNTHESE_TABLE + ".*, rel_groupe_cycle.id_groupe " +
+                " FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.BFC_SYNTHESE_TABLE +
                 " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle " +
-                "     ON rel_groupe_cycle.id_cycle = bfc_synthese.id_cycle " +
-                " WHERE bfc_synthese.id_eleve IN "+ Sql.listPrepared(idsEleve)+"  " +
+                "     ON rel_groupe_cycle.id_cycle = " + Field.BFC_SYNTHESE_TABLE + ".id_cycle " +
+                " WHERE " + Field.BFC_SYNTHESE_TABLE + ".id_eleve IN "+ Sql.listPrepared(idsEleve)+"  " +
                 " AND rel_groupe_cycle.id_groupe = ? ";
 
         for(String s:idsEleve){
