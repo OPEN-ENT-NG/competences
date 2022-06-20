@@ -20,9 +20,11 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.model.*;
+import fr.openent.competences.service.SubTopicService;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
@@ -51,6 +53,7 @@ import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.CONNECTION_WAS_CLOSED;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
+import static fr.openent.competences.utils.HomeworkUtils.safeGetDouble;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
@@ -64,12 +67,17 @@ public class DefaultUtilsService implements UtilsService {
     protected static final Logger log = LoggerFactory.getLogger(DefaultUtilsService.class);
     protected EventBus eb;
     private final Neo4j neo4j = Neo4j.getInstance();
+    private final SubTopicService subTopicService;
 
     public DefaultUtilsService(EventBus eb) {
         this.eb = eb;
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SUBTOPIC_TABLE);
+
     }
 
     public DefaultUtilsService() {
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SUBTOPIC_TABLE);
+
     }
 
     @Override
@@ -1516,5 +1524,65 @@ public class DefaultUtilsService implements UtilsService {
         JsonArray params = new JsonArray().add(idStructure);
         Sql.getInstance().prepared(query.toString(), params, Competences.DELIVERY_OPTIONS,
                 validResultHandler(handler));
+    }
+
+    @Override
+    public void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<List<SubTopic>> promise) {
+        subTopicService.getSubtopicServices(idEtablissement,idClasse,event -> {
+            if(event.isRight()){
+                List<SubTopic> subTopics= new ArrayList<>();
+                for(Object subTopicobj : event.right().getValue()){
+                    SubTopic subTopic = new SubTopic();
+                    JsonObject subTopicJo = (JsonObject) subTopicobj;
+                    Service service = new Service();
+                    Matiere matiere = new Matiere();
+                    Group group = new Group();
+                    Teacher teacher = new Teacher();
+                    group.setId(subTopicJo.getString("id_group"));
+                    matiere.setId(subTopicJo.getString("id_topic"));
+                    teacher.setId(subTopicJo.getString("id_teacher"));
+                    service.setMatiere(matiere);
+                    service.setGroup(group);
+                    service.setTeacher(teacher);
+                    subTopic.setService(service);
+                    subTopic.setId(subTopicJo.getLong("id_subtopic"));
+                    subTopic.setCoefficient(safeGetDouble(subTopicJo, Field.COEFFICIENT));
+                    subTopics.add(subTopic);
+                }
+                promise.complete(subTopics);
+            }else{
+                promise.fail(event.left().getValue());
+            }
+        });
+    }
+
+    @Override
+    public void getSubTopicCoeff(String idEtablissement,  Promise<List<SubTopic>> promise) {
+        subTopicService.getSubtopicServices(idEtablissement,event -> {
+            if(event.isRight()){
+                List<SubTopic> subTopics= new ArrayList<>();
+                for(Object subTopicobj : event.right().getValue()){
+                    SubTopic subTopic = new SubTopic();
+                    JsonObject subTopicJo = (JsonObject) subTopicobj;
+                    Service service = new Service();
+                    Matiere matiere = new Matiere();
+                    Group group = new Group();
+                    Teacher teacher = new Teacher();
+                    group.setId(subTopicJo.getString("id_group"));
+                    matiere.setId(subTopicJo.getString("id_topic"));
+                    teacher.setId(subTopicJo.getString("id_teacher"));
+                    service.setMatiere(matiere);
+                    service.setGroup(group);
+                    service.setTeacher(teacher);
+                    subTopic.setService(service);
+                    subTopic.setId(subTopicJo.getLong("id_subtopic"));
+                    subTopic.setCoefficient(safeGetDouble(subTopicJo, Field.COEFFICIENT));
+                    subTopics.add(subTopic);
+                }
+                promise.complete(subTopics);
+            }else{
+                promise.fail(event.left().getValue());
+            }
+        });
     }
 }

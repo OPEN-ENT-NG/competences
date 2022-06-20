@@ -18,6 +18,7 @@
 package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.model.Service;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
@@ -174,7 +175,7 @@ public interface NoteService extends CrudService {
      * @param services
      */
     void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes, final JsonObject result,
-                                          String idEleve, JsonArray idEleves, JsonArray services);
+                                          String idEleve, JsonArray idEleves, List<Service> services);
     /**
      *Calcul la moyenne d'un eleve a
      * @param listNotes response of request
@@ -191,7 +192,7 @@ public interface NoteService extends CrudService {
                                                                                      String idEleve,
                                                                                      JsonArray idEleves,
                                                                                      List<String> idsClassWithNoteAppCompNoteStudent,
-                                                                                     Long idPriodeAsked, JsonArray services);
+                                                                                     Long idPriodeAsked, List<Service> services);
 
     /**
      * Récupère toutes les appreciations, les moyennes finales et les positionnement pour un eleve, une matiere, une periode

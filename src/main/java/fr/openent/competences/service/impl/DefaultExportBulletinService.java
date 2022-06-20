@@ -211,7 +211,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         workspaceHelper = new WorkspaceHelper(eb,storage);
-        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, "services_subtopic");
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SUBTOPIC_TABLE);
 
     }
 
@@ -234,7 +234,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         this.httpClient =  createHttpClient(vertx);
         workspaceHelper = new WorkspaceHelper(eb,storage);
-        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, "services_subtopic");
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SUBTOPIC_TABLE);
 
     }
 
@@ -2021,12 +2021,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if(groupsClassResult != null && !groupsClassResult.isEmpty()){
                         idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray("id_groupes"));
                     }
-                    JsonArray servicesJson = new JsonArray(student.getClasse().getServices().stream().map(Service::toJson).collect(Collectors.toList()));
                     JsonArray multiTeachers = new JsonArray(student.getClasse().getMultiTeachers().stream().map(MultiTeaching::toJsonObject).collect(Collectors.toList()));
                     List<Service> services = student.getClasse().getServices();
 
                     bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
-                            idGroupClasse, servicesJson, multiTeachers,
+                            idGroupClasse, services, multiTeachers,
                             getSuiviAcquisHandler(student, params, promise,classe,idEleves,
                                     getProgrammeElement,  idGroupClasse, services, multiTeachers));
                 }
@@ -2054,9 +2053,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if (message.contains(TIME) && !answer.get())
                     {
                         count ++;
-                        JsonArray servicesJson = new JsonArray(services.stream().map(Service::toJson).collect(Collectors.toList()));
                         bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve, idGroupClasse,
-                                servicesJson, multiTeachers,this);
+                                services, multiTeachers,this);
                     } else {
                         promise.fail("["+ GET_SUIVI_ACQUIS_METHOD + "] :" + idEleve + " " + message + count);
                     }
