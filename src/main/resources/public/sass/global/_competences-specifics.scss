@@ -25,4 +25,15 @@
 @import "sniplets/memento-notes";
 @import "specifics/_radioPillbox";
 @import "specifics/_tableNote";
+@import "specifics/_materialize";
 @import "specifics/proportionSuiviCompetence";
+@font-face {
+  font-family: 'material-icons';
+  src: url('/competences/public/font/material-design/fonts/materialdesignicons-webfont.eot');
+  src: url('/competences/public/font/material-design/fonts/materialdesignicons-webfont.eot') format('embedded-opentype'),
+  url('/competences/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff2'),
+  url('/competences/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff'),
+  url('/competences/public/font/material-design/fonts/materialdesignicons-webfont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

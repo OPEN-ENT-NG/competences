@@ -728,6 +728,7 @@
   "evaluation.service.delete.error":"Erreur lors de la suppression d'un service",
   "evaluation.service.choose.a.subject": "Veuillez choisir une matière",
   "evaluation.service.choose.another.subject": "Veuillez choisir une matière différente de celle où le service est créé",
+  "evaluation.service.tooltip.subtopic": "Cette matière comporte des sous matières",
   "evaluation.class.evaluation.header.followItems": "SUIVI DES ITEMS",
   "evaluation.class.evaluation.header.positioning": "POSITIONNEMENTS",
   "evaluation.class.evaluation.header.average": "MOYENNES",

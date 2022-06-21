@@ -86,7 +86,9 @@
                 <div ng-show="!showServicesLoader" class="service-list-container"
                      ng-repeat="service in (filteredItems = ( services | orderBy:sortBy:!sortByAsc  | filter:filterSearch())) track by $index ">
                     <div class="row serviceList" ng-click="deploySubtopics(service)" ng-class="{'active':service.deploy}">
-                        <div class="[[columns.matiere.size]] cellTab ellipsis cellTab-left" tooltip="[[service.nom_matiere]]"><span>[[service.topicName]]</span></div>
+                        <div class="[[columns.matiere.size]] cellTab ellipsis cellTab-left" tooltip="[[service.topicName]]">
+                            <span>[[service.topicName]]</span>
+                        </div>
                         <div class="[[columns.classe.size]]  cellTab ellipsis cellTab-left" tooltip="[[service.groups_name]]">
                             [[service.groups_name ? service.groups_name : service.nom_groupe]]
                         </div>
@@ -152,7 +154,7 @@
                             </select>
                         </div>
                         <div class="cellTab one cellTab-center">
-                            <div class="six inline-block">
+                            <div class="five inline-block">
                                 <div class="svg-image">
                                     <input ng-show="service.hasAllServicesEvaluable()" type="image" src="/competences/public/img/scss/checkbox-marked.svg"
                                            ng-click="switchEvaluableService(service);$event.stopPropagation()"alt="switchEvaluableService">
@@ -162,14 +164,19 @@
                                            ng-click="switchEvaluableService(service);$event.stopPropagation()"alt="switchEvaluableService">
                                 </div>
                             </div>
-                            <div class="five inline-block">
+                            <div class="three inline-block">
                                 <div class="svg-image">
                                     <input ng-show="service.hasCompetencesParams()" type="image" src="/competences/public/img/scss/cog.svg"
                                            ng-click="openUpdateLightbox(service);$event.stopPropagation()"alt="i18nAfaire">
                                 </div>
                             </div>
+                            <div class="two inline-block" tooltip="[[lang.translate('evaluation.service.tooltip.subtopic')]]">
+                                <div ng-show="service.subTopics && service.subTopics.length > 0" class="svg-image">
+                                    <i class="mdi-book"></i>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                        </div>
                     <!--SUBTOPICS -->
                     <div class="twelve row serviceList subList" ng-repeat="subTopic in service.subTopics" ng-show="service.deploy" >
                         <div class="[[columns.matiere.size]] cellTab ellipsis cellTab-left" tooltip="[[subTopic.libelle]"><span class="tabulation">[[subTopic.libelle]]</span></div>
@@ -224,7 +231,7 @@
                                     ng-options="modalite for modalite in columns.modalite.data">
                             </select>
                         </div>
-                        <div class="two cellTab cellTab-center">
+                        <div class="one cellTab cellTab-center">
                             <div class="six inline-block">
                                 <div class="svg-image">
                                     <input ng-show="param.evaluable" type="image" src="/competences/public/img/scss/checkbox-marked.svg"
