@@ -1,5 +1,6 @@
 package fr.openent.competences.controllers;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.model.Student;
 import fr.openent.competences.security.AccessExportBulletinFilter;
@@ -36,7 +37,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class ExportBulletinController extends ControllerHelper {
@@ -138,14 +138,14 @@ public class ExportBulletinController extends ControllerHelper {
         String idClasse = request.params().get(ID_CLASSE_KEY);
         Long idPeriode = Long.valueOf(request.params().get(ID_PERIODE_KEY));
         Boolean isCycle = false;
-        ArchiveUtils.getArchive(idEleve, idClasse, idPeriode, storage, ARCHIVE_BULLETIN_TABLE, isCycle, request);
+        ArchiveUtils.getArchive(idEleve, idClasse, idPeriode, storage, Field.BULLETIN_ARCHIVE_TABLE, isCycle, request);
     }
 
     @Get("/delete/archive/bulletin")
     @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
     @ResourceFilter(SuperAdminFilter.class)
     public void deleteArchive(final HttpServerRequest request){
-        ArchiveUtils.deleteAll(ARCHIVE_BULLETIN_TABLE, storage, response -> Renders.renderJson(request, response));
+        ArchiveUtils.deleteAll(Field.BULLETIN_ARCHIVE_TABLE, storage, response -> Renders.renderJson(request, response));
     }
 
     @Get("/archive/bulletins")

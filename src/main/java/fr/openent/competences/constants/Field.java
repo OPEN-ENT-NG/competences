@@ -20,6 +20,7 @@ public class Field {
     public static final String RESULTS = "results";
 
     // TABLE
+    public static final String BFC_ARCHIVE_TABLE = "archive_bfc";
     public static final String BULLETIN_ARCHIVE_TABLE = "archive_bulletins";
     public static final String CLASS_APPRECIATION_DIGITAL_SKILLS = "class_appreciation_digital_skills";
     public static final String COMPETENCE_NIVEAU_FINAL = "competence_niveau_final";

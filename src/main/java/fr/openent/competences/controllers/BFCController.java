@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.AccessBFCFilter;
 import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.AccessControleByClassFilter;
@@ -47,7 +48,6 @@ import java.util.List;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
-import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BFC_TABLE;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 /**
@@ -567,13 +567,13 @@ public class BFCController extends ControllerHelper {
         String idClasse = request.params().get(ID_CLASSE_KEY);
         Long idCycle = Utils.isCycleNotNull(request.params().get("idCycle")) ? Long.valueOf(request.params().get("idCycle")) : null;
         Boolean isCycle = true;
-        ArchiveUtils.getArchive(idEleve, idClasse, idCycle, storage, ARCHIVE_BFC_TABLE, isCycle, request);
+        ArchiveUtils.getArchive(idEleve, idClasse, idCycle, storage, Field.BFC_ARCHIVE_TABLE, isCycle, request);
     }
 
     @Get("/delete/archive/bfc")
     @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
     public void deleteArchive(final HttpServerRequest request){
-        ArchiveUtils.deleteAll(ARCHIVE_BFC_TABLE, storage, response -> Renders.renderJson(request, response));
+        ArchiveUtils.deleteAll(Field.BFC_ARCHIVE_TABLE, storage, response -> Renders.renderJson(request, response));
     }
 
     @Get("/archive/bfc")
