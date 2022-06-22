@@ -1,6 +1,7 @@
 package fr.openent.competences.service.digitalSkills.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.service.digitalSkills.ClassAppreciationDigitalSkillsService;
 import fr.openent.competences.service.digitalSkills.DigitalSkillsService;
@@ -26,7 +27,7 @@ public class DefaultDigitalSkillsService implements DigitalSkillsService {
 
     public DefaultDigitalSkillsService () {
         classAppDigitalSkills = new DefaultClassAppreciationDigitalSkills(Competences.COMPETENCES_SCHEMA,
-                Competences.CLASS_APPRECIATION_DIGITAL_SKILLS);
+                Field.CLASS_APPRECIATION_DIGITAL_SKILLS);
         studentAppDigitalSkills = new DefaultStudentAppreciationDigitalSkills(Competences.COMPETENCES_SCHEMA,
                 Competences.STUDENT_APPRECIATION_DIGITAL_SKILLS);
         studentDigitalSkills = new DefaultStudentDigitalSkills(Competences.COMPETENCES_SCHEMA,

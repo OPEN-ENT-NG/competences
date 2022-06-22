@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.AccessCompetenceNoteFilter;
 import fr.openent.competences.security.AccessSuiviCompetenceFilter;
@@ -62,9 +63,9 @@ public class CompetenceNoteController extends ControllerHelper {
 
     public CompetenceNoteController(EventBus eb) {
         this.eb = eb;
-        competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
+        competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Field.COMPETENCES_NOTES_TABLE);
         syntheseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
-        competenceNiveauFinalService = new DefaultCompetenceNiveauFinalService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCE_NIVEAU_FINAL);
+        competenceNiveauFinalService = new DefaultCompetenceNiveauFinalService(Competences.COMPETENCES_SCHEMA, Field.COMPETENCE_NIVEAU_FINAL);
         devoirsService = new DefaultDevoirService(eb);
     }
 

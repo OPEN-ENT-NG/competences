@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.NiveauDeMaitriseService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -57,7 +58,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
                 .append(" t1.id_cycle, t1.id AS id_niveau,")
                 .append(" niv.id_etablissement, niv.couleur, niv.lettre, niv.id AS id, t2.libelle AS cycle")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.NIVEAU_COMPETENCES_TABLE + " AS t1")
-                .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.CYCLE_TABLE + " AS t2")
+                .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.CYCLE_TABLE + " AS t2")
                 .append(" ON t1.id_cycle = t2.id ")
                 .append(" LEFT JOIN ")
                 .append(" (SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + "." + Competences.PERSO_NIVEAU_COMPETENCES_TABLE)

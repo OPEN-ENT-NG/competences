@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Domaine;
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
@@ -83,7 +84,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         this.eb = eb;
         this.storage = storage;
 
-        competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE);
+        competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, Field.COMPETENCES_NOTES_TABLE);
         domaineService = new DefaultDomaineService(COMPETENCES_SCHEMA, DOMAINES_TABLE);
         competenceService = new DefaultCompetencesService(eb);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(COMPETENCES_SCHEMA,DISPENSE_DOMAINE_ELEVE);
@@ -99,7 +100,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         this.eb = eb;
         this.storage = null;
 
-        competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE);
+        competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, Field.COMPETENCES_NOTES_TABLE);
         domaineService = new DefaultDomaineService(COMPETENCES_SCHEMA, DOMAINES_TABLE);
         competenceService = new DefaultCompetencesService(eb);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(COMPETENCES_SCHEMA,DISPENSE_DOMAINE_ELEVE);

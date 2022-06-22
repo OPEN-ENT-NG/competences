@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.AnnotationService;
 import fr.openent.competences.service.CompetenceNoteService;
 import fr.openent.competences.service.NoteService;
@@ -43,7 +44,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
     public DefaultAnnotationService(String schema, String table) {
         super(schema, table);
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
-        competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
+        competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Field.COMPETENCES_NOTES_TABLE);
     }
 
     public void listAnnotations(String idEtab, Handler<Either<String, JsonArray>> handler){

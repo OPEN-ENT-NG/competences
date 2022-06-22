@@ -4,6 +4,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.ImgLevel;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
@@ -201,7 +202,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         exportService = new DefaultExportService(eb, storage);
         utilsService = new DefaultUtilsService(eb);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,
-                Competences.COMPETENCES_NOTES_TABLE);
+                Field.COMPETENCES_NOTES_TABLE);
         this.storage = storage;
         this.mongoExportService = new DefaultMongoExportService();
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
@@ -221,7 +222,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         exportService = new DefaultExportService(eb, storage);
         utilsService = new DefaultUtilsService(eb);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,
-                Competences.COMPETENCES_NOTES_TABLE);
+                Field.COMPETENCES_NOTES_TABLE);
         this.storage = storage;
         this.mongoExportService = new DefaultMongoExportService();
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
@@ -3536,7 +3537,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         utilsService.getYearsAndPeriodes(idStructure, true, yearEvent -> {
             String idYear = yearEvent.right().getValue().getString("start_date").substring(0, 4);
             StringBuilder query = new StringBuilder();
-            query.append("SELECT * FROM notes.archive_bulletins WHERE id_eleve IN ").append(Sql.listPrepared(idsStudent.getList()))
+            query.append("SELECT * FROM notes." + Field.BULLETIN_ARCHIVE_TABLE + " WHERE id_eleve IN ").append(Sql.listPrepared(idsStudent.getList()))
                     .append(" AND id_classe IN ").append(Sql.listPrepared(idsClasses.getList())).append(" AND id_periode = ? ")
                     .append(" AND id_etablissement = ? AND id_annee = ? ;");
             JsonArray values = new JsonArray().addAll(idsStudent).addAll(idsClasses).add(idPeriode).add(idStructure).add(idYear);
@@ -3557,7 +3558,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
 
     private JsonObject checkStatements(String idStudent, String idClasse, Integer idPeriode, String idYear) {
-        String query = "SELECT 1 from " + Competences.EVAL_SCHEMA + ".archive_bulletins " +
+        String query = "SELECT 1 from " + Competences.EVAL_SCHEMA + "." + Field.BULLETIN_ARCHIVE_TABLE +
                 " WHERE id_classe = ? AND id_eleve = ? AND id_periode = ? AND id_annee = ? ; ";
         JsonArray params = new JsonArray().add(idClasse).add(idStudent).add(idPeriode).add(idYear);
         return  new JsonObject()

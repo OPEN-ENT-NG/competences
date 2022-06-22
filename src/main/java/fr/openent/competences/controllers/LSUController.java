@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.lsun.ElementProgramme;
 import fr.openent.competences.bean.lsun.*;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.LevelCycle;
 import fr.openent.competences.security.HasExportLSURight;
 import fr.openent.competences.service.*;
@@ -136,12 +137,12 @@ public class LSUController extends ControllerHelper {
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,
                 Competences.DISPENSE_DOMAINE_ELEVE);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,
-                Competences.COMPETENCES_NOTES_TABLE);
+                Field.COMPETENCES_NOTES_TABLE);
         lsuService = new DefaultLSUService(eb);
         stsFileService = new DefaultSTSFileService(Competences.STSFILE_TABLE);
         digitalSkillsService = new DefaultDigitalSkillsService();
         classAppreciationDigitalSkillsService = new DefaultClassAppreciationDigitalSkills(COMPETENCES_SCHEMA,
-                CLASS_APPRECIATION_DIGITAL_SKILLS);
+                Field.CLASS_APPRECIATION_DIGITAL_SKILLS);
     }
 
     /**

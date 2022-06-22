@@ -18,6 +18,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.BaseServer;
@@ -133,7 +134,7 @@ public class FilterDevoirUtils  extends ControllerHelper {
                                     final HttpServerRequest resourceRequest) {
         WorkflowActionUtils.hasHeadTeacherRight(user, null,
                 new JsonArray().add(idDevoir),
-                Competences.DEVOIR_TABLE, null, null, null,
+                Field.DEVOIR_TABLE, null, null, null,
                 new Handler<Either<String, Boolean>>() {
                     @Override
                     public void handle(Either<String, Boolean> event) {

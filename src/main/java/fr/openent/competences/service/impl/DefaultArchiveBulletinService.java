@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.ArchiveService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -14,7 +15,7 @@ public class DefaultArchiveBulletinService implements ArchiveService {
     @Override
     public void getArchives(String idStructure, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
-        String query = "SELECT * FROM "+ Competences.EVAL_SCHEMA + "." + Competences.BULLETIN_ARCHIVE_TABLE +
+        String query = "SELECT * FROM "+ Competences.EVAL_SCHEMA + "." + Field.BULLETIN_ARCHIVE_TABLE +
                 " WHERE id_etablissement = ? ";
 
         params.add(idStructure);

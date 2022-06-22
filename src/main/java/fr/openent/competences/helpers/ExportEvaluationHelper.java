@@ -1,6 +1,7 @@
 package fr.openent.competences.helpers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.Future;
@@ -142,7 +143,7 @@ public class ExportEvaluationHelper {
             future.complete();
         }
         else {
-            new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE)
+            new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Field.COMPETENCES_NOTES_TABLE)
                     .getCompetencesNotesDevoir(idDevoir, event -> {
                         if(event.isLeft()){
                             future.fail(event.left().getValue());

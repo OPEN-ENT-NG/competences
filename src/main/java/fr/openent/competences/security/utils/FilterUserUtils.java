@@ -19,6 +19,7 @@ package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.logging.Logger;
@@ -308,7 +309,7 @@ public class FilterUserUtils {
                     .append(" FROM "+ Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes ")
                     .append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA + "." + table)
                     .append(" ON rel_devoirs_groupes.id_devoir = " + table )
-                    .append(Competences.DEVOIR_TABLE.equals(table)? ".id":".id_devoir ")
+                    .append(Field.DEVOIR_TABLE.equals(table)? ".id":".id_devoir ")
                     .append((idsRessources.size() > 0) ? " AND id IN "
                             + Sql.listPrepared(idsRessources.getList()) : "");
 

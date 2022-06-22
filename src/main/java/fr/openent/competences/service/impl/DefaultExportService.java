@@ -103,7 +103,7 @@ public class DefaultExportService implements ExportService {
         devoirService = new DefaultDevoirService(eb);
         utilsService = new DefaultUtilsService(eb);
         domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
-        competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
+        competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Field.COMPETENCES_NOTES_TABLE);
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
         competencesService = new DefaultCompetencesService(eb);
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();

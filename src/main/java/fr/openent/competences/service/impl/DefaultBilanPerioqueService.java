@@ -3,6 +3,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
@@ -468,7 +469,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
             // Récupération du tableau de conversion des compétences notes
             Future<JsonArray> tableauDeConversionFuture = Future.future();
-            new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE)
+            new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, Field.COMPETENCES_NOTES_TABLE)
                     .getConversionNoteCompetence(idEtablissement, idClasse,  // note : Est ce que c'est pas l'idGroupeClasse qu'on doit passé ici ?
                             tableauEvent -> formate(tableauDeConversionFuture, tableauEvent));
 

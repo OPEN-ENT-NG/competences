@@ -18,6 +18,7 @@
 package fr.openent.competences.security;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.utils.FilterCompetenceNoteUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
@@ -61,7 +62,7 @@ public class AccessCompetenceNoteFilter implements ResourcesProvider {
                             ids_competence_note.add(Long.parseLong(s));
                         }
                         WorkflowActionUtils.hasHeadTeacherRight(user, null, ids_competence_note,
-                                Competences.COMPETENCES_NOTES_TABLE, null, null, null,
+                                Field.COMPETENCES_NOTES_TABLE, null, null, null,
                                 new Handler<Either<String, Boolean>>() {
                                     @Override
                                     public void handle(Either<String, Boolean> event) {

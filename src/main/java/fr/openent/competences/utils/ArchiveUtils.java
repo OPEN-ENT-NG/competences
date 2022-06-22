@@ -1,6 +1,7 @@
 package fr.openent.competences.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.folders.FolderExporterZip;
 import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.model.PdfFile;
@@ -40,8 +41,6 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class ArchiveUtils {
 
-    public static final String ARCHIVE_BULLETIN_TABLE = "archive_bulletins";
-    public static final String ARCHIVE_BFC_TABLE = "archive_bfc";
     private static final Logger log = LoggerFactory.getLogger(ArchiveUtils.class);
 
     private static void getIdFileArchive(String idEleve, String idClasse, Long idPeriode, String table, Boolean isCycle,
@@ -197,7 +196,7 @@ public class ArchiveUtils {
                                              EventBus eb, Storage storage, Vertx vertx, HttpServerRequest request,
                                              UserInfos user, WorkspaceHelper workspaceHelper) {
         String query = "SELECT id_classe, id_etablissement, id_eleve, id_file, file_name as name" +
-                " FROM " + COMPETENCES_SCHEMA + "." + ARCHIVE_BULLETIN_TABLE +
+                " FROM " + COMPETENCES_SCHEMA + "." + Field.BULLETIN_ARCHIVE_TABLE +
                 " WHERE id_etablissement = ? AND id_annee = ?";
         JsonArray params = new JsonArray().add(idStructure).add(idYear);
 

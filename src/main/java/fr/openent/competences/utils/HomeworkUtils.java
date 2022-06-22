@@ -1,6 +1,7 @@
 package fr.openent.competences.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.DefaultDevoirService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -43,32 +44,32 @@ public class HomeworkUtils {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT count(notes.id) as nb_notes , devoirs.id, rel_devoirs_groupes.id_groupe")
+        query.append("SELECT count(notes.id) as nb_notes , " + Field.DEVOIR_TABLE + ".id, rel_devoirs_groupes.id_groupe")
                 .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.NOTES_TABLE)
-                .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_TABLE)
+                .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Field.DEVOIR_TABLE)
                 .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.REL_DEVOIRS_GROUPES)
-                .append(" WHERE notes.id_devoir = devoirs.id")
-                .append(" AND rel_devoirs_groupes.id_devoir = devoirs.id")
-                .append(" AND devoirs.id = ?");
+                .append(" WHERE notes.id_devoir = " + Field.DEVOIR_TABLE + ".id")
+                .append(" AND rel_devoirs_groupes.id_devoir = " + Field.DEVOIR_TABLE + ".id")
+                .append(" AND " + Field.DEVOIR_TABLE + ".id = ?");
 
         values.add(idDevoir);
 
         if (!isChefEtab) {
-            query.append(" AND (devoirs.owner = ? OR") // devoirs dont on est le propriétaire
-                    .append(" devoirs.owner IN (SELECT DISTINCT id_titulaire") // ou dont l'un de mes tiulaires le sont (on regarde sur tous mes établissments)
+            query.append(" AND (" + Field.DEVOIR_TABLE + ".owner = ? OR") // devoirs dont on est le propriétaire
+                    .append(" " + Field.DEVOIR_TABLE + ".owner IN (SELECT DISTINCT id_titulaire") // ou dont l'un de mes tiulaires le sont (on regarde sur tous mes établissments)
                     .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.REL_PROFESSEURS_REMPLACANTS_TABLE)
-                    .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_TABLE)
-                    .append(" ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement")
+                    .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Field.DEVOIR_TABLE)
+                    .append(" ON " + Field.DEVOIR_TABLE + ".id_etablissement = rel_professeurs_remplacants.id_etablissement")
                     .append(" WHERE id_remplacant = ?")
                     .append(" AND rel_professeurs_remplacants.id_etablissement IN ").append(Sql.listPrepared(user.getStructures().toArray()))
                     .append(" ) OR")
                     .append(" ? IN (SELECT member_id") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
                     .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_SHARE_TABLE)
-                    .append(" WHERE resource_id = devoirs.id")
+                    .append(" WHERE resource_id = " + Field.DEVOIR_TABLE + ".id")
                     .append(" AND action = '").append(Competences.DEVOIR_ACTION_UPDATE).append("')")
                     .append(" )");
         }
-        query.append(" GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
+        query.append(" GROUP by " + Field.DEVOIR_TABLE + ".id, rel_devoirs_groupes.id_groupe");
 
         HomeworkUtils.addValueForRequest(values, user, isChefEtab);
 
