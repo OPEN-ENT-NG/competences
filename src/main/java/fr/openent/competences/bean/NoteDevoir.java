@@ -168,4 +168,12 @@ public class NoteDevoir {
     public void setService(Service service) {
         this.service = service;
     }
+
+    public Long getIdSousMatiere() {
+        return idSousMatiere;
+    }
+
+    public void setIdSousMatiere(Long idSousMatiere) {
+        this.idSousMatiere = idSousMatiere;
+    }
 }
