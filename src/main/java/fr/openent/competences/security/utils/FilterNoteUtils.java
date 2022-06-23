@@ -69,10 +69,10 @@ public class FilterNoteUtils {
                                     .append("AND id_remplacant = ? ")
                                     .append(") OR ")
 
-                        .append("? IN (SELECT member_id ")
-                            .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE)
-                            .append("WHERE resource_id = devoirs.id ")
-                            .append("AND action = '" + Competences.DEVOIR_ACTION_UPDATE+"')")
+                        .append("? IN (SELECT member_id")
+                            .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE)
+                            .append(" WHERE resource_id = devoirs.id")
+                            .append(" AND action = '" + Competences.DEVOIR_ACTION_UPDATE+"')")
 
                     .append(")");
 

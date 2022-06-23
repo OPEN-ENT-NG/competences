@@ -46,7 +46,7 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
     @Override
     public void deleteDispenseDomaineEleve(String idEleve,Integer idDomaine, Handler<Either<String, JsonObject>> handler) {
         String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.DISPENSE_DOMAINE_ELEVE +
-                "WHERE id_eleve = ? AND id_domaines = ? ;";
+                " WHERE id_eleve = ? AND id_domaines = ? ;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(idEleve)
                 .add(idDomaine);
@@ -67,7 +67,7 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
     @Override
     public void listDipenseDomainesByClasse(List<String> idsEleves, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT id_eleve, id_domaines, dispense FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.DISPENSE_DOMAINE_ELEVE +
-                "WHERE id_eleve IN " + Sql.listPrepared(idsEleves.toArray());
+                " WHERE id_eleve IN " + Sql.listPrepared(idsEleves.toArray());
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         for(String idEleve : idsEleves){

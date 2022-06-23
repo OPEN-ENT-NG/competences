@@ -114,20 +114,20 @@ public class DefaultDevoirRemplacementService extends SqlCrudService implements 
 
     @Override
     public void getClassesIdsDevoir(String userId, String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT distinct(rel_devoirs_groupes.id_groupe) " +
-                "FROM notes.devoirs " +
-                "inner join notes.rel_devoirs_groupes ON (rel_devoirs_groupes.id_devoir = devoirs.id) " +
-                "AND (devoirs.id_etablissement = ? ) " +
-                "AND (devoirs.owner = ? " +
-                "OR devoirs.owner IN (SELECT DISTINCT id_titulaire " +
-                "FROM notes.rel_professeurs_remplacants " +
-                "INNER JOIN notes.devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement " +
-                "WHERE id_remplacant = ? " +
-                "AND rel_professeurs_remplacants.id_etablissement = ?) " +
-                "OR ? IN (SELECT member_id " +
-                "FROM notes." + Field.DEVOIR_SHARE_TABLE +
-                "WHERE resource_id = devoirs.id " +
-                "AND action = '"+ Competences.DEVOIR_ACTION_UPDATE +"'))";
+        String query = "SELECT distinct(rel_devoirs_groupes.id_groupe)" +
+                " FROM notes.devoirs" +
+                " inner join notes.rel_devoirs_groupes ON (rel_devoirs_groupes.id_devoir = devoirs.id)" +
+                " AND (devoirs.id_etablissement = ? )" +
+                " AND (devoirs.owner = ?" +
+                " OR devoirs.owner IN (SELECT DISTINCT id_titulaire" +
+                " FROM notes.rel_professeurs_remplacants" +
+                " INNER JOIN notes.devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement" +
+                " WHERE id_remplacant = ?" +
+                " AND rel_professeurs_remplacants.id_etablissement = ?)" +
+                " OR ? IN (SELECT member_id" +
+                " FROM notes." + Field.DEVOIR_SHARE_TABLE +
+                " WHERE resource_id = devoirs.id" +
+                " AND action = '"+ Competences.DEVOIR_ACTION_UPDATE +"'))";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(structureId)
                 .add(userId)

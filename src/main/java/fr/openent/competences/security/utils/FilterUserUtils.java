@@ -70,9 +70,9 @@ public class FilterUserUtils {
 
     public void validateElement(List<String> idsElements, String idClasse, Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
-                .append("SELECT id, type_elt_bilan_periodique ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.ELT_BILAN_PERIODIQUE_TABLE)
-                .append("WHERE id IN " + Sql.listPrepared(idsElements));
+                .append("SELECT id, type_elt_bilan_periodique")
+                .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.ELT_BILAN_PERIODIQUE_TABLE)
+                .append(" WHERE id IN " + Sql.listPrepared(idsElements));
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         for (String id : idsElements) {

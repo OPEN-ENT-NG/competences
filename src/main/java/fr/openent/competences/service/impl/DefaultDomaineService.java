@@ -97,9 +97,9 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
 
-        query.append("SELECT id, id_parent, libelle, codification ");
-        query.append("FROM notes." + Field.DOMAINES_TABLE);
-        query.append("WHERE id IN " + listIntPrepared(idDomaines));
+        query.append("SELECT id, id_parent, libelle, codification");
+        query.append(" FROM notes." + Field.DOMAINES_TABLE);
+        query.append(" WHERE id IN " + listIntPrepared(idDomaines));
 
         for(int s : idDomaines) {
             params.add(s);
@@ -128,7 +128,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
                 .append("(SELECT id, id_parent, libelle, codification ")
                 .append("FROM notes." + Field.DOMAINES_TABLE);
         if(idCycle == null) {
-            query.append("LEFT JOIN notes.rel_groupe_cycle ON notes." + Field.DOMAINES_TABLE + ".id_cycle = notes.rel_groupe_cycle.id_cycle")
+            query.append(" LEFT JOIN notes.rel_groupe_cycle ON notes." + Field.DOMAINES_TABLE + ".id_cycle = notes.rel_groupe_cycle.id_cycle")
                     .append(" WHERE " + Field.DOMAINES_TABLE + ".evaluated = TRUE AND rel_groupe_cycle.id_groupe = ?) ");
             params.add(idClasse);
         }else {
