@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.CompetencesService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -37,7 +38,6 @@ import java.util.Objects;
 
 import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
-import static fr.openent.competences.Competences.PERSO_COMPETENCES_TABLE;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
@@ -51,13 +51,13 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     private static final String COMPETENCES_TABLE = Competences.COMPETENCES_SCHEMA
             + "." + Competences.COMPETENCES_TABLE;
     private static final String COMPETENCES_DOMAINES_TABLE = Competences.COMPETENCES_SCHEMA
-            + "." + Competences.REL_COMPETENCES_DOMAINES_TABLE;
+            + "." + Field.REL_COMPETENCES_DOMAINES_TABLE;
     private static final String COMPETENCES_ENSEIGNEMENTS_TABLE = Competences.COMPETENCES_SCHEMA
-            + "." + Competences.REL_COMPETENCES_ENSEIGNEMENTS_TABLE;
+            + "." + Field.REL_COMPETENCES_ENSEIGNEMENTS_TABLE;
     private static final String COMPETENCES_PERSO_TABLE = Competences.COMPETENCES_SCHEMA
-            + "." + Competences.PERSO_COMPETENCES_TABLE;
+            + "." + Field.PERSO_COMPETENCES_TABLE;
     private static final String COMPETENCES_PERSO_ORDRE_TABLE = Competences.COMPETENCES_SCHEMA
-            + "." + Competences.PERSO_COMPETENCES_ORDRE_TABLE;
+            + "." + Field.PERSO_COMPETENCES_ORDRE_TABLE;
     private static final String COMPETENCES_DEVOIRS_TABLE = Competences.COMPETENCES_SCHEMA
             + "." + Competences.COMPETENCES_DEVOIRS;
     private static final String DEVOIRS_TABLE = Competences.COMPETENCES_SCHEMA
@@ -242,8 +242,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " comp.id_parent as id_parent, compDevoir.index as index, compEns.id_enseignement AS id_enseignement " +
                 " FROM " + COMPETENCES_TABLE + " AS comp" +
                 " INNER JOIN " + COMPETENCES_DEVOIRS_TABLE + " AS compDevoir ON (comp.id = compDevoir.id_competence )" +
-                " INNER JOIN " + COMPETENCES_SCHEMA + ".rel_competences_enseignements AS compEns ON (comp.id = compEns.id_competence)" +
-                " LEFT JOIN " + COMPETENCES_SCHEMA + ".perso_competences AS compPerso ON comp.id = compPerso.id_competence" +
+                " INNER JOIN " + COMPETENCES_SCHEMA + "." + Field.REL_COMPETENCES_ENSEIGNEMENTS_TABLE + " AS compEns ON (comp.id = compEns.id_competence)" +
+                " LEFT JOIN " + COMPETENCES_SCHEMA + "." + Field.PERSO_COMPETENCES_TABLE + " AS compPerso ON comp.id = compPerso.id_competence" +
                 " WHERE compDevoir.id_devoir = ?";
 
         JsonArray values = new JsonArray().add(devoirId);
@@ -264,9 +264,9 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " comp.id_parent as id_parent, compDevoir.index as index, compEns.id_enseignement AS id_enseignement " +
                 " FROM " + COMPETENCES_TABLE + " AS comp" +
                 " INNER JOIN " + COMPETENCES_DEVOIRS_TABLE + " AS compDevoir ON (comp.id = compDevoir.id_competence )" +
-                " INNER JOIN " + COMPETENCES_SCHEMA + ".rel_competences_enseignements AS compEns ON (comp.id = compEns.id_competence)" +
+                " INNER JOIN " + COMPETENCES_SCHEMA + "." + Field.REL_COMPETENCES_ENSEIGNEMENTS_TABLE + " AS compEns ON (comp.id = compEns.id_competence)" +
                 " LEFT JOIN (SELECT nom, id_competence FROM " + COMPETENCES_SCHEMA +
-                ".perso_competences WHERE id_etablissement = ?) AS compPerso ON comp.id = compPerso.id_competence " +
+                "." + Field.PERSO_COMPETENCES_TABLE + " WHERE id_etablissement = ?) AS compPerso ON comp.id = compPerso.id_competence " +
                 " WHERE compDevoir.id_devoir IN " + Sql.listPrepared(devoirIds.getList()) ;
 
         JsonArray values = new JsonArray().add(idEtablissement).addAll(devoirIds);
@@ -350,7 +350,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     " FROM " + COMPETENCES_TABLE + " AS comp" +
                     " INNER JOIN " + COMPETENCES_ENSEIGNEMENTS_TABLE + " AS compEns" +
                     " ON (comp.id = compEns.id_competence) " +
-                    " LEFT OUTER JOIN " + COMPETENCES_SCHEMA + ".perso_order_item_enseignement AS perso_ordre" +
+                    " LEFT OUTER JOIN " + COMPETENCES_SCHEMA + "." + Field.PERSO_COMPETENCES_ORDRE_TABLE + " AS perso_ordre" +
                     " ON ( perso_ordre.id_competence = compEns.id_competence AND " +
                     " perso_ordre.id_enseignement = compEns.id_enseignement AND perso_ordre.id_etablissement = ?) ";
             params.add(idEtablissement);
@@ -472,14 +472,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
     private void updateDomain(Number idComp, String idEtablissement, Number idDomaine,
                               Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT notes.function_updateDomaineCompetence(?, ?, ?);";
+        String query = "SELECT " + Field.NOTES_TABLE + ".function_updateDomaineCompetence(?, ?, ?);";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(idComp).add(idEtablissement).add(idDomaine);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
     }
 
     private void updateMasqueComp(Number id, String idEtablissement, Boolean masque, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT notes.function_masqueCompetence(?, ?, ?);";
+        String query = "SELECT " + Field.NOTES_TABLE + ".function_masqueCompetence(?, ?, ?);";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(id).add(idEtablissement).add(masque);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
@@ -563,7 +563,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
     @Override
     public void delete(final Number id, final String idEtablissement, final Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT notes.function_deleteCompetence(?, ?);";
+        String query = "SELECT " + Field.NOTES_TABLE + ".function_deleteCompetence(?, ?);";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(id).add(idEtablissement);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));

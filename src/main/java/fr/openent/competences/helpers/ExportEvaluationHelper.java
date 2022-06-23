@@ -1,6 +1,7 @@
 package fr.openent.competences.helpers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.Future;
@@ -178,7 +179,7 @@ public class ExportEvaluationHelper {
 
     public static Future listNotes(Long idDevoir, EventBus eb, JsonArray notes) {
         Future future = Future.future();
-        new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb)
+        new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Field.NOTES_TABLE, eb)
                 .listNotesParDevoir(idDevoir, event -> {
                     if(event.isLeft()){
                         future.fail(event.left().getValue());
@@ -193,7 +194,7 @@ public class ExportEvaluationHelper {
 
     public static Future listAnnotations(String idEtablissement, JsonArray annotations) {
         Future future = Future.future();
-        new DefaultAnnotationService(Competences.COMPETENCES_SCHEMA, Competences.REL_ANNOTATIONS_DEVOIRS_TABLE)
+        new DefaultAnnotationService(Competences.COMPETENCES_SCHEMA, Field.REL_ANNOTATIONS_DEVOIRS_TABLE)
                 .listAnnotations(idEtablissement, event -> {
                     if(event.isLeft()){
                         future.fail(event.left().getValue());

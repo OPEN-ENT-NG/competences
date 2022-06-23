@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -402,7 +403,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 String queryAverageMaxCompNoteMat = "(SELECT id_competence, ROUND(AVG(max)+1,2) AS round, id_eleve FROM " + queryMaxCompNoteMat +
                         " AS avg GROUP BY id_competence, id_eleve)";
 
-                String queryConversionAverage = "WITH table_conversion as (SELECT valmin, valmax, ordre FROM notes.niveau_competences AS niv " +
+                String queryConversionAverage = "WITH table_conversion as (SELECT valmin, valmax, ordre FROM notes." + Field.NIVEAU_COMPETENCES_TABLE + " AS niv " +
                         "INNER JOIN  notes.echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau " +
                         "INNER JOIN  notes.rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle " +
                         "AND cc.id_groupe = ? AND echelle.id_structure = ? ) " +
@@ -502,7 +503,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 Competences.COMPETENCES_SCHEMA + "." + Competences.ELEMENT_PROGRAMME_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.ELEVES_IGNORES_LSU_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.ELT_BILAN_PERIODIQUE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.MOYENNE_FINALE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.MOYENNE_FINALE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.POSITIONNEMENT + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE + ", " +

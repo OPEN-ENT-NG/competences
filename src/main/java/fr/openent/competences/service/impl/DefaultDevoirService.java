@@ -80,7 +80,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public DefaultDevoirService(EventBus eb) {
         super(Competences.COMPETENCES_SCHEMA, Competences.DEVOIR_TABLE);
         utilsService = new DefaultUtilsService(eb);
-        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Field.NOTES_TABLE,eb);
         matiereService = new DefaultMatiereService(eb);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
         this.eb = eb;
@@ -147,15 +147,15 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append(" NATURAL  JOIN (SELECT COALESCE(count(*), 0) NbrCompetence" )
                 .append(" FROM notes.competences_devoirs c" )
                 .append(" WHERE c.id_devoir =?) comp")
-                .append(" INNER JOIN  notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id")
+                .append(" INNER JOIN  notes." + Field.REL_DEVOIRS_GROUPES_TABLE + " Gdevoir ON Gdevoir.id_devoir = devoir.id")
                 .append(" LEFT JOIN "+ Competences.VSCO_SCHEMA +".sousmatiere")
                 .append("            ON devoir.id_sousmatiere = sousmatiere.id ")
                 .append(" LEFT JOIN "+ Competences.VSCO_SCHEMA +".type_sousmatiere ")
                 .append("            ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
-                .append(" LEFT JOIN "+ Competences.EVAL_SCHEMA +".rel_devoirs_groupes ")
-                .append("            ON rel_devoirs_groupes.id_devoir = devoir.id ")
+                .append(" LEFT JOIN "+ Competences.EVAL_SCHEMA +"." + Field.REL_DEVOIRS_GROUPES_TABLE)
+                .append("            ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = devoir.id ")
                 .append(" LEFT JOIN "+ Competences.EVAL_SCHEMA +".rel_groupe_cycle ")
-                .append("            ON rel_groupe_cycle.id_groupe = rel_devoirs_groupes.id_groupe ")
+                .append("            ON rel_groupe_cycle.id_groupe = " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe ")
                 .append(" WHERE devoir.id = ? ;");
 
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
@@ -298,7 +298,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         if(null != devoir.getLong(attributeTypeGroupe) && devoir.getLong(attributeTypeGroupe) > -1){
             JsonArray paramsAddRelDevoirsGroupes = new fr.wseduc.webutils.collections.JsonArray();
             String queryAddRelDevoirsGroupes = new String("INSERT INTO " + Competences.COMPETENCES_SCHEMA +
-                    ".rel_devoirs_groupes(id_groupe, id_devoir,type_groupe) VALUES (?, ?, ?)");
+                    "." + Field.REL_DEVOIRS_GROUPES_TABLE + "(id_groupe, id_devoir,type_groupe) VALUES (?, ?, ?)");
             paramsAddRelDevoirsGroupes.add(devoir.getValue(attributeIdGroupe));
             paramsAddRelDevoirsGroupes.add(idDevoir);
             paramsAddRelDevoirsGroupes.add(devoir.getInteger(attributeTypeGroupe).intValue());
@@ -512,8 +512,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         if(null != devoir.getString(attributeIdGroupe)
                 && null != devoir.getLong(attributeTypeGroupe)
                 && devoir.getLong(attributeTypeGroupe)>-1){
-            String queryUpdateRelDevoirGroupe ="UPDATE "+ Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes " +
-                    "SET id_groupe = ? " +
+            String queryUpdateRelDevoirGroupe ="UPDATE "+ Competences.COMPETENCES_SCHEMA + "." + Field.REL_DEVOIRS_GROUPES_TABLE +
+                    " SET id_groupe = ? " +
                     "WHERE id_devoir = ? ";
             JsonArray paramsUpdateRelDevoirGroupe = new fr.wseduc.webutils.collections.JsonArray();
             paramsUpdateRelDevoirGroupe.add(devoir.getString(attributeIdGroupe));
@@ -541,7 +541,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     .put("action", "prepared"));
 
             StringBuilder queryDeleteAnnotations = new StringBuilder()
-                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs WHERE id_devoir = ? ");
+                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.REL_ANNOTATIONS_DEVOIRS_TABLE + " WHERE id_devoir = ? ");
             statements.add(new JsonObject()
                     .put("statement", queryDeleteAnnotations.toString())
                     .put("values", paramsDelete)
@@ -585,7 +585,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
         JsonArray values = new JsonArray();
 
-        query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, rel_devoirs_groupes.type_groupe, devoirs.is_evaluated, ")
+        query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".type_groupe, devoirs.is_evaluated, ")
                 .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
                 .append("devoirs.id_etat, devoirs.date_publication, devoirs.id_matiere, devoirs.coefficient, devoirs.ramener_sur, devoirs.percent, ")
                 .append("type_sousmatiere.libelle as _sousmatiere_libelle, devoirs.date, devoirs.apprec_visible, ")
@@ -595,24 +595,24 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".competences_devoirs ON devoirs.id = competences_devoirs.id_devoir ")
                 .append("LEFT JOIN ").append(VSCO_SCHEMA).append(".sousmatiere ON devoirs.id_sousmatiere = sousmatiere.id ")
                 .append("LEFT JOIN ").append(VSCO_SCHEMA).append(".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
-                .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ")
+                .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append("." + Field.REL_DEVOIRS_GROUPES_TABLE + " ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = devoirs.id ")
                 .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".users ON users.id = devoirs.owner ")
-                .append("WHERE rel_devoirs_groupes.id_devoir = devoirs.id AND devoirs.id_etablissement = ? ")
+                .append("WHERE " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = devoirs.id AND devoirs.id_etablissement = ? ")
                 .append("AND devoirs.eval_lib_historise = false AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
                 .append("devoirs.owner IN (SELECT DISTINCT main_teacher_id ") // ou dont l'un de mes titulaires le sont (de l'établissement passé en paramètre)
                 .append("FROM ").append(VSCO_SCHEMA).append(".multi_teaching ")
                 .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".devoirs ON devoirs.id_matiere = multi_teaching.subject_id ")
-                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON devoirs.id = rel_devoirs_groupes.id_devoir ")
-                .append("AND multi_teaching.class_or_group_id = rel_devoirs_groupes.id_groupe ")
+                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append("." + Field.REL_DEVOIRS_GROUPES_TABLE + " ON devoirs.id = " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir ")
+                .append("AND multi_teaching.class_or_group_id = " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe ")
                 .append("WHERE second_teacher_id = ? AND multi_teaching.structure_id = ? ")
                 .append("AND ((start_date <= current_date AND current_date <= entered_end_date AND NOT is_coteaching) OR is_coteaching)) ")
                 .append("OR ? IN (SELECT member_id ") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
                 .append("FROM ").append(COMPETENCES_SCHEMA).append(".devoirs_shares ")
                 .append("WHERE resource_id = devoirs.id ")
                 .append("AND action = '").append(DEVOIR_ACTION_UPDATE).append("')) ")
-                .append("GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, devoirs.is_evaluated, users.username, ")
+                .append("GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe, devoirs.is_evaluated, users.username, ")
                 .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
-                .append("devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, rel_devoirs_groupes.type_groupe, ")
+                .append("devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".type_groupe, ")
                 .append("devoirs.coefficient, devoirs.ramener_sur, type_sousmatiere.libelle, type.nom ")
                 .append("ORDER BY devoirs.date DESC ");
 
@@ -641,7 +641,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
         JsonArray values = new JsonArray();
 
-        query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, rel_devoirs_groupes.type_groupe, devoirs.is_evaluated, ")
+        query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".type_groupe, devoirs.is_evaluated, ")
                 .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
                 .append("devoirs.id_etat, devoirs.date_publication, devoirs.id_matiere, devoirs.coefficient, devoirs.ramener_sur, devoirs.percent, ")
                 .append("type_sousmatiere.libelle as _sousmatiere_libelle, devoirs.date, devoirs.apprec_visible,")
@@ -651,13 +651,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("LEFT JOIN notes.competences_devoirs on devoirs.id = competences_devoirs.id_devoir ")
                 .append("LEFT JOIN viesco.sousmatiere  on devoirs.id_sousmatiere = sousmatiere.id ")
                 .append("LEFT JOIN viesco.type_sousmatiere on sousmatiere.id_type_sousmatiere = type_sousmatiere.id  ")
-                .append("LEFT JOIN notes.rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ")
+                .append("LEFT JOIN notes." + Field.REL_DEVOIRS_GROUPES_TABLE + " ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = devoirs.id ")
                 .append("INNER JOIN notes.users on users.id = devoirs.owner ")
                 .append("WHERE devoirs.id_etablissement = ? ")
                 .append("AND devoirs.eval_lib_historise = false AND id_groupe IS NOT NULL ")
-                .append("GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, devoirs.is_evaluated, users.username, ")
+                .append("GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe, devoirs.is_evaluated, users.username, ")
                 .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
-                .append("devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, rel_devoirs_groupes.type_groupe, ")
+                .append("devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".type_groupe, ")
                 .append("devoirs.coefficient, devoirs.ramener_sur, type_sousmatiere.libelle, type.nom ")
                 .append("ORDER BY devoirs.date DESC ");
 
@@ -689,10 +689,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("LEFT JOIN ").append(Competences.VSCO_SCHEMA).append(".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type on devoirs.id_type = type.id ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users on users.id = devoirs.owner ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ");
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.REL_DEVOIRS_GROUPES_TABLE + " ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = devoirs.id ");
 
         if(idClasse != null) {
-            query.append("AND rel_devoirs_groupes.id_groupe = ? ");
+            query.append("AND " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe = ? ");
             values.add(idClasse);
         }
 
@@ -770,7 +770,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.append("SELECT devoirs.*, rel.id_groupe, users.username as teacher")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs")
                 .append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ")
-                .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel")
+                .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.REL_DEVOIRS_GROUPES_TABLE + " AS rel")
                 .append(" ON devoirs.id = rel.id_devoir");
 
         if(hasCompetences == null || !hasCompetences) {
@@ -823,7 +823,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             query.append("SELECT devoirs.*, rel.id_groupe, users.username as teacher")
                     .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs")
                     .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".users on users.id = devoirs.owner ")
-                    .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel").append(" ON devoirs.id = rel.id_devoir")
+                    .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.REL_DEVOIRS_GROUPES_TABLE + " AS rel").append(" ON devoirs.id = rel.id_devoir")
                     .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCES_NOTES_TABLE + " AS comp").append(" ON devoirs.id = comp.id_devoir");
 
 
@@ -966,17 +966,17 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     private StringBuilder buildAnnotationNotNNQuery(JsonArray values, Long idDevoir) {
         StringBuilder res = new StringBuilder()
-                .append("SELECT count(rel_annotations_devoirs.id_annotation) AS nb_annotations, 'notNN' as type,")
-                .append(" devoirs.id, rel_devoirs_groupes.id_groupe")
-                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_annotations_devoirs")
+                .append("SELECT count(" + Field.REL_ANNOTATIONS_DEVOIRS_TABLE + ".id_annotation) AS nb_annotations, 'notNN' as type,")
+                .append(" devoirs.id, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe")
+                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.REL_ANNOTATIONS_DEVOIRS_TABLE)
                 .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs")
-                .append(" ON rel_annotations_devoirs.id_devoir = devoirs.id AND devoirs.id = ?")
-                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes")
-                .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id AND devoirs.id = ?")
+                .append(" ON " + Field.REL_ANNOTATIONS_DEVOIRS_TABLE + ".id_devoir = devoirs.id AND devoirs.id = ?")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.REL_DEVOIRS_GROUPES_TABLE)
+                .append(" ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = devoirs.id AND devoirs.id = ?")
                 .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".annotations")
-                .append(" ON annotations.id = rel_annotations_devoirs.id_annotation")
+                .append(" ON annotations.id = " + Field.REL_ANNOTATIONS_DEVOIRS_TABLE + ".id_annotation")
                 .append(" AND NOT annotations.libelle_court = 'NN'")
-                .append(" GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
+                .append(" GROUP by devoirs.id, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe");
 
         values.add(idDevoir);
         values.add(idDevoir);
@@ -985,17 +985,17 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     private StringBuilder buildAnnotationNNQuery(JsonArray values, Long idDevoir) {
         StringBuilder res = new StringBuilder()
-                .append("SELECT count(rel_annotations_devoirs.id_annotation) AS nb_annotations, 'NN' as type,")
-                .append(" devoirs.id, rel_devoirs_groupes.id_groupe")
-                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_annotations_devoirs")
+                .append("SELECT count(" + Field.REL_ANNOTATIONS_DEVOIRS_TABLE + ".id_annotation) AS nb_annotations, 'NN' as type,")
+                .append(" devoirs.id, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe")
+                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.REL_ANNOTATIONS_DEVOIRS_TABLE)
                 .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs")
-                .append(" ON rel_annotations_devoirs.id_devoir = devoirs.id AND devoirs.id = ?")
-                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes")
-                .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id AND devoirs.id = ?")
+                .append(" ON " + Field.REL_ANNOTATIONS_DEVOIRS_TABLE + ".id_devoir = devoirs.id AND devoirs.id = ?")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.REL_DEVOIRS_GROUPES_TABLE)
+                .append(" ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = devoirs.id AND devoirs.id = ?")
                 .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".annotations")
-                .append(" ON annotations.id = rel_annotations_devoirs.id_annotation")
+                .append(" ON annotations.id = " + Field.REL_ANNOTATIONS_DEVOIRS_TABLE + ".id_annotation")
                 .append(" AND annotations.libelle_court = 'NN'")
-                .append(" GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
+                .append(" GROUP by devoirs.id, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe");
 
         values.add(idDevoir);
         values.add(idDevoir);
@@ -1169,7 +1169,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT id, is_evaluated, CASE WHEN nb_competences > 0 THEN TRUE ELSE FALSE END AS ")
-                .append("has_competences, id_groupe FROM notes.rel_devoirs_groupes,")
+                .append("has_competences, id_groupe FROM notes." + Field.REL_DEVOIRS_GROUPES_TABLE + ",")
                 .append(" (SELECT count(competences_devoirs.id_devoir) AS nb_competences,")
                 .append(" devoirs.id,devoirs.is_evaluated FROM  notes.devoirs LEFT OUTER JOIN notes.competences_devoirs")
                 .append(" ON devoirs.id = competences_devoirs.id_devoir  GROUP by (devoirs.id) ) AS res ")
@@ -1192,7 +1192,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT devoir.id, devoir.id_matiere, devoir.id_periode, Gdevoir.id_groupe FROM notes.devoirs devoir ")
-                .append("INNER Join notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id ")
+                .append("INNER Join notes." + Field.REL_DEVOIRS_GROUPES_TABLE + " Gdevoir ON Gdevoir.id_devoir = devoir.id ")
                 .append(" WHERE devoir.id IN ");
 
         if (idDevoirs != null) {
@@ -1227,10 +1227,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder()
                 .append("WITH res AS ( ")
                 .append("SELECT devoirs.id, devoirs.id_matiere, devoirs.owner, services.is_visible, services.coefficient, ")
-                .append("devoirs.id_periode, rel_devoirs_groupes.id_groupe ")
+                .append("devoirs.id_periode, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe ")
                 .append("FROM notes.devoirs ")
-                .append("INNER JOIN notes.rel_devoirs_groupes ON (devoirs.id = rel_devoirs_groupes.id_devoir) ")
-                .append("LEFT JOIN viesco.services ON (rel_devoirs_groupes.id_groupe = services.id_groupe ")
+                .append("INNER JOIN notes." + Field.REL_DEVOIRS_GROUPES_TABLE + " ON (devoirs.id = " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir) ")
+                .append("LEFT JOIN viesco.services ON (" + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe = services.id_groupe ")
                 .append("AND devoirs.owner = services.id_enseignant AND devoirs.id_matiere = services.id_matiere ")
                 .append("AND services.id_etablissement = ?) ")
                 .append("WHERE devoirs.eval_lib_historise = FALSE AND devoirs.id_etablissement = ?) ");
@@ -1261,13 +1261,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("UNION ");
 
-        query.append("SELECT DISTINCT moyenne_finale.id_matiere, services.id_enseignant, services.is_visible, services.coefficient, ")
-                .append("moyenne_finale.id_periode, services.id_groupe ")
-                .append("FROM notes.moyenne_finale ")
-                .append("LEFT JOIN viesco.services ON (moyenne_finale.id_classe = services.id_groupe ")
-                .append("AND moyenne_finale.id_matiere = services.id_matiere ")
-                .append("AND services.id_etablissement = ?) ")
-                .append("WHERE moyenne_finale.id_eleve = ? ");
+        query.append("SELECT DISTINCT " + Field.MOYENNE_FINALE_TABLE + ".id_matiere, services.id_enseignant, services.is_visible, services.coefficient, ")
+                .append(Field.MOYENNE_FINALE_TABLE + ".id_periode, services.id_groupe")
+                .append(" FROM notes." + Field.MOYENNE_FINALE_TABLE)
+                .append(" LEFT JOIN viesco.services ON (" + Field.MOYENNE_FINALE_TABLE + ".id_classe = services.id_groupe")
+                .append(" AND " + Field.MOYENNE_FINALE_TABLE + ".id_matiere = services.id_matiere")
+                .append(" AND services.id_etablissement = ?)")
+                .append(" WHERE " + Field.MOYENNE_FINALE_TABLE + ".id_eleve = ? ");
         values.add(idEtablissement);
         values.add(idEleve);
 
@@ -1290,10 +1290,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     @Override
     public void listDevoirsService(String idEnseignant, String idMatiere, List<String> idGroups, Handler<Either<String,JsonArray>> handler) {
-        String query = "SELECT devoirs.id, devoirs.id_matiere, devoirs.owner, rel_devoirs_groupes.id_groupe" +
+        String query = "SELECT devoirs.id, devoirs.id_matiere, devoirs.owner, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe" +
                 " FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs" +
-                " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel_devoirs_groupes" +
-                " ON devoirs.id = rel_devoirs_groupes.id_devoir" +
+                " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.REL_DEVOIRS_GROUPES_TABLE + " AS " + Field.REL_DEVOIRS_GROUPES_TABLE +
+                " ON devoirs.id = " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir" +
                 " WHERE owner=? AND id_matiere=? AND id_groupe IN " + Sql.listPrepared(idGroups) ;
 
         JsonArray values = new JsonArray().add(idEnseignant).add(idMatiere);
@@ -1341,8 +1341,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     @Override
     public void autoCleanSQLTable(Handler<Either<String, JsonObject>> result) {
-        String query = "DELETE FROM notes.moyenne_finale AS moy WHERE NOT EXISTS " +
-                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
+        String query = "DELETE FROM notes." + Field.MOYENNE_FINALE_TABLE + " AS moy WHERE NOT EXISTS " +
+                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes." + Field.REL_DEVOIRS_GROUPES_TABLE + " AS relDevGr ON relDevGr.id_devoir = dev.id" +
                 " WHERE moy.id_matiere = dev.id_matiere AND moy.id_periode = dev.id_periode AND moy.id_classe = relDevGr.id_groupe);" +
                 " " /*+
                 SUITE à la demande de la MN-1126 on garde les informations ci-après, à voir si cela n'entraine pas de problème
@@ -1370,7 +1370,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         JsonArray values = new JsonArray();
         query.append("DELETE FROM notes.competence_niveau_final AS compNivFin WHERE compNivFin.id_periode = ? AND " +
                 "compNivFin.id_matiere = ? AND compNivFin.id_eleve IN " + Sql.listPrepared(listEleves.toArray()) + " AND NOT EXISTS " +
-                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
+                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes." + Field.REL_DEVOIRS_GROUPES_TABLE + " AS relDevGr ON relDevGr.id_devoir = dev.id" +
                 " WHERE compNivFin.id_matiere = dev.id_matiere AND compNivFin.id_periode = dev.id_periode " +
                 "AND relDevGr.id_groupe IN " + Sql.listPrepared(listGroups.toArray()) + ") ");
 
@@ -1390,7 +1390,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         JsonArray values = new JsonArray();
         query.append("DELETE FROM notes.positionnement AS pos WHERE pos.id_periode = ? AND " +
                 "pos.id_matiere = ? AND pos.id_eleve IN " + Sql.listPrepared(listEleves.toArray()) + " AND NOT EXISTS " +
-                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
+                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes." + Field.REL_DEVOIRS_GROUPES_TABLE + " AS relDevGr ON relDevGr.id_devoir = dev.id" +
                 " WHERE pos.id_matiere = dev.id_matiere AND pos.id_periode = dev.id_periode " +
                 "AND relDevGr.id_groupe IN " + Sql.listPrepared(listGroups.toArray()) + ") ");
 
@@ -1453,7 +1453,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                                   String groupId, Handler<Either<String, JsonArray>> handler){
         String query = "SELECT distinct devoirs.id  " +
                 " FROM "+Competences.COMPETENCES_SCHEMA + ".devoirs " +
-                " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes rdg " +
+                " INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.REL_DEVOIRS_GROUPES_TABLE + " rdg " +
                 " ON rdg.id_devoir = devoirs.id "+
                 " WHERE owner = ? AND id_matiere = ? AND rdg.id_groupe = ?";
         JsonArray params = new JsonArray().add(idTeacher).add(idSubject).add(groupId);

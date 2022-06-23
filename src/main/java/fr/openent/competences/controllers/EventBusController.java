@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.DevoirService;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.ShareCompetencesService;
@@ -49,7 +50,7 @@ public class EventBusController extends ControllerHelper {
 
     public EventBusController(Map<String, SecuredAction> securedActions) {
         utilsService = new DefaultUtilsService();
-        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Field.NOTES_TABLE);
         competencesShareService = new DefaultShareCompetencesService(eb,securedActions);
     }
 

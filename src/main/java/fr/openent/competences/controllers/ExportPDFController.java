@@ -96,7 +96,7 @@ public class ExportPDFController extends ControllerHelper {
         utilsService = new DefaultUtilsService(eb);
         bfcService = new DefaultBFCService(eb, storage);
         domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
-        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Field.NOTES_TABLE, eb);
         exportService = new DefaultExportService(eb, storage);
         exportBulletinService = new DefaultExportBulletinService(eb, storage);
         appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE);

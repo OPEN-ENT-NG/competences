@@ -1,6 +1,7 @@
 package fr.openent.competences.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.DefaultDevoirService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -43,12 +44,12 @@ public class HomeworkUtils {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT count(notes.id) as nb_notes , devoirs.id, rel_devoirs_groupes.id_groupe")
-                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.NOTES_TABLE)
+        query.append("SELECT count(" + Field.NOTES_TABLE + ".id) as nb_notes , devoirs.id, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe")
+                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Field.NOTES_TABLE)
                 .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_TABLE)
-                .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.REL_DEVOIRS_GROUPES)
-                .append(" WHERE notes.id_devoir = devoirs.id")
-                .append(" AND rel_devoirs_groupes.id_devoir = devoirs.id")
+                .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Field.REL_DEVOIRS_GROUPES_TABLE)
+                .append(" WHERE " + Field.NOTES_TABLE + ".id_devoir = devoirs.id")
+                .append(" AND " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = devoirs.id")
                 .append(" AND devoirs.id = ?");
 
         values.add(idDevoir);
@@ -68,7 +69,7 @@ public class HomeworkUtils {
                     .append(" AND action = '").append(Competences.DEVOIR_ACTION_UPDATE).append("')")
                     .append(" )");
         }
-        query.append(" GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
+        query.append(" GROUP by devoirs.id, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe");
 
         HomeworkUtils.addValueForRequest(values, user, isChefEtab);
 

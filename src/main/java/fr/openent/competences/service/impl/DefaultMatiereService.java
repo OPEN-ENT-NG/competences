@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.Subject;
 import fr.openent.competences.service.MatiereService;
 import fr.wseduc.webutils.Either;
@@ -40,12 +41,12 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     private static final String LIBELLE_COURT = "libelle_court";
 
     public DefaultMatiereService(EventBus eb) {
-        super(Competences.COMPETENCES_SCHEMA, Competences.MATIERE_TABLE);
+        super(Competences.COMPETENCES_SCHEMA, Field.MATIERE_TABLE);
         this.eb = eb;
     }
 
     public DefaultMatiereService() {
-        super(Competences.COMPETENCES_SCHEMA, Competences.MATIERE_TABLE);
+        super(Competences.COMPETENCES_SCHEMA, Field.MATIERE_TABLE);
         this.eb = null;
     }
 
@@ -180,7 +181,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     }
 
     private void getDefaultLibele(Handler<Either<String, JsonArray>> handler) {
-        String query = " SELECT * FROM " + EVAL_SCHEMA + "." + VSCO_MATIERE_TABLE;
+        String query = " SELECT * FROM " + EVAL_SCHEMA + "." + Field.MATIERE_TABLE;
         sql.prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
     }
 

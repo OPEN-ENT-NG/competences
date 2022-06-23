@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.DomainesService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -70,7 +71,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
         }
         query .append("FROM search_graph");
         if(idEleve !=null){
-            query.append(" LEFT JOIN notes.dispense_domaine_eleve  ON search_graph.id = dispense_domaine_eleve.id_domaines ")
+            query.append(" LEFT JOIN " + Field.NOTES_TABLE + ".dispense_domaine_eleve  ON search_graph.id = dispense_domaine_eleve.id_domaines ")
                     .append("AND dispense_domaine_eleve.id_eleve = ?");
         }
         query.append(" GROUP BY niveau, id, id_parent, libelle, codification, evaluated, id_cycle, dispensable, nom, nomHtml, pathinfo");
@@ -97,7 +98,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
 
 
         query.append("SELECT id, id_parent, libelle, codification ");
-        query.append("FROM notes.domaines ");
+        query.append("FROM " + Field.NOTES_TABLE + ".domaines ");
         query.append("WHERE id IN " + listIntPrepared(idDomaines));
 
         for(int s : idDomaines) {
@@ -125,9 +126,9 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
         //On extrait d'abord les domaines evalués et dont le cycle correspond à celui de la classe
         query.append("WITH evaluated_domaines AS ")
                 .append("(SELECT id, id_parent, libelle, codification ")
-                .append("FROM notes.domaines ");
+                .append("FROM " + Field.NOTES_TABLE + ".domaines ");
         if(idCycle == null) {
-            query.append("LEFT JOIN notes.rel_groupe_cycle ON notes.domaines.id_cycle = notes.rel_groupe_cycle.id_cycle")
+            query.append("LEFT JOIN " + Field.NOTES_TABLE + ".rel_groupe_cycle ON " + Field.NOTES_TABLE + ".domaines.id_cycle = " + Field.NOTES_TABLE + ".rel_groupe_cycle.id_cycle")
                     .append(" WHERE domaines.evaluated = TRUE AND rel_groupe_cycle.id_groupe = ?) ");
             params.add(idClasse);
         }else {

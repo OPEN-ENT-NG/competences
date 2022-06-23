@@ -20,6 +20,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.ExportEvaluationHelper;
 import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.service.*;
@@ -104,11 +105,11 @@ public class DefaultExportService implements ExportService {
         utilsService = new DefaultUtilsService(eb);
         domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
-        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Field.NOTES_TABLE, eb);
         competencesService = new DefaultCompetencesService(eb);
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
-        annotationsService = new DefaultAnnotationService(Competences.COMPETENCES_SCHEMA, Competences.REL_ANNOTATIONS_DEVOIRS_TABLE);
+        annotationsService = new DefaultAnnotationService(Competences.COMPETENCES_SCHEMA, Field.REL_ANNOTATIONS_DEVOIRS_TABLE);
         defaultMatiereService = new DefaultMatiereService(eb);
         this.storage = storage;
     }

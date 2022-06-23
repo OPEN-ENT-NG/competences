@@ -20,6 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.*;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
@@ -76,7 +77,7 @@ public class NoteController extends ControllerHelper {
 
     public NoteController(EventBus eb) {
         this.eb = eb;
-        notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
+        notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Field.NOTES_TABLE,eb);
         devoirsService = new DefaultDevoirService(this.eb);
         utilsService = new DefaultUtilsService(this.eb);
         elementProgramme = new DefaultElementProgramme();

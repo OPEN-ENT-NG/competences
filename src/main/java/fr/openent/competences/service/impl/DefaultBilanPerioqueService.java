@@ -3,6 +3,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
@@ -46,7 +47,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     public DefaultBilanPerioqueService (EventBus eb){
         this.eb = eb;
-        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Field.NOTES_TABLE, eb);
         utilsService = new DefaultUtilsService(eb);
         devoirService = new DefaultDevoirService(eb);
         elementProgramme = new DefaultElementProgramme() ;
@@ -787,7 +788,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             } else {
                 JsonArray idGroups = responseQuerry.right().getValue();
                 //idGroups null si l'eleve n'est pas dans un groupe
-                new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb)
+                new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Field.NOTES_TABLE,eb)
                         .getDataGraphDomaine(idEleve, idGroups, idEtablissement, idClasse,
                                 typeClasse, idPeriodeString, isNull(idPeriodeString), handler);
             }

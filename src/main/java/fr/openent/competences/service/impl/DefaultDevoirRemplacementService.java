@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.DevoirRemplacementService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.neo4j.Neo4j;
@@ -113,9 +114,9 @@ public class DefaultDevoirRemplacementService extends SqlCrudService implements 
 
     @Override
     public void getClassesIdsDevoir(String userId, String structureId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT distinct(rel_devoirs_groupes.id_groupe) " +
+        String query = "SELECT distinct(" + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe) " +
                 "FROM notes.devoirs " +
-                "inner join notes.rel_devoirs_groupes ON (rel_devoirs_groupes.id_devoir = devoirs.id) " +
+                "inner join notes." + Field.REL_DEVOIRS_GROUPES_TABLE + " ON (" + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = devoirs.id) " +
                 "AND (devoirs.id_etablissement = ? ) " +
                 "AND (devoirs.owner = ? " +
                 "OR devoirs.owner IN (SELECT DISTINCT id_titulaire " +

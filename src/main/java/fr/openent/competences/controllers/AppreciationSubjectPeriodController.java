@@ -1,6 +1,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.AppreciationSubjectPeriodModel;
 import fr.openent.competences.security.AccessReleveByClasseMatiereFilter;
 import fr.openent.competences.security.SaveAppreciationBilanPeriodiqueFilter;
@@ -37,7 +38,7 @@ public class AppreciationSubjectPeriodController extends ControllerHelper {
 
     public AppreciationSubjectPeriodController(EventBus eb) {
         this.eb = eb;
-        notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
+        notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Field.NOTES_TABLE, eb);
         appreciationSubjectPeriodService = new DefaultAppreciationSubjectPeriod(Competences.COMPETENCES_SCHEMA,
                 Competences.APPRECIATION_MATIERE_PERIODE_TABLE, Competences.REL_APPRECIATION_USERS_NEO, eb);
     }

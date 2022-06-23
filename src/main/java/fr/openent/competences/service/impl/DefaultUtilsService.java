@@ -20,6 +20,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.service.UtilsService;
@@ -789,11 +790,11 @@ public class DefaultUtilsService implements UtilsService {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         query.append(" SELECT devoirs.id, devoirs.name, id_groupe, COUNT(competences_devoirs.id) as nbcompetences ")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs ")
-                .append(" LEFT JOIN notes.rel_devoirs_groupes ")
-                .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id ")
+                .append(" LEFT JOIN notes." + Field.REL_DEVOIRS_GROUPES_TABLE)
+                .append(" ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = devoirs.id ")
                 .append(" LEFT OUTER JOIN " + Competences.COMPETENCES_SCHEMA + ".competences_devoirs ")
                 .append(" ON devoirs.id = competences_devoirs.id_devoir ")
-                .append(" WHERE rel_devoirs_groupes.id_groupe IN " + Sql.listPrepared(idClasses))
+                .append(" WHERE " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe IN " + Sql.listPrepared(idClasses))
                 .append(" GROUP BY devoirs.id, devoirs.name, id_groupe ")
                 .append(" HAVING COUNT(competences_devoirs.id) > 0 ")
                 .append(" ORDER BY id_groupe ");

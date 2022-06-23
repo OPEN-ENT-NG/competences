@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.NiveauDeMaitriseService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -41,7 +42,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
 
 
     public DefaultNiveauDeMaitriseService() {
-        super(Competences.COMPETENCES_SCHEMA, Competences.PERSO_NIVEAU_COMPETENCES_TABLE);
+        super(Competences.COMPETENCES_SCHEMA, Field.PERSO_NIVEAU_COMPETENCES_TABLE);
     }
 
     /**
@@ -56,11 +57,11 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         query.append("SELECT niv.libelle, t1.libelle as default_lib, t1.ordre, t1.couleur AS default,")
                 .append(" t1.id_cycle, t1.id AS id_niveau,")
                 .append(" niv.id_etablissement, niv.couleur, niv.lettre, niv.id AS id, t2.libelle AS cycle")
-                .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.NIVEAU_COMPETENCES_TABLE + " AS t1")
+                .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.NIVEAU_COMPETENCES_TABLE + " AS t1")
                 .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.CYCLE_TABLE + " AS t2")
                 .append(" ON t1.id_cycle = t2.id ")
                 .append(" LEFT JOIN ")
-                .append(" (SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + "." + Competences.PERSO_NIVEAU_COMPETENCES_TABLE)
+                .append(" (SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + "." + Field.PERSO_NIVEAU_COMPETENCES_TABLE)
                 .append(" WHERE id_etablissement = ? ) AS niv")
                 .append(" ON (niv.id_niveau = t1.id) ");
 
@@ -81,7 +82,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT niv1.libelle, niv1.ordre, niv1.couleur couleurDefault, niv1.id_cycle ")
-                .append("FROM notes.niveau_competences niv1 ")
+                .append("FROM " + Field.NOTES_TABLE + "." + Field.NIVEAU_COMPETENCES_TABLE + " niv1 ")
                 .append("WHERE id_cycle = ? ")
                 .append("ORDER BY (ordre);");
 
@@ -94,11 +95,11 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT niveau_competences.libelle, niveau_competences.ordre, ")
-                .append(" niveau_competences.couleur couleurDefault, niveau_competences.id_cycle  ")
-                .append(" FROM notes.niveau_competences")
+        query.append("SELECT " + Field.NIVEAU_COMPETENCES_TABLE + ".libelle, " + Field.NIVEAU_COMPETENCES_TABLE + ".ordre, ")
+                .append(" " + Field.NIVEAU_COMPETENCES_TABLE + ".couleur couleurDefault, " + Field.NIVEAU_COMPETENCES_TABLE + ".id_cycle  ")
+                .append(" FROM " + Field.NOTES_TABLE + "." + Field.NIVEAU_COMPETENCES_TABLE)
                 .append(" INNER JOIN " +   Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
-                .append(" ON id_groupe = ? AND rel_groupe_cycle.id_cycle = niveau_competences.id_cycle ")
+                .append(" ON id_groupe = ? AND rel_groupe_cycle.id_cycle = " + Field.NIVEAU_COMPETENCES_TABLE + ".id_cycle ")
                 .append(" order By (ordre);" );
 
         values.add(idClasse);

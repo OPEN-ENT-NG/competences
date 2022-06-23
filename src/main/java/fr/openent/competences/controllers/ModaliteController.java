@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.ModaliteService;
 import fr.openent.competences.service.impl.DefaultModaliteService;
 import fr.wseduc.rs.ApiDoc;
@@ -34,7 +35,7 @@ public class ModaliteController extends ControllerHelper {
     ModaliteService modaliteService;
 
     public ModaliteController() {
-        this.modaliteService = new DefaultModaliteService(Competences.COMPETENCES_SCHEMA, Competences.MODALITES_TABLE);
+        this.modaliteService = new DefaultModaliteService(Competences.COMPETENCES_SCHEMA, Field.MODALITES_TABLE);
     }
 
     @Get("/modalites")

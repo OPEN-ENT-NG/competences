@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.AnnotationService;
 import fr.openent.competences.service.CompetenceNoteService;
 import fr.openent.competences.service.NoteService;
@@ -42,7 +43,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
     public final String NN = "NN";
     public DefaultAnnotationService(String schema, String table) {
         super(schema, table);
-        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Field.NOTES_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
     }
 
@@ -90,7 +91,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
     private void addStatementAnnotation(JsonArray statements,final Long idDevoir,final Long idAnnotation,
                                         final String idEleve ){
         StringBuilder query = new StringBuilder()
-                .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs " +
+                .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +"." + Field.REL_ANNOTATIONS_DEVOIRS_TABLE +
                         " (id_devoir, id_annotation, id_eleve)  VALUES (?, ?, ?) " +
                         " ON CONFLICT  (id_devoir, id_eleve) " +
                         "DO UPDATE SET  id_annotation = ? ");
@@ -116,8 +117,8 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
 
     private void addStatementdeleteNote(JsonArray statements,final Long idDevoir, final String idEleve ) {
         StringBuilder queryDeleteNote = new StringBuilder()
-                .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".notes " +
-                        "WHERE id_devoir = ? AND id_eleve = ? ;");
+                .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.NOTES_TABLE +
+                        " WHERE id_devoir = ? AND id_eleve = ? ;");
         JsonArray paramsDeleteNote = new fr.wseduc.webutils.collections.JsonArray();
         paramsDeleteNote.add(idDevoir).add(idEleve);
         statements.add(new JsonObject()
@@ -197,7 +198,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("UPDATE "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs " +
+        query.append("UPDATE "+ Competences.COMPETENCES_SCHEMA +"." + Field.REL_ANNOTATIONS_DEVOIRS_TABLE +
                 "SET id_annotation = ? WHERE id_devoir = ? AND id_eleve = ?;");
         values.add(idAnnotation).add(idDevoir).add(idEleve);
 
@@ -209,7 +210,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs WHERE id_devoir = ? AND id_eleve = ?;");
+        query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.REL_ANNOTATIONS_DEVOIRS_TABLE + " WHERE id_devoir = ? AND id_eleve = ?;");
         values.add(idDevoir).add(idEleve);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validRowsResultHandler(handler));
@@ -218,9 +219,9 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
     @Override
     public void getAnnotationByEleveByDevoir(Long[] ids_devoir, String[] ids_eleve, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs "+
-                "WHERE rel_annotations_devoirs.id_devoir IN "+ Sql.listPrepared(ids_devoir)+
-                " AND rel_annotations_devoirs.id_eleve IN " + Sql.listPrepared(ids_eleve);
+        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA +"." + Field.REL_ANNOTATIONS_DEVOIRS_TABLE +
+                " WHERE " + Field.REL_ANNOTATIONS_DEVOIRS_TABLE + ".id_devoir IN "+ Sql.listPrepared(ids_devoir)+
+                " AND " + Field.REL_ANNOTATIONS_DEVOIRS_TABLE + ".id_eleve IN " + Sql.listPrepared(ids_eleve);
         for(Long idDevoir : ids_devoir){
             values.add(idDevoir);
         }

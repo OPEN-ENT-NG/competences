@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.AccessBFCFilter;
 import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.AccessControleByClassFilter;
@@ -72,10 +73,10 @@ public class BFCController extends ControllerHelper {
         syntheseService = new DefaultBfcSyntheseService(COMPETENCES_SCHEMA, BFC_SYNTHESE_TABLE, eb);
         enseignementComplement = new DefaultEnseignementComplementService(COMPETENCES_SCHEMA, ENSEIGNEMENT_COMPLEMENT);
         languesCultureRegionaleService = new DefaultLanguesCultureRegionaleService(COMPETENCES_SCHEMA,
-                LANGUES_CULTURE_REGIONALE);
+                Field.LANGUES_CULTURE_REGIONALE);
         eleveEnseignementComplement = new DefaultEleveEnseignementComplementService(COMPETENCES_SCHEMA,
                 ELEVE_ENSEIGNEMENT_COMPLEMENT);
-        niveauEnsComplementService = new DefaultNiveauEnsComplement(COMPETENCES_SCHEMA,NIVEAU_ENS_COMPLEMENT);
+        niveauEnsComplementService = new DefaultNiveauEnsComplement(COMPETENCES_SCHEMA, Field.NIVEAU_ENS_COMPLEMENT);
         this.storage = storage;
         bulletinsService = new DefaultArchiveBFCService();
     }

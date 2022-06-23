@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Domaine;
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
@@ -166,8 +167,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT * ")
-                .append(" FROM notes.bilan_fin_cycle")
-                .append(" INNER JOIN notes.domaines ON bilan_fin_cycle.id_domaine = domaines.id")
+                .append(" FROM " + Field.NOTES_TABLE + ".bilan_fin_cycle")
+                .append(" INNER JOIN " + Field.NOTES_TABLE + ".domaines ON bilan_fin_cycle.id_domaine = domaines.id")
                 .append(" WHERE bilan_fin_cycle.id_eleve IN " + Sql.listPrepared(idEleves))
                 .append(" AND bilan_fin_cycle.id_etablissement = ? AND valeur >= 0 ");
 
