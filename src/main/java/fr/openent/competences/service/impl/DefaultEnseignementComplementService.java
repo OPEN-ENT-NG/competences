@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.EnseignementComplementService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -38,7 +39,7 @@ public class DefaultEnseignementComplementService extends SqlCrudService impleme
 
 
     public void getEnseignementsComplement(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, libelle, code FROM "+ Competences.COMPETENCES_SCHEMA + ".enseignement_complement";
+        String query = "SELECT id, libelle, code FROM "+ Competences.COMPETENCES_SCHEMA + "." + Field.ENSEIGNEMENT_COMPLEMENT;
         JsonArray values = new JsonArray();
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
 

@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.CompetencesService;
 import fr.openent.competences.service.EnseignementService;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
@@ -53,7 +54,7 @@ public class EnseignementController extends ControllerHelper {
     private final CompetencesService competencesService;
 
     public EnseignementController(EventBus eb) {
-        enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
+        enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Field.ENSEIGNEMENTS_TABLE);
         competencesService = new DefaultCompetencesService(eb);
     }
 

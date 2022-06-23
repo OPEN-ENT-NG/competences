@@ -17,6 +17,7 @@
 
 package fr.openent.competences;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.controllers.*;
 import fr.openent.competences.service.impl.BulletinWorker;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
@@ -78,19 +79,6 @@ public class Competences extends BaseServer {
     public static final String CYCLE_TABLE = "cycle";
 
     public static final String DEVOIR_TABLE = "devoirs";
-    public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
-    public static final String DIGITAL_SKILLS_TABLE = "digital_skills";
-    public static final String DOMAINE_DIGITAL_SKILLS_TABLE = "domaines_digital_skills";
-    public static final String DISPENSE_DOMAINE_ELEVE = "dispense_domaine_eleve";
-    public static final String DOMAINES_TABLE = "domaines";
-
-    public static final String ELEMENT_PROGRAMME_TABLE = "element_programme";
-    public static final String ELEVE_ENSEIGNEMENT_COMPLEMENT = "eleve_enseignement_complement";
-    public static final String ELEVES_IGNORES_LSU_TABLE = "eleves_ignores_lsu";
-    public static final String ELT_BILAN_PERIODIQUE_TABLE = "elt_bilan_periodique";
-    public static final String ENSEIGNEMENT_COMPLEMENT = "enseignement_complement";
-    public static final String ENSEIGNEMENTS_TABLE = "enseignements";
-
 
     public static final String LANGUES_CULTURE_REGIONALE = "langues_culture_regionale";
 
@@ -322,18 +310,18 @@ public class Competences extends BaseServer {
         addController(new SuperAdminController());
         // Devoir Controller
         DevoirController devoirController = new DevoirController(eb, eventStore);
-        SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,
+        SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, Field.DEVOIR_SHARE_TABLE,
                 new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
         devoirController.setCrudService(devoirSqlCrudService);
-        devoirController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions,
+        devoirController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, Field.DEVOIR_SHARE_TABLE, eb, securedActions,
                 null));
         addController(devoirController);
 
         EventBusController eventBusController = new EventBusController(securedActions);
-        SqlCrudService eventBusSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,
+        SqlCrudService eventBusSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, Field.DEVOIR_SHARE_TABLE,
                 new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
         eventBusController.setCrudService(eventBusSqlCrudService);
-        eventBusController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions,
+        eventBusController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, Field.DEVOIR_SHARE_TABLE, eb, securedActions,
                 null));
         addController(eventBusController);
 

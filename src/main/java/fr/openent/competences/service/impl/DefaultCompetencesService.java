@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.CompetencesService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -189,14 +190,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     @Override
     public void getDevoirCompetences(Long devoirId, Long idCycle, final Handler<Either<String, JsonArray>> handler) {
 
-        String query = "SELECT string_agg(domaines.codification, ', ') as code_domaine," +
-                " string_agg( cast (domaines.id as text), ',') as ids_domaine, comp.id as id_competence," +
+        String query = "SELECT string_agg(" + Field.DOMAINES_TABLE + ".codification, ', ') as code_domaine," +
+                " string_agg( cast (" + Field.DOMAINES_TABLE + ".id as text), ',') as ids_domaine, comp.id as id_competence," +
                 " compDevoir.*, COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_type as id_type," +
                 " comp.id_parent as id_parent, compDevoir.index as index, comp.id_cycle" +
                 " FROM " + COMPETENCES_TABLE + " AS comp" +
                 " INNER JOIN " + COMPETENCES_DEVOIRS_TABLE + " AS compDevoir ON (comp.id = compDevoir.id_competence )" +
                 " LEFT JOIN " + COMPETENCES_DOMAINES_TABLE + " AS compDom ON (comp.id = compDom.id_competence)" +
-                " LEFT JOIN " + COMPETENCES_SCHEMA + ".domaines ON (domaines.id = compDom.id_domaine)" +
+                " LEFT JOIN " + COMPETENCES_SCHEMA + "." + Field.DOMAINES_TABLE + " ON (" + Field.DOMAINES_TABLE + ".id = compDom.id_domaine)" +
                 " LEFT JOIN (SELECT nom, id_competence FROM " + COMPETENCES_PERSO_TABLE + " WHERE id_etablissement = " +
                 "(SELECT id_etablissement FROM " + DEVOIRS_TABLE + " WHERE id = ?)) AS compPerso" +
                 " ON comp.id = compPerso.id_competence" +
@@ -210,14 +211,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     public void getDevoirCompetences(JsonArray devoirIds, String idEtablissement, Long idCycle,
                                      final Handler<Either<String, JsonArray>> handler) {
 
-        String query = "SELECT string_agg(domaines.codification, ', ') as code_domaine," +
-                " string_agg( cast (domaines.id as text), ',') as ids_domaine, comp.id as id_competence," +
+        String query = "SELECT string_agg(" + Field.DOMAINES_TABLE + ".codification, ', ') as code_domaine," +
+                " string_agg( cast (" + Field.DOMAINES_TABLE + ".id as text), ',') as ids_domaine, comp.id as id_competence," +
                 " compDevoir.*, COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_type as id_type," +
                 " comp.id_parent as id_parent, compDevoir.index as index" +
                 " FROM " + COMPETENCES_TABLE + " AS comp" +
                 " INNER JOIN " + COMPETENCES_DEVOIRS_TABLE + " AS compDevoir ON (comp.id = compDevoir.id_competence )" +
                 " LEFT JOIN " + COMPETENCES_DOMAINES_TABLE + " AS compDom ON (comp.id = compDom.id_competence)" +
-                " LEFT JOIN " + COMPETENCES_SCHEMA + ".domaines ON (domaines.id = compDom.id_domaine)" +
+                " LEFT JOIN " + COMPETENCES_SCHEMA + "." + Field.DOMAINES_TABLE + " ON (" + Field.DOMAINES_TABLE + ".id = compDom.id_domaine)" +
                 " LEFT JOIN (SELECT nom, id_competence FROM " + COMPETENCES_PERSO_TABLE + " WHERE id_etablissement = ?"+
                 " ) AS compPerso" +
                 " ON comp.id = compPerso.id_competence" +
@@ -340,8 +341,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 filterQuery = "comp." + filter + " = ? AND";
             }
 
-            String query = "SELECT DISTINCT string_agg(domaines.codification, ', ') as code_domaine," +
-                    " string_agg( cast (domaines.id as text), ',') as ids_domaine, comp.id," +
+            String query = "SELECT DISTINCT string_agg(" + Field.DOMAINES_TABLE + ".codification, ', ') as code_domaine," +
+                    " string_agg( cast (" + Field.DOMAINES_TABLE + ".id as text), ',') as ids_domaine, comp.id," +
                     " COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_parent, comp.id_type," +
                     " compEns.id_enseignement, comp.id_cycle, perso_ordre.index as index,  " +
                     " comp.id_etablissement IS NOT NULL AS isManuelle," +
@@ -361,8 +362,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
             query += " LEFT JOIN " + COMPETENCES_DOMAINES_TABLE + " AS compDom" +
                     " ON (comp.id = compDom.id_competence)" +
-                    " LEFT JOIN " + COMPETENCES_SCHEMA + ".domaines" +
-                    " ON (domaines.id = compDom.id_domaine) " +
+                    " LEFT JOIN " + COMPETENCES_SCHEMA + "." + Field.DOMAINES_TABLE +
+                    " ON (" + Field.DOMAINES_TABLE + ".id = compDom.id_domaine) " +
                     " LEFT JOIN (SELECT nom, id_competence, masque  FROM " + COMPETENCES_PERSO_TABLE +
                     "  WHERE id_etablissement = ? ) AS compPerso" +
                     " ON comp.id = compPerso.id_competence " +

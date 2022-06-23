@@ -19,6 +19,7 @@ package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.logging.Logger;
@@ -70,7 +71,7 @@ public class FilterUserUtils {
     public void validateElement(List<String> idsElements, String idClasse, Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
                 .append("SELECT id, type_elt_bilan_periodique ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.ELT_BILAN_PERIODIQUE_TABLE)
                 .append("WHERE id IN " + Sql.listPrepared(idsElements));
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();

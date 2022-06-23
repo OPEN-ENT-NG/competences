@@ -5,6 +5,7 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.lsun.CodeDomaineSocle;
 import fr.openent.competences.bean.lsun.Discipline;
 import fr.openent.competences.bean.lsun.Donnees;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.LSUService;
 import fr.openent.competences.service.UtilsService;
 import io.vertx.core.AsyncResult;
@@ -36,7 +37,6 @@ import static org.entcore.common.sql.SqlResult.validResultHandler;
 public class DefaultLSUService implements LSUService {
     public static final String DISCIPLINE_KEY = "DIS_";
     private static final Logger log = LoggerFactory.getLogger(DefaultExportBulletinService.class);
-    public static final String LSU_UNHEEDED_STUDENTS_TABLE = "eleves_ignores_lsu";
     private JsonArray idsEvaluatedDiscipline;
     private UtilsService utilsService;
     protected EventBus eb;
@@ -257,7 +257,7 @@ public class DefaultLSUService implements LSUService {
     public void addUnheededStudents(JsonArray idsStudents, Long idPeriode, String idClasse,
                                     final Handler<Either<String, JsonArray>> handler){
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
-        String query = " INSERT INTO " + Competences.EVAL_SCHEMA + "." + LSU_UNHEEDED_STUDENTS_TABLE
+        String query = " INSERT INTO " + Competences.EVAL_SCHEMA + "." + Field.ELEVES_IGNORES_LSU_TABLE
                 + " (id_eleve, id_classe, id_periode, created) "
                 + " VALUES (?, ?, " + ((idPeriode != null) ? " ?,": "-1," ) + " NOW()) "
                 + " ON CONFLICT (id_eleve, id_classe,id_periode) DO UPDATE SET created = NOW() ";
@@ -270,7 +270,7 @@ public class DefaultLSUService implements LSUService {
                                     final Handler<Either<String, JsonArray>> handler){
 
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
-        String query = " DELETE FROM " + Competences.EVAL_SCHEMA + "." + LSU_UNHEEDED_STUDENTS_TABLE
+        String query = " DELETE FROM " + Competences.EVAL_SCHEMA + "." + Field.ELEVES_IGNORES_LSU_TABLE
                 + " WHERE id_eleve =? AND  id_classe = ? "
                 + ((idPeriode!=null)?" AND id_periode =? ;": " AND id_periode =-1 ;");
 
@@ -282,7 +282,7 @@ public class DefaultLSUService implements LSUService {
     public void getUnheededStudents(JsonArray idPeriodes, JsonArray idClasses,
                                     final Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder().append(" SELECT * ").append(" FROM ")
-                .append(Competences.EVAL_SCHEMA).append(".").append(LSU_UNHEEDED_STUDENTS_TABLE)
+                .append(Competences.EVAL_SCHEMA).append(".").append(Field.ELEVES_IGNORES_LSU_TABLE)
                 .append(" WHERE id_classe IN ").append(Sql.listPrepared(idClasses.getList()))
                 .append(" AND id_periode ");
 

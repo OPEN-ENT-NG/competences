@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.EleveEnseignementComplementService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.logging.Logger;
@@ -54,8 +55,8 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
     public void updateEnsCpl(Integer id, JsonObject data, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "UPDATE " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement " +
-                "SET id_enscpl = ?, id_niveau = ?, id_langue = ?, niveau_lcr = ? " +
+        String query = "UPDATE " + Competences.COMPETENCES_SCHEMA + "." + Field.ELEVE_ENSEIGNEMENT_COMPLEMENT +
+                " SET id_enscpl = ?, id_niveau = ?, id_langue = ?, niveau_lcr = ? " +
                 "WHERE id = ?";
 
         values.add(data.getLong("id_enscpl"));
@@ -70,9 +71,9 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
     @Override
     public void getNiveauEnsCplByEleve(String idEleve, Long idCycle, Handler<Either<String, JsonObject>> handler) {
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT eleve_enseignement_complement.*, enseignement_complement.libelle " +
-                "FROM " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement " +
-                "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".enseignement_complement ON enseignement_complement.id = eleve_enseignement_complement.id_enscpl " +
+        String query = "SELECT " + Field.ELEVE_ENSEIGNEMENT_COMPLEMENT + ".*, " + Field.ENSEIGNEMENT_COMPLEMENT + ".libelle " +
+                "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.ELEVE_ENSEIGNEMENT_COMPLEMENT +
+                " INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.ENSEIGNEMENT_COMPLEMENT + " ON " + Field.ENSEIGNEMENT_COMPLEMENT + ".id = " + Field.ELEVE_ENSEIGNEMENT_COMPLEMENT + ".id_enscpl " +
                 "WHERE id_eleve = ?" ;
 
         values.add(idEleve);
@@ -89,9 +90,9 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
     public void listNiveauCplByEleves( final String[] idsEleve, final  Handler<Either<String, JsonArray>> handler) {
         JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
         String queryCount = "SELECT count(*) FROM " +
-                Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement INNER JOIN " +
-                Competences.COMPETENCES_SCHEMA +".enseignement_complement " +
-                " ON notes.eleve_enseignement_complement.id_enscpl = notes.enseignement_complement.id " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.ELEVE_ENSEIGNEMENT_COMPLEMENT + " INNER JOIN " +
+                Competences.COMPETENCES_SCHEMA +"." + Field.ENSEIGNEMENT_COMPLEMENT +
+                " ON notes." + Field.ELEVE_ENSEIGNEMENT_COMPLEMENT + ".id_enscpl = notes." + Field.ENSEIGNEMENT_COMPLEMENT + ".id " +
                 " WHERE id_eleve IN "+ Sql.listPrepared(idsEleve);
         for(String idEleve : idsEleve){
             valuesCount.add(idEleve);
@@ -101,16 +102,16 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
             Long nbEnsCpl = SqlResult.countResult(sqlResultCount);
             if(isNotNull(nbEnsCpl) && nbEnsCpl > 0){
                 String query = "SELECT langues_culture_regionale.code as code_lcr, " +
-                        " langues_culture_regionale.libelle as libelle_lcr ,eleve_enseignement_complement.*, " +
-                        " enseignement_complement.libelle,enseignement_complement.code, niveau_ens_complement.niveau " +
-                        " FROM " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement" +
-                        " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".enseignement_complement " +
-                        "    ON notes.eleve_enseignement_complement.id_enscpl = notes.enseignement_complement.id " +
+                        " langues_culture_regionale.libelle as libelle_lcr ," + Field.ELEVE_ENSEIGNEMENT_COMPLEMENT + ".*, " +
+                        Field.ENSEIGNEMENT_COMPLEMENT + ".libelle," + Field.ENSEIGNEMENT_COMPLEMENT + ".code, niveau_ens_complement.niveau " +
+                        " FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.ELEVE_ENSEIGNEMENT_COMPLEMENT  +
+                        " INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.ENSEIGNEMENT_COMPLEMENT +
+                        "    ON notes." + Field.ELEVE_ENSEIGNEMENT_COMPLEMENT + ".id_enscpl = notes." + Field.ENSEIGNEMENT_COMPLEMENT + ".id " +
                         " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".niveau_ens_complement " +
-                        "    ON niveau_ens_complement.id = eleve_enseignement_complement.id_niveau "+
+                        "    ON niveau_ens_complement.id = " + Field.ELEVE_ENSEIGNEMENT_COMPLEMENT + ".id_niveau "+
 
                         "LEFT JOIN "+ Competences.COMPETENCES_SCHEMA + ".langues_culture_regionale " +
-                        "    ON eleve_enseignement_complement.id_langue = langues_culture_regionale.id "+
+                        "    ON " + Field.ELEVE_ENSEIGNEMENT_COMPLEMENT + ".id_langue = langues_culture_regionale.id "+
 
                         " WHERE id_eleve IN " + Sql.listPrepared(idsEleve);
                 JsonArray values = new fr.wseduc.webutils.collections.JsonArray();

@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.DispenseDomaineEleveService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -44,7 +45,7 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
 
     @Override
     public void deleteDispenseDomaineEleve(String idEleve,Integer idDomaine, Handler<Either<String, JsonObject>> handler) {
-        String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".dispense_domaine_eleve " +
+        String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.DISPENSE_DOMAINE_ELEVE +
                 "WHERE id_eleve = ? AND id_domaines = ? ;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(idEleve)
@@ -54,7 +55,7 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
 
     @Override
     public void createDispenseDomaineEleve(final JsonObject dispenseDomaineEleve, Handler<Either<String, JsonObject>> handler) {
-        String query = "INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".dispense_domaine_eleve ( id_eleve, id_domaines, dispense )"+
+        String query = "INSERT INTO "+ Competences.COMPETENCES_SCHEMA +"." + Field.DISPENSE_DOMAINE_ELEVE + " ( id_eleve, id_domaines, dispense )"+
                 "VALUES(?,?,?)";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
        .add(dispenseDomaineEleve.getString("id_eleve"))
@@ -65,7 +66,7 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
 
     @Override
     public void listDipenseDomainesByClasse(List<String> idsEleves, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id_eleve, id_domaines, dispense FROM "+ Competences.COMPETENCES_SCHEMA +".dispense_domaine_eleve "+
+        String query = "SELECT id_eleve, id_domaines, dispense FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.DISPENSE_DOMAINE_ELEVE +
                 "WHERE id_eleve IN " + Sql.listPrepared(idsEleves.toArray());
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();

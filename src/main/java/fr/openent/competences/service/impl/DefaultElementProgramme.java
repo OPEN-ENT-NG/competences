@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.ElementProgramme;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -39,7 +40,7 @@ public class DefaultElementProgramme implements ElementProgramme {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder()
-                .append("INSERT INTO ").append(Competences.COMPETENCES_SCHEMA).append(".element_programme ")
+                .append("INSERT INTO ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE)
                 .append("(id_periode, id_matiere, id_classe, id_user_create, id_user_update, texte) VALUES ")
                 .append("(?, ?, ?, ?, ?, ?) ")
                 .append("ON CONFLICT (id_periode, id_matiere , id_classe) ")
@@ -58,10 +59,10 @@ public class DefaultElementProgramme implements ElementProgramme {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT * ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".element_programme ")
-                .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_classe = ? ")
-                .append("AND "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_periode = ? ")
-                .append("AND "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_matiere = ? ");
+                .append("FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.ELEMENT_PROGRAMME_TABLE)
+                .append("WHERE "+ Competences.COMPETENCES_SCHEMA +"." + Field.ELEMENT_PROGRAMME_TABLE + ".id_classe = ? ")
+                .append("AND "+ Competences.COMPETENCES_SCHEMA +"." + Field.ELEMENT_PROGRAMME_TABLE + ".id_periode = ? ")
+                .append("AND "+ Competences.COMPETENCES_SCHEMA +"." + Field.ELEMENT_PROGRAMME_TABLE + ".id_matiere = ? ");
 
         values.add(idClasse);
         values.add(idPeriode);
@@ -77,10 +78,10 @@ public class DefaultElementProgramme implements ElementProgramme {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT texte, id_classe ")
-                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".element_programme ")
-                .append("WHERE ").append(Competences.COMPETENCES_SCHEMA).append(".element_programme.id_classe IN ").append(Sql.listPrepared(idsClasse.getList()))
-                .append("AND ").append(Competences.COMPETENCES_SCHEMA).append(".element_programme.id_periode = ? ")
-                .append("AND ").append(Competences.COMPETENCES_SCHEMA).append(".element_programme.id_matiere = ? ");
+                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE)
+                .append("WHERE ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE + ".id_classe IN ").append(Sql.listPrepared(idsClasse.getList()))
+                .append("AND ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE + ".id_periode = ? ")
+                .append("AND ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE + ".id_matiere = ? ");
 
         for(Object idClasse : idsClasse){
             values.add(idClasse);

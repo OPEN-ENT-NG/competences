@@ -1,6 +1,7 @@
 package fr.openent.competences.service.digitalSkills.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.service.digitalSkills.ClassAppreciationDigitalSkillsService;
 import fr.openent.competences.service.digitalSkills.DigitalSkillsService;
@@ -129,8 +130,8 @@ public class DefaultDigitalSkillsService implements DigitalSkillsService {
     public void getAllDigitalSkillsByDomaine(Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
         query.append("SELECT ds.id as id_digital_skill, id_domaine, ds.libelle as libelle, dds.libelle as libelle_domaine")
-                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DIGITAL_SKILLS_TABLE)
-                .append(" ds INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DOMAINE_DIGITAL_SKILLS_TABLE)
+                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Field.DIGITAL_SKILLS_TABLE)
+                .append(" ds INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Field.DOMAINE_DIGITAL_SKILLS_TABLE)
                 .append(" dds ON dds.id = ds.id_domaine")
                 .append(" ORDER BY id_domaine, id_digital_skill");
 

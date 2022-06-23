@@ -4,6 +4,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.ImgLevel;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
@@ -197,7 +198,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
         avisConseilService = new DefaultAvisConseilService();
         avisOrientationService = new DefaultAvisOrientationService();
-        domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
+        domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Field.DOMAINES_TABLE);
         exportService = new DefaultExportService(eb, storage);
         utilsService = new DefaultUtilsService(eb);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,
@@ -217,7 +218,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
         avisConseilService = new DefaultAvisConseilService();
         avisOrientationService = new DefaultAvisOrientationService();
-        domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
+        domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Field.DOMAINES_TABLE);
         exportService = new DefaultExportService(eb, storage);
         utilsService = new DefaultUtilsService(eb);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,

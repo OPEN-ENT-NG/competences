@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Domaine;
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
@@ -84,12 +85,12 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         this.storage = storage;
 
         competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE);
-        domaineService = new DefaultDomaineService(COMPETENCES_SCHEMA, DOMAINES_TABLE);
+        domaineService = new DefaultDomaineService(COMPETENCES_SCHEMA, Field.DOMAINES_TABLE);
         competenceService = new DefaultCompetencesService(eb);
-        dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(COMPETENCES_SCHEMA,DISPENSE_DOMAINE_ELEVE);
+        dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(COMPETENCES_SCHEMA, Field.DISPENSE_DOMAINE_ELEVE);
         bfcSynthseService = new DefaultBfcSyntheseService(COMPETENCES_SCHEMA, BFC_SYNTHESE_TABLE, eb);
         eleveEnseignementComplementService = new DefaultEleveEnseignementComplementService(COMPETENCES_SCHEMA,
-                ELEVE_ENSEIGNEMENT_COMPLEMENT);
+                Field.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         utilsService = new DefaultUtilsService(eb);
         exportBulletinService = new DefaultExportBulletinService(eb, storage);
     }
@@ -100,12 +101,12 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         this.storage = null;
 
         competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE);
-        domaineService = new DefaultDomaineService(COMPETENCES_SCHEMA, DOMAINES_TABLE);
+        domaineService = new DefaultDomaineService(COMPETENCES_SCHEMA, Field.DOMAINES_TABLE);
         competenceService = new DefaultCompetencesService(eb);
-        dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(COMPETENCES_SCHEMA,DISPENSE_DOMAINE_ELEVE);
+        dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(COMPETENCES_SCHEMA, Field.DISPENSE_DOMAINE_ELEVE);
         bfcSynthseService = new DefaultBfcSyntheseService(COMPETENCES_SCHEMA, BFC_SYNTHESE_TABLE, eb);
         eleveEnseignementComplementService = new DefaultEleveEnseignementComplementService(COMPETENCES_SCHEMA,
-                ELEVE_ENSEIGNEMENT_COMPLEMENT);
+                Field.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         utilsService = new DefaultUtilsService(eb);
     }
 
@@ -167,7 +168,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         StringBuilder query = new StringBuilder()
                 .append("SELECT * ")
                 .append(" FROM notes.bilan_fin_cycle")
-                .append(" INNER JOIN notes.domaines ON bilan_fin_cycle.id_domaine = domaines.id")
+                .append(" INNER JOIN notes." + Field.DOMAINES_TABLE + " ON bilan_fin_cycle.id_domaine = " + Field.DOMAINES_TABLE + ".id")
                 .append(" WHERE bilan_fin_cycle.id_eleve IN " + Sql.listPrepared(idEleves))
                 .append(" AND bilan_fin_cycle.id_etablissement = ? AND valeur >= 0 ");
 
@@ -178,7 +179,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         values.add(idEtablissement);
 
         if(idCycle != null) {
-            query.append("AND domaines.id_cycle = ? ");
+            query.append("AND " + Field.DOMAINES_TABLE + ".id_cycle = ? ");
             values.add(idCycle);
         }
 

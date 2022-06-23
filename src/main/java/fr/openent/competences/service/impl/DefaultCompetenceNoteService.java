@@ -19,6 +19,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -227,7 +228,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".competences_notes CN ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences C ON CN.id_competence = C.id ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_competences_domaines RCD ON RCD.id_competence = C.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".domaines D ON RCD.id_domaine = D.id ")
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.DOMAINES_TABLE + " D ON RCD.id_domaine = D.id ")
                 .append("WHERE CN.id_devoir = ? ");
 
         Sql.getInstance().prepared(query.toString(),

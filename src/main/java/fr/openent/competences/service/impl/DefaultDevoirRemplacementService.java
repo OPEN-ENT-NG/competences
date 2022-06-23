@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.DevoirRemplacementService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.neo4j.Neo4j;
@@ -124,7 +125,7 @@ public class DefaultDevoirRemplacementService extends SqlCrudService implements 
                 "WHERE id_remplacant = ? " +
                 "AND rel_professeurs_remplacants.id_etablissement = ?) " +
                 "OR ? IN (SELECT member_id " +
-                "FROM notes.devoirs_shares " +
+                "FROM notes." + Field.DEVOIR_SHARE_TABLE +
                 "WHERE resource_id = devoirs.id " +
                 "AND action = '"+ Competences.DEVOIR_ACTION_UPDATE +"'))";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()

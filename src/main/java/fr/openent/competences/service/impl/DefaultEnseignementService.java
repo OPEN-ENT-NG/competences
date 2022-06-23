@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.EnseignementService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -48,8 +49,8 @@ public class DefaultEnseignementService extends SqlCrudService implements Enseig
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT * ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".enseignements ")
-                .append("ORDER BY nom ASC");
+                .append("FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.ENSEIGNEMENTS_TABLE)
+                .append(" ORDER BY nom ASC");
 
         Sql.getInstance().prepared(query.toString(), values, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }

@@ -607,7 +607,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("WHERE second_teacher_id = ? AND multi_teaching.structure_id = ? ")
                 .append("AND ((start_date <= current_date AND current_date <= entered_end_date AND NOT is_coteaching) OR is_coteaching)) ")
                 .append("OR ? IN (SELECT member_id ") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
-                .append("FROM ").append(COMPETENCES_SCHEMA).append(".devoirs_shares ")
+                .append("FROM ").append(COMPETENCES_SCHEMA).append("." + Field.DEVOIR_SHARE_TABLE)
                 .append("WHERE resource_id = devoirs.id ")
                 .append("AND action = '").append(DEVOIR_ACTION_UPDATE).append("')) ")
                 .append("GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, devoirs.is_evaluated, users.username, ")

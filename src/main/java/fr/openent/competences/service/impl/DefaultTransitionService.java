@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -437,7 +438,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 String querySuppressionDispenseDomaine = "" +
 
                         "  DELETE " +
-                        "  FROM " + Competences.COMPETENCES_SCHEMA + ".dispense_domaine_eleve" +
+                        "  FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DISPENSE_DOMAINE_ELEVE +
                         "  WHERE " +
                         "   id_eleve IN " + Sql.listPrepared(vListEleves.toArray());
                 JsonArray valuesDeleteDispenseEleve = new fr.wseduc.webutils.collections.JsonArray();
@@ -499,9 +500,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 Competences.COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_ORIENTATION_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.ELEMENT_PROGRAMME_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.ELEVES_IGNORES_LSU_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.ELT_BILAN_PERIODIQUE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.ELEMENT_PROGRAMME_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.ELEVES_IGNORES_LSU_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.ELT_BILAN_PERIODIQUE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.MOYENNE_FINALE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.POSITIONNEMENT + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE + ", " +

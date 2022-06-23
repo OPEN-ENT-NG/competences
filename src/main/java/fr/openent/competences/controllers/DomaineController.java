@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.CreateDispenseDomaineEleveFilter;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
@@ -72,10 +73,10 @@ public class DomaineController extends ControllerHelper {
     private final DispenseDomaineEleveService dispenseDomaineEleveService;
 
     public DomaineController(EventBus eb) {
-        enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
+        enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Field.ENSEIGNEMENTS_TABLE);
         competencesService = new DefaultCompetencesService(eb);
-        domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
-        dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
+        domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Field.DOMAINES_TABLE);
+        dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA, Field.DISPENSE_DOMAINE_ELEVE);
     }
 
     /**

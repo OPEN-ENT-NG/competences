@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.DevoirService;
 import fr.openent.competences.service.ShareCompetencesService;
 import fr.wseduc.webutils.Either;
@@ -79,7 +80,7 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
     }
 
     private JsonObject getNewShareStatements(String userIdSecondTeacher, String devoirID, List<String> actions) {
-        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares (member_id ,resource_id,action)" +
+        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE + "(member_id ,resource_id,action)" +
                 "VALUES (?,?,?) ON CONFLICT DO NOTHING";
         JsonArray paramsDeleteAnnotation = new fr.wseduc.webutils.collections.JsonArray();
         paramsDeleteAnnotation.add(userIdSecondTeacher).add(devoirID).add(actions.get(0));

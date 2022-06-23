@@ -18,6 +18,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
@@ -97,7 +98,7 @@ public class FilterCompetenceNoteUtils {
                                     .append(") OR ")
 
                         .append("? IN (SELECT member_id ")
-                                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares ")
+                                .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE)
                                 .append("WHERE resource_id = devoirs.id ")
                                 .append("AND action = '" + Competences.DEVOIR_ACTION_UPDATE+"')")
 

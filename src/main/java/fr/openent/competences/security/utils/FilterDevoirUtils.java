@@ -18,6 +18,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.BaseServer;
@@ -96,7 +97,7 @@ public class FilterDevoirUtils  extends ControllerHelper {
                 .append(") OR ")
 
                 .append("? IN (SELECT member_id ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE)
                 .append("WHERE resource_id = ? ")
                 .append("AND action = '" + Competences.DEVOIR_ACTION_UPDATE+"')")
 

@@ -1,6 +1,7 @@
 package fr.openent.competences.service.digitalSkills.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.digitalSkills.StudentDigitalSkillsService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -56,7 +57,7 @@ public class DefaultStudentDigitalSkills extends SqlCrudService implements Stude
                                           Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         query.append("SELECT * FROM ").append(this.schema).append(this.table)
-                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DIGITAL_SKILLS_TABLE)
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Field.DIGITAL_SKILLS_TABLE)
                 .append(" ds ON ds.id = id_digital_skill")
                 .append(" WHERE student_id = ? AND structure_id = ?");
 

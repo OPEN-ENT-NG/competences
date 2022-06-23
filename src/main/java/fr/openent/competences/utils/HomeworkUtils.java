@@ -1,6 +1,7 @@
 package fr.openent.competences.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.DefaultDevoirService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -63,7 +64,7 @@ public class HomeworkUtils {
                     .append(" AND rel_professeurs_remplacants.id_etablissement IN ").append(Sql.listPrepared(user.getStructures().toArray()))
                     .append(" ) OR")
                     .append(" ? IN (SELECT member_id") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
-                    .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_SHARE_TABLE)
+                    .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Field.DEVOIR_SHARE_TABLE)
                     .append(" WHERE resource_id = devoirs.id")
                     .append(" AND action = '").append(Competences.DEVOIR_ACTION_UPDATE).append("')")
                     .append(" )");
