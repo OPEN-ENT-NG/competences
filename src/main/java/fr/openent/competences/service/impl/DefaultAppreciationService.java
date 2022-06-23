@@ -60,8 +60,8 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
 
             StringBuilder query = new StringBuilder().append("DELETE FROM ")
                     .append(Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_CLASSE_TABLE)
-                    .append("WHERE ")
-                    .append("id_classe = ? AND id_periode = ? AND id_matiere = ?;");
+                    .append(" WHERE")
+                    .append(" id_classe = ? AND id_periode = ? AND id_matiere = ?;");
             JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
             values.add(id_classe);
             values.add(id_periode);
@@ -78,8 +78,8 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
         } else {
 
             StringBuilder query = new StringBuilder().append("INSERT INTO ")
-                    .append(Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_CLASSE_TABLE + "(appreciation, id_classe, id_periode, id_matiere) ")
-                    .append(" VALUES ")
+                    .append(Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATION_CLASSE_TABLE + "(appreciation, id_classe, id_periode, id_matiere)")
+                    .append(" VALUES")
                     .append(" ( ?, ?, ?, ?)")
                     .append(" ON CONFLICT (id_classe, id_periode, id_matiere) DO UPDATE SET appreciation = ?");
             JsonArray values = new fr.wseduc.webutils.collections.JsonArray();

@@ -3164,14 +3164,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                              Integer idCycle, String idYear, String filename, String idFile,
                              Handler<Either<String, JsonObject>> handler) {
         String query = "INSERT INTO " + Competences.EVAL_SCHEMA +
-                "." + Field.BFC_ARCHIVE_TABLE + "(id_eleve, external_id_classe, id_classe, id_etablissement, id_cycle, id_annee, id_file, file_name, modified ) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, Now()) " +
-                "ON CONFLICT (id_classe, id_etablissement, id_cycle, id_eleve, id_annee) " +
-                "DO UPDATE SET id_eleve = ?, external_id_classe = ?, id_classe = ?, id_etablissement = ?, id_cycle = ?, " +
-                "id_annee = ?, id_file = ?, file_name = ? , modified = Now() " +
-                "RETURNING (SELECT id_file from notes." + Field.BFC_ARCHIVE_TABLE +
-                "WHERE file_name = ? AND external_id_classe = ? AND id_classe = ? AND id_etablissement = ? " +
-                "AND id_cycle = ? AND id_annee = ? AND id_eleve = ?);";
+                "." + Field.BFC_ARCHIVE_TABLE + "(id_eleve, external_id_classe, id_classe, id_etablissement, id_cycle, id_annee, id_file, file_name, modified )" +
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, Now())" +
+                " ON CONFLICT (id_classe, id_etablissement, id_cycle, id_eleve, id_annee)" +
+                " DO UPDATE SET id_eleve = ?, external_id_classe = ?, id_classe = ?, id_etablissement = ?, id_cycle = ?," +
+                " id_annee = ?, id_file = ?, file_name = ? , modified = Now()" +
+                " RETURNING (SELECT id_file from notes." + Field.BFC_ARCHIVE_TABLE +
+                " WHERE file_name = ? AND external_id_classe = ? AND id_classe = ? AND id_etablissement = ?" +
+                " AND id_cycle = ? AND id_annee = ? AND id_eleve = ?);";
 
         JsonArray params = new JsonArray()
                 .add(idEleve).add(externalIdClasse).add(idClasse).add(idEtablissement).add(idCycle).add(idYear).add(idFile).add(filename)

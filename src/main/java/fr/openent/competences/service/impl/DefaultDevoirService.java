@@ -534,28 +534,28 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             paramsDelete.add(Integer.parseInt(id));
 
             StringBuilder queryDeleteNote = new StringBuilder()
-                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".notes WHERE id_devoir = ? ");
+                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA + ".notes WHERE id_devoir = ? ");
             statements.add(new JsonObject()
                     .put("statement", queryDeleteNote.toString())
                     .put("values", paramsDelete)
                     .put("action", "prepared"));
 
             StringBuilder queryDeleteAnnotations = new StringBuilder()
-                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs WHERE id_devoir = ? ");
+                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs WHERE id_devoir = ? ");
             statements.add(new JsonObject()
                     .put("statement", queryDeleteAnnotations.toString())
                     .put("values", paramsDelete)
                     .put("action", "prepared"));
 
             StringBuilder queryDeleteAppreciations = new StringBuilder()
-                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATIONS_TABLE + "WHERE id_devoir = ? ");
+                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATIONS_TABLE + " WHERE id_devoir = ? ");
             statements.add(new JsonObject()
                     .put("statement", queryDeleteAppreciations.toString())
                     .put("values", paramsDelete)
                     .put("action", "prepared"));
 
             StringBuilder queryDeleteCompetences = new StringBuilder()
-                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id_devoir = ? ");
+                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA + ".competences_notes WHERE id_devoir = ? ");
             statements.add(new JsonObject()
                     .put("statement", queryDeleteCompetences.toString())
                     .put("values", paramsDelete)
@@ -1168,11 +1168,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT id, is_evaluated, CASE WHEN nb_competences > 0 THEN TRUE ELSE FALSE END AS ")
-                .append("has_competences, id_groupe FROM notes.rel_devoirs_groupes,")
+        query.append("SELECT id, is_evaluated, CASE WHEN nb_competences > 0 THEN TRUE ELSE FALSE END AS")
+                .append(" has_competences, id_groupe FROM notes.rel_devoirs_groupes,")
                 .append(" (SELECT count(competences_devoirs.id_devoir) AS nb_competences,")
                 .append(" devoirs.id,devoirs.is_evaluated FROM  notes.devoirs LEFT OUTER JOIN notes.competences_devoirs")
-                .append(" ON devoirs.id = competences_devoirs.id_devoir  GROUP by (devoirs.id) ) AS res ")
+                .append(" ON devoirs.id = competences_devoirs.id_devoir  GROUP by (devoirs.id) ) AS res")
                 .append(" WHERE id = id_devoir");
 
         if (idDevoirs != null) {
@@ -1191,8 +1191,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT devoir.id, devoir.id_matiere, devoir.id_periode, Gdevoir.id_groupe FROM notes.devoirs devoir ")
-                .append("INNER Join notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id ")
+        query.append("SELECT devoir.id, devoir.id_matiere, devoir.id_periode, Gdevoir.id_groupe FROM notes.devoirs devoir")
+                .append(" INNER Join notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id")
                 .append(" WHERE devoir.id IN ");
 
         if (idDevoirs != null) {

@@ -106,10 +106,10 @@ public class DefaultAvisConseilService implements AvisConseilService {
         String query = "";
 
         query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_DE_CLASSE_TABLE +
-                "INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_bilan_periodique " +
-                "ON(avis_conseil_bilan_periodique.id = " + Field.AVIS_CONSEIL_DE_CLASSE_TABLE + ".id_avis_conseil_bilan)  " +
-                "WHERE "+ Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_DE_CLASSE_TABLE + ".id_eleve = ? " +
-                "AND "+ Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_DE_CLASSE_TABLE + ".id_etablissement = ? ";
+                " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_bilan_periodique" +
+                " ON(avis_conseil_bilan_periodique.id = " + Field.AVIS_CONSEIL_DE_CLASSE_TABLE + ".id_avis_conseil_bilan)" +
+                " WHERE "+ Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_DE_CLASSE_TABLE + ".id_eleve = ?" +
+                " AND "+ Competences.COMPETENCES_SCHEMA + "." + Field.AVIS_CONSEIL_DE_CLASSE_TABLE + ".id_etablissement = ?";
 
         params.add(idEleve);
         params.add(idStructure);
