@@ -51,9 +51,9 @@ public class DefaultCompetenceNiveauFinalService extends SqlCrudService implemen
         JsonArray idsMatieres = niveauFinal.getJsonArray("ids_matieres");
 
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCE_NIVEAU_FINAL
-                + "(id_periode, id_eleve, niveau_final, id_competence, id_matiere) VALUES(?, ?, ?, ?, ?) "
-                + "ON CONFLICT (id_periode, id_eleve, id_competence, id_matiere) "
-                + "DO UPDATE SET niveau_final = ?";
+                + " (id_periode, id_eleve, niveau_final, id_competence, id_matiere) VALUES(?, ?, ?, ?, ?)"
+                + " ON CONFLICT (id_periode, id_eleve, id_competence, id_matiere)"
+                + " DO UPDATE SET niveau_final = ?";
 
         for ( int i = 0; i < idsMatieres.size(); i++ ) {
             JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
@@ -76,9 +76,9 @@ public class DefaultCompetenceNiveauFinalService extends SqlCrudService implemen
         JsonArray idsMatieres = niveauFinal.getJsonArray("ids_matieres");
 
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL
-                + "(id_eleve, niveau_final, id_competence, id_matiere) VALUES( ?, ?, ?, ?) "
-                + "ON CONFLICT (id_eleve, id_competence, id_matiere) "
-                + "DO UPDATE SET niveau_final = ?";
+                + " (id_eleve, niveau_final, id_competence, id_matiere) VALUES( ?, ?, ?, ?)"
+                + " ON CONFLICT (id_eleve, id_competence, id_matiere)"
+                + " DO UPDATE SET niveau_final = ?";
 
         for ( int i = 0; i < idsMatieres.size(); i++ ) {
             JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
@@ -100,7 +100,7 @@ public class DefaultCompetenceNiveauFinalService extends SqlCrudService implemen
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA + "." +Field.COMPETENCE_NIVEAU_FINAL
-                + "WHERE id_periode = ? AND id_eleve = ? AND id_competence = ? AND id_matiere = ? AND id_classe = ? ";
+                + " WHERE id_periode = ? AND id_eleve = ? AND id_competence = ? AND id_matiere = ? AND id_classe = ? ";
 
         values.add(niveauFinal.getInteger("id_periode")).add(niveauFinal.getString("id_eleve"))
                 .add(niveauFinal.getInteger("niveau_final")).add(niveauFinal.getInteger("id_competence"))

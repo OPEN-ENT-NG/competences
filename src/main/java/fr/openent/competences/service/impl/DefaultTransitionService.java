@@ -378,22 +378,22 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
                         "END AS max_comp "+
                         "FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
-                        "INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE + " ON " + Field.DEVOIR_TABLE + ".id = competences_notes.id_devoir " +
+                        "INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE + " ON " + Field.DEVOIR_TABLE + ".id = competences_notes.id_devoir" +
 
-                        "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCE_NIVEAU_FINAL + " " +
-                        "ON " + Field.DEVOIR_TABLE + ".id_periode = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_periode " +
-                        "AND competences_notes.id_competence = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_competence " +
-                        "AND competences_notes.id_eleve = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve " +
-                        "AND " + Field.DEVOIR_TABLE + ".id_matiere = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_matiere " +
+                        " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCE_NIVEAU_FINAL +
+                        " ON " + Field.DEVOIR_TABLE + ".id_periode = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_periode" +
+                        " AND competences_notes.id_competence = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_competence" +
+                        " AND competences_notes.id_eleve = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve" +
+                        " AND " + Field.DEVOIR_TABLE + ".id_matiere = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_matiere" +
 
-                        "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + " " +
-                        "ON competences_notes.id_competence = " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_competence " +
-                        "AND competences_notes.id_eleve = " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve " +
-                        "AND " + Field.DEVOIR_TABLE + ".id_matiere = " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_matiere " +
+                        " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL +
+                        " ON competences_notes.id_competence = " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_competence" +
+                        " AND competences_notes.id_eleve = " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve" +
+                        " AND " + Field.DEVOIR_TABLE + ".id_matiere = " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_matiere" +
 
-                        "WHERE competences_notes.owner != '" + _id_user_transition_annee +
+                        " WHERE competences_notes.owner != '" + _id_user_transition_annee +
                         "' AND competences_notes.id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
-                        "GROUP BY competences_notes.id_competence, competences_notes.id_eleve, " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve," +
+                        " GROUP BY competences_notes.id_competence, competences_notes.id_eleve, " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve," +
                          Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve, " + Field.DEVOIR_TABLE + ".id_periode, " + Field.DEVOIR_TABLE + ".id_matiere)";
 
                 String queryMaxCompNoteMat = "(SELECT id_competence, MAX(max_comp), id_eleve, id_matiere FROM " + queryMaxCompNoteNiveauFinalByPeriode +
