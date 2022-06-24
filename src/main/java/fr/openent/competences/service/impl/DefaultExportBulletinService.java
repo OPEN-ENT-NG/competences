@@ -4,6 +4,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.ImgLevel;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
@@ -891,7 +892,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("Host",host);
 
             JsonObject action = new JsonObject()
-                    .put(ACTION, "periode.getLibellePeriode")
+                    .put(ACTION, Field.VIESCO_PERIODE_TABLE + ".getLibellePeriode")
                     .put("idType", idPeriode)
                     .put("request", jsonRequest);
             eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
@@ -926,7 +927,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 .put("headers", new JsonObject().put("Accept-Language", acceptLanguage))
                 .put("Host",host);
         JsonObject action = new JsonObject()
-                .put(ACTION, "periode.getLibellePeriode")
+                .put(ACTION, Field.VIESCO_PERIODE_TABLE + ".getLibellePeriode")
                 .put("idType", idPeriode)
                 .put("request", jsonRequest);
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
@@ -957,7 +958,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             }
             else {
                 JsonObject action = new JsonObject();
-                action.put(ACTION, "periode.getPeriodes")
+                action.put(ACTION, Field.VIESCO_PERIODE_TABLE + ".getPeriodes")
                         .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
@@ -1011,7 +1012,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public void getAnneeScolaire(String idClasse, Promise<Periode> promise) {
 
         JsonObject action = new JsonObject();
-        action.put(ACTION, "periode.getPeriodes")
+        action.put(ACTION, Field.VIESCO_PERIODE_TABLE + ".getPeriodes")
                 .put("idGroupes", new JsonArray().add(idClasse));
 
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,

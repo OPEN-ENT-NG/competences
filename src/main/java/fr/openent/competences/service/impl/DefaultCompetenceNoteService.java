@@ -19,6 +19,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -466,14 +467,14 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append(" type.formative AS formative ")
                 .append(", competence_niveau_final.niveau_final AS niveau_final  ")
                 .append(", competence_niveau_final_annuel.niveau_final AS niveau_final_annuel  ")
-                .append(", devoirs.eval_lib_historise as eval_lib_historise, users.username as owner_name ")
+                .append(", devoirs.eval_lib_historise as eval_lib_historise, " + Field.USERS_TABLE + ".username as owner_name ")
                 .append("FROM notes.competences ")
 
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences_notes ON (competences_notes.id_competence = competences.id) ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ON (competences_notes.id_devoir = devoirs.id) ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type ON (type.id = devoirs.id_type) ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users ON users.id = competences_notes.owner ")
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.USERS_TABLE + " ON " + Field.USERS_TABLE + ".id = competences_notes.owner ")
 
                 .append("LEFT JOIN notes.competence_niveau_final ON (competence_niveau_final.id_competence = competences.id ")
                 .append("AND competence_niveau_final.id_periode = devoirs.id_periode ")

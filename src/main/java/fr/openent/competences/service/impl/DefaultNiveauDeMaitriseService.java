@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.NiveauDeMaitriseService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -110,7 +111,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE)
+        query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.USE_PERSO_NIVEAU_COMPETENCES_TABLE)
                 .append(" WHERE id_user = ? ");
 
         values.add(idUser);
@@ -119,7 +120,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
 
     public void markUsePerso(final JsonObject idUser, final Handler<Either<String, JsonArray>> handler) {
         final String queryNewUserId =
-                "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + "."+ Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE
+                "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + "."+ Field.USE_PERSO_NIVEAU_COMPETENCES_TABLE
                         +"_id_seq') as id";
 
         sql.raw(queryNewUserId, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
@@ -128,7 +129,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
                 if (event.isRight()) {
                     final Long userId = event.right().getValue().getLong("id");
                     final String table = Competences.COMPETENCES_SCHEMA + "."+
-                            Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE;
+                            Field.USE_PERSO_NIVEAU_COMPETENCES_TABLE;
                     doCreate(handler, userId, idUser, table);
                 }
                 else {
@@ -189,7 +190,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
 
     public void deleteUserFromPerso(String idUser,Handler<Either<String, JsonObject>> handler ) {
         final String table = Competences.COMPETENCES_SCHEMA + "."+
-                Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE;
+                Field.USE_PERSO_NIVEAU_COMPETENCES_TABLE;
 
         String query = "DELETE FROM " + table + " WHERE id_user = ?";
         sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(idUser), validRowsResultHandler(handler));

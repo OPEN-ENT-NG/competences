@@ -18,6 +18,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.BaseServer;
@@ -87,10 +88,10 @@ public class FilterDevoirUtils  extends ControllerHelper {
                 .append("AND (devoirs.owner = ? OR ")
                 .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA)
-                .append(".rel_professeurs_remplacants ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA )
+                .append("." + Field.REL_PROFESSEURS_REMPLACANTS_TABLE)
+                .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA )
                 .append(".devoirs ON devoirs.id_etablissement = ")
-                .append(" rel_professeurs_remplacants.id_etablissement  ")
+                .append(" " + Field.REL_PROFESSEURS_REMPLACANTS_TABLE + ".id_etablissement  ")
                 .append("WHERE devoirs.id = ? ")
                 .append("AND id_remplacant = ? ")
                 .append(") OR ")

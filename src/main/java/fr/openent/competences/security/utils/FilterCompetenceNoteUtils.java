@@ -18,6 +18,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
@@ -89,11 +90,11 @@ public class FilterCompetenceNoteUtils {
                 .append("WHERE competences_notes.id IN " + Sql.listPrepared(idNotes.toArray()) + " ")
                 .append("AND (devoirs.owner = ? OR ")
                         .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ")
-                                    .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
-                                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement  ")
-                                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".competences_notes ON (competences_notes.id_devoir = devoirs.id) ")
-                                    .append("WHERE competences_notes.id IN " + Sql.listPrepared(idNotes.toArray()) + " ")
-                                    .append("AND id_remplacant = ? ")
+                                    .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.REL_PROFESSEURS_REMPLACANTS_TABLE)
+                                    .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = " + Field.REL_PROFESSEURS_REMPLACANTS_TABLE + ".id_etablissement")
+                                    .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".competences_notes ON (competences_notes.id_devoir = devoirs.id)")
+                                    .append(" WHERE competences_notes.id IN " + Sql.listPrepared(idNotes.toArray()))
+                                    .append(" AND id_remplacant = ?")
                                     .append(") OR ")
 
                         .append("? IN (SELECT member_id ")

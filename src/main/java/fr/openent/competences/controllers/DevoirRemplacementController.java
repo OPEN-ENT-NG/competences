@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.DevoirRemplacementService;
 import fr.openent.competences.service.impl.DefaultDevoirService;
 import fr.openent.competences.service.impl.DefaultDevoirRemplacementService;
@@ -48,7 +49,7 @@ public class DevoirRemplacementController extends ControllerHelper {
     private final DevoirRemplacementService remplacementService;
 
     public DevoirRemplacementController() {
-        remplacementService = new DefaultDevoirRemplacementService(Competences.COMPETENCES_SCHEMA, Competences.REL_PROFESSEURS_REMPLACANTS_TABLE);
+        remplacementService = new DefaultDevoirRemplacementService(Competences.COMPETENCES_SCHEMA, Field.REL_PROFESSEURS_REMPLACANTS_TABLE);
     }
 
 

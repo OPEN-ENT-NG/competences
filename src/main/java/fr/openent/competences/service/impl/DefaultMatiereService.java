@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.Subject;
 import fr.openent.competences.service.MatiereService;
 import fr.wseduc.webutils.Either;
@@ -31,10 +32,10 @@ import static org.entcore.common.sql.Sql.listPrepared;
 public class DefaultMatiereService extends SqlCrudService implements MatiereService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultMatiereService.class);
-    private static final String subjectLibelleTable = VSCO_SCHEMA + "." + VSCO_MATIERE_LIBELLE_TABLE;
-    private static final String modelSubjectLibelleTable = VSCO_SCHEMA + "." + VSCO_MODEL_MATIERE_LIBELLE_TABLE;
-    private static final String underSubjectTable = VSCO_SCHEMA + "." + VSCO_SOUS_MATIERE_TABLE;
-    private static final String typeUnderSubjectTable = VSCO_SCHEMA + "." + VSCO_TYPE_SOUS_MATIERE_TABLE;
+    private static final String subjectLibelleTable = VSCO_SCHEMA + "." + Field.VIESCO_MATIERE_LIBELLE_TABLE;
+    private static final String modelSubjectLibelleTable = VSCO_SCHEMA + "." + Field.VIESCO_MODEL_MATIERE_LIBELLE_TABLE;
+    private static final String underSubjectTable = VSCO_SCHEMA + "." + Field.VIESCO_SOUS_MATIERE_TABLE;
+    private static final String typeUnderSubjectTable = VSCO_SCHEMA + "." + Field.VIESCO_TYPE_SOUS_MATIERE_TABLE;
 
     private final EventBus eb;
     private static final String LIBELLE_COURT = "libelle_court";
@@ -180,7 +181,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     }
 
     private void getDefaultLibele(Handler<Either<String, JsonArray>> handler) {
-        String query = " SELECT * FROM " + EVAL_SCHEMA + "." + VSCO_MATIERE_TABLE;
+        String query = " SELECT * FROM " + EVAL_SCHEMA + "." + Field.VIESCO_MATIERE_TABLE;
         sql.prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
     }
 
@@ -347,7 +348,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     public void getSousMatieres(String idMatiere, String idStructure, Handler<Either<String, JsonArray>> handler) {
         String query = " SELECT id_type_sousmatiere as id_sousmatiere, id_matiere , libelle " +
                 " FROM " + underSubjectTable + "  INNER JOIN " + typeUnderSubjectTable +
-                " ON id_type_sousmatiere = type_sousmatiere.id " +
+                " ON id_type_sousmatiere = " + Field.VIESCO_TYPE_SOUS_MATIERE_TABLE + ".id " +
                 " WHERE id_matiere = ? AND id_structure = ?";
 
         JsonArray params = new JsonArray().add(idMatiere).add(idStructure);
@@ -376,8 +377,8 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         String query = "SELECT DISTINCT devoirs.*\n" +
                 " FROM " + COMPETENCES_SCHEMA + ".devoirs\n" +
                 " INNER JOIN " +
-                "      " + VSCO_SCHEMA + ".sousmatiere " +
-                "       ON devoirs.id_matiere = sousmatiere.id_matiere  AND " +
+                "      " + VSCO_SCHEMA + "." + Field.VIESCO_SOUS_MATIERE_TABLE +
+                "       ON devoirs.id_matiere = " + Field.VIESCO_SOUS_MATIERE_TABLE + ".id_matiere  AND " +
                 (isNull(idsMatieres) ? "true" : listPrepared(idsMatieres.getList())) +
                 "       AND devoirs.id_sousmatiere IS NULL;";
 
@@ -390,9 +391,9 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
 
     private void getSubJectInfos(JsonArray idsMatieres, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT id_type_sousmatiere as id_sousmatiere, id_matiere, libelle, id_structure " +
-                " FROM " + VSCO_SCHEMA + ".sousmatiere " +
-                " INNER JOIN " + VSCO_SCHEMA + ".type_sousmatiere " +
-                " ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id AND " +
+                " FROM " + VSCO_SCHEMA + "." + Field.VIESCO_SOUS_MATIERE_TABLE +
+                " INNER JOIN " + VSCO_SCHEMA + "." + Field.VIESCO_TYPE_SOUS_MATIERE_TABLE +
+                " ON " + Field.VIESCO_SOUS_MATIERE_TABLE + ".id_type_sousmatiere = " + Field.VIESCO_TYPE_SOUS_MATIERE_TABLE + ".id AND " +
                 (isNull(idsMatieres) ? "true" : listPrepared(idsMatieres.getList()));
 
         JsonArray params = new JsonArray();

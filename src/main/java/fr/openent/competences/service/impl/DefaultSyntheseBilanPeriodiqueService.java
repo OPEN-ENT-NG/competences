@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -20,7 +21,7 @@ public class DefaultSyntheseBilanPeriodiqueService {
             deleteSynthese(idTypePeriode, idEleve, idStructure, handler);
         }
         else {
-            String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique" +
+            String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Field.SYNTHESE_BILAN_PERIODIQUE_TABLE +
                     "(id_typePeriode, id_eleve, synthese, id_etablissement) VALUES (?, ?, ?, ?)" +
                     "ON CONFLICT (id_typePeriode, id_eleve, id_etablissement) DO UPDATE SET synthese = ?";
             JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(idTypePeriode).add(idEleve)
@@ -31,7 +32,7 @@ public class DefaultSyntheseBilanPeriodiqueService {
 
     private void deleteSynthese (Long idTypePeriode, String idEleve, String idStructure,
                                  Handler<Either<String, JsonObject>> handler){
-        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique " +
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.SYNTHESE_BILAN_PERIODIQUE_TABLE +
                 " WHERE id_eleve = ? AND id_typePeriode = ? AND id_etablissement = ?";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idEleve)
@@ -42,8 +43,8 @@ public class DefaultSyntheseBilanPeriodiqueService {
 
     public void getSyntheseBilanPeriodique(Long idTypePeriode, String idEleve, String idStructure,
                                            Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique " +
-                "WHERE id_eleve = ? AND id_etablissement = ? ";
+        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.SYNTHESE_BILAN_PERIODIQUE_TABLE +
+                " WHERE id_eleve = ? AND id_etablissement = ? ";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idEleve).add(idStructure);
 

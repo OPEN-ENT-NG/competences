@@ -19,6 +19,7 @@ package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.logging.Logger;
@@ -101,7 +102,7 @@ public class FilterUserUtils {
                         // sinon on vérifie si le prof est dans la liste des intervenants affectés à l'élèment
                         StringBuilder query = new StringBuilder()
                                 .append("SELECT id_intervenant ")
-                                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
+                                .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE)
                                 .append("WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idsEPI_AP));
 
                         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();

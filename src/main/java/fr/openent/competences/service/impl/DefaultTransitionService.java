@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -43,7 +44,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     protected static final Logger log = LoggerFactory.getLogger(DefaultTransitionService.class);
     private final Neo4j neo4j = Neo4j.getInstance();
     public DefaultTransitionService() {
-        super(Competences.COMPETENCES_SCHEMA, Competences.TRANSITION_TABLE);
+        super(Competences.COMPETENCES_SCHEMA, Field.TRANSITION_TABLE);
     }
 
     @Override
@@ -95,7 +96,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         String queryPeriode = "SELECT id FROM " + Competences.VSCO_SCHEMA + ".periode WHERE id_etablissement = ? ";
 
-        String queryTransition = "SELECT id_etablissement FROM " + Competences.COMPETENCES_SCHEMA + ".transition WHERE id_etablissement = ? ";
+        String queryTransition = "SELECT id_etablissement FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.TRANSITION_TABLE + " WHERE id_etablissement = ? ";
 
         String query = " SELECT EXISTS(" + queryDevoir + ") as has_devoir, "+
                 "EXISTS(" + queryPeriode + ") as has_periode, " +
@@ -276,7 +277,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         // Transition pour l'établissement effectué
         JsonArray valuesTransition = new fr.wseduc.webutils.collections.JsonArray();
         valuesTransition.add(idStructureATraiter);
-        String queryInsertTransition ="INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".transition(id_etablissement) VALUES (?)";
+        String queryInsertTransition ="INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Field.TRANSITION_TABLE + "(id_etablissement) VALUES (?)";
         statements.add(new JsonObject().put("statement", queryInsertTransition).put("values", valuesTransition).put("action", "prepared"));
 
         Sql.getInstance().transaction(statements,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
@@ -297,13 +298,13 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         // Suppresion des users
         values = new fr.wseduc.webutils.collections.JsonArray();
         String queryUsers = "" +
-                "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".users " +
-                "WHERE" +
+                "DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.USERS_TABLE +
+                " WHERE" +
                 " NOT EXISTS ( " +
                 "    SELECT 1 " +
                 "    FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
                 "    WHERE " +
-                "     devoirs.owner = users.id " +
+                "     devoirs.owner = " + Field.USERS_TABLE + ".id " +
                 " )";
         statements.add(new JsonObject().put("statement", queryUsers).put("values", values).put("action", "prepared"));
 
@@ -325,7 +326,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         String classname = "Bilan Année classe : ";
         values = new fr.wseduc.webutils.collections.JsonArray();
         values.add(_id_user_transition_annee).add(username).add(username);
-        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".users(id, username) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET username = ?";
+        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Field.USERS_TABLE + "(id, username) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET username = ?";
         statements.add(new JsonObject().put("statement", query).put("values", values).put("action", "prepared"));
 
         if(vMapGroupesATraiter.size() > 0) {
@@ -504,17 +505,17 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 Competences.COMPETENCES_SCHEMA + "." + Competences.ELT_BILAN_PERIODIQUE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.MOYENNE_FINALE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.POSITIONNEMENT + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.CLASS_APPRECIATION_DIGITAL_SKILLS + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.STUDENT_APPRECIATION_DIGITAL_SKILLS + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.STUDENT_DIGITAL_SKILLS_TABLE + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_ABSENCES_ET_RETARDS + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_PERIODE + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_MULTI_TEACHING + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_SERVICES_TABLE;
+                Competences.COMPETENCES_SCHEMA + "." + Field.STUDENT_APPRECIATION_DIGITAL_SKILLS_TABLE + ", " +
+                Competences.COMPETENCES_SCHEMA + "." + Field.STUDENT_DIGITAL_SKILLS_TABLE + ", " +
+                Competences.VSCO_SCHEMA + "." + Field.VIESCO_ABSENCES_ET_RETARDS_TABLE + ", " +
+                Competences.VSCO_SCHEMA + "." + Field.VIESCO_PERIODE_TABLE + ", " +
+                Competences.VSCO_SCHEMA + "." + Field.VIESCO_MULTI_TEACHING_TABLE + ", " +
+                Competences.VSCO_SCHEMA + "." + Field.VIESCO_SERVICES_TABLE;
 
         statements.prepared(queryTruncate, params);
         String queryTruncateCascade = "TRUNCATE TABLE " + Competences.COMPETENCES_SCHEMA + "."
@@ -545,10 +546,10 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     public void cleanTableSql(Handler<Either<String, JsonArray>> handler) {
         JsonArray emptyParams = new JsonArray();
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
-        String truncateQuery = "TRUNCATE " + VSCO_SCHEMA + ".rel_structures_personne_supp," +
-                VSCO_SCHEMA + ".rel_groupes_personne_supp," +
-                VSCO_SCHEMA + ".personnes_supp," +
-                COMPETENCES_SCHEMA + ".transition," +
+        String truncateQuery = "TRUNCATE " + VSCO_SCHEMA + ".rel_structures_personne_supp, " +
+                VSCO_SCHEMA + ".rel_groupes_personne_supp, " +
+                VSCO_SCHEMA + ".personnes_supp, " +
+                COMPETENCES_SCHEMA + "." + Field.TRANSITION_TABLE + ", " +
                 COMPETENCES_SCHEMA + ".match_class_id_transition CASCADE";
 
         statements.prepared(truncateQuery, emptyParams);
@@ -749,7 +750,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 values.add(id);
         }
 
-        query.append("DELETE FROM ").append(Competences.VSCO_SCHEMA).append(".").append(Competences.VSCO_SOUS_MATIERE_TABLE)
+        query.append("DELETE FROM ").append(Competences.VSCO_SCHEMA).append(".").append(Field.VIESCO_SOUS_MATIERE_TABLE)
                 .append(" WHERE id_matiere NOT IN ").append(Sql.listPrepared(matieres.getList()));
 
         statements.add(new JsonObject()

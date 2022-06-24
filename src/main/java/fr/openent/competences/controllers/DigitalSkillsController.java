@@ -1,6 +1,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.DigitalSkillsFilter;
 import fr.openent.competences.service.digitalSkills.ClassAppreciationDigitalSkillsService;
 import fr.openent.competences.service.digitalSkills.DigitalSkillsService;
@@ -37,9 +38,9 @@ public class DigitalSkillsController extends ControllerHelper {
         classAppreciationDigitalSkillsService = new DefaultClassAppreciationDigitalSkills(Competences.COMPETENCES_SCHEMA,
                 Competences.CLASS_APPRECIATION_DIGITAL_SKILLS);
         studentAppreciationDigitalSkillsService = new DefaultStudentAppreciationDigitalSkills(Competences.COMPETENCES_SCHEMA,
-                Competences.STUDENT_APPRECIATION_DIGITAL_SKILLS);
+                Field.STUDENT_APPRECIATION_DIGITAL_SKILLS_TABLE);
         studentDigitalSkillsService = new DefaultStudentDigitalSkills(Competences.COMPETENCES_SCHEMA,
-                Competences.STUDENT_DIGITAL_SKILLS_TABLE);
+                Field.STUDENT_DIGITAL_SKILLS_TABLE);
         digitalSkillsService = new DefaultDigitalSkillsService(classAppreciationDigitalSkillsService,
                 studentAppreciationDigitalSkillsService, studentDigitalSkillsService);
     }

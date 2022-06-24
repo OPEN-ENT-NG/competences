@@ -20,6 +20,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.service.UtilsService;
@@ -90,8 +91,8 @@ public class DefaultUtilsService implements UtilsService {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT DISTINCT id_remplacant ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
-                .append("WHERE id_titulaire = ? ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.REL_PROFESSEURS_REMPLACANTS_TABLE)
+                .append(" WHERE id_titulaire = ? ")
                 .append("AND id_etablissement = ? ")
                 .append("AND date_debut <= current_date ")
                 .append("AND current_date <= date_fin ");
@@ -116,8 +117,8 @@ public class DefaultUtilsService implements UtilsService {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT DISTINCT main_teacher_id ")
-                .append("FROM " + Competences.VSCO_SCHEMA + ".multi_teaching ")
-                .append("WHERE second_teacher_id = ? ")
+                .append("FROM " + Competences.VSCO_SCHEMA + "." + Field.VIESCO_MULTI_TEACHING_TABLE)
+                .append(" WHERE second_teacher_id = ? ")
                 .append("AND structure_id = ? ")
                 .append("AND start_date <= current_date ")
                 .append("AND current_date <= end_date ");
@@ -967,7 +968,7 @@ public class DefaultUtilsService implements UtilsService {
                 handler.handle(new Either.Left<>(message));
             } else {
                 StringBuilder query = new StringBuilder()
-                        .append(" INSERT INTO viesco.absences_et_retards( id_periode, id_eleve, ")
+                        .append(" INSERT INTO viesco." + Field.VIESCO_ABSENCES_ET_RETARDS_TABLE + "( id_periode, id_eleve, ")
                         .append(colonne + " )")
                         .append(" VALUES ")
                         .append(" (?, ?, ?) ")

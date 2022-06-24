@@ -1,6 +1,7 @@
 package fr.openent.competences.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.DefaultDevoirService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -56,11 +57,11 @@ public class HomeworkUtils {
         if (!isChefEtab) {
             query.append(" AND (devoirs.owner = ? OR") // devoirs dont on est le propriétaire
                     .append(" devoirs.owner IN (SELECT DISTINCT id_titulaire") // ou dont l'un de mes tiulaires le sont (on regarde sur tous mes établissments)
-                    .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.REL_PROFESSEURS_REMPLACANTS_TABLE)
+                    .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Field.REL_PROFESSEURS_REMPLACANTS_TABLE)
                     .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_TABLE)
-                    .append(" ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement")
+                    .append(" ON devoirs.id_etablissement = " + Field.REL_PROFESSEURS_REMPLACANTS_TABLE + ".id_etablissement")
                     .append(" WHERE id_remplacant = ?")
-                    .append(" AND rel_professeurs_remplacants.id_etablissement IN ").append(Sql.listPrepared(user.getStructures().toArray()))
+                    .append(" AND " + Field.REL_PROFESSEURS_REMPLACANTS_TABLE + ".id_etablissement IN ").append(Sql.listPrepared(user.getStructures().toArray()))
                     .append(" ) OR")
                     .append(" ? IN (SELECT member_id") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
                     .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_SHARE_TABLE)

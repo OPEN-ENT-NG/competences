@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.DevoirRemplacementService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.neo4j.Neo4j;
@@ -49,10 +50,10 @@ public class DefaultDevoirRemplacementService extends SqlCrudService implements 
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         Object[] oListIdEtabArray = poListIdEtab.toArray();
 
-        query.append("SELECT rel_professeurs_remplacants.*, users_titulaires.username AS libelle_titulaire, users_remplacants.username AS libelle_remplacant ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".rel_professeurs_remplacants ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".users users_titulaires ON users_titulaires.id = rel_professeurs_remplacants.id_titulaire  ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".users users_remplacants ON users_remplacants.id = rel_professeurs_remplacants.id_remplacant  ")
+        query.append("SELECT " + Field.REL_PROFESSEURS_REMPLACANTS_TABLE + ".*, users_titulaires.username AS libelle_titulaire, users_remplacants.username AS libelle_remplacant ")
+                .append("FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.REL_PROFESSEURS_REMPLACANTS_TABLE)
+                .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.USERS_TABLE + " users_titulaires ON users_titulaires.id = " + Field.REL_PROFESSEURS_REMPLACANTS_TABLE + ".id_titulaire  ")
+                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.USERS_TABLE + " users_remplacants ON users_remplacants.id = " + Field.REL_PROFESSEURS_REMPLACANTS_TABLE + ".id_remplacant  ")
                 .append("WHERE id_etablissement IN " + Sql.listPrepared(oListIdEtabArray) + " ")
         /*.append("AND current_date <= date_fin")*/; // TODO a décomenter
 
@@ -77,7 +78,7 @@ public class DefaultDevoirRemplacementService extends SqlCrudService implements 
 
 
         // Ajout du remplacement
-        String remplacementQuery = "INSERT INTO "+ Competences.COMPETENCES_SCHEMA+ ".rel_professeurs_remplacants (id_titulaire, id_remplacant, date_debut, date_fin, id_etablissement) VALUES (?, ?, to_timestamp(?,'YYYY-MM-DD'), to_timestamp(?,'YYYY-MM-DD'), ?);";
+        String remplacementQuery = "INSERT INTO "+ Competences.COMPETENCES_SCHEMA+ "." + Field.REL_PROFESSEURS_REMPLACANTS_TABLE + " (id_titulaire, id_remplacant, date_debut, date_fin, id_etablissement) VALUES (?, ?, to_timestamp(?,'YYYY-MM-DD'), to_timestamp(?,'YYYY-MM-DD'), ?);";
         s.prepared(remplacementQuery, new fr.wseduc.webutils.collections.JsonArray().add(poRemplacement.getString("id_titulaire"))
                 .add(poRemplacement.getString("id_remplacant"))
                 .add(poRemplacement.getString("date_debut"))
@@ -95,8 +96,8 @@ public class DefaultDevoirRemplacementService extends SqlCrudService implements 
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_professeurs_remplacants ")
-                .append("WHERE id_titulaire = ? ")
+        query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.REL_PROFESSEURS_REMPLACANTS_TABLE)
+                .append(" WHERE id_titulaire = ? ")
                 .append("AND id_remplacant = ? ")
                 .append("AND date_debut = to_date(?,'YYYY-MM-DD') ")
                 .append("AND date_fin = to_date(?,'YYYY-MM-DD') ")
@@ -119,10 +120,10 @@ public class DefaultDevoirRemplacementService extends SqlCrudService implements 
                 "AND (devoirs.id_etablissement = ? ) " +
                 "AND (devoirs.owner = ? " +
                 "OR devoirs.owner IN (SELECT DISTINCT id_titulaire " +
-                "FROM notes.rel_professeurs_remplacants " +
-                "INNER JOIN notes.devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement " +
+                "FROM notes." + Field.REL_PROFESSEURS_REMPLACANTS_TABLE +
+                " INNER JOIN notes.devoirs ON devoirs.id_etablissement = " + Field.REL_PROFESSEURS_REMPLACANTS_TABLE + ".id_etablissement " +
                 "WHERE id_remplacant = ? " +
-                "AND rel_professeurs_remplacants.id_etablissement = ?) " +
+                "AND " + Field.REL_PROFESSEURS_REMPLACANTS_TABLE + ".id_etablissement = ?) " +
                 "OR ? IN (SELECT member_id " +
                 "FROM notes.devoirs_shares " +
                 "WHERE resource_id = devoirs.id " +

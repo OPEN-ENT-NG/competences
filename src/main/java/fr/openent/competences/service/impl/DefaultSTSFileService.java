@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.STSFileService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.collections.JsonArray;
@@ -16,7 +17,7 @@ public class DefaultSTSFileService extends SqlCrudService implements STSFileServ
 
 
     public DefaultSTSFileService (String table) {
-        super(Competences.COMPETENCES_SCHEMA, Competences.STSFILE_TABLE);
+        super(Competences.COMPETENCES_SCHEMA, Field.STSFILE_TABLE);
     }
 
     @Override
