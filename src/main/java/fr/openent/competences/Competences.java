@@ -110,33 +110,6 @@ public class Competences extends BaseServer {
     public static final String REL_COMPETENCES_DOMAINES_TABLE = "rel_competences_domaines";
     public static final String REL_COMPETENCES_ENSEIGNEMENTS_TABLE = "rel_competences_enseignements";
     public static final String REL_DEVOIRS_GROUPES = "rel_devoirs_groupes";
-    public static final String REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE = "rel_groupe_appreciation_elt_eleve";
-    public static final String REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE = "rel_elt_bilan_periodique_groupe";
-    public static final String REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE = "rel_elt_bilan_periodique_intervenant_matiere";
-    public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
-    public static final String REL_APPRECIATION_USERS_NEO = "rel_appreciations_users_neo";
-
-    public static final String STUDENT_APPRECIATION_DIGITAL_SKILLS = "student_appreciation_digital_skills";
-    public static final String STUDENT_DIGITAL_SKILLS_TABLE = "student_digital_skills";
-    public static final String STSFILE_TABLE = "sts_file";
-    public static final String SYNTHESE_BILAN_PERIODIQUE_TABLE = "synthese_bilan_periodique";
-
-    public static final String THEMATIQUE_BILAN_PERIODIQUE_TABLE = "thematique_bilan_periodique";
-    public static final String TRANSITION_TABLE = "transition";
-
-    public static final String USERS = "users";
-
-    public static final String USE_PERSO_NIVEAU_COMPETENCES_TABLE = "use_perso";
-
-    public static final String VSCO_ABSENCES_ET_RETARDS = "absences_et_retards";
-    public static final String VSCO_PERIODE = "periode";
-    public final static String VSCO_MATIERE_LIBELLE_TABLE = "subject_libelle";
-    public final static String VSCO_MODEL_MATIERE_LIBELLE_TABLE = "model_subject_libelle";
-    public static final String VSCO_MULTI_TEACHING = "multi_teaching";
-    public final static String VSCO_MATIERE_TABLE = "matiere";
-    public final static String VSCO_SOUS_MATIERE_TABLE = "sousmatiere";
-    public final static String VSCO_TYPE_SOUS_MATIERE_TABLE = "type_sousmatiere";
-    public final static String VSCO_SERVICES_TABLE = "services";
 
     public static final String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";
     public static final String SCHEMA_APPRECIATIONS_CREATE = "eval_createAppreciation";

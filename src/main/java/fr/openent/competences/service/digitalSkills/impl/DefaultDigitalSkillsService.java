@@ -31,7 +31,7 @@ public class DefaultDigitalSkillsService implements DigitalSkillsService {
         studentAppDigitalSkills = new DefaultStudentAppreciationDigitalSkills(Competences.COMPETENCES_SCHEMA,
                 Field.STUDENT_APPRECIATION_DIGITAL_SKILLS_TABLE);
         studentDigitalSkills = new DefaultStudentDigitalSkills(Competences.COMPETENCES_SCHEMA,
-                Competences.STUDENT_DIGITAL_SKILLS_TABLE);
+                Field.STUDENT_DIGITAL_SKILLS_TABLE);
     }
 
     public DefaultDigitalSkillsService (ClassAppreciationDigitalSkillsService classAppDigitalSkills,

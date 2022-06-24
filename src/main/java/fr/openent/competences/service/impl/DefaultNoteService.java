@@ -84,7 +84,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public final String SYNTHESE_BILAN_PERIODIQUE = "synthese_bilan_periodique";
     public final String AVIS_CONSEIL_DE_CLASSE = "avis_conseil_de_classe";
     public final String AVIS_CONSEIL_ORIENTATION = "avis_conseil_orientation";
-    public final String AVIS_CONSEIL_BILAN_PERIODIQUE = "avis_conseil_bilan_periodique";
     public final String COMPETENCES_NOTES_KEY = "competencesNotes";
     public final String TABLE_CONVERSION_KEY = "tableConversions";
     public static final String SOUS_MATIERES = "sousMatieres";
