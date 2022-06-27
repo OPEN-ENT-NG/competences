@@ -1300,9 +1300,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 }
                 if (!notesByElevesBySousMat.containsKey(id_eleve)) {
                     notesByElevesBySousMat.put(id_eleve, new HashMap<Long, ArrayList<NoteDevoir>>());
-                    for(SubTopic subtopic : note.getService().getSubtopics()){
-                        if (!notesByElevesBySousMat.get(id_eleve).containsKey(subtopic.getId()))
-                            notesByElevesBySousMat.get(id_eleve).put(subtopic.getId(), new ArrayList<>());
+                    if(isNotNull(note.getService())){
+                        for(SubTopic subtopic : note.getService().getSubtopics()){
+                            if (!notesByElevesBySousMat.get(id_eleve).containsKey(subtopic.getId()))
+                                notesByElevesBySousMat.get(id_eleve).put(subtopic.getId(), new ArrayList<>());
+                        }
                     }
 //                    notesByElevesBySousMat.get(id_eleve).get(note.get
                 }
@@ -1569,83 +1571,55 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 final Double[] min = {null};
                 final Double[] max = {null};
 
-//
-//
-                Map<Long, ArrayList<NoteDevoir>> notesBySubTopic = new HashMap<>();
-                //TODO methode pour calculer la moyenne
-//                allNotesByEleve.forEach((key, value) -> {
-//                    List<SubTopic> subTopics;
-//                    try {
-//                        subTopics = value.get(0).getService().getSubtopics();
-//                    }catch (NullPointerException e){
-//                        subTopics = new ArrayList<>();
-//                    }
-//                    if(!moyennesFinalesNN.contains(key)) {
-//                        value.forEach(note ->{
-//                            if(notesBySubTopic.containsKey(note.getIdSousMatiere())){
-//                                ArrayList<NoteDevoir> noteDevoirList = notesBySubTopic.get(note.getIdSousMatiere());
-//                                noteDevoirList.add(note);
-//                                notesBySubTopic.put(note.getIdSousMatiere(),noteDevoirList);
-//                            }else{
-//                                ArrayList<NoteDevoir> noteDevoirList = new ArrayList<>();
-//                                noteDevoirList.add(note);
-//                                notesBySubTopic.put(note.getIdSousMatiere(),noteDevoirList);
-//                            }
-//                        });
-//
-//                        AtomicReference<Double> moyenneAtomic = new AtomicReference<>(0.d);
-//                        AtomicReference<Double> coeff = new AtomicReference<>(0.d);
-//
-//
-//                        List<SubTopic> finalSubTopics = subTopics;
-//                        notesBySubTopic.forEach((subTopicId, noteDevoirList) ->{
-//                            SubTopic subTopic = finalSubTopics.stream().filter(s -> subTopicId.equals(s.getId()))
-//                                    .findFirst().orElse(null);
-//                            if(subTopic != null){
-//                                if(!utilsService.calculMoyenne(noteDevoirList,
-//                                        false, 20, false).getValue("moyenne").equals("NN"))
-//                                    moyenneAtomic.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
-//                                            false, 20, false).getDouble("moyenne") * subTopic.getCoefficient());
-//                                coeff.updateAndGet(v -> v + subTopic.getCoefficient());
-//
-//                            }else{
-//                                if(!utilsService.calculMoyenne(noteDevoirList,
-//                                        false, 20, false).getValue("moyenne").equals("NN"))
-//                                    moyenneAtomic.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
-//                                            false, 20, false).getDouble("moyenne"));
-//                                coeff.updateAndGet(v -> v + 1.d);
-//                            }
-//                        });
-//                        if(!coeff.get().equals(0.d)){
-//                            Double moyenneTmp = moyenneAtomic.get() / coeff.get();
-//                            if (moyennesFinales.containsKey(key)) {
-//                                moyenneTmp = moyennesFinales.get(key);
-//                            }
-//                            //manage min value
-//                            if (min[0] == null || min[0] > moyenneTmp) {
-//                                min[0] = moyenneTmp;
-//                            }
-//                            //manage max value
-//                            if (max[0] == null || max[0] < moyenneTmp) {
-//                                max[0] = moyenneTmp;
-//                            }
-//
-//                            allMoyennes.put(key, moyenneTmp);
-//                        }
-//                    }
-//                });
-
-                //FIXME vieille méthode
                 allNotesByEleve.forEach((key, value) -> {
+                    Map<Long, ArrayList<NoteDevoir>> notesBySubTopic = new HashMap<>();
+                    List<SubTopic> subTopics;
+                    try {
+                        subTopics = value.get(0).getService().getSubtopics();
+                    }catch (NullPointerException e){
+                        subTopics = new ArrayList<>();
+                    }
                     if(!moyennesFinalesNN.contains(key)) {
-                        JsonObject moyenne = utilsService.calculMoyenne(value, false, 20, false);
-                        if(!moyenne.getValue("moyenne").equals("NN")){
-                            Double moyenneTmp = moyenne.getDouble("moyenne");
+                        value.forEach(note ->{
+                            if(notesBySubTopic.containsKey(note.getIdSousMatiere())){
+                                ArrayList<NoteDevoir> noteDevoirList = notesBySubTopic.get(note.getIdSousMatiere());
+                                noteDevoirList.add(note);
+                                notesBySubTopic.put(note.getIdSousMatiere(),noteDevoirList);
+                            }else{
+                                ArrayList<NoteDevoir> noteDevoirList = new ArrayList<>();
+                                noteDevoirList.add(note);
+                                notesBySubTopic.put(note.getIdSousMatiere(),noteDevoirList);
+                            }
+                        });
 
+                        AtomicReference<Double> moyenneAtomic = new AtomicReference<>(0.d);
+                        AtomicReference<Double> coeff = new AtomicReference<>(0.d);
+
+
+                        List<SubTopic> finalSubTopics = subTopics;
+                        notesBySubTopic.forEach((subTopicId, noteDevoirList) ->{
+                            SubTopic subTopic = finalSubTopics.stream().filter(s -> subTopicId.equals(s.getId()))
+                                    .findFirst().orElse(null);
+                            if(subTopic != null){
+                                if(!utilsService.calculMoyenne(noteDevoirList,
+                                        false, 20, false).getValue("moyenne").equals("NN"))
+                                    moyenneAtomic.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
+                                            false, 20, false).getDouble("moyenne") * subTopic.getCoefficient());
+                                coeff.updateAndGet(v -> v + subTopic.getCoefficient());
+
+                            }else{
+                                if(!utilsService.calculMoyenne(noteDevoirList,
+                                        false, 20, false).getValue("moyenne").equals("NN"))
+                                    moyenneAtomic.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
+                                            false, 20, false).getDouble("moyenne"));
+                                coeff.updateAndGet(v -> v + 1.d);
+                            }
+                        });
+                        if(!coeff.get().equals(0.d)){
+                            Double moyenneTmp = moyenneAtomic.get() / coeff.get();
                             if (moyennesFinales.containsKey(key)) {
                                 moyenneTmp = moyennesFinales.get(key);
                             }
-
                             //manage min value
                             if (min[0] == null || min[0] > moyenneTmp) {
                                 min[0] = moyenneTmp;
@@ -1653,7 +1627,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             //manage max value
                             if (max[0] == null || max[0] < moyenneTmp) {
                                 max[0] = moyenneTmp;
-                                log.info(moyenneTmp);
                             }
 
                             allMoyennes.put(key, moyenneTmp);
@@ -1664,7 +1637,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 if (min[0] != null && max[0] != null) {
                     JsonObject minMaxObj = new JsonObject();
-                    DecimalFormat decimalFormat = new DecimalFormat("#.00");
+                    DecimalFormat decimalFormat = new DecimalFormat("#.0");
                     decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
                     minMaxObj.put("id_periode", idPeriode)
                             .put("min",decimalFormat.format(min[0]))
