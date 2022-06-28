@@ -3256,7 +3256,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                         JsonObject templateProps = resultFinal;
 
-                        templateProps.put("eleves", new JsonArray().add(eleve));
                         render.processTemplate(request, templateProps, templateName, reader,
                                 getRenderProcessHandler(templateProps, baseUrl, _node, request, prefixPdfName, dateDebut, eleve, finalHandler));
                     }

@@ -20,6 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.security.AccessAdminHeadTeacherFilter;
 import fr.openent.competences.security.AccessChildrenParentFilter;
@@ -61,7 +62,6 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BFC;
 import static fr.openent.competences.utils.UtilsConvert.strIdGroupesToJsonArray;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
@@ -282,7 +282,7 @@ public class ExportPDFController extends ControllerHelper {
     private void setFuturesToInsertMongo(JsonObject result, String prefixPdfName, String templateName, JsonObject jsonRequest) {
         try {
             JsonArray students = result.getJsonArray("classes").getJsonObject(0).getJsonArray("eleves");
-            List<Future<String>> futureArray = mongoExportService.insertDataInMongo(students, result, jsonRequest, prefixPdfName, templateName, SAVE_BFC);
+            List<Future<String>> futureArray = mongoExportService.insertDataInMongo(students, result, jsonRequest, prefixPdfName, templateName, Field.SAVE_BFC);
             FutureHelper.all(futureArray).onSuccess(success -> {
                 log.info(String.format("[Competences@%s::setFuturesToInsertMongo] insert BFC data in Mongo done.", this.getClass().getSimpleName()));
                 eb.send(BulletinWorker.class.getSimpleName(), new JsonObject(), Competences.DELIVERY_OPTIONS);

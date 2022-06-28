@@ -1,12 +1,14 @@
 package fr.openent.competences.service.impl;
 
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.service.ExportBulletinService;
 import fr.openent.competences.service.MongoExportService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -23,7 +25,6 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     private boolean isWorking = false;
     private ExportBulletinService exportBulletinService;
     public static final String SAVE_BULLETIN = "saveBulletin";
-    public static final String SAVE_BFC = "saveBFC";
     private static final Logger log = LoggerFactory.getLogger(BulletinWorker.class);
     private boolean isSleeping = true;
 
@@ -90,7 +91,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
                     processBulletin(params, exportHandler);
                 }
                 break;
-            case SAVE_BFC:
+            case Field.SAVE_BFC:
                 if(!isWorking){
                     isWorking = true;
                     params.put("_id",body.getString("_id"));
@@ -118,7 +119,10 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     private void processBFC(JsonObject paramBfc ,Handler<Either<String, Boolean>> bfcHandler) {
         try {
             JsonObject params = paramBfc.copy();
+
             JsonObject bfcToHandle = paramBfc.getJsonObject("eleve").copy();
+            params.getJsonArray("classes").getJsonObject(0).put("eleves", new JsonArray().add(bfcToHandle));
+            paramBfc.remove("eleve");
             bfcToHandle.put("typeExport", TypePDF.BFC.toString());
             bfcToHandle.put("idCycle", paramBfc.getInteger("idCycle"));
             log.info(String.format("[Competences@%s::processBFC : Process BFC", this.getClass().getSimpleName()));
@@ -143,6 +147,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     private void processBulletin(JsonObject paramBulletin, Handler<Either<String, Boolean>> bulletinHandlerWork) {
         try {
             JsonObject bulletinToHandle = paramBulletin.getJsonObject("eleve").copy();
+            paramBulletin.put("eleves", new JsonArray().add(bulletinToHandle)  );
             paramBulletin.remove("eleve");
             log.info("[Competences@BulletinWorker::processBulletin ] Process BULLETIN");
             bulletinToHandle.put("typeExport", TypePDF.BULLETINS.toString());

@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.MongoExportService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -61,7 +62,13 @@ public class DefaultMongoExportService implements MongoExportService {
     public  List<Future<String>> insertDataInMongo(JsonArray students , JsonObject params,JsonObject request , String title, String template,String typeExport){
         JsonObject common  = params.copy();
         try {
-            common.remove("eleves");
+            if (Field.SAVE_BFC.equals(typeExport)){
+                JsonObject studentsDelete = common.getJsonArray("classes").getJsonObject(0);
+                studentsDelete.remove ("eleves");
+            } else { // cas des bulletins
+                common.remove("eleves");
+            }
+
             common.put("template", template);
             common.put("title", title);
             common.put("request", request);
