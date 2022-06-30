@@ -21,4 +21,8 @@ public class Field {
 
     //variables
     public static final String SAVE_BFC = "saveBFC";
+
+    //schemas
+    public static final String DB_SCHEMA = "notes";
+    public static final String VIESCO_SCHEMA = "viesco";
 }
