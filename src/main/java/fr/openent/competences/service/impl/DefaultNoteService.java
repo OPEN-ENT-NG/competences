@@ -962,16 +962,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         hasNote = true;
                     }
                 }
-                DecimalFormat decimalFormat = new DecimalFormat("#.0");
-                decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
-
-                String moyenne = hasNote ?
-                        decimalFormat.format(total / totalCoeff) : "NN";
+                Double moyenne = Math.round((total / totalCoeff)*10.0)/10.0;
 
                 result.put("moyenne", moyenne);
 
                 JsonObject moyenneTotale = new JsonObject().put("moyenne",  moyenne)
-                        .put("hasNote", true);
+                        .put("hasNote", hasNote);
                 moyenneTotale.put("id", idPeriode);
                 listMoyDevoirs.get(idPeriode).add(moyenneTotale);
             }
