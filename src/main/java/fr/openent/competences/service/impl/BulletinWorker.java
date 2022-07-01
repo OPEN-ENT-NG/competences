@@ -121,7 +121,6 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
             JsonObject params = paramBfc.copy();
 
             JsonObject bfcToHandle = paramBfc.getJsonObject("eleve").copy();
-            params.getJsonArray("classes").getJsonObject(0).put("eleves", new JsonArray().add(bfcToHandle));
             paramBfc.remove("eleve");
             bfcToHandle.put("typeExport", TypePDF.BFC.toString());
             bfcToHandle.put("idCycle", paramBfc.getInteger("idCycle"));
@@ -147,7 +146,6 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     private void processBulletin(JsonObject paramBulletin, Handler<Either<String, Boolean>> bulletinHandlerWork) {
         try {
             JsonObject bulletinToHandle = paramBulletin.getJsonObject("eleve").copy();
-            paramBulletin.put("eleves", new JsonArray().add(bulletinToHandle)  );
             paramBulletin.remove("eleve");
             log.info("[Competences@BulletinWorker::processBulletin ] Process BULLETIN");
             bulletinToHandle.put("typeExport", TypePDF.BULLETINS.toString());

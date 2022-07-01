@@ -3253,9 +3253,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     try {
                         StringReader reader = new StringReader(result.result().toString("UTF-8"));
                         Renders render = new Renders(vertx, config);
-
                         JsonObject templateProps = resultFinal;
-
+                        if(eleve.containsKey("typeExport") && TypePDF.BFC.toString().equals(eleve.getString("typeExport"))){
+                            templateProps.getJsonArray("classes").getJsonObject(0).put("eleves", new JsonArray().add(eleve));
+                        } else {
+                            templateProps.put("eleves", new JsonArray().add(eleve)  );
+                        }
                         render.processTemplate(request, templateProps, templateName, reader,
                                 getRenderProcessHandler(templateProps, baseUrl, _node, request, prefixPdfName, dateDebut, eleve, finalHandler));
                     }
