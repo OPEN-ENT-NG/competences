@@ -60,15 +60,20 @@ export class Eleve extends DefaultEleve  {
         return this.hasOwnProperty("displayName") ? this.displayName : this.firstName+" "+this.lastName;
     }
 
-    getMoyenne (devoirs?) : Promise<any> {
+    getMoyenne (devoirs, idEtablissement, idClasse, idPeriode, idMatiere?) : Promise<any> {
         return new Promise((resolve, reject) => {
             if (devoirs) {
-                let idDevoirsURL = "";
+                let idDevoirsURL:String = "";
                 _.each(_.pluck(devoirs,'id'), (id) => {
                     idDevoirsURL += "devoirs=" + id + "&";
                 });
                 idDevoirsURL = idDevoirsURL.slice(0, idDevoirsURL.length - 1);
-                httpCore().getJson(this.api.GET_MOYENNE + idDevoirsURL).done(function (res) {
+                let idMatiereURL:String = (idMatiere != null ? "&idMatiere=" + idMatiere : "");
+                let idEtablissementURL:String = "&idEtablissement=" + idEtablissement;
+                let idClasseURL:String = "&idClasse=" + idClasse;
+                let idPeriodeURL:String = "&idPeriode=" + idPeriode;
+                httpCore().getJson(this.api.GET_MOYENNE + idDevoirsURL + idMatiereURL + idEtablissementURL + idClasseURL + idPeriodeURL)
+                    .done(function (res) {
                     if (!res.error) {
                         if (!res.hasNote) {
                             this.moyenne = "NN";

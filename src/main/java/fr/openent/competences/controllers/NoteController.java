@@ -20,6 +20,8 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.helpers.FutureHelper;
+import fr.openent.competences.model.*;
 import fr.openent.competences.security.*;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
@@ -36,6 +38,7 @@ import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
@@ -51,6 +54,7 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import java.math.RoundingMode;
@@ -58,6 +62,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 
+import static fr.wseduc.webutils.Utils.isNotEmpty;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
@@ -695,6 +700,8 @@ public class NoteController extends ControllerHelper {
                 if (user != null) {
                     List<String> idDevoirsList = request.params().getAll("devoirs");
                     String idEleve = request.params().get("idEleve");
+                    String idEtablissement = request.params().get("idEtablissement");
+                    String idClasse = request.params().get("idClasse");
                     String idMatiere = request.params().get("idMatiere");
                     Long idPeriode = null;
                     if(request.params().get("idPeriode") != null)
@@ -717,14 +724,42 @@ public class NoteController extends ControllerHelper {
                             notesEvent -> formate(notesFuture, notesEvent));
 
                     Long finalIdPeriode = idPeriode;
-                    CompositeFuture.all(notesFuture, moyenneFinaleFuture)
+
+                    //Récupération des Services
+                    Promise<Object> servicesPromise = Promise.promise();
+                    utilsService.getServices(idEtablissement,
+                            new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
+
+                    //Récupération des Multi-teachers
+                    Promise<Object> multiTeachingPromise = Promise.promise();
+                    utilsService.getMultiTeachers(idEtablissement,
+                            new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise));
+
+                    //Récupération des Sous-Matières
+                    Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+                    utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
+
+                    CompositeFuture.all(notesFuture, moyenneFinaleFuture, servicesPromise.future(),
+                                    multiTeachingPromise.future(), subTopicCoefPromise.future())
                             .setHandler(event -> {
                                 if (event.failed()) {
                                     renderError(request, new JsonObject().put("error",request.params()));
-                                }else {
+                                }
+                                else {
                                     JsonArray notesEleve = notesFuture.result();
                                     JsonArray moyenneFinaleArray = moyenneFinaleFuture.result();
                                     List<NoteDevoir> notes = new ArrayList<>();
+
+                                    Structure structure = new Structure();
+                                    structure.setId(idEtablissement);
+                                    JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
+                                    JsonArray multiTeachers = (JsonArray) multiTeachingPromise.future().result();
+                                    List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+
+                                    List<Service> services = new ArrayList<>();
+                                    List<MultiTeaching> multiTeachings = new ArrayList<>();
+                                    new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClasse);
+                                    setServices(structure, servicesJson, services, subTopics);
 
                                     if(!moyenneFinaleArray.isEmpty() && finalIdPeriode != null){
                                         JsonObject moyenneFinale = moyenneFinaleArray.getJsonObject(0);
@@ -734,17 +769,102 @@ public class NoteController extends ControllerHelper {
                                             Renders.renderJson(request, new JsonObject().put("moyenne", moyenneFinale.getValue("moyenne"))
                                                     .put("hasNote", true));
 
-                                    }else{
+                                    }
+                                    else {
+                                        HashMap<Long, ArrayList<NoteDevoir>> notesBySousMat = new HashMap<>();
                                         for (int i = 0; i < notesEleve.size(); i++) {
                                             JsonObject note = notesEleve.getJsonObject(i);
                                             if(note.getString("coefficient") != null) {
-                                                notes.add(new NoteDevoir(Double.parseDouble(note.getString("valeur").replace(",",".")),
+                                                Matiere matiere = new Matiere(idMatiere);
+                                                Teacher teacher = new Teacher(note.getString("owner"));
+                                                Group group = new Group(idClasse);
+
+                                                Service service = services.stream()
+                                                        .filter(el -> teacher.getId().equals(el.getTeacher().getId())
+                                                                && matiere.getId().equals(el.getMatiere().getId())
+                                                                && group.getId().equals(el.getGroup().getId()))
+                                                        .findFirst().orElse(null);
+
+                                                if (service == null){
+                                                    //On regarde les multiTeacher
+                                                    for(Object mutliTeachO: multiTeachers){
+                                                        //multiTeaching.getString("second_teacher_id").equals(teacher.getId()
+                                                        JsonObject multiTeaching  =(JsonObject) mutliTeachO;
+                                                        if(multiTeaching.getString("main_teacher_id").equals(teacher.getId())
+                                                                && multiTeaching.getString("id_classe").equals(group.getId())
+                                                                && multiTeaching.getString("subject_id").equals(matiere.getId())){
+                                                            service = services.stream()
+                                                                    .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString("second_teacher_id"))
+                                                                            && matiere.getId().equals(el.getMatiere().getId())
+                                                                            && group.getId().equals(el.getGroup().getId()))
+                                                                    .findFirst().orElse(null);
+                                                        }
+
+                                                        if(multiTeaching.getString("second_teacher_id").equals(teacher.getId())
+                                                                && multiTeaching.getString("class_or_group_id").equals(group.getId())
+                                                                && multiTeaching.getString("subject_id").equals(matiere.getId())){
+
+                                                            service = services.stream()
+                                                                    .filter(el -> multiTeaching.getString("main_teacher_id").equals(el.getTeacher().getId())
+                                                                            && matiere.getId().equals(el.getMatiere().getId())
+                                                                            && group.getId().equals(el.getGroup().getId()))
+                                                                    .findFirst().orElse(null);
+                                                        }
+                                                    }
+                                                }
+
+                                                Long sousMatiereId = note.getLong("id_sousmatiere");
+                                                Long id_periode = note.getLong(ID_PERIODE);
+                                                NoteDevoir noteDevoir = new NoteDevoir(Double.parseDouble(note.getString("valeur").replace(",",".")),
                                                         Double.parseDouble(note.getInteger("diviseur").toString().replace(",",".")),
                                                         note.getBoolean("ramener_sur"),
-                                                        Double.parseDouble(note.getString("coefficient").replace(",","."))));
+                                                        Double.parseDouble(note.getString("coefficient").replace(",",".")),
+                                                        idEleve, id_periode, service, sousMatiereId);
+                                                notes.add(noteDevoir);
+                                                if (isNotNull(sousMatiereId)) {
+                                                    utilsService.addToMap(sousMatiereId, notesBySousMat, noteDevoir);
+                                                }
                                             }
                                         }
-                                        Renders.renderJson(request, utilsService.calculMoyenne(notes, false, 20,false));
+                                        if(!notesBySousMat.isEmpty()) {
+                                            //Si on a des sous-matières, on calcule la moyenne par sous-matière, puis la moyenne de la matière.
+                                            double total = 0;
+                                            double totalCoeff = 0;
+                                            Boolean hasNote = false;
+
+                                            for (Map.Entry<Long, ArrayList<NoteDevoir>> subEntry :
+                                                    notesBySousMat.entrySet()) {
+                                                Long idSousMat = subEntry.getKey();
+                                                Service serv = subEntry.getValue().get(0).getService();
+                                                double coeff = 1.d;
+                                                if (serv != null && serv.getSubtopics() != null && serv.getSubtopics().size() > 0) {
+                                                    SubTopic subTopic = serv.getSubtopics().stream()
+                                                            .filter(el ->
+                                                                    el.getId().equals(idSousMat)
+                                                            ).findFirst().orElse(null);
+                                                    if (subTopic != null)
+                                                        coeff = subTopic.getCoefficient();
+                                                }
+
+                                                JsonObject moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(), false, 20, false); //FIXME remettre les variables?
+
+                                                total += coeff * moyenSousMat.getDouble("moyenne");
+                                                totalCoeff += coeff;
+                                                hasNote = true;
+                                            }
+                                            Double moyenneComputed = Math.round((total / totalCoeff) * 10.0) / 10.0;
+
+                                            JsonObject r = new JsonObject().put("moyenne", moyenneComputed)
+                                                    .put("hasNote", hasNote);
+
+                                            if(totalCoeff == 0)
+                                                r.put("moyenne","NN");
+
+                                            Renders.renderJson(request, r);
+                                        }
+                                        else {
+                                            Renders.renderJson(request, utilsService.calculMoyenne(notes, false, 20,false));
+                                        }
                                     }
                                 }
                             });
