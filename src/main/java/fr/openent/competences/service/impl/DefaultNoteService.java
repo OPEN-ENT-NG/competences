@@ -962,7 +962,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         hasNote = true;
                     }
                 }
-                Double moyenne = Math.round((total / totalCoeff)*10.0)/10.0;
+                Double moyenne = Math.round((total / totalCoeff) * 10.0) / 10.0;
 
                 result.put("moyenne", moyenne);
 
