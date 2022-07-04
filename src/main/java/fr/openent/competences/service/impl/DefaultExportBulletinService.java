@@ -2955,7 +2955,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return student;
     }
 
-    private void setMultiTeaching(Structure structure, JsonArray multiTeachinJsonArray, List<MultiTeaching> multiTeachings, String idClasse) {
+    public void setMultiTeaching(Structure structure, JsonArray multiTeachinJsonArray, List<MultiTeaching> multiTeachings, String idClasse) {
         for(int i = 0 ; i < multiTeachinJsonArray.size(); i++){
             JsonObject multiTeachinJo = multiTeachinJsonArray.getJsonObject(i);
             MultiTeaching multiTeaching = new MultiTeaching();
