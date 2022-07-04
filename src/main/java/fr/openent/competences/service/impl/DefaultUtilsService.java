@@ -116,7 +116,7 @@ public class DefaultUtilsService implements UtilsService {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT DISTINCT main_teacher_id ")
-                .append("FROM " + Competences.VIESCO_SCHEMA + ".multi_teaching ")
+                .append("FROM " + VIESCO_SCHEMA + ".multi_teaching ")
                 .append("WHERE second_teacher_id = ? ")
                 .append("AND structure_id = ? ")
                 .append("AND start_date <= current_date ")
@@ -315,14 +315,14 @@ public class DefaultUtilsService implements UtilsService {
                 // Selection
                 .append(" (SELECT personnes_supp.id_user AS \"idEleve\", MAX(delete_date) AS \"deleteDate\", ")
                 .append(" string_agg(DISTINCT rel_groupes_personne_supp.id_groupe, ',') AS \"idGroupes\" ")
-                .append(" FROM " + Competences.VIESCO_SCHEMA + ".personnes_supp, viesco.rel_groupes_personne_supp ")
+                .append(" FROM " + VIESCO_SCHEMA + ".personnes_supp, viesco.rel_groupes_personne_supp ")
                 .append(" WHERE personnes_supp.id = rel_groupes_personne_supp.id ")
                 .append(" AND id_user = ? ")
                 .append(" AND user_type = 'Student' ")
                 .append(" GROUP BY personnes_supp.id_user) AS res ")
 
 
-                .append(" INNER JOIN " + Competences.VIESCO_SCHEMA + ".personnes_supp ")
+                .append(" INNER JOIN " + VIESCO_SCHEMA + ".personnes_supp ")
                 .append(" ON \"deleteDate\" = personnes_supp.delete_date ")
                 .append(" AND \"idEleve\" = personnes_supp.id_user)  AS res1 ")
 
@@ -676,7 +676,7 @@ public class DefaultUtilsService implements UtilsService {
                 } else {
                     // Si l'id n'est pas retrouvé dans l'annuaire, on le récupère dans Postgres
                     String queryPostgres = " SELECT  personnes_supp.last_name as name " +
-                            " FROM " + Competences.VIESCO_SCHEMA + ".personnes_supp" +
+                            " FROM " + VIESCO_SCHEMA + ".personnes_supp" +
                             " WHERE id_user IN " + Sql.listPrepared(Arrays.asList(name));
 
                     JsonArray paramsPostgres = new JsonArray();
@@ -983,7 +983,7 @@ public class DefaultUtilsService implements UtilsService {
 
     private void getStructureImage(String idStructure, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder()
-                .append(" SELECT * FROM " + Competences.VIESCO_SCHEMA + ".logo_etablissement ")
+                .append(" SELECT * FROM " + VIESCO_SCHEMA + ".logo_etablissement ")
                 .append(" WHERE id_etablissement = ? ");
         JsonArray params = new JsonArray().add(idStructure);
 
@@ -992,7 +992,7 @@ public class DefaultUtilsService implements UtilsService {
 
     public void getInformationCE(String idStructure, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder()
-                .append(" SELECT * FROM " + Competences.VIESCO_SCHEMA + ".nom_et_signature_CE ")
+                .append(" SELECT * FROM " + VIESCO_SCHEMA + ".nom_et_signature_CE ")
                 .append(" WHERE id_etablissement = ? ");
         JsonArray params = new JsonArray().add(idStructure);
 
@@ -1001,7 +1001,7 @@ public class DefaultUtilsService implements UtilsService {
 
     public void setStructureImage(String idStructure, String path, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder()
-                .append(" INSERT INTO " + Competences.VIESCO_SCHEMA + ".logo_etablissement ")
+                .append(" INSERT INTO " + VIESCO_SCHEMA + ".logo_etablissement ")
                 .append(" (id_etablissement, path) VALUES ")
                 .append(" ( ?, ?) ")
                 .append(" ON CONFLICT (id_etablissement) ")
@@ -1015,7 +1015,7 @@ public class DefaultUtilsService implements UtilsService {
     public void setInformationCE(String idStructure, String path, String name,
                                  Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder()
-                .append(" INSERT INTO " + Competences.VIESCO_SCHEMA + ".nom_et_signature_CE ")
+                .append(" INSERT INTO " + VIESCO_SCHEMA + ".nom_et_signature_CE ")
                 .append(" (id_etablissement, path, name) VALUES ( ?, ?, ?) ")
                 .append(" ON CONFLICT (id_etablissement) DO UPDATE SET path = ?, name = ? ");
 

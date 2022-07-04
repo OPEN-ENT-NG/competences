@@ -33,6 +33,7 @@ import org.entcore.common.user.UserInfos;
 
 import java.util.List;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 import static org.entcore.common.sql.SqlResult.*;
 
 public class DefaultCompetenceNiveauFinalService extends SqlCrudService implements CompetenceNiveauFinalService {
@@ -49,7 +50,7 @@ public class DefaultCompetenceNiveauFinalService extends SqlCrudService implemen
         SqlStatementsBuilder sqlBuilder =new SqlStatementsBuilder();
         JsonArray idsMatieres = niveauFinal.getJsonArray("ids_matieres");
 
-        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL
+        String query = "INSERT INTO " + COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL
                 + "(id_periode, id_eleve, niveau_final, id_competence, id_matiere) VALUES(?, ?, ?, ?, ?) "
                 + "ON CONFLICT (id_periode, id_eleve, id_competence, id_matiere) "
                 + "DO UPDATE SET niveau_final = ?";
@@ -74,7 +75,7 @@ public class DefaultCompetenceNiveauFinalService extends SqlCrudService implemen
         SqlStatementsBuilder sqlBuilder =new SqlStatementsBuilder();
         JsonArray idsMatieres = niveauFinal.getJsonArray("ids_matieres");
 
-        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL
+        String query = "INSERT INTO " + COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL
                 + "(id_eleve, niveau_final, id_competence, id_matiere) VALUES( ?, ?, ?, ?) "
                 + "ON CONFLICT (id_eleve, id_competence, id_matiere) "
                 + "DO UPDATE SET niveau_final = ?";
@@ -98,7 +99,7 @@ public class DefaultCompetenceNiveauFinalService extends SqlCrudService implemen
     public void deleteNiveauFinal(JsonObject niveauFinal, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA + "." +Competences.COMPETENCE_NIVEAU_FINAL
+        String query = "DELETE FROM "+ COMPETENCES_SCHEMA + "." +Competences.COMPETENCE_NIVEAU_FINAL
                 + "WHERE id_periode = ? AND id_eleve = ? AND id_competence = ? AND id_matiere = ? AND id_classe = ? ";
 
         values.add(niveauFinal.getInteger("id_periode")).add(niveauFinal.getString("id_eleve"))
@@ -113,7 +114,7 @@ public class DefaultCompetenceNiveauFinalService extends SqlCrudService implemen
     public void getNiveauFinalByEleve(Long id_periode, String id_eleve, List<String> ids_matieres, String id_classe, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL
+        String query = "SELECT * FROM "+ COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL
                 + " WHERE id_periode = ? AND id_eleve = ? AND id_matiere IN "+ Sql.listPrepared(ids_matieres) +" AND id_classe = ? ";
 
         values.add(id_periode).add(id_eleve);

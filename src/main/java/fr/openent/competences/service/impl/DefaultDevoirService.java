@@ -148,9 +148,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append(" FROM notes.competences_devoirs c" )
                 .append(" WHERE c.id_devoir =?) comp")
                 .append(" INNER JOIN  notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id")
-                .append(" LEFT JOIN "+ Competences.VIESCO_SCHEMA +".sousmatiere")
+                .append(" LEFT JOIN "+ VIESCO_SCHEMA +".sousmatiere")
                 .append("            ON devoir.id_sousmatiere = sousmatiere.id ")
-                .append(" LEFT JOIN "+ Competences.VIESCO_SCHEMA +".type_sousmatiere ")
+                .append(" LEFT JOIN "+ VIESCO_SCHEMA +".type_sousmatiere ")
                 .append("            ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
                 .append(" LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ")
                 .append("            ON rel_devoirs_groupes.id_devoir = devoir.id ")
@@ -686,7 +686,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
 
         query.append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ")
-                .append("LEFT JOIN ").append(Competences.VIESCO_SCHEMA).append(".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
+                .append("LEFT JOIN ").append(VIESCO_SCHEMA).append(".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type on devoirs.id_type = type.id ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users on users.id = devoirs.owner ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ");
@@ -934,8 +934,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("SELECT devoirs.*,type_sousmatiere.libelle as _sousmatiere_libelle,sousmatiere.id as _sousmatiere_id " +
                 "FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs " +
-                "LEFT JOIN "+ Competences.VIESCO_SCHEMA +".sousmatiere ON devoirs.id_sousmatiere = sousmatiere.id " +
-                "LEFT JOIN "+ Competences.VIESCO_SCHEMA +".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id " +
+                "LEFT JOIN "+ VIESCO_SCHEMA +".sousmatiere ON devoirs.id_sousmatiere = sousmatiere.id " +
+                "LEFT JOIN "+ VIESCO_SCHEMA +".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id " +
                 "WHERE devoirs.id_etablissement = ?" +
                 "AND devoirs.id_periode = ? " +
                 "AND devoirs.owner = ? " +

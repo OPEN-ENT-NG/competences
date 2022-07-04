@@ -33,6 +33,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
@@ -42,8 +43,8 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
     public final String NN = "NN";
     public DefaultAnnotationService(String schema, String table) {
         super(schema, table);
-        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
-        competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
+        noteService = new DefaultNoteService(COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
+        competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
     }
 
     public void listAnnotations(String idEtab, Handler<Either<String, JsonArray>> handler){
@@ -51,8 +52,8 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT * ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".annotations ")
-                .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".annotations.id_etablissement = ?");
+                .append("FROM "+ COMPETENCES_SCHEMA +".annotations ")
+                .append("WHERE "+ COMPETENCES_SCHEMA +".annotations.id_etablissement = ?");
 
         values.add(idEtab);
 
@@ -64,8 +65,8 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT * ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".annotations ")
-                .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".annotations.id = ?");
+                .append("FROM "+ COMPETENCES_SCHEMA +".annotations ")
+                .append("WHERE "+ COMPETENCES_SCHEMA +".annotations.id = ?");
         values.add(id);
 
         Sql.getInstance().prepared(query.toString(), values, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
@@ -90,7 +91,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
     private void addStatementAnnotation(JsonArray statements,final Long idDevoir,final Long idAnnotation,
                                         final String idEleve ){
         StringBuilder query = new StringBuilder()
-                .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs " +
+                .append("INSERT INTO "+ COMPETENCES_SCHEMA +".rel_annotations_devoirs " +
                         " (id_devoir, id_annotation, id_eleve)  VALUES (?, ?, ?) " +
                         " ON CONFLICT  (id_devoir, id_eleve) " +
                         "DO UPDATE SET  id_annotation = ? ");
@@ -104,7 +105,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
 
     private void addStatementdeleteCompetenceNote(JsonArray statements,final Long idDevoir, final String idEleve ) {
         StringBuilder queryDeleteCompetenceNote = new StringBuilder()
-                .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes " +
+                .append("DELETE FROM "+ COMPETENCES_SCHEMA +".competences_notes " +
                         "WHERE id_devoir = ? AND id_eleve = ? ;");
         JsonArray paramsDeleteCompetenceNote = new fr.wseduc.webutils.collections.JsonArray();
         paramsDeleteCompetenceNote.add(idDevoir).add(idEleve);
@@ -116,7 +117,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
 
     private void addStatementdeleteNote(JsonArray statements,final Long idDevoir, final String idEleve ) {
         StringBuilder queryDeleteNote = new StringBuilder()
-                .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".notes " +
+                .append("DELETE FROM "+ COMPETENCES_SCHEMA +".notes " +
                         "WHERE id_devoir = ? AND id_eleve = ? ;");
         JsonArray paramsDeleteNote = new fr.wseduc.webutils.collections.JsonArray();
         paramsDeleteNote.add(idDevoir).add(idEleve);
@@ -197,7 +198,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("UPDATE "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs " +
+        query.append("UPDATE "+ COMPETENCES_SCHEMA +".rel_annotations_devoirs " +
                 "SET id_annotation = ? WHERE id_devoir = ? AND id_eleve = ?;");
         values.add(idAnnotation).add(idDevoir).add(idEleve);
 
@@ -209,7 +210,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs WHERE id_devoir = ? AND id_eleve = ?;");
+        query.append("DELETE FROM "+ COMPETENCES_SCHEMA +".rel_annotations_devoirs WHERE id_devoir = ? AND id_eleve = ?;");
         values.add(idDevoir).add(idEleve);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validRowsResultHandler(handler));
@@ -218,7 +219,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
     @Override
     public void getAnnotationByEleveByDevoir(Long[] ids_devoir, String[] ids_eleve, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs "+
+        String query = "SELECT * FROM " + COMPETENCES_SCHEMA +".rel_annotations_devoirs "+
                 "WHERE rel_annotations_devoirs.id_devoir IN "+ Sql.listPrepared(ids_devoir)+
                 " AND rel_annotations_devoirs.id_eleve IN " + Sql.listPrepared(ids_eleve);
         for(Long idDevoir : ids_devoir){

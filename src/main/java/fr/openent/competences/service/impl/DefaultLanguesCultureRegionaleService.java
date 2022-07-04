@@ -17,7 +17,6 @@
 
 package fr.openent.competences.service.impl;
 
-import fr.openent.competences.Competences;
 import fr.openent.competences.service.LanguesCultureRegionaleService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -25,6 +24,8 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
+
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 
 public class DefaultLanguesCultureRegionaleService extends SqlCrudService implements LanguesCultureRegionaleService {
 
@@ -35,7 +36,7 @@ public class DefaultLanguesCultureRegionaleService extends SqlCrudService implem
 
 
     public void getLanguesCultureRegionaleService(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, libelle, code FROM "+ Competences.COMPETENCES_SCHEMA + ".langues_culture_regionale";
+        String query = "SELECT id, libelle, code FROM "+ COMPETENCES_SCHEMA + ".langues_culture_regionale";
         JsonArray values = new JsonArray();
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }

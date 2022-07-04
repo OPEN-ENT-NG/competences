@@ -36,6 +36,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static fr.openent.competences.Competences.VIESCO_SCHEMA;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
 
@@ -140,7 +141,7 @@ public class FilterPeriodeUtils {
     public void validateStructure(final String idEtablissement, Long idPeriode, final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
                 .append("SELECT count(periode.*) " +
-                        "FROM " + Competences.VIESCO_SCHEMA + ".periode " +
+                        "FROM " + VIESCO_SCHEMA + ".periode " +
                         "WHERE periode.id_etablissement = ?");
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idEtablissement);
 

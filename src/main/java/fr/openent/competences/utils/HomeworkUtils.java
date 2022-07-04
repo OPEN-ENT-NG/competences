@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
+
 public class HomeworkUtils {
 
     protected static final Logger log = LoggerFactory.getLogger(HomeworkUtils.class);
@@ -44,9 +46,9 @@ public class HomeworkUtils {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT count(notes.id) as nb_notes , devoirs.id, rel_devoirs_groupes.id_groupe")
-                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.NOTES_TABLE)
-                .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_TABLE)
-                .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.REL_DEVOIRS_GROUPES)
+                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".").append(Competences.NOTES_TABLE)
+                .append(", ").append(COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_TABLE)
+                .append(", ").append(COMPETENCES_SCHEMA).append(".").append(Competences.REL_DEVOIRS_GROUPES)
                 .append(" WHERE notes.id_devoir = devoirs.id")
                 .append(" AND rel_devoirs_groupes.id_devoir = devoirs.id")
                 .append(" AND devoirs.id = ?");
@@ -56,14 +58,14 @@ public class HomeworkUtils {
         if (!isChefEtab) {
             query.append(" AND (devoirs.owner = ? OR") // devoirs dont on est le propriétaire
                     .append(" devoirs.owner IN (SELECT DISTINCT id_titulaire") // ou dont l'un de mes tiulaires le sont (on regarde sur tous mes établissments)
-                    .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.REL_PROFESSEURS_REMPLACANTS_TABLE)
-                    .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_TABLE)
+                    .append(" FROM ").append(COMPETENCES_SCHEMA).append(".").append(Competences.REL_PROFESSEURS_REMPLACANTS_TABLE)
+                    .append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_TABLE)
                     .append(" ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement")
                     .append(" WHERE id_remplacant = ?")
                     .append(" AND rel_professeurs_remplacants.id_etablissement IN ").append(Sql.listPrepared(user.getStructures().toArray()))
                     .append(" ) OR")
                     .append(" ? IN (SELECT member_id") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
-                    .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_SHARE_TABLE)
+                    .append(" FROM ").append(COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_SHARE_TABLE)
                     .append(" WHERE resource_id = devoirs.id")
                     .append(" AND action = '").append(Competences.DEVOIR_ACTION_UPDATE).append("')")
                     .append(" )");

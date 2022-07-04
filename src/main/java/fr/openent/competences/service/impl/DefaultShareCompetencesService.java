@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
+
 public class DefaultShareCompetencesService implements ShareCompetencesService {
     private DevoirService devoirService ;
 
@@ -79,7 +81,7 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
     }
 
     private JsonObject getNewShareStatements(String userIdSecondTeacher, String devoirID, List<String> actions) {
-        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares (member_id ,resource_id,action)" +
+        String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".devoirs_shares (member_id ,resource_id,action)" +
                 "VALUES (?,?,?) ON CONFLICT DO NOTHING";
         JsonArray paramsDeleteAnnotation = new fr.wseduc.webutils.collections.JsonArray();
         paramsDeleteAnnotation.add(userIdSecondTeacher).add(devoirID).add(actions.get(0));

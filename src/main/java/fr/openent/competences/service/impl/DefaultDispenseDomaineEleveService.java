@@ -33,6 +33,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
+
 public class DefaultDispenseDomaineEleveService extends SqlCrudService implements DispenseDomaineEleveService {
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultDispenseDomaineEleveService.class);
@@ -44,7 +46,7 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
 
     @Override
     public void deleteDispenseDomaineEleve(String idEleve,Integer idDomaine, Handler<Either<String, JsonObject>> handler) {
-        String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".dispense_domaine_eleve " +
+        String query = "DELETE FROM "+ COMPETENCES_SCHEMA +".dispense_domaine_eleve " +
                 "WHERE id_eleve = ? AND id_domaines = ? ;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(idEleve)
@@ -54,7 +56,7 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
 
     @Override
     public void createDispenseDomaineEleve(final JsonObject dispenseDomaineEleve, Handler<Either<String, JsonObject>> handler) {
-        String query = "INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".dispense_domaine_eleve ( id_eleve, id_domaines, dispense )"+
+        String query = "INSERT INTO "+ COMPETENCES_SCHEMA +".dispense_domaine_eleve ( id_eleve, id_domaines, dispense )"+
                 "VALUES(?,?,?)";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
        .add(dispenseDomaineEleve.getString("id_eleve"))
@@ -65,7 +67,7 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
 
     @Override
     public void listDipenseDomainesByClasse(List<String> idsEleves, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id_eleve, id_domaines, dispense FROM "+ Competences.COMPETENCES_SCHEMA +".dispense_domaine_eleve "+
+        String query = "SELECT id_eleve, id_domaines, dispense FROM "+ COMPETENCES_SCHEMA +".dispense_domaine_eleve "+
                 "WHERE id_eleve IN " + Sql.listPrepared(idsEleves.toArray());
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();

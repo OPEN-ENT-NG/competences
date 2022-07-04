@@ -26,6 +26,8 @@ import org.entcore.common.sql.SqlResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
+
 /**
  * Created by agnes.lapeyronnie on 28/11/2017.
  */
@@ -38,7 +40,7 @@ public class DefaultEnseignementComplementService extends SqlCrudService impleme
 
 
     public void getEnseignementsComplement(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, libelle, code FROM "+ Competences.COMPETENCES_SCHEMA + ".enseignement_complement";
+        String query = "SELECT id, libelle, code FROM "+ COMPETENCES_SCHEMA + ".enseignement_complement";
         JsonArray values = new JsonArray();
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
 

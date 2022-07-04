@@ -63,7 +63,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     private final EventBus eb;
 
     public DefaultElementBilanPeriodiqueService(EventBus eb) {
-        super(Competences.COMPETENCES_SCHEMA, null);
+        super(COMPETENCES_SCHEMA, null);
         this.eb = eb;
     }
 
@@ -75,7 +75,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         // Insert user in the right table
         final String queryIdSeq =
-                "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique_id_seq') as id";
+                "SELECT nextval('" + COMPETENCES_SCHEMA + ".thematique_bilan_periodique_id_seq') as id";
 
         sql.raw(queryIdSeq, SqlResult.validUniqueResultHandler( event -> {
             if (event.isRight()) {
@@ -88,7 +88,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 }
 
                 SqlStatementsBuilder statements = new SqlStatementsBuilder();
-                String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique" +
+                String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".thematique_bilan_periodique" +
                         "(id, libelle, code, type_elt_bilan_periodique, id_etablissement , personnalise) VALUES (?, ?, ?, ?, ?,?);";
 
                 JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
@@ -112,13 +112,13 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
 
         final String queryElement =
-                "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique_id_seq') as id";
+                "SELECT nextval('" + COMPETENCES_SCHEMA + ".elt_bilan_periodique_id_seq') as id";
 
         sql.raw(queryElement, SqlResult.validUniqueResultHandler( event -> {
             if (event.isRight()) {
                 Long idElement = event.right().getValue().getLong("id");
 
-                String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique(" +
+                String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".elt_bilan_periodique(" +
                         "id, type_elt_bilan_periodique, id_etablissement ";
 
                 if(element.getInteger("type") == 1 || element.getInteger("type") == 2){
@@ -168,7 +168,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         for (Object o : intervenantsMatieres) {
             JsonObject intervenantMatiere = (JsonObject) o;
-            String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
+            String query = "INSERT INTO " + COMPETENCES_SCHEMA +
                     ".rel_elt_bilan_periodique_intervenant_matiere(id_elt_bilan_periodique, id_intervenant, id_matiere) " +
                     "VALUES (?, ?, ?) " +
                     "ON CONFLICT (id_elt_bilan_periodique, id_intervenant, id_matiere) DO NOTHING;";
@@ -191,7 +191,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         for (Object o : groupes) {
             JsonObject group = (JsonObject) o;
-            String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
+            String query = "INSERT INTO " + COMPETENCES_SCHEMA +
                     ".rel_elt_bilan_periodique_groupe(id_elt_bilan_periodique, id_groupe, externalid_groupe) " +
                     "VALUES (?, ?, ?) " +
                     "ON CONFLICT (id_elt_bilan_periodique, id_groupe) DO NOTHING;";
@@ -209,7 +209,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         StringBuilder query = new StringBuilder();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT id, libelle, code, personnalise FROM ").append(Competences.COMPETENCES_SCHEMA)
+        query.append("SELECT id, libelle, code, personnalise FROM ").append(COMPETENCES_SCHEMA)
                 .append(".thematique_bilan_periodique ")
                 .append("WHERE type_elt_bilan_periodique = ? AND (id_etablissement = ? OR id_etablissement IS NULL) ");
 
@@ -226,8 +226,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         query.append("(SELECT elt_bilan_periodique.*, thematique_bilan_periodique.libelle, thematique_bilan_periodique.code, string_agg(DISTINCT id_groupe, ',') AS groupes,")
                 .append(" array_agg(distinct CONCAT(id_intervenant, ',', id_matiere)) AS intervenants_matieres")
-                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append( ".elt_bilan_periodique")
-                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_groupe ")
+                .append(" FROM ").append(COMPETENCES_SCHEMA).append( ".elt_bilan_periodique")
+                .append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_groupe ")
                 .append(" ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ");
 
         if(listIdClasses != null){
@@ -237,22 +237,22 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             }
         }
 
-        query.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_intervenant_matiere ")
+        query.append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_intervenant_matiere ")
                 .append(" ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = elt_bilan_periodique.id ");
 
         if(idEnseignant != null){
             query.append(" AND rel_elt_bilan_periodique_intervenant_matiere.id_intervenant = ? ");
             params.add(idEnseignant);
         }
-        query.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".thematique_bilan_periodique ")
+        query.append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".thematique_bilan_periodique ")
                 .append(" ON elt_bilan_periodique.id_thematique = thematique_bilan_periodique.id ")
                 .append(" WHERE elt_bilan_periodique.id_etablissement = ? ")
                 .append(" GROUP BY elt_bilan_periodique.id, thematique_bilan_periodique.libelle, thematique_bilan_periodique.code) ");
         params.add(idEtablissement);
         query.append(" UNION ")
                 .append(" (SELECT elt_bilan_periodique.*, thematique_bilan_periodique.libelle, thematique_bilan_periodique.code, string_agg(DISTINCT id_groupe, ',') AS groupes, null ")
-                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".elt_bilan_periodique ")
-                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_groupe ")
+                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".elt_bilan_periodique ")
+                .append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_groupe ")
                 .append(" ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ");
 
         if(listIdClasses != null){
@@ -261,7 +261,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 params.add(c);
             }
         }
-        query.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".thematique_bilan_periodique ")
+        query.append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".thematique_bilan_periodique ")
                 .append(" ON elt_bilan_periodique.id_thematique = thematique_bilan_periodique.id ")
                 .append(" WHERE elt_bilan_periodique.id_etablissement = ? ")
                 .append(" AND intitule is null ")
@@ -271,8 +271,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         query.append(" UNION ")
                 .append(" (SELECT elt_bilan_periodique.*, null, null, string_agg(DISTINCT id_groupe, ',') AS groupes, ")
                 .append(" array_agg(distinct CONCAT(id_intervenant, ',', id_matiere)) AS intervenants_matieres")
-                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".elt_bilan_periodique ")
-                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_groupe ")
+                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".elt_bilan_periodique ")
+                .append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_groupe ")
                 .append(" ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ");
 
         if(listIdClasses != null){
@@ -282,7 +282,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             }
         }
 
-        query.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_intervenant_matiere ")
+        query.append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_intervenant_matiere ")
                 .append(" ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = elt_bilan_periodique.id ");
 
         if(idEnseignant != null){
@@ -515,7 +515,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT id_elt_bilan_periodique, id_intervenant, id_matiere ")
-                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_intervenant_matiere ")
+                .append("FROM ").append(COMPETENCES_SCHEMA).append(".rel_elt_bilan_periodique_intervenant_matiere ")
                 .append("WHERE id_elt_bilan_periodique IN ").append(Sql.listPrepared(idElements));
 
         for (String idElement : idElements) {

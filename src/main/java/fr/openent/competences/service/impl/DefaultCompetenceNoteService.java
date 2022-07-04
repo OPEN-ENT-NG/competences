@@ -68,7 +68,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     }
 
     private void update(JsonObject competenceNote, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE" + COMPETENCES_SCHEMA + ".competences_notes SET evaluation = ? " +
+        String query = "UPDATE " + COMPETENCES_SCHEMA + ".competences_notes SET evaluation = ? " +
                 "WHERE id_competence = ? AND id_devoir = ? AND id_eleve = ?;";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()

@@ -148,7 +148,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     }
     private void addStatmentDeleteAnnotation(JsonArray statements, Long id_devoir, String id_eleve ){
-        String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs " +
+        String query = "DELETE FROM "+ COMPETENCES_SCHEMA +".rel_annotations_devoirs " +
                 "WHERE id_devoir = ? AND id_eleve = ? ;";
         JsonArray paramsDeleteAnnotation = new fr.wseduc.webutils.collections.JsonArray();
         paramsDeleteAnnotation.add(id_devoir).add(id_eleve);
@@ -334,7 +334,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ")
                 .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe IN ")
                 .append(Sql.listPrepared(idsClass.getList())).append(" LEFT JOIN ")
-                .append(Competences.VIESCO_SCHEMA).append(".services ")
+                .append(VIESCO_SCHEMA).append(".services ")
                 .append(" ON (rel_devoirs_groupes.id_groupe = services.id_groupe ")
                 .append(" AND devoirs.owner = services.id_enseignant AND devoirs.id_matiere = services.id_matiere) ")
                 .append(" WHERE devoirs.id_etablissement = ? ")

@@ -10,13 +10,14 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 public class DefaultSTSFileService extends SqlCrudService implements STSFileService {
 
 
     public DefaultSTSFileService (String table) {
-        super(Competences.COMPETENCES_SCHEMA, Competences.STSFILE_TABLE);
+        super(COMPETENCES_SCHEMA, Competences.STSFILE_TABLE);
     }
 
     @Override

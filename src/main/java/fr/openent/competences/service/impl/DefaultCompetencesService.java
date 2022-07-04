@@ -48,25 +48,25 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultCompetencesService.class);
 
-    private static final String COMPETENCES_TABLE = Competences.COMPETENCES_SCHEMA
+    private static final String COMPETENCES_TABLE = COMPETENCES_SCHEMA
             + "." + Competences.COMPETENCES_TABLE;
-    private static final String COMPETENCES_DOMAINES_TABLE = Competences.COMPETENCES_SCHEMA
+    private static final String COMPETENCES_DOMAINES_TABLE = COMPETENCES_SCHEMA
             + "." + Competences.REL_COMPETENCES_DOMAINES_TABLE;
-    private static final String COMPETENCES_ENSEIGNEMENTS_TABLE = Competences.COMPETENCES_SCHEMA
+    private static final String COMPETENCES_ENSEIGNEMENTS_TABLE = COMPETENCES_SCHEMA
             + "." + Competences.REL_COMPETENCES_ENSEIGNEMENTS_TABLE;
-    private static final String COMPETENCES_PERSO_TABLE = Competences.COMPETENCES_SCHEMA
+    private static final String COMPETENCES_PERSO_TABLE = COMPETENCES_SCHEMA
             + "." + Competences.PERSO_COMPETENCES_TABLE;
-    private static final String COMPETENCES_PERSO_ORDRE_TABLE = Competences.COMPETENCES_SCHEMA
+    private static final String COMPETENCES_PERSO_ORDRE_TABLE = COMPETENCES_SCHEMA
             + "." + Competences.PERSO_COMPETENCES_ORDRE_TABLE;
-    private static final String COMPETENCES_DEVOIRS_TABLE = Competences.COMPETENCES_SCHEMA
+    private static final String COMPETENCES_DEVOIRS_TABLE = COMPETENCES_SCHEMA
             + "." + Competences.COMPETENCES_DEVOIRS;
-    private static final String DEVOIRS_TABLE = Competences.COMPETENCES_SCHEMA
+    private static final String DEVOIRS_TABLE = COMPETENCES_SCHEMA
             + "." + Competences.DEVOIR_TABLE;
 
     private final EventBus eb;
 
     public DefaultCompetencesService(EventBus eb) {
-        super(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_TABLE);
+        super(COMPETENCES_SCHEMA, Competences.COMPETENCES_TABLE);
         this.eb = eb;
     }
 

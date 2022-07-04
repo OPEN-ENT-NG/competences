@@ -26,6 +26,7 @@ import org.entcore.common.sql.SqlResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
 
 /**
@@ -48,7 +49,7 @@ public class DefaultEnseignementService extends SqlCrudService implements Enseig
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT * ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".enseignements ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".enseignements ")
                 .append("ORDER BY nom ASC");
 
         Sql.getInstance().prepared(query.toString(), values, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));

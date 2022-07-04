@@ -32,6 +32,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import static fr.openent.competences.Competences.VIESCO_SCHEMA;
 import static fr.wseduc.webutils.Server.getEventBus;
 
 
@@ -61,7 +62,7 @@ public class FilterDevoirUtils  extends ControllerHelper {
     public void validateDevoirFinSaisie(Long idDevoir, UserInfos user, final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
                 .append("SELECT count(devoir.id) " +
-                        "FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs, " + Competences.VIESCO_SCHEMA + ".periode "+
+                        "FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs, " + VIESCO_SCHEMA + ".periode "+
                         "WHERE devoirs.id = ? " +
                         "AND devoirs.owner = ?  " +
                         "AND now() < periode.date_fin_saisie;" );
