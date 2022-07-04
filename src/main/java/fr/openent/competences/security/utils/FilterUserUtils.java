@@ -19,6 +19,7 @@ package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.logging.Logger;
@@ -83,8 +84,8 @@ public class FilterUserUtils {
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status"))) {
-                    JsonArray elements = body.getJsonArray("results");
+                if (Field.OK.equals(body.getString(Field.STATUS))) {
+                    JsonArray elements = body.getJsonArray(Field.RESULTS);
                     List<Integer> idsEPI_AP = new ArrayList<Integer>();
                     List<Integer> idsParcours = new ArrayList<Integer>();
 
@@ -114,8 +115,8 @@ public class FilterUserUtils {
                             public void handle(Message<JsonObject> message) {
                                 JsonObject body = message.body();
 
-                                if ("ok".equals(body.getString("status"))) {
-                                    JsonArray enseignants = body.getJsonArray("results");
+                                if (Field.OK.equals(body.getString(Field.STATUS))) {
+                                    JsonArray enseignants = body.getJsonArray(Field.RESULTS);
                                     JsonArray idsEnseignants = new fr.wseduc.webutils.collections.JsonArray();
                                     for(Object o : enseignants){
                                         JsonArray enseignant = (JsonArray)o;
@@ -152,8 +153,8 @@ public class FilterUserUtils {
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();
 
-                    if ("ok".equals(body.getString("status"))) {
-                        JsonObject infosEleve = body.getJsonArray("results").getJsonObject(0);
+                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                        JsonObject infosEleve = body.getJsonArray(Field.RESULTS).getJsonObject(0);
 
                         JsonArray idsGroupes = infosEleve.getJsonArray("idGroupes")
                                 .add(infosEleve.getString("idClasse"))
@@ -237,11 +238,11 @@ public class FilterUserUtils {
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
-                if (!"ok".equals(body.getString("status"))) {
+                if (!Field.OK.equals(body.getString(Field.STATUS))) {
                     log.error("[validateHeadTeacherWithClasses] : user " + user.getUsername());
                     handler.handle(new Either.Right(false));
                 } else {
-                    JsonArray result = body.getJsonArray("result");
+                    JsonArray result = body.getJsonArray(Field.RESULT);
                     if (result == null || result.size() == 0) {
                         log.debug("[validateHeadTeacherWithClasses] : user " + user.getUsername()
                                 + " is not HeadTeacher ");
@@ -279,12 +280,12 @@ public class FilterUserUtils {
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();
 
-                    if (!"ok".equals(body.getString("status"))) {
+                    if (!Field.OK.equals(body.getString(Field.STATUS))) {
                         log.error("[validateHeadTeacherWithEleves] : user " + user.getUsername());
                         handler.handle(new Either.Right(false));
                     } else {
 
-                        JsonArray queryResult = body.getJsonArray("results");
+                        JsonArray queryResult = body.getJsonArray(Field.RESULTS);
                         JsonArray idClasses = new JsonArray();
                         for (int i = 0; i < queryResult.size(); i++) {
                             idClasses.add(queryResult.getJsonObject(i).getString("idClasse"));
@@ -320,11 +321,11 @@ public class FilterUserUtils {
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();
 
-                    if (!"ok".equals(body.getString("status"))) {
+                    if (!Field.OK.equals(body.getString(Field.STATUS))) {
                         log.error("[validateHeadTeacherWithRessources] : user " + user.getUsername());
                         handler.handle(new Either.Right(false));
                     } else {
-                        JsonArray result = body.getJsonArray("results");
+                        JsonArray result = body.getJsonArray(Field.RESULTS);
                         if (result == null || result.size() == 0) {
                             handler.handle(new Either.Right(false));
                         } else {

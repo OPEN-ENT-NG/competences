@@ -18,6 +18,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -104,7 +105,7 @@ public class FilterPeriodeUtils {
                 JsonArray periodes = body.getJsonArray("result");
                 boolean isUpdatable = true;
 
-                if ("ok".equals(body.getString("status"))) {
+                if (Field.OK.equals(body.getString(Field.STATUS))) {
                     // On vérifie que la date de fin de saisie n'est pas dépassée
                     JsonObject periode = null;
                     for (int i = 0; i < periodes.size(); i++) {

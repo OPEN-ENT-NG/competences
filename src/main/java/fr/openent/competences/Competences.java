@@ -17,6 +17,7 @@
 
 package fr.openent.competences;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.controllers.*;
 import fr.openent.competences.service.impl.BulletinWorker;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
@@ -257,11 +258,6 @@ public class Competences extends BaseServer {
     public static final String LIBELLE =  "libelle";
     public static final String CODE = "code";
     public static final String SUBJECTS = "subjects";
-    public static final String STATUS = "status";
-    public static final String RESULTS = "results";
-    public static final String RESULT = "result";
-    public static final String OK = "ok";
-    public static final String MESSAGE = "message";
     public static final String LIBELLE_MATIERE = "libelleMatiere";
     public static final String BLANK_SPACE = " ";
     public static final String UNDERSCORE = "_";
@@ -350,7 +346,7 @@ public class Competences extends BaseServer {
     public static void launchTransitionWorker(EventBus eb, JsonObject params, boolean isHTTP) {
         eb.send(CompetencesTransitionWorker.class.getSimpleName(), params.put("isHTTP", isHTTP),
                 new DeliveryOptions().setSendTimeout(1000 * 1000L), handlerToAsyncHandler(eventExport -> {
-                            if(!eventExport.body().getString("status").equals("ok"))
+                            if(!eventExport.body().getString(Field.STATUS).equals(Field.OK))
                                 launchTransitionWorker(eb, params, isHTTP);
                             log.info("Ok calling worker " + eventExport.body().toString());
                         }

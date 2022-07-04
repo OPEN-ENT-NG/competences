@@ -2,6 +2,7 @@ package fr.openent.competences.helpers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
@@ -26,8 +27,8 @@ public class FormSaisieHelper {
                 .put("request", jsonRequest);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if ("ok".equals(body.getString("status"))) {
-                result.put("periode", body.getString("result"));
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                result.put("periode", body.getString(Field.RESULT));
                 periodeFuture.complete();
             }
             else {
@@ -48,8 +49,8 @@ public class FormSaisieHelper {
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
-            if ("ok".equals(body.getString("status"))) {
-                result.put("eleves", Utils.sortElevesByDisplayName(body.getJsonArray("results")));
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                result.put("eleves", Utils.sortElevesByDisplayName(body.getJsonArray(Field.RESULTS)));
                 studentsFuture.complete();
             }
             else {
@@ -70,8 +71,8 @@ public class FormSaisieHelper {
                 message -> {
                     JsonObject body = message.body();
 
-                    if ("ok".equals(body.getString("status"))) {
-                        result.put("matiere", body.getJsonObject("result").getJsonObject("n").getJsonObject("data")
+                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                        result.put("matiere", body.getJsonObject(Field.RESULT).getJsonObject("n").getJsonObject("data")
                                 .getString("label"));
                         subjectFuture.complete();
                     } else {
@@ -89,8 +90,8 @@ public class FormSaisieHelper {
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if ("ok".equals(body.getString("status"))) {
-                result.put("classeName", body.getJsonObject("result").getJsonObject("c").getJsonObject("data")
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                result.put("classeName", body.getJsonObject(Field.RESULT).getJsonObject("c").getJsonObject("data")
                         .getString("name"));
                 classeFuture.complete();
             } else {

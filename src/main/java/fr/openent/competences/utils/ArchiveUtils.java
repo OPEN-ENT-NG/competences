@@ -1,6 +1,7 @@
 package fr.openent.competences.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.folders.FolderExporterZip;
 import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.model.PdfFile;
@@ -74,7 +75,7 @@ public class ArchiveUtils {
             FormateFutureEvent.formate(idFileFuture, event);
             JsonArray results = idFileFuture.result().getJsonArray("ids");
             if(results == null){
-                handler.handle(new JsonObject().put(RESULT, "NO files archived "));
+                handler.handle(new JsonObject().put(Field.RESULT, "NO files archived "));
                 return;
             }
 
@@ -91,7 +92,7 @@ public class ArchiveUtils {
             storage.removeFiles(removesFiles, remove -> {
                 log.info(" [Remove Archives " + table + "] " + remove.encode());
                 clearArchiveTable(removesFiles, table, deleteEvent -> {
-                    JsonObject response = new JsonObject().put(RESULT,remove.encode());
+                    JsonObject response = new JsonObject().put(Field.RESULT,remove.encode());
                     if (deleteEvent.isRight()) {
                         handler.handle(response.put("deleteOK", deleteEvent.right().getValue()));
                     }

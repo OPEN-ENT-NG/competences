@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.EleveEnseignementComplementService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.logging.Logger;
@@ -32,7 +33,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
-import static fr.openent.competences.Competences.MESSAGE;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 
@@ -120,7 +120,7 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
 
                 Sql.getInstance().prepared(query, values, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
             }else{
-                String error =  sqlResultCount.body().getString(MESSAGE);
+                String error =  sqlResultCount.body().getString(Field.MESSAGE);
                 // log.error("listNiveauCplByEleves " + error);
                 if(error.contains(TIME)){
                     listNiveauCplByEleves(idsEleve, handler);

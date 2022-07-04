@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.zip.Deflater;
 
+import fr.openent.competences.constants.Field;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.storage.Storage;
@@ -37,10 +38,10 @@ public class FolderExporterZip extends FolderExporter {
     private Future<JsonObject> createZip(ZipContext context) {
         Future<JsonObject> future = Future.future();
         Zip.getInstance().zipFolder(context.basePath, context.zipFullPath, true, Deflater.NO_COMPRESSION, res -> {
-            if ("ok".equals(res.body().getString("status"))) {
+            if (Field.OK.equals(res.body().getString(Field.STATUS))) {
                 future.complete(res.body());
             } else {
-                future.fail(res.body().getString("message"));
+                future.fail(res.body().getString(Field.MESSAGE));
             }
         });
         return future;

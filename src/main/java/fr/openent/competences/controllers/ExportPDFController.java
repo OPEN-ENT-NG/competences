@@ -969,8 +969,8 @@ public class ExportPDFController extends ControllerHelper {
 
                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
-                    if ("ok".equals(body.getString("status"))) {
-                        final String idEtablissement = body.getJsonArray("results")
+                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                        final String idEtablissement = body.getJsonArray(Field.RESULTS)
                                 .getJsonObject(0).getString("idStructure");
                         UserUtils.getUserInfos(eb, request, user -> {
                             final boolean isChefEtab;
@@ -1039,8 +1039,8 @@ public class ExportPDFController extends ControllerHelper {
                                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                                     JsonObject body = message.body();
 
-                                    if ("ok".equals(body.getString("status"))) {
-                                        JsonArray results = body.getJsonArray("results");
+                                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                                        JsonArray results = body.getJsonArray(Field.RESULTS);
                                         results = Utils.sortElevesByDisplayName(results);
 
                                         final String[] idEleves = new String[results.size()];
@@ -1140,8 +1140,8 @@ public class ExportPDFController extends ControllerHelper {
                             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                                 JsonObject body = message.body();
 
-                                if ("ok".equals(body.getString("status"))) {
-                                    final String classeName = body.getJsonObject("result").getJsonObject("c")
+                                if (Field.OK.equals(body.getString(Field.STATUS))) {
+                                    final String classeName = body.getJsonObject(Field.RESULT).getJsonObject("c")
                                             .getJsonObject("data").getString("name");
                                     result.put("classe", classeName);
 
@@ -1177,8 +1177,8 @@ public class ExportPDFController extends ControllerHelper {
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
-            if ("ok".equals(body.getString("status"))) {
-                String libellePeriode = body.getString("result")
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                String libellePeriode = body.getString(Field.RESULT)
                         .replace("é", "e")
                         .replace("è", "e");
                 result.put("periode", libellePeriode);

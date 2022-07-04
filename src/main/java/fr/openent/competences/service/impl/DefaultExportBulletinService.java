@@ -236,13 +236,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     getInfoEleveHandler(Future<JsonArray> elevesFuture, JsonArray idEleves, String idEtablissement) {
         return handlerToAsyncHandler(
                 message -> {
-                    if ("ok".equals(message.body().getString(STATUS))) {
-                        elevesFuture.complete(message.body().getJsonArray(RESULTS));
+                    if (Field.OK.equals(message.body().getString(Field.STATUS))) {
+                        elevesFuture.complete(message.body().getJsonArray(Field.RESULTS));
 
                     }
                     else
                     {
-                        String error = message.body().getString(MESSAGE);
+                        String error = message.body().getString(Field.MESSAGE);
                         log.error("[runExport | getInfoEleve ] : " + error);
                         if(error.contains(TIMED_OUT)){
                             JsonObject action = new JsonObject()
@@ -936,7 +936,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
 
-                        String periodeName = body.getString(RESULT);
+                        String periodeName = body.getString(Field.RESULT);
                         Periode periode = new Periode();
                         periode.setId(idPeriode.toString());
                         periode.setName(periodeName);
@@ -1502,7 +1502,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
-                    JsonObject structureJO = body.getJsonObject(RESULT);
+                    JsonObject structureJO = body.getJsonObject(Field.RESULT);
                     if(structureJO != null){
                         structureJO = structureJO.getJsonObject("s");
                         if(structureJO != null) {
@@ -1534,7 +1534,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
-                    JsonObject structureJO = body.getJsonObject(RESULT);
+                    JsonObject structureJO = body.getJsonObject(Field.RESULT);
                     if(structureJO != null){
                         structureJO = structureJO.getJsonObject("s");
                         if(structureJO != null) {
@@ -1630,7 +1630,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        JsonArray res = body.getJsonArray(RESULTS);
+                        JsonArray res = body.getJsonArray(Field.RESULTS);
                         JsonObject result = new JsonObject();
                         if (res != null) {
                             JsonArray headTeachers = new JsonArray();
@@ -3019,8 +3019,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             this.storage.writeBuffer(file, "application/pdf", name, uploaded -> {
                 try {
                     String idFile = uploaded.getString("_id");
-                    if (!OK.equals(uploaded.getString(STATUS)) || idFile == null) {
-                        String error = "save pdf  : " + uploaded.getString(MESSAGE);
+                    if (!Field.OK.equals(uploaded.getString(Field.STATUS)) || idFile == null) {
+                        String error = "save pdf  : " + uploaded.getString(Field.MESSAGE);
                         if (error.contains(TIME)) {
                             savePdfInStorage(eleve, file, handler);
                         } else {
@@ -3316,9 +3316,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             public void handle(Message<JsonObject> reply) {
                 JsonObject pdfResponse = reply.body();
                 try {
-                    if (!"ok".equals(pdfResponse.getString("status"))) {
-                        badRequest(request, pdfResponse.getString("message"));
-                        finalHandler.handle(new Either.Left("getPdfRenderHandler pdfResponse status " + pdfResponse.getString("message")
+                    if (!Field.OK.equals(pdfResponse.getString(Field.STATUS))) {
+                        badRequest(request, pdfResponse.getString(Field.MESSAGE));
+                        finalHandler.handle(new Either.Left("getPdfRenderHandler pdfResponse status " + pdfResponse.getString(Field.MESSAGE)
                                 + " "
                                 + eleve.getString("idEleve") + " " + eleve.getString("lastName")));
                         return;
@@ -3544,13 +3544,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             Sql.getInstance().prepared(query.toString(), values, event -> {
                 JsonObject result = event.body();
-                if (result.getString("status").equals("ok")) {
+                if (result.getString(Field.STATUS).equals(Field.OK)) {
                     Integer response =
                             result.getInteger("rows");
                     handler.handle(new Either.Right<>(response != null && response > 0));
 
                 } else {
-                    handler.handle(new Either.Left<>(result.getString("status")));
+                    handler.handle(new Either.Left<>(result.getString(Field.STATUS)));
                 }
             });
         });

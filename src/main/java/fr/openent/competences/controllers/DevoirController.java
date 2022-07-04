@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.helpers.DevoirControllerHelper;
 import fr.openent.competences.security.*;
@@ -180,8 +181,8 @@ public class DevoirController extends ControllerHelper {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
-                if ("ok".equals(body.getString("status"))) {
-                    if(body.getJsonArray("results").size() > 0){
+                if (Field.OK.equals(body.getString(Field.STATUS))) {
+                    if(body.getJsonArray(Field.RESULTS).size() > 0){
                         DevoirControllerHelper.creationDevoir(request, user, resource, pathPrefix,
                                 devoirsService, shareService, eb);
                     } else {
@@ -311,10 +312,10 @@ public class DevoirController extends ControllerHelper {
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        JsonArray periodes = body.getJsonArray("result");
+                        JsonArray periodes = body.getJsonArray(Field.RESULT);
                         boolean isUpdatable = true;
 
-                        if ("ok".equals(body.getString("status"))) {
+                        if (Field.OK.equals(body.getString(Field.STATUS))) {
                             // On vérifie que la date de fin de saisie n'est pas dépassée
                             final Number idPeriode =  devoir.getLong("id_periode");
                             JsonObject periode = null;

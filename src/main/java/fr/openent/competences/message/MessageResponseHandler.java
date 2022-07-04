@@ -1,5 +1,6 @@
 package fr.openent.competences.message;
 
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -14,8 +15,8 @@ public class MessageResponseHandler {
 
     public static Handler<AsyncResult<Message<JsonObject>>> messageJsonArrayHandler(Handler<Either<String, JsonArray>> handler) {
         return event -> {
-            if (event.succeeded() && "ok".equals(event.result().body().getString("status"))) {
-                handler.handle(new Either.Right<>(event.result().body().getJsonArray("result")));
+            if (event.succeeded() && Field.OK.equals(event.result().body().getString(Field.STATUS))) {
+                handler.handle(new Either.Right<>(event.result().body().getJsonArray(Field.RESULT)));
             } else {
                 handler.handle(new Either.Left<>(event.cause().getMessage()));
             }
@@ -24,8 +25,8 @@ public class MessageResponseHandler {
 
     public static Handler<AsyncResult<Message<JsonObject>>> messageJsonObjectHandler(Handler<Either<String, JsonObject>> handler) {
         return event -> {
-            if (event.succeeded() && "ok".equals(event.result().body().getString("status"))) {
-                handler.handle(new Either.Right<>(event.result().body().getJsonObject("result")));
+            if (event.succeeded() && Field.OK.equals(event.result().body().getString(Field.STATUS))) {
+                handler.handle(new Either.Right<>(event.result().body().getJsonObject(Field.RESULT)));
             } else {
                 handler.handle(new Either.Left<>(event.cause().getMessage()));
             }

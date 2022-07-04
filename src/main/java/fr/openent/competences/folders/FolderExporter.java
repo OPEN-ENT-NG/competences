@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import fr.openent.competences.constants.Field;
 import io.vertx.core.json.JsonArray;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.utils.StringUtils;
@@ -173,7 +174,7 @@ public class FolderExporter {
 //
             String[] ids = nameByFileId.fieldNames().stream().toArray(String[]::new);
             storage.writeToFileSystem(ids, folderPath, nameByFileId, res -> {
-                if ("ok".equals(res.getString("status"))) {
+                if (Field.OK.equals(res.getString(Field.STATUS))) {
                     future.complete(res);
                 } else if (throwErrors) {
                     future.fail(res.getString("error"));

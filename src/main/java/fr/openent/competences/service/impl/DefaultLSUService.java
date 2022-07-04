@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Competences.RESULTS;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 

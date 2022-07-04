@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.AccessElementBilanPeriodiqueFilter;
 import fr.openent.competences.security.CreateElementBilanPeriodique;
 import fr.openent.competences.security.utils.AccessThematiqueBilanPeriodique;
@@ -222,8 +223,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                                                                                 public void handle(Message<JsonObject> message) {
                                                                                                     JsonObject body = message.body();
 
-                                                                                                    if ("ok".equals(body.getString("status"))) {
-                                                                                                        JsonArray users = body.getJsonArray("results");
+                                                                                                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                                                                                                        JsonArray users = body.getJsonArray(Field.RESULTS);
 
                                                                                                         // map qui à un idUser associe une map de idClass -> externalIdClass de toutes les classes/groupes de l'élève
                                                                                                         Map<String, Map<String, String>> usersMap = new HashMap<String, Map<String, String>>();
@@ -382,8 +383,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                             public void handle(Message<JsonObject> message) {
                                                 JsonObject body = message.body();
 
-                                                if ("ok".equals(body.getString("status"))) {
-                                                    JsonArray users = body.getJsonArray("results");
+                                                if (Field.OK.equals(body.getString(Field.STATUS))) {
+                                                    JsonArray users = body.getJsonArray(Field.RESULTS);
                                                     Map<String, String> usersMap = new HashMap<String, String>();
                                                     for(Object o : users){
                                                         JsonObject user = (JsonObject)o;

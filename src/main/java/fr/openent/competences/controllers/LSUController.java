@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.lsun.ElementProgramme;
 import fr.openent.competences.bean.lsun.*;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.LevelCycle;
 import fr.openent.competences.security.HasExportLSURight;
 import fr.openent.competences.service.*;
@@ -255,8 +256,8 @@ public class LSUController extends ControllerHelper {
                         @Override
                         public void handle(Message<JsonObject> message) {
                             JsonObject body = message.body();
-                            if ("ok".equals(body.getString("status"))) {
-                                Renders.renderJson(request, body.getJsonArray("results"));
+                            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                                Renders.renderJson(request, body.getJsonArray(Field.RESULTS));
                             } else {
                                 JsonObject error = new JsonObject()
                                         .put("error", body.getString(MESSAGE));
@@ -476,7 +477,7 @@ public class LSUController extends ControllerHelper {
         Handler<Either.Right<String, JsonObject>> getBilansPeriodiquesHandler = backResponse -> {
             JsonObject data = backResponse.right().getValue();
             lsuService.validateDisciplines(lsuService.getIdsEvaluatedDiscipline(), donnees, errorsExport);
-            if (data.getInteger("status") == 200 && errorsExport.isEmpty()) {
+            if (data.getInteger(Field.STATUS) == 200 && errorsExport.isEmpty()) {
                 log.info("FIN exportLSU : export ");
                 lsunBilans.setDonnees(donnees);
                 returnResponse(request, lsunBilans);
@@ -710,12 +711,12 @@ public class LSUController extends ControllerHelper {
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        if ("ok".equals(body.getString("status")) && !body.getJsonObject("result").isEmpty()) {
+                        if (Field.OK.equals(body.getString(Field.STATUS)) && !body.getJsonObject(Field.RESULT).isEmpty()) {
                             // log for time-out
                             answer.set(true);
                             lsuService.serviceResponseOK(answer, count, thread, method);
 
-                            JsonObject valueUAI = body.getJsonObject("result");
+                            JsonObject valueUAI = body.getJsonObject(Field.RESULT);
                             if (valueUAI != null) {
                                 Entete entete = objectFactory.createEntete("CGI","OpenENT", valueUAI.getString("uai"));
                                 lsunBilans.setEntete(entete);
@@ -756,7 +757,7 @@ public class LSUController extends ControllerHelper {
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        if ("ok".equals(body.getString("status")) && body.getJsonArray("results").size()!= 0 ) {
+                        if (Field.OK.equals(body.getString(Field.STATUS)) && body.getJsonArray(Field.RESULTS).size()!= 0 ) {
                             JsonArray value = body.getJsonArray("results");
                             Donnees.ResponsablesEtab responsablesEtab = objectFactory.createDonneesResponsablesEtab();
                             try {
@@ -1723,9 +1724,9 @@ public class LSUController extends ControllerHelper {
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        if ("ok".equals(body.getString("status"))) {
+                        if (Field.OK.equals(body.getString(Field.STATUS))) {
                             try {
-                                JsonArray listSubject = body.getJsonArray("results");
+                                JsonArray listSubject = body.getJsonArray(Field.RESULTS);
                                 disciplines.complete(listSubject);
                                 answer.set(true);
                                 lsuService.serviceResponseOK(answer, count.get(), thread, method);
@@ -1851,11 +1852,11 @@ public class LSUController extends ControllerHelper {
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        if ("ok".equals(body.getString("status")) && !body.getJsonArray("results").isEmpty()) {
+                        if (Field.OK.equals(body.getString(Field.STATUS)) && !body.getJsonArray(Field.RESULTS).isEmpty()) {
                             // log for time-out
                             answer.set(true);
                             lsuService.serviceResponseOK(answer, count, thread, method);
-                            JsonArray groupsClassResult = body.getJsonArray(RESULTS);
+                            JsonArray groupsClassResult = body.getJsonArray(Field.RESULTS);
 
                             if (groupsClassResult != null && !groupsClassResult.isEmpty()) {
                                 for(int i = 0; i < groupsClassResult.size() ; i++){
@@ -1925,8 +1926,8 @@ public class LSUController extends ControllerHelper {
                 public void handle(Message<JsonObject> message) {
 
                     JsonObject body = message.body();
-                    if(!"ok".equals(body.getString("status"))){
-                        String error = body.getString(MESSAGE);
+                    if(!Field.OK.equals(body.getString(Field.STATUS))){
+                        String error = body.getString(Field.MESSAGE);
                         if (error!=null && error.contains(TIME)) {
                             eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                     handlerToAsyncHandler(this));
