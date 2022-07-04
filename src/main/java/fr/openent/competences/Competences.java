@@ -42,8 +42,7 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class Competences extends BaseServer {
 
-    public static String COMPETENCES_SCHEMA = "notes";
-
+    public static String COMPETENCES_SCHEMA;
     public static String VIESCO_SCHEMA = "viesco";
 
     public static JsonObject LSUN_CONFIG;
