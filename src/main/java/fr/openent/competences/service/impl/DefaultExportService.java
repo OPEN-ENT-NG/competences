@@ -1605,8 +1605,8 @@ public class DefaultExportService implements ExportService {
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
 
-                    if (Field.OK.equals(body.getString(STATUS))) {
-                        final JsonArray results = body.getJsonArray(RESULTS);
+                    if (Field.OK.equals(body.getString(Field.STATUS))) {
+                        final JsonArray results = body.getJsonArray(Field.RESULTS);
                         String mat = "";
                         if (isNotNull(results) && !results.isEmpty()) {
                             mat = results.getJsonObject(0).getString(NAME);
@@ -1646,7 +1646,7 @@ public class DefaultExportService implements ExportService {
         }
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             final JsonObject body = message.body();
-            if (Field.OK.equals(body.getString(STATUS))) {
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
                 String libellePeriode = body.getString(Field.RESULT)
                         .replace("é", "e")
                         .replace("è", "e");
@@ -1671,7 +1671,7 @@ public class DefaultExportService implements ExportService {
                     handlerToAsyncHandler(message -> {
                         JsonObject body = message.body();
 
-                        if (Field.OK.equals(body.getString(STATUS))) {
+                        if (Field.OK.equals(body.getString(Field.STATUS))) {
                             JsonArray results = body.getJsonArray(Field.RESULTS);
                             if (isNull(results) || results.isEmpty()) {
                                 handler.handle(new Either.Left<>(" No student found "));
@@ -1690,7 +1690,7 @@ public class DefaultExportService implements ExportService {
                     .put(ID_PERIODE_KEY, finalIdPeriode);
             eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(
                     message -> {
-                        if (Field.OK.equals(message.body().getString(STATUS))) {
+                        if (Field.OK.equals(message.body().getString(Field.STATUS))) {
                             JsonArray eleves = message.body().getJsonArray(Field.RESULTS);
                             eleves = Utils.sortElevesByDisplayName(eleves);
                             final String[] idEleves = new String[eleves.size()];
@@ -1710,7 +1710,7 @@ public class DefaultExportService implements ExportService {
                                     handlerToAsyncHandler(event -> {
                                         JsonObject body = event.body();
 
-                                        if (Field.OK.equals(body.getString(STATUS))) {
+                                        if (Field.OK.equals(body.getString(Field.STATUS))) {
                                             JsonArray results = body.getJsonArray(Field.RESULTS);
                                             if (isNull(results) || results.isEmpty()) {
                                                 handler.handle(new Either.Left<>(" No student's info found"));
@@ -1899,7 +1899,7 @@ public class DefaultExportService implements ExportService {
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (Field.OK.equals(body.getString(STATUS))) {
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
                 JsonArray users = body.getJsonArray(Field.RESULTS);
                 boolean printSousMatiere = false;
 

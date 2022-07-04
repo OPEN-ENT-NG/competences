@@ -1,6 +1,7 @@
 package fr.openent.competences.model;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -177,12 +178,12 @@ public class Subject extends Model implements Cloneable {
                 handlerToAsyncHandler(message -> {
                     List<Subject> subjects = new ArrayList<>();
 
-                    if (!message.body().getString(STATUS).equals(OK)
-                            && !message.body().containsKey(RESULT)) {
+                    if (!message.body().getString(Field.STATUS).equals(Field.OK)
+                            && !message.body().containsKey(Field.RESULT)) {
                         handler.handle(new Either.Left<>("Problem when you get subject by the bus"));
                     }
                     JsonArray resultDirty = (JsonArray) message.body()
-                            .getValue(RESULTS);
+                            .getValue(Field.RESULTS);
 
                     if (resultDirty.isEmpty()) handler.handle(new Either.Left<>("This structure don't have subjects"));
                     try {

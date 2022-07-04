@@ -4,6 +4,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.ImgLevel;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
@@ -393,8 +394,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action,  DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                String classe = body.getJsonObject(RESULT).getJsonObject("c").getJsonObject("data").getString(NAME);
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                String classe = body.getJsonObject(Field.RESULT).getJsonObject("c").getJsonObject("data").getString(NAME);
 
                 handler.handle(new Either.Right<>(classe));
             }else {
@@ -852,13 +853,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         @Override
                         public void handle(Message<JsonObject> result) {
                             JsonObject body = result.body();
-                            if (!"ok".equals(body.getString(STATUS))) {
-                                String message =  body.getString(MESSAGE);
+                            if (!Field.OK.equals(body.getString(Field.STATUS))) {
+                                String message =  body.getString(Field.MESSAGE);
                                 promise.fail("[Competences:@getCycle] : " + idEleve + " " + message + count);
 //                                buildErrorReponseForEb (idEleve, message, answer, count, action,
 //                                        this, finalHandler, eleve, GET_LIBELLE_PERIOD_METHOD);
                             } else {
-                                JsonArray results = body.getJsonArray(RESULTS);
+                                JsonArray results = body.getJsonArray(Field.RESULTS);
                                 if(results.size() > 0) {
                                     final String libelle = results.getJsonObject(0)
                                             .getString(LIBELLE);
@@ -902,14 +903,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         public void handle(Message<JsonObject> message) {
                             JsonObject body = message.body();
 
-                            if (!"ok".equals(body.getString(STATUS))) {
-                                String mess =  body.getString(MESSAGE);
+                            if (!Field.OK.equals(body.getString(Field.STATUS))) {
+                                String mess =  body.getString(Field.MESSAGE);
                                 log.error("[ getLibellePeriode ] : " + idEleve + " " + mess + " " + count);
                                 buildErrorReponseForEb (idEleve, mess, answer, count, action,
                                         this, finalHandler, eleve, GET_LIBELLE_PERIOD_METHOD);
 
                             } else {
-                                String periodeName = body.getString(RESULT);
+                                String periodeName = body.getString(Field.RESULT);
                                 eleve.put(PERIODE, periodeName);
                                 serviceResponseOK(answer, finalHandler, count, idEleve, GET_LIBELLE_PERIOD_METHOD);
                             }
@@ -967,9 +968,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             @Override
                             public void handle(Message<JsonObject> message) {
                                 JsonObject body = message.body();
-                                JsonArray periodes = body.getJsonArray(RESULT);
-                                String mess = body.getString(MESSAGE);
-                                if (!"ok".equals(body.getString(STATUS))) {
+                                JsonArray periodes = body.getJsonArray(Field.RESULT);
+                                String mess = body.getString(Field.MESSAGE);
+                                if (!Field.OK.equals(body.getString(Field.STATUS))) {
                                     log.error("[" + GET_ANNEE_SCOLAIRE_METHOD + "] : " + idEleve + " " + mess + " "
                                             + count);
 
@@ -1017,9 +1018,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
-                    JsonArray periodes = body.getJsonArray(RESULT);
-                    if (!"ok".equals(body.getString(STATUS))) {
-                        promise.fail(body.getString(STATUS));
+                    JsonArray periodes = body.getJsonArray(Field.RESULT);
+                    if (!Field.OK.equals(body.getString(Field.STATUS))) {
+                        promise.fail(body.getString(Field.STATUS));
                     }
                     else {
                         Long start = null;
@@ -1426,8 +1427,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         @Override
                         public void handle(Message<JsonObject> message) {
                             JsonObject body = message.body();
-                            if (!"ok".equals(body.getString(STATUS))) {
-                                String mess = body.getString(MESSAGE);
+                            if (!Field.OK.equals(body.getString(Field.STATUS))) {
+                                String mess = body.getString(Field.MESSAGE);
                                 log.error("["+ GET_STRUCTURE_METHOD + "] : " + idEleve + " " + mess + " " + count);
 
                                 if (mess.contains(TIME) && !answer.get()) {
@@ -1445,7 +1446,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     serviceResponseOK(answer, finalHandler, count, idEleve, GET_STRUCTURE_METHOD);
                                 }
                             } else {
-                                JsonObject structure = body.getJsonObject(RESULT);
+                                JsonObject structure = body.getJsonObject(Field.RESULT);
                                 JsonArray structureLibelle = new JsonArray();
                                 if(structure != null){
                                     structure = structure.getJsonObject("s");
@@ -1575,8 +1576,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             @Override
                             public void handle(Message<JsonObject> message) {
                                 JsonObject body = message.body();
-                                if (!"ok".equals(body.getString(STATUS))) {
-                                    String mess = body.getString(MESSAGE);
+                                if (!Field.OK.equals(body.getString(Field.STATUS))) {
+                                    String mess = body.getString(Field.MESSAGE);
                                     log.error("[" + GET_HEAD_TEACHERS_METHOD + "] : " + idEleve + " "
                                             + mess + " " + count);
 
@@ -1584,7 +1585,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                             this, finalHandler, eleveObject,
                                             GET_HEAD_TEACHERS_METHOD);
                                 } else {
-                                    JsonArray res = body.getJsonArray(RESULTS);
+                                    JsonArray res = body.getJsonArray(Field.RESULTS);
 
                                     if (res != null) {
                                         JsonArray headTeachers = new JsonArray();
@@ -1671,12 +1672,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        if (!"ok".equals(body.getString(STATUS))) {
-                            String mess = body.getString(MESSAGE);
+                        if (!Field.OK.equals(body.getString(Field.STATUS))) {
+                            String mess = body.getString(Field.MESSAGE);
                             promise.fail("[" + GET_RESPONSABLE_METHOD + "] : " + idEleve + " " + mess + " " + count);
                         } else {
                             JsonObject result = new JsonObject();
-                            JsonArray responsables = body.getJsonArray(RESULTS);
+                            JsonArray responsables = body.getJsonArray(Field.RESULTS);
                             result.put("responsables", responsables);
                             promise.complete(result);
                         }

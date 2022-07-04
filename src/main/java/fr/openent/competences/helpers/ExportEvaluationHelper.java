@@ -1,6 +1,7 @@
 package fr.openent.competences.helpers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.Future;
@@ -49,8 +50,8 @@ public class ExportEvaluationHelper {
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler( message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                eleves.addAll(body.getJsonArray(RESULTS));
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                eleves.addAll(body.getJsonArray(Field.RESULTS));
                 future.complete();
             }
             else{
@@ -72,8 +73,8 @@ public class ExportEvaluationHelper {
         eb.send(Competences.VIESCO_BUS_ADDRESS, action,  DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
-            if (OK.equals(body.getString(STATUS))) {
-                devoirMap.put("classe", body.getJsonObject(RESULT).getJsonObject("c").getJsonObject("data")
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                devoirMap.put("classe", body.getJsonObject(Field.RESULT).getJsonObject("c").getJsonObject("data")
                         .getString(NAME));
                 future.complete();
             }
@@ -96,8 +97,8 @@ public class ExportEvaluationHelper {
         eb.send(Competences.VIESCO_BUS_ADDRESS, matiereAction, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
-            if (OK.equals(body.getString(STATUS))) {
-                devoirMap.put("matiere", body.getJsonObject(RESULT).getJsonObject("n").getJsonObject("data")
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                devoirMap.put("matiere", body.getJsonObject(Field.RESULT).getJsonObject("n").getJsonObject("data")
                         .getString("label"));
                 future.complete();
             } else {

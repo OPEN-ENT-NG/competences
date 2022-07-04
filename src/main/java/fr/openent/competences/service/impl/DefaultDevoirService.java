@@ -895,7 +895,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .put("idMatiere", idMatiere);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (Field.OK.equals(body.getString(STATUS))) {
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
                 JsonArray result = body.getJsonArray(Field.RESULTS);
                 handler.handle(new Either.Right<>(result));
             } else {

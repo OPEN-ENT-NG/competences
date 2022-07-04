@@ -365,10 +365,10 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                 .put("onlyId", false);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (Field.OK.equals(body.getString(STATUS))) {
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
                 handler.handle(new Either.Right<>(body.getJsonArray(Field.RESULTS)));
             } else {
-                handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
             }
         }));
     }
