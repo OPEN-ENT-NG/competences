@@ -28,6 +28,7 @@ public class Field {
     public static final String APPRECIATION_MATIERE_PERIODE_TABLE = "appreciation_matiere_periode";
     public static final String APPRECIATIONS_TABLE = "appreciations";
     public static final String AVIS_CONSEIL_DE_CLASSE_TABLE = "avis_conseil_de_classe";
+    public static final String AVIS_CONSEIL_BILAN_PERIODIQUE_TABLE = "avis_conseil_bilan_periodique";
     public static final String AVIS_CONSEIL_ORIENTATION_TABLE ="avis_conseil_orientation";
     public static final String BFC_SYNTHESE_TABLE = "bfc_synthese";
     public static final String BFC_TABLE = "bilan_fin_cycle";
