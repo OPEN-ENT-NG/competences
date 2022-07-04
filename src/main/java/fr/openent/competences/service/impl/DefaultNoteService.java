@@ -2242,7 +2242,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // Récupération de l'appréciation de la classe
         Future<JsonArray> appreciationClassFuture = Future.future();
         if (idPeriode != null) {
-            new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE)
+            new DefaultAppreciationService(COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE)
                     .getAppreciationClasse(new String[]{idClasse}, idPeriode.intValue(), new String[]{idMatiere},
                             appreciationsEither -> formate(appreciationClassFuture, appreciationsEither));
         } else {

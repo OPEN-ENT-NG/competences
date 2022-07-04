@@ -8,13 +8,15 @@ import io.vertx.core.json.JsonArray;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
+
 
 public class DefaultArchiveBFCService implements ArchiveService {
 
     @Override
     public void getArchives(String idStructure, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
-        String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + "." + Competences.BFC_ARCHIVE_TABLE +
+        String query = "SELECT * FROM "+ COMPETENCES_SCHEMA + "." + Competences.BFC_ARCHIVE_TABLE +
                 " WHERE id_etablissement = ? ";
 
         params.add(idStructure);

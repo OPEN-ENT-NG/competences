@@ -90,7 +90,7 @@ public class DefaultUtilsService implements UtilsService {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT DISTINCT id_remplacant ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
+                .append("FROM " + COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
                 .append("WHERE id_titulaire = ? ")
                 .append("AND id_etablissement = ? ")
                 .append("AND date_debut <= current_date ")
@@ -277,7 +277,7 @@ public class DefaultUtilsService implements UtilsService {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT type.* ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".type ")
+                .append("FROM " + COMPETENCES_SCHEMA + ".type ")
                 .append("WHERE type.id_etablissement = ? ");
         values.add(idEtablissement);
 
@@ -622,8 +622,8 @@ public class DefaultUtilsService implements UtilsService {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT id_groupe, id_cycle, libelle, value_cycle ")
-                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_groupe_cycle, ")
-                .append(Competences.COMPETENCES_SCHEMA).append(".cycle ")
+                .append("FROM ").append(COMPETENCES_SCHEMA).append(".rel_groupe_cycle, ")
+                .append(COMPETENCES_SCHEMA).append(".cycle ")
                 .append("WHERE id_groupe IN ").append(Sql.listPrepared(idClasse.toArray()))
                 .append(" AND id_cycle = cycle.id");
 
@@ -645,8 +645,8 @@ public class DefaultUtilsService implements UtilsService {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT id_cycle ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle,  ")
-                .append(Competences.COMPETENCES_SCHEMA + ".cycle ")
+                .append("FROM " + COMPETENCES_SCHEMA + ".rel_groupe_cycle,  ")
+                .append(COMPETENCES_SCHEMA + ".cycle ")
                 .append("WHERE id_groupe = ? ")
                 .append(" AND id_cycle = cycle.id");
 
@@ -729,7 +729,7 @@ public class DefaultUtilsService implements UtilsService {
                         if (listDevoir.size() > 0) {
                             StringBuilder queryDeleteDevoir = new StringBuilder();
                             JsonArray idDevoirs = new fr.wseduc.webutils.collections.JsonArray();
-                            queryDeleteDevoir.append("DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs")
+                            queryDeleteDevoir.append("DELETE FROM " + COMPETENCES_SCHEMA + ".devoirs")
                                     .append(" WHERE id IN " + Sql.listPrepared(listDevoir.getList().toArray()));
                             for (int i = 0; i < listDevoir.size(); i++) {
                                 idDevoirs.add(((JsonObject) listDevoir.getJsonObject(i)).getLong("id"));
@@ -745,7 +745,7 @@ public class DefaultUtilsService implements UtilsService {
                         StringBuilder queryLink = new StringBuilder();
                         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
                         if(id_cycle.intValue() != 0) {
-                            queryLink.append("INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
+                            queryLink.append("INSERT INTO " + COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
                                     .append(" (id_cycle, id_groupe, type_groupe) VALUES ");
                             for (int i = 0; i < idClasses.length; i++) {
                                 queryLink.append(" (?, ?, ?) ");
@@ -788,10 +788,10 @@ public class DefaultUtilsService implements UtilsService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         query.append(" SELECT devoirs.id, devoirs.name, id_groupe, COUNT(competences_devoirs.id) as nbcompetences ")
-                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs ")
+                .append(" FROM " + COMPETENCES_SCHEMA + ".devoirs ")
                 .append(" LEFT JOIN notes.rel_devoirs_groupes ")
                 .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id ")
-                .append(" LEFT OUTER JOIN " + Competences.COMPETENCES_SCHEMA + ".competences_devoirs ")
+                .append(" LEFT OUTER JOIN " + COMPETENCES_SCHEMA + ".competences_devoirs ")
                 .append(" ON devoirs.id = competences_devoirs.id_devoir ")
                 .append(" WHERE rel_devoirs_groupes.id_groupe IN " + Sql.listPrepared(idClasses))
                 .append(" GROUP BY devoirs.id, devoirs.name, id_groupe ")

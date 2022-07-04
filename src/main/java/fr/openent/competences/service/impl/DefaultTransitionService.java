@@ -43,7 +43,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     protected static final Logger log = LoggerFactory.getLogger(DefaultTransitionService.class);
     private final Neo4j neo4j = Neo4j.getInstance();
     public DefaultTransitionService() {
-        super(Competences.COMPETENCES_SCHEMA, Competences.TRANSITION_TABLE);
+        super(COMPETENCES_SCHEMA, Competences.TRANSITION_TABLE);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     private void checkIfEtabActif(String idStructureATraiter, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT EXISTS(SELECT id_etablissement FROM "+ Competences.COMPETENCES_SCHEMA + ".etablissements_actifs " +
+        String query = "SELECT EXISTS(SELECT id_etablissement FROM "+ COMPETENCES_SCHEMA + ".etablissements_actifs " +
                 "WHERE actif = TRUE AND id_etablissement = ? ) as etab_actif";
 
         values.add(idStructureATraiter);
@@ -91,11 +91,11 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     private void conditionsToDoTransition(String idStructureATraiter, Handler<Either<String, JsonObject>> handler) {
         JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
 
-        String queryDevoir = "SELECT id FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs WHERE id_etablissement= ? AND owner !='id-user-transition-annee' ";
+        String queryDevoir = "SELECT id FROM " + COMPETENCES_SCHEMA + ".devoirs WHERE id_etablissement= ? AND owner !='id-user-transition-annee' ";
 
         String queryPeriode = "SELECT id FROM " + VIESCO_SCHEMA + ".periode WHERE id_etablissement = ? ";
 
-        String queryTransition = "SELECT id_etablissement FROM " + Competences.COMPETENCES_SCHEMA + ".transition WHERE id_etablissement = ? ";
+        String queryTransition = "SELECT id_etablissement FROM " + COMPETENCES_SCHEMA + ".transition WHERE id_etablissement = ? ";
 
         String query = " SELECT EXISTS(" + queryDevoir + ") as has_devoir, "+
                 "EXISTS(" + queryPeriode + ") as has_periode, " +
@@ -215,7 +215,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                                Handler<Either<String, JsonArray>> finalHandler) {
         // On récupère les ids des prochains devoirs pour créer la liste des identifiants de devoir nécessaires à la création de devoir
         int nbrDevoirsToCreate = pListIdsGroupesATraiter.size();
-        String queryNextVal = "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".devoirs_id_seq') AS id FROM generate_series(1," + nbrDevoirsToCreate + ")";
+        String queryNextVal = "SELECT nextval('" + COMPETENCES_SCHEMA + ".devoirs_id_seq') AS id FROM generate_series(1," + nbrDevoirsToCreate + ")";
         sql.raw(queryNextVal, SqlResult.validResultHandler(result -> {
             if (result.isRight()) {
                 // On ajoute l'id du cours aux cours à créer.
@@ -276,7 +276,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         // Transition pour l'établissement effectué
         JsonArray valuesTransition = new fr.wseduc.webutils.collections.JsonArray();
         valuesTransition.add(idStructureATraiter);
-        String queryInsertTransition ="INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".transition(id_etablissement) VALUES (?)";
+        String queryInsertTransition ="INSERT INTO " + COMPETENCES_SCHEMA + ".transition(id_etablissement) VALUES (?)";
         statements.add(new JsonObject().put("statement", queryInsertTransition).put("values", valuesTransition).put("action", "prepared"));
 
         Sql.getInstance().transaction(statements,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
@@ -291,17 +291,17 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         JsonArray values = new JsonArray();
 
         // Suppresion des relations groupes d'enseignement - cycle
-        String queryRelGroupeType= "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle WHERE type_groupe > 0";
+        String queryRelGroupeType= "DELETE FROM " + COMPETENCES_SCHEMA + ".rel_groupe_cycle WHERE type_groupe > 0";
         statements.add(new JsonObject().put("statement", queryRelGroupeType).put("values", values).put("action", "prepared"));
 
         // Suppresion des users
         values = new fr.wseduc.webutils.collections.JsonArray();
         String queryUsers = "" +
-                "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".users " +
+                "DELETE FROM " + COMPETENCES_SCHEMA + ".users " +
                 "WHERE" +
                 " NOT EXISTS ( " +
                 "    SELECT 1 " +
-                "    FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
+                "    FROM " + COMPETENCES_SCHEMA + ".devoirs " +
                 "    WHERE " +
                 "     devoirs.owner = users.id " +
                 " )";
@@ -325,7 +325,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         String classname = "Bilan Année classe : ";
         values = new fr.wseduc.webutils.collections.JsonArray();
         values.add(_id_user_transition_annee).add(username).add(username);
-        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".users(id, username) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET username = ?";
+        String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".users(id, username) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET username = ?";
         statements.add(new JsonObject().put("statement", query).put("values", values).put("action", "prepared"));
 
         if(vMapGroupesATraiter.size() > 0) {
@@ -335,9 +335,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             String queryInsertDevoir = "WITH temp_periode AS ( " +
                     "SELECT type.id as id_type, MAX(periode.id_type) as max_periode_id_type, MAX(periode.date_fin_saisie) as max_periode_date_fin_saisie," +
                     "periode.id_classe as periode_id_classe " +
-                    "FROM " + Competences.COMPETENCES_SCHEMA + ".type , " + VIESCO_SCHEMA + ".periode WHERE type.default_type = ? AND type.id_etablissement = ? AND periode.id_etablissement = ? " +
+                    "FROM " + COMPETENCES_SCHEMA + ".type , " + VIESCO_SCHEMA + ".periode WHERE type.default_type = ? AND type.id_etablissement = ? AND periode.id_etablissement = ? " +
                     "GROUP BY periode.id_etablissement,type.id, periode.id_classe ) " +
-                    "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".devoirs(id,owner, name, id_type, id_etablissement, diviseur, ramener_sur, date_publication," +
+                    "INSERT INTO " + COMPETENCES_SCHEMA + ".devoirs(id,owner, name, id_type, id_etablissement, diviseur, ramener_sur, date_publication," +
                     " is_evaluated, id_etat, percent, apprec_visible, eval_lib_historise,id_periode, date) ";
 
             for (Map.Entry<String, String> entry : vMapGroupesATraiter.entrySet()) {
@@ -377,16 +377,16 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "ELSE MAX(competence_niveau_final_annuel.niveau_final) " +
 
                         "END AS max_comp "+
-                        "FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
-                        "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = competences_notes.id_devoir " +
+                        "FROM " + COMPETENCES_SCHEMA + ".competences_notes " +
+                        "INNER JOIN " + COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = competences_notes.id_devoir " +
 
-                        "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".competence_niveau_final " +
+                        "LEFT JOIN " + COMPETENCES_SCHEMA + ".competence_niveau_final " +
                         "ON devoirs.id_periode = competence_niveau_final.id_periode " +
                         "AND competences_notes.id_competence = competence_niveau_final.id_competence " +
                         "AND competences_notes.id_eleve = competence_niveau_final.id_eleve " +
                         "AND devoirs.id_matiere = competence_niveau_final.id_matiere " +
 
-                        "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".competence_niveau_final_annuel " +
+                        "LEFT JOIN " + COMPETENCES_SCHEMA + ".competence_niveau_final_annuel " +
                         "ON competences_notes.id_competence = competence_niveau_final_annuel.id_competence " +
                         "AND competences_notes.id_eleve = competence_niveau_final_annuel.id_eleve " +
                         "AND devoirs.id_matiere = competence_niveau_final_annuel.id_matiere " +
@@ -425,7 +425,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 // Ajout du max des compétences ou du niveau final pour chaque élève
                 //Cette requête fait peur
                 String queryInsertMaxCompetenceNoteG = "" +
-                        "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".competences_notes(id_devoir, id_competence, evaluation, owner, id_eleve) " +
+                        "INSERT INTO " + COMPETENCES_SCHEMA + ".competences_notes(id_devoir, id_competence, evaluation, owner, id_eleve) " +
                         "(" + queryConversionAverage + ")";
 
                 statements.add(new JsonObject()
@@ -437,7 +437,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 String querySuppressionDispenseDomaine = "" +
 
                         "  DELETE " +
-                        "  FROM " + Competences.COMPETENCES_SCHEMA + ".dispense_domaine_eleve" +
+                        "  FROM " + COMPETENCES_SCHEMA + ".dispense_domaine_eleve" +
                         "  WHERE " +
                         "   id_eleve IN " + Sql.listPrepared(vListEleves.toArray());
                 JsonArray valuesDeleteDispenseEleve = new fr.wseduc.webutils.collections.JsonArray();
@@ -454,11 +454,11 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         // Création des compétences par devoir (historisé)
         values = new fr.wseduc.webutils.collections.JsonArray();
         values.add(idStructureATraiter);
-        String queryInsertCompetenceDevoir = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".competences_devoirs (id_devoir, id_competence, index) " +
+        String queryInsertCompetenceDevoir = "INSERT INTO " + COMPETENCES_SCHEMA + ".competences_devoirs (id_devoir, id_competence, index) " +
                 "( " +
                 "    SELECT competences_notes.id_devoir,competences_notes.id_competence,0" +
-                "    FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
-                "           INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON competences_notes.id_devoir = devoirs.id" +
+                "    FROM " + COMPETENCES_SCHEMA + ".competences_notes " +
+                "           INNER JOIN " + COMPETENCES_SCHEMA + ".devoirs ON competences_notes.id_devoir = devoirs.id" +
                 "    WHERE " +
                 "           devoirs.eval_lib_historise = true" +
                 "           AND id_etablissement = ? " +
@@ -472,7 +472,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         // Suppression devoir non historisé
         String queryDeleteDevoirNonHistorise = "" +
-                "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs  " +
+                "DELETE FROM " + COMPETENCES_SCHEMA + ".devoirs  " +
                 "WHERE " +
                 " eval_lib_historise = false " +
                 " AND id_etablissement = ? ";
@@ -490,19 +490,19 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
 
         String queryTruncate = "TRUNCATE TABLE " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATIONS_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CLASSE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CPE_BILAN_PERIODIQUE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_DE_CLASSE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_ORIENTATION_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.ELEMENT_PROGRAMME_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.ELEVES_IGNORES_LSU_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.ELT_BILAN_PERIODIQUE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.MOYENNE_FINALE_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.APPRECIATIONS_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CLASSE_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CPE_BILAN_PERIODIQUE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_DE_CLASSE_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_ORIENTATION_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.ELEMENT_PROGRAMME_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.ELEVES_IGNORES_LSU_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.ELT_BILAN_PERIODIQUE_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.MOYENNE_FINALE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.POSITIONNEMENT + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE + ", " +
                 Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE + ", " +

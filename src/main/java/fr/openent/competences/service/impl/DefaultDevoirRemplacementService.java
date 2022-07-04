@@ -32,6 +32,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.util.List;
 
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
@@ -50,9 +51,9 @@ public class DefaultDevoirRemplacementService extends SqlCrudService implements 
         Object[] oListIdEtabArray = poListIdEtab.toArray();
 
         query.append("SELECT rel_professeurs_remplacants.*, users_titulaires.username AS libelle_titulaire, users_remplacants.username AS libelle_remplacant ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".rel_professeurs_remplacants ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".users users_titulaires ON users_titulaires.id = rel_professeurs_remplacants.id_titulaire  ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".users users_remplacants ON users_remplacants.id = rel_professeurs_remplacants.id_remplacant  ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".rel_professeurs_remplacants ")
+                .append("INNER JOIN " + COMPETENCES_SCHEMA + ".users users_titulaires ON users_titulaires.id = rel_professeurs_remplacants.id_titulaire  ")
+                .append("INNER JOIN " + COMPETENCES_SCHEMA + ".users users_remplacants ON users_remplacants.id = rel_professeurs_remplacants.id_remplacant  ")
                 .append("WHERE id_etablissement IN " + Sql.listPrepared(oListIdEtabArray) + " ")
         /*.append("AND current_date <= date_fin")*/; // TODO a décomenter
 
@@ -68,16 +69,16 @@ public class DefaultDevoirRemplacementService extends SqlCrudService implements 
         SqlStatementsBuilder s = new SqlStatementsBuilder();
 
         // Ajout du titulaire dans la table users s'il n'existe pas
-        String userQueryTitulaire = "SELECT "+ Competences.COMPETENCES_SCHEMA+ ".merge_users(?,?)";
+        String userQueryTitulaire = "SELECT "+ COMPETENCES_SCHEMA+ ".merge_users(?,?)";
         s.prepared(userQueryTitulaire, new fr.wseduc.webutils.collections.JsonArray().add(poRemplacement.getString("id_titulaire")).add(poRemplacement.getString("libelle_titulaire")));
 
         // Ajout du remplaçant dans la table users s'il n'existe pas
-        String userQueryRemplacant = "SELECT "+ Competences.COMPETENCES_SCHEMA+ ".merge_users(?,?)";
+        String userQueryRemplacant = "SELECT "+ COMPETENCES_SCHEMA+ ".merge_users(?,?)";
         s.prepared(userQueryRemplacant, new fr.wseduc.webutils.collections.JsonArray().add(poRemplacement.getString("id_remplacant")).add(poRemplacement.getString("libelle_remplacant")));
 
 
         // Ajout du remplacement
-        String remplacementQuery = "INSERT INTO "+ Competences.COMPETENCES_SCHEMA+ ".rel_professeurs_remplacants (id_titulaire, id_remplacant, date_debut, date_fin, id_etablissement) VALUES (?, ?, to_timestamp(?,'YYYY-MM-DD'), to_timestamp(?,'YYYY-MM-DD'), ?);";
+        String remplacementQuery = "INSERT INTO "+ COMPETENCES_SCHEMA+ ".rel_professeurs_remplacants (id_titulaire, id_remplacant, date_debut, date_fin, id_etablissement) VALUES (?, ?, to_timestamp(?,'YYYY-MM-DD'), to_timestamp(?,'YYYY-MM-DD'), ?);";
         s.prepared(remplacementQuery, new fr.wseduc.webutils.collections.JsonArray().add(poRemplacement.getString("id_titulaire"))
                 .add(poRemplacement.getString("id_remplacant"))
                 .add(poRemplacement.getString("date_debut"))
@@ -95,7 +96,7 @@ public class DefaultDevoirRemplacementService extends SqlCrudService implements 
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_professeurs_remplacants ")
+        query.append("DELETE FROM "+ COMPETENCES_SCHEMA +".rel_professeurs_remplacants ")
                 .append("WHERE id_titulaire = ? ")
                 .append("AND id_remplacant = ? ")
                 .append("AND date_debut = to_date(?,'YYYY-MM-DD') ")

@@ -40,12 +40,12 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     private static final String LIBELLE_COURT = "libelle_court";
 
     public DefaultMatiereService(EventBus eb) {
-        super(Competences.COMPETENCES_SCHEMA, Competences.MATIERE_TABLE);
+        super(COMPETENCES_SCHEMA, Competences.MATIERE_TABLE);
         this.eb = eb;
     }
 
     public DefaultMatiereService() {
-        super(Competences.COMPETENCES_SCHEMA, Competences.MATIERE_TABLE);
+        super(COMPETENCES_SCHEMA, Competences.MATIERE_TABLE);
         this.eb = null;
     }
 
