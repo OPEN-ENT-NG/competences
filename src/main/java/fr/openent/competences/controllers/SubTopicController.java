@@ -26,7 +26,7 @@ public class SubTopicController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void updateSubtopicsServices(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, body ->{
-            subTopicService.upsertCoefficent(body,arrayResponseHandler(request));
+            subTopicService.upsertCoefficient(body,arrayResponseHandler(request));
         });
     }
 

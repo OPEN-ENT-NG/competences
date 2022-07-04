@@ -20,15 +20,13 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
     }
 
     @Override
-    public void upsertCoefficent(JsonObject data, Handler<Either<String, JsonArray>> handler) {
+    public void upsertCoefficient(JsonObject data, Handler<Either<String, JsonArray>> handler) {
          List<String> groups = data.getJsonArray("groups")
                 .stream().map(group -> ((JsonObject)group).getString("id")).collect(Collectors.toList());
         JsonArray statements = new JsonArray();
         for(String idGroup: groups){
             statements.add(setStatementCoefficient(data,idGroup));
         }
-
-
         Sql.getInstance().transaction(statements,validResultHandler(handler));
     }
 
@@ -57,6 +55,5 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
                 " From " + this.resourceTable + " WHERE id_structure = ? ";
         JsonArray params = new JsonArray().add(idStructure);
         Sql.getInstance().prepared(query,params,validResultHandler(handler));
-
     }
 }

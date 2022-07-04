@@ -214,16 +214,16 @@ export const paramServices = {
                 if (matiere && matiere.sous_matieres && matiere.sous_matieres.length > 0)
                     matiere.sous_matieres.forEach(sm => {
                         paramServices.that.subTopics.all.map(sb => {
-                            let sbt =  paramServices.that.subTopicsServices.all.find(subTopicsService =>{
+                            let sbt =  paramServices.that.subTopicsServices.all.find(subTopicsService => {
                                 return subTopicsService.id_teacher === service.id_enseignant
                                     && subTopicsService.id_topic === service.id_matiere
                                     && subTopicsService.id_group === service.id_groupe
                                     && subTopicsService.id_subtopic === sm.id_type_sousmatiere
                             });
                             if (sm.id_type_sousmatiere == sb.id) {
-                                if(sbt !== undefined){
-                                    sbt.libelle =   sb.libelle ;
-                                 }else{
+                                if(sbt !== undefined) {
+                                    sbt.libelle = sb.libelle ;
+                                 } else {
                                     sbt = new SubTopicsService()
                                     sbt.libelle =   sb.libelle ;
                                     sbt.id_teacher = service.id_enseignant ;
