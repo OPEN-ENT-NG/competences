@@ -1369,7 +1369,7 @@ public class DefaultUtilsService implements UtilsService {
         JsonArray params = new JsonArray().add(idStructure);
 
         String query = "SELECT presences_sync " +
-                " FROM " + Competences.COMPETENCES_SCHEMA + ".structure_options " +
+                " FROM " + COMPETENCES_SCHEMA + ".structure_options " +
                 " WHERE id_structure = ? ";
         Sql.getInstance().prepared(query, params, Competences.DELIVERY_OPTIONS, validUniqueResultHandler(eitherHandler));
 
@@ -1377,7 +1377,7 @@ public class DefaultUtilsService implements UtilsService {
 
     public void activeDeactiveSyncStatePresences(String idStructure, Boolean state, Handler<Either<String, JsonObject>> eitherHandler){
         StringBuilder query = new StringBuilder().append("INSERT INTO ")
-                .append(Competences.COMPETENCES_SCHEMA + ".structure_options (id_structure, presences_sync) ")
+                .append(COMPETENCES_SCHEMA + ".structure_options (id_structure, presences_sync) ")
                 .append(" VALUES ")
                 .append(" ( ?, ? )")
                 .append(" ON CONFLICT (id_structure) DO UPDATE SET presences_sync = ?");

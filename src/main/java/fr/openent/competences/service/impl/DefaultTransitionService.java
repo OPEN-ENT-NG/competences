@@ -503,21 +503,21 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 COMPETENCES_SCHEMA + "." + Competences.ELEVES_IGNORES_LSU_TABLE + ", " +
                 COMPETENCES_SCHEMA + "." + Competences.ELT_BILAN_PERIODIQUE_TABLE + ", " +
                 COMPETENCES_SCHEMA + "." + Competences.MOYENNE_FINALE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.POSITIONNEMENT + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.CLASS_APPRECIATION_DIGITAL_SKILLS + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.STUDENT_APPRECIATION_DIGITAL_SKILLS + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.STUDENT_DIGITAL_SKILLS_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.POSITIONNEMENT + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.CLASS_APPRECIATION_DIGITAL_SKILLS + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.STUDENT_APPRECIATION_DIGITAL_SKILLS + ", " +
+                COMPETENCES_SCHEMA + "." + Competences.STUDENT_DIGITAL_SKILLS_TABLE + ", " +
                 VIESCO_SCHEMA + "." + Competences.VSCO_ABSENCES_ET_RETARDS + ", " +
                 VIESCO_SCHEMA + "." + Competences.VSCO_PERIODE + ", " +
                 VIESCO_SCHEMA + "." + Competences.VSCO_MULTI_TEACHING + ", " +
                 VIESCO_SCHEMA + "." + Competences.VSCO_SERVICES_TABLE;
 
         statements.prepared(queryTruncate, params);
-        String queryTruncateCascade = "TRUNCATE TABLE " + Competences.COMPETENCES_SCHEMA + "."
+        String queryTruncateCascade = "TRUNCATE TABLE " + COMPETENCES_SCHEMA + "."
                 + Competences.APPRECIATION_MATIERE_PERIODE_TABLE + " CASCADE ";
         statements.prepared(queryTruncateCascade, params);
 
@@ -579,12 +579,12 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put("action", "prepared"));
 
         statements.add(new JsonObject()
-                .put("statement", "ALTER SCHEMA " + Competences.COMPETENCES_SCHEMA + " RENAME TO " + Competences.COMPETENCES_SCHEMA + "_" + currentYear)
+                .put("statement", "ALTER SCHEMA " + COMPETENCES_SCHEMA + " RENAME TO " + COMPETENCES_SCHEMA + "_" + currentYear)
                 .put("values", new fr.wseduc.webutils.collections.JsonArray())
                 .put("action", "prepared"));
 
         JsonArray valuesForCloneNotes = new fr.wseduc.webutils.collections.JsonArray()
-                .add(Competences.COMPETENCES_SCHEMA + "_" + currentYear).add(Competences.COMPETENCES_SCHEMA);
+                .add(COMPETENCES_SCHEMA + "_" + currentYear).add(COMPETENCES_SCHEMA);
 
         statements.add(new JsonObject()
                 .put("statement", queryForClone.toString())
@@ -592,7 +592,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put("action", "prepared"));
 
         statements.add(new JsonObject()
-                .put("statement", "SELECT " + Competences.COMPETENCES_SCHEMA + ".function_renameConstraintFromViescoAfterClonning() ")
+                .put("statement", "SELECT " + COMPETENCES_SCHEMA + ".function_renameConstraintFromViescoAfterClonning() ")
                 .put("values", new fr.wseduc.webutils.collections.JsonArray())
                 .put("action", "prepared"));
 
@@ -691,7 +691,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     }
 
     public void getOldIdClassTransition(final Handler<Either<String,JsonArray>> handler) {
-        String query = "SELECT external_id FROM " + Competences.COMPETENCES_SCHEMA + ".match_class_id_transition";
+        String query = "SELECT external_id FROM " + COMPETENCES_SCHEMA + ".match_class_id_transition";
 
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         sql.prepared(query, values, validResultHandler(handler));
@@ -772,7 +772,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             String externalId = o.getString("externalId");
 
             if(id != null && externalId != null) {
-                query.append("UPDATE " + Competences.COMPETENCES_SCHEMA + ".match_class_id_transition " +
+                query.append("UPDATE " + COMPETENCES_SCHEMA + ".match_class_id_transition " +
                         "SET new_class_id = ? WHERE external_id = ?;");
                 values.add(id).add(externalId);
             }
@@ -784,9 +784,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     }
 
     private void updateRelationGroupeCycle(JsonArray statements) {
-        String query = "UPDATE " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle r " +
+        String query = "UPDATE " + COMPETENCES_SCHEMA + ".rel_groupe_cycle r " +
                 "SET id_groupe = m.new_class_id " +
-                "FROM " + Competences.COMPETENCES_SCHEMA + ".match_class_id_transition m " +
+                "FROM " + COMPETENCES_SCHEMA + ".match_class_id_transition m " +
                 "WHERE m.old_class_id = r.id_groupe AND new_class_id IS NOT NULL;";
 
         statements.add(new JsonObject()
@@ -796,8 +796,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     }
 
     private void deleteRelationGroupCycleWhitoutNewIdClass(JsonArray statements){
-        String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_groupe_cycle r WHERE r.id_groupe = " +
-                "(SELECT old_class_id FROM "+ Competences.COMPETENCES_SCHEMA +".match_class_id_transition m " +
+        String query = "DELETE FROM "+ COMPETENCES_SCHEMA +".rel_groupe_cycle r WHERE r.id_groupe = " +
+                "(SELECT old_class_id FROM "+ COMPETENCES_SCHEMA +".match_class_id_transition m " +
                 "WHERE m.old_class_id = r.id_groupe AND m.new_class_id IS NULL);";
         statements.add(new JsonObject()
                 .put("statement", query)
