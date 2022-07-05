@@ -3169,7 +3169,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 "ON CONFLICT (id_classe, id_etablissement, id_cycle, id_eleve, id_annee) " +
                 "DO UPDATE SET id_eleve = ?, external_id_classe = ?, id_classe = ?, id_etablissement = ?, id_cycle = ?, " +
                 "id_annee = ?, id_file = ?, file_name = ? , modified = Now() " +
-                "RETURNING (SELECT id_file from " + Field.NOTES_TABLE + ".archive_bfc " +
+                "RETURNING (SELECT id_file from notes.archive_bfc " +
                 "WHERE file_name = ? AND external_id_classe = ? AND id_classe = ? AND id_etablissement = ? " +
                 "AND id_cycle = ? AND id_annee = ? AND id_eleve = ?);";
 
@@ -3537,7 +3537,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         utilsService.getYearsAndPeriodes(idStructure, true, yearEvent -> {
             String idYear = yearEvent.right().getValue().getString("start_date").substring(0, 4);
             StringBuilder query = new StringBuilder();
-            query.append("SELECT * FROM " + Field.NOTES_TABLE + ".archive_bulletins WHERE id_eleve IN ").append(Sql.listPrepared(idsStudent.getList()))
+            query.append("SELECT * FROM notes.archive_bulletins WHERE id_eleve IN ").append(Sql.listPrepared(idsStudent.getList()))
                     .append(" AND id_classe IN ").append(Sql.listPrepared(idsClasses.getList())).append(" AND id_periode = ? ")
                     .append(" AND id_etablissement = ? AND id_annee = ? ;");
             JsonArray values = new JsonArray().addAll(idsStudent).addAll(idsClasses).add(idPeriode).add(idStructure).add(idYear);

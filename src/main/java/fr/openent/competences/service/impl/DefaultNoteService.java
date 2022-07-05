@@ -233,7 +233,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append(table_appreciation).append(" WHERE ").append(note_id_devoir).append(" = ")
                 .append(appreciation_id_devoir).append(" AND ").append(note_id_eleve).append(" = ")
                 .append(appreciation_id_eleve).append(" ) ").append("ORDER BY 2")
-                .append(") AS res, " + Field.NOTES_TABLE + ".devoirs WHERE res.id_devoir = devoirs.id");
+                .append(") AS res, notes.devoirs WHERE res.id_devoir = devoirs.id");
 
         values.add(devoirId);
         values.add(devoirId);

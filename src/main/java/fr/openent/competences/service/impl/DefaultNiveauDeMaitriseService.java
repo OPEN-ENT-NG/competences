@@ -82,7 +82,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT niv1.libelle, niv1.ordre, niv1.couleur couleurDefault, niv1.id_cycle ")
-                .append("FROM " + Field.NOTES_TABLE + "." + Field.NIVEAU_COMPETENCES_TABLE + " niv1 ")
+                .append("FROM notes." + Field.NIVEAU_COMPETENCES_TABLE + " niv1 ")
                 .append("WHERE id_cycle = ? ")
                 .append("ORDER BY (ordre);");
 
@@ -97,7 +97,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
 
         query.append("SELECT " + Field.NIVEAU_COMPETENCES_TABLE + ".libelle, " + Field.NIVEAU_COMPETENCES_TABLE + ".ordre, ")
                 .append(" " + Field.NIVEAU_COMPETENCES_TABLE + ".couleur couleurDefault, " + Field.NIVEAU_COMPETENCES_TABLE + ".id_cycle  ")
-                .append(" FROM " + Field.NOTES_TABLE + "." + Field.NIVEAU_COMPETENCES_TABLE)
+                .append(" FROM  notes." + Field.NIVEAU_COMPETENCES_TABLE)
                 .append(" INNER JOIN " +   Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
                 .append(" ON id_groupe = ? AND rel_groupe_cycle.id_cycle = " + Field.NIVEAU_COMPETENCES_TABLE + ".id_cycle ")
                 .append(" order By (ordre);" );

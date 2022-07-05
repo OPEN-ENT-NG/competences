@@ -199,7 +199,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("UPDATE "+ Competences.COMPETENCES_SCHEMA +"." + Field.REL_ANNOTATIONS_DEVOIRS_TABLE +
-                "SET id_annotation = ? WHERE id_devoir = ? AND id_eleve = ?;");
+                " SET id_annotation = ? WHERE id_devoir = ? AND id_eleve = ?;");
         values.add(idAnnotation).add(idDevoir).add(idEleve);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validRowsResultHandler(handler));
