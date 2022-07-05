@@ -269,7 +269,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             StringBuilder valueParamsLibre = new StringBuilder();
             oCompetenceNote.put("owner", devoir.getString("owner"));
             StringBuilder queryCompLibre = new StringBuilder()
-                    .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".competences_notes ");
+                    .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +"." + Field.COMPETENCES_NOTES_TABLE);
             queryCompLibre.append("( id_devoir ");
             valueParamsLibre.append("( ?");
             paramsCompLibre.add(idDevoir);
@@ -437,7 +437,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             StringBuilder query = new StringBuilder()
                     .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.COMPETENCES_DEVOIRS + " WHERE ");
             StringBuilder queryDelNote = new StringBuilder()
-                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE ");
+                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.COMPETENCES_NOTES_TABLE + " WHERE ");
             for(int i = 0; i < competenceRem.size(); i++){
                 query.append("(id_devoir = ? AND  id_competence = ?)");
                 queryDelNote.append("(id_devoir = ? AND  id_competence = ?)");
@@ -555,7 +555,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     .put("action", "prepared"));
 
             StringBuilder queryDeleteCompetences = new StringBuilder()
-                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id_devoir = ? ");
+                    .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.COMPETENCES_NOTES_TABLE + " WHERE id_devoir = ? ");
             statements.add(new JsonObject()
                     .put("statement", queryDeleteCompetences.toString())
                     .put("values", paramsDelete)
@@ -1028,7 +1028,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.append("Group BY (n.id_eleve, n.valeur) ");
         query.append("UNION ");
         query.append("select count(c.id_competence) NbrEval, concat(c.id_competence,'') ID, c.evaluation Evaluation,  '"+TypeEvalSkill+"' TypeEval ");
-        query.append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes c, "+ Competences.COMPETENCES_SCHEMA +".devoirs d ");
+        query.append("FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.COMPETENCES_NOTES_TABLE + " c, "+ Competences.COMPETENCES_SCHEMA +".devoirs d ");
         query.append("WHERE c.id_devoir = d.id ");
         query.append("AND d.id = ? ");
         query.append("and c.evaluation != -1 ");
@@ -1054,7 +1054,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.append("END id, ");
         query.append("NbEvalSkill, NbEvalNum  FROM " );
         query.append("(SELECT d.id, count(d.id) NbEvalSkill FROM notes.devoirs d " );
-        query.append("INNER  JOIN notes.competences_notes c ON d.id = c.id_devoir " );
+        query.append("INNER  JOIN notes." + Field.COMPETENCES_NOTES_TABLE + " c ON d.id = c.id_devoir " );
         query.append("AND d.id in ");
         query.append("(");
         for (int i=0; i<idDevoir.length-1 ; i++){
@@ -1138,9 +1138,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void getNbCompetencesDevoirsByEleve(Long idDevoir, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
-        query.append("SELECT count(competences_notes.id_competence) AS nb_competences, id_eleve, id_devoir as id")
+        query.append("SELECT count(" + Field.COMPETENCES_NOTES_TABLE + ".id_competence) AS nb_competences, id_eleve, id_devoir as id")
                 .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Field.COMPETENCES_NOTES_TABLE)
-                .append(" WHERE id_devoir = ? AND competences_notes.evaluation >= 0 ")
+                .append(" WHERE id_devoir = ? AND " + Field.COMPETENCES_NOTES_TABLE + ".evaluation >= 0 ")
                 .append(" GROUP BY (id_eleve, id_devoir)");
 
         JsonArray values = new JsonArray();
@@ -1246,7 +1246,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("SELECT res.id_matiere, res.owner, res.is_visible, res.coefficient, res.id_periode, res.id_groupe ")
                 .append("FROM res ")
-                .append("INNER JOIN notes.competences_notes ON (competences_notes.id_devoir = res.id) ")
+                .append("INNER JOIN notes." + Field.COMPETENCES_NOTES_TABLE + " ON (competences_notes.id_devoir = res.id) ")
                 .append("WHERE competences_notes.id_eleve = ? ");
         values.add(idEleve);
 

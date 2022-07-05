@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.Subject;
 import fr.openent.competences.service.MatiereService;
 import fr.wseduc.webutils.Either;
@@ -373,13 +374,13 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     }
 
     private void getDevoirsToUpdate(JsonArray idsMatieres, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT devoirs.*\n" +
-                " FROM " + COMPETENCES_SCHEMA + ".devoirs\n" +
+        String query = "SELECT DISTINCT " + Field.DEVOIR_TABLE + ".*\n" +
+                " FROM " + COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE + "\n" +
                 " INNER JOIN " +
                 "      " + VSCO_SCHEMA + ".sousmatiere " +
-                "       ON devoirs.id_matiere = sousmatiere.id_matiere  AND " +
+                "       ON " + Field.DEVOIR_TABLE + ".id_matiere = sousmatiere.id_matiere  AND " +
                 (isNull(idsMatieres) ? "true" : listPrepared(idsMatieres.getList())) +
-                "       AND devoirs.id_sousmatiere IS NULL;";
+                "       AND " + Field.DEVOIR_TABLE + ".id_sousmatiere IS NULL;";
 
         JsonArray params = new JsonArray();
         if (isNotNull(idsMatieres)) {
@@ -403,7 +404,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     }
 
     private JsonObject buildUpdateDevoir(JsonObject devoir, JsonObject sousMatiere) {
-        String query = "UPDATE " + COMPETENCES_SCHEMA + ".devoirs " +
+        String query = "UPDATE " + COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE +
                 " SET id_sousmatiere = ? " +
                 " WHERE id = ? ";
 

@@ -307,13 +307,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT notes.valeur, " + Field.DEVOIR_TABLE + ".id, " + Field.DEVOIR_TABLE + ".date, " + Field.DEVOIR_TABLE + ".id_matiere, " + Field.DEVOIR_TABLE + ".diviseur, devoirs.libelle, devoirs.name ")
-                .append("FROM "+ COMPETENCES_SCHEMA +".notes, "+ COMPETENCES_SCHEMA +".devoirs ")
-                .append("WHERE notes.id_eleve = ? ")
-                .append("AND notes.id_devoir = devoirs.id ")
-                .append("AND devoirs.date_publication <= current_date ")
-                .append("ORDER BY notes.id DESC ")
-                .append("LIMIT 5;");
+        query.append("SELECT notes.valeur, " + Field.DEVOIR_TABLE + ".id, " + Field.DEVOIR_TABLE + ".date, " + Field.DEVOIR_TABLE + ".id_matiere, " + Field.DEVOIR_TABLE + ".diviseur, " + Field.DEVOIR_TABLE + ".libelle, " + Field.DEVOIR_TABLE + ".name ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".notes, "+ COMPETENCES_SCHEMA +"." + Field.DEVOIR_TABLE)
+                .append(" WHERE notes.id_eleve = ?")
+                .append(" AND notes.id_devoir = " + Field.DEVOIR_TABLE + ".id")
+                .append(" AND " + Field.DEVOIR_TABLE + ".date_publication <= current_date")
+                .append(" ORDER BY notes.id DESC")
+                .append(" LIMIT 5;");
         values.add(userId);
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
@@ -324,24 +324,24 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, ")
-                .append(" devoirs.ramener_sur, devoirs.is_evaluated, devoirs.id_periode, devoirs.id_sousmatiere,")
-                .append(" devoirs.id_matiere, devoirs.id_etablissement, rel_devoirs_groupes.id_groupe, notes.valeur, ")
+        query.append("SELECT " + Field.DEVOIR_TABLE + ".id as id_devoir, " + Field.DEVOIR_TABLE + ".date, " + Field.DEVOIR_TABLE + ".coefficient, " + Field.DEVOIR_TABLE + ".diviseur, ")
+                .append(Field.DEVOIR_TABLE + ".ramener_sur, " + Field.DEVOIR_TABLE + ".is_evaluated, " + Field.DEVOIR_TABLE + ".id_periode, " + Field.DEVOIR_TABLE + ".id_sousmatiere,")
+                .append(Field.DEVOIR_TABLE + ".id_matiere, " + Field.DEVOIR_TABLE + ".id_etablissement, rel_devoirs_groupes.id_groupe, notes.valeur, ")
                 .append(" notes.id, notes.id_eleve, services.coefficient as coef ")
-                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".devoirs ").append(" LEFT JOIN ")
+                .append(" FROM ").append(COMPETENCES_SCHEMA).append("." + Field.DEVOIR_TABLE).append(" LEFT JOIN ")
                 .append(COMPETENCES_SCHEMA).append(".notes ")
-                .append(" ON devoirs.id = notes.id_devoir ")
+                .append(" ON " + Field.DEVOIR_TABLE + ".id = notes.id_devoir ")
                 .append((null != userId) ? " AND notes.id_eleve = ? " : "").append(" INNER JOIN ")
                 .append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ")
-                .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe IN ")
+                .append(" ON rel_devoirs_groupes.id_devoir = " + Field.DEVOIR_TABLE + ".id AND rel_devoirs_groupes.id_groupe IN ")
                 .append(Sql.listPrepared(idsClass.getList())).append(" LEFT JOIN ")
                 .append(Competences.VSCO_SCHEMA).append(".services ")
                 .append(" ON (rel_devoirs_groupes.id_groupe = services.id_groupe ")
-                .append(" AND devoirs.owner = services.id_enseignant AND devoirs.id_matiere = services.id_matiere) ")
-                .append(" WHERE devoirs.id_etablissement = ? ")
-                .append(" AND devoirs.id_matiere = ? ")
-                .append((null != periodeId) ? " AND devoirs.id_periode = ? " : "")
-                .append(" ORDER BY devoirs.date ASC, devoirs.id ASC;");
+                .append(" AND " + Field.DEVOIR_TABLE + ".owner = services.id_enseignant AND " + Field.DEVOIR_TABLE + ".id_matiere = services.id_matiere) ")
+                .append(" WHERE " + Field.DEVOIR_TABLE + ".id_etablissement = ? ")
+                .append(" AND " + Field.DEVOIR_TABLE + ".id_matiere = ? ")
+                .append((null != periodeId) ? " AND " + Field.DEVOIR_TABLE + ".id_periode = ? " : "")
+                .append(" ORDER BY " + Field.DEVOIR_TABLE + ".date ASC, " + Field.DEVOIR_TABLE + ".id ASC;");
 
         if(null != userId) {
             values.add(userId);
@@ -394,10 +394,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient,")
-                .append(" devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, devoirs.id_periode , notes.id_eleve,")
-                .append(" devoirs.is_evaluated, null as annotation, devoirs.id_matiere, devoirs.id_sousmatiere ")
-                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".devoirs")
+        query.append("SELECT " + Field.DEVOIR_TABLE + ".id as id_devoir, " + Field.DEVOIR_TABLE + ".date, " + Field.DEVOIR_TABLE + ".coefficient,")
+                .append(Field.DEVOIR_TABLE + ".diviseur, " + Field.DEVOIR_TABLE + ".ramener_sur,notes.valeur, notes.id, " + Field.DEVOIR_TABLE + ".id_periode , notes.id_eleve,")
+                .append(Field.DEVOIR_TABLE + ".is_evaluated, null as annotation, " + Field.DEVOIR_TABLE + ".id_matiere, " + Field.DEVOIR_TABLE + ".id_sousmatiere ")
+                .append(" FROM ").append(COMPETENCES_SCHEMA).append("." + Field.DEVOIR_TABLE)
                 .append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".notes")
                 .append(" ON ( devoirs.id = notes.id_devoir ")
                 .append((null != idGroupes) ? ")" : ("AND notes.id_eleve IN " + Sql.listPrepared(idEleves) + ")"))
@@ -535,11 +535,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         query.append("SELECT ")
                 .append( (null != eleveId) ? "DISTINCT": "")
                 .append(" devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, ")
-                .append(" devoirs.diviseur, devoirs.ramener_sur, competences_notes.evaluation ,")
-                .append(" competences_notes.id_competence , devoirs.id_matiere, devoirs.id_sousmatiere, ")
-                .append( (null != eleveId) ? "rel_devoirs_groupes.id_groupe," : " competences_notes.id, ")
+                .append(" devoirs.diviseur, devoirs.ramener_sur, " + Field.COMPETENCES_NOTES_TABLE + ".evaluation ,")
+                .append(" " + Field.COMPETENCES_NOTES_TABLE + ".id_competence , devoirs.id_matiere, devoirs.id_sousmatiere, ")
+                .append( (null != eleveId) ? "rel_devoirs_groupes.id_groupe," : " " + Field.COMPETENCES_NOTES_TABLE + ".id, ")
                 .append( (withDomaineInfo) ? "compDom.id_domaine, " : "")
-                .append(" devoirs.id_periode, competences_notes.id_eleve, devoirs.is_evaluated, ")
+                .append(" devoirs.id_periode, " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve, devoirs.is_evaluated, ")
                 .append(" null as annotation, ")
                 .append(Field.COMPETENCE_NIVEAU_FINAL + ".niveau_final AS niveau_final, type.formative ")
                 .append( (!isYear) ? "" : ", " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".niveau_final AS niveau_final_annuel ")
@@ -551,16 +551,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             query.append("INNER JOIN notes.rel_devoirs_groupes ON devoirs.id = rel_devoirs_groupes.id_devoir")
                     .append(" LEFT JOIN (SELECT id, id_devoir, id_competence, max(evaluation) ")
                     .append(" as evaluation, id_eleve " )
-                    .append(" FROM " ).append(COMPETENCES_SCHEMA).append( ".competences_notes ")
+                    .append(" FROM " ).append(COMPETENCES_SCHEMA).append( "." + Field.COMPETENCES_NOTES_TABLE)
                     .append(" WHERE id_eleve = ? ")
-                    .append(" GROUP BY (id, id_devoir, id_eleve) ) AS competences_notes  ")
+                    .append(" GROUP BY (id, id_devoir, id_eleve) ) AS " + Field.COMPETENCES_NOTES_TABLE)
                     .append(" ON devoirs.id ")
-                    .append(" = competences_notes.id_devoir " );
+                    .append(" = " + Field.COMPETENCES_NOTES_TABLE + ".id_devoir " );
             values.add(eleveId);
         } else {
-            query.append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".competences_notes " +
-                    "ON (devoirs.id  = competences_notes.id_devoir " +
-                    "AND competences_notes.id_eleve IN " + Sql.listPrepared(idEleves)+ ")" );
+            query.append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append("." + Field.COMPETENCES_NOTES_TABLE +
+                    "ON (devoirs.id  = " + Field.COMPETENCES_NOTES_TABLE + ".id_devoir " +
+                    "AND " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve IN " + Sql.listPrepared(idEleves)+ ")" );
             for (String idEleve : idEleves) {
                 values.add(idEleve);
             }
@@ -568,18 +568,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         if (withDomaineInfo) {
             query.append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_competences_domaines " + " AS compDom")
-                    .append(" ON competences_notes.id_competence = compDom.id_competence ");
+                    .append(" ON " + Field.COMPETENCES_NOTES_TABLE + ".id_competence = compDom.id_competence ");
         }
         query.append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append("." + Field.COMPETENCE_NIVEAU_FINAL + " ON " +
                 "( " + Field.COMPETENCE_NIVEAU_FINAL + ".id_periode = devoirs.id_periode " +
-                "AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve = competences_notes.id_eleve " +
-                "AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_competence = competences_notes.id_competence " +
+                "AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve = " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve " +
+                "AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_competence = " + Field.COMPETENCES_NOTES_TABLE + ".id_competence " +
                 "AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_matiere = devoirs.id_matiere )");
 
         if(isYear) {
             query.append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append("." + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + " ON " +
-                    "( " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve = competences_notes.id_eleve " +
-                    "AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_competence = competences_notes.id_competence " +
+                    "( " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve = " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve " +
+                    "AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_competence = " + Field.COMPETENCES_NOTES_TABLE + ".id_competence " +
                     "AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_matiere = devoirs.id_matiere )");
         }
 

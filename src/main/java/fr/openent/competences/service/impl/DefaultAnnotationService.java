@@ -105,7 +105,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
 
     private void addStatementdeleteCompetenceNote(JsonArray statements,final Long idDevoir, final String idEleve ) {
         StringBuilder queryDeleteCompetenceNote = new StringBuilder()
-                .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes " +
+                .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.COMPETENCES_NOTES_TABLE +
                         "WHERE id_devoir = ? AND id_eleve = ? ;");
         JsonArray paramsDeleteCompetenceNote = new fr.wseduc.webutils.collections.JsonArray();
         paramsDeleteCompetenceNote.add(idDevoir).add(idEleve);

@@ -365,11 +365,11 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 JsonArray valuesMaxCompetence = new fr.wseduc.webutils.collections.JsonArray();
 
 
-                String queryMaxCompNoteNiveauFinalByPeriode = "(SELECT competences_notes.id_competence, " +
-                        "competences_notes.id_eleve, " + Field.DEVOIR_TABLE + ".id_periode, " + Field.DEVOIR_TABLE + ".id_matiere, CASE " +
+                String queryMaxCompNoteNiveauFinalByPeriode = "(SELECT " + Field.COMPETENCES_NOTES_TABLE + ".id_competence, " +
+                        Field.COMPETENCES_NOTES_TABLE + ".id_eleve, " + Field.DEVOIR_TABLE + ".id_periode, " + Field.DEVOIR_TABLE + ".id_matiere, CASE " +
 
                         "WHEN " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve IS NULL AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve IS NULL" +
-                        "   THEN MAX(competences_notes.evaluation) " +
+                        "   THEN MAX(" + Field.COMPETENCES_NOTES_TABLE + ".evaluation) " +
 
                         "WHEN " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve IS NOT NULL AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve IS NULL" +
                         "   THEN MAX(" + Field.COMPETENCE_NIVEAU_FINAL + ".niveau_final) " +
@@ -377,24 +377,26 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "ELSE MAX(" + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".niveau_final) " +
 
                         "END AS max_comp "+
-                        "FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
-                        "INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE + " ON " + Field.DEVOIR_TABLE + ".id = competences_notes.id_devoir" +
+                        "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_NOTES_TABLE +
+                        "INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE +
+                        " ON " + Field.DEVOIR_TABLE + ".id = " + Field.COMPETENCES_NOTES_TABLE + ".id_devoir" +
 
                         " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCE_NIVEAU_FINAL +
                         " ON " + Field.DEVOIR_TABLE + ".id_periode = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_periode" +
-                        " AND competences_notes.id_competence = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_competence" +
-                        " AND competences_notes.id_eleve = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve" +
+                        " AND " + Field.COMPETENCES_NOTES_TABLE + ".id_competence = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_competence" +
+                        " AND " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve" +
                         " AND " + Field.DEVOIR_TABLE + ".id_matiere = " + Field.COMPETENCE_NIVEAU_FINAL + ".id_matiere" +
 
                         " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL +
-                        " ON competences_notes.id_competence = " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_competence" +
-                        " AND competences_notes.id_eleve = " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve" +
+                        " ON " + Field.COMPETENCES_NOTES_TABLE + ".id_competence = " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_competence" +
+                        " AND " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve = " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve" +
                         " AND " + Field.DEVOIR_TABLE + ".id_matiere = " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_matiere" +
 
-                        " WHERE competences_notes.owner != '" + _id_user_transition_annee +
-                        "' AND competences_notes.id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
-                        " GROUP BY competences_notes.id_competence, competences_notes.id_eleve, " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve," +
-                         Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve, " + Field.DEVOIR_TABLE + ".id_periode, " + Field.DEVOIR_TABLE + ".id_matiere)";
+                        " WHERE " + Field.COMPETENCES_NOTES_TABLE + ".owner != '" + _id_user_transition_annee +
+                        "' AND " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
+                        " GROUP BY " + Field.COMPETENCES_NOTES_TABLE + ".id_competence, " +
+                        Field.COMPETENCES_NOTES_TABLE + ".id_eleve, " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve," +
+                        Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve, " + Field.DEVOIR_TABLE + ".id_periode, " + Field.DEVOIR_TABLE + ".id_matiere)";
 
                 String queryMaxCompNoteMat = "(SELECT id_competence, MAX(max_comp), id_eleve, id_matiere FROM " + queryMaxCompNoteNiveauFinalByPeriode +
                         " AS max_mat GROUP BY id_competence, id_eleve, id_matiere)";
@@ -425,7 +427,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 // Ajout du max des compétences ou du niveau final pour chaque élève
                 //Cette requête fait peur
                 String queryInsertMaxCompetenceNoteG = "" +
-                        "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".competences_notes(id_devoir, id_competence, evaluation, owner, id_eleve) " +
+                        "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_NOTES_TABLE +
+                        "(id_devoir, id_competence, evaluation, owner, id_eleve) " +
                         "(" + queryConversionAverage + ")";
 
                 statements.add(new JsonObject()
@@ -456,11 +459,12 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         values.add(idStructureATraiter);
         String queryInsertCompetenceDevoir = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_DEVOIRS + " (id_devoir, id_competence, index) " +
                 "( " +
-                "    SELECT competences_notes.id_devoir,competences_notes.id_competence,0" +
-                "    FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
-                "           INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE + " ON competences_notes.id_devoir = devoirs.id" +
+                "    SELECT " + Field.COMPETENCES_NOTES_TABLE + ".id_devoir, " + Field.COMPETENCES_NOTES_TABLE + ".id_competence,0" +
+                "    FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_NOTES_TABLE +
+                "           INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE +
+                " ON " + Field.COMPETENCES_NOTES_TABLE + ".id_devoir = " + Field.DEVOIR_TABLE + ".id" +
                 "    WHERE " +
-                "           devoirs.eval_lib_historise = true" +
+                "           " + Field.DEVOIR_TABLE + ".eval_lib_historise = true" +
                 "           AND id_etablissement = ? " +
                 "    GROUP BY id_devoir, id_competence  " +
                 ")";
@@ -472,8 +476,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         // Suppression devoir non historisé
         String queryDeleteDevoirNonHistorise = "" +
-                "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs  " +
-                "WHERE " +
+                "DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE +
+                " WHERE " +
                 " eval_lib_historise = false " +
                 " AND id_etablissement = ? ";
 

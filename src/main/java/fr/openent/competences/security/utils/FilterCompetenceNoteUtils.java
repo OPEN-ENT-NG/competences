@@ -18,6 +18,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
@@ -37,8 +38,8 @@ public class FilterCompetenceNoteUtils {
                                             final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
                 .append("SELECT count(devoirs.*) " +
-                        "FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes " +
-                        "ON (competences_notes.id_devoir = devoirs.id) " +
+                        "FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs INNER JOIN "+ Competences.COMPETENCES_SCHEMA +"." + Field.COMPETENCES_NOTES_TABLE +
+                        "ON (" + Field.COMPETENCES_NOTES_TABLE + ".id_devoir = devoirs.id) " +
                         "WHERE competences_notes.id = ? " +
                         "AND devoirs.owner = ?;");
 
