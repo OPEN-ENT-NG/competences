@@ -89,9 +89,9 @@ public class DefaultMongoExportService implements MongoExportService {
             for(String key : keysToDelete){
                 student.remove(key);
             }
-            common.put("eleve",student);
+
             Promise<String> promise = Promise.promise();
-            this.createWhenStart("pdf", common,
+            this.createWhenStart("pdf", common.copy().put("eleve",student),
                     typeExport,promise);
             futureArray.add(promise.future());
         }
