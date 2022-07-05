@@ -791,7 +791,7 @@ public class DefaultUtilsService implements UtilsService {
         query.append(" SELECT " + Field.DEVOIR_TABLE + ".id, " + Field.DEVOIR_TABLE + ".name, id_groupe, COUNT(" + Field.COMPETENCES_DEVOIRS + ".id) as nbcompetences ")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE)
                 .append(" LEFT JOIN notes.rel_devoirs_groupes ")
-                .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id ")
+                .append(" ON rel_devoirs_groupes.id_devoir = " + Field.DEVOIR_TABLE + ".id ")
                 .append(" LEFT OUTER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_DEVOIRS)
                 .append(" ON " + Field.DEVOIR_TABLE + ".id = " + Field.COMPETENCES_DEVOIRS + ".id_devoir ")
                 .append(" WHERE rel_devoirs_groupes.id_groupe IN " + Sql.listPrepared(idClasses))
