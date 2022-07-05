@@ -603,7 +603,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 .append(" SELECT DISTINCT " + Field.COMPETENCES_DEVOIRS + ".id_competence, true, id_etablissement ")
                 .append(" FROM " + COMPETENCES_DEVOIRS_TABLE)
                 .append(" INNER JOIN " + COMPETENCES_TABLE)
-                .append(" ON " + Field.COMPETENCES_DEVOIRS + ".id_competence = competences.id AND id_etablissement = ? )")
+                .append(" ON " + Field.COMPETENCES_DEVOIRS + ".id_competence = " + Field.COMPETENCES_TABLE + ".id AND id_etablissement = ? )")
                 .append(" ON CONFLICT (id_competence, id_etablissement) DO UPDATE SET masque = true ");
         JsonArray paramsMask = new fr.wseduc.webutils.collections.JsonArray();
 
