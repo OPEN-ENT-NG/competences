@@ -685,7 +685,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT moy.id_eleve, moy.id_periode, null as avis_conseil_orientation, ")
-                .append("null as avis_conseil_de_classe, null as " + Field.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", null as positionnement, ")
+                .append("null as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, ")
                 .append("moy.id_matiere, COALESCE(moy.moyenne, -100) AS moyenne, moy.id_classe ")
                 .append("FROM ").append(COMPETENCES_SCHEMA).append(".moyenne_finale AS moy WHERE ");
 
@@ -717,7 +717,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         query.append(" UNION ")
                 .append("SELECT pos.id_eleve, pos.id_periode, null as avis_conseil_orientation, null as avis_conseil_de_classe, ")
-                .append("null as " + Field.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", pos.positionnement, pos.id_matiere, null as moyenne, null as id_classe ")
+                .append("null as synthese_bilan_periodique, pos.positionnement, pos.id_matiere, null as moyenne, null as id_classe ")
                 .append("FROM ").append(COMPETENCES_SCHEMA).append(".positionnement AS pos WHERE ");
 
         if (null != idEleves) {
@@ -741,7 +741,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         query.append(" UNION ")
                 .append("SELECT IdTableAvisOrientation.id_eleve, IdTableAvisOrientation.id_periode, libelleTableAvisOrientation.libelle as avis_conseil_orientation, ")
-                .append("null as avis_conseil_de_classe, null as " + Field.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", null as positionnement, null as id_matiere, null as moyenne, null as id_classe ")
+                .append("null as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, null as id_matiere, null as moyenne, null as id_classe ")
                 .append("FROM ").append(COMPETENCES_SCHEMA).append(".avis_conseil_orientation AS IdTableAvisOrientation ")
                 .append("JOIN ").append(COMPETENCES_SCHEMA).append(".avis_conseil_bilan_periodique AS libelleTableAvisOrientation ON ")
                 .append("IdTableAvisOrientation.id_avis_conseil_bilan = libelleTableAvisOrientation.id WHERE ");
@@ -765,7 +765,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         query.append(" UNION ")
                 .append("SELECT IdTableAvisConseil.id_eleve, IdTableAvisConseil.id_periode, null as avis_conseil_orientation,")
-                .append("libelleTableAvisConseil.libelle as avis_conseil_de_classe, null as " + Field.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", null as positionnement, null as id_matiere, ")
+                .append("libelleTableAvisConseil.libelle as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, null as id_matiere, ")
                 .append("null as moyenne, null as id_classe FROM ").append(COMPETENCES_SCHEMA).append(".avis_conseil_de_classe AS IdTableAvisConseil ")
                 .append("JOIN ").append(COMPETENCES_SCHEMA).append(".avis_conseil_bilan_periodique AS libelleTableAvisConseil ON ")
                 .append("IdTableAvisConseil.id_avis_conseil_bilan = libelleTableAvisConseil.id WHERE ");
@@ -789,7 +789,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         query.append("UNION ")
                 .append("SELECT syntheseBP.id_eleve, syntheseBP.id_typeperiode as id_periode, null as avis_conseil_orientation, null as avis_conseil_de_classe,")
-                .append("syntheseBP.synthese as " + Field.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", null as positionnement, null as id_matiere, null as moyenne, null as id_classe ")
+                .append("syntheseBP.synthese as synthese_bilan_periodique, null as positionnement, null as id_matiere, null as moyenne, null as id_classe ")
                 .append("FROM ").append(COMPETENCES_SCHEMA).append("." + Field.SYNTHESE_BILAN_PERIODIQUE_TABLE + " AS syntheseBP WHERE ");
 
         if (null != idEleves) {

@@ -892,7 +892,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("Host",host);
 
             JsonObject action = new JsonObject()
-                    .put(ACTION, Field.VIESCO_PERIODE_TABLE + ".getLibellePeriode")
+                    .put(ACTION, "periode.getLibellePeriode")
                     .put("idType", idPeriode)
                     .put("request", jsonRequest);
             eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
@@ -927,7 +927,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 .put("headers", new JsonObject().put("Accept-Language", acceptLanguage))
                 .put("Host",host);
         JsonObject action = new JsonObject()
-                .put(ACTION, Field.VIESCO_PERIODE_TABLE + ".getLibellePeriode")
+                .put(ACTION, "periode.getLibellePeriode")
                 .put("idType", idPeriode)
                 .put("request", jsonRequest);
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
@@ -958,7 +958,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             }
             else {
                 JsonObject action = new JsonObject();
-                action.put(ACTION, Field.VIESCO_PERIODE_TABLE + ".getPeriodes")
+                action.put(ACTION, "periode.getPeriodes")
                         .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,

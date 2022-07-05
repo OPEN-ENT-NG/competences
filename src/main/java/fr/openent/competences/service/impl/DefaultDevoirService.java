@@ -588,7 +588,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, rel_devoirs_groupes.type_groupe, devoirs.is_evaluated, ")
                 .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
                 .append("devoirs.id_etat, devoirs.date_publication, devoirs.id_matiere, devoirs.coefficient, devoirs.ramener_sur, devoirs.percent, ")
-                .append("" + Field.VIESCO_TYPE_SOUS_MATIERE_TABLE + ".libelle as _sousmatiere_libelle, devoirs.date, devoirs.apprec_visible, ")
+                .append(Field.VIESCO_TYPE_SOUS_MATIERE_TABLE + ".libelle as _sousmatiere_libelle, devoirs.date, devoirs.apprec_visible, ")
                 .append("type.nom as _type_libelle, COUNT(competences_devoirs.id) as nbcompetences, " + Field.USERS_TABLE + ".username as teacher ")
                 .append("FROM ").append(COMPETENCES_SCHEMA).append(".devoirs ")
                 .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".type ON devoirs.id_type = type.id ")
