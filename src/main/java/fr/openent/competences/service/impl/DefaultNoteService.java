@@ -544,7 +544,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append(Field.COMPETENCE_NIVEAU_FINAL + ".niveau_final AS niveau_final, type.formative ")
                 .append( (!isYear) ? "" : ", " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".niveau_final AS niveau_final_annuel ")
 
-                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".devoirs ")
+                .append(" FROM ").append(COMPETENCES_SCHEMA).append("." + Field.DEVOIR_TABLE)
                 .append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".type ON (" + Field.DEVOIR_TABLE + ".id_type = type.id) ");
 
         if (null != eleveId) {

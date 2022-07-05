@@ -788,14 +788,14 @@ public class DefaultUtilsService implements UtilsService {
     public void checkDataOnClasses(String[] idClasses, final Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        query.append(" SELECT devoirs.id, devoirs.name, id_groupe, COUNT(" + Field.COMPETENCES_DEVOIRS + ".id) as nbcompetences ")
-                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs ")
+        query.append(" SELECT " + Field.DEVOIR_TABLE + ".id, " + Field.DEVOIR_TABLE + ".name, id_groupe, COUNT(" + Field.COMPETENCES_DEVOIRS + ".id) as nbcompetences ")
+                .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE)
                 .append(" LEFT JOIN notes.rel_devoirs_groupes ")
                 .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id ")
                 .append(" LEFT OUTER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_DEVOIRS)
-                .append(" ON devoirs.id = " + Field.COMPETENCES_DEVOIRS + ".id_devoir ")
+                .append(" ON " + Field.DEVOIR_TABLE + ".id = " + Field.COMPETENCES_DEVOIRS + ".id_devoir ")
                 .append(" WHERE rel_devoirs_groupes.id_groupe IN " + Sql.listPrepared(idClasses))
-                .append(" GROUP BY devoirs.id, devoirs.name, id_groupe ")
+                .append(" GROUP BY " + Field.DEVOIR_TABLE + ".id, " + Field.DEVOIR_TABLE + ".name, id_groupe ")
                 .append(" HAVING COUNT(" + Field.COMPETENCES_DEVOIRS + ".id) > 0 ")
                 .append(" ORDER BY id_groupe ");
 
