@@ -1246,8 +1246,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("SELECT res.id_matiere, res.owner, res.is_visible, res.coefficient, res.id_periode, res.id_groupe ")
                 .append("FROM res ")
-                .append("INNER JOIN notes." + Field.COMPETENCES_NOTES_TABLE + " ON (competences_notes.id_devoir = res.id) ")
-                .append("WHERE competences_notes.id_eleve = ? ");
+                .append("INNER JOIN notes." + Field.COMPETENCES_NOTES_TABLE + " ON (" + Field.COMPETENCES_NOTES_TABLE + ".id_devoir = res.id) ")
+                .append("WHERE " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve = ? ");
         values.add(idEleve);
 
         query.append("UNION ");
