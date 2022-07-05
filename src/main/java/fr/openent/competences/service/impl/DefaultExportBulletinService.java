@@ -1012,7 +1012,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public void getAnneeScolaire(String idClasse, Promise<Periode> promise) {
 
         JsonObject action = new JsonObject();
-        action.put(ACTION, Field.VIESCO_PERIODE_TABLE + ".getPeriodes")
+        action.put(ACTION, "periode.getPeriodes")
                 .put("idGroupes", new JsonArray().add(idClasse));
 
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
