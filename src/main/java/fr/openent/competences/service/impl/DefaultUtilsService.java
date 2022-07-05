@@ -730,7 +730,7 @@ public class DefaultUtilsService implements UtilsService {
                         if (listDevoir.size() > 0) {
                             StringBuilder queryDeleteDevoir = new StringBuilder();
                             JsonArray idDevoirs = new fr.wseduc.webutils.collections.JsonArray();
-                            queryDeleteDevoir.append("DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs")
+                            queryDeleteDevoir.append("DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE)
                                     .append(" WHERE id IN " + Sql.listPrepared(listDevoir.getList().toArray()));
                             for (int i = 0; i < listDevoir.size(); i++) {
                                 idDevoirs.add(((JsonObject) listDevoir.getJsonObject(i)).getLong("id"));
