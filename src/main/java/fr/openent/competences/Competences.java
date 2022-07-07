@@ -43,7 +43,7 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 public class Competences extends BaseServer {
 
     public static String COMPETENCES_SCHEMA;
-    public static String VIESCO_SCHEMA = "viesco";
+    public static String VIESCO_SCHEMA;
 
     public static JsonObject LSUN_CONFIG;
     public static JsonObject TRANSITION_CONFIG;
@@ -273,7 +273,7 @@ public class Competences extends BaseServer {
         super.start();
 
         COMPETENCES_SCHEMA = config.getString(Field.DB_SCHEMA);
-        VIESCO_SCHEMA = config.getString(Field.VIESCO_SCHEMA);
+        VIESCO_SCHEMA = config.getString(Field.DB_VIESCO_SCHEMA);
         LSUN_CONFIG = config.getJsonObject("lsun");
         TRANSITION_CONFIG = config.getJsonObject("transition");
         DELIVERY_OPTIONS = new DeliveryOptions()

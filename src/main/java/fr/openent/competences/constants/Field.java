@@ -23,6 +23,6 @@ public class Field {
     public static final String SAVE_BFC = "saveBFC";
 
     //schemas
-    public static final String DB_SCHEMA = "notes";
-    public static final String VIESCO_SCHEMA = "viesco";
+    public static final String DB_SCHEMA = "db-schema";
+    public static final String DB_VIESCO_SCHEMA = "vsco-schema";
 }
