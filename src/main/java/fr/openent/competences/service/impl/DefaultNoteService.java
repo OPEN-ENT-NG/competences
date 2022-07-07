@@ -2355,6 +2355,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     }
                 });
             } else {
+                String message = String.format("[Competences@%s::getDatasReleve]: %s",
+                        DefaultNoteService.class.getSimpleName(), idElevesEvent.cause().getMessage());
+                log.error(message);
                 handler.handle(new Either.Left<>(idElevesEvent.cause().getMessage()));
             }
         });

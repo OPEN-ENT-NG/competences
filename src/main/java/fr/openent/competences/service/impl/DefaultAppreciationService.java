@@ -102,7 +102,7 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
         JsonArray values = new JsonArray();
 
         if(params) {
-            query += "WHERE ";
+            query += " WHERE ";
 
             if(id_periode != null) {
                 query += "id_periode = ? AND ";
