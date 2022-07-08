@@ -2989,7 +2989,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             Map<Long, Double> mapMin = new HashMap<>();
             Map<Long, Double> mapMax = new HashMap<>();
             // Calcul des moyennes par élève
-            for (Map.Entry<String, T> entry : notesByEleve.entrySet()) { //TODO : Calculer la moyenne
+            for (Map.Entry<String, T> entry : notesByEleve.entrySet()) {
                 String idEleve = entry.getKey();
 
                 JsonObject submoyenne = new JsonObject().put(matiereId, new JsonObject());
@@ -3035,9 +3035,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(),
                                     withStat, diviseur, annual);
                             submoyenne.getJsonObject(matiereId).put("null", moyenSousMat);
+
+                            if (!hasSousMatieres) {
+                                total += coeff * moyenSousMat.getDouble("moyenne");
+                                totalCoeff += coeff;
+                                hasNote = true;
+                            }
                         }
 
-                        if(isNotNull(moyenSousMat)) {
+                        if(isNotNull(moyenSousMat) && isNotNull(idSousMat)) {
                             if (!mapNbMoyenneClasse.containsKey(idSousMat)) {
                                 mapNbMoyenneClasse.put(idSousMat, 0);
                                 mapSumMoyClasse.put(idSousMat, 0.0);
@@ -3059,6 +3065,21 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         }
                     }
                     moyenneComputed = Math.round((total / totalCoeff) * 10.0) / 10.0;
+
+                    if (!mapNbMoyenneClasse.containsKey(null)) {
+                        mapNbMoyenneClasse.put(null, 0);
+                        mapSumMoyClasse.put(null, 0.0);
+                    }
+                    int nbSousMoyClass = mapNbMoyenneClasse.get(null);
+                    Double sumMoySous = mapSumMoyClasse.get(null);
+                    mapNbMoyenneClasse.put(null, nbSousMoyClass + 1);
+                    mapSumMoyClasse.put(null, sumMoySous + moyenneComputed);
+                    if(isNull(mapMax.get(null)) || mapMax.get(null).compareTo(moyenneComputed) < 0) {
+                        mapMax.put(null, moyenneComputed);
+                    }
+                    if(isNull(mapMin.get(null)) || mapMin.get(null).compareTo(moyenneComputed) > 0) {
+                        mapMin.put(null, moyenneComputed);
+                    }
                 }
                 else {
                     //Sinon, on calcule la moyenne avec toutes les notes, sans distinction de sous-matières.
