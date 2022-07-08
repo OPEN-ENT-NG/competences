@@ -257,7 +257,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         boolean devoirs = idDevoirs != null && idDevoirs.length != 0;
         boolean periode = idPeriode != null;
 
-        query.append("SELECT notes.id_devoir, notes.id_eleve, notes.valeur, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, devoirs.owner, devoirs.id_matiere, grp.id_groupe " +
+        query.append("SELECT notes.id_devoir, notes.id_eleve, notes.valeur, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, devoirs.owner, devoirs.id_matiere, devoirs.id_sousmatiere, grp.id_groupe " +
                 "FROM " + COMPETENCES_SCHEMA + ".notes " +
                 "LEFT JOIN " + COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = notes.id_devoir " +
                 "LEFT JOIN " + COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS grp ON devoirs.id = grp.id_devoir WHERE devoirs.is_evaluated = true AND ");
