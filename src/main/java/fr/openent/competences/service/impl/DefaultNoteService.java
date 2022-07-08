@@ -2868,6 +2868,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
 
             String matiereId = idMatiere;
+            Boolean hasSousMatieres = false;
             for (int i = 0; i < listNotes.size(); i++) {
                 JsonObject note = listNotes.getJsonObject(i);
                 if (note.getString(VALEUR) == null || note.getString(COEFFICIENT) == null ||
@@ -2966,6 +2967,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 utilsService.addToMap(idEleve, (HashMap<String, ArrayList<NoteDevoir>>) notesByEleve, noteDevoir);
                 if(isNotNull(sousMatiereId)) {
                     utilsService.addToMap(idEleve, sousMatiereId, notesByEleveBySousMatiere, noteDevoir);
+                    hasSousMatieres = true;
                 }
                 utilsService.addToMap(idEleve, null, notesByEleveBySousMatiere, noteDevoir);
             }
