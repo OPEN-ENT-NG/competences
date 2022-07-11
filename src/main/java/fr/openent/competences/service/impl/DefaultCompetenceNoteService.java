@@ -310,11 +310,11 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 "AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_competence = " + Field.COMPETENCES_TABLE + ".id " +
                 "AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_matiere= " + Field.DEVOIR_TABLE + ".id_matiere) ");
         query.append("LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +"." + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL +
-                "ON (" + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve = " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve " +
-                "AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_competence = " + Field.COMPETENCES_TABLE + ".id " +
-                "AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_matiere= " + Field.DEVOIR_TABLE + ".id_matiere) ");
-        query.append("WHERE type.formative = false ");
-        query.append("GROUP BY " + Field.COMPETENCES_TABLE + ".id, " + Field.COMPETENCES_TABLE + ".id_cycle, rel_competences_domaines.id_domaine, " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve, " +
+                " ON (" + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve = " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve" +
+                " AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_competence = " + Field.COMPETENCES_TABLE + ".id" +
+                " AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_matiere= " + Field.DEVOIR_TABLE + ".id_matiere)");
+        query.append(" WHERE type.formative = false");
+        query.append(" GROUP BY " + Field.COMPETENCES_TABLE + ".id, " + Field.COMPETENCES_TABLE + ".id_cycle, rel_competences_domaines.id_domaine, " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve, " +
                 Field.COMPETENCES_NOTES_TABLE + ".owner, " + Field.COMPETENCE_NIVEAU_FINAL + ".niveau_final, " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".niveau_final, " + Field.DEVOIR_TABLE + ".id_matiere ");
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
