@@ -481,22 +481,22 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append(", " + Field.DEVOIR_TABLE + ".eval_lib_historise as eval_lib_historise, users.username as owner_name ")
                 .append("FROM notes." +Field.COMPETENCES_TABLE)
 
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_competences_domaines ON (" + Field.COMPETENCES_TABLE + ".id = rel_competences_domaines.id_competence) ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.COMPETENCES_NOTES_TABLE + " ON (" + Field.COMPETENCES_NOTES_TABLE + ".id_competence = " + Field.COMPETENCES_TABLE + ".id) ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.DEVOIR_TABLE + " ON (" + Field.COMPETENCES_NOTES_TABLE + ".id_devoir = " + Field.DEVOIR_TABLE + ".id) ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type ON (type.id = " + Field.DEVOIR_TABLE + ".id_type) ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users ON users.id = " + Field.COMPETENCES_NOTES_TABLE + ".owner ")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_competences_domaines ON (" + Field.COMPETENCES_TABLE + ".id = rel_competences_domaines.id_competence)")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.COMPETENCES_NOTES_TABLE + " ON (" + Field.COMPETENCES_NOTES_TABLE + ".id_competence = " + Field.COMPETENCES_TABLE + ".id)")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.DEVOIR_TABLE + " ON (" + Field.COMPETENCES_NOTES_TABLE + ".id_devoir = " + Field.DEVOIR_TABLE + ".id)")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type ON (type.id = " + Field.DEVOIR_TABLE + ".id_type)")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users ON users.id = " + Field.COMPETENCES_NOTES_TABLE + ".owner")
 
-                .append("LEFT JOIN notes." + Field.COMPETENCE_NIVEAU_FINAL + " ON (" + Field.COMPETENCE_NIVEAU_FINAL + ".id_competence = " + Field.COMPETENCES_TABLE + ".id ")
-                .append("AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_periode = " + Field.DEVOIR_TABLE + ".id_periode ")
-                .append("AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve = " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve ")
-                .append("AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_matiere = " + Field.DEVOIR_TABLE + ".id_matiere )")
+                .append(" LEFT JOIN notes." + Field.COMPETENCE_NIVEAU_FINAL + " ON (" + Field.COMPETENCE_NIVEAU_FINAL + ".id_competence = " + Field.COMPETENCES_TABLE + ".id")
+                .append(" AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_periode = " + Field.DEVOIR_TABLE + ".id_periode")
+                .append(" AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve = " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve")
+                .append(" AND " + Field.COMPETENCE_NIVEAU_FINAL + ".id_matiere = " + Field.DEVOIR_TABLE + ".id_matiere )")
 
-                .append("LEFT JOIN notes." + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + " ON (" + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_competence = " + Field.COMPETENCES_TABLE + ".id ")
-                .append("AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve = " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve ")
-                .append("AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_matiere = " + Field.DEVOIR_TABLE + ".id_matiere )")
+                .append(" LEFT JOIN notes." + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + " ON (" + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_competence = " + Field.COMPETENCES_TABLE + ".id")
+                .append(" AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve = " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve")
+                .append(" AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_matiere = " + Field.DEVOIR_TABLE + ".id_matiere )")
 
-                .append("WHERE " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve = ? AND evaluation >= 0 ");
+                .append(" WHERE " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve = ? AND evaluation >= 0 ");
         values.add(idEleve);
         if (idPeriode != null) {
             query.append("AND " + Field.DEVOIR_TABLE + ".id_periode = ? ");
@@ -604,9 +604,9 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     public void getCyclesEleve(String idEleve, Handler<Either<String, JsonArray>> handler){
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
-                .append("SELECT " + Field.CYCLE_TABLE + ".id AS id_cycle, " + Field.CYCLE_TABLE + ".libelle ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.CYCLE_TABLE)
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_TABLE)
+                .append("SELECT " + Field.CYCLE_TABLE + ".id AS id_cycle, " + Field.CYCLE_TABLE + ".libelle")
+                .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.CYCLE_TABLE)
+                .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_TABLE)
                 .append(" ON " + Field.COMPETENCES_TABLE + ".id_cycle = " + Field.CYCLE_TABLE + ".id")
                 .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_NOTES_TABLE)
                 .append(" ON " + Field.COMPETENCES_TABLE + ".id = " + Field.COMPETENCES_NOTES_TABLE + ".id_competence")

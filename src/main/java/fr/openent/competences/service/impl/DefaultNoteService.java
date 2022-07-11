@@ -412,9 +412,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         setParamGetNotesReleve(idGroupes, idEleves, classeId, idMatieres, etablissementId, periodeId, values);
 
         query.append(" UNION ")
-                .append("SELECT " + Field.DEVOIR_TABLE + ".id as id_devoir, " + Field.DEVOIR_TABLE + ".date, " + Field.DEVOIR_TABLE + ".coefficient,")
-                .append(" " + Field.DEVOIR_TABLE + ".diviseur, " + Field.DEVOIR_TABLE + ".ramener_sur,null as valeur, null as id, " + Field.DEVOIR_TABLE + ".id_periode, ")
-                .append(Field.DEVOIR_TABLE + ".id_eleve, " + Field.DEVOIR_TABLE + ".is_evaluated,")
+                .append("SELECT " + Field.DEVOIR_TABLE + ".id as id_devoir, " + Field.DEVOIR_TABLE + ".date, " + Field.DEVOIR_TABLE + ".coefficient, ")
+                .append(Field.DEVOIR_TABLE + ".diviseur, " + Field.DEVOIR_TABLE + ".ramener_sur,null as valeur, null as id, " + Field.DEVOIR_TABLE + ".id_periode, ")
+                .append("rel_annotations_devoirs.id_eleve, " + Field.DEVOIR_TABLE + ".is_evaluated,")
                 .append(" rel_annotations_devoirs.id_annotation as annotation, " + Field.DEVOIR_TABLE + ".id_matiere, " + Field.DEVOIR_TABLE + ".id_sousmatiere ")
                 .append(" FROM ").append(COMPETENCES_SCHEMA).append("." + Field.DEVOIR_TABLE)
                 .append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".rel_annotations_devoirs")
@@ -559,8 +559,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             values.add(eleveId);
         } else {
             query.append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append("." + Field.COMPETENCES_NOTES_TABLE +
-                    "ON (" + Field.DEVOIR_TABLE + ".id  = " + Field.COMPETENCES_NOTES_TABLE + ".id_devoir " +
-                    "AND " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve IN " + Sql.listPrepared(idEleves)+ ")" );
+                    " ON (" + Field.DEVOIR_TABLE + ".id  = " + Field.COMPETENCES_NOTES_TABLE + ".id_devoir " +
+                    " AND " + Field.COMPETENCES_NOTES_TABLE + ".id_eleve IN " + Sql.listPrepared(idEleves)+ ")" );
             for (String idEleve : idEleves) {
                 values.add(idEleve);
             }
