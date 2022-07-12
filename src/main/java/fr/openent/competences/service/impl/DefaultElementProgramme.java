@@ -41,10 +41,10 @@ public class DefaultElementProgramme implements ElementProgramme {
 
         StringBuilder query = new StringBuilder()
                 .append("INSERT INTO ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE)
-                .append("(id_periode, id_matiere, id_classe, id_user_create, id_user_update, texte) VALUES ")
-                .append("(?, ?, ?, ?, ?, ?) ")
-                .append("ON CONFLICT (id_periode, id_matiere , id_classe) ")
-                .append("DO UPDATE SET id_user_update = ?, texte = ? ");
+                .append(" (id_periode, id_matiere, id_classe, id_user_create, id_user_update, texte) VALUES ")
+                .append(" (?, ?, ?, ?, ?, ?) ")
+                .append(" ON CONFLICT (id_periode, id_matiere , id_classe) ")
+                .append(" DO UPDATE SET id_user_update = ?, texte = ? ");
 
         values.add(idPeriode).add(idMatiere).add(idClasse).add(userId).add(userId).add(texte).add(userId).add(texte);
 
@@ -79,9 +79,9 @@ public class DefaultElementProgramme implements ElementProgramme {
 
         query.append("SELECT texte, id_classe ")
                 .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE)
-                .append("WHERE ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE + ".id_classe IN ").append(Sql.listPrepared(idsClasse.getList()))
-                .append("AND ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE + ".id_periode = ? ")
-                .append("AND ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE + ".id_matiere = ? ");
+                .append(" WHERE ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE + ".id_classe IN ").append(Sql.listPrepared(idsClasse.getList()))
+                .append(" AND ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE + ".id_periode = ? ")
+                .append(" AND ").append(Competences.COMPETENCES_SCHEMA).append("." + Field.ELEMENT_PROGRAMME_TABLE + ".id_matiere = ? ");
 
         for(Object idClasse : idsClasse){
             values.add(idClasse);
