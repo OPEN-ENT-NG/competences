@@ -944,14 +944,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT " + Field.DEVOIR_TABLE + ".*,type_sousmatiere.libelle as _sousmatiere_libelle,sousmatiere.id as _sousmatiere_id " +
-                "FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.DEVOIR_TABLE +
+                " FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.DEVOIR_TABLE +
                 " LEFT JOIN "+ Competences.VSCO_SCHEMA +".sousmatiere ON " + Field.DEVOIR_TABLE + ".id_sousmatiere = sousmatiere.id " +
-                "LEFT JOIN "+ Competences.VSCO_SCHEMA +".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id " +
-                "WHERE " + Field.DEVOIR_TABLE + ".id_etablissement = ?" +
-                "AND " + Field.DEVOIR_TABLE + ".id_periode = ? " +
-                "AND " + Field.DEVOIR_TABLE + ".owner = ? " +
-                "AND " + Field.DEVOIR_TABLE + ".date_publication <= current_date " +
-                "ORDER BY " + Field.DEVOIR_TABLE + ".date ASC;");
+                " LEFT JOIN "+ Competences.VSCO_SCHEMA +".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id " +
+                " WHERE " + Field.DEVOIR_TABLE + ".id_etablissement = ? " +
+                " AND " + Field.DEVOIR_TABLE + ".id_periode = ? " +
+                " AND " + Field.DEVOIR_TABLE + ".owner = ? " +
+                " AND " + Field.DEVOIR_TABLE + ".date_publication <= current_date " +
+                " ORDER BY " + Field.DEVOIR_TABLE + ".date ASC;");
 
         values.add(idEtablissement);
         values.add(idPeriode);

@@ -284,7 +284,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     @Override
     public void getLastCompetencesDevoir(String idEtablissement, String userId, Handler<Either<String, JsonArray>> handler) {
 
-        String query = "WITH lastDevoir AS (SELECT * FROM " + DEVOIRS_TABLE + " AS " + Field.DEVOIR_TABLE +
+        String query = "WITH lastDevoir AS (SELECT * FROM " + DEVOIRS_TABLE + " AS devoirs " +
                 " WHERE " + Field.DEVOIR_TABLE + ".owner = ? ORDER BY " + Field.DEVOIR_TABLE + ".created DESC LIMIT 1)" +
                 " SELECT compDevoir.*, COALESCE(compPerso.nom, comp.nom) AS nom" +
                 " FROM " + COMPETENCES_DEVOIRS_TABLE + " AS compDevoir" +

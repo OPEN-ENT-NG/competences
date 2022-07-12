@@ -553,7 +553,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     .append(" as evaluation, id_eleve " )
                     .append(" FROM " ).append(COMPETENCES_SCHEMA).append( "." + Field.COMPETENCES_NOTES_TABLE)
                     .append(" WHERE id_eleve = ? ")
-                    .append(" GROUP BY (id, id_devoir, id_eleve) ) AS " + Field.COMPETENCES_NOTES_TABLE)
+                    .append(" GROUP BY (id, id_devoir, id_eleve) ) AS competences_notes  ")
                     .append(" ON " + Field.DEVOIR_TABLE + ".id ")
                     .append(" = " + Field.COMPETENCES_NOTES_TABLE + ".id_devoir " );
             values.add(eleveId);

@@ -368,17 +368,17 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 String queryMaxCompNoteNiveauFinalByPeriode = "(SELECT " + Field.COMPETENCES_NOTES_TABLE + ".id_competence, " +
                         Field.COMPETENCES_NOTES_TABLE + ".id_eleve, " + Field.DEVOIR_TABLE + ".id_periode, " + Field.DEVOIR_TABLE + ".id_matiere, CASE " +
 
-                        "WHEN " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve IS NULL AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve IS NULL" +
+                        " WHEN " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve IS NULL AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve IS NULL" +
                         "   THEN MAX(" + Field.COMPETENCES_NOTES_TABLE + ".evaluation) " +
 
-                        "WHEN " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve IS NOT NULL AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve IS NULL" +
+                        " WHEN " + Field.COMPETENCE_NIVEAU_FINAL + ".id_eleve IS NOT NULL AND " + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".id_eleve IS NULL" +
                         "   THEN MAX(" + Field.COMPETENCE_NIVEAU_FINAL + ".niveau_final) " +
 
-                        "ELSE MAX(" + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".niveau_final) " +
+                        " ELSE MAX(" + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ".niveau_final) " +
 
-                        "END AS max_comp "+
-                        "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_NOTES_TABLE +
-                        "INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE +
+                        " END AS max_comp "+
+                        " FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_NOTES_TABLE +
+                        " INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE +
                         " ON " + Field.DEVOIR_TABLE + ".id = " + Field.COMPETENCES_NOTES_TABLE + ".id_devoir" +
 
                         " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCE_NIVEAU_FINAL +
