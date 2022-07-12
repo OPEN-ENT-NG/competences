@@ -162,8 +162,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private void addStatmentNote(JsonArray statements, Long id_devoir, String id_eleve, Object valeur, String id_user){
 
         String query = "INSERT INTO " + COMPETENCES_SCHEMA + "." + Field.NOTES_TABLE +
-                "( id_eleve, id_devoir, valeur, owner ) VALUES ( ?, ?, ?, ? ) ON CONFLICT ( id_devoir, id_eleve ) " +
-                "DO UPDATE SET valeur = ?, owner = ?";
+                " ( id_eleve, id_devoir, valeur, owner ) VALUES ( ?, ?, ?, ? ) ON CONFLICT ( id_devoir, id_eleve ) " +
+                " DO UPDATE SET valeur = ?, owner = ?";
         JsonArray paramsNote = new JsonArray();
         paramsNote.add( id_eleve ).add( id_devoir ).add( valeur ).add( id_user).add( valeur ).add( id_user );
 
@@ -685,10 +685,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT moy.id_eleve, moy.id_periode, null as avis_conseil_orientation, ")
-                .append("null as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, ")
-                .append("moy.id_matiere, COALESCE(moy.moyenne, -100) AS moyenne, moy.id_classe ")
-                .append("FROM ").append(COMPETENCES_SCHEMA).append("." + Field.MOYENNE_FINALE_TABLE + " AS moy WHERE ");
+        query.append(" SELECT moy.id_eleve, moy.id_periode, null as avis_conseil_orientation, ")
+                .append(" null as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, ")
+                .append(" moy.id_matiere, COALESCE(moy.moyenne, -100) AS moyenne, moy.id_classe ")
+                .append(" FROM ").append(COMPETENCES_SCHEMA).append("." + Field.MOYENNE_FINALE_TABLE + " AS moy WHERE ");
 
         if (null != idEleves) {
             query.append("moy.id_eleve IN ").append(Sql.listPrepared(idEleves.getList().toArray()));
@@ -717,9 +717,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         query.append(" UNION ")
-                .append("SELECT pos.id_eleve, pos.id_periode, null as avis_conseil_orientation, null as avis_conseil_de_classe, ")
-                .append("null as synthese_bilan_periodique, pos.positionnement, pos.id_matiere, null as moyenne, null as id_classe ")
-                .append("FROM ").append(COMPETENCES_SCHEMA).append(".positionnement AS pos WHERE ");
+                .append(" SELECT pos.id_eleve, pos.id_periode, null as avis_conseil_orientation, null as avis_conseil_de_classe, ")
+                .append(" null as synthese_bilan_periodique, pos.positionnement, pos.id_matiere, null as moyenne, null as id_classe ")
+                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".positionnement AS pos WHERE ");
 
         if (null != idEleves) {
             query.append("pos.id_eleve IN ").append(Sql.listPrepared(idEleves.getList().toArray()));
@@ -741,14 +741,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         query.append(" UNION ")
-                .append("SELECT IdTableAvisOrientation.id_eleve, IdTableAvisOrientation.id_periode, libelleTableAvisOrientation.libelle as avis_conseil_orientation, ")
-                .append("null as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, null as id_matiere, null as moyenne, null as id_classe ")
-                .append("FROM ").append(COMPETENCES_SCHEMA).append(".avis_conseil_orientation AS IdTableAvisOrientation ")
-                .append("JOIN ").append(COMPETENCES_SCHEMA).append(".avis_conseil_bilan_periodique AS libelleTableAvisOrientation ON ")
-                .append("IdTableAvisOrientation.id_avis_conseil_bilan = libelleTableAvisOrientation.id WHERE ");
+                .append(" SELECT IdTableAvisOrientation.id_eleve, IdTableAvisOrientation.id_periode, libelleTableAvisOrientation.libelle as avis_conseil_orientation, ")
+                .append(" null as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, null as id_matiere, null as moyenne, null as id_classe ")
+                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".avis_conseil_orientation AS IdTableAvisOrientation ")
+                .append(" JOIN ").append(COMPETENCES_SCHEMA).append(".avis_conseil_bilan_periodique AS libelleTableAvisOrientation ON ")
+                .append(" IdTableAvisOrientation.id_avis_conseil_bilan = libelleTableAvisOrientation.id WHERE ");
 
         if (null != idEleves) {
-            query.append("IdTableAvisOrientation.id_eleve IN ").append(Sql.listPrepared(idEleves.getList().toArray()));
+            query.append(" IdTableAvisOrientation.id_eleve IN ").append(Sql.listPrepared(idEleves.getList().toArray()));
             for (int i = 0; i < idEleves.size(); i++) {
                 values.add(idEleves.getString(i));
             }
@@ -765,11 +765,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         query.append(" UNION ")
-                .append("SELECT IdTableAvisConseil.id_eleve, IdTableAvisConseil.id_periode, null as avis_conseil_orientation,")
-                .append("libelleTableAvisConseil.libelle as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, null as id_matiere, ")
-                .append("null as moyenne, null as id_classe FROM ").append(COMPETENCES_SCHEMA).append(".avis_conseil_de_classe AS IdTableAvisConseil ")
-                .append("JOIN ").append(COMPETENCES_SCHEMA).append(".avis_conseil_bilan_periodique AS libelleTableAvisConseil ON ")
-                .append("IdTableAvisConseil.id_avis_conseil_bilan = libelleTableAvisConseil.id WHERE ");
+                .append(" SELECT IdTableAvisConseil.id_eleve, IdTableAvisConseil.id_periode, null as avis_conseil_orientation,")
+                .append(" libelleTableAvisConseil.libelle as avis_conseil_de_classe, null as synthese_bilan_periodique, null as positionnement, null as id_matiere, ")
+                .append(" null as moyenne, null as id_classe FROM ").append(COMPETENCES_SCHEMA).append(".avis_conseil_de_classe AS IdTableAvisConseil ")
+                .append(" JOIN ").append(COMPETENCES_SCHEMA).append(".avis_conseil_bilan_periodique AS libelleTableAvisConseil ON ")
+                .append(" IdTableAvisConseil.id_avis_conseil_bilan = libelleTableAvisConseil.id WHERE ");
 
         if (null != idEleves) {
             query.append("IdTableAvisConseil.id_eleve IN ").append(Sql.listPrepared(idEleves.getList().toArray()));
@@ -788,10 +788,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             values.add(idStructure);
         }
 
-        query.append("UNION ")
-                .append("SELECT syntheseBP.id_eleve, syntheseBP.id_typeperiode as id_periode, null as avis_conseil_orientation, null as avis_conseil_de_classe,")
-                .append("syntheseBP.synthese as synthese_bilan_periodique, null as positionnement, null as id_matiere, null as moyenne, null as id_classe ")
-                .append("FROM ").append(COMPETENCES_SCHEMA).append(".synthese_bilan_periodique AS syntheseBP WHERE ");
+        query.append(" UNION ")
+                .append(" SELECT syntheseBP.id_eleve, syntheseBP.id_typeperiode as id_periode, null as avis_conseil_orientation, null as avis_conseil_de_classe,")
+                .append(" syntheseBP.synthese as synthese_bilan_periodique, null as positionnement, null as id_matiere, null as moyenne, null as id_classe ")
+                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".synthese_bilan_periodique AS syntheseBP WHERE ");
 
         if (null != idEleves) {
             query.append("syntheseBP.id_eleve IN ").append(Sql.listPrepared(idEleves.getList().toArray()));

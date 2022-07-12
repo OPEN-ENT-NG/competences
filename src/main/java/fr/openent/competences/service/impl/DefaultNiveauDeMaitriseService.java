@@ -96,7 +96,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT " + Field.NIVEAU_COMPETENCES_TABLE + ".libelle, " + Field.NIVEAU_COMPETENCES_TABLE + ".ordre, ")
-                .append(" " + Field.NIVEAU_COMPETENCES_TABLE + ".couleur couleurDefault, " + Field.NIVEAU_COMPETENCES_TABLE + ".id_cycle  ")
+                .append(Field.NIVEAU_COMPETENCES_TABLE + ".couleur couleurDefault, " + Field.NIVEAU_COMPETENCES_TABLE + ".id_cycle  ")
                 .append(" FROM  notes." + Field.NIVEAU_COMPETENCES_TABLE)
                 .append(" INNER JOIN " +   Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
                 .append(" ON id_groupe = ? AND rel_groupe_cycle.id_cycle = " + Field.NIVEAU_COMPETENCES_TABLE + ".id_cycle ")
