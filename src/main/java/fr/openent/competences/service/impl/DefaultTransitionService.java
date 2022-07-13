@@ -81,7 +81,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                     finalHandler.handle(new Either.Left<>("transition année : établissement inactif : id Etablissement : " + idStructureATraiter));
                 }
             } else {
-                log.error("transition année : problème dans la requête chechant si l'établissement est actif");
+                log.error("transition année : problème dans la requête chechant si l'établissement est actif : " + event.left().getValue());
                 log.info("FIN : transition année ");
                 finalHandler.handle(new Either.Left<>("transition année : problème dans la requête chechant si l'établissement est actif"));
             }
@@ -111,9 +111,11 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                                                                 String idStructureATraiter, JsonObject structure) {
         return event -> {
             if(event.isLeft()){
-                log.error(event.left().getValue());
+                log.error("transition année : l'établissement a une erreur dans la récupération des valeurs des conditions: "
+                        + event.left().getValue());
                 finalHandler.handle(new Either.Left<>(
-                        "transition année : l'établissement a une erreur dans la récupération des valeurs des conditions : " + idStructureATraiter));
+                        "transition année : l'établissement a une erreur dans la récupération des valeurs des conditions : "
+                                + idStructureATraiter));
             }else {
                 log.info(event.right().getValue());
                 Boolean hasDevoir = event.right().getValue().getBoolean("has_devoir");
@@ -124,7 +126,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                     log.warn("transition année : établissement déjà effectuée : " +
                             "id Etablissement : " + idStructureATraiter);
                     finalHandler.handle(new Either.Left<>(
-                            "transition année : l'établissement a déjà effectué sa transition d'année : " + idStructureATraiter));
+                            "transition année : l'établissement a déjà effectué sa transition d'année : "
+                                    + idStructureATraiter));
                 } else {
                     if (!hasDevoir || !hasPeriode) {
                         if (!hasDevoir)
@@ -134,7 +137,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                             log.warn("transition année : établissement n'a pas de periode " +
                                     "paramétrée : id Etablissement : " + idStructureATraiter);
                         finalHandler.handle(new Either.Left<>(
-                                "transition année : établissement n'a pas de devoir ou de periodes : id Etablissement : " + idStructureATraiter));
+                                "transition année : établissement n'a pas de devoir ou de periodes : id Etablissement : "
+                                        + idStructureATraiter));
                     } else {
                         Map<String, List<String>> classeIdsEleves = new HashMap<>();
                         List<String> vListIdsGroupesATraiter = new ArrayList<>();
@@ -145,9 +149,11 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                     vMapGroupesATraiter, listIdClassWithPeriode, structure, idStructureATraiter, finalHandler)
                             );
                         } else {
-                            log.warn("transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter);
+                            log.warn("transition année :  erreur lors de la récupération des groupes : id Etablissement : "
+                                    + idStructureATraiter);
                             finalHandler.handle(new Either.Left<>(
-                                    "transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter));
+                                    "transition année :  erreur lors de la récupération des groupes : id Etablissement : "
+                                            + idStructureATraiter));
                         }
                     }
                 }
@@ -162,8 +168,10 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
     }
 
-    private Handler<Either<String, JsonArray>> handlerGetInfosClasses(Map<String, List<String>> classeIdsEleves, List<String> vListIdsGroupesATraiter,
-                                                                      Map<String, String> vMapGroupesATraiter, List<String> listIdClassWithPeriode,
+    private Handler<Either<String, JsonArray>> handlerGetInfosClasses(Map<String, List<String>> classeIdsEleves,
+                                                                      List<String> vListIdsGroupesATraiter,
+                                                                      Map<String, String> vMapGroupesATraiter,
+                                                                      List<String> listIdClassWithPeriode,
                                                                       JsonObject structure, String idStructureATraiter,
                                                                       Handler<Either<String, JsonArray>> finalHandler) {
         return event -> {
