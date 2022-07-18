@@ -8,7 +8,6 @@ import fr.openent.competences.service.MongoExportService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -34,7 +33,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
         String neo4jConfig = (String) vertx.sharedData().getLocalMap("server").get("neo4jConfig");
         Neo4j.getInstance().init(vertx, new JsonObject(neo4jConfig));
         this.storage = new StorageFactory(vertx).getStorage();
-        this.exportBulletinService = new DefaultExportBulletinService(eb, storage, vertx);
+        this.exportBulletinService = new DefaultExportBulletinService(eb, storage, vertx , config);
         vertx.eventBus().localConsumer(BulletinWorker.class.getSimpleName(), this);
         processExport();
     }
@@ -63,6 +62,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
             if(event.isRight() &&  !event.right().getValue().isEmpty() ){
                 log.info("[Competences@BulletinWorker::processExport ] getWaitingExport");
                 JsonObject waitingOrder = event.right().getValue();
+                log.info(config.getJsonObject("node-pdf-generator"));
                 chooseExport( waitingOrder,exportHandler);
             }else{
                 isSleeping = true;

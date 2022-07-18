@@ -31,6 +31,8 @@ import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.http.request.JsonHttpServerRequest;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
+import org.entcore.common.pdf.PdfFactory;
+import org.entcore.common.pdf.PdfGenerator;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.storage.Storage;
@@ -188,7 +190,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private DefaultNoteService noteService;
     private WorkspaceHelper workspaceHelper;
     private MongoExportService mongoExportService;
-
+    private PdfFactory pdfFactory;
     public DefaultExportBulletinService(EventBus eb, Storage storage) {
         this.eb = eb;
         bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
@@ -209,7 +211,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         workspaceHelper = new WorkspaceHelper(eb,storage);
     }
 
-    public DefaultExportBulletinService(EventBus eb, Storage storage, Vertx vertx) {
+    public DefaultExportBulletinService(EventBus eb, Storage storage, Vertx vertx, JsonObject config) {
         this.eb = eb;
         bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
         elementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService(eb);
@@ -228,6 +230,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         this.httpClient =  createHttpClient(vertx);
         workspaceHelper = new WorkspaceHelper(eb,storage);
+
+        pdfFactory = new PdfFactory(vertx,
+                new JsonObject().put("node-pdf-generator",
+                        config.getJsonObject("node-pdf-generator", new JsonObject())));
 
     }
 
@@ -3282,7 +3288,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             @Override
             public void handle(Writer writer) {
                 try{
+                    PdfGenerator pdfGenerator = pdfFactory.getPdfGenerator();
+                    log.info(pdfGenerator);
                     String processedTemplate = ((StringWriter) writer).getBuffer().toString();
+                    pdfGenerator.generatePdfFromTemplate("title", processedTemplate, ar -> {
+                        if (ar.failed()) {
+                            log.info(ar.cause().getMessage());
+                            log.error("[Formulaire@generatePDF] Failed to generatePdfFromTemplate : " + ar.cause().getMessage());
+                        } else {
+                            log.info("LETSGOOOOOOOOOOOOOOOOOOO");
+                        }
+                    });
                     JsonObject actionObject = new JsonObject();
                     byte[] bytes;
                     try {
