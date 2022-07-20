@@ -90,13 +90,102 @@ function addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales) {
     }
 }
 
+function getMoyenneSubTopic(matiere: any, devoirsMatieres: any[], subTopicsServices, moyennesFinales) {
+    let coefficientTotal = 0;
+    let sumMoyenneSubTopic = 0
+    for (let sousMat of matiere.sousMatieres.all) {
+        let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
+        let mapTeacherDevoirs = new Map();
+
+        devoirsSousMat.forEach(devoir => {
+            if (mapTeacherDevoirs.get(devoir.owner) === undefined) {
+                let devoirArray = []
+                devoirArray.push(devoir);
+                mapTeacherDevoirs.set(devoir.owner, devoirArray)
+            } else {
+                let devoirArray = mapTeacherDevoirs.get(devoir.owner)
+                devoirArray.push(devoir);
+                mapTeacherDevoirs.set(devoir.owner, devoirArray)
+            }
+        })
+        if (devoirsSousMat.length > 0) {
+            mapTeacherDevoirs.forEach((devoirArray, key) => {
+                let coefficient = 1;
+                let subTopicsService = subTopicsServices.all.find(subTopic => subTopic.id_subtopic === sousMat.id_type_sousmatiere
+                    && subTopic.id_topic === matiere.id && subTopic.id_teacher === key)
+                if (subTopicsService)
+                    coefficient = subTopicsService.coefficient
+                let moyenneFinale = _.findWhere(moyennesFinales, {id_matiere: sousMat.id_type_sousmatiere});
+                if (moyenneFinale) {
+                    if (moyenneFinale.moyenne == null) {
+                        matiere.moyenne = "NN";
+                    } else {
+                        matiere.moyenne = moyenneFinale.moyenne;
+                        sumMoyenneSubTopic += matiere.moyenne * coefficient;
+                        coefficientTotal += coefficient;
+                    }
+                } else {
+                    sousMat.moyenne = getMoyenne(devoirsSousMat);
+                    sumMoyenneSubTopic += sousMat.moyenne * coefficient;
+                    coefficientTotal += coefficient;
+                }
+            })
+        } else {
+            sousMat.moyenne = "";
+        }
+    }
+
+    if (coefficientTotal != 0)
+        matiere.moyenne = (sumMoyenneSubTopic / coefficientTotal).toFixed(2);
+    else
+        matiere.moyenne = ""
+}
+
+export async function calculMoyennesWithSubTopic(periode_idType, id_eleve, matieresReleve, matieres, dataReleveDevoirs,subTopicsServices) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let url = '/competences/eleve/' + id_eleve + "/moyenneFinale?";
+            if (periode_idType)
+                url += "idPeriode=" + periode_idType.toString();
+            http.get(url).then(res => {
+                let moyennesFinales = res.data;
+                addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales);
+                for (let matiere of matieresReleve) {
+                    let devoirsMatieres = dataReleveDevoirs.where({id_matiere: matiere.id});
+                    if (devoirsMatieres !== undefined) {
+                        let moyenneFinale = _.findWhere(moyennesFinales, {id_matiere: matiere.id});
+                        if (moyenneFinale) {
+                            if (moyenneFinale.moyenne == null) {
+                                matiere.moyenne = "NN";
+                            } else {
+                                matiere.moyenne = moyenneFinale.moyenne;
+                            }
+                        } else {
+                            if(!(matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0))
+                                matiere.moyenne = getMoyenne(devoirsMatieres);
+
+                        }
+                        if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
+                             getMoyenneSubTopic(matiere, devoirsMatieres, subTopicsServices, moyennesFinales);
+                        }
+                    }
+                }
+                resolve();
+            });
+        } catch (e) {
+            console.error(e);
+            reject(e);
+        }
+    });
+}
+
+//DELTE AFTER and replace with previous
 export async function calculMoyennes(periode_idType, id_eleve, matieresReleve, matieres, dataReleveDevoirs) {
     return new Promise(async (resolve, reject) => {
         try {
             let url = '/competences/eleve/' + id_eleve + "/moyenneFinale?";
             if (periode_idType)
                 url += "idPeriode=" + periode_idType.toString();
-
             http.get(url).then(res => {
                 let moyennesFinales = res.data;
                 addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales);
@@ -115,6 +204,8 @@ export async function calculMoyennes(periode_idType, id_eleve, matieresReleve, m
                         }
                         if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
                             for (let sousMat of matiere.sousMatieres.all) {
+                                console.log(matiere.name)
+                                console.log(devoirsMatieres)
                                 let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
                                 if (devoirsSousMat.length > 0) {
                                     let moyenneFinale = _.findWhere(moyennesFinales, {id_matiere: sousMat.id_type_sousmatiere});
