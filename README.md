@@ -4,6 +4,9 @@
 * Financeur(s) : Département de la Seine-et-Marne, CGI, Région Hauts-de-France (ex Picardie)
 * Description : Application de gestion des compétences
 
+## Présentation du module
+Le module Evaluations permet la création d'évaluations en choisissant son mode d'évaluation par compétences ou par notes. Il permet également le suivi des résultats par les parents, la génération et la remontée au ministère des livrets scolaires et le suivi de la progression de l'élève tout au long des cycles. Des affichages graphiques permettent de facilité ce suivi pendant les conseils de classe.
+
 ## Configuration
 <pre>
     {
