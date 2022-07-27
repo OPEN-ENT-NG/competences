@@ -69,7 +69,7 @@ function getMoyenne (devoirs) {
 
             if (null == moyenne) moyenne = 0.0;
 
-            return +(moyenne).toFixed(2);
+            return +(moyenne).toFixed(1);
         }else{
             return "NN";
         }
@@ -111,7 +111,7 @@ function getMoyenneSubTopic(matiere: any, devoirsMatieres: any[], subTopicsServi
         if (devoirsSousMat.length > 0) {
             mapTeacherDevoirs.forEach((devoirArray, key) => {
                 let coefficient = 1;
-                let subTopicsService = subTopicsServices.all.find(subTopic => subTopic.id_subtopic === sousMat.id_type_sousmatiere
+                let subTopicsService = subTopicsServices.find(subTopic => subTopic.id_subtopic === sousMat.id_type_sousmatiere
                     && subTopic.id_topic === matiere.id && subTopic.id_teacher === key)
                 if (subTopicsService)
                     coefficient = subTopicsService.coefficient
