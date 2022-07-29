@@ -2136,7 +2136,7 @@ public class DefaultExportService implements ExportService {
                 double currentCoeff = 1.d;
                 JsonObject moySousMatiere = null;
                 if (isNotNull(notesSousMat)) {
-                     moySousMatiere  = utilsService.calculMoyenne(notesSousMat, false, 20, false);
+                    moySousMatiere  = utilsService.calculMoyenne(notesSousMat, false, 20, false);
                     moy = moySousMatiere.getValue(MOYENNE).toString();
                     if (!moy.equals("NN"))
                         moy += "/20";
@@ -2160,13 +2160,15 @@ public class DefaultExportService implements ExportService {
                     if (service != null) {
                         SubTopic subTopic  = service.getSubtopics().stream()
                                 .filter(subTopic1 ->  idSousMatiere.equals(subTopic1.getId())
-                                       )
+                                )
                                 .findFirst().orElse(null);
                         if(subTopic != null) {
                             currentCoeff = subTopic.getCoefficient();
                         }
                     }
                 }
+                if(currentCoeff != 1)
+                    sousMatiere.put("coeff",currentCoeff);
                 if(moySousMatiere != null) {
                     coefficient += currentCoeff;
                     moyenneTotal += moySousMatiere.getDouble(MOYENNE) * currentCoeff;
