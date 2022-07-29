@@ -32,3 +32,25 @@ Il est nécessaire de mettre ***competences:true*** dans services du module vie 
      ...
  }
 </pre>
+
+## Archivage / Transition
+
+### Avant la transition
+
+Avant de déclencher la transition, il faut lancer l'API `POST /competences/transition/before?year={{year_backup}}`  (avec un compte ADMC)
+####
+Exemple `year_backup` peut être "2020_2021" pour le nommage du schema backup.
+####
+Cette API va procéder : 
+* Clonage des schémas notes et viesco
+* Suppression de quelques tables (`viesco.rel_structures_personne_supp`, `viesco.rel_groupes_personne_supp`, `viesco.personnes_supp`, `notes.transition`, `notes.match_class_id_transition`)
+* Mis à jour de table `match_class_id_transition` avec les infos sur la `table rel_groupe_cycle` et les informations sur les groupes stockées dans l'annuaire (Neo4j)
+
+
+### Après la transition
+Après la transition, il faut lancer l'API `POST /competences/transition/after`  (avec un compte ADMC)
+
+Cette API va procéder :
+* Purge de nombreuses tables
+* Mise à jour des identifiants des classes (pour la table `rel_groupe_cycle`) afin que cela puisse correspondre avec les nouveaux identifiants des classes dans l'annuaire (Neo4j)
+* Suppression des sous-matières qui étaient reliées à des matières non manuelles
