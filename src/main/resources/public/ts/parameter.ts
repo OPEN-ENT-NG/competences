@@ -1,7 +1,6 @@
 import {ng} from "entcore";
 import {ParameterService} from "./services";
 import {adminParameterController} from "./controllers/admin-parameter"
-import * as services from './services';
 import {cFilAriane} from "./utils/directives/cFilAriane";
 import {navigable} from "./utils/directives/navigable";
 import {navigatable} from "./utils/directives/navigatable";
@@ -21,6 +20,7 @@ import {messageLoader} from "./utils/directives/messageLoading";
 import {inputTextList} from "./directives/inputTextList";
 import {teachingsSkills} from "./directives/teachingsSkills";
 import {cSkillsBubble} from "./directives/cSkillsBubble";
+
 ng.addRequiredModule('chart.js');
 ng.services.push(ParameterService);
 ng.controllers.push(adminParameterController);
