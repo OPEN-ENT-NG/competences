@@ -28,6 +28,7 @@ import {paramImportCSV} from "./sniplets/param_import_csv";
 import {programElements} from "./sniplets/programsElement";
 import {orderShowSubject} from "./sniplets/orderShowSubject";
 import {notesMementoWidget} from "./sniplets/memento"
+import {structureOptionIsAverageSkills} from "./sniplets/structure-option-is-average-skills";
 
 Behaviours.register('competences', {
     rights: {
@@ -63,6 +64,7 @@ Behaviours.register('competences', {
     loadResources: async function (callback) {
     },
     sniplets: {
+        'structure-option-is-average-skills' :  structureOptionIsAverageSkills,
         visibilitymoyBFC: visibilitymoyBFC,
         visibilityDNB: visibilityDNB,
         itemsCompetences: itemsCompetences,

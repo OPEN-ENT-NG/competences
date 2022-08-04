@@ -1,0 +1,1 @@
+ALTER TABLE notes.structure_options ADD COLUMN is_average_skills boolean DEFAULT false;
