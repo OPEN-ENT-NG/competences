@@ -2,7 +2,6 @@
 import {
     structureOptionsService,
     IStructureOptionsService,
-    StructureOptionsService,
     StructureOptions
 } from "../services";
 
