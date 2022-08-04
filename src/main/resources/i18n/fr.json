@@ -181,7 +181,7 @@
   "evaluations.remplacement.add":"Ajouter un remplacement",
   "evaluations.remplacement.titulaire":"Titulaire",
   "evaluations.remplacement.remplacant":"Remplaçant",
-  "evaluations.level": "Niveau de maitrise",
+  "evaluations.level": "Niveau de maitrise et calcul du niveau",
   "evaluations.remplacement.debut":"Début",
   "evaluations.remplacement.fin":"Fin",
   "evaluations.remplacement.ajouter":"Ajouter le remplacement",
@@ -823,5 +823,11 @@
   "competence.createCompetence.domaine" : "Domaines",
   "competence.createCompetence.success": "Nouvel item de compétence créé.",
   "competence.createCompetence.error": "Erreur lors de la création de l'item.",
-  "competence.createCompetence.error.unautorize": "Désolé, vous n'êtes pas autorisé à créer des items."
+  "competence.createCompetence.error.unautorize": "Désolé, vous n'êtes pas autorisé à créer des items.",
+  "competence.struture.option.default.sentence": "Par défault, si un item est évalué sur plusieurs devoirs, c'est le niveau maximum qui est retenu.",
+  "competence.struture.option.is.average.skills": "Calculer et utiliser la moyenne des niveaux pour chaque item de compétences",
+  "viescolaire.confirmation.updateSchoolYear": "Vous allez changer les dates de l'année scolaire.Des applications pourraient être impactées par ce changement. Voulez-vous continuer ?",
+  "competence.structure.option.title.calculate.level.skills": "Calcul du niveau des items de compétences",
+  "competences.structure.options.error.get": "une erreur est survenue lors de la récupération de l'option du calcul des compétences",
+  "competences.structure.options.error.save": "une erreur est survenue lors de la sauvegarde du calcul des compétences"
 }
