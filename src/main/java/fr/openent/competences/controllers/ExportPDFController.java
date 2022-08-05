@@ -22,6 +22,7 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
+import fr.openent.competences.model.*;
 import fr.openent.competences.security.AccessAdminHeadTeacherFilter;
 import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
@@ -67,6 +68,8 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
+
+import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -582,6 +585,7 @@ public class ExportPDFController extends ControllerHelper {
 
         Future<Map<JsonObject, String>> apprFuture = Future.future();
         Future<Map<JsonObject, Map<String, List<NoteDevoir>>>> notesFuture = Future.future();
+        Future<Map<JsonObject, Map<String, Map<Long, List<NoteDevoir>>>>> notesBySousMatiereFuture = Future.future();
         Future<Map<JsonObject, Map<String, NoteDevoir>>> moyennesFinalFuture = Future.future();
 
         Future<Map<String, JsonObject>> libMatFuture = Future.future();
@@ -615,14 +619,32 @@ public class ExportPDFController extends ControllerHelper {
             formate(multiTeachersFuture, event);
         });
 
-        Future<JsonArray> servicesFuture = Future.future();
-        log.info("exportpdf controller");
-        utilsService.getServices(idEtablissement, new JsonArray().add(idClasse), event -> {
-            formate(servicesFuture, event);
-        });
+        Promise<Object> multiTeachingPromise = Promise.promise();
+        utilsService.getMultiTeachers(idEtablissement,
+                new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise));
 
-        CompositeFuture.all(idElevesFuture, idGroupesFuture, multiTeachersFuture, servicesFuture).setHandler(event -> {
+        Promise<Object> servicesPromise = Promise.promise();
+        utilsService.getServices(idEtablissement,
+                new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
+
+        Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+        utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
+
+        CompositeFuture.all(idElevesFuture, idGroupesFuture, multiTeachersFuture, multiTeachingPromise.future(),
+                servicesPromise.future(), subTopicCoefPromise.future()).setHandler(event -> {
             if(event.succeeded()) {
+
+                Structure structure = new Structure();
+                structure.setId(idEtablissement);
+                JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
+                JsonArray multiTeachers = (JsonArray) multiTeachingPromise.future().result();
+                List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+
+                List<Service> services = new ArrayList<>();
+                List<MultiTeaching> multiTeachings = new ArrayList<>();
+                new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClasse);
+                setServices(structure, servicesJson, services, subTopics);
+
                 Set<String> idGroups = new HashSet<>(Collections.singleton(idClasse));
                 idGroupesFuture.result().stream().forEach(line -> {
                     idGroups.add(((JsonObject) line).getString("id_classe"));
@@ -654,6 +676,7 @@ public class ExportPDFController extends ControllerHelper {
                         resultNotesEleves -> {
                             if (resultNotesEleves.isRight()) {
                                 Map<JsonObject, Map<String, List<NoteDevoir>>> notes = new HashMap<>();
+                                Map<JsonObject, Map<String, Map<Long, List<NoteDevoir>>>> notesBySousMatiere = new HashMap<>();
 
                                 resultNotesEleves.right().getValue().stream().forEach(line -> {
                                     JsonObject lineObject = (JsonObject) line;
@@ -665,9 +688,9 @@ public class ExportPDFController extends ControllerHelper {
                                     MatGrp.add(key);
 
                                     Boolean isVisible = true;
-                                    JsonArray services = servicesFuture.result();
-                                    for(int i = 0; i < services.size(); i++){
-                                        JsonObject service = (JsonObject) services.getJsonObject(i);
+                                    JsonArray servicesJSON = (JsonArray) servicesPromise.future().result();
+                                    for(int i = 0; i < servicesJSON.size(); i++){
+                                        JsonObject service = servicesJSON.getJsonObject(i);
 
                                         String serviceIdMatiere = service.getString("id_matiere");
                                         String lineIdMatiere = lineObject.getString("id_matiere");
@@ -680,25 +703,86 @@ public class ExportPDFController extends ControllerHelper {
                                         teachers.put(key, lineObject.getString("owner"));
                                     }
 
+                                    Matiere matiere = new Matiere(lineObject.getString("id_matiere"));
+                                    Teacher teacher = new Teacher(lineObject.getString("owner"));
+                                    Group group = new Group(idClasse);
+
+                                    Service service = services.stream()
+                                            .filter(el -> teacher.getId().equals(el.getTeacher().getId())
+                                                    && matiere.getId().equals(el.getMatiere().getId())
+                                                    && group.getId().equals(el.getGroup().getId()))
+                                            .findFirst().orElse(null);
+
+                                    if (service == null){
+                                        //On regarde les multiTeacher
+                                        for(Object mutliTeachO: multiTeachers){
+                                            //multiTeaching.getString("second_teacher_id").equals(teacher.getId()
+                                            JsonObject multiTeaching  =(JsonObject) mutliTeachO;
+                                            if(multiTeaching.getString("main_teacher_id").equals(teacher.getId())
+                                                    && multiTeaching.getString("id_classe").equals(group.getId())
+                                                    && multiTeaching.getString("subject_id").equals(matiere.getId())){
+                                                service = services.stream()
+                                                        .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString("second_teacher_id"))
+                                                                && matiere.getId().equals(el.getMatiere().getId())
+                                                                && group.getId().equals(el.getGroup().getId()))
+                                                        .findFirst().orElse(null);
+                                            }
+
+                                            if(multiTeaching.getString("second_teacher_id").equals(teacher.getId())
+                                                    && multiTeaching.getString("class_or_group_id").equals(group.getId())
+                                                    && multiTeaching.getString("subject_id").equals(matiere.getId())){
+
+                                                service = services.stream()
+                                                        .filter(el -> multiTeaching.getString("main_teacher_id").equals(el.getTeacher().getId())
+                                                                && matiere.getId().equals(el.getMatiere().getId())
+                                                                && group.getId().equals(el.getGroup().getId()))
+                                                        .findFirst().orElse(null);
+                                            }
+                                        }
+                                    }
+
+                                    Long sousMatiereId = lineObject.getLong("id_sousmatiere");
+                                    Long id_periode = lineObject.getLong("id_periode");
+
                                     NoteDevoir note = new NoteDevoir(Double.parseDouble(lineObject.getString("valeur")),
                                             lineObject.getLong("diviseur").doubleValue(),
                                             lineObject.getBoolean("ramener_sur"),
-                                            Double.parseDouble(lineObject.getString(COEFFICIENT)));
+                                            Double.parseDouble(lineObject.getString(COEFFICIENT)),
+                                            lineObject.getString("id_eleve"), id_periode, service, sousMatiereId);
 
-                                    if (!notes.containsKey(key)) {
-                                        notes.put(key, new HashMap<>());
-                                    }
+                                    if (sousMatiereId != null) {
+                                        if (!notesBySousMatiere.containsKey(key)) {
+                                            notesBySousMatiere.put(key, new HashMap<>());
+                                        }
 
-                                    if (!notes.get(key).containsKey(lineObject.getString("id_eleve"))) {
-                                        notes.get(key).put(lineObject.getString("id_eleve"), new ArrayList<>());
+                                        if (!notesBySousMatiere.get(key).containsKey(lineObject.getString("id_eleve"))) {
+                                            notesBySousMatiere.get(key).put(lineObject.getString("id_eleve"), new HashMap<>());
+                                        }
+
+                                        if (!notesBySousMatiere.get(key).get(lineObject.getString("id_eleve")).containsKey(sousMatiereId)) {
+                                            notesBySousMatiere.get(key).get(lineObject.getString("id_eleve")).put(sousMatiereId, new ArrayList<>());
+                                        }
+
+                                        notesBySousMatiere.get(key).get(lineObject.getString("id_eleve")).get(sousMatiereId).add(note);
                                     }
-                                    notes.get(key).get(lineObject.getString("id_eleve")).add(note);
+                                    else {
+                                        if (!notes.containsKey(key)) {
+                                            notes.put(key, new HashMap<>());
+                                        }
+
+                                        if (!notes.get(key).containsKey(lineObject.getString("id_eleve"))) {
+                                            notes.get(key).put(lineObject.getString("id_eleve"), new ArrayList<>());
+                                        }
+                                        notes.get(key).get(lineObject.getString("id_eleve")).add(note);
+                                    }
                                 });
 
                                 notesFuture.complete(notes);
+                                notesBySousMatiereFuture.complete(notesBySousMatiere);
 
                             } else {
                                 notesFuture.fail(resultNotesEleves.left().getValue());
+                                notesBySousMatiereFuture.fail(resultNotesEleves.left().getValue());
                             }
                         });
 
@@ -755,11 +839,12 @@ public class ExportPDFController extends ControllerHelper {
             }
         });
 
-        CompositeFuture.all(apprFuture, notesFuture, moyennesFinalFuture).setHandler(compositeFutureAsyncResult -> {
+        CompositeFuture.all(apprFuture, notesFuture, moyennesFinalFuture, notesBySousMatiereFuture).setHandler(compositeFutureAsyncResult -> {
             if (compositeFutureAsyncResult.succeeded()) {
                 Map<JsonObject, String> appr = compositeFutureAsyncResult.result().resultAt(0);
                 Map<JsonObject, Map<String, List<NoteDevoir>>> notes = compositeFutureAsyncResult.result().resultAt(1);
                 Map<JsonObject, Map<String, NoteDevoir>> moyennesFinales = compositeFutureAsyncResult.result().resultAt(2);
+                Map<JsonObject, Map<String, Map<Long, List<NoteDevoir>>>> notesBySousMatiere = compositeFutureAsyncResult.result().resultAt(3);
 
                 Map<JsonObject, JsonObject> moyObjects = MatGrp.stream().collect(Collectors.toMap(val -> val, val -> new JsonObject()));
 
@@ -771,10 +856,41 @@ public class ExportPDFController extends ControllerHelper {
                     idElevesFuture.result().stream().forEach(idEleve -> {
                         if (moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() != null) {
                             matGrpNotes.add(moyennesFinales.get(matGrp).get(idEleve));
-                        } else if (notes.containsKey(matGrp) && notes.get(matGrp).containsKey(idEleve) &&
-                                !(moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() == null)) {
-                            if(!"NN".equals(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null,false).getValue(MOYENNE))) {
-                                matGrpNotes.add(new NoteDevoir(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null, false).getDouble(MOYENNE), false, new Double(1)));
+                        }
+                        else {
+                            if (notesBySousMatiere.containsKey(matGrp) && notesBySousMatiere.get(matGrp).containsKey(idEleve)) {
+                                if (!(moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() == null)) {
+                                    double total = 0;
+                                    double totalCoeff = 0;
+                                    for (Map.Entry<Long, List<NoteDevoir>> sousMatMapEntry : notesBySousMatiere.get(matGrp).get(idEleve).entrySet()) {
+                                        Long idSousMat = sousMatMapEntry.getKey();
+                                        Service serv = sousMatMapEntry.getValue().get(0).getService();
+                                        double coeff = 1.d;
+
+                                        if (serv != null && serv.getSubtopics() != null && serv.getSubtopics().size() > 0) {
+                                            SubTopic subTopic = serv.getSubtopics().stream()
+                                                    .filter(el ->
+                                                            el.getId().equals(idSousMat)
+                                                    ).findFirst().orElse(null);
+                                            if (subTopic != null)
+                                                coeff = subTopic.getCoefficient();
+                                        }
+
+                                        Double moyenSousMat = utilsService.calculMoyenne(sousMatMapEntry.getValue(), false, 20, false).getDouble("moyenne");
+
+                                        total += coeff * moyenSousMat;
+                                        totalCoeff += coeff;
+                                    }
+                                    Double moy = Math.round((total / totalCoeff) * 10.0) / 10.0;
+                                    matGrpNotes.add(new NoteDevoir(moy, false, 1.0));
+                                }
+                            }
+                            else {
+                                if (notes.containsKey(matGrp) && notes.get(matGrp).containsKey(idEleve) && !(moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() == null)) {
+                                    if(!"NN".equals(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null,false).getValue(MOYENNE))) {
+                                        matGrpNotes.add(new NoteDevoir(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null, false).getDouble(MOYENNE), false, new Double(1))); //TODO139 : Changer le calcul de moyenne pour prendre en compte les sous matières
+                                    }
+                                }
                             }
                         }
                     });
