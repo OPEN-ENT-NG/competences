@@ -46,6 +46,12 @@ Cette API va procéder :
 * Suppression de quelques tables (`viesco.rel_structures_personne_supp`, `viesco.rel_groupes_personne_supp`, `viesco.personnes_supp`, `notes.transition`, `notes.match_class_id_transition`)
 * Mis à jour de table `match_class_id_transition` avec les infos sur la `table rel_groupe_cycle` et les informations sur les groupes stockées dans l'annuaire (Neo4j)
 
+Cette requête vous permet de déterminer le nombre d'établissement qui devra être archivé :
+```postgresql
+SELECT COUNT(DISTINCT id_etablissement) FROM notes.devoirs WHERE eval_lib_historise = false 
+-- (e.g 50)
+```
+
 
 ### Après la transition
 Après la transition, il faut lancer l'API `POST /competences/transition/after`  (avec un compte ADMC)
@@ -54,3 +60,17 @@ Cette API va procéder :
 * Purge de nombreuses tables
 * Mise à jour des identifiants des classes (pour la table `rel_groupe_cycle`) afin que cela puisse correspondre avec les nouveaux identifiants des classes dans l'annuaire (Neo4j)
 * Suppression des sous-matières qui étaient reliées à des matières non manuelles
+
+Cette requête vous permet de savoir quel établissement a été archivé : 
+```postgresql
+SELECT * FROM notes.transition ;
+```
+
+|  id_etablissement | date |
+| --- | --- |
+| structure identifier | date.now() (e.g 2022-08-05 19:43:35.597778) |
+| ... | ... |
+
+###### _(e.g 50 lines)_
+
+Afin de savoir si la transition s'est bien déroulée, le retour de cette requête doit être égal à la requête d'avant la transition
