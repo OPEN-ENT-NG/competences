@@ -151,6 +151,7 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_APPRECIATION_CPE_CREATE = "eval_createAppreciationCPE";
     public static final String SCHEMA_AVIS_CONSEIL_ORIENTATION_BILAN_PERIODIQUE = "eval_setAvisConseilOrientation";
     public static final String SCHEMA_CREATE_OPINION = "eval_createOpinion";
+    public static final String SCHEMA_SUBTOPIC_COEFF_UPDATE = "subTopicCoeff";
 
     public static final String SCHEMA_APPRECIATIONS_CLASSE = "eval_createOrUpdateAppreciationClasse";
 

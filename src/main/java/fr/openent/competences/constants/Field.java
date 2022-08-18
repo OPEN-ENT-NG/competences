@@ -8,6 +8,7 @@ public class Field {
 
     //id
     public static final String ID = "id";
+    public static final String IDSTRUCTURE = "idStructure";
 
     //transaction
     public static final String ACTION = "action";
