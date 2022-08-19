@@ -1,6 +1,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.AccessVisibilityAppreciation;
 import fr.openent.competences.service.SubTopicService;
 import fr.openent.competences.service.impl.DefaultSubTopicService;
@@ -21,7 +22,7 @@ public class SubTopicController extends ControllerHelper {
 
     SubTopicService subTopicService;
     public SubTopicController() {
-        this.subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, "services_subtopic");
+        this.subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SERVICE_SUBTOPIC);
     }
 
     @Post("/subtopics/services/update")

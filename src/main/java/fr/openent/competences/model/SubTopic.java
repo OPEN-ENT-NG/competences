@@ -1,5 +1,6 @@
 package fr.openent.competences.model;
 
+import fr.openent.competences.constants.Field;
 import io.vertx.core.json.JsonObject;
 
 public class SubTopic {
@@ -21,9 +22,9 @@ public class SubTopic {
 
     public JsonObject toJsonObject() {
         return new JsonObject()
-                .put("id",this.id)
-                .put("id_matiere",this.service.getMatiere().getId())
-                .put("coefficient",coefficient);
+                .put(Field.ID,this.id)
+                .put(Field.ID_MATIERE,this.service.getMatiere().getId())
+                .put(Field.COEFFICIENT,coefficient);
     }
 
     public Integer getId() {

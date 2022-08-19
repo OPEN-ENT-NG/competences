@@ -11,6 +11,7 @@ import org.entcore.common.sql.Sql;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static fr.openent.competences.constants.Field.*;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultSubTopicService extends SqlCrudService implements SubTopicService {
@@ -21,14 +22,12 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
 
     @Override
     public void upsertCoefficent(JsonObject data, Handler<Either<String, JsonArray>> handler) {
-         List<String> groups = data.getJsonArray("groups")
-                .stream().map(group -> ((JsonObject)group).getString("id")).collect(Collectors.toList());
+        List<String> groups = data.getJsonArray(GROUPS)
+                .stream().map(group -> ((JsonObject)group).getString(ID)).collect(Collectors.toList());
         JsonArray statements = new JsonArray();
-        for(String idGroup: groups){
+        groups.forEach(idGroup -> {
             statements.add(setStatementCoefficient(data,idGroup));
-        }
-
-
+        });
         Sql.getInstance().transaction(statements,validResultHandler(handler));
     }
 
@@ -39,16 +38,16 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
                 " ON CONFLICT (id_teacher, id_topic, id_group,id_subtopic) DO UPDATE SET coefficient = ?";
 
         JsonArray params = new JsonArray().add(Double.parseDouble(data.getValue("coefficient").toString()))
-                .add(data.getInteger("id_subtopic"))
-                .add(data.getString("id_teacher"))
-                .add(data.getString("id_topic"))
-                .add(data.getString("id_structure"))
+                .add(data.getInteger(ID_SUBTOPIC))
+                .add(data.getString(ID_TEACHER))
+                .add(data.getString(ID_TOPIC))
+                .add(data.getString(ID_STRUCTURE))
                 .add(idGroup)
-                .add(Double.parseDouble(data.getValue("coefficient").toString()));
+                .add(Double.parseDouble(data.getValue(COEFFICIENT).toString()));
 
-        return new JsonObject().put("statement", statement)
-                .put("values", params)
-                .put("action", "prepared");
+        return new JsonObject().put(STATEMENT, statement)
+                .put(VALUES, params)
+                .put(ACTION, PREPARED);
     }
 
     @Override

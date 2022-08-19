@@ -4,6 +4,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.ImgLevel;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
@@ -209,7 +210,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         workspaceHelper = new WorkspaceHelper(eb,storage);
-        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, "services_subtopic");
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SERVICE_SUBTOPIC);
 
     }
 
@@ -232,7 +233,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         this.httpClient =  createHttpClient(vertx);
         workspaceHelper = new WorkspaceHelper(eb,storage);
-        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, "services_subtopic");
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SERVICE_SUBTOPIC);
 
     }
 
@@ -2245,11 +2246,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonObject moyenClasseSous = matiere.getJsonObject("_moyennesClasse");
                     Float moyCl = getMoyenneForSousMat(moyenClasseSous, idPeriode, idSousMat);
                     sousMat.put(MOYENNE_CLASSE, isNull(moyCl)? NN : moyCl);
-                    sousMat.put("subCoef",1);
+                    sousMat.put(Field.SUBCOEF,1);
                     for(Service service : services){
                         for(SubTopic subTopic : service.getSubtopics()){
                             if(subTopic.getId().equals(sousMat.getInteger("id_type_sousmatiere"))){
-                                sousMat.put("subCoef",subTopic.getCoefficient());
+                                sousMat.put(Field.SUBCOEF,subTopic.getCoefficient());
                             }
                         }
                     }
@@ -2361,7 +2362,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
 
         // Mise Remplissage des données des sousMatières
-        buildSousMatieres(matiereJO, tableauDeconversion, idPeriode , params,services);
+        buildSousMatieres(matiereJO, tableauDeconversion, idPeriode , params, services);
 
         String elementsProgramme = troncateLibelle(matiereJO.getString(ELEMENTS_PROGRAMME), MAX_SIZE_LIBELLE);
 
@@ -2792,7 +2793,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             List<MultiTeaching> multiTeachings = new ArrayList<>();
 
                             setMultiTeaching(structure, multiTeachinJsonArray, multiTeachings, idClasse);
-                            setServices(structure, servicesJson, services,subTopics);
+                            setServices(structure, servicesJson, services, subTopics);
 
                             for (int i = 0; i < eleves.size(); i++) {
                                 futures.add(Future.future());
@@ -3001,6 +3002,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     service.addSubtopics(subTopic);
                 }
             }
+            subTopics.stream().filter(subtopic -> subtopic.getService().equals(service)).forEach(service::addSubtopics);
             services.add(service);
 
         }

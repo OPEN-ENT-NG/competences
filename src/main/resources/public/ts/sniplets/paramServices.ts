@@ -213,7 +213,7 @@ export const paramServices = {
                 let matiere = _.findWhere(paramServices.that.columns.matiere.data, {id: service.id_matiere});
                 if (matiere && matiere.sous_matieres && matiere.sous_matieres.length > 0)
                     matiere.sous_matieres.forEach(sm => {
-                        paramServices.that.subTopics.all.map(sb => {
+                        paramServices.that.subTopics.all.forEach(sb => {
                             let sbt =  paramServices.that.subTopicsServices.all.find(subTopicsService =>{
                                 return subTopicsService.id_teacher === service.id_enseignant
                                     && subTopicsService.id_topic === service.id_matiere
@@ -221,9 +221,9 @@ export const paramServices = {
                                     && subTopicsService.id_subtopic === sm.id_type_sousmatiere
                             });
                             if (sm.id_type_sousmatiere == sb.id) {
-                                if(sbt !== undefined){
+                                if(sbt !== undefined) {
                                     sbt.libelle =   sb.libelle ;
-                                 }else{
+                                } else {
                                     sbt = new SubTopicsService()
                                     sbt.libelle =   sb.libelle ;
                                     sbt.id_teacher = service.id_enseignant ;
