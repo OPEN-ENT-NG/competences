@@ -51,6 +51,8 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
+import static fr.openent.competences.constants.Field.IDETABLISSEMENT;
+import static fr.openent.competences.constants.Field.IDCLASSE;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
 import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
@@ -2757,15 +2759,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             nbOptions++;
                         }
 
-                        getSubTopicCoeff(firstStudent.getString("idEtablissement"),firstStudent.getString("idClasse"),subTopicCoefPromise);
-                        getStructure(firstStudent.getString("idEtablissement"),structurePromise);
+                        getSubTopicCoeff(firstStudent.getString(IDETABLISSEMENT), firstStudent.getString(IDCLASSE),
+                                subTopicCoefPromise);
+                        getStructure(firstStudent.getString(IDETABLISSEMENT),structurePromise);
                         getLibellePeriode(idPeriode,host,acceptLanguage,periodeLibellePromise);
                         getAnneeScolaire(idClasse,periodeYearPromise);
                         generateImagesFromPathForBulletin(params,vertx,imgPromise);
                         Utils.getElevesClasse(eb, idClasse, idPeriode, listStudentsPromise);
-                        utilsService.getServices(firstStudent.getString("idEtablissement"),
+                        utilsService.getServices(firstStudent.getString(IDETABLISSEMENT),
                                 new JsonArray(groupIds),FutureHelper.handlerJsonArray(servicesPromise));
-                        utilsService.getMultiTeachers(firstStudent.getString("idEtablissement"),
+                        utilsService.getMultiTeachers(firstStudent.getString(IDETABLISSEMENT),
                                 new JsonArray(groupIds),idPeriode.intValue() ,FutureHelper.handlerJsonArray(multiTeachingPromise));
 
                         int finalNbOptions = nbOptions;
@@ -2837,15 +2840,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     Matiere matiere = new Matiere();
                     Group group = new Group();
                     Teacher teacher = new Teacher();
-                    group.setId(subTopicJo.getString("id_group"));
-                    matiere.setId(subTopicJo.getString("id_topic"));
-                    teacher.setId(subTopicJo.getString("id_teacher"));
+                    group.setId(subTopicJo.getString(Field.ID_GROUP));
+                    matiere.setId(subTopicJo.getString(Field.ID_TOPIC));
+                    teacher.setId(subTopicJo.getString(Field.ID_TEACHER));
                     service.setMatiere(matiere);
                     service.setGroup(group);
                     service.setTeacher(teacher);
                     subTopic.setService(service);
-                    subTopic.setId(subTopicJo.getInteger("id_subtopic"));
-                    subTopic.setCoefficient(safeGetDouble(subTopicJo,"coefficient"));
+                    subTopic.setId(subTopicJo.getInteger(Field.ID_SUBTOPIC));
+                    subTopic.setCoefficient(safeGetDouble(subTopicJo,Field.COEFFICIENT));
                     subTopics.add(subTopic);
                 }
                 promise.complete(subTopics);
@@ -2997,11 +3000,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             service.setVisible(serviceJo.getBoolean("is_visible"));
             service.setModalite(serviceJo.getString("modalite",""));
             service.setCoefficient(serviceJo.getLong("coefficient"));
-            for(SubTopic subTopic : subTopics){
-                if(subTopic.getService().equals(service)){
-                    service.addSubtopics(subTopic);
-                }
-            }
             subTopics.stream().filter(subtopic -> subtopic.getService().equals(service)).forEach(service::addSubtopics);
             services.add(service);
 

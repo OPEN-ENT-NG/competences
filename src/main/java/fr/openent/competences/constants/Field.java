@@ -11,11 +11,14 @@ public class Field {
     //id
     public static final String ID = "id";
     public static final String IDSTRUCTURE = "idStructure";
+    public static final String IDETABLISSEMENT = "idEtablissement";
+    public static final String IDCLASSE = "idClasse";
     public static final String ID_STRUCTURE = "id_structure";
     public static final String ID_MATIERE = "id_matiere";
     public static final String ID_SUBTOPIC = "id_subtopic";
     public static final String ID_TEACHER = "id_teacher";
     public static final String ID_TOPIC = "id_topic";
+    public static final String ID_GROUP = "id_group";
 
     //transaction
     public static final String ACTION = "action";

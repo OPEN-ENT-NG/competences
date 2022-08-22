@@ -214,7 +214,8 @@ export const paramServices = {
                 if (matiere && matiere.sous_matieres && matiere.sous_matieres.length > 0)
                     matiere.sous_matieres.forEach(sm => {
                         paramServices.that.subTopics.all.forEach(sb => {
-                            let sbt =  paramServices.that.subTopicsServices.all.find(subTopicsService =>{
+                            let sbt: SubTopicsService;
+                            sbt =  paramServices.that.subTopicsServices.all.find(  subTopicsService =>{
                                 return subTopicsService.id_teacher === service.id_enseignant
                                     && subTopicsService.id_topic === service.id_matiere
                                     && subTopicsService.id_group === service.id_groupe
