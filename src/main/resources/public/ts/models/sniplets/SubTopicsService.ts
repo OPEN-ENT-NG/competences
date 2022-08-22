@@ -46,7 +46,7 @@ export class SubTopicsServices extends Selection<SubTopicsService> {
     async get(idStructure) {
         let {data} = await subTopicsServiceService.get(idStructure);
         data.forEach((item) => {
-            let sts =  new SubTopicsService();
+            let sts:SubTopicsService =  new SubTopicsService();
             this.all.push(sts.build(item))
         })
     }
