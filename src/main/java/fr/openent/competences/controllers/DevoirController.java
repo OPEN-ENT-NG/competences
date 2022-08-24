@@ -842,6 +842,7 @@ public class DevoirController extends ControllerHelper {
     }
 
     @Put("/devoir/finish")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     @ApiDoc("Permet de positionner une évaluation à 100% terminée même si des compétences ou des notes n'ont pas toutes été saisies")
     public void finishDevoir(final HttpServerRequest request) {
         try {
