@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.helpers.DevoirControllerHelper;
 import fr.openent.competences.security.*;
@@ -842,11 +843,12 @@ public class DevoirController extends ControllerHelper {
     }
 
     @Put("/devoir/finish")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateEvaluationWorkflow.class)
     @ApiDoc("Permet de positionner une évaluation à 100% terminée même si des compétences ou des notes n'ont pas toutes été saisies")
     public void finishDevoir(final HttpServerRequest request) {
         try {
-            Long idDevoir = Long.parseLong(request.params().get("idDevoir"));
+            Long idDevoir = Long.parseLong(request.params().get(Field.ID_DEVOIR));
             devoirsService.updatePercent(idDevoir, 100, arrayResponseHandler(request));
         } catch (NumberFormatException err) {
             leftToResponse(request, new Either.Left<>(err.toString()));

@@ -21,4 +21,7 @@ public class Field {
 
     //variables
     public static final String SAVE_BFC = "saveBFC";
+    public static final String ID_DEVOIR = "idDevoir";
+    public static final String ID_STRUCTURE = "idStructure";
+
 }

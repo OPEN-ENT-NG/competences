@@ -32,7 +32,8 @@ public enum WorkflowActions {
 	SAVE_APPRECIATION_BILAN_PERIODIQUE("bilan.periodique.save.appMatiere.positionnement"),
 	CAN_UPDATE_BFC_SYNTHESE("competences.canUpdateBFCSynthese"),
 	SET_AVIS_CONSEIL("set.avis.conseil.orientation.bilan.periodique"),
-	DIGITAL_SKILLS("digital.skills");
+	DIGITAL_SKILLS("digital.skills"),
+	ACCESS_CONSEIL_DE_CLASSE("access.conseil.de.classe");
 	private final String actionName;
 
 	WorkflowActions(String actionName) {
