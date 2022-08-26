@@ -701,7 +701,20 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
          * @param detail
          */
         $scope.openDetailCompetence = async function (competence, detail) {
+            let keyIdDevoirIdCompetences = [];
+            let finalCompetences = []
             $scope.detailCompetence = competence;
+            competence.competencesEvaluations.forEach(elem =>{
+                if(!keyIdDevoirIdCompetences.find(keyIdDevoirIdCompetence => {
+                        return keyIdDevoirIdCompetence.id_devoir === elem.id_devoir
+                            && keyIdDevoirIdCompetence.id_competences === elem.id_competence
+                    }
+                )) {
+                    keyIdDevoirIdCompetences.push({id_devoir: elem.id_devoir , id_competences : elem.id_competence})
+                    finalCompetences.push(elem);
+                }
+            })
+            $scope.detailCompetence.competencesEvaluations = finalCompetences;
             await $scope.initChartsEval();
 
             if (detail !== undefined) {
