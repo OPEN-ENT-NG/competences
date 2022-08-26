@@ -27,6 +27,7 @@ export class SuiviCompetenceClasse extends Model {
     periode : Periode;
     matieres: Collection<Matiere>;
     tableauConversion: any;
+    structure: Structure;
 
     get api() {
         return {
@@ -38,6 +39,7 @@ export class SuiviCompetenceClasse extends Model {
     constructor (classe : Classe, periode : any,structure : Structure) {
         super();
         this.periode = periode;
+        this.structure = structure;
         var that = this;
         this.collection(Matiere);
 
@@ -106,10 +108,10 @@ export class SuiviCompetenceClasse extends Model {
     }
 
     async getCompetencesNotesClasse (classe : Classe, periode : any): Promise<any> {
-        let urlComp = this.api.getCompetencesNotesClasse + classe.id + "/" + classe.type_groupe;
+        let urlComp = this.api.getCompetencesNotesClasse + classe.id + "/" + classe.type_groupe + "?structureId=" + this.structure.id;
         if (periode !== null && periode !== undefined && periode !== '*') {
             if(periode.id_type !== undefined && periode.id_type !== null){
-                urlComp += "?idPeriode="+periode.id_type;
+                urlComp += "&idPeriode="+periode.id_type;
             }
         }
         return http.get(`${urlComp}`);
