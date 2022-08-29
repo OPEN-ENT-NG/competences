@@ -15,6 +15,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -32,9 +33,11 @@ public class StructureOptionsController extends ControllerHelper {
     protected static final Logger log = LoggerFactory.getLogger(StructureOptionsController.class);
 
     private final StructureOptionsService structureOptionService;
+    private EventBus eb;
 
-    public StructureOptionsController () {
-        this.structureOptionService = new DefaultStructureOptions(eb);
+    public StructureOptionsController (EventBus eb) {
+        this.eb = eb;
+        this.structureOptionService = new DefaultStructureOptions(Competences.EVAL_SCHEMA, Field.STRUTUCTURE_OPTIONS, eb);
     }
 
     @Get("/structure/:structureId/options/isSkillAverage")
