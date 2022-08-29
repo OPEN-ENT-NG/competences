@@ -3,6 +3,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
@@ -39,6 +40,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private final NoteService noteService;
     private final UtilsService utilsService;
     private final DevoirService devoirService;
+    private final StructureOptionsService structureOptionService;
     private final ElementProgramme elementProgramme;
     private final EventBus eb;
     private final Sql sql;
@@ -49,6 +51,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
         utilsService = new DefaultUtilsService(eb);
         devoirService = new DefaultDevoirService(eb);
+        structureOptionService = new DefaultStructureOptions(Competences.EVAL_SCHEMA, Field.STRUTUCTURE_OPTIONS, eb);
         elementProgramme = new DefaultElementProgramme() ;
         defautlMatiereService = new DefaultMatiereService(eb);
         sql = Sql.getInstance();
@@ -59,11 +62,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                       Handler<Either<String, JsonArray>> eitherHandler){
         // Récupération de l'état d'activation du module présences de l'établissement
         Future<JsonObject> activationFuture = Future.future();
-        utilsService.getActiveStatePresences(structureId, event -> formate(activationFuture, event));
+        structureOptionService.getActiveStatePresences(structureId, event -> formate(activationFuture, event));
 
         // Récupération de l'état de la récupération des données du modules présences
         Future<JsonObject> syncFuture = Future.future();
-        utilsService.getSyncStatePresences(structureId, event -> formate(syncFuture, event));
+        structureOptionService.getSyncStatePresences(structureId, event -> formate(syncFuture, event));
 
         CompositeFuture.all(syncFuture, activationFuture).setHandler(event -> {
             if(event.failed()){

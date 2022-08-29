@@ -1322,69 +1322,6 @@ public class DefaultUtilsService implements UtilsService {
         }));
     }
 
-    public void getActiveStatePresences ( final String idStructure, Handler<Either<String,JsonObject>> handler){
-        // Récupération de la config vie scolaire
-        Promise<JsonObject> configFuture = Promise.promise();
-        JsonObject action = new JsonObject()
-                .put("action", "config.generale");
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-                if (OK.equals(body.getString(STATUS))) {
-                    JsonObject queryResult = body.getJsonObject(RESULT);
-                    configFuture.complete(queryResult);
-                } else {
-                    log.error("getRetardsAndAbsences-getconfigVieScolaire failed : " + body.getString("message"));
-                    configFuture.fail(body.getString("message"));
-
-                }
-            }
-        }));
-
-        // Récupération de l'activation du module présences de l'établissement
-//        isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
-
-        configFuture.future()
-                .onSuccess(configEvent -> {
-                    JsonObject result = new JsonObject();
-                    boolean configInstalled = Boolean.TRUE.equals(configEvent.getBoolean("presences"));
-                    result.put("installed",configInstalled);
-                    if (configInstalled){
-                        Future<JsonObject> activationFuture = Future.future();
-                        isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
-                        activationFuture.onSuccess(event -> {
-                            result.put("activate",!event.isEmpty() && event.getBoolean("actif"));
-                            handler.handle(new Either.Right<>(result));
-                        }).onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] "+event.getMessage())));
-                    }else{
-                        result.put("activate",false);
-                        handler.handle(new Either.Right<>(result));
-                    }
-                })
-                .onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] "+event.getMessage())));;
-    }
-
-    public void getSyncStatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler){
-        JsonArray params = new JsonArray().add(idStructure);
-
-        String query = "SELECT presences_sync " +
-                " FROM " + Competences.COMPETENCES_SCHEMA + ".structure_options " +
-                " WHERE id_structure = ? ";
-        Sql.getInstance().prepared(query, params, Competences.DELIVERY_OPTIONS, validUniqueResultHandler(eitherHandler));
-
-    }
-
-    public void activeDeactiveSyncStatePresences(String idStructure, Boolean state, Handler<Either<String, JsonObject>> eitherHandler){
-        StringBuilder query = new StringBuilder().append("INSERT INTO ")
-                .append(Competences.COMPETENCES_SCHEMA + ".structure_options (id_structure, presences_sync) ")
-                .append(" VALUES ")
-                .append(" ( ?, ? )")
-                .append(" ON CONFLICT (id_structure) DO UPDATE SET presences_sync = ?");
-        JsonArray params = new JsonArray().add(idStructure).add(state).add(state);
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(eitherHandler));
-    }
-
     @Override
     public void lauchTransition(List<String> structureIds) {
         for(int i = 0;  i<structureIds.size();i++){
@@ -1397,16 +1334,6 @@ public class DefaultUtilsService implements UtilsService {
                 }
             });
         }
-
-    }
-
-    private void isStructureActivatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler){
-        JsonArray params = new JsonArray().add(idStructure);
-
-        String query = " SELECT * " +
-                " FROM presences.etablissements_actifs " +
-                " WHERE id_etablissement = ? ";
-        Sql.getInstance().prepared(query, params, Competences.DELIVERY_OPTIONS, validUniqueResultHandler(eitherHandler));
 
     }
 
