@@ -15,6 +15,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
@@ -37,7 +38,7 @@ public class StructureOptionsController extends ControllerHelper {
 
     public StructureOptionsController (EventBus eb) {
         this.eb = eb;
-        this.structureOptionService = new DefaultStructureOptions(Competences.EVAL_SCHEMA, Field.STRUTUCTURE_OPTIONS, eb);
+        this.structureOptionService = new DefaultStructureOptions(eb);
     }
 
     @Get("/structure/:structureId/options/isSkillAverage")
@@ -86,11 +87,9 @@ public class StructureOptionsController extends ControllerHelper {
                 RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
                     @Override
                     public void handle(JsonObject body) {
-                        if(user != null && body.containsKey("structureId") && body.containsKey("state")){
-                            final String structureId = body.getString("structureId");
-                            final Boolean state = body.getBoolean("state");
-                            Handler<Either<String, JsonObject>> handler = defaultResponseHandler(request);
-                            structureOptionService.activeDeactiveSyncStatePresences(structureId, state, handler);
+                        if(user != null && body.containsKey(Field.STRUCTUREID) && body.containsKey(Field.STATE)){
+                            structureOptionService.activeDeactiveSyncStatePresences(body.getString(Field.STRUCTUREID),
+                                    body.getBoolean(Field.STATE), defaultResponseHandler(request));
                         }else{
                             badRequest(request);
                         }
@@ -112,8 +111,8 @@ public class StructureOptionsController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
-                if(user != null && request.params().contains("structureId")){
-                    final String structureId = request.params().get("structureId");
+                if(user != null && request.params().contains(Field.STRUCTUREID)){
+                    final String structureId = request.params().get(Field.STRUCTUREID);
                     // Récupération de l'état d'activation du module présences de l'établissement
                     Future<JsonObject> activationFuture = Future.future();
                     structureOptionService.getActiveStatePresences(structureId,event -> formate(activationFuture,event));
@@ -122,7 +121,7 @@ public class StructureOptionsController extends ControllerHelper {
                     Future<JsonObject> syncFuture = Future.future();
                     structureOptionService.getSyncStatePresences(structureId,event -> formate(syncFuture,event));
 
-                    CompositeFuture.all(syncFuture, activationFuture).setHandler(
+                    CompositeFuture.all(syncFuture, activationFuture).onComplete(
                             event -> {
                                 if(event.failed()){
                                     String error = event.cause().getMessage();
@@ -135,7 +134,7 @@ public class StructureOptionsController extends ControllerHelper {
                                     Renders.renderJson(request, result);
                                 }
                             });
-                }else{
+                } else {
                     badRequest(request);
                 }
             }

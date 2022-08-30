@@ -98,8 +98,8 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
                     JsonObject queryResult = body.getJsonObject(RESULT);
                     configFuture.complete(queryResult);
                 } else {
-                    log.error("getRetardsAndAbsences-getconfigVieScolaire failed : " + body.getString("message"));
-                    configFuture.fail(body.getString("message"));
+                    log.error("getRetardsAndAbsences-getconfigVieScolaire failed : " + body.getString(Field.MESSAGE));
+                    configFuture.fail(body.getString(Field.MESSAGE));
 
                 }
             }
@@ -111,17 +111,17 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
         configFuture.future()
                 .onSuccess(configEvent -> {
                     JsonObject result = new JsonObject();
-                    boolean configInstalled = Boolean.TRUE.equals(configEvent.getBoolean("presences"));
-                    result.put("installed",configInstalled);
+                    boolean configInstalled = Boolean.TRUE.equals(configEvent.getBoolean(Field.PRESENCES));
+                    result.put(Field.INSTALLED, configInstalled);
                     if (configInstalled){
                         Future<JsonObject> activationFuture = Future.future();
                         isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
                         activationFuture.onSuccess(event -> {
-                            result.put("activate",!event.isEmpty() && event.getBoolean("actif"));
+                            result.put(Field.ACTIVATE,!event.isEmpty() && event.getBoolean(Field.ACTIF));
                             handler.handle(new Either.Right<>(result));
                         }).onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] "+event.getMessage())));
                     }else{
-                        result.put("activate",false);
+                        result.put(Field.ACTIVATE, false);
                         handler.handle(new Either.Right<>(result));
                     }
                 })
