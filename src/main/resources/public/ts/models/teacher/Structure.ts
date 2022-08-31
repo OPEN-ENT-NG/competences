@@ -40,6 +40,7 @@ import {
 } from './index';
 import {Mix} from "entcore-toolkit";
 import httpAxios from 'axios';
+import {StructureOptions, structureOptionsService, StructureOptionsService} from "../../services";
 
 function castClasses(classes: any) {
     return _.map(classes, (classe) => {
@@ -80,6 +81,7 @@ export class Structure extends Model {
     detailsUser: any;
     composer: any; // Set By infra
     services: any[];
+    options: StructureOptions;
 
     get api() {
         return {
@@ -150,6 +152,9 @@ export class Structure extends Model {
             .done(function (res) {
                 that.baremeDNBvisible = res[0].visible;
             }.bind(this));
+        structureOptionsService.getStructureOptionsIsAverageSkills(that.id).then(res =>{
+            that.options = res;
+        });
 
         this.collection(NiveauCompetence, {
             sync: async function () {

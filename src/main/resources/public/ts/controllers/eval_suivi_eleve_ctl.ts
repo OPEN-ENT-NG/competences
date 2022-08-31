@@ -310,7 +310,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     });
                 }
                 await competenceNiveauFinal.saveNiveaufinal();
-                Utils.setMaxCompetenceShow(competence, $scope.suiviCompetence.tableConversions, isYear,false,$scope.listTeacher);
+                Utils.setMaxOrAverageCompetenceShow(competence, $scope.suiviCompetence.tableConversions, isYear,false,$scope.listTeacher);
+                utils.safeApply($scope);
             }
         };
 
