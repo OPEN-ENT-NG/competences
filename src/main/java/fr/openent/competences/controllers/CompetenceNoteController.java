@@ -26,6 +26,7 @@ import fr.openent.competences.security.CreateEvaluationWorkflow;
 import fr.openent.competences.service.BfcSyntheseService;
 import fr.openent.competences.service.CompetenceNiveauFinalService;
 import fr.openent.competences.service.CompetenceNoteService;
+import fr.openent.competences.service.StructureOptionsService;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -57,6 +58,7 @@ public class CompetenceNoteController extends ControllerHelper {
     private final BfcSyntheseService syntheseService;
     private final CompetenceNiveauFinalService competenceNiveauFinalService;
     private final DefaultDevoirService devoirsService;
+    private final StructureOptionsService structureOptionsService;
     private EventBus eb;
 
 
@@ -65,6 +67,7 @@ public class CompetenceNoteController extends ControllerHelper {
         competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
         syntheseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         competenceNiveauFinalService = new DefaultCompetenceNiveauFinalService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCE_NIVEAU_FINAL);
+        structureOptionsService = new DefaultStructureOptions();
         devoirsService = new DefaultDevoirService(eb);
     }
 
@@ -302,9 +305,11 @@ public class CompetenceNoteController extends ControllerHelper {
     @SecuredAction(value = "access.suivi.classe", type = ActionType.WORKFLOW)
     public void getCompetenceNoteClasse(final HttpServerRequest request) {
         Long idPeriode = null;
-        if (request.params().contains("idClasse") && request.params().contains("typeClasse")) {
+        if (request.params().contains("idClasse") && request.params().contains("typeClasse")
+            && request.params().contains("idStructure")) {
             final String idClasse = request.params().get("idClasse");
             Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
+            final String idStructure = request.params().get("idStructure");
             if (request.params().contains("idPeriode")) {
                 try {
                     idPeriode = Long.parseLong(request.params().get("idPeriode"));
@@ -314,7 +319,7 @@ public class CompetenceNoteController extends ControllerHelper {
                     return;
                 }
             }
-            callGetCompetenceNote(idClasse, idPeriode, typeClasse, null, request);
+            callGetCompetenceNote(idClasse, idPeriode, typeClasse, null, idStructure, request);
         } else {
             Renders.badRequest(request, "Invalid parameters");
         }
@@ -328,9 +333,10 @@ public class CompetenceNoteController extends ControllerHelper {
     public void getCompetenceNoteDomaineClasse(final HttpServerRequest request) {
         final Long idPeriode;
         if (request.params().contains("idClasse")
-                && request.params().contains("typeClasse")) {
+                && request.params().contains("typeClasse") && request.params().contains("idStructure")) {
             final List<String> idDomaines = request.params().getAll("idDomaine");
             final String idClasse = request.params().get("idClasse");
+            final String idStructure = request.params().get("idStructure");
             Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
             if (request.params().contains("idPeriode")) {
                 try {
@@ -344,7 +350,7 @@ public class CompetenceNoteController extends ControllerHelper {
                 idPeriode = null;
             }
 
-            callGetCompetenceNote(idClasse, idPeriode, typeClasse, idDomaines, request);
+            callGetCompetenceNote(idClasse, idPeriode, typeClasse, idDomaines, idStructure, request);
         }
 
     }
@@ -358,10 +364,10 @@ public class CompetenceNoteController extends ControllerHelper {
      * @param idPeriode
      * @param request
      */
-    private void callCompetencesNotesService(List<String> idEleves, Long idPeriode, HttpServerRequest request) {
+    private void callCompetencesNotesService(List<String> idEleves, Long idPeriode, Boolean isSkillAverage, HttpServerRequest request) {
         if (null != idEleves
                 && !idEleves.isEmpty()) {
-            competencesNotesService.getCompetencesNotesClasse(idEleves, idPeriode, arrayResponseHandler(request));
+            competencesNotesService.getMaxOrAverageCompetencesNotesClasse(idEleves, idPeriode, isSkillAverage, arrayResponseHandler(request));
         }
     }
 
@@ -463,7 +469,7 @@ public class CompetenceNoteController extends ControllerHelper {
     }
 
     private void callGetCompetenceNote(String idClasse, Long idPeriode, Integer typeClasse, List<String> idDomaines,
-                                       final HttpServerRequest request) {
+                                       String idStructure, final HttpServerRequest request) {
         new DefaultUtilsService(this.eb).studentIdAvailableForPeriode(idClasse, idPeriode, typeClasse,
                 new Handler<Either<String, JsonArray>>() {
                     @Override
@@ -477,12 +483,21 @@ public class CompetenceNoteController extends ControllerHelper {
                                     idEleves.add(queryResult.getString(i));
                                 }
                             }
-                            if (idDomaines != null) {
-                                callCompetencesNotesDomaineService(idEleves, idPeriode, idDomaines, request);
-                            } else {
-                                callCompetencesNotesService(idEleves, idPeriode, request);
-                            }
+                            structureOptionsService.getIsAverageSkills(idStructure, responseOption -> {
 
+                                if(responseOption.isLeft()) {
+                                    Renders.notFound(request,"Impossible de recuperer le type de calcul des competences notes \n"
+                                            + responseOption.left().getValue());
+                                    log.error("buildBFC : getIsAverageSkills : " + responseOption.left().getValue());
+                                }
+                                Boolean isSkillAverage = responseOption.right().getValue().getBoolean("is_average_skills");
+
+                                if (idDomaines != null) {
+                                    callCompetencesNotesDomaineService(idEleves, idPeriode, idDomaines, request);
+                                } else {
+                                    callCompetencesNotesService(idEleves, idPeriode, isSkillAverage, request);
+                                }
+                            });
                         } else {
                             Renders.notFound(request,
                                     "Error :can not get CompNotes of groupe : " + idClasse);

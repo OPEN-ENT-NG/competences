@@ -131,7 +131,7 @@ public interface CompetenceNoteService extends CrudService {
      * @param idPeriode identifiant de la période
      * @param handler handler portant le résultat de la requête
      */
-    void getCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Handler<Either<String, JsonArray>> handler);
+    void getMaxOrAverageCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Boolean isSkillAverage, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère toutes les compétences notes d'une classe

@@ -272,11 +272,15 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     }
 
     @Override
-    public void getCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
+    public void getMaxOrAverageCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Boolean isSkillAverage, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
-                .append("SELECT ").append(table).append(".id_eleve AS id_eleve, competences.id as id_competence, ")
-                .append("max(").append(table).append(".evaluation) as evaluation , competence_niveau_final.niveau_final ,")
+                .append("SELECT ").append(table).append(".id_eleve AS id_eleve, competences.id as id_competence, ");
+        if(isSkillAverage)
+            query.append("ROUND(AVG(").append(table).append(".evaluation),2) as evaluation, ");
+        else
+            query.append("MAX(" ).append(table).append( ".evaluation) as evaluation, ");
+        query.append("competence_niveau_final.niveau_final ,")
                 .append("competence_niveau_final_annuel.niveau_final AS niveau_final_annuel, ")
                 .append("rel_competences_domaines.id_domaine, devoirs.id_matiere, ").append(table).append(".owner ")
                 .append("FROM ").append(schema).append("competences ")
