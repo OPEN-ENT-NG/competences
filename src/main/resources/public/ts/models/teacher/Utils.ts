@@ -454,9 +454,11 @@ export class Utils {
         });
         //tableau des max des Evals pour chaque matière
         if(onlyNote !== undefined && onlyNote){
-            return  _.max(listEval, (e) => {
-                return e.evaluation;
-            }).evaluation;
+            let notesComp = [];
+            _.map(listEval,(e) => {
+                notesComp.push(e.evaluation);
+            })
+            return  utils.getMoyenneForBFC(utils.average(notesComp) + 1, tableConversion.all) - 1;
         }else {
             let allCompNote = [];
             //trier par idMatiere;
