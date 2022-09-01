@@ -32,8 +32,7 @@ public class StructureOptionsController extends ControllerHelper {
 
     @Get("/structure/options/isSkillAverage")
     @ApiDoc(" create and update structure_ options isAverableSkills")
-    @ResourceFilter(AdministratorRight.class)
-    @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getStructureOptionIsAverage (HttpServerRequest request) {
         if( !request.params().contains(Field.STRUCTUREID)) {
             badRequest(request, "no structureId");
