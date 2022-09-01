@@ -1,5 +1,10 @@
 
-import {structureOptionsService, IStructureOptionsService, StructureOptions} from "../services";
+import {
+    structureOptionsService,
+    IStructureOptionsService,
+    StructureOptionsService,
+    StructureOptions
+} from "../services";
 
 import {toasts} from "entcore";
 import {safeApply} from "../utils/functions/safeApply";
@@ -11,10 +16,9 @@ export class SnipletStructureOptions {
         this.initOptionsIsAverageSkills($scope.source.idStructure);
     }
 
-    async initOptionsIsAverageSkills(structureId: String): Promise<void> {
+    async initOptionsIsAverageSkills(structureId: string): Promise<void> {
         try {
-            let option = await structureOptionsService.getStructureOptionsIsAverageSkills(structureId);
-            this.option = option;
+            this.option = await this.structureOptionsService.getStructureOptionsIsAverageSkills(structureId);
             safeApply(this.$scope);
         } catch (err) {
             console.error(err);
@@ -24,7 +28,7 @@ export class SnipletStructureOptions {
 
     async saveOptionIsAverageSkills () : Promise<void> {
         try {
-            await structureOptionsService.saveStrustureOptinsIsAverageSkills(this.option)
+            await this.structureOptionsService.saveStrustureOptinsIsAverageSkills(this.option);
         } catch (err ) {
             console.error(err);
             this.option.isSkillAverage = !this.option.isSkillAverage;
