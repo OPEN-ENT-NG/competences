@@ -18,7 +18,7 @@ export const structureOptionsService: IStructureOptionsService = {
 
     getStructureOptionsIsAverageSkills: async(structureId: string): Promise<StructureOptions> => {
         try {
-            const response = await http.get(`competences/structure/options/isSkillAverage?structureId=${structureId}`);
+            const response : AxiosResponse = await http.get(`competences/structure/${structureId}/options/isSkillAverage`);
             return {structureId:  structureId, isSkillAverage: response.data.is_average_skills} ;
         } catch (err) {
             throw err;

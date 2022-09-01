@@ -30,17 +30,12 @@ public class StructureOptionsController extends ControllerHelper {
         this.structureOptionService = new DefaultStructureOptions();
     }
 
-    @Get("/structure/options/isSkillAverage")
+    @Get("/structure/:structureId/options/isSkillAverage")
     @ApiDoc(" create and update structure_ options isAverableSkills")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getStructureOptionIsAverage (HttpServerRequest request) {
-        if( !request.params().contains(Field.STRUCTUREID)) {
-            badRequest(request, "no structureId");
-        }
         String structureId = request.getParam(Field.STRUCTUREID);
-
         structureOptionService.getIsAverageSkills(structureId, defaultResponseHandler(request));
-
     }
 
     @Post("/structure/options/isSkillAverage")

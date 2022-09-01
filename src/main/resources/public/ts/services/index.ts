@@ -1,3 +1,3 @@
 export * from './ReportModelPrintExportService';
 export * from './parameter';
-export * from './structureOptions';
+export * from './structure-options.service';
