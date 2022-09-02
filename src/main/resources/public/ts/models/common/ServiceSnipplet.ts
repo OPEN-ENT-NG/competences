@@ -120,6 +120,7 @@ export class Service {
     }
 
     async updateServices(isModalite?,isCoefficient?){
+
         try {
             let {status} = await http.put('/viescolaire/services',{"services" :this.competencesParams.map(service =>
                     {
