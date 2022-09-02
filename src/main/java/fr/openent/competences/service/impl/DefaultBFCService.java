@@ -563,103 +563,125 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
             List<Future> listOfFutures = new ArrayList<>();
 
-            Future getBFCsByEleveFuture = Future.future();
-            listOfFutures.add(getBFCsByEleveFuture);
-            getBFCsByEleve(idEleves, idStructure, idCycle, event -> {
-                if (event.isRight()) {
-                    JsonArray bfcResultArray = event.right().getValue();
+            Promise getBFCsByElevePromise = Promise.promise();
+            listOfFutures.add(getBFCsByElevePromise.future());
+            getBfCsByEleve(idEleves, idStructure, idPeriode, idCycle, isYear, handler, bfcEleve, getBFCsByElevePromise);
 
-                    for (int i = 0; i < bfcResultArray.size(); i++) {
-                        JsonObject _o = bfcResultArray.getJsonObject(i);
-                        if (_o.getInteger(VALEUR) < 0) {
-                            continue;
-                        }
-                        if (!bfcEleve.containsKey(_o.getString(ID_ELEVE))) {
-                            bfcEleve.put(_o.getString(ID_ELEVE), new HashMap<>());
-                        }
-                        bfcEleve.get(_o.getString(ID_ELEVE)).put(_o.getLong(ID_DOMAINE), _o.getInteger(VALEUR));
-                    }
+            Promise getMaxNoteCompetenceElevePromise = Promise.promise();
+            listOfFutures.add(getMaxNoteCompetenceElevePromise.future());
+            getMaxOrAverageNoteCompetenceEleve(recapEval, idEleves, idPeriode, idCycle, isYear, handler,
+                    notesCompetencesEleve, isSkillAverage, getMaxNoteCompetenceElevePromise);
 
-                    if (bfcEleve.isEmpty() || idPeriode != null || isYear) {
-                        bfcEleve.put(EMPTY, new HashMap<>());
-                        // Ajouter une valeur inutilisee dans la map permet de s'assurer que le traitement a ete effectue
-                    }
-                    getBFCsByEleveFuture.complete();
-                } else {
-                    getBFCsByEleveFuture.failed();
-                    handler.handle(new Either.Left<>("Impossible de recuperer le bilan de fin de cycle pour la " +
-                            "classe selectionnee :\n" + event.left().getValue()));
-                    log.error("buildBFC : getBFCsByEleve : " + event.left().getValue());
-                }
-            });
+            Promise echelleConversionPromise = Promise.promise();
+            listOfFutures.add(echelleConversionPromise.future());
+            getEchelleConversion(idClasse, idStructure, handler, echelleConversion, echelleConversionPromise);
 
-            Future getMaxNoteCompetenceEleveFuture = Future.future();
-            listOfFutures.add(getMaxNoteCompetenceEleveFuture);
-            getMaxOrAverageNoteCompetenceEleve(idEleves, idPeriode, idCycle, isYear, recapEval, isSkillAverage, event -> {
-                if (event.isRight()) {
-                    notesCompetencesEleve.putAll(event.right().getValue());
-                    if (notesCompetencesEleve.isEmpty()) {
-                        notesCompetencesEleve.put(EMPTY, new HashMap<>());
-                    }
-                    getMaxNoteCompetenceEleveFuture.complete();
-                } else {
-                    getMaxNoteCompetenceEleveFuture.failed();
-                    handler.handle(new Either.Left<>("Impossible de recuperer les evaluations pour " +
-                            "la classe selectionnee :\n" + event.left().getValue()));
-                    log.error("buildBFC : getMaxNoteCompetenceEleve : " + event.left().getValue());
-                }
-            });
+            Promise domainesPromise = Promise.promise();
+            listOfFutures.add(domainesPromise.future());
+            getDomaines(idClasse, idCycle, handler, domainesRacine, domainesPromise);
 
-            Future echelleConversionFuture = Future.future();
-            listOfFutures.add(echelleConversionFuture);
-            getEchelleConversion(idStructure, idClasse, event -> {
-                if (event.isRight()) {
-                    echelleConversion.addAll(event.right().getValue());
-                    echelleConversionFuture.complete();
-                } else {
-                    echelleConversionFuture.failed();
-                    handler.handle(new Either.Left<>("Impossible de recuperer l'echelle de conversion pour la " +
-                            "classe selectionnee :\n" + event.left().getValue()));
-                    log.error("buildBFC : getEchelleConversion : " + event.left().getValue());
-                }
-            });
-
-            Future domainesFuture = Future.future();
-            listOfFutures.add(domainesFuture);
-            getDomaines(idClasse, idCycle, event -> {
-                if (event.isRight()) {
-                    Set<Domaine> setDomainesRacine = new LinkedHashSet<>();
-
-                    final Map<Long, Domaine> domaines = new HashMap<>();
-                    domaines.putAll(event.right().getValue());
-                    for (Domaine domaine : domaines.values()) {
-                        if (domaine.getParentRacine() != null) {
-                            setDomainesRacine.add(domaine.getParentRacine());
-                        }
-                    }
-                    domainesRacine.addAll(setDomainesRacine);
-
-                    domainesFuture.complete();
-                } else {
-                    domainesFuture.failed();
-                    handler.handle(new Either.Left<>("Impossible de recuperer les domaines racines pour la" +
-                            " classe selectionne :\n" + event.left().getValue()));
-                    log.error("buildBFC : getDomaines : " + event.left().getValue());
-                }
-            });
-
-            CompositeFuture.all(listOfFutures).setHandler(event -> {
-                if (event.succeeded()) {
-                    calcMoyBFC(recapEval, idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine,
-                            handler);
-                } else {
-                    String error = event.cause().getMessage();
-                    log.error("[buildBFC] : " + error);
-                    handler.handle(new Either.Left<>("[buildBFC] Failed : " + error));
-                }
-            });
+            CompositeFuture.all(listOfFutures)
+                    .onSuccess(event -> calcMoyBFC(recapEval, idEleves, bfcEleve,
+                            notesCompetencesEleve, echelleConversion, domainesRacine, handler))
+                    .onFailure(err -> {
+                        String error = err.getMessage();
+                        log.error("[buildBFC] : " + error);
+                        handler.handle(new Either.Left<>("[buildBFC] Failed : " + error));
+                    });
         });
 
+    }
+
+    private void getDomaines (String idClasse, Long idCycle, Handler<Either<String, JsonObject>> handler,
+                              List<Domaine> domainesRacine, Promise domainesPromise) {
+        getDomaines(idClasse, idCycle, event -> {
+            if (event.isRight()) {
+                Set<Domaine> setDomainesRacine = new LinkedHashSet<>();
+
+                final Map<Long, Domaine> domaines = new HashMap<>();
+                domaines.putAll(event.right().getValue());
+                for (Domaine domaine : domaines.values()) {
+                    if (domaine.getParentRacine() != null) {
+                        setDomainesRacine.add(domaine.getParentRacine());
+                    }
+                }
+                domainesRacine.addAll(setDomainesRacine);
+
+                domainesPromise.complete();
+            } else {
+                domainesPromise.fail("Impossible de recuperer les domaines racines pour la" +
+                        " classe selectionne :\n" + event.left().getValue());
+                handler.handle(new Either.Left<>("Impossible de recuperer les domaines racines pour la" +
+                        " classe selectionne :\n" + event.left().getValue()));
+                log.error("buildBFC : getDomaines : " + event.left().getValue());
+            }
+        });
+    }
+
+    private void getEchelleConversion (String idClasse, String idStructure, Handler<Either<String, JsonObject>> handler, SortedSet<Double> echelleConversion, Promise echelleConversionPromise) {
+        getEchelleConversion(idStructure, idClasse, event -> {
+            if (event.isRight()) {
+                echelleConversion.addAll(event.right().getValue());
+                echelleConversionPromise.complete();
+            } else {
+                echelleConversionPromise.fail("Impossible de recuperer l'echelle de conversion pour la " +
+                        "classe selectionnee :\n" + event.left().getValue());
+                handler.handle(new Either.Left<>("Impossible de recuperer l'echelle de conversion pour la " +
+                        "classe selectionnee :\n" + event.left().getValue()));
+                log.error("buildBFC : getEchelleConversion : " + event.left().getValue());
+            }
+        });
+    }
+
+    private void getMaxOrAverageNoteCompetenceEleve (boolean recapEval, String[] idEleves, Long idPeriode, Long idCycle, Boolean isYear, Handler<Either<String, JsonObject>> handler, Map<String, Map<Long, Float>> notesCompetencesEleve, Boolean isSkillAverage, Promise getMaxNoteCompetenceElevePromise) {
+        getMaxOrAverageNoteCompetenceEleve(idEleves, idPeriode, idCycle, isYear, recapEval, isSkillAverage, event -> {
+            if (event.isRight()) {
+                notesCompetencesEleve.putAll(event.right().getValue());
+                if (notesCompetencesEleve.isEmpty()) {
+                    notesCompetencesEleve.put(EMPTY, new HashMap<>());
+                }
+                getMaxNoteCompetenceElevePromise.complete();
+            } else {
+                getMaxNoteCompetenceElevePromise.fail("Impossible de recuperer les evaluations pour " +
+                        "la classe selectionnee :\n" + event.left().getValue());
+                handler.handle(new Either.Left<>("Impossible de recuperer les evaluations pour " +
+                        "la classe selectionnee :\n" + event.left().getValue()));
+                log.error("buildBFC : getMaxNoteCompetenceEleve : " + event.left().getValue());
+            }
+        });
+    }
+
+    private void getBfCsByEleve (String[] idEleves, String idStructure, Long idPeriode, Long idCycle, Boolean isYear,
+                                 Handler<Either<String, JsonObject>> handler, Map<String, Map<Long, Integer>> bfcEleve,
+                                 Promise<JsonArray> getBFCsByElevePromise) {
+        getBFCsByEleve(idEleves, idStructure, idCycle, event -> {
+            if (event.isRight()) {
+                JsonArray bfcResultArray = event.right().getValue();
+
+                for (int i = 0; i < bfcResultArray.size(); i++) {
+                    JsonObject _o = bfcResultArray.getJsonObject(i);
+                    if (_o.getInteger(VALEUR) < 0) {
+                        continue;
+                    }
+                    if (!bfcEleve.containsKey(_o.getString(ID_ELEVE))) {
+                        bfcEleve.put(_o.getString(ID_ELEVE), new HashMap<>());
+                    }
+                    bfcEleve.get(_o.getString(ID_ELEVE)).put(_o.getLong(ID_DOMAINE), _o.getInteger(VALEUR));
+                }
+
+                if (bfcEleve.isEmpty() || idPeriode != null || isYear) {
+                    bfcEleve.put(EMPTY, new HashMap<>());
+                    // Ajouter une valeur inutilisee dans la map permet de s'assurer que le traitement a ete effectue
+                }
+                getBFCsByElevePromise.complete();
+            } else {
+                getBFCsByElevePromise.fail("Impossible de recuperer le bilan de fin de cycle pour la " +
+                        "classe selectionnee :\n" + event.left().getValue());
+                handler.handle(new Either.Left<>("Impossible de recuperer le bilan de fin de cycle pour la " +
+                        "classe selectionnee :\n" + event.left().getValue()));
+                log.error("buildBFC : getBFCsByEleve : " + event.left().getValue());
+            }
+        });
     }
 
     @Override

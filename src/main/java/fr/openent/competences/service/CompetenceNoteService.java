@@ -126,12 +126,15 @@ public interface CompetenceNoteService extends CrudService {
     void getCompetencesNotesEleve(String idEleve, Long idPeriode, Long idCycle, boolean isCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
-     * Récupère toutes les compétences notes d'une classe
+     * Récupère toutes les compétences notes d'une classe soit le max de la note chaque item soit la moyenne des notes de chaque item
+     * pour un periode donnée ou l'année
      * @param idEleves identifiant des élèves de la classe
      * @param idPeriode identifiant de la période
+     * @param isSkillAverage chois du calcul
      * @param handler handler portant le résultat de la requête
      */
-    void getMaxOrAverageCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Boolean isSkillAverage, Handler<Either<String, JsonArray>> handler);
+    void getMaxOrAverageCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Boolean isSkillAverage,
+                                               Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère toutes les compétences notes d'une classe
@@ -166,6 +169,14 @@ public interface CompetenceNoteService extends CrudService {
      */
     void getCyclesEleve(String idEleve, Handler<Either<String, JsonArray>> handler);
 
+    /**
+     * Récupère toutes les compétences notes d'une classe soit le max de la note chaque item soit la moyenne des notes de chaque item
+     * pour un cycle
+     * @param id_eleve identifiant des élèves de la classe
+     * @param idCycle id du cycle
+     * @param isSkillAverage choix du calcul
+     * @param handler handler portant le résultat de la requête
+     */
     void getMaxOrAverageCompetenceNoteEleveByCycle (String[] id_eleve, Long idCycle, Boolean isSkillAverage,
                                                     Handler<Either<String, JsonArray>> handler);
 
