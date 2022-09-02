@@ -15,14 +15,14 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {model, idiom as lang, _, Behaviours, template, notify, moment} from 'entcore';
+import {model, idiom as lang, _, Behaviours, template, notify, moment, Collection} from 'entcore';
 import * as utils from '../../utils/teacher';
-import {BilanFinDeCycle, Classe, CompetenceNote} from './index';
+import {BilanFinDeCycle, Classe, CompetenceNote, Domaine, TableConversion} from './index';
 import {evaluations} from "./model";
 import {updateFilters} from "../../utils/functions/updateFilters";
 import http from "axios";
 import {getTitulairesForRemplacantsCoEnseignant} from "../../utils/teacher";
-import {StructureOptions, structureOptionsService} from "../../services";
+import {FilterNotEvaluated} from "../../utils/filters/filterNotEvaluatedEnseignement";
 
 
 export class Utils {
@@ -341,20 +341,20 @@ export class Utils {
         if (competence.competencesEvaluations)
             allEvaluations = competence.competencesEvaluations;
         if (!forClass) {
-            allEvaluations = _.filter(competence.competencesEvaluations, (evaluation) => {
+            allEvaluations = _.filter(competence.competencesEvaluations, (evaluation : any) => {
                 return !evaluation.formative;
                 // la competence doit être reliée à un devoir ayant un type non "formative"
             });
         }
         if (allEvaluations !== undefined && allEvaluations.length > 0) {
-            let notHistorizedEvals = allEvaluations;
+            let notHistorizedEvals : Array<object>= allEvaluations;
             if (!forClass) {
-                notHistorizedEvals = _.filter(allEvaluations, (evaluation) => {
+                notHistorizedEvals = _.filter(allEvaluations, (evaluation: any) => {
                     return evaluation.eval_lib_historise === false;
                 });
             }
             //allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
-            let niveauFinaltoShowAllEvaluations;
+            let niveauFinaltoShowAllEvaluations: number;
             if (notHistorizedEvals.length > 0) { // si il y a des notes sur la compétence sur l'année en cours, on prend la note max obtenue
                 allEvaluations = notHistorizedEvals;
                 niveauFinaltoShowAllEvaluations = (evaluations.structure.options.isSkillAverage) ?
@@ -384,7 +384,7 @@ export class Utils {
         });
         if (myEvaluations !== undefined && myEvaluations.length > 0) {
             //set the max of my evaluations on this competence for "niveau atteint"
-            let niveauAtteintToShowMyEvaluations = (evaluations.structure.options.isSkillAverage) ?
+            let niveauAtteintToShowMyEvaluations : number = (evaluations.structure.options.isSkillAverage) ?
                 Utils.getNiveauMoyOfListEval(myEvaluations, tableConversion, true, false) :
                 Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion, true, false);
             if (competence.competencesEvaluations) {
@@ -396,7 +396,7 @@ export class Utils {
             }
 
             //set the max of my evaluations on this competence for "niveau final"
-            let niveauFinalToShowMyEvaluations = (evaluations.structure.options.isSkillAverage) ?
+            let niveauFinalToShowMyEvaluations : number = (evaluations.structure.options.isSkillAverage) ?
                 Utils.getNiveauMoyOfListEval(myEvaluations, tableConversion, false, isYear) :
                 Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion, false, isYear);
             if (competence.competencesEvaluations) {
@@ -416,7 +416,7 @@ export class Utils {
      * @param onlyNote
      * @param isYear
      */
-    static getNiveauMaxOfListEval (listEval, tableConversion, onlyNote?, isYear?){
+    static getNiveauMaxOfListEval (listEval, tableConversion, onlyNote? : boolean, isYear? : boolean) : number {
         //enlever les compétences non notés
         listEval = _.filter(listEval, (e) => {
             return e.evaluation>-1;
@@ -447,20 +447,21 @@ export class Utils {
         }
     }
 
-    static getNiveauMoyOfListEval (listEval, tableConversion, onlyNote?, isYear?){
+    static getNiveauMoyOfListEval (listEval : Array<object>, tableConversion : Collection<TableConversion>,
+                                   onlyNote? : boolean, isYear? : boolean) : number {
         //enlever les compétences non notés
         listEval = _.filter(listEval, (e) => {
             return e.evaluation>-1;
         });
         //tableau des max des Evals pour chaque matière
         if(onlyNote !== undefined && onlyNote){
-            let notesComp = [];
-            _.map(listEval,(e) => {
+            let notesComp : Array<any> = [];
+            _.map(listEval,(e: any) => {
                 notesComp.push(e.evaluation);
             })
             return  utils.getMoyenneForBFC(utils.average(notesComp) + 1, tableConversion.all) - 1;
         }else {
-            let allCompNote = [];
+            let allCompNote : Array<any> = [];
             //trier par idMatiere;
             let listEvalsByMatiere = _.groupBy(listEval, (e) => {
                 return e.id_matiere;
@@ -472,8 +473,8 @@ export class Utils {
                 if (_.first(tabEvals).niveau_final !== null) {
                     allCompNote.push(_.first(tabEvals).niveau_final);
                 } else {
-                    let allCompNoteMat = [];
-                    _.map(tabEvals, (e) => {
+                    let allCompNoteMat : Array<any>= [];
+                    _.map(tabEvals, (e: any) => {
                         allCompNoteMat.push(e.evaluation);
                     });
                     allCompNote.push(utils.average(allCompNoteMat))
@@ -483,13 +484,14 @@ export class Utils {
         }
     }
 
-    static setCompetenceNotes(poDomaine, poCompetencesNotes, tableConversion, object?, classe?, tabDomaine?, isCycle?, periode?, listTeacher?) {
+    static setCompetenceNotes(poDomaine : Domaine, poCompetencesNotes, tableConversion,
+                              object?, classe?, tabDomaine?, isCycle?, periode?, listTeacher?) {
         let isYear = isCycle || (periode && !periode.id);
         if(!listTeacher && classe)
             listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId, classe);
         if (object === undefined && classe === undefined) {
             if (poDomaine.competences) {
-                _.map(poDomaine.competences.all, async function (competence) {
+                _.map(poDomaine.competences.all, (competence) => {
                     competence.competencesEvaluations = _.where(poCompetencesNotes, {
                         id_competence: competence.id,
                         id_domaine: competence.id_domaine

@@ -26,7 +26,7 @@ import service = workspace.v2.service;
 export function average (arr) {
     return _.reduce(arr, function(memo, num) {
         return memo + num;
-    },  0) / (arr.length === 0 ? 1 : arr.length);
+    }, 0) / (arr.length === 0 ? 1 : arr.length);
 }
 
 function getMoyenne (devoirs) {

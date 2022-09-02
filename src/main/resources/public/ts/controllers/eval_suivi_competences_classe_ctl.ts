@@ -153,27 +153,28 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             updateNiveau(usePerso, $scope);
         };
 
-        $scope.getMaxOrAverageEvaluations = function (idEleve) {
+        $scope.getMaxOrAverageEvaluations = (idEleve) : number => {
             if ($scope.detailCompetence === undefined
                 || $scope.detailCompetence === null) {
                 return;
             }
             if ($scope.suiviFilter === undefined) $scope.initFilterMine();
-            let evals = _.where($scope.detailCompetence.competencesEvaluations, {id_eleve: idEleve});
+            let evals: Array<object>;
+            evals = _.where($scope.detailCompetence.competencesEvaluations, {id_eleve: idEleve});
             if($scope.suiviFilter.mine == 'true') {
-                evals = _.filter(evals,evaluation => {
+                evals = _.filter(evals, (evaluation : any) => {
                     return _.findWhere($scope.listTeacher,{id_enseignant : evaluation.owner, id_matiere : evaluation.id_matiere});
                 });
             }
             if (evals.length > 0) {
                 // filtre sur les competences prises dans le calcul
-                evals = _.filter(evals, function (competence) {
+                evals = _.filter(evals, (competence: any) => {
                     return !competence.formative; // la competence doit être reliée à un devoir ayant un type non "formative"
                 });
                 return (evaluations.structure.options.isSkillAverage) ?
-                    Utils.getNiveauMoyOfListEval(evals,$scope.suiviCompetence.tableauConversion,false,
+                    Utils.getNiveauMoyOfListEval(evals,$scope.suiviCompetence.tableauConversion, false,
                         $scope.search.periode.id === null) :
-                    Utils.getNiveauMaxOfListEval(evals,$scope.suiviCompetence.tableauConversion,false,
+                    Utils.getNiveauMaxOfListEval(evals,$scope.suiviCompetence.tableauConversion, false,
                     $scope.search.periode.id === null);
             }
         };
@@ -193,7 +194,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             return eleve.isEvaluable($scope.search.periode);
         };
 
-        $scope.FilterColor = (item) => {
+        $scope.FilterColor = (item) : number => {
             let moyenneMaxMats = $scope.getMaxOrAverageEvaluations(item.id);
             if (moyenneMaxMats === undefined) {
                 return;
