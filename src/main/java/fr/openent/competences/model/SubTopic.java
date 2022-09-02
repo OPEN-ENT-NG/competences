@@ -5,7 +5,7 @@ import io.vertx.core.json.JsonObject;
 
 public class SubTopic {
     private String libelle;
-    private Integer id;
+    private Long id;
     private Service service;
     private Double coefficient = 1.d;
 
@@ -27,11 +27,11 @@ public class SubTopic {
                 .put(Field.COEFFICIENT,coefficient);
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

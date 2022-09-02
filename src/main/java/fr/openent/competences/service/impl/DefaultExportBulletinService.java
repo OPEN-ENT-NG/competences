@@ -58,6 +58,7 @@ import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
 import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.*;
+import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.utils.BulletinUtils.getIdParentForStudent;
 import static fr.openent.competences.utils.HomeworkUtils.safeGetDouble;
@@ -1898,7 +1899,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 Long periode = moyenneJson.getLong("id");
                 if(periode != null && !periodes.contains(periode)){
                     if(!moyenneJson.getValue("moyenne").equals(NN)){
-                        moyMatiere[0] += moyenneJson.getDouble("moyenne");
+                        moyMatiere[0] += safeGetDouble(moyenneJson,"moyenne");
                         periodes.add(periode);
                     }
                 }
@@ -2028,12 +2029,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if(groupsClassResult != null && !groupsClassResult.isEmpty()){
                         idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray("id_groupes"));
                     }
-                    JsonArray servicesJson = new JsonArray(student.getClasse().getServices().stream().map(Service::toJson).collect(Collectors.toList()));
                     JsonArray multiTeachers = new JsonArray(student.getClasse().getMultiTeachers().stream().map(MultiTeaching::toJsonObject).collect(Collectors.toList()));
                     List<Service> services = student.getClasse().getServices();
 
                     bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
-                            idGroupClasse, servicesJson, multiTeachers,
+                            idGroupClasse, services, multiTeachers,
                             getSuiviAcquisHandler(student, params, promise,classe,idEleves,
                                     getProgrammeElement,  idGroupClasse, services, multiTeachers));
                 }
@@ -2061,9 +2061,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if (message.contains(TIME) && !answer.get())
                     {
                         count ++;
-                        JsonArray servicesJson = new JsonArray(services.stream().map(Service::toJson).collect(Collectors.toList()));
                         bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve, idGroupClasse,
-                                servicesJson, multiTeachers,this);
+                                services, multiTeachers,this);
                     } else {
                         promise.fail("["+ GET_SUIVI_ACQUIS_METHOD + "] :" + idEleve + " " + message + count);
                     }
@@ -2248,28 +2247,19 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonObject moyenClasseSous = matiere.getJsonObject("_moyennesClasse");
                     Float moyCl = getMoyenneForSousMat(moyenClasseSous, idPeriode, idSousMat);
                     sousMat.put(MOYENNE_CLASSE, isNull(moyCl)? NN : moyCl);
-                    sousMat.put(Field.SUBCOEF,1);
+                    sousMat.put(Field.SUBCOEF,1.d);
 
-                    log.info(sousMat.getValue(Field.SUBCOEF));
-                    for(Service service : services){
-                        for(SubTopic subTopic : service.getSubtopics()){
-                            if(subTopic.getId().equals(sousMat.getInteger("id_type_sousmatiere"))){
-                                sousMat.put(Field.SUBCOEF,subTopic.getCoefficient());
+                    List<Service> matiereServices = setMatiereServices(matiere, params);
+                    for(Service matiereService : matiereServices) {
+                        for (Service service : services) {
+                            for (SubTopic subTopic : service.getSubtopics()) {
+                                if (subTopic.getId().equals(sousMat.getLong("id_type_sousmatiere")) &&
+                                        subTopic.getService().equals(matiereService) ){
+                                    sousMat.put(Field.SUBCOEF, subTopic.getCoefficient());
+                                }
                             }
                         }
                     }
-                    log.info(sousMat.getValue(Field.SUBCOEF));
-
-                    services.stream()
-                            .map(Service::getSubtopics)
-                            .flatMap(Collection::stream)
-                            .forEach(subTopic -> {
-                                if(subTopic.getId().equals(sousMat.getInteger("id_type_sousmatiere"))){
-                                    sousMat.put(Field.SUBCOEF,subTopic.getCoefficient());
-                                }
-                            });
-
-                    log.info(sousMat.getValue(Field.SUBCOEF));
 
                     if(i!=0){
                         sousMatiereWithoutFirst.add(sousMat);
@@ -2283,6 +2273,25 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             matiere.put(SOUS_MATIERES, sousMatiereWithoutFirst);
         }
     }
+
+    private List<Service> setMatiereServices(JsonObject matiere, JsonObject params) {
+        List<Service> matiereServices = new ArrayList<>();
+        for(Object o : matiere.getJsonArray("teachers")){
+            Teacher teacher = new Teacher();
+            teacher.setId(((JsonObject)o).getString("id"));
+            Service matiereService = new Service();
+            Group group = new Group();
+            group.setId(params.getString("idClasse"));
+            Matiere matiere1 = new Matiere();
+            matiere1.setId(matiere.getString("id_matiere"));
+            matiereService.setTeacher(teacher);
+            matiereService.setMatiere(matiere1);
+            matiereService.setGroup(group);
+            matiereServices.add(matiereService);
+        }
+        return matiereServices;
+    }
+
     private void setPrintCoefficient(JsonObject matiere, JsonObject params){
         matiere.put(PRINT_COEFFICIENT, params.getBoolean(COEFFICIENT));
         matiere.put("coef", matiere.getValue("coef", "1"));
@@ -2805,7 +2814,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             JsonArray servicesJson = (JsonArray) success.result().list().get(5);
                             JsonArray multiTeachinJsonArray = (JsonArray) success.result().list().get(6);
                             for(int i = 1; i <= finalNbOptions; i++) {
-                                paramBulletins.addParams((JsonObject) success.result().list().get(6 + i));
+                                paramBulletins.addParams((JsonObject) success.result().list().get(7 + i));
                             }
                             List<Service> services = new ArrayList<>();
                             List<MultiTeaching> multiTeachings = new ArrayList<>();
@@ -2862,7 +2871,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     service.setGroup(group);
                     service.setTeacher(teacher);
                     subTopic.setService(service);
-                    subTopic.setId(subTopicJo.getInteger(Field.ID_SUBTOPIC));
+                    subTopic.setId(subTopicJo.getLong(Field.ID_SUBTOPIC));
                     subTopic.setCoefficient(safeGetDouble(subTopicJo,Field.COEFFICIENT));
                     subTopics.add(subTopic);
                 }
@@ -2900,16 +2909,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         //Faire le libelle
         classeStudent.setPeriode(periode);
         JsonArray groupes, manualGroupes = new JsonArray();
-          try {
+        try {
             groupes = eleve.getJsonArray("idGroupes");
-              } catch (ClassCastException e) {
-             String groupesStr = eleve.getString("idGroupes");
-             String[] array = groupesStr.split(",");
-              groupes = new JsonArray();
+        } catch (ClassCastException e) {
+            String groupesStr = eleve.getString("idGroupes");
+            String[] array = groupesStr.split(",");
+            groupes = new JsonArray();
             for(String s : array){
-              groupes.add(s);
+                groupes.add(s);
             }
-          }
+        }
         manualGroupes.addAll(eleve.getJsonArray("idManualGroupes", new JsonArray()));
         for (int j = 0; j < groupes.size(); j++) {
             Group group = new Group();
@@ -2997,29 +3006,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    private void setServices(Structure structure, JsonArray servicesJson, List<Service> services, List<SubTopic> subTopics) {
-        for (int i = 0 ; i < servicesJson.size();i++){
-            JsonObject serviceJo = servicesJson.getJsonObject(i);
-            Service service = new Service();
-            service.setStructure(structure);
-            Group group = new Group();
-            group.setId(serviceJo.getString("id_groupe"));
-            service.setGroup(group);
-            Matiere matiere = new Matiere();
-            matiere.setId(serviceJo.getString("id_matiere"));
-            service.setMatiere(matiere);
-            Teacher teacher =  new Teacher();
-            teacher.setId(serviceJo.getString("id_enseignant"));
-            service.setTeacher(teacher);
-            service.setEvaluable(serviceJo.getBoolean("evaluable"));
-            service.setVisible(serviceJo.getBoolean("is_visible"));
-            service.setModalite(serviceJo.getString("modalite",""));
-            service.setCoefficient(serviceJo.getLong("coefficient"));
-            subTopics.stream().filter(subtopic -> subtopic.getService().equals(service)).forEach(service::addSubtopics);
-            services.add(service);
 
-        }
-    }
 
     private void setStudentClasseToPrint(JsonObject student, JsonObject classe){
         student.put(CLASSE_NAME_TO_SHOW, classe.getString("classeName"));

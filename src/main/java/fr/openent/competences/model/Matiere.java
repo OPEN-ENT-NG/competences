@@ -13,6 +13,10 @@ public class Matiere {
     public Matiere() {
     }
 
+    public Matiere(String id) {
+        this.id = id;
+    }
+
     public String getBackgroundColor() {
         return backgroundColor;
     }

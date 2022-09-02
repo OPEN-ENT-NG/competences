@@ -2,8 +2,6 @@ package fr.openent.competences.constants;
 
 public class Field {
 
-
-
     private Field() {
         throw new IllegalStateException("Utility class");
     }
@@ -39,5 +37,9 @@ public class Field {
     public static final String GROUPS = "groups";
 
     //subTopic
+
+    //db
+    public static final String SUBTOPIC_TABLE = "services_subtopic";
+
 
 }
