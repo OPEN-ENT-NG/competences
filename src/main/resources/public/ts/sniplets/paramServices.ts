@@ -5,7 +5,7 @@ import {Classe, TypeSousMatieres} from "../models/teacher";
 import {Service} from "../models/common/ServiceSnipplet";
 import {safeApply} from "../utils/teacher";
 import {MultiTeaching} from "../models/common/MultiTeaching";
-import {SubTopicsService, SubTopicsServices} from "../models/sniplets";
+import {SubtopicserviceService, SubTopicsServices} from "../models/sniplets";
 import {SubTopicsServiceService} from "../services/SubTopicServiceService";
 
 export const paramServices = {
@@ -39,7 +39,6 @@ export const paramServices = {
                 manualGroupes : {isSelected: true, filterName:"manualGroups", name:"evaluation.service.filter.manualGroupes", type:2}
             };
 
-            this.subTopicsServices = new SubTopicsServices([])
             this.subTopicsServiceService = new SubTopicsServiceService();
             this.subTopics = new TypeSousMatieres([]);
             this.columns = {
@@ -200,10 +199,11 @@ export const paramServices = {
             await paramServices.that.subTopicsServiceService.set(subtopic);
         }
         ,
-        setServicesWithGroups: async function (data) {
-            await paramServices.that.subTopicsServices.get(paramServices.that.idStructure)
+        setServicesWithGroups: async function (datas) {
+            let {data} =  await paramServices.that.subTopicsServiceService.get(paramServices.that.idStructure)
+             paramServices.that.subTopicsServices = new SubTopicsServices([],data);
             await paramServices.that.subTopics.get(paramServices.that.idStructure);
-            paramServices.that.services = _.reject(_.map(data, service => {
+            paramServices.that.services = _.reject(_.map(datas, service => {
                 let enseignant = _.findWhere(paramServices.that.columns.enseignant.data, {id: service.id_enseignant});
                 let groupe = _.findWhere(paramServices.that.columns.classe.data, {id: service.id_groupe});
                 let groups = [];
@@ -213,9 +213,8 @@ export const paramServices = {
                 let matiere = _.findWhere(paramServices.that.columns.matiere.data, {id: service.id_matiere});
                 if (matiere && matiere.sous_matieres && matiere.sous_matieres.length > 0)
                     matiere.sous_matieres.forEach(sm => {
-                        paramServices.that.subTopics.all.forEach(sb => {
-                            let sbt: SubTopicsService;
-                            sbt =  paramServices.that.subTopicsServices.all.find(  subTopicsService =>{
+                        paramServices.that.subTopics.all.map(sb => {
+                            let sbt =  paramServices.that.subTopicsServices.all.find(subTopicsService => {
                                 return subTopicsService.id_teacher === service.id_enseignant
                                     && subTopicsService.id_topic === service.id_matiere
                                     && subTopicsService.id_group === service.id_groupe
@@ -223,9 +222,9 @@ export const paramServices = {
                             });
                             if (sm.id_type_sousmatiere == sb.id) {
                                 if(sbt !== undefined) {
-                                    sbt.libelle =   sb.libelle ;
-                                } else {
-                                    sbt = new SubTopicsService()
+                                    sbt.libelle = sb.libelle ;
+                                 } else {
+                                    sbt = new SubtopicserviceService()
                                     sbt.libelle =   sb.libelle ;
                                     sbt.id_teacher = service.id_enseignant ;
                                     sbt.id_group = service.id_groupe ;

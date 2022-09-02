@@ -1,1 +1,1 @@
-export * from './SubTopicsService';
+export * from './subtopicservice.service';

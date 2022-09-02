@@ -7,7 +7,7 @@ import {SubTopicsServiceService} from "../../services/SubTopicServiceService";
 let subTopicsServiceService = new SubTopicsServiceService();
 
 
-export class SubTopicsService implements Selectable{
+export class SubtopicserviceService implements Selectable{
     libelle: string;
     selected: boolean;
     id_structure: string;
@@ -42,11 +42,11 @@ export class SubTopicsService implements Selectable{
     }
 }
 
-export class SubTopicsServices extends Selection<SubTopicsService> {
-    async get(idStructure) {
-        let {data} = await subTopicsServiceService.get(idStructure);
+export class SubTopicsServices extends Selection<SubtopicserviceService> {
+    constructor(arr: any[], data: any) {
+        super([]);
         data.forEach((item) => {
-            let sts:SubTopicsService =  new SubTopicsService();
+            let sts:SubtopicserviceService =  new SubtopicserviceService();
             this.all.push(sts.build(item))
         })
     }

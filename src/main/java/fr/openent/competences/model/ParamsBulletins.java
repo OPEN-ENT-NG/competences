@@ -118,7 +118,7 @@ public class ParamsBulletins {
                 .put(COEFFICIENT_LIBELLE, getLibelle("viescolaire.utils.coef"))
                 .put(MOYENNE_ANUELLE_LIBELLE, getLibelle("average.annual"))
                 .put(MOYENNE_GENERALE_LIBELLE, getLibelle("average.general"))
-                .put(SUBTOPIC_LIBELLE, "Sous matières")
+                .put(SUBTOPIC_LIBELLE, getLibelle("subtopic.libelle"))
         ;
     }
 

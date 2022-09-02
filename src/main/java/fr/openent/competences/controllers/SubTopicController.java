@@ -31,14 +31,13 @@ public class SubTopicController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void updateSubtopicsServices(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request,pathPrefix +
-                Competences.SCHEMA_SUBTOPIC_COEFF_UPDATE, body ->{
-            subTopicService.upsertCoefficent(body,arrayResponseHandler(request));
-        });
+                Competences.SCHEMA_SUBTOPIC_COEFF_UPDATE, body -> subTopicService.upsertCoefficent(body,arrayResponseHandler(request)));
     }
 
     @Get("/subtopics/services/:idStructure")
     @ApiDoc("get SubtopicsServices")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ResourceFilter(AccessVisibilityAppreciation.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void getDefaultSubtopicsServices(final HttpServerRequest request) {
         String idStructure = request.params().get(IDSTRUCTURE);
         subTopicService.getSubtopicServices(idStructure,arrayResponseHandler(request));

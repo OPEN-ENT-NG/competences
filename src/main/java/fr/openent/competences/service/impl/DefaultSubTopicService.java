@@ -25,9 +25,7 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
         List<String> groups = data.getJsonArray(GROUPS)
                 .stream().map(group -> ((JsonObject)group).getString(ID)).collect(Collectors.toList());
         JsonArray statements = new JsonArray();
-        groups.forEach(idGroup -> {
-            statements.add(setStatementCoefficient(data,idGroup));
-        });
+        groups.forEach(idGroup -> statements.add(setStatementCoefficient(data,idGroup)));
         Sql.getInstance().transaction(statements,validResultHandler(handler));
     }
 

@@ -2249,6 +2249,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     Float moyCl = getMoyenneForSousMat(moyenClasseSous, idPeriode, idSousMat);
                     sousMat.put(MOYENNE_CLASSE, isNull(moyCl)? NN : moyCl);
                     sousMat.put(Field.SUBCOEF,1);
+
+                    log.info(sousMat.getValue(Field.SUBCOEF));
                     for(Service service : services){
                         for(SubTopic subTopic : service.getSubtopics()){
                             if(subTopic.getId().equals(sousMat.getInteger("id_type_sousmatiere"))){
@@ -2256,6 +2258,19 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             }
                         }
                     }
+                    log.info(sousMat.getValue(Field.SUBCOEF));
+
+                    services.stream()
+                            .map(Service::getSubtopics)
+                            .flatMap(Collection::stream)
+                            .forEach(subTopic -> {
+                                if(subTopic.getId().equals(sousMat.getInteger("id_type_sousmatiere"))){
+                                    sousMat.put(Field.SUBCOEF,subTopic.getCoefficient());
+                                }
+                            });
+
+                    log.info(sousMat.getValue(Field.SUBCOEF));
+
                     if(i!=0){
                         sousMatiereWithoutFirst.add(sousMat);
                     }
