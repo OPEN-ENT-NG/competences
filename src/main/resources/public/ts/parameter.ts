@@ -1,7 +1,6 @@
 import {ng} from "entcore";
 import {ParameterService} from "./services";
 import {adminParameterController} from "./controllers/admin-parameter"
-import * as services from './services';
 import {cFilAriane} from "./utils/directives/cFilAriane";
 import {navigable} from "./utils/directives/navigable";
 import {navigatable} from "./utils/directives/navigatable";
