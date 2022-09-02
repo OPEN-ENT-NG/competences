@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "coefficient": {
+      "type": "number"
+    },
+    "id_teacher": {
+      "type": "string"
+    },
+    "id_group": {
+      "type": "string"
+    },
+    "id_topic": {
+      "type": "string"
+    },
+    "id_subtopic": {
+      "type": "number"
+    },
+    "id_structure": {
+      "type": "string"
+    },
+    "groups": {
+      "type": "array"
+    }
+  },
+  "required": [
+    "coefficient",
+    "id_teacher",
+    "id_group",
+    "id_topic",
+    "id_subtopic",
+    "id_structure"
+  ]
+}

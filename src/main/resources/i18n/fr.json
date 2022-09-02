@@ -823,5 +823,6 @@
   "competence.createCompetence.domaine" : "Domaines",
   "competence.createCompetence.success": "Nouvel item de compétence créé.",
   "competence.createCompetence.error": "Erreur lors de la création de l'item.",
-  "competence.createCompetence.error.unautorize": "Désolé, vous n'êtes pas autorisé à créer des items."
+  "competence.createCompetence.error.unautorize": "Désolé, vous n'êtes pas autorisé à créer des items.",
+  "subtopic.libelle": "Sous Matières"
 }

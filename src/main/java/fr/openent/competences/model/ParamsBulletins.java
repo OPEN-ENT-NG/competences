@@ -1,10 +1,8 @@
 package fr.openent.competences.model;
 
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import java.security.PrivilegedAction;
 import java.util.Collections;
 
 import static fr.openent.competences.Utils.getLibelle;
@@ -47,6 +45,7 @@ public class ParamsBulletins {
     private static final String COEFFICIENT_LIBELLE = "coefficientLibelle";
     private static final String MOYENNE_ANUELLE_LIBELLE = "moyenneAnnuelleLibelle";
     private static final String MOYENNE_GENERALE_LIBELLE = "moyenneGeneraleLibelle";
+    private static final String SUBTOPIC_LIBELLE = "subTopicLibelle";
     // Parameter Key
     private static final String GET_MOYENNE_CLASSE = "getMoyenneClasse";
     private static final String GET_MOYENNE_ELEVE = "getMoyenneEleve";
@@ -118,7 +117,9 @@ public class ParamsBulletins {
                 .put(EVALUATION_BY_DOMAINE, getLibelle("evaluation.by.domaine"))
                 .put(COEFFICIENT_LIBELLE, getLibelle("viescolaire.utils.coef"))
                 .put(MOYENNE_ANUELLE_LIBELLE, getLibelle("average.annual"))
-                .put(MOYENNE_GENERALE_LIBELLE, getLibelle("average.general"));
+                .put(MOYENNE_GENERALE_LIBELLE, getLibelle("average.general"))
+                .put(SUBTOPIC_LIBELLE, getLibelle("subtopic.libelle"))
+        ;
     }
 
     public void setParams(JsonObject otherParams) {
