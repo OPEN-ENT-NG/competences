@@ -108,10 +108,10 @@ export class SuiviCompetenceClasse extends Model {
     }
 
     async getCompetencesNotesClasse (classe : Classe, periode : any): Promise<any> {
-        let urlComp = this.api.getCompetencesNotesClasse + classe.id + "/" + classe.type_groupe + "?idStructure=" + this.structure.id;
+        let urlComp = this.api.getCompetencesNotesClasse + classe.id + "/" + classe.type_groupe + "?structureId=" + this.structure.id;
         if (periode !== null && periode !== undefined && periode !== '*') {
             if(periode.id_type !== undefined && periode.id_type !== null){
-                urlComp += "?idPeriode="+periode.id_type;
+                urlComp += "&idPeriode="+periode.id_type;
             }
         }
         return http.get(`${urlComp}`);

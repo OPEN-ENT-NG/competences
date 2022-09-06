@@ -23,9 +23,16 @@ public class Field {
     public static final String SAVE_BFC = "saveBFC";
     public static final String STRUCTUREID = "structureId";
     public static final String ISSKILLAVERAGE = "isSkillAverage";
+    public static final String IDCLASSE = "idClasse";
+    public static final String TYPECLASSE = "typeClasse";
+    public static final String IDDOMAINE = "idDomaine";
+    public static final String IDPERIODE = "idPeriode";
 
     // tables
     public static final String STRUTUCTURE_OPTIONS = "structure_options";
+
+    //colonnes
+    public static final String ISAVERAGESKILLS = "is_average_skills";
 
     //schema json
     public static final String SCHEMA_EVAL_CREATEORUPDATESTRUCTUREOPTIONISAVERAGESKILLS =

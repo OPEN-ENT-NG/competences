@@ -272,11 +272,12 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     }
 
     @Override
-    public void getMaxOrAverageCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Boolean isSkillAverage, Handler<Either<String, JsonArray>> handler) {
+    public void getMaxOrAverageCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Boolean isSkillAverage,
+                                                      Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT ").append(table).append(".id_eleve AS id_eleve, competences.id as id_competence, ");
-        if(isSkillAverage)
+        if(Boolean.TRUE.equals(isSkillAverage))
             query.append("ROUND(AVG(").append(table).append(".evaluation),2) as evaluation, ");
         else
             query.append("MAX(" ).append(table).append( ".evaluation) as evaluation, ");
@@ -318,47 +319,6 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("GROUP BY competences.id, competences.id_cycle, rel_competences_domaines.id_domaine, ")
                 .append(table).append(".id_eleve, ").append(table).append(".owner, competence_niveau_final.niveau_final, ")
                 .append("competence_niveau_final_annuel.niveau_final, devoirs.id_matiere ");
-
-        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
-    }
-
-    @Override
-    public void getCompetencesNotesDomaineClasse(List<String> idEleves, Long idPeriode, List<String> idDomaines, Handler<Either<String, JsonArray>> handler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        StringBuilder query = new StringBuilder()
-                .append("SELECT ").append(table).append(".id_eleve AS id_eleve, competences.id as id_competence, ")
-                .append("max(").append(table).append(".evaluation) as evaluation,rel_competences_domaines.id_domaine, ")
-                .append(table).append(".owner ")
-                .append("FROM ").append(schema).append("competences ")
-                .append("INNER JOIN ").append(schema).append("rel_competences_domaines ON ")
-                .append("(competences.id = rel_competences_domaines.id_competence AND rel_competences_domaines.id_domaine IN ( " );
-
-        for (int i=0; i<idDomaines.size()-1 ; i++){
-            query.append("?,");
-            values.add(Integer.valueOf(idDomaines.get(i)));
-        }
-        query.append("?)) ");
-        values.add(Integer.valueOf(idDomaines.get(idDomaines.size()-1)));
-
-        query.append("INNER JOIN " ).append(resourceTable)
-                .append(" ON (").append(table).append(".id_competence = competences.id AND ")
-                .append(table).append(".id_eleve IN (");
-
-        for (int i=0; i<idEleves.size()-1 ; i++){
-            query.append("?,");
-            values.add(idEleves.get(i));
-        }
-        query.append("?)) ");
-        values.add(idEleves.get(idEleves.size()-1));
-
-        query.append("INNER JOIN ").append(schema).append("devoirs ON (").append(table).append(".id_devoir = devoirs.id) ");
-
-        if (idPeriode != null) {
-            query.append("AND devoirs.id_periode = ? ");
-            values.add(idPeriode);
-        }
-        query.append("GROUP BY competences.id, competences.id_cycle,rel_competences_domaines.id_domaine, ")
-                .append(table).append(".id_eleve, ").append(table).append(".owner ");
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }

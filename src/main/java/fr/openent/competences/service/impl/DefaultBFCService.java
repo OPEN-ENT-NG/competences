@@ -40,6 +40,7 @@ import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.utils.StringUtils;
 
+import javax.swing.*;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -563,20 +564,20 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
             List<Future> listOfFutures = new ArrayList<>();
 
-            Promise getBFCsByElevePromise = Promise.promise();
+            Promise<Void> getBFCsByElevePromise = Promise.promise();
             listOfFutures.add(getBFCsByElevePromise.future());
             getBfCsByEleve(idEleves, idStructure, idPeriode, idCycle, isYear, handler, bfcEleve, getBFCsByElevePromise);
 
-            Promise getMaxNoteCompetenceElevePromise = Promise.promise();
+            Promise<Void> getMaxNoteCompetenceElevePromise = Promise.promise();
             listOfFutures.add(getMaxNoteCompetenceElevePromise.future());
             getMaxOrAverageNoteCompetenceEleve(recapEval, idEleves, idPeriode, idCycle, isYear, handler,
                     notesCompetencesEleve, isSkillAverage, getMaxNoteCompetenceElevePromise);
 
-            Promise echelleConversionPromise = Promise.promise();
+            Promise<Void> echelleConversionPromise = Promise.promise();
             listOfFutures.add(echelleConversionPromise.future());
             getEchelleConversion(idClasse, idStructure, handler, echelleConversion, echelleConversionPromise);
 
-            Promise domainesPromise = Promise.promise();
+            Promise<Void> domainesPromise = Promise.promise();
             listOfFutures.add(domainesPromise.future());
             getDomaines(idClasse, idCycle, handler, domainesRacine, domainesPromise);
 
@@ -593,7 +594,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     }
 
     private void getDomaines (String idClasse, Long idCycle, Handler<Either<String, JsonObject>> handler,
-                              List<Domaine> domainesRacine, Promise domainesPromise) {
+                              List<Domaine> domainesRacine, Promise<Void> domainesPromise) {
         getDomaines(idClasse, idCycle, event -> {
             if (event.isRight()) {
                 Set<Domaine> setDomainesRacine = new LinkedHashSet<>();
@@ -618,7 +619,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         });
     }
 
-    private void getEchelleConversion (String idClasse, String idStructure, Handler<Either<String, JsonObject>> handler, SortedSet<Double> echelleConversion, Promise echelleConversionPromise) {
+    private void getEchelleConversion (String idClasse, String idStructure, Handler<Either<String, JsonObject>> handler,
+                                       SortedSet<Double> echelleConversion, Promise<Void> echelleConversionPromise) {
         getEchelleConversion(idStructure, idClasse, event -> {
             if (event.isRight()) {
                 echelleConversion.addAll(event.right().getValue());
@@ -633,7 +635,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         });
     }
 
-    private void getMaxOrAverageNoteCompetenceEleve (boolean recapEval, String[] idEleves, Long idPeriode, Long idCycle, Boolean isYear, Handler<Either<String, JsonObject>> handler, Map<String, Map<Long, Float>> notesCompetencesEleve, Boolean isSkillAverage, Promise getMaxNoteCompetenceElevePromise) {
+    private void getMaxOrAverageNoteCompetenceEleve (boolean recapEval, String[] idEleves, Long idPeriode, Long idCycle,
+                                                     Boolean isYear, Handler<Either<String, JsonObject>> handler,
+                                                     Map<String, Map<Long, Float>> notesCompetencesEleve, Boolean isSkillAverage,
+                                                     Promise<Void> getMaxNoteCompetenceElevePromise) {
         getMaxOrAverageNoteCompetenceEleve(idEleves, idPeriode, idCycle, isYear, recapEval, isSkillAverage, event -> {
             if (event.isRight()) {
                 notesCompetencesEleve.putAll(event.right().getValue());
@@ -653,7 +658,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
     private void getBfCsByEleve (String[] idEleves, String idStructure, Long idPeriode, Long idCycle, Boolean isYear,
                                  Handler<Either<String, JsonObject>> handler, Map<String, Map<Long, Integer>> bfcEleve,
-                                 Promise<JsonArray> getBFCsByElevePromise) {
+                                 Promise<Void> getBFCsByElevePromise) {
         getBFCsByEleve(idEleves, idStructure, idCycle, event -> {
             if (event.isRight()) {
                 JsonArray bfcResultArray = event.right().getValue();
