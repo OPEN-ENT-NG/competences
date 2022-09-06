@@ -343,17 +343,18 @@ public class CompetenceNoteController extends ControllerHelper {
             competencesNotesService.getMaxOrAverageCompetencesNotesClasse(idEleves, idPeriode, isSkillAverage,
                     event ->{
                 if(event .isLeft()) {
-                    JsonObject error = (new JsonObject()).put("error", (String)event.left().getValue());
+                    JsonObject error = new JsonObject().put(Field.ERROR, event.left().getValue());
                     log.error("[CompetenceNoteController] : callCompetencesNotesService " + event.left().getValue());
-                    Renders.renderJson(request, error);
+                    Renders.renderError(request, error);
+                    return;
                 }
                 if(!Boolean.TRUE.equals(isSkillAverage)) Renders.renderJson(request, event.right().getValue());
                 else {
                     JsonArray competencesNoteWithDoubleEvaluation = new JsonArray();
                    event.right().getValue().stream().forEach(comp -> {
                        JsonObject competenceNoteEleve = (JsonObject)comp;
-                       Double evaluation = HomeworkUtils.safeGetDouble(competenceNoteEleve,"evaluation");
-                       competenceNoteEleve.put("evaluation", evaluation);
+                       Double evaluation = HomeworkUtils.safeGetDouble(competenceNoteEleve,Field.EVALUATION);
+                       competenceNoteEleve.put(Field.EVALUATION, evaluation);
                        competencesNoteWithDoubleEvaluation.add(competenceNoteEleve);
                    });
                    Renders.renderJson(request,competencesNoteWithDoubleEvaluation);
@@ -445,7 +446,7 @@ public class CompetenceNoteController extends ControllerHelper {
         new DefaultUtilsService(this.eb).studentIdAvailableForPeriode(idClasse, idPeriode, typeClasse, event -> {
             if (event.isRight()) {
                 JsonArray queryResult = event.right().getValue();
-                List<String> idEleves = new ArrayList<String>();
+                List<String> idEleves = new ArrayList<>();
 
                 if (queryResult != null) {
                     for (int i = 0; i < queryResult.size(); i++) {
@@ -458,6 +459,7 @@ public class CompetenceNoteController extends ControllerHelper {
                         Renders.notFound(request,"Impossible de recuperer le type de calcul des competences notes \n"
                                 + responseOption.left().getValue());
                         log.error("buildBFC : getIsAverageSkills : " + responseOption.left().getValue());
+                        return;
                     }
                     Boolean isSkillAverage = responseOption.right().getValue().getBoolean(Field.ISAVERAGESKILLS);
 
