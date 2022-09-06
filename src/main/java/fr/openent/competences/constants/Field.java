@@ -17,6 +17,17 @@ public class Field {
     public static final String ID_TEACHER = "id_teacher";
     public static final String ID_TOPIC = "id_topic";
     public static final String ID_GROUP = "id_group";
+    public static final String ID_GROUPE = "id_groupe";
+    public static final String ID_TYPESOUSMATIERE = "id_type_sousmatiere";
+    public static final String ID_PERIODE = "id_periode";
+    public static final String ID_ELEVE = "id_eleve";
+    public static final String ID_CLASSE = "id_classe";
+
+
+    public static final String MAIN_TEACHER_ID = "main_teacher_id";
+    public static final String SECOND_TEACHER_ID = "second_teacher_id";
+    public static final String SUBJECT_ID = "subject_id";
+    public static final String CLASS_OR_GROUP_ID = "class_or_group_id";
 
     //transaction
     public static final String ACTION = "action";
@@ -35,6 +46,15 @@ public class Field {
     public static final String SERVICE_SUBTOPIC = "services_subtopic";
     public static final String COEFFICIENT = "coefficient" ;
     public static final String GROUPS = "groups";
+    public static final String TEACHERS = "teachers";
+    public static final String MOYENNE = "moyenne";
+    public static final String HASNOTE = "hasNote";
+    public static final String VALEUR = "valeur";
+    public static final String IS_EVALUATED = "is_evaluated";
+    public static final String OWNER = "owner";
+    public static final String DIVISEUR = "diviseur";
+    public static final String RAMENER_SUR = "ramener_sur";
+
 
     //subTopic
 

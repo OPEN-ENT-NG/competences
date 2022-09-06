@@ -2253,7 +2253,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     for(Service matiereService : matiereServices) {
                         for (Service service : services) {
                             for (SubTopic subTopic : service.getSubtopics()) {
-                                if (subTopic.getId().equals(sousMat.getLong("id_type_sousmatiere")) &&
+                                if (subTopic.getId().equals(sousMat.getLong(Field.ID_TYPESOUSMATIERE)) &&
                                         subTopic.getService().equals(matiereService) ){
                                     sousMat.put(Field.SUBCOEF, subTopic.getCoefficient());
                                 }
@@ -2276,14 +2276,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     private List<Service> setMatiereServices(JsonObject matiere, JsonObject params) {
         List<Service> matiereServices = new ArrayList<>();
-        for(Object o : matiere.getJsonArray("teachers")){
+        for(Object o : matiere.getJsonArray(Field.TEACHERS)){
             Teacher teacher = new Teacher();
-            teacher.setId(((JsonObject)o).getString("id"));
+            teacher.setId(((JsonObject)o).getString(Field.ID));
             Service matiereService = new Service();
             Group group = new Group();
-            group.setId(params.getString("idClasse"));
+            group.setId(params.getString(Field.IDCLASSE));
             Matiere matiere1 = new Matiere();
-            matiere1.setId(matiere.getString("id_matiere"));
+            matiere1.setId(matiere.getString(Field.ID_MATIERE));
             matiereService.setTeacher(teacher);
             matiereService.setMatiere(matiere1);
             matiereService.setGroup(group);

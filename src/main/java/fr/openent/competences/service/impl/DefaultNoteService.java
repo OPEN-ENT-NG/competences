@@ -957,7 +957,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         JsonObject moyenne = utilsService.calculMoyenne(smEntry.getValue(), withStat, diviseur, annual);
                         result.getJsonObject("_" + MOYENNE).getJsonObject(periodeKey).put(idSousMatiere.toString(),
                                 moyenne);
-                        total += coeff * moyenne.getDouble("moyenne");
+                        total += coeff * moyenne.getDouble(Field.MOYENNE);
                         totalCoeff += coeff;
                         hasNote = true;
                     }
@@ -968,18 +968,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 String moyenne = hasNote ?
                         decimalFormat.format(total / totalCoeff) : "NN";
 
-                result.put("moyenne", moyenne);
+                result.put(Field.MOYENNE, moyenne);
 
-                JsonObject moyenneTotale = new JsonObject().put("moyenne",  moyenne)
-                        .put("hasNote", true);
-                moyenneTotale.put("id", idPeriode);
+                JsonObject moyenneTotale = new JsonObject().put(Field.MOYENNE,  moyenne)
+                        .put(Field.HASNOTE, true);
+                moyenneTotale.put(Field.ID, idPeriode);
                 listMoyDevoirs.get(idPeriode).add(moyenneTotale);
             }
             else {
                 // calcul des moyennes des notes de la matière de l'élève
                 for (Map.Entry<Long, ArrayList<NoteDevoir>> entry : entryPeriode.getValue().entrySet()) {
                     JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(), withStat, diviseur, annual);
-                    moyenne.put("id", idPeriode);
+                    moyenne.put(Field.ID, idPeriode);
                     listMoyDevoirs.get(idPeriode).add(moyenne);
                 }
             }
@@ -1018,12 +1018,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         for (int i = 0; i < listNotes.size(); i++) {
             JsonObject note = listNotes.getJsonObject(i);
 
-            if (note.getString("valeur") != null && note.getBoolean("is_evaluated")
-                    && note.getString("coefficient") != null && !"0".equals(note.getString("coefficient"))) {
-                Long id_periode = note.getLong("id_periode");
-                String id_eleve = note.getString("id_eleve");
+            if (note.getString(Field.VALEUR) != null && note.getBoolean(Field.IS_EVALUATED)
+                    && note.getString(Field.COEFFICIENT) != null && !"0".equals(note.getString(Field.COEFFICIENT))) {
+                Long id_periode = note.getLong(Field.ID_PERIODE);
+                String id_eleve = note.getString(Field.ID_ELEVE);
                 Long id_sousMatiere = note.getLong(ID_SOUS_MATIERE);
-                String id_groupe = note.getString("id_groupe");
+                String id_groupe = note.getString(Field.ID_GROUPE);
                 if(idsClassWithNoteAppCompNoteStudent != null && idPeriodeAsked != null){
                     if(idEleve.equals(id_eleve) && idPeriodeAsked.equals(id_periode) && id_groupe != null &&
                             !idsClassWithNoteAppCompNoteStudent.contains(id_groupe))
@@ -1041,51 +1041,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     idEleves.add(id_eleve);
                 }
 
-                Matiere matiere = new Matiere(note.getString("id_matiere"));
-                Teacher teacher = new Teacher(note.getString("owner"));
-                Group group = new Group(note.getString("id_groupe"));
-
-                Service service = services.stream()
-                        .filter(el -> teacher.getId().equals(el.getTeacher().getId())
-                                && matiere.getId().equals(el.getMatiere().getId())
-                                && group.getId().equals(el.getGroup().getId()))
-                        .findFirst().orElse(null);
-
-                if (service == null){
-                    //On regarde les multiTeacher
-                    for(Object mutliTeachO: multiTeachers){
-                        //multiTeaching.getString("second_teacher_id").equals(teacher.getId()
-                        JsonObject multiTeaching  =(JsonObject) mutliTeachO;
-                        if(multiTeaching.getString("main_teacher_id").equals(teacher.getId())
-                                && multiTeaching.getString("id_classe").equals(group.getId())
-                                && multiTeaching.getString("subject_id").equals(matiere.getId())){
-                            service = services.stream()
-                                    .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString("second_teacher_id"))
-                                            && matiere.getId().equals(el.getMatiere().getId())
-                                            && group.getId().equals(el.getGroup().getId()))
-                                    .findFirst().orElse(null);
-                        }
-
-                        if(multiTeaching.getString("second_teacher_id").equals(teacher.getId())
-                                && multiTeaching.getString("class_or_group_id").equals(group.getId())
-                                && multiTeaching.getString("subject_id").equals(matiere.getId())){
-
-                            service = services.stream()
-                                    .filter(el -> multiTeaching.getString("main_teacher_id").equals(el.getTeacher().getId())
-                                            && matiere.getId().equals(el.getMatiere().getId())
-                                            && group.getId().equals(el.getGroup().getId()))
-                                    .findFirst().orElse(null);
-                        }
-                    }
-                }
-
-                NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(note.getString("valeur")),
-                        Double.valueOf(note.getLong("diviseur")), note.getBoolean("ramener_sur"),
-                        Double.valueOf(note.getString("coefficient")), note.getString("id_eleve"),
-                        id_periode, service, id_sousMatiere);
+                NoteDevoir noteDevoir = setNoteDevoir(services, multiTeachers, note, id_periode, id_sousMatiere);
 
                 //ajouter la note à la période correspondante et à l'année pour l'élève
-                if (note.getString("id_eleve").equals(idEleve)) {
+                if (note.getString(Field.ID_ELEVE).equals(idEleve)) {
                     utilsService.addToMap(id_periode, notesByDevoirByPeriode.get(id_periode), noteDevoir);
                     utilsService.addToMap(null, notesByDevoirByPeriode.get(null), noteDevoir);
                     if(id_sousMatiere != null)
@@ -1102,6 +1061,52 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 }
             }
         }
+    }
+
+    private NoteDevoir setNoteDevoir(List<Service> services, JsonArray multiTeachers, JsonObject note, Long id_periode, Long id_sousMatiere) {
+        Matiere matiere = new Matiere(note.getString(Field.ID_MATIERE));
+        Teacher teacher = new Teacher(note.getString(Field.OWNER));
+        Group group = new Group(note.getString(Field.ID_GROUPE));
+
+        Service service = services.stream()
+                .filter(el -> teacher.getId().equals(el.getTeacher().getId())
+                        && matiere.getId().equals(el.getMatiere().getId())
+                        && group.getId().equals(el.getGroup().getId()))
+                .findFirst().orElse(null);
+
+        if (service == null){
+            //On regarde les multiTeacher
+            for(Object mutliTeachO: multiTeachers){
+                //multiTeaching.getString("second_teacher_id").equals(teacher.getId()
+                JsonObject multiTeaching  =(JsonObject) mutliTeachO;
+                if(multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                        && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
+                        && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
+                    service = services.stream()
+                            .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
+                                    && matiere.getId().equals(el.getMatiere().getId())
+                                    && group.getId().equals(el.getGroup().getId()))
+                            .findFirst().orElse(null);
+                }
+
+                if(multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                        && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
+                        && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
+
+                    service = services.stream()
+                            .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
+                                    && matiere.getId().equals(el.getMatiere().getId())
+                                    && group.getId().equals(el.getGroup().getId()))
+                            .findFirst().orElse(null);
+                }
+            }
+        }
+
+        NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(note.getString(Field.VALEUR)),
+                Double.valueOf(note.getLong(Field.DIVISEUR)), note.getBoolean(Field.RAMENER_SUR),
+                Double.valueOf(note.getString(Field.COEFFICIENT)), note.getString(Field.ID_ELEVE),
+                id_periode, service, id_sousMatiere);
+        return noteDevoir;
     }
 
     private String nullPositionnemetFinal() {
@@ -1301,12 +1306,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 if (!notesByElevesBySousMat.containsKey(id_eleve)) {
                     notesByElevesBySousMat.put(id_eleve, new HashMap<Long, ArrayList<NoteDevoir>>());
                     if(isNotNull(note.getService())){
-                        for(SubTopic subtopic : note.getService().getSubtopics()){
-                            if (!notesByElevesBySousMat.get(id_eleve).containsKey(subtopic.getId()))
-                                notesByElevesBySousMat.get(id_eleve).put(subtopic.getId(), new ArrayList<>());
-                        }
+                        note.getService().getSubtopics().stream().filter(subtopic -> !notesByElevesBySousMat.get(id_eleve).containsKey(subtopic.getId()))
+                                .forEach(subtopic -> notesByElevesBySousMat.get(id_eleve).put(subtopic.getId(), new ArrayList<>()));
                     }
-//                    notesByElevesBySousMat.get(id_eleve).get(note.get
                 }
                 notesPeriodeByEleves.get(id_eleve).add(note);
             }
@@ -1357,22 +1359,25 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     }
                     AtomicReference<Double> moyenne = new AtomicReference<>(0.d);
                     AtomicReference<Double> coeff = new AtomicReference<>(0.d);
+                    Boolean withStat = false;
+                    Boolean annual = false;
+                    int diviseur = 20;
 
                     notesBySubTopic.forEach((subTopicId,noteDevoirList) ->{
                         SubTopic subTopic = subTopics.stream().filter(s -> subTopicId.equals(s.getId()))
                                 .findFirst().orElse(null);
                         if(subTopic != null){
                             if(!utilsService.calculMoyenne(noteDevoirList,
-                                    false, 20, false).getValue("moyenne").equals("NN"))
+                                    withStat, diviseur, annual).getValue(Field.MOYENNE).equals("NN"))
                                 moyenne.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
-                                        false, 20, false).getDouble("moyenne") * subTopic.getCoefficient());
+                                        withStat, diviseur, annual).getDouble(Field.MOYENNE) * subTopic.getCoefficient());
                             coeff.updateAndGet(v -> v + subTopic.getCoefficient());
 
                         }else{
                             if(!utilsService.calculMoyenne(noteDevoirList,
-                                    false, 20, false).getValue("moyenne").equals("NN"))
+                                    withStat, diviseur, annual).getValue(Field.MOYENNE).equals("NN"))
                                 moyenne.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
-                                        false, 20, false).getDouble("moyenne"));
+                                        withStat, diviseur, annual).getDouble(Field.MOYENNE));
                             coeff.updateAndGet(v -> v + 1.d);
                         }
                     });
@@ -1382,7 +1387,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         moyEleve = moyenne.get() / coeff.get();
                     }else{
                         moyEleve = utilsService.calculMoyenne(notesPeriodeByEleve.getValue(),
-                                false, 20,false).getDouble("moyenne");
+                                withStat, diviseur,annual).getDouble(Field.MOYENNE);
                     }
                     sumMoyClasse += moyEleve;
                     nbEleve++;
@@ -1595,6 +1600,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         AtomicReference<Double> moyenneAtomic = new AtomicReference<>(0.d);
                         AtomicReference<Double> coeff = new AtomicReference<>(0.d);
+                        Boolean withStat = false;
+                        Boolean annual = false;
+                        int diviseur = 20;
 
 
                         List<SubTopic> finalSubTopics = subTopics;
@@ -1603,16 +1611,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     .findFirst().orElse(null);
                             if(subTopic != null){
                                 if(!utilsService.calculMoyenne(noteDevoirList,
-                                        false, 20, false).getValue("moyenne").equals("NN"))
+                                        withStat, diviseur, annual).getValue(Field.MOYENNE).equals("NN"))
                                     moyenneAtomic.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
-                                            false, 20, false).getDouble("moyenne") * subTopic.getCoefficient());
+                                            withStat, diviseur, annual).getDouble(Field.MOYENNE) * subTopic.getCoefficient());
                                 coeff.updateAndGet(v -> v + subTopic.getCoefficient());
 
                             }else{
                                 if(!utilsService.calculMoyenne(noteDevoirList,
-                                        false, 20, false).getValue("moyenne").equals("NN"))
+                                        withStat, diviseur, annual).getValue(Field.MOYENNE).equals("NN"))
                                     moyenneAtomic.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
-                                            false, 20, false).getDouble("moyenne"));
+                                            withStat, diviseur, annual).getDouble(Field.MOYENNE));
                                 coeff.updateAndGet(v -> v + 1.d);
                             }
                         });

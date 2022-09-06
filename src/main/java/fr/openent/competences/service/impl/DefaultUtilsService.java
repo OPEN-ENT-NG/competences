@@ -191,11 +191,8 @@ public class DefaultUtilsService implements UtilsService {
             service.setVisible(serviceJo.getBoolean("is_visible"));
             service.setModalite(serviceJo.getString("modalite",""));
             service.setCoefficient(serviceJo.getLong("coefficient"));
-            for(SubTopic subTopic : subTopics){
-                if(subTopic.getService().equals(service)){
-                    service.addSubtopics(subTopic);
-                }
-            }
+            subTopics.stream().filter(subTopic -> subTopic.getService().equals(service))
+                    .forEach(service::addSubtopics);
             services.add(service);
 
         }
@@ -1530,26 +1527,7 @@ public class DefaultUtilsService implements UtilsService {
     public void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<List<SubTopic>> promise) {
         subTopicService.getSubtopicServices(idEtablissement,idClasse,event -> {
             if(event.isRight()){
-                List<SubTopic> subTopics= new ArrayList<>();
-                for(Object subTopicobj : event.right().getValue()){
-                    SubTopic subTopic = new SubTopic();
-                    JsonObject subTopicJo = (JsonObject) subTopicobj;
-                    Service service = new Service();
-                    Matiere matiere = new Matiere();
-                    Group group = new Group();
-                    Teacher teacher = new Teacher();
-                    group.setId(subTopicJo.getString("id_group"));
-                    matiere.setId(subTopicJo.getString("id_topic"));
-                    teacher.setId(subTopicJo.getString("id_teacher"));
-                    service.setMatiere(matiere);
-                    service.setGroup(group);
-                    service.setTeacher(teacher);
-                    subTopic.setService(service);
-                    subTopic.setId(subTopicJo.getLong("id_subtopic"));
-                    subTopic.setCoefficient(safeGetDouble(subTopicJo, Field.COEFFICIENT));
-                    subTopics.add(subTopic);
-                }
-                promise.complete(subTopics);
+                setSubtopics(promise, event);
             }else{
                 promise.fail(event.left().getValue());
             }
@@ -1557,32 +1535,36 @@ public class DefaultUtilsService implements UtilsService {
     }
 
     @Override
-    public void getSubTopicCoeff(String idEtablissement,  Promise<List<SubTopic>> promise) {
+    public void getSubTopicCoeff(String idEtablissement, Promise<List<SubTopic>> promise) {
         subTopicService.getSubtopicServices(idEtablissement,event -> {
             if(event.isRight()){
-                List<SubTopic> subTopics= new ArrayList<>();
-                for(Object subTopicobj : event.right().getValue()){
-                    SubTopic subTopic = new SubTopic();
-                    JsonObject subTopicJo = (JsonObject) subTopicobj;
-                    Service service = new Service();
-                    Matiere matiere = new Matiere();
-                    Group group = new Group();
-                    Teacher teacher = new Teacher();
-                    group.setId(subTopicJo.getString("id_group"));
-                    matiere.setId(subTopicJo.getString("id_topic"));
-                    teacher.setId(subTopicJo.getString("id_teacher"));
-                    service.setMatiere(matiere);
-                    service.setGroup(group);
-                    service.setTeacher(teacher);
-                    subTopic.setService(service);
-                    subTopic.setId(subTopicJo.getLong("id_subtopic"));
-                    subTopic.setCoefficient(safeGetDouble(subTopicJo, Field.COEFFICIENT));
-                    subTopics.add(subTopic);
-                }
-                promise.complete(subTopics);
+                setSubtopics(promise, event);
             }else{
                 promise.fail(event.left().getValue());
             }
         });
+    }
+
+    private void setSubtopics(Promise<List<SubTopic>> promise, Either<String, JsonArray> event) {
+        List<SubTopic> subTopics= new ArrayList<>();
+        for(Object subTopicobj : event.right().getValue()){
+            SubTopic subTopic = new SubTopic();
+            JsonObject subTopicJo = (JsonObject) subTopicobj;
+            Service service = new Service();
+            Matiere matiere = new Matiere();
+            Group group = new Group();
+            Teacher teacher = new Teacher();
+            group.setId(subTopicJo.getString(Field.ID_GROUP));
+            matiere.setId(subTopicJo.getString(Field.ID_TOPIC));
+            teacher.setId(subTopicJo.getString(Field.ID_TEACHER));
+            service.setMatiere(matiere);
+            service.setGroup(group);
+            service.setTeacher(teacher);
+            subTopic.setService(service);
+            subTopic.setId(subTopicJo.getLong(Field.ID_SUBTOPIC));
+            subTopic.setCoefficient(safeGetDouble(subTopicJo, Field.COEFFICIENT));
+            subTopics.add(subTopic);
+        }
+        promise.complete(subTopics);
     }
 }
