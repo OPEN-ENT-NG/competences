@@ -18,6 +18,7 @@
 package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.model.Service;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
@@ -171,9 +172,11 @@ public interface NoteService extends CrudService {
      * @param result JsonObject of result
      * @param idEleve idEleve
      * @param idEleves id des Eleves ayant une note dans la lisNotes
+     * @param services
+     * @param multiTeachers
      */
     void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes, final JsonObject result,
-                                          String idEleve, JsonArray idEleves);
+                                          String idEleve, JsonArray idEleves, List<Service> services, JsonArray multiTeachers);
     /**
      *Calcul la moyenne d'un eleve a
      * @param listNotes response of request
@@ -182,14 +185,16 @@ public interface NoteService extends CrudService {
      * @param idEleves id des Eleves ayant une note dans la lisNotes
      * @param idsClassWithNoteAppCompNoteStudent idsClassWithNoteAppCompNoteStudent
      * @param idPriodeAsked idPriodeAsked
+     * @param services
+     * @param multiTeachers
      * @return retourne une map avec
      */
-    HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> calculMoyennesEleveByPeriode (JsonArray listNotes,
-                                                                                      final JsonObject result,
-                                                                                      String idEleve,
-                                                                                      JsonArray idEleves,
-                                                                                      List<String> idsClassWithNoteAppCompNoteStudent,
-                                                                                      Long idPriodeAsked);
+    HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> calculMoyennesEleveByPeriode(JsonArray listNotes,
+                                                                                     final JsonObject result,
+                                                                                     String idEleve,
+                                                                                     JsonArray idEleves,
+                                                                                     List<String> idsClassWithNoteAppCompNoteStudent,
+                                                                                     Long idPriodeAsked, List<Service> services, JsonArray multiTeachers);
 
     /**
      * Récupère toutes les appreciations, les moyennes finales et les positionnement pour un eleve, une matiere, une periode

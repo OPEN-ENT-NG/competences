@@ -2,45 +2,41 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.model.Service;
+import fr.openent.competences.model.Structure;
+import fr.openent.competences.model.SubTopic;
 import fr.openent.competences.security.AccessChildrenParentFilter;
-import fr.openent.competences.security.CanUpdateBFCSyntheseRight;
 import fr.openent.competences.security.CreateSyntheseBilanPeriodiqueFilter;
 import fr.openent.competences.security.SetAvisConseilFilter;
-import fr.openent.competences.service.*;
+import fr.openent.competences.service.BilanPeriodiqueService;
 import fr.openent.competences.service.impl.*;
-import fr.wseduc.rs.ApiDoc;
-import fr.wseduc.rs.Delete;
-import fr.wseduc.rs.Get;
-import fr.wseduc.rs.Post;
-import fr.wseduc.rs.Put;
+import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
-
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
-
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
-
-import java.awt.*;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static org.entcore.common.http.response.DefaultResponseHandler.*;
+import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
+import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 
 public class BilanPeriodiqueController extends ControllerHelper{
@@ -87,6 +83,9 @@ public class BilanPeriodiqueController extends ControllerHelper{
                         idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray("id_groupes"));
                     }
 
+                    Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+                    utilsService.getSubTopicCoeff(idEtablissement,idClasse,subTopicCoefPromise);
+
                     Future<JsonArray> servicesFuture = Future.future();
                     utilsService.getServices(idEtablissement, idGroupClasse,
                             servicesEvent -> formate(servicesFuture, servicesEvent));
@@ -95,15 +94,19 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     utilsService.getMultiTeachers(idEtablissement, idGroupClasse, idPeriode != null ? idPeriode.intValue() : null,
                             multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
 
-                    CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(futuresEvent -> {
+                    CompositeFuture.all(servicesFuture, multiTeachersFuture,subTopicCoefPromise.future()).setHandler(futuresEvent -> {
                         if (futuresEvent.failed()) {
                             String error = futuresEvent.cause().getMessage();
                             log.error(error);
                             badRequest(request);
                         } else {
-                            JsonArray services = servicesFuture.result();
+                            JsonArray servicesJsonArray = servicesFuture.result();
                             JsonArray multiTeachers = multiTeachersFuture.result();
-
+                            List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+                            Structure structure = new Structure();
+                            structure.setId(idEtablissement);
+                            List<Service> services = new ArrayList<>();
+                            setServices(structure, servicesJsonArray, services,subTopics);
                             bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve, idGroupClasse,
                                     services, multiTeachers, arrayResponseHandler(request));
                         }

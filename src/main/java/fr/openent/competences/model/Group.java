@@ -11,6 +11,10 @@ public class Group extends Model {
         super();
     }
 
+    public Group(String id) {
+        super(id);
+    }
+
     public String getName() {
         return name;
     }
