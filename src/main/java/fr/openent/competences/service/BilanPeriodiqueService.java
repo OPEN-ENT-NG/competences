@@ -1,9 +1,9 @@
 package fr.openent.competences.service;
 
+import fr.openent.competences.model.Service;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public interface BilanPeriodiqueService {
      * @param idClasse
      */
     void getSuiviAcquis(final String idEtablissement, final Long idPeriode, final String idEleve,
-                        final JsonArray idClasse, final JsonArray services, final JsonArray multiTeachers,
+                        final JsonArray idClasse, final List<Service> services, final JsonArray multiTeachers,
                         Handler<Either<String, JsonArray>> handler);
 
     /**
