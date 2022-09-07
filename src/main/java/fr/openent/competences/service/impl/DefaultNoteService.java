@@ -17,38 +17,11 @@
 
 package fr.openent.competences.service.impl;
 
-import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Utils.*;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static fr.wseduc.webutils.http.Renders.badRequest;
-import static org.entcore.common.sql.SqlResult.validResultHandler;
-import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
-
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.stream.Collectors;
-
-import fr.openent.competences.service.*;
-import org.entcore.common.service.impl.SqlCrudService;
-import org.entcore.common.sql.Sql;
-import org.entcore.common.sql.SqlResult;
-import org.entcore.common.user.UserInfos;
-
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.*;
+import fr.openent.competences.constants.Field;
+import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
@@ -62,6 +35,24 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.service.impl.SqlCrudService;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
+import org.entcore.common.user.UserInfos;
+
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.*;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.badRequest;
+import static org.entcore.common.sql.SqlResult.validResultHandler;
+import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -99,6 +90,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private UtilsService utilsService;
     private AnnotationService annotationService;
     private CompetenceNoteService competenceNoteService;
+    private StructureOptionsService structureOptionsService;
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultNoteService.class);
 
@@ -112,6 +104,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         utilsService = new DefaultUtilsService(eb);
         annotationService = new DefaultAnnotationService(COMPETENCES_SCHEMA, REL_ANNOTATIONS_DEVOIRS_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE);
+        structureOptionsService = new DefaultStructureOptions(Competences.EVAL_SCHEMA, Field.STRUTUCTURE_OPTIONS);
     }
 
     @Override
@@ -500,7 +493,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         } else{
             idMatieres = null;
         }
-
         runGetCompetencesNotesReleve(etablissementId, matiereId, idMatieres, periodeId,
                 eleveId, idEleves, withDomaineInfo, isYear, handler);
     }
@@ -509,6 +501,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                           Long periodeId, String eleveId, Integer typeClasse, Boolean withDomaineInfo,
                                           Boolean isYear, Handler<Either<String, JsonArray>> handler) {
         if(typeClasse == null){
+            log.info("ici ");
             runGetCompetencesNotesReleve(etablissementId, matiereId, null,
                     periodeId, eleveId, new ArrayList<>(), withDomaineInfo, isYear, handler);
         } else {
@@ -1539,6 +1532,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonObject compNote = listCompNotes.getJsonObject(i);
             Long id_periode = compNote.getLong(ID_PERIODE);
             Long idSousMatiere = compNote.getLong(ID_SOUS_MATIERE);
+
             String group_id = compNote.getString("id_groupe");
             Boolean isFormative = compNote.getBoolean("formative");
             if (isFormative) {
@@ -1564,11 +1558,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
         //2- loop map<idP, JAcompNote> -> JAcompNoteMaxByPeriode -> map<idP,list<NoteDevoirMax>> = notesByDevoirByPeriode
         compNotesByPeriode.forEach((id_period,compNotes) -> {
-            Map<String, JsonObject> MaxCompNotesByCompetence = calculMaxCompNoteItem(compNotes, tableauConversion,true);
 
+            Map<String, JsonObject> MaxCompNotesByCompetence = calculMaxCompNoteItem(compNotes, tableauConversion,true, true);
             MaxCompNotesByCompetence.forEach((id_comp,maxCompNote) -> {
                 NoteDevoir noteDevoir;
-
                 Long niveauFinal = maxCompNote.getLong("niveau_final");
                 Long niveauFinalAnnuel = maxCompNote.getLong("niveau_final_annuel");
                 if (isNotNull(niveauFinalAnnuel) ) {
@@ -1576,7 +1569,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 } else if (isNotNull(niveauFinal) ) {
                     noteDevoir = new NoteDevoir(Double.valueOf(niveauFinal)+1,1.0,false,1.0);
                 } else {
-                    noteDevoir = new NoteDevoir(Double.valueOf(maxCompNote.getLong("evaluation"))+1, 1.0,
+                    noteDevoir = new NoteDevoir(maxCompNote.getDouble("evaluation") +1, 1.0,
                             false, 1.0);
                 }
                 utilsService.addToMap(id_period, notesByDevoirByPeriode, noteDevoir);
@@ -1589,10 +1582,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         compNotesBySousMatByPeriode.forEach((id_periode,mapSousMatCompNotes) ->{
             mapSousMatCompNotes.forEach((id_sousMat, compNotesSousMat) -> {
                 Map<String,JsonObject> MaxCompNoteSousMatByComp = calculMaxCompNoteItem(compNotesSousMat, tableauConversion,
-                        false);
+                        false, true);
 
                 MaxCompNoteSousMatByComp.forEach((id_comp,maxCompNoteSousMat) -> {
-                    NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(maxCompNoteSousMat.getLong("evaluation"))+1,
+                    NoteDevoir noteDevoir = new NoteDevoir(maxCompNoteSousMat.getDouble("evaluation") +1.d,
                             1.0, false, 1.0);
 
                     if(!notesByPeriodeBySousMatiere.containsKey(id_periode)) notesByPeriodeBySousMatiere.put(id_periode,
@@ -1628,6 +1621,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             ArrayList<NoteDevoir> compNotesPeriode = entryPeriode.getValue();
             JsonObject moyenneMatiere = utilsService.calculMoyenne(compNotesPeriode, withStat, diviseur, annual);
             moyenneMatiere.put("id_periode", idPeriode);
+
             listMoyDevoirs.get(idPeriode).add(moyenneMatiere);
 
             // Calcul des moyennes des compétencesNotes par sousMatiere
@@ -1645,6 +1639,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
 
             if (listMoyDevoirs.get(idPeriode).size() > 0) {
+                log.info("STP ICI " + listMoyDevoirs.get(idPeriode).getJsonObject(0));
                 result.getJsonArray(POSITIONNEMENTS_AUTO).add(listMoyDevoirs.get(idPeriode).getJsonObject(0));
             } else {
                 result.getJsonArray(POSITIONNEMENTS_AUTO).add(new JsonObject()
@@ -3754,7 +3749,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         for (Map.Entry<String,JsonArray> entry: mapData.entrySet()) {
             String idEntry = entry.getKey();
             JsonArray currentEntry = entry.getValue();
-            Map<String, JsonObject> maxComp = calculMaxCompNoteItem(currentEntry, tableauConversion,true);
+            Map<String, JsonObject> maxComp = calculMaxCompNoteItem(currentEntry, tableauConversion,true, false);
             result.put(idEntry, new JsonArray());
             for (Map.Entry<String,JsonObject> max: maxComp.entrySet()) {
                 result.get(idEntry).add(max.getValue());
@@ -3767,7 +3762,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private JsonArray getMaxByItemDomaine(JsonArray compNotes,JsonArray tableauConversion){
         JsonArray result = new JsonArray();
 
-        Map<String, JsonObject> maxCompNote = calculMaxCompNoteItem(compNotes, tableauConversion,true);
+        Map<String, JsonObject> maxCompNote = calculMaxCompNoteItem(compNotes, tableauConversion,true, false);
         for (Map.Entry<String,JsonObject> max: maxCompNote.entrySet()) {
             result.add(max.getValue());
         }
@@ -3775,10 +3770,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return result;
     }
 
-    private Map<String, JsonObject> calculMaxCompNoteItem (JsonArray compNotes, JsonArray tableauConversion, Boolean takeNivFinal) {
+    private Map<String, JsonObject> calculMaxCompNoteItem(JsonArray compNotes, JsonArray tableauConversion, Boolean takeNivFinal, boolean isAvg) {
         Map<String, JsonObject> maxComp = new HashMap<>();
         Map<String, List<JsonObject>> groupByStudent = new HashMap<>();
         JsonArray clone = compNotes.copy();
+
+        //TODO
+        //Call Structure Option
+//        structureOptionsService.getIsAverageSkills();
+
         //On groupe les items de compétences par élève
         for (int i = 0; i < clone.size(); i++) {
             JsonObject compNote = clone.getJsonObject(i);
@@ -3808,29 +3808,36 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 }
                 List<JsonObject> listSameCompMaxMat = new ArrayList<>();
                 //On récupère les maxs de chaque matière
-                for (Map.Entry<String, List<JsonObject>> listMat : groupByMat.entrySet()) {
-                    List<JsonObject> listSameMatComp = listMat.getValue();
-                    Long max = listSameMatComp.get(0).getLong("evaluation");
-                    JsonObject JsonObjectToAdd = listSameMatComp.get(0);
-                    for (JsonObject compNoteTemp : listSameMatComp) {
-                        Long evaluation = compNoteTemp.getLong("evaluation");
-                        Long niveauFinal = compNoteTemp.getLong("niveau_final");
-                        Long niveauFinalAnnuel = compNoteTemp.getLong("niveau_final_annuel");
-                        Long valueToTake;
-                        if (takeNivFinal) {
-                            if(niveauFinalAnnuel != null)
-                                valueToTake = niveauFinalAnnuel;
-                            else
-                                valueToTake = (niveauFinal != null) ? niveauFinal : evaluation;
-                        }else{
-                            valueToTake = evaluation;
-                        }
-                        if (valueToTake != null && valueToTake > max) {
-                            max = valueToTake;
-                            JsonObjectToAdd = compNoteTemp;
-                        }
+                if(isAvg){
+                    for (Map.Entry<String, List<JsonObject>> listMat : groupByMat.entrySet()) {
+                        List<JsonObject> listSameMatComp = listMat.getValue();
+                        listSameCompMaxMat.addAll(listSameMatComp);
                     }
-                    listSameCompMaxMat.add(JsonObjectToAdd);
+                }else {
+                    for (Map.Entry<String, List<JsonObject>> listMat : groupByMat.entrySet()) {
+                        List<JsonObject> listSameMatComp = listMat.getValue();
+                        Long max = listSameMatComp.get(0).getLong("evaluation");
+                        JsonObject JsonObjectToAdd = listSameMatComp.get(0);
+                        for (JsonObject compNoteTemp : listSameMatComp) {
+                            Long evaluation = compNoteTemp.getLong("evaluation");
+                            Long niveauFinal = compNoteTemp.getLong("niveau_final");
+                            Long niveauFinalAnnuel = compNoteTemp.getLong("niveau_final_annuel");
+                            Long valueToTake;
+                            if (takeNivFinal) {
+                                if (niveauFinalAnnuel != null)
+                                    valueToTake = niveauFinalAnnuel;
+                                else
+                                    valueToTake = (niveauFinal != null) ? niveauFinal : evaluation;
+                            } else {
+                                valueToTake = evaluation;
+                            }
+                            if (valueToTake != null && valueToTake > max) {
+                                max = valueToTake;
+                                JsonObjectToAdd = compNoteTemp;
+                            }
+                        }
+                        listSameCompMaxMat.add(JsonObjectToAdd);
+                    }
                 }
                 //Et on fait la moyenne des maxs de chaque matières dans l'item de compétences
                 JsonObject compNote = listSameComp.get(0);
@@ -3859,15 +3866,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     if (valueToTake != null) {
                         sum += valueToTake;
                         nbrofMat++;
+
                     }
                 }
+
                 float moyenneToSend;
                 if (nbrofMat != 0)
-                    moyenneToSend = sum / nbrofMat;
+                    moyenneToSend = sum / nbrofMat ;
                 else
                     moyenneToSend = 1f;
-                int moyenneConverted = utilsService.getPositionnementValue(moyenneToSend+1, tableauConversion)-1;
-                compNote.put("evaluation", moyenneConverted).put("niveau_final", moyenneConverted);
+
+                compNote.put("evaluation", moyenneToSend).put("niveau_final", moyenneToSend);
                 maxComp.put(idItem, compNote);
             }
         }
