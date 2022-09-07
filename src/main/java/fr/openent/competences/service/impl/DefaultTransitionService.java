@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.service.StructureOptionsService;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -42,8 +43,10 @@ import static org.entcore.common.sql.SqlResult.validResultHandler;
 public class DefaultTransitionService extends SqlCrudService implements TransitionService{
     protected static final Logger log = LoggerFactory.getLogger(DefaultTransitionService.class);
     private final Neo4j neo4j = Neo4j.getInstance();
+    private StructureOptionsService structureOptionsService;
     public DefaultTransitionService() {
         super(Competences.COMPETENCES_SCHEMA, Competences.TRANSITION_TABLE);
+        structureOptionsService = new DefaultStructureOptions();
     }
 
     @Override
@@ -249,8 +252,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     }
 
     private static final String _id_user_transition_annee = "id-user-transition-annee";
-    private static final String key_username_user_transition_annee ="transition.bilan.annee";
-    private static final String key_libelle_classe_transition_annee = "transition.bilan.annee.classe";
 
     /**
      * * Effectue la transistion d'année de l'établissement actif passé en paramètre
@@ -272,23 +273,35 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         } else {
             log.warn("WARN : transactions pour la transition année vListIdsGroupesATraiter : Aucun groupe ");
         }
-        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+
+        structureOptionsService.getIsAverageSkills(idStructureATraiter, responseCalculate -> {
+
+            if (responseCalculate.isLeft()) {
+                log.error("[DefaultTransitionService] getIsAverageSkills idStructure : "
+                        + idStructureATraiter + " " + responseCalculate.left().getValue());
+                handler.handle(new Either.Left<>("[DefaultTransitionService] getIsAverageSkills idStructure : "
+                        + idStructureATraiter ));
+            }
+            Boolean isSkillAverage = responseCalculate.right().getValue().getBoolean("is_average_skills");
+
+            JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
         
-        // Suppresssion : Conservation des  compétences max par l'élève, suppresion des devoirs
-        manageDevoirsAndCompetences(idStructureATraiter, vMapGroupesATraiter, vMapGroupesIdsDevoirATraiter,
-                classeIdsEleves, statements);
+            // Suppresssion : Conservation des  compétences max par l'élève, suppresion des devoirs
+            manageDevoirsAndCompetences(idStructureATraiter, vMapGroupesATraiter, vMapGroupesIdsDevoirATraiter,
+                    classeIdsEleves, isSkillAverage, statements);
 
-        // Suppresion des notes.users, rel_group_cycle
-        deleteUsersGroups(statements);
+            // Suppresion des notes.users, rel_group_cycle
+            deleteUsersGroups(statements);
 
-        // Transition pour l'établissement effectué
-        JsonArray valuesTransition = new fr.wseduc.webutils.collections.JsonArray();
-        valuesTransition.add(idStructureATraiter);
-        String queryInsertTransition ="INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".transition(id_etablissement) VALUES (?)";
-        statements.add(new JsonObject().put("statement", queryInsertTransition).put("values", valuesTransition).put("action", "prepared"));
+            // Transition pour l'établissement effectué
+            JsonArray valuesTransition = new fr.wseduc.webutils.collections.JsonArray();
+            valuesTransition.add(idStructureATraiter);
+            String queryInsertTransition ="INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".transition(id_etablissement) VALUES (?)";
+            statements.add(new JsonObject().put("statement", queryInsertTransition).put("values", valuesTransition).put("action", "prepared"));
 
-        Sql.getInstance().transaction(statements,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
-                SqlResult.validResultHandler(handler));
+            Sql.getInstance().transaction(statements,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                    SqlResult.validResultHandler(handler));
+        });
     }
 
     /**
@@ -327,7 +340,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
      */
     private void manageDevoirsAndCompetences( String idStructureATraiter, Map<String,String> vMapGroupesATraiter,
                                               Map<String, Long> vMapGroupesIdsDevoirATraiter, Map<String,List<String>> classeIdsEleves,
-                                              JsonArray statements) {
+                                              Boolean isSkillAverage, JsonArray statements) {
+
         JsonArray values;// Ajout de l'utilisateur pour la transition année
         String username = "NC";
         String classname = "Bilan Année classe : ";
@@ -373,18 +387,21 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 JsonArray valuesMaxCompetence = new fr.wseduc.webutils.collections.JsonArray();
 
 
-                String queryMaxCompNoteNiveauFinalByPeriode = "(SELECT competences_notes.id_competence, " +
+                String queryMaxOrAvgCompNoteNiveauFinalByPeriode = "(SELECT competences_notes.id_competence, " +
                         "competences_notes.id_eleve, devoirs.id_periode, devoirs.id_matiere, CASE " +
 
                         "WHEN competence_niveau_final.id_eleve IS NULL AND competence_niveau_final_annuel.id_eleve IS NULL" +
-                        "   THEN MAX(competences_notes.evaluation) " +
+                        "   THEN ";
+                queryMaxOrAvgCompNoteNiveauFinalByPeriode += (Boolean.TRUE.equals(isSkillAverage)) ?
+                        "ROUND(AVG(competences_notes.evaluation), 2) "
+                        : "MAX(competences_notes.evaluation) " ;
 
-                        "WHEN competence_niveau_final.id_eleve IS NOT NULL AND competence_niveau_final_annuel.id_eleve IS NULL" +
+                queryMaxOrAvgCompNoteNiveauFinalByPeriode += "WHEN competence_niveau_final.id_eleve IS NOT NULL AND competence_niveau_final_annuel.id_eleve IS NULL" +
                         "   THEN MAX(competence_niveau_final.niveau_final) " +
 
                         "ELSE MAX(competence_niveau_final_annuel.niveau_final) " +
 
-                        "END AS max_comp "+
+                        "END AS comp_note_by_subject_period "+
                         "FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
                         "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = competences_notes.id_devoir " +
 
@@ -404,11 +421,14 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "GROUP BY competences_notes.id_competence, competences_notes.id_eleve, competence_niveau_final.id_eleve," +
                         "competence_niveau_final_annuel.id_eleve, devoirs.id_periode, devoirs.id_matiere)";
 
-                String queryMaxCompNoteMat = "(SELECT id_competence, MAX(max_comp), id_eleve, id_matiere FROM " + queryMaxCompNoteNiveauFinalByPeriode +
-                        " AS max_mat GROUP BY id_competence, id_eleve, id_matiere)";
+                String queryMaxOrAvgCompNoteMat = "(SELECT id_competence, ";
+                queryMaxOrAvgCompNoteMat += (Boolean.TRUE.equals(isSkillAverage)) ? "ROUND(AVG(comp_note_by_subject_period), 2) ":
+                        "MAX(comp_note_by_subject_period) ";
+                queryMaxOrAvgCompNoteMat +=  "AS comp_note_by_subject, id_eleve, id_matiere FROM " + queryMaxOrAvgCompNoteNiveauFinalByPeriode +
+                        " AS max_or_avg_mat GROUP BY id_competence, id_eleve, id_matiere)";
 
-                String queryAverageMaxCompNoteMat = "(SELECT id_competence, ROUND(AVG(max)+1,2) AS round, id_eleve FROM " + queryMaxCompNoteMat +
-                        " AS avg GROUP BY id_competence, id_eleve)";
+                String queryAverageCompNoteMat = "(SELECT id_competence, ROUND(AVG(comp_note_by_subject)+1,2) AS round, id_eleve FROM "
+                        + queryMaxOrAvgCompNoteMat + " AS avg GROUP BY id_competence, id_eleve)";
 
                 String queryConversionAverage = "WITH table_conversion as (SELECT valmin, valmax, ordre FROM notes.niveau_competences AS niv " +
                         "INNER JOIN  notes.echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau " +
@@ -424,7 +444,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "WHEN round >= (SELECT valmin FROM table_conversion where ordre = 4) AND round <= (SELECT valmax FROM table_conversion where ordre = 4) " +
                         "THEN 3 " +
                         "END " +
-                        ",'" + _id_user_transition_annee + "', id_eleve FROM " + queryAverageMaxCompNoteMat + "as conversion_max_mats GROUP BY id_competence, id_eleve, round";
+                        ",'" + _id_user_transition_annee + "', id_eleve FROM " + queryAverageCompNoteMat + "as conversion_max_mats GROUP BY id_competence, id_eleve, round";
 
                 valuesMaxCompetence.add(idClasse).add(idStructureATraiter);
                 for (String idEleve : vListEleves) {
