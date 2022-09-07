@@ -22,6 +22,8 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.lsun.ElementProgramme;
 import fr.openent.competences.bean.lsun.*;
 import fr.openent.competences.enums.LevelCycle;
+import fr.openent.competences.model.Service;
+import fr.openent.competences.model.SubTopic;
 import fr.openent.competences.security.HasExportLSURight;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.digitalSkills.ClassAppreciationDigitalSkillsService;
@@ -40,10 +42,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -87,6 +86,7 @@ import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.bean.lsun.TypeEnseignant.fromValue;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultLSUService.DISCIPLINE_KEY;
+import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.lang.Long.*;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
@@ -627,6 +627,10 @@ public class LSUController extends ControllerHelper {
                             List<String> idEleves = donnees.getEleves().getEleve().stream()
                                     .map(Eleve::getIdNeo4j).collect(Collectors.toList());
 
+                            Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+                            utilsService.getSubTopicCoeff(idStructure,subTopicCoefPromise);
+                            listGetProjectAndCompNum.add(subTopicCoefPromise.future());
+
                             Future<JsonArray> getAbsencesAndRetardsFuture = Future.future();
                             listGetProjectAndCompNum.add(getAbsencesAndRetardsFuture);
                             bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idEleves, idsClasse,
@@ -645,8 +649,15 @@ public class LSUController extends ControllerHelper {
                             CompositeFuture.all(listGetProjectAndCompNum).setHandler(eventProjectCompNum -> {
                                 if(eventProjectCompNum.succeeded()){
                                     final JsonArray absencesAndRetards = getAbsencesAndRetardsFuture.result();
-                                    final JsonArray services = servicesFuture.result();
+                                    final JsonArray servicesJsonArray = servicesFuture.result();
                                     final JsonArray multiTeachers = multiTeachersFuture.result();
+                                    List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+
+                                    fr.openent.competences.model.Structure structure = new fr.openent.competences.model.Structure();
+                                    structure.setId(idStructure);
+                                    List<Service> services = new ArrayList<>();
+                                    setServices(structure, servicesJsonArray, services,subTopics);
+
                                     this.getBaliseBilansPeriodiques(donnees, idStructure, idsGroupsClasses, periodesByClass, cyclesByClass,
                                             tableConversionByClass, enseignantFromSts, mapIdClassHeadTeachers, periodeUnheededStudents,
                                             absencesAndRetards, services, multiTeachers, mapIdsGroupsClasses, getBilansPeriodiquesHandler);
@@ -2476,7 +2487,7 @@ public class LSUController extends ControllerHelper {
                                             final Map<String, JsonArray> periodesByClasse, final Map<String, Integer> cyclesByClasse,
                                             final Map<String, JsonArray> tableConversionByClasse, final JsonArray enseignantFromSts,
                                             final Map<String, JsonArray> mapIdClassHeadTeachers, Map<Long, JsonObject> periodeUnheededStudents,
-                                            final JsonArray retardsAndAbsences, final JsonArray services, final JsonArray multiTeachers,
+                                            final JsonArray retardsAndAbsences, final List<Service> services, final JsonArray multiTeachers,
                                             final Map<String, JsonArray> mapIdsGroupsClasses, final Handler<Either.Right<String, JsonObject>> handler) {
         final Donnees.BilansPeriodiques bilansPeriodiques = objectFactory.createDonneesBilansPeriodiques();
         final List<Eleve> eleves = donnees.getEleves().getEleve();
@@ -2516,10 +2527,10 @@ public class LSUController extends ControllerHelper {
             Integer currentCycle = cyclesByClasse.get(idClasse);
             JsonArray idClasseGroups = mapIdsGroupsClasses.get(idClasse);
 
-            JsonArray servicesClasse = new JsonArray(services.stream()
-                    .filter(el -> idClasse.equals(((JsonObject) el).getString("id_groupe")) ||
-                            (idClasseGroups.getList()).contains(((JsonObject) el).getString("id_groupe")))
-                    .collect(Collectors.toList()));
+            List<Service> servicesClasse = services.stream()
+                    .filter(el -> idClasse.equals(el.getGroup().getId()) ||
+                            (idClasseGroups.getList()).contains(el.getGroup().getId()))
+                    .collect(Collectors.toList());
 
             for (int j = 0; j < periodes.size(); j++) {
                 JsonObject response = new JsonObject();
