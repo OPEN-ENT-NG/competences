@@ -90,9 +90,7 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
         Promise<JsonObject> configFuture = Promise.promise();
         JsonObject action = new JsonObject()
                 .put("action", "config.generale");
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler( message -> {
                 JsonObject body = message.body();
                 if (OK.equals(body.getString(STATUS))) {
                     JsonObject queryResult = body.getJsonObject(RESULT);
@@ -103,7 +101,7 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
 
                 }
             }
-        }));
+        ));
 
         // Récupération de l'activation du module présences de l'établissement
 //        isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));

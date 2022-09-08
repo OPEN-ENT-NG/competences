@@ -81,22 +81,16 @@ public class StructureOptionsController extends ControllerHelper {
     @ApiDoc("Active la récupération des absences/retards de presences sur compétences pour une structure donnée")
     @SecuredAction(value="", type = ActionType.AUTHENTICATED)
     public void activateStructureRecuperationAbsencesRetardsFromPresences(final HttpServerRequest request){
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
-                    @Override
-                    public void handle(JsonObject body) {
-                        if(user != null && body.containsKey(Field.STRUCTUREID) && body.containsKey(Field.STATE)){
-                            structureOptionService.activeDeactiveSyncStatePresences(body.getString(Field.STRUCTUREID),
-                                    body.getBoolean(Field.STATE), defaultResponseHandler(request));
-                        }else{
-                            badRequest(request);
-                        }
-                    }
-                });
-            }
-        });
+        UserUtils.getUserInfos(eb, request, user ->
+            RequestUtils.bodyToJson(request, body -> {
+                if(user != null && body.containsKey(Field.STRUCTUREID) && body.containsKey(Field.STATE)){
+                    structureOptionService.activeDeactiveSyncStatePresences(body.getString(Field.STRUCTUREID),
+                            body.getBoolean(Field.STATE), defaultResponseHandler(request));
+                }else{
+                    badRequest(request);
+                }
+            })
+        );
     }
 
 
