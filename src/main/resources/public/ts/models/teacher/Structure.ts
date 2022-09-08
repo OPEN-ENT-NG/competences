@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {_, Collection, http, idiom as lang, model, Model, angular} from 'entcore';
+import {_, Collection, http, idiom as lang, model, Model, angular, toasts} from 'entcore';
 import * as utils from '../../utils/teacher';
 import {
     Annotation,
@@ -40,6 +40,7 @@ import {
 } from './index';
 import {Mix} from "entcore-toolkit";
 import httpAxios from 'axios';
+import {StructureOptions, structureOptionsService} from "../../services";
 
 function castClasses(classes: any) {
     return _.map(classes, (classe) => {
@@ -80,6 +81,7 @@ export class Structure extends Model {
     detailsUser: any;
     composer: any; // Set By infra
     services: any[];
+    options: StructureOptions;
 
     get api() {
         return {
@@ -150,6 +152,12 @@ export class Structure extends Model {
             .done(function (res) {
                 that.baremeDNBvisible = res[0].visible;
             }.bind(this));
+        structureOptionsService.getStructureOptionsIsAverageSkills(that.id).then(res =>{
+            that.options = res;
+        }).catch((err) => {
+            toasts.warning('competences.structure.options.error.get');
+            console.log(err);
+        });
 
         this.collection(NiveauCompetence, {
             sync: async function () {
