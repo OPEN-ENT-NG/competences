@@ -70,7 +70,6 @@ export const structureOptionsService: IStructureOptionsService = {
                     reject();
                 });
         });
-        return http.post(`competences/structure/options/isSkillAverage`, options);
     }
 };
 

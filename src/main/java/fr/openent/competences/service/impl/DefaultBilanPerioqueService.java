@@ -51,7 +51,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
         utilsService = new DefaultUtilsService(eb);
         devoirService = new DefaultDevoirService(eb);
-        structureOptionService = new DefaultStructureOptions(Competences.EVAL_SCHEMA, Field.STRUTUCTURE_OPTIONS, eb);
+        structureOptionService = new DefaultStructureOptions(eb);
         elementProgramme = new DefaultElementProgramme() ;
         defautlMatiereService = new DefaultMatiereService(eb);
         sql = Sql.getInstance();
