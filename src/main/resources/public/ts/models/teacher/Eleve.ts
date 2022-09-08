@@ -63,15 +63,15 @@ export class Eleve extends DefaultEleve  {
     getMoyenne (devoirs, idEtablissement, idClasse, idPeriode, idMatiere?) : Promise<any> {
         return new Promise((resolve, reject) => {
             if (devoirs) {
-                let idDevoirsURL:String = "";
+                let idDevoirsURL:string = "";
                 _.each(_.pluck(devoirs,'id'), (id) => {
                     idDevoirsURL += "devoirs=" + id + "&";
                 });
                 idDevoirsURL = idDevoirsURL.slice(0, idDevoirsURL.length - 1);
-                let idMatiereURL:String = (idMatiere != null ? "&idMatiere=" + idMatiere : "");
-                let idEtablissementURL:String = "&idEtablissement=" + idEtablissement;
-                let idClasseURL:String = "&idClasse=" + idClasse;
-                let idPeriodeURL:String = "&idPeriode=" + idPeriode;
+                let idMatiereURL:string = (idMatiere != null ? "&idMatiere=" + idMatiere : "");
+                let idEtablissementURL:string = "&idEtablissement=" + idEtablissement;
+                let idClasseURL:string = "&idClasse=" + idClasse;
+                let idPeriodeURL:string = "&idPeriode=" + idPeriode;
                 httpCore().getJson(this.api.GET_MOYENNE + idDevoirsURL + idMatiereURL + idEtablissementURL + idClasseURL + idPeriodeURL)
                     .done(function (res) {
                     if (!res.error) {

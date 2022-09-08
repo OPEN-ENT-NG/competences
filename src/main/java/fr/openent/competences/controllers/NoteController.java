@@ -726,14 +726,14 @@ public class NoteController extends ControllerHelper {
                     Long finalIdPeriode = idPeriode;
 
                     //Récupération des Services
-                    Promise<Object> servicesPromise = Promise.promise();
+                    Promise<JsonArray> servicesPromise = Promise.promise();
                     utilsService.getServices(idEtablissement,
-                            new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
+                            new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise.future()));
 
                     //Récupération des Multi-teachers
-                    Promise<Object> multiTeachingPromise = Promise.promise();
+                    Promise<JsonArray> multiTeachingPromise = Promise.promise();
                     utilsService.getMultiTeachers(idEtablissement,
-                            new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise));
+                            new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
                     //Récupération des Sous-Matières
                     Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
@@ -752,8 +752,8 @@ public class NoteController extends ControllerHelper {
 
                                     Structure structure = new Structure();
                                     structure.setId(idEtablissement);
-                                    JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
-                                    JsonArray multiTeachers = (JsonArray) multiTeachingPromise.future().result();
+                                    JsonArray servicesJson = servicesPromise.future().result();
+                                    JsonArray multiTeachers = multiTeachingPromise.future().result();
                                     List<SubTopic> subTopics = subTopicCoefPromise.future().result();
 
                                     List<Service> services = new ArrayList<>();

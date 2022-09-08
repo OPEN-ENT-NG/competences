@@ -3,7 +3,10 @@ package fr.openent.competences.bean;
 import fr.openent.competences.model.Service;
 import fr.openent.competences.model.SubTopic;
 import fr.openent.competences.service.UtilsService;
+import fr.openent.competences.service.impl.DefaultNoteService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 
 import java.util.ArrayList;
@@ -13,12 +16,16 @@ import java.util.Map;
 
 public class StatEleve {
 
+    private static final int DIVISEUR = 20;
+    private static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
+
     private List<NoteDevoir> noteDevoirList;
 
-    private HashMap<Long, ArrayList<NoteDevoir>> notesBySousMat;
+    private Map<Long, ArrayList<NoteDevoir>> notesBySousMat;
     private Double finalAverage;
     private Double averageAuto;
     private UtilsService utilsService;
+    protected static final Logger log = LoggerFactory.getLogger(StatEleve.class);
 
     public StatEleve(){
         if(noteDevoirList == null){
@@ -61,11 +68,11 @@ public class StatEleve {
         this.finalAverage = moyenneFinale;
     }
 
-    public HashMap<Long, ArrayList<NoteDevoir>> getNotesBySousMat() {
+    public Map<Long, ArrayList<NoteDevoir>> getNotesBySousMat() {
         return notesBySousMat;
     }
 
-    public void setNotesBySousMat(HashMap<Long, ArrayList<NoteDevoir>> notesBySousMat) {
+    public void setNotesBySousMat(Map<Long, ArrayList<NoteDevoir>> notesBySousMat) {
         this.notesBySousMat = notesBySousMat;
     }
 
@@ -93,15 +100,20 @@ public class StatEleve {
                         coeff = subTopic.getCoefficient();
                 }
 
-                Double moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(), false, 20, false).getDouble("moyenne");
+                Double moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(), false, DIVISEUR, false).getDouble("moyenne");
 
                 total += coeff * moyenSousMat;
                 totalCoeff += coeff;
             }
-            averageAuto = Math.round((total / totalCoeff) * 10.0) / 10.0;
+            if (totalCoeff < 1) {
+                log.error("Found a 0 or negative coefficient in getMoyenneAuto, please check your subtopics " +
+                        "coefficients (value of totalCoeff : " + totalCoeff + ")");
+                return null;
+            }
+            averageAuto = Math.round((total / totalCoeff) * ROUNDER) / ROUNDER;
         }
         else {
-            averageAuto = utilsService.calculMoyenne(this.noteDevoirList,false,20,false).getDouble("moyenne");
+            averageAuto = utilsService.calculMoyenne(this.noteDevoirList,false, DIVISEUR,false).getDouble("moyenne");
         }
 
         return averageAuto;

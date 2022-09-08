@@ -93,7 +93,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private AnnotationService annotationService;
     private CompetenceNoteService competenceNoteService;
     private SubTopicService subTopicService;
-    //private ExportBulletinService exportBulletinService;
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultNoteService.class);
 
@@ -108,7 +107,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         annotationService = new DefaultAnnotationService(COMPETENCES_SCHEMA, REL_ANNOTATIONS_DEVOIRS_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE);
         subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SUBTOPIC_TABLE);
-        //exportBulletinService = new DefaultExportBulletinService(eb, null);
     }
 
     @Override
@@ -257,7 +255,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         boolean devoirs = idDevoirs != null && idDevoirs.length != 0;
         boolean periode = idPeriode != null;
 
-        query.append("SELECT notes.id_devoir, notes.id_eleve, notes.valeur, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, devoirs.owner, devoirs.id_matiere, devoirs.id_sousmatiere, grp.id_groupe " +
+        query.append("SELECT notes.id_devoir, notes.id_eleve, notes.valeur, devoirs.coefficient, devoirs.diviseur, " +
+                "devoirs.ramener_sur, devoirs.owner, devoirs.id_matiere, devoirs.id_sousmatiere, grp.id_groupe " +
                 "FROM " + COMPETENCES_SCHEMA + ".notes " +
                 "LEFT JOIN " + COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = notes.id_devoir " +
                 "LEFT JOIN " + COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS grp ON devoirs.id = grp.id_devoir WHERE devoirs.is_evaluated = true AND ");
@@ -965,9 +964,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         hasNote = true;
                     }
                 }
+                if (totalCoeff < 1) {
+                    log.error("Found a 0 or negative coefficient in calculMoyennesEleveByPeriode, please check your subtopics " +
+                            "coefficients (value of totalCoeff : " + totalCoeff + ")");
+                    return null;
+                }
                 Double moyenne = Math.round((total / totalCoeff) * 10.0) / 10.0;
 
-                result.put(Field.MOYENNE, moyenne);
+                if (hasNote)
+                    result.put(Field.MOYENNE, moyenne);
+                else
+                    result.put(Field.MOYENNE, "NN");
 
                 JsonObject moyenneTotale = new JsonObject().put(Field.MOYENNE,  moyenne)
                         .put(Field.HASNOTE, true);
@@ -2673,7 +2680,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                 JsonObject resultNotes = new JsonObject();
 
                                                 calculMoyennesNotesForReleve(notesMatiere, resultNotes, idPeriode,
-                                                        elevesMapObject, hasEvaluatedHomeWork,false, annual, idMatiere, idClasse, null, null); //FIXME : Faire les récups de services/multiteachings ici aussi
+                                                        elevesMapObject, hasEvaluatedHomeWork,false, annual, idMatiere, idClasse, null, null);
                                                 if(data.containsKey(MOYENNE)){
                                                     data.getJsonObject(MOYENNE).put(idMatiere, resultNotes);
                                                 }else{
@@ -2958,19 +2965,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 notesByDevoirByPeriodeByEleve.get(idEleve).get(id_periode), noteDevoir);
                         utilsService.addToMap(null, notesByDevoirByPeriodeByEleve.get(idEleve).get(null),
                                 noteDevoir);
-                        /*Map<Long, ArrayList<NoteDevoir>> m =
-                                notesByDevoirByPeriodeByEleveBySousMatiere.get(idEleve).get(id_periode);*/
-                        /*Map<Long, HashMap<Long, ArrayList<NoteDevoir>>> mNull =
-                                notesByDevoirByPeriodeByEleveBySousMatiere.get(idEleve).get(null);*/
                         if (isNotNull(sousMatiereId)) {
-                            /*if (!m.containsKey(sousMatiereId)) {
-                                m.put(sousMatiereId, new HashMap<>());
-                                //mNull.put(sousMatiereId, new HashMap<>());
-                            }*/
                             utilsService.addToMap(sousMatiereId,
                                     notesByDevoirByPeriodeByEleveBySousMatiere.get(idEleve).get(id_periode), noteDevoir);
-                            //utilsService.addToMap(sousMatiereId, m.get(sousMatiereId), noteDevoir);
-                            //utilsService.addToMap(null, mNull.get(sousMatiereId), noteDevoir);
                         }
                     }
                 }
@@ -3109,7 +3106,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 if (eleveMapObject.containsKey(idEleve)) {
                     Double moy = 0.0;
-                    if (!NN.equals(moyenneComputed)) { //FIXME : voir si la condition est la bonne
+                    if (!NN.equals(moyenneComputed)) {
                         moy = moyenneComputed;
                     }
                     JsonObject el = eleveMapObject.get(idEleve);
@@ -3279,41 +3276,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 moyenne.put("moyenne","NN");
 
                             Boolean isFinale = false;
-                            /*if (moyennesFinales != null) { //TODO139 : Gérer les moyennes finales
-                                if (entryPeriode.getKey() == null) {
-                                    List<NoteDevoir> notePeriode = entry.getValue();
-                                    int nbMoy = moyennesFinales.size();
-                                    double sumMoy = 0.0;
-                                    for (int i = 0; i < nbMoy; i++) {
-                                        JsonObject moyFin = moyennesFinales.getJsonObject(i);
-                                        Long periode = moyFin.getLong(ID_PERIODE);
-                                        notePeriode = notePeriode.stream()
-                                                .filter(line -> !(line.getIdPeriode().equals(periode)))
-                                                .collect(Collectors.toList());
-                                        if (moyFin.getString(MOYENNE) != null) sumMoy += Double.valueOf(moyFin.getString(MOYENNE));
-                                    }
-                                    if (!notePeriode.isEmpty()) {
-                                        ++nbMoy;
-                                        moyenne = utilsService.calculMoyenne(notePeriode, false, 20,
-                                                annual);
-                                        sumMoy += moyenne.getDouble(MOYENNE);
-                                    }
-                                    moyenne.remove(MOYENNE);
-                                    moyenne.put(MOYENNE, sumMoy / nbMoy);
-                                } else {
-                                    JsonObject moyObj = utilsService.getObjectForPeriode(moyennesFinales,
-                                            entry.getKey(), ID_PERIODE);
-                                    if (moyObj != null) {
-                                        moyenne.remove(MOYENNE);
-                                        if ((moyObj.getString(MOYENNE) != null)) {
-                                            moyenne.put(MOYENNE, moyObj.getString(MOYENNE));
-                                        } else {
-                                            moyenne.put(MOYENNE, "NN");
-                                        }
-                                        isFinale = true;
-                                    }
-                                }
-                            }*/
                             moyenne.put(ID_PERIODE, entryPeriode.getKey());
                             moyenne.put(ID_ELEVE, entryEleve.getKey());
                             moyenne.put("isFinale", isFinale);

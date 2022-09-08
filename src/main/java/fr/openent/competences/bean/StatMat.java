@@ -139,16 +139,16 @@ public class StatMat {
                     }
 
                     Long sousMatiereId = note.getLong("id_sousmatiere");
-                    Long id_periode = note.getLong("id_periode");
+                    Long periodId = note.getLong("id_periode");
                     NoteDevoir noteDevoir = new NoteDevoir(
                             Double.valueOf(note.getString("valeur")),
                             Double.valueOf(note.getInteger("diviseur")),
                             note.getBoolean("ramener_sur"),
                             Double.valueOf(note.getString("coefficient")),
-                            note.getString("id_eleve"), id_periode, service, sousMatiereId);
+                            note.getString("id_eleve"), periodId, service, sousMatiereId);
                     statClass.putMapEleveStat(note.getString("id_eleve"),null, noteDevoir);
                     if (isNotNull(sousMatiereId)) {
-                        statClass.putSousMatiereMapEleveStat(note.getString("id_eleve"), sousMatiereId, noteDevoir); //TODO139 : Ajouter plutot ça au set de l'élève
+                        statClass.putSousMatiereMapEleveStat(note.getString("id_eleve"), sousMatiereId, noteDevoir);
                     }
                 }
 
