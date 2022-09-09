@@ -187,7 +187,8 @@ public interface NoteService extends CrudService {
      * @param idPriodeAsked idPriodeAsked
      * @param services
      * @param multiTeachers
-     * @return retourne une map avec
+     * @return retourne une map avec les infos des moyennes et des élèves, peut retourner un null
+     * si un problème de coeff survient
      */
     HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> calculMoyennesEleveByPeriode(JsonArray listNotes,
                                                                                      final JsonObject result,

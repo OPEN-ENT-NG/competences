@@ -77,6 +77,19 @@ public class StatClass {
         }
     }
 
+    public void putSousMatiereMapEleveStat(String idEleve, Long sousMatiereId, NoteDevoir note){
+        if(note != null) {
+            if (this.mapEleveStat.containsKey(idEleve)) {
+                StatEleve statEleve = this.mapEleveStat.get(idEleve);
+                utilsService.addToMap(sousMatiereId, statEleve.getNotesBySousMat(), note);
+            } else {
+                StatEleve statEleve = new StatEleve();
+                utilsService.addToMap(sousMatiereId, statEleve.getNotesBySousMat(), note);
+                this.mapEleveStat.put(idEleve, statEleve);
+            }
+        }
+    }
+
     public Map<String, StatEleve> getMapEleveStat() {
         return mapEleveStat;
     }
