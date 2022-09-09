@@ -20,6 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
 import fr.openent.competences.security.*;
@@ -74,6 +75,7 @@ public class NoteController extends ControllerHelper {
     /**
      * Déclaration des services
      */
+    private static final double ROUNDER = 10.0;
     private final NoteService notesService;
     private final DevoirService devoirsService;
     private final UtilsService utilsService;
@@ -698,14 +700,14 @@ public class NoteController extends ControllerHelper {
             @Override
             public void handle(final UserInfos user) {
                 if (user != null) {
-                    List<String> idDevoirsList = request.params().getAll("devoirs");
-                    String idEleve = request.params().get("idEleve");
-                    String idEtablissement = request.params().get("idEtablissement");
-                    String idClasse = request.params().get("idClasse");
-                    String idMatiere = request.params().get("idMatiere");
+                    List<String> idDevoirsList = request.params().getAll(Field.DEVOIRS);
+                    String idEleve = request.params().get(Field.ID_ELEVE);
+                    String idEtablissement = request.params().get(Field.IDETABLISSEMENT);
+                    String idClasse = request.params().get(Field.IDCLASSE);
+                    String idMatiere = request.params().get(Field.IDMATIERE);
                     Long idPeriode = null;
-                    if(request.params().get("idPeriode") != null)
-                        idPeriode = Long.valueOf(request.params().get("idPeriode"));
+                    if(request.params().get(Field.IDPERIODE) != null)
+                        idPeriode = Long.valueOf(request.params().get(Field.IDPERIODE));
 
                     Long[] idDevoirsArray = new Long[idDevoirsList.size()];
 
@@ -715,7 +717,7 @@ public class NoteController extends ControllerHelper {
 
                     // Récupération des moyennes finales
                     Future<JsonArray> moyenneFinaleFuture = Future.future();
-                    notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, idMatiere, null, "moyenne",
+                    notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, idMatiere, null, Field.MOYENNE,
                             moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
 
                     // Récupération des notes des devoirs
@@ -774,9 +776,9 @@ public class NoteController extends ControllerHelper {
                                         HashMap<Long, ArrayList<NoteDevoir>> notesBySousMat = new HashMap<>();
                                         for (int i = 0; i < notesEleve.size(); i++) {
                                             JsonObject note = notesEleve.getJsonObject(i);
-                                            if(note.getString("coefficient") != null) {
+                                            if(note.getString(Field.COEFFICIENT) != null) {
                                                 Matiere matiere = new Matiere(idMatiere);
-                                                Teacher teacher = new Teacher(note.getString("owner"));
+                                                Teacher teacher = new Teacher(note.getString(Field.OWNER));
                                                 Group group = new Group(idClasse);
 
                                                 Service service = services.stream()
@@ -788,24 +790,23 @@ public class NoteController extends ControllerHelper {
                                                 if (service == null){
                                                     //On regarde les multiTeacher
                                                     for(Object mutliTeachO: multiTeachers){
-                                                        //multiTeaching.getString("second_teacher_id").equals(teacher.getId()
                                                         JsonObject multiTeaching  =(JsonObject) mutliTeachO;
-                                                        if(multiTeaching.getString("main_teacher_id").equals(teacher.getId())
-                                                                && multiTeaching.getString("id_classe").equals(group.getId())
-                                                                && multiTeaching.getString("subject_id").equals(matiere.getId())){
+                                                        if(multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                                                                && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
+                                                                && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
                                                             service = services.stream()
-                                                                    .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString("second_teacher_id"))
+                                                                    .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
                                                                             && matiere.getId().equals(el.getMatiere().getId())
                                                                             && group.getId().equals(el.getGroup().getId()))
                                                                     .findFirst().orElse(null);
                                                         }
 
-                                                        if(multiTeaching.getString("second_teacher_id").equals(teacher.getId())
-                                                                && multiTeaching.getString("class_or_group_id").equals(group.getId())
-                                                                && multiTeaching.getString("subject_id").equals(matiere.getId())){
+                                                        if(multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                                                                && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
+                                                                && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
 
                                                             service = services.stream()
-                                                                    .filter(el -> multiTeaching.getString("main_teacher_id").equals(el.getTeacher().getId())
+                                                                    .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
                                                                             && matiere.getId().equals(el.getMatiere().getId())
                                                                             && group.getId().equals(el.getGroup().getId()))
                                                                     .findFirst().orElse(null);
@@ -813,12 +814,12 @@ public class NoteController extends ControllerHelper {
                                                     }
                                                 }
 
-                                                Long sousMatiereId = note.getLong("id_sousmatiere");
+                                                Long sousMatiereId = note.getLong(Field.ID_SOUSMATIERE);
                                                 Long id_periode = note.getLong(ID_PERIODE);
-                                                NoteDevoir noteDevoir = new NoteDevoir(Double.parseDouble(note.getString("valeur").replace(",",".")),
-                                                        Double.parseDouble(note.getInteger("diviseur").toString().replace(",",".")),
-                                                        note.getBoolean("ramener_sur"),
-                                                        Double.parseDouble(note.getString("coefficient").replace(",",".")),
+                                                NoteDevoir noteDevoir = new NoteDevoir(Double.parseDouble(note.getString(Field.VALEUR).replace(",",".")),
+                                                        Double.parseDouble(note.getInteger(Field.DIVISEUR).toString().replace(",",".")),
+                                                        note.getBoolean(Field.RAMENER_SUR),
+                                                        Double.parseDouble(note.getString(Field.COEFFICIENT).replace(",",".")),
                                                         idEleve, id_periode, service, sousMatiereId);
                                                 notes.add(noteDevoir);
                                                 if (isNotNull(sousMatiereId)) {
@@ -848,17 +849,17 @@ public class NoteController extends ControllerHelper {
 
                                                 JsonObject moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(), false, 20, false); //FIXME remettre les variables?
 
-                                                total += coeff * moyenSousMat.getDouble("moyenne");
+                                                total += coeff * moyenSousMat.getDouble(Field.MOYENNE);
                                                 totalCoeff += coeff;
                                                 hasNote = true;
                                             }
-                                            Double moyenneComputed = Math.round((total / totalCoeff) * 10.0) / 10.0;
+                                            Double moyenneComputed = Math.round((total / totalCoeff) * ROUNDER) / ROUNDER;
 
-                                            JsonObject r = new JsonObject().put("moyenne", moyenneComputed)
-                                                    .put("hasNote", hasNote);
+                                            JsonObject r = new JsonObject().put(Field.MOYENNE, moyenneComputed)
+                                                    .put(Field.HASNOTE, hasNote);
 
                                             if(totalCoeff == 0)
-                                                r.put("moyenne","NN");
+                                                r.put(Field.MOYENNE,"NN");
 
                                             Renders.renderJson(request, r);
                                         }

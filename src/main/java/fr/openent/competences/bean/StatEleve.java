@@ -1,5 +1,6 @@
 package fr.openent.competences.bean;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.Service;
 import fr.openent.competences.model.SubTopic;
 import fr.openent.competences.service.UtilsService;
@@ -85,6 +86,8 @@ public class StatEleve {
             //Si on a des sous-matières, on calcule la moyenne par sous-matière, puis la moyenne de la matière.
             double total = 0;
             double totalCoeff = 0;
+            boolean stat = false;
+            boolean annual = false;
 
             for (Map.Entry<Long, ArrayList<NoteDevoir>> subEntry :
                     notesBySousMat.entrySet()) {
@@ -100,7 +103,7 @@ public class StatEleve {
                         coeff = subTopic.getCoefficient();
                 }
 
-                Double moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(), false, DIVISEUR, false).getDouble("moyenne");
+                Double moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(), stat, DIVISEUR, annual).getDouble(Field.MOYENNE);
 
                 total += coeff * moyenSousMat;
                 totalCoeff += coeff;
@@ -113,7 +116,7 @@ public class StatEleve {
             averageAuto = Math.round((total / totalCoeff) * ROUNDER) / ROUNDER;
         }
         else {
-            averageAuto = utilsService.calculMoyenne(this.noteDevoirList,false, DIVISEUR,false).getDouble("moyenne");
+            averageAuto = utilsService.calculMoyenne(this.noteDevoirList,false, DIVISEUR,false).getDouble(Field.MOYENNE);
         }
 
         return averageAuto;
