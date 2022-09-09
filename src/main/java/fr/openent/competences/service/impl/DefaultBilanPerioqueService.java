@@ -3,7 +3,6 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.EventType;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.service.*;
@@ -17,19 +16,18 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+
+
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
@@ -51,7 +49,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         devoirService = new DefaultDevoirService(eb);
         elementProgramme = new DefaultElementProgramme() ;
         defautlMatiereService = new DefaultMatiereService(eb);
-        structureOptionsService = new DefaultStructureOptions();
+        structureOptionsService = new DefaultStructureOptions(eb);
         sql = Sql.getInstance();
     }
 
@@ -60,11 +58,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                       Handler<Either<String, JsonArray>> eitherHandler){
         // Récupération de l'état d'activation du module présences de l'établissement
         Future<JsonObject> activationFuture = Future.future();
-        utilsService.getActiveStatePresences(structureId, event -> formate(activationFuture, event));
+        structureOptionsService.getActiveStatePresences(structureId, event -> formate(activationFuture, event));
 
         // Récupération de l'état de la récupération des données du modules présences
         Future<JsonObject> syncFuture = Future.future();
-        utilsService.getSyncStatePresences(structureId, event -> formate(syncFuture, event));
+        structureOptionsService.getSyncStatePresences(structureId, event -> formate(syncFuture, event));
 
         CompositeFuture.all(syncFuture, activationFuture).setHandler(event -> {
             if(event.failed()){

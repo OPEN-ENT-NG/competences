@@ -29,4 +29,25 @@ public interface StructureOptionsService extends CrudService {
      */
     Future<Boolean> isAverageSkills(String structureId);
 
+    /**
+     * change sync state of data from presenecs
+     * @param idStructure id of the structure
+     * @param state state
+     * @param handler response
+     */
+    void activeDeactiveSyncStatePresences(String idStructure, Boolean state, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * get sync state of data from presenecs
+     * @param idStructure id of the structure
+     * @param handler response
+     */
+    void getSyncStatePresences(String idStructure, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * get config viescolaire and activation state of presences modules
+     * @param idStructure id of the structure
+     * @param handler response
+     */
+    void getActiveStatePresences (final String idStructure, Handler<Either<String,JsonObject>> handler);
 }
