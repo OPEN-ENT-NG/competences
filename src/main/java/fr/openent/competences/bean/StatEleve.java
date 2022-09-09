@@ -4,7 +4,6 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.Service;
 import fr.openent.competences.model.SubTopic;
 import fr.openent.competences.service.UtilsService;
-import fr.openent.competences.service.impl.DefaultNoteService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -16,9 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 public class StatEleve {
-
-    private static final int DIVISEUR = 20;
-    private static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
 
     private List<NoteDevoir> noteDevoirList;
 
@@ -103,7 +99,7 @@ public class StatEleve {
                         coeff = subTopic.getCoefficient();
                 }
 
-                Double moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(), stat, DIVISEUR, annual).getDouble(Field.MOYENNE);
+                Double moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(), stat, Field.DIVISEUR_NOTE, annual).getDouble(Field.MOYENNE);
 
                 total += coeff * moyenSousMat;
                 totalCoeff += coeff;
@@ -113,10 +109,10 @@ public class StatEleve {
                         "coefficients (value of totalCoeff : " + totalCoeff + ")");
                 return null;
             }
-            averageAuto = Math.round((total / totalCoeff) * ROUNDER) / ROUNDER;
+            averageAuto = Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER;
         }
         else {
-            averageAuto = utilsService.calculMoyenne(this.noteDevoirList,false, DIVISEUR,false).getDouble(Field.MOYENNE);
+            averageAuto = utilsService.calculMoyenne(this.noteDevoirList,false, Field.DIVISEUR_NOTE,false).getDouble(Field.MOYENNE);
         }
 
         return averageAuto;

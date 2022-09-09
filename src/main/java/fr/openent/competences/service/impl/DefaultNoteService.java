@@ -61,7 +61,6 @@ import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
  */
 public class DefaultNoteService extends SqlCrudService implements NoteService {
 
-    private static final double ROUNDER = 10.0;
     public final String MOYENNES = "moyennes";
     public final String MOYENNESFINALES = "moyennesFinales";
     public final String MOYENNEFINALE = "moyenneFinale";
@@ -969,7 +968,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             "coefficients (value of totalCoeff : " + totalCoeff + ")");
                     return null;
                 }
-                Double moyenne = Math.round((total / totalCoeff) * ROUNDER) / ROUNDER;
+                Double moyenne = Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER;
 
                 if (hasNote)
                     result.put(Field.MOYENNE, moyenne);
@@ -3071,7 +3070,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             }
                         }
                     }
-                    moyenneComputed = Math.round((total / totalCoeff) * ROUNDER) / ROUNDER;
+                    moyenneComputed = Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER;
 
                     if (!mapNbMoyenneClasse.containsKey(null)) {
                         mapNbMoyenneClasse.put(null, 0);
@@ -3269,10 +3268,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 }
                             }
 
-                            JsonObject moyenne = new JsonObject().put(Field.MOYENNE, Math.round((total / totalCoeff) * ROUNDER) / ROUNDER)
+                            JsonObject moyenne = new JsonObject().put(Field.MOYENNE, Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER)
                                     .put("hasNote", true);
                             if(totalCoeff == 0)
-                                moyenne.put(Field.MOYENNE,"NN");
+                                moyenne.put(Field.MOYENNE,Field.NN);
 
                             Boolean isFinale = false;
                             moyenne.put(ID_PERIODE, entryPeriode.getKey());

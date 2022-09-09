@@ -60,7 +60,7 @@ export class Eleve extends DefaultEleve  {
         return this.hasOwnProperty("displayName") ? this.displayName : this.firstName+" "+this.lastName;
     }
 
-    getMoyenne (devoirs, idEtablissement, idClasse, idPeriode, idMatiere?) : Promise<any> {
+    getMoyenne (devoirs:any, idEtablissement:string, idClasse:string, idPeriode:string, idMatiere?:string) : Promise<any> {
         return new Promise((resolve, reject) => {
             if (devoirs) {
                 let idDevoirsURL:string = "";

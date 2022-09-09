@@ -46,6 +46,7 @@ public class Field {
     public static final String RESULTS = "results";
 
     //variables
+    public static final String NN = "NN";
     public static final String SAVE_BFC = "saveBFC";
     public static final String SUBCOEF = "subCoef";
     public static final String SERVICE_SUBTOPIC = "services_subtopic";
@@ -67,5 +68,7 @@ public class Field {
     //db
     public static final String SUBTOPIC_TABLE = "services_subtopic";
 
-
+    //numbers
+    public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
+    public static final int DIVISEUR_NOTE = 20;
 }

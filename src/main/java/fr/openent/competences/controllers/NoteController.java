@@ -75,7 +75,6 @@ public class NoteController extends ControllerHelper {
     /**
      * Déclaration des services
      */
-    private static final double ROUNDER = 10.0;
     private final NoteService notesService;
     private final DevoirService devoirsService;
     private final UtilsService utilsService;
@@ -853,18 +852,18 @@ public class NoteController extends ControllerHelper {
                                                 totalCoeff += coeff;
                                                 hasNote = true;
                                             }
-                                            Double moyenneComputed = Math.round((total / totalCoeff) * ROUNDER) / ROUNDER;
+                                            Double moyenneComputed = Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER;
 
                                             JsonObject r = new JsonObject().put(Field.MOYENNE, moyenneComputed)
                                                     .put(Field.HASNOTE, hasNote);
 
                                             if(totalCoeff == 0)
-                                                r.put(Field.MOYENNE,"NN");
+                                                r.put(Field.MOYENNE,Field.NN);
 
                                             Renders.renderJson(request, r);
                                         }
                                         else {
-                                            Renders.renderJson(request, utilsService.calculMoyenne(notes, false, 20,false));
+                                            Renders.renderJson(request, utilsService.calculMoyenne(notes, false, Field.DIVISEUR_NOTE,false));
                                         }
                                     }
                                 }
