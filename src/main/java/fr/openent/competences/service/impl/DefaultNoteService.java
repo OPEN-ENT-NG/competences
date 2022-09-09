@@ -964,7 +964,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         hasNote = true;
                     }
                 }
-                if (totalCoeff < 1) {
+                if (totalCoeff == 0) {
                     log.error("Found a 0 or negative coefficient in calculMoyennesEleveByPeriode, please check your subtopics " +
                             "coefficients (value of totalCoeff : " + totalCoeff + ")");
                     return null;

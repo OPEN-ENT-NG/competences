@@ -108,7 +108,7 @@ public class StatEleve {
                 total += coeff * moyenSousMat;
                 totalCoeff += coeff;
             }
-            if (totalCoeff < 1) {
+            if (totalCoeff == 0) {
                 log.error("Found a 0 or negative coefficient in getMoyenneAuto, please check your subtopics " +
                         "coefficients (value of totalCoeff : " + totalCoeff + ")");
                 return null;
