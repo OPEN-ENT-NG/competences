@@ -615,6 +615,16 @@ public class DefaultUtilsService implements UtilsService {
         }
         map.get(id).add(valueToAdd);
     }
+    @Override
+    public <K, V> void addToMap(K id, Map<K, ArrayList<V>> map, V valueToAdd) {
+        if (!map.containsKey(id) ) {
+            map.put(id, new ArrayList<>());
+        }
+        if(isNull(map.get(id))){
+            map.put(id, new ArrayList<>());
+        }
+        map.get(id).add(valueToAdd);
+    }
 
 
     public  void addToMap(String id, Long sousMatiereId,

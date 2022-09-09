@@ -13,6 +13,7 @@ public class Field {
     public static final String IDCLASSE = "idClasse";
     public static final String ID_STRUCTURE = "id_structure";
     public static final String ID_MATIERE = "id_matiere";
+    public static final String IDMATIERE = "idMatiere";
     public static final String ID_SUBTOPIC = "id_subtopic";
     public static final String ID_TEACHER = "id_teacher";
     public static final String ID_TOPIC = "id_topic";
@@ -20,8 +21,12 @@ public class Field {
     public static final String ID_GROUPE = "id_groupe";
     public static final String ID_TYPESOUSMATIERE = "id_type_sousmatiere";
     public static final String ID_PERIODE = "id_periode";
+    public static final String IDPERIODE = "idPeriode";
     public static final String ID_ELEVE = "id_eleve";
     public static final String ID_CLASSE = "id_classe";
+    public static final String ID_ELEVE_MOYENNE_FINALE = "id_eleve_moyenne_finale";
+    public static final String ID_SOUSMATIERE = "id_sousmatiere";
+    public static final String ID_MATIERE_MOYF = "id_matiere_moyf";
 
 
     public static final String MAIN_TEACHER_ID = "main_teacher_id";
@@ -41,6 +46,7 @@ public class Field {
     public static final String RESULTS = "results";
 
     //variables
+    public static final String NN = "NN";
     public static final String SAVE_BFC = "saveBFC";
     public static final String SUBCOEF = "subCoef";
     public static final String SERVICE_SUBTOPIC = "services_subtopic";
@@ -54,6 +60,7 @@ public class Field {
     public static final String OWNER = "owner";
     public static final String DIVISEUR = "diviseur";
     public static final String RAMENER_SUR = "ramener_sur";
+    public static final String DEVOIRS = "devoirs";
 
 
     //subTopic
@@ -61,5 +68,7 @@ public class Field {
     //db
     public static final String SUBTOPIC_TABLE = "services_subtopic";
 
-
+    //numbers
+    public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
+    public static final int DIVISEUR_NOTE = 20;
 }

@@ -20,6 +20,9 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
+import fr.openent.competences.helpers.FutureHelper;
+import fr.openent.competences.model.*;
 import fr.openent.competences.security.*;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
@@ -36,6 +39,7 @@ import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
@@ -51,6 +55,7 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import java.math.RoundingMode;
@@ -58,6 +63,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 
+import static fr.wseduc.webutils.Utils.isNotEmpty;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
@@ -693,12 +699,14 @@ public class NoteController extends ControllerHelper {
             @Override
             public void handle(final UserInfos user) {
                 if (user != null) {
-                    List<String> idDevoirsList = request.params().getAll("devoirs");
-                    String idEleve = request.params().get("idEleve");
-                    String idMatiere = request.params().get("idMatiere");
+                    List<String> idDevoirsList = request.params().getAll(Field.DEVOIRS);
+                    String idEleve = request.params().get(Field.ID_ELEVE);
+                    String idEtablissement = request.params().get(Field.IDETABLISSEMENT);
+                    String idClasse = request.params().get(Field.IDCLASSE);
+                    String idMatiere = request.params().get(Field.IDMATIERE);
                     Long idPeriode = null;
-                    if(request.params().get("idPeriode") != null)
-                        idPeriode = Long.valueOf(request.params().get("idPeriode"));
+                    if(request.params().get(Field.IDPERIODE) != null)
+                        idPeriode = Long.valueOf(request.params().get(Field.IDPERIODE));
 
                     Long[] idDevoirsArray = new Long[idDevoirsList.size()];
 
@@ -708,7 +716,7 @@ public class NoteController extends ControllerHelper {
 
                     // Récupération des moyennes finales
                     Future<JsonArray> moyenneFinaleFuture = Future.future();
-                    notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, idMatiere, null, "moyenne",
+                    notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, idMatiere, null, Field.MOYENNE,
                             moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
 
                     // Récupération des notes des devoirs
@@ -717,14 +725,42 @@ public class NoteController extends ControllerHelper {
                             notesEvent -> formate(notesFuture, notesEvent));
 
                     Long finalIdPeriode = idPeriode;
-                    CompositeFuture.all(notesFuture, moyenneFinaleFuture)
+
+                    //Récupération des Services
+                    Promise<JsonArray> servicesPromise = Promise.promise();
+                    utilsService.getServices(idEtablissement,
+                            new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise.future()));
+
+                    //Récupération des Multi-teachers
+                    Promise<JsonArray> multiTeachingPromise = Promise.promise();
+                    utilsService.getMultiTeachers(idEtablissement,
+                            new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+
+                    //Récupération des Sous-Matières
+                    Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+                    utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
+
+                    CompositeFuture.all(notesFuture, moyenneFinaleFuture, servicesPromise.future(),
+                                    multiTeachingPromise.future(), subTopicCoefPromise.future())
                             .setHandler(event -> {
                                 if (event.failed()) {
                                     renderError(request, new JsonObject().put("error",request.params()));
-                                }else {
+                                }
+                                else {
                                     JsonArray notesEleve = notesFuture.result();
                                     JsonArray moyenneFinaleArray = moyenneFinaleFuture.result();
                                     List<NoteDevoir> notes = new ArrayList<>();
+
+                                    Structure structure = new Structure();
+                                    structure.setId(idEtablissement);
+                                    JsonArray servicesJson = servicesPromise.future().result();
+                                    JsonArray multiTeachers = multiTeachingPromise.future().result();
+                                    List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+
+                                    List<Service> services = new ArrayList<>();
+                                    List<MultiTeaching> multiTeachings = new ArrayList<>();
+                                    new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClasse);
+                                    setServices(structure, servicesJson, services, subTopics);
 
                                     if(!moyenneFinaleArray.isEmpty() && finalIdPeriode != null){
                                         JsonObject moyenneFinale = moyenneFinaleArray.getJsonObject(0);
@@ -734,17 +770,101 @@ public class NoteController extends ControllerHelper {
                                             Renders.renderJson(request, new JsonObject().put("moyenne", moyenneFinale.getValue("moyenne"))
                                                     .put("hasNote", true));
 
-                                    }else{
+                                    }
+                                    else {
+                                        HashMap<Long, ArrayList<NoteDevoir>> notesBySousMat = new HashMap<>();
                                         for (int i = 0; i < notesEleve.size(); i++) {
                                             JsonObject note = notesEleve.getJsonObject(i);
-                                            if(note.getString("coefficient") != null) {
-                                                notes.add(new NoteDevoir(Double.parseDouble(note.getString("valeur").replace(",",".")),
-                                                        Double.parseDouble(note.getInteger("diviseur").toString().replace(",",".")),
-                                                        note.getBoolean("ramener_sur"),
-                                                        Double.parseDouble(note.getString("coefficient").replace(",","."))));
+                                            if(note.getString(Field.COEFFICIENT) != null) {
+                                                Matiere matiere = new Matiere(idMatiere);
+                                                Teacher teacher = new Teacher(note.getString(Field.OWNER));
+                                                Group group = new Group(idClasse);
+
+                                                Service service = services.stream()
+                                                        .filter(el -> teacher.getId().equals(el.getTeacher().getId())
+                                                                && matiere.getId().equals(el.getMatiere().getId())
+                                                                && group.getId().equals(el.getGroup().getId()))
+                                                        .findFirst().orElse(null);
+
+                                                if (service == null){
+                                                    //On regarde les multiTeacher
+                                                    for(Object mutliTeachO: multiTeachers){
+                                                        JsonObject multiTeaching  =(JsonObject) mutliTeachO;
+                                                        if(multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                                                                && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
+                                                                && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
+                                                            service = services.stream()
+                                                                    .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
+                                                                            && matiere.getId().equals(el.getMatiere().getId())
+                                                                            && group.getId().equals(el.getGroup().getId()))
+                                                                    .findFirst().orElse(null);
+                                                        }
+
+                                                        if(multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                                                                && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
+                                                                && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
+
+                                                            service = services.stream()
+                                                                    .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
+                                                                            && matiere.getId().equals(el.getMatiere().getId())
+                                                                            && group.getId().equals(el.getGroup().getId()))
+                                                                    .findFirst().orElse(null);
+                                                        }
+                                                    }
+                                                }
+
+                                                Long sousMatiereId = note.getLong(Field.ID_SOUSMATIERE);
+                                                Long id_periode = note.getLong(ID_PERIODE);
+                                                NoteDevoir noteDevoir = new NoteDevoir(Double.parseDouble(note.getString(Field.VALEUR).replace(",",".")),
+                                                        Double.parseDouble(note.getInteger(Field.DIVISEUR).toString().replace(",",".")),
+                                                        note.getBoolean(Field.RAMENER_SUR),
+                                                        Double.parseDouble(note.getString(Field.COEFFICIENT).replace(",",".")),
+                                                        idEleve, id_periode, service, sousMatiereId);
+                                                notes.add(noteDevoir);
+                                                if (isNotNull(sousMatiereId)) {
+                                                    utilsService.addToMap(sousMatiereId, notesBySousMat, noteDevoir);
+                                                }
                                             }
                                         }
-                                        Renders.renderJson(request, utilsService.calculMoyenne(notes, false, 20,false));
+                                        if(!notesBySousMat.isEmpty()) {
+                                            //Si on a des sous-matières, on calcule la moyenne par sous-matière, puis la moyenne de la matière.
+                                            double total = 0;
+                                            double totalCoeff = 0;
+                                            Boolean hasNote = false;
+
+                                            for (Map.Entry<Long, ArrayList<NoteDevoir>> subEntry :
+                                                    notesBySousMat.entrySet()) {
+                                                Long idSousMat = subEntry.getKey();
+                                                Service serv = subEntry.getValue().get(0).getService();
+                                                double coeff = 1.d;
+                                                if (serv != null && serv.getSubtopics() != null && serv.getSubtopics().size() > 0) {
+                                                    SubTopic subTopic = serv.getSubtopics().stream()
+                                                            .filter(el ->
+                                                                    el.getId().equals(idSousMat)
+                                                            ).findFirst().orElse(null);
+                                                    if (subTopic != null)
+                                                        coeff = subTopic.getCoefficient();
+                                                }
+
+                                                JsonObject moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(), false, 20, false); //FIXME remettre les variables?
+
+                                                total += coeff * moyenSousMat.getDouble(Field.MOYENNE);
+                                                totalCoeff += coeff;
+                                                hasNote = true;
+                                            }
+                                            Double moyenneComputed = Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER;
+
+                                            JsonObject r = new JsonObject().put(Field.MOYENNE, moyenneComputed)
+                                                    .put(Field.HASNOTE, hasNote);
+
+                                            if(totalCoeff == 0)
+                                                r.put(Field.MOYENNE,Field.NN);
+
+                                            Renders.renderJson(request, r);
+                                        }
+                                        else {
+                                            Renders.renderJson(request, utilsService.calculMoyenne(notes, false, Field.DIVISEUR_NOTE,false));
+                                        }
                                     }
                                 }
                             });
