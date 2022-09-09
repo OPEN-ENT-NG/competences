@@ -1,5 +1,7 @@
 package fr.openent.competences.service;
 
+import fr.openent.competences.model.MultiTeaching;
+import fr.openent.competences.model.Structure;
 import fr.openent.competences.model.Student;
 import fr.openent.competences.model.StudentEvenement;
 import fr.wseduc.webutils.Either;
@@ -256,4 +258,13 @@ public interface ExportBulletinService {
  void generateImagesFromPathForBulletin (JsonObject eleve, Vertx vertx, Handler<Either<String, JsonObject>> handler);
 
  void checkBulletinsExist(JsonArray students, Integer idPeriode, String idStructure, Handler<Either<String, Boolean>> handler);
+
+ void setMultiTeaching(Structure structure, JsonArray multiTeachinJsonArray, List<MultiTeaching> multiTeachings, String idClasse);
+
+ /**
+  * Récupère le libelle de l'établissement de l'élève
+  * @param idStructure idStructure
+  * @param promise contient la promise visant à récupérer ces données
+  */
+ void getStructure(String idStructure, Promise<Structure> promise);
 }

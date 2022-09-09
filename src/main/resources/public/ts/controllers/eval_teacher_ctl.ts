@@ -3066,7 +3066,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
             if (isInReleve) {
-                $scope.calculerMoyenneEleve(eleve);
+                $scope.calculerMoyenneEleve(eleve, eleve.idClasse, evaluation.id_matiere);
                 $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
             } else {
                 $scope.calculStatsDevoir();
@@ -3205,15 +3205,18 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Calcul la moyenne pour un élève
          * @param eleve élève
          */
-        $scope.calculerMoyenneEleve = function (eleve) {
-            eleve.getMoyenne($scope.releveNote.devoirs.all).then(() => {
-                if(!eleve.moyenneFinaleIsSet){
-                    eleve.moyenneFinale = eleve.moyenne;
-                    eleve.oldMoyenneFinale = eleve.moyenne;
-                }
-                $scope.calculerMoyenneClasse();
-                utils.safeApply($scope);
-            });
+        $scope.calculerMoyenneEleve = async function (eleve, idClasse, idMatiere?) {
+            if (idMatiere != null) {
+                await eleve.getMoyenne($scope.releveNote.devoirs.all, $scope.releveNote.idEtablissement, idClasse, $scope.releveNote.periode.id, idMatiere);
+            } else {
+                await eleve.getMoyenne($scope.releveNote.devoirs.all);
+            }
+            if(!eleve.moyenneFinaleIsSet){
+                eleve.moyenneFinale = eleve.moyenne;
+                eleve.oldMoyenneFinale = eleve.moyenne;
+            }
+            $scope.calculerMoyenneClasse();
+            utils.safeApply($scope);
         };
 
         $scope.calculerMoyenneClasse = function() {
@@ -3260,7 +3263,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
 
             utils.safeApply($scope);
-        }
+            }
 
         /**
          * Ouvre la fenêtre détail des compétences sur un devoir

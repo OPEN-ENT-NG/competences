@@ -176,6 +176,7 @@ public interface UtilsService {
      * @param <K> Le type de la clé
      */
     <K,V> void addToMap(K key, HashMap<K, ArrayList<V>> map, V valueToAdd);
+    <K,V> void addToMap(K key, Map<K, ArrayList<V>> map, V valueToAdd);
     void addToMap(String key, Long sousmatiere, HashMap<String,HashMap<Long,ArrayList<NoteDevoir>>> map,
                   NoteDevoir valueToAdd);
     <K,V> void addToMapWithJsonArray(K id, HashMap<K, JsonArray> map, V valueToAdd);
