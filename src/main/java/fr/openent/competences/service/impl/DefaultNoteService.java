@@ -61,6 +61,7 @@ import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
  */
 public class DefaultNoteService extends SqlCrudService implements NoteService {
 
+    public static final int NB_FUTURES = 6;
 
     public final String MOYENNES = "moyennes";
     public final String MOYENNESFINALES = "moyennesFinales";
@@ -2823,8 +2824,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     try{
                                         if(event.succeeded()) {
                                             // Rajout des moyennes finales
-                                            for (int i = 6; i < idMatieres.size() + 6; i++){
-                                                String idMatiere = idMatieres.getString(i - 6);
+                                            for (int i = NB_FUTURES; i < idMatieres.size() + NB_FUTURES; i++){
+                                                String idMatiere = idMatieres.getString(i - NB_FUTURES);
                                                 // Récupération du  nombre de devoirs avec évaluation numérique
                                                 Boolean hasEvaluatedHomeWork = (((JsonObject) listFuturesFirst.get(i).result())
                                                         .getLong("nb") > 0);
