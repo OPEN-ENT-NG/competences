@@ -3,36 +3,34 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
+import fr.openent.competences.enums.EventType;
+import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
-import fr.openent.competences.enums.*;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-
-import fr.openent.competences.message.MessageResponseHandler;
-
 import static org.entcore.common.sql.SqlResult.validResultHandler;
-import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private static final Logger log = LoggerFactory.getLogger(DefaultBilanPerioqueService.class);
@@ -43,6 +41,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private final EventBus eb;
     private final Sql sql;
     private final MatiereService defautlMatiereService;
+    private final StructureOptionsService structureOptionsService;
+
 
     public DefaultBilanPerioqueService (EventBus eb){
         this.eb = eb;
@@ -51,6 +51,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         devoirService = new DefaultDevoirService(eb);
         elementProgramme = new DefaultElementProgramme() ;
         defautlMatiereService = new DefaultMatiereService(eb);
+        structureOptionsService = new DefaultStructureOptions(Competences.EVAL_SCHEMA, Field.STRUTUCTURE_OPTIONS);
         sql = Sql.getInstance();
     }
 
@@ -472,24 +473,37 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     .getConversionNoteCompetence(idEtablissement, idClasse,  // note : Est ce que c'est pas l'idGroupeClasse qu'on doit passé ici ?
                             tableauEvent -> formate(tableauDeConversionFuture, tableauEvent));
 
+            Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
+            structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
+                if(event.isRight())
+                    isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
+                else
+                    isAvgSkillpromise.fail(event.left().getValue());
+            });
+
             Future<String> subjectFuture = Future.future();
             subjectsFuture.add(subjectFuture);
 
-            CompositeFuture.all(elementsProgFuture, appreciationMoyFinalePosFuture, notesFuture, compNotesFuture,
-                    moyenneFinaleFuture, tableauDeConversionFuture).setHandler(event -> {
-                if(event.succeeded()){
-                    List<String> idsClassWithNoteAppCompNoteStudent = new ArrayList<>();
-                    setAppreciationMoyFinalePositionnementEleve(result, appreciationMoyFinalePosFuture.result(),
-                            idsClassWithNoteAppCompNoteStudent);
-                    setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(), moyenneFinaleFuture.result(),
-                            result, idEleve, idPeriod, tableauDeConversionFuture.result(), idsClassWithNoteAppCompNoteStudent);
-                    setElementProgramme(result, elementsProgFuture.result(), idsClassWithNoteAppCompNoteStudent);
-                    results.add(result);
-                    subjectFuture.complete();
-                } else {
-                    subjectFuture.fail(event.cause().getMessage());
-                }
-            });
+            isAvgSkillpromise.future()
+                    .onSuccess(isAvgSkillResult -> CompositeFuture.all(elementsProgFuture, appreciationMoyFinalePosFuture, notesFuture, compNotesFuture,
+                            moyenneFinaleFuture, tableauDeConversionFuture).setHandler(event -> {
+                        if(event.succeeded()){
+                            List<String> idsClassWithNoteAppCompNoteStudent = new ArrayList<>();
+                            setAppreciationMoyFinalePositionnementEleve(result, appreciationMoyFinalePosFuture.result(),
+                                    idsClassWithNoteAppCompNoteStudent);
+                            //future isAvgSkill
+                            setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(), moyenneFinaleFuture.result(),
+                                    result, idEleve, idPeriod, tableauDeConversionFuture.result(), idsClassWithNoteAppCompNoteStudent, isAvgSkillResult );
+                            setElementProgramme(result, elementsProgFuture.result(), idsClassWithNoteAppCompNoteStudent);
+                            results.add(result);
+                            subjectFuture.complete();
+                        } else {
+                            subjectFuture.fail(event.cause().getMessage());
+                        }
+                    }))
+                    .onFailure(err ->{
+                        subjectFuture.fail(err.getMessage());
+                    });
         }
 
         CompositeFuture.all(subjectsFuture).setHandler(event -> {
@@ -763,14 +777,14 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     private void setMoyAndPosForSuivi(JsonArray notes, JsonArray compNotes, JsonArray moyFinalesEleves,
                                       JsonObject result, String idEleve, Long idPeriodAsked,
-                                      JsonArray tableauConversion, List<String> idsClassWithNoteAppCompNoteStudent) {
+                                      JsonArray tableauConversion, List<String> idsClassWithNoteAppCompNoteStudent, boolean isAvgSkill) {
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
                 noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves,
                         idsClassWithNoteAppCompNoteStudent, idPeriodAsked);
         noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves);
         noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false, tableauConversion,
-                idsClassWithNoteAppCompNoteStudent, idPeriodAsked);
+                idsClassWithNoteAppCompNoteStudent, idPeriodAsked, isAvgSkill);
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
         noteService.setRankAndMinMaxInClasseByPeriode(idPeriodAsked, idEleve, notesByDevoirByPeriodeClasse,
                 moyFinalesEleves, result);

@@ -24,10 +24,7 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
@@ -1257,8 +1254,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         if(nbEleve!=0)
             return Double.valueOf(decimalFormat.format((sumMoyClasse / nbEleve)).replaceAll(",", "."));
-      else
-          return Double.valueOf(decimalFormat.format((sumMoyClasse / 1)).replaceAll(",", "."));
+        else
+            return Double.valueOf(decimalFormat.format((sumMoyClasse / 1)).replaceAll(",", "."));
     }
 
     public void calculAndSetMoyenneClasseByPeriode(final JsonArray moyFinalesEleves,
@@ -1388,7 +1385,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 JsonObject moyFinaleJson = (JsonObject) moyFinale;
                 Long idP = moyFinaleJson.getLong("id_periode");
                 NoteDevoir noteEleve = (moyFinaleJson.getString("moyenne") != null) ?
-                new NoteDevoir(Double.valueOf(moyFinaleJson.getString("moyenne")),20.0, false, 1.0, moyFinaleJson.getString("id_eleve")) :
+                        new NoteDevoir(Double.valueOf(moyFinaleJson.getString("moyenne")),20.0, false, 1.0, moyFinaleJson.getString("id_eleve")) :
                         new NoteDevoir(null,20.0, false, 1.0, moyFinaleJson.getString("id_eleve"));
                 if(!notesByDevoirByPeriodeClasse.containsKey(idP))
                     notesByDevoirByPeriodeClasse.put(idP, new HashMap<>());
@@ -1521,7 +1518,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                          HashMap<Long, ArrayList<NoteDevoir>> notesByDevoirByPeriode,
                                          HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByPeriodeBySousMatiere,
                                          JsonArray tableauConversion,
-                                         List<String> idsClassWithNoteAppCompNoteStudent, Long idPeriodAsked){
+                                         List<String> idsClassWithNoteAppCompNoteStudent, Long idPeriodAsked, boolean isAvg){
         notesByDevoirByPeriode.put(null, new ArrayList<>());
 
         // 1- parcourir la listCompNotes pour en extraire les map map<idP, JAcompNote> et map<idP,map<idssM,JAcompNote>>
@@ -1559,7 +1556,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         //2- loop map<idP, JAcompNote> -> JAcompNoteMaxByPeriode -> map<idP,list<NoteDevoirMax>> = notesByDevoirByPeriode
         compNotesByPeriode.forEach((id_period,compNotes) -> {
 
-            Map<String, JsonObject> MaxCompNotesByCompetence = calculMaxCompNoteItem(compNotes, tableauConversion,true, true);
+            Map<String, JsonObject> MaxCompNotesByCompetence = calculMaxCompNoteItem(compNotes, tableauConversion,true, isAvg);
             MaxCompNotesByCompetence.forEach((id_comp,maxCompNote) -> {
                 NoteDevoir noteDevoir;
                 Long niveauFinal = maxCompNote.getLong("niveau_final");
@@ -1582,7 +1579,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         compNotesBySousMatByPeriode.forEach((id_periode,mapSousMatCompNotes) ->{
             mapSousMatCompNotes.forEach((id_sousMat, compNotesSousMat) -> {
                 Map<String,JsonObject> MaxCompNoteSousMatByComp = calculMaxCompNoteItem(compNotesSousMat, tableauConversion,
-                        false, true);
+                        false, isAvg);
 
                 MaxCompNoteSousMatByComp.forEach((id_comp,maxCompNoteSousMat) -> {
                     NoteDevoir noteDevoir = new NoteDevoir(maxCompNoteSousMat.getDouble("evaluation") +1.d,
@@ -1599,7 +1596,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public void calculPositionnementAutoByEleveByMatiere(JsonArray listCompNotes, JsonObject result, Boolean annual,
                                                          JsonArray tableauConversion,
                                                          List<String> idsClassWithNoteAppCompNoteStudent,
-                                                         Long idPeriodAsked) {
+                                                         Long idPeriodAsked, boolean isAvgSkill) {
         HashMap<Long, JsonArray> listMoyDevoirs = new HashMap<>();
         HashMap<Long, ArrayList<NoteDevoir>> notesByDevoirByPeriode = new HashMap<>();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByPeriodeBySousMatiere = new HashMap<>();
@@ -1608,7 +1605,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         result.put("_" + POSITIONNEMENTS_AUTO, new JsonObject());
 
         getMaxCompNoteByPeriode(listCompNotes, notesByDevoirByPeriode,notesByPeriodeBySousMatiere, tableauConversion,
-                idsClassWithNoteAppCompNoteStudent, idPeriodAsked);
+                idsClassWithNoteAppCompNoteStudent, idPeriodAsked ,isAvgSkill);
 
         // Paramètre de calcul des moyennes de compétencesNotes
         Boolean withStat = false;
@@ -1639,7 +1636,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
 
             if (listMoyDevoirs.get(idPeriode).size() > 0) {
-                log.info("STP ICI " + listMoyDevoirs.get(idPeriode).getJsonObject(0));
                 result.getJsonArray(POSITIONNEMENTS_AUTO).add(listMoyDevoirs.get(idPeriode).getJsonObject(0));
             } else {
                 result.getJsonArray(POSITIONNEMENTS_AUTO).add(new JsonObject()
@@ -1856,7 +1852,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         //récupérer les moysFinales => set mapIdEleveIdMatMoy
                         if (moyenneFinale != null ) {
                             if(!mapAllidMatAndidTeachers.containsKey(idMatMoyF))
-                            setListTeachers(services, multiTeachers,mapAllidMatAndidTeachers,idMatMoyF);
+                                setListTeachers(services, multiTeachers,mapAllidMatAndidTeachers,idMatMoyF);
                             if(mapAllidMatAndidTeachers.containsKey(idMatMoyF)){//idMatMoyF is on service
                                 setMapIdEleveMatMoy(mapIdEleveIdMatMoy, moyenneFinale, idEleveMoyF, idMatMoyF);
                             } else {
@@ -2314,6 +2310,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 List<Future> listFutures = new ArrayList<>(Arrays.asList(compNotesFuture, notesFuture,
                         moyennesFinalesFutures, appreciationsFutures, positionnementsFinauxFutures));
 
+                Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
+                structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
+                    if(event.isRight())
+                        isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
+                    else
+                        isAvgSkillpromise.fail(event.left().getValue());
+                });
+                listFutures.add(isAvgSkillpromise.future());
                 CompositeFuture.all(listFutures).setHandler( event -> {
                     if(event.succeeded()) {
                         // Rajout des moyennes finales
@@ -2329,7 +2333,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         if (idPeriode != null) {
                             // Cacul du positionnement auto
                             calculMoyennesCompetencesNotesForReleve(compNotesFuture.result(), resultHandler,
-                                    idPeriode, tableauDeConversionFuture.result(), elevesMapObject);
+                                    idPeriode, tableauDeConversionFuture.result(), elevesMapObject, isAvgSkillpromise.future().result());
 
                             // Format sous matières moyennes
                             addSousMatieres(elevesMapObject, sousMatiereFuture.result(), resultHandler, idPeriode);
@@ -2427,7 +2431,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                         null, true, annual,
                                         compNotesEvent -> formate(compNotesFuture, compNotesEvent));
 
+                                Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
+                                structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
+                                    if(event.isRight())
+                                        isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
+                                    else
+                                        isAvgSkillpromise.fail(event.left().getValue());
+                                });
+
+
                                 List<Future> listFutures = new ArrayList<>(Arrays.asList(bigRequestFuture, compNotesFuture, notesFuture));
+                                listFutures.add(isAvgSkillpromise.future());
                                 CompositeFuture.all(listFutures).setHandler(event -> {
                                     try{
                                         if(event.succeeded()) {
@@ -2503,7 +2517,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                         JsonObject resultNotes = new JsonObject();
                                                         calculPositionnementAutoByEleveByMatiere(compNotesEleve, resultNotes,
                                                                 annual, tableauDeConversionFuture.result(),
-                                                                null , null);
+                                                                null , null, isAvgSkillpromise.future().result());
                                                         if(eleveObject.containsKey(POSITIONNEMENT_AUTO)){
                                                             eleveObject.getJsonObject(POSITIONNEMENT_AUTO).put(idMatiere.toString(),
                                                                     resultNotes.getJsonArray(POSITIONNEMENTS_AUTO));
@@ -2987,7 +3001,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     private <T> void calculMoyennesCompetencesNotesForReleve (JsonArray listCompNotes, JsonObject result, Long idPeriode,
                                                               JsonArray tableauDeconversion,
-                                                              Map<String, JsonObject> eleveMapObject) {
+                                                              Map<String, JsonObject> eleveMapObject, Boolean isAvgSkill) {
 
         Map<String, JsonArray> notesByEleve = groupeNotesByStudent(listCompNotes);
 
@@ -3006,7 +3020,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             eleveObject.getJsonArray(COMPETENCES_NOTES_KEY).encode());
                 }
                 calculPositionnementAutoByEleveByMatiere(compNotesEleve, eleveObject,false, tableauDeconversion,
-                        null , null );
+                        null , null, isAvgSkill);
                 JsonObject positionnement = utilsService.getObjectForPeriode(
                         eleveObject.getJsonArray(POSITIONNEMENTS_AUTO), idPeriode, ID_PERIODE);
 
@@ -3503,109 +3517,123 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse, tableauEvent ->
                 formate(tableauDeConversionFuture, tableauEvent));
 
-        CompositeFuture.all(compNoteF, noteF, subjectF, tableauDeConversionFuture).setHandler(event -> {
-            if(event.failed()){
-                String message = "[getReleveDataForGraph] " + event.cause().getMessage();
-                log.error(message);
-                handler.handle(new Either.Left<>(message));
-                return;
-            }
+        Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
+        structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
+            if(event.isRight())
+                isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
+            else
+                isAvgSkillpromise.fail(event.left().getValue());
+        });
 
-            final JsonArray listCompNotes = compNoteF.result();
-            final JsonArray listNotes = noteF.result();
-            Map<String,JsonArray> matieresCompNotes = new HashMap<>();
-            Map<String,JsonArray> matieresCompNotesEleve = new HashMap<>();
+        isAvgSkillpromise.future()
+                .onSuccess(isAvgSkillpromiseResult -> CompositeFuture.all(compNoteF, noteF, subjectF, tableauDeConversionFuture).setHandler(event -> {
+                    if(event.failed()){
+                        String message = "[getReleveDataForGraph] " + event.cause().getMessage();
+                        log.error(message);
+                        handler.handle(new Either.Left<>(message));
+                        return;
+                    }
 
-            // 4. On regroupe  les compétences notes par idMatière
-            JsonArray idMatieres = groupDataByMatiere(listCompNotes, matieresCompNotes, matieresCompNotesEleve, idEleve,
-                    true);
+                    final JsonArray listCompNotes = compNoteF.result();
+                    final JsonArray listNotes = noteF.result();
+                    Map<String,JsonArray> matieresCompNotes = new HashMap<>();
+                    Map<String,JsonArray> matieresCompNotesEleve = new HashMap<>();
 
-            // 5. On regroupe les notes par idMatière
+                    // 4. On regroupe  les compétences notes par idMatière
+                    JsonArray idMatieres = groupDataByMatiere(listCompNotes, matieresCompNotes, matieresCompNotesEleve, idEleve,
+                            true);
 
-            Map<String,JsonArray> matieresNotes = new HashMap<>();
-            Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
-            idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes, matieresNotes, matieresNotesEleve, idEleve,
-                    false), idMatieres);
+                    // 5. On regroupe les notes par idMatière
 
-            Map<String, StatClass> mapMatieresStatClasseAndEleve = new HashMap<>();
+                    Map<String,JsonArray> matieresNotes = new HashMap<>();
+                    Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
+                    idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes, matieresNotes, matieresNotesEleve, idEleve,
+                            false), idMatieres);
 
-            StatMat statMat = new StatMat();
-            if(idPeriode != null) {
-                statMat.setMapIdMatStatclass(listNotes);
-                mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
-            } else { // notes order by periode
-                Map<Integer, JsonArray> mapIdPeriodeNotes = getListNotesByPeriode(listNotes, false);
-                if(!mapIdPeriodeNotes.isEmpty()) {
-                    for (int i = 0; i < idMatieres.size(); i++) {
-                        String idMatiere = idMatieres.getString(i);
-                        List<NoteDevoir> listAverageClass = new ArrayList<>();
-                        List<NoteDevoir> listAverageStudent = new ArrayList<>();
-                        Double annualClassAverage;
-                        Double annualClassMin = null;
-                        Double annualClassMax = null;
-                        Double annualAverageStudent;
-                        for(Map.Entry<Integer, JsonArray> IdPeriodeNotesEntry : mapIdPeriodeNotes.entrySet()){
-                            StatMat statMatP = new StatMat();
-                            statMatP.setMapIdMatStatclass(IdPeriodeNotesEntry.getValue());
-                            Map<String, StatClass> mapMatieresStatClasseAndEleveP = statMatP.getMapIdMatStatclass();
-                            StatClass statClasseP = mapMatieresStatClasseAndEleveP.get(idMatiere);
+                    Map<String, StatClass> mapMatieresStatClasseAndEleve = new HashMap<>();
 
-                            if (statClasseP != null && !statClasseP.getMapEleveStat().isEmpty()) {
-                                listAverageClass.add(new NoteDevoir
-                                        (statClasseP.getAverageClass(), new Double(20), false, 1.0));
-                                if (annualClassMin == null) {
-                                    annualClassMin = statClasseP.getMinMaxClass(true);
-                                } else {
-                                    if (statClasseP.getMinMaxClass(true) < annualClassMin)
-                                        annualClassMin = statClasseP.getMinMaxClass(true);
+                    StatMat statMat = new StatMat();
+                    if(idPeriode != null) {
+                        statMat.setMapIdMatStatclass(listNotes);
+                        mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
+                    } else { // notes order by periode
+                        Map<Integer, JsonArray> mapIdPeriodeNotes = getListNotesByPeriode(listNotes, false);
+                        if(!mapIdPeriodeNotes.isEmpty()) {
+                            for (int i = 0; i < idMatieres.size(); i++) {
+                                String idMatiere = idMatieres.getString(i);
+                                List<NoteDevoir> listAverageClass = new ArrayList<>();
+                                List<NoteDevoir> listAverageStudent = new ArrayList<>();
+                                Double annualClassAverage;
+                                Double annualClassMin = null;
+                                Double annualClassMax = null;
+                                Double annualAverageStudent;
+                                for(Map.Entry<Integer, JsonArray> IdPeriodeNotesEntry : mapIdPeriodeNotes.entrySet()){
+                                    StatMat statMatP = new StatMat();
+                                    statMatP.setMapIdMatStatclass(IdPeriodeNotesEntry.getValue());
+                                    Map<String, StatClass> mapMatieresStatClasseAndEleveP = statMatP.getMapIdMatStatclass();
+                                    StatClass statClasseP = mapMatieresStatClasseAndEleveP.get(idMatiere);
+
+                                    if (statClasseP != null && !statClasseP.getMapEleveStat().isEmpty()) {
+                                        listAverageClass.add(new NoteDevoir
+                                                (statClasseP.getAverageClass(), new Double(20), false, 1.0));
+                                        if (annualClassMin == null) {
+                                            annualClassMin = statClasseP.getMinMaxClass(true);
+                                        } else {
+                                            if (statClasseP.getMinMaxClass(true) < annualClassMin)
+                                                annualClassMin = statClasseP.getMinMaxClass(true);
+                                        }
+                                        if (annualClassMax == null) {
+                                            annualClassMax = statClasseP.getMinMaxClass(false);
+                                        } else {
+                                            if (statClasseP.getMinMaxClass(false) > annualClassMax)
+                                                annualClassMax = statClasseP.getMinMaxClass(false);
+                                        }
+
+                                        if (statClasseP.getMoyenneEleve(idEleve) != null) {
+                                            listAverageStudent.add(new NoteDevoir
+                                                    (statClasseP.getMoyenneEleve(idEleve), new Double(20), false, 1.0));
+                                        }
+                                    }
                                 }
-                                if (annualClassMax == null) {
-                                    annualClassMax = statClasseP.getMinMaxClass(false);
-                                } else {
-                                    if (statClasseP.getMinMaxClass(false) > annualClassMax)
-                                        annualClassMax = statClasseP.getMinMaxClass(false);
-                                }
 
-                                if (statClasseP.getMoyenneEleve(idEleve) != null) {
-                                    listAverageStudent.add(new NoteDevoir
-                                            (statClasseP.getMoyenneEleve(idEleve), new Double(20), false, 1.0));
+                                StatEleve statEleveAnnual = new StatEleve();
+                                StatClass statClassAnnual = new StatClass();
+                                if( !listAverageClass.isEmpty() ){
+                                    if( !listAverageStudent.isEmpty() ) {
+                                        annualAverageStudent = utilsService.calculMoyenneParDiviseur(listAverageStudent,
+                                                false).getDouble("moyenne");
+                                        statEleveAnnual.setMoyenneAuto(annualAverageStudent);
+                                        statClassAnnual.getMapEleveStat().put(idEleve, statEleveAnnual);
+                                    }
+
+                                    annualClassAverage = utilsService.calculMoyenneParDiviseur(listAverageClass,
+                                            false).getDouble("moyenne");
+
+                                    statClassAnnual.setAverageClass(annualClassAverage);
+                                    statClassAnnual.setMax(annualClassMax);
+                                    statClassAnnual.setMin(annualClassMin);
+                                    mapMatieresStatClasseAndEleve.put(idMatiere, statClassAnnual);
                                 }
                             }
-                        }
 
-                        StatEleve statEleveAnnual = new StatEleve();
-                        StatClass statClassAnnual = new StatClass();
-                        if( !listAverageClass.isEmpty() ){
-                            if( !listAverageStudent.isEmpty() ) {
-                                annualAverageStudent = utilsService.calculMoyenneParDiviseur(listAverageStudent,
-                                        false).getDouble("moyenne");
-                                statEleveAnnual.setMoyenneAuto(annualAverageStudent);
-                                statClassAnnual.getMapEleveStat().put(idEleve, statEleveAnnual);
-                            }
-
-                            annualClassAverage = utilsService.calculMoyenneParDiviseur(listAverageClass,
-                                    false).getDouble("moyenne");
-
-                            statClassAnnual.setAverageClass(annualClassAverage);
-                            statClassAnnual.setMax(annualClassMax);
-                            statClassAnnual.setMin(annualClassMin);
-                            mapMatieresStatClasseAndEleve.put(idMatiere, statClassAnnual);
+                            statMat.setMapIdMatStatclass(mapMatieresStatClasseAndEleve);
+                        } else {
+                            statMat.setMapIdMatStatclass(listNotes);
+                            mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
                         }
                     }
 
-                    statMat.setMapIdMatStatclass(mapMatieresStatClasseAndEleve);
-                } else {
-                    statMat.setMapIdMatStatclass(listNotes);
-                    mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
-                }
-            }
-
-            // 6. On récupère tous les libelles des matières de l'établissement et on fait correspondre
-            // aux résultats par idMatière
-            linkIdSubjectToLibelle(idEleve, idPeriode, getMaxByItem(matieresCompNotes, tableauDeConversionFuture.result()),
-                    getMaxByItem(matieresCompNotesEleve, tableauDeConversionFuture.result()), matieresNotes, matieresNotesEleve,
-                    mapMatieresStatClasseAndEleve, idMatieres, subjectF.result(), handler);
-        });
+                    // 6. On récupère tous les libelles des matières de l'établissement et on fait correspondre
+                    // aux résultats par idMatière
+                    linkIdSubjectToLibelle(idEleve, idPeriode, getMaxByItem(matieresCompNotes, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ),
+                            getMaxByItem(matieresCompNotesEleve, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ), matieresNotes, matieresNotesEleve,
+                            mapMatieresStatClasseAndEleve, idMatieres, subjectF.result(), handler);
+                }))
+                .onFailure(err ->{
+                    String message = "[getReleveDataForGraph] " + err.getMessage();
+                    log.error(message);
+                    handler.handle(new Either.Left<>(message));
+                });
     }
 
     public void getDataGraphDomaine(final String idEleve, JsonArray groupIds, final String idEtablissement ,
@@ -3644,21 +3672,37 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse,tableauEvent ->
                 formate(tableauDeConversionFuture, tableauEvent));
 
-        // 4. On Lie les compétences-Notes à leur libellé
-        CompositeFuture.all(compNotesFuture, domainesCycleFuture,tableauDeConversionFuture).setHandler(event -> {
-            if (event.succeeded()) {
-                handler.handle(new Either.Right<>(linkCompNoteToLibelle(domainesCycleFuture.result(),
-                        compNotesFuture.result(), tableauDeConversionFuture.result(), idEleve)));
-            } else {
-                String message = event.cause().getMessage();
-                handler.handle(new Either.Left<>(message));
-                log.error(message);
-            }
+        Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
+        structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
+            if(event.isRight())
+                isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
+            else
+                isAvgSkillpromise.fail(event.left().getValue());
         });
+
+        isAvgSkillpromise.future()
+                .onSuccess(isAvgSkillpromiseResult -> {
+                    CompositeFuture.all(compNotesFuture, domainesCycleFuture,tableauDeConversionFuture).setHandler(event -> {
+                        if (event.succeeded()) {
+                            handler.handle(new Either.Right<>(linkCompNoteToLibelle(domainesCycleFuture.result(),
+                                    compNotesFuture.result(), tableauDeConversionFuture.result(), idEleve, isAvgSkillpromiseResult)));
+                        } else {
+                            String message = event.cause().getMessage();
+                            handler.handle(new Either.Left<>(message));
+                            log.error(message);
+                        }
+                    });
+                })
+                .onFailure(err ->{
+                    handler.handle(new Either.Left<>(err.getMessage()));
+                    log.error(err.getMessage());
+                });
+        // 4. On Lie les compétences-Notes à leur libellé
+
 
     }
 
-    private JsonArray linkCompNoteToLibelle(JsonArray domaines, JsonArray compNotes, JsonArray tableauConversion, String idEleve) {
+    private JsonArray linkCompNoteToLibelle(JsonArray domaines, JsonArray compNotes, JsonArray tableauConversion, String idEleve, boolean isAvgSkill) {
 
         Map<Long,JsonObject> domainesMap = new HashMap<>();
         JsonArray res = new JsonArray();
@@ -3691,8 +3735,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonArray competencesNotes =
                     (data!=null)?data.getJsonArray("competencesNotes") : new JsonArray();
             if (data!= null) {
-                res.add(domaine.put("competencesNotes",   getMaxByItemDomaine(competencesNotes,tableauConversion))
-                        .put("competencesNotesEleve", getMaxByItemDomaine(competencesNotesEleve,tableauConversion)));
+                res.add(domaine.put("competencesNotes",   getMaxByItemDomaine(competencesNotes,tableauConversion, isAvgSkill))
+                        .put("competencesNotesEleve", getMaxByItemDomaine(competencesNotesEleve,tableauConversion, isAvgSkill)));
             }
         }
         return res;
@@ -3743,13 +3787,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return mapIdPeriodeListeNotes;
     }
     // Permet de Calculer le Max des Niveaux Atteints par Items regroupés par Matière
-    private Map<String,JsonArray> getMaxByItem(Map<String,JsonArray> mapData, JsonArray tableauConversion){
+    private Map<String,JsonArray> getMaxByItem(Map<String, JsonArray> mapData, JsonArray tableauConversion, boolean isAvgSkill){
         Map<String,JsonArray> result = new HashMap<>();
 
         for (Map.Entry<String,JsonArray> entry: mapData.entrySet()) {
             String idEntry = entry.getKey();
             JsonArray currentEntry = entry.getValue();
-            Map<String, JsonObject> maxComp = calculMaxCompNoteItem(currentEntry, tableauConversion,true, false);
+            Map<String, JsonObject> maxComp = calculMaxCompNoteItem(currentEntry, tableauConversion,true, isAvgSkill);
             result.put(idEntry, new JsonArray());
             for (Map.Entry<String,JsonObject> max: maxComp.entrySet()) {
                 result.get(idEntry).add(max.getValue());
@@ -3759,10 +3803,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     // Permet de Calculer le Max des Niveaux Atteints par Items regroupés par Domaine
-    private JsonArray getMaxByItemDomaine(JsonArray compNotes,JsonArray tableauConversion){
+    private JsonArray getMaxByItemDomaine(JsonArray compNotes, JsonArray tableauConversion, boolean isAvgSkill){
         JsonArray result = new JsonArray();
 
-        Map<String, JsonObject> maxCompNote = calculMaxCompNoteItem(compNotes, tableauConversion,true, false);
+        Map<String, JsonObject> maxCompNote = calculMaxCompNoteItem(compNotes, tableauConversion,true, isAvgSkill);
         for (Map.Entry<String,JsonObject> max: maxCompNote.entrySet()) {
             result.add(max.getValue());
         }
@@ -4080,6 +4124,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 formate(tableauDeConversionFuture, tableauEvent));
         detailsFuture.add(tableauDeConversionFuture);
 
+        Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
+        detailsFuture.add(isAvgSkillpromise.future());
+        structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
+            if(event.isRight())
+                isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
+            else
+                isAvgSkillpromise.fail(event.left().getValue());
+        });
+
         CompositeFuture.all(detailsFuture).setHandler(event -> {
             if(event.failed()){
                 String error = event.cause().getMessage();
@@ -4095,7 +4148,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             // Calcul des positionements
             JsonArray listCompNotes = listCompNotesF.result();
             calculPositionnementAutoByEleveByMatiere(listCompNotes, result,false, tableauDeConversionFuture.result(),
-                    null ,null );
+                    null ,null, isAvgSkillpromise.future().result());
 
             // Calcul des moyennes par période pour la classe
             JsonArray moyFinalesEleves = moyFinalesElevesF.result();
