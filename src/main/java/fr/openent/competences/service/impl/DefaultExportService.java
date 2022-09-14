@@ -2186,7 +2186,6 @@ public class DefaultExportService implements ExportService {
                 }
             }
             if(coefficient != 0 ){
-                log.info(moyenneTotal / coefficient);
                 DecimalFormat decimalFormat = new DecimalFormat("#.00");
                 decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
                 double moyenne = Double.parseDouble(decimalFormat.format((moyenneTotal / coefficient)).replaceAll(",", "."));
