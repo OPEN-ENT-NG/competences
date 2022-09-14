@@ -20,6 +20,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.ExportEvaluationHelper;
 import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.model.Service;
@@ -1935,7 +1936,7 @@ public class DefaultExportService implements ExportService {
                     if(service != null) {
                         Boolean isVisible = service.isVisible();
                         JsonObject mainTeacher = (JsonObject) users.stream()
-                                .filter(el -> service.getTeacher().getId().equals(((JsonObject) el).getString("id")))
+                                .filter(el -> service.getTeacher().getId().equals(((JsonObject) el).getString(Field.ID)))
                                 .findFirst().orElse(null);
 
                         if(mainTeacher != null) {
@@ -2113,13 +2114,15 @@ public class DefaultExportService implements ExportService {
 
     private void handleHasDevoirMatiere(JsonObject matiere, List<Service> services, List<NoteDevoir> listeNoteDevoirs, Map<Long, List<NoteDevoir>> listNotesSousMatiere, Map<String, Map<Long, JsonArray>> devoirsSousMat, String idMatiere, boolean hasDevoirs) {
         if (hasDevoirs) {
-            String keySousMatiere = "sous_matieres";
-            JsonArray sousMatieres = matiere.getJsonArray(keySousMatiere);
-            matiere.put("hasSousMatiere", sousMatieres.size() > 0);
+            Boolean statistiques = false;
+            Boolean annual = false;
+            int diviseur = 20;
+            JsonArray sousMatieres = matiere.getJsonArray(Field.SOUS_MATIERES);
+            matiere.put(Field.HASSOUSMATIERE, sousMatieres.size() > 0);
             JsonArray sousMatieresWithoutFirst = new JsonArray();
             // calcul de la moyenne de l'eleve pour la matiere
-            if(matiere.getString(MOYENNE).equals("NN")) {
-                JsonObject moyenneMatiere = utilsService.calculMoyenne(listeNoteDevoirs, false, 20, false);// TODO recuper le diviseur de la matiere
+            if(matiere.getString(MOYENNE).equals(Field.NN)) {
+                JsonObject moyenneMatiere = utilsService.calculMoyenne(listeNoteDevoirs, statistiques, diviseur, annual);
                 if(moyenneMatiere.getValue(MOYENNE) != null && sousMatieres.size() == 0) {
                     matiere.put(MOYENNE, moyenneMatiere.getValue(MOYENNE).toString());
                 }
@@ -2137,9 +2140,9 @@ public class DefaultExportService implements ExportService {
                 double currentCoeff = 1.d;
                 JsonObject moySousMatiere = null;
                 if (isNotNull(notesSousMat)) {
-                    moySousMatiere  = utilsService.calculMoyenne(notesSousMat, false, 20, false);
+                    moySousMatiere  = utilsService.calculMoyenne(notesSousMat, statistiques, diviseur, annual);
                     moy = moySousMatiere.getValue(MOYENNE).toString();
-                    if (!moy.equals("NN"))
+                    if (!moy.equals(Field.NN))
                         moy += "/20";
                 }
                 sousMatiere.put(MOYENNE, moy).put("isLast", i == sousMatieres.size() - 1);
@@ -2156,7 +2159,7 @@ public class DefaultExportService implements ExportService {
                     //Récupération du coeff de sous-matière en fonction du Service
                     Service service = services.stream()
                             .filter(ser -> idMatiere.equals(ser.getMatiere().getId()) &&
-                                    ser.getTeacher().getId().equals(finalDevoirsSousMatieres.getJsonObject(0).getString("owner")))
+                                    ser.getTeacher().getId().equals(finalDevoirsSousMatieres.getJsonObject(0).getString(Field.OWNER)))
                             .findFirst().orElse(null);
                     if (service != null) {
                         SubTopic subTopic  = service.getSubtopics().stream()
@@ -2169,7 +2172,7 @@ public class DefaultExportService implements ExportService {
                     }
                 }
                 if(currentCoeff != 1)
-                    sousMatiere.put("coeff",currentCoeff);
+                    sousMatiere.put(Field.COEFF,currentCoeff);
                 if(moySousMatiere != null) {
                     coefficient += currentCoeff;
                     moyenneTotal += moySousMatiere.getDouble(MOYENNE) * currentCoeff;
@@ -2188,7 +2191,7 @@ public class DefaultExportService implements ExportService {
                 double moyenne = Double.parseDouble(decimalFormat.format((moyenneTotal / coefficient)).replaceAll(",", "."));
                 matiere.put(MOYENNE , moyenne + "/20");
             }
-            matiere.put(keySousMatiere + "_tail", sousMatieresWithoutFirst);
+            matiere.put(Field.SOUS_MATIERES + Field._TAIL, sousMatieresWithoutFirst);
         }
     }
 

@@ -204,8 +204,6 @@ export async function calculMoyennes(periode_idType, id_eleve, matieresReleve, m
                         }
                         if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
                             for (let sousMat of matiere.sousMatieres.all) {
-                                console.log(matiere.name)
-                                console.log(devoirsMatieres)
                                 let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
                                 if (devoirsSousMat.length > 0) {
                                     let moyenneFinale = _.findWhere(moyennesFinales, {id_matiere: sousMat.id_type_sousmatiere});
