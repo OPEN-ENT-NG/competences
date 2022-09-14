@@ -69,6 +69,10 @@ public class Field {
     public static final String DIVISEUR = "diviseur";
     public static final String RAMENER_SUR = "ramener_sur";
     public static final String DEVOIRS = "devoirs";
+    public static final String SOUS_MATIERES = "sous_matieres";
+    public static final String _TAIL = "_tail";
+    public static final String HASSOUSMATIERE = "hasSousMatiere";
+    public static final String COEFF = "coeff";
 
 
     //subTopic

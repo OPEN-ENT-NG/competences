@@ -20,8 +20,12 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.ExportEvaluationHelper;
 import fr.openent.competences.helpers.FormateFutureEvent;
+import fr.openent.competences.model.Service;
+import fr.openent.competences.model.Structure;
+import fr.openent.competences.model.SubTopic;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.Either.Left;
@@ -55,11 +59,8 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
 import java.text.DecimalFormat;
-
 import java.text.ParseException;
-
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -69,6 +70,7 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.helpers.ExportEvaluationHelper.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.*;
 
@@ -1232,7 +1234,7 @@ public class DefaultExportService implements ExportService {
     }
 
     private JsonArray calcWidthNotePeriode(Boolean text, Boolean usePerso, Map<String, JsonObject> maitrises,
-                                    Map<String, Long> competenceNotes, List<Long> competenceNotesActualClasse, Integer nbDevoir) {
+                                           Map<String, Long> competenceNotes, List<Long> competenceNotesActualClasse, Integer nbDevoir) {
 
         JsonArray resultList = new fr.wseduc.webutils.collections.JsonArray();
         for (Map.Entry<String, Long> notesMaitrises : competenceNotes.entrySet()) {
@@ -1795,6 +1797,8 @@ public class DefaultExportService implements ExportService {
                     idPeriode != null ? idPeriode.intValue() : null, multiTeacherEvent -> {
                         formate(multiTeachersFuture, multiTeacherEvent);
                     });
+            Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+            utilsService.getSubTopicCoeff(idEtablissement,subTopicCoefPromise);
 
             Future<JsonArray> servicesFuture = Future.future();
             utilsService.getServices(idEtablissement, new JsonArray().add(idClass), servicesEvent -> {
@@ -1852,16 +1856,19 @@ public class DefaultExportService implements ExportService {
             }
 
             final Boolean finalBackUp = isBackup;
-            CompositeFuture.all(multiTeachersFuture, servicesFuture).setHandler(futuresEvent -> {
+            CompositeFuture.all(multiTeachersFuture, servicesFuture , subTopicCoefPromise.future()).setHandler(futuresEvent -> {
                 final JsonArray multiTeachers = multiTeachersFuture.result();
-                final JsonArray services = servicesFuture.result();
-
+                final JsonArray servicesJson = servicesFuture.result();
+                final List<SubTopic> subTopics =  subTopicCoefPromise.future().result();
                 final JsonArray idEnseignants = new JsonArray();
-
-                for (int i = 0; i < services.size(); i++) {
-                    JsonObject service = services.getJsonObject(i);
+                List<Service> services = new ArrayList<>();
+                Structure structure = new Structure();
+                structure.setId(idEtablissement);
+                for (int i = 0; i < servicesJson.size(); i++) {
+                    JsonObject service = servicesJson.getJsonObject(i);
                     idEnseignants.add(service.getString("id_enseignant"));
                 }
+                setServices(structure, servicesJson, services,subTopics);
 
                 for (int i = 0; i < multiTeachers.size(); i++) {
                     JsonObject multiTeacher = multiTeachers.getJsonObject(i);
@@ -1869,7 +1876,7 @@ public class DefaultExportService implements ExportService {
                 }
 
                 getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON, periodeJSON, userJSON, etabJSON,
-                        finalBackUp, moyennesFinales, multiTeachers, services, handler);
+                        finalBackUp, moyennesFinales, multiTeachers, services,  handler);
             });
         });
     }
@@ -1890,7 +1897,7 @@ public class DefaultExportService implements ExportService {
     public void getEnseignantsMatieres(final JsonArray matieres, JsonArray idEnseignants, final JsonArray devoirsJson,
                                        final JsonObject periodeJson, final JsonObject userJson,
                                        final JsonObject etabJson, final boolean isBackup, final JsonArray moyennesFinales,
-                                       final JsonArray multiTeachers, final JsonArray services,
+                                       final JsonArray multiTeachers, final List<Service> services,
                                        Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getUsers")
@@ -1916,21 +1923,20 @@ public class DefaultExportService implements ExportService {
                             .filter(el -> idMatiere.equals(((JsonObject) el).getString("id_matiere")))
                             .findFirst().orElse(new JsonObject());
 
-                    getDevoirsByMatiere(devoirsJson, matiere, moyenneFinale);
+                    getDevoirsByMatiere(devoirsJson, matiere, services, moyenneFinale);
 
                     JsonArray _enseignantMatiere = matiere.getJsonArray("displayNameEnseignant");
                     if (_enseignantMatiere == null) {
                         _enseignantMatiere = new JsonArray();
                     }
 
-                    JsonObject service = (JsonObject) services.stream()
-                            .filter(el -> idMatiere.equals(((JsonObject) el).getString("id_matiere")))
+                    Service service =  services.stream()
+                            .filter(el -> idMatiere.equals(el.getMatiere().getId()))
                             .findFirst().orElse(null);
                     if(service != null) {
-                        Boolean isVisible = service.getBoolean("is_visible");
-
+                        Boolean isVisible = service.isVisible();
                         JsonObject mainTeacher = (JsonObject) users.stream()
-                                .filter(el -> service.getString("id_enseignant").equals(((JsonObject) el).getString("id")))
+                                .filter(el -> service.getTeacher().getId().equals(((JsonObject) el).getString(Field.ID)))
                                 .findFirst().orElse(null);
 
                         if(mainTeacher != null) {
@@ -2000,11 +2006,12 @@ public class DefaultExportService implements ExportService {
 
     /**
      * Récupère les devoirs de la matière et les positionnent sur celle ci.
-     *
-     * @param devoirsJson  la liste de tous les devoirs de l'élève.
+     *  @param devoirsJson  la liste de tous les devoirs de l'élève.
      * @param matiere la matière dont on cherche les devoirs.
+     * @param services
+     * @param moyenneFinale
      */
-    private void getDevoirsByMatiere(JsonArray devoirsJson, JsonObject matiere, JsonObject moyenneFinale) {
+    private void getDevoirsByMatiere(JsonArray devoirsJson, JsonObject matiere, List<Service> services, JsonObject moyenneFinale) {
         DecimalFormat df = new DecimalFormat("0.#");
         df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
 
@@ -2096,7 +2103,6 @@ public class DefaultExportService implements ExportService {
         matiere.put("hasDevoirs", hasDevoirs);
 
         matiere.put(MOYENNE, "NN");
-
         if(!moyenneFinale.isEmpty()) {
             if(isNotNull(moyenneFinale.getValue("moyenne"))) {
                 matiere.put(MOYENNE, moyenneFinale.getValue("moyenne").toString());
@@ -2104,50 +2110,88 @@ public class DefaultExportService implements ExportService {
             }
         }
 
+        handleHasDevoirMatiere(matiere, services, listeNoteDevoirs, listNotesSousMatiere, devoirsSousMat, idMatiere, hasDevoirs);
+    }
+
+    private void handleHasDevoirMatiere(JsonObject matiere, List<Service> services, List<NoteDevoir> listeNoteDevoirs, Map<Long, List<NoteDevoir>> listNotesSousMatiere, Map<String, Map<Long, JsonArray>> devoirsSousMat, String idMatiere, boolean hasDevoirs) {
         if (hasDevoirs) {
+            Boolean statistiques = false;
+            Boolean annual = false;
+            int diviseur = 20;
+            JsonArray sousMatieres = matiere.getJsonArray(Field.SOUS_MATIERES);
+            matiere.put(Field.HASSOUSMATIERE, sousMatieres.size() > 0);
+            JsonArray sousMatieresWithoutFirst = new JsonArray();
             // calcul de la moyenne de l'eleve pour la matiere
-            if(matiere.getString(MOYENNE).equals("NN")) {
-                JsonObject moyenneMatiere = utilsService.calculMoyenne(listeNoteDevoirs, false, 20, false);// TODO recuper le diviseur de la matiere
-                if(moyenneMatiere.getValue(MOYENNE) != null) {
+            if(matiere.getString(MOYENNE).equals(Field.NN)) {
+                JsonObject moyenneMatiere = utilsService.calculMoyenne(listeNoteDevoirs, statistiques, diviseur, annual);
+                if(moyenneMatiere.getValue(MOYENNE) != null && sousMatieres.size() == 0) {
                     matiere.put(MOYENNE, moyenneMatiere.getValue(MOYENNE).toString());
                 }
             }
-
             matiere.put("hasDiviseurMatiere", !matiere.getValue(MOYENNE).equals("NN"));
             matiere.put(MOYENNE_NON_NOTE, matiere.getValue(MOYENNE).equals("NN"));
-
-            String keySousMatiere = "sous_matieres";
-            JsonArray sousMatieres = matiere.getJsonArray(keySousMatiere);
-            matiere.put("hasSousMatiere", sousMatieres.size() > 0);
-            JsonArray sousMatieresWithoutFirst = new JsonArray();
-
+            double coefficient = 0.d;
+            double moyenneTotal = 0.d;
             for(int i = 0; i < sousMatieres.size(); i++) {
                 JsonObject sousMatiere = sousMatieres.getJsonObject(i);
                 Long idSousMatiere = sousMatiere.getLong("id_type_sousmatiere");
                 List<NoteDevoir> notesSousMat = listNotesSousMatiere.get(idSousMatiere);
                 String moy = "NN";
-                if(isNotNull(notesSousMat)) {
-                    JsonObject moySousMatiere = utilsService.calculMoyenne(notesSousMat, false, 20, false);
+                //Si aucun coeff de présent -> le coeff sera de 1.d
+                double currentCoeff = 1.d;
+                JsonObject moySousMatiere = null;
+                if (isNotNull(notesSousMat)) {
+                    moySousMatiere  = utilsService.calculMoyenne(notesSousMat, statistiques, diviseur, annual);
                     moy = moySousMatiere.getValue(MOYENNE).toString();
-                    if(!moy.equals("NN"))
+                    if (!moy.equals(Field.NN))
                         moy += "/20";
                 }
                 sousMatiere.put(MOYENNE, moy).put("isLast", i == sousMatieres.size() - 1);
                 sousMatiere.put(MOYENNE_NON_NOTE, sousMatiere.getValue(MOYENNE).equals("NN"));
                 JsonArray devoirsSousMatieres = new JsonArray();
-                if(isNotNull(devoirsSousMat.get(idMatiere))) {
-                    if(isNotNull(devoirsSousMat.get(idMatiere).get(idSousMatiere))) {
+                if (isNotNull(devoirsSousMat.get(idMatiere))) {
+                    if (isNotNull(devoirsSousMat.get(idMatiere).get(idSousMatiere))) {
                         devoirsSousMatieres = devoirsSousMat.get(idMatiere).get(idSousMatiere);
                     }
                 }
+                if (devoirsSousMatieres.size() > 0) {
+                    JsonArray finalDevoirsSousMatieres = devoirsSousMatieres;
+
+                    //Récupération du coeff de sous-matière en fonction du Service
+                    Service service = services.stream()
+                            .filter(ser -> idMatiere.equals(ser.getMatiere().getId()) &&
+                                    ser.getTeacher().getId().equals(finalDevoirsSousMatieres.getJsonObject(0).getString(Field.OWNER)))
+                            .findFirst().orElse(null);
+                    if (service != null) {
+                        SubTopic subTopic  = service.getSubtopics().stream()
+                                .filter(subTopic1 ->  idSousMatiere.equals(subTopic1.getId())
+                                )
+                                .findFirst().orElse(null);
+                        if(subTopic != null) {
+                            currentCoeff = subTopic.getCoefficient();
+                        }
+                    }
+                }
+                if(currentCoeff != 1)
+                    sousMatiere.put(Field.COEFF,currentCoeff);
+                if(moySousMatiere != null) {
+                    coefficient += currentCoeff;
+                    moyenneTotal += moySousMatiere.getDouble(MOYENNE) * currentCoeff;
+                }
                 sousMatiere.put(DEVOIRS, devoirsSousMatieres);
-                if(i == 0) {
+                if (i == 0) {
                     matiere.put("first_sous_matieres", sousMatiere);
                 } else {
                     sousMatieresWithoutFirst.add(sousMatiere);
                 }
             }
-            matiere.put(keySousMatiere + "_tail", sousMatieresWithoutFirst);
+            if(coefficient != 0 ){
+                DecimalFormat decimalFormat = new DecimalFormat("#.00");
+                decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
+                double moyenne = Double.parseDouble(decimalFormat.format((moyenneTotal / coefficient)).replaceAll(",", "."));
+                matiere.put(MOYENNE , moyenne + "/20");
+            }
+            matiere.put(Field.SOUS_MATIERES + Field._TAIL, sousMatieresWithoutFirst);
         }
     }
 
