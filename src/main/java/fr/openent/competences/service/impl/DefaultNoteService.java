@@ -20,7 +20,6 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.*;
-import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
@@ -101,7 +100,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         utilsService = new DefaultUtilsService(eb);
         annotationService = new DefaultAnnotationService(COMPETENCES_SCHEMA, REL_ANNOTATIONS_DEVOIRS_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE);
-        structureOptionsService = new DefaultStructureOptions(Competences.EVAL_SCHEMA, Field.STRUTUCTURE_OPTIONS);
+        structureOptionsService = new DefaultStructureOptions();
     }
 
     @Override

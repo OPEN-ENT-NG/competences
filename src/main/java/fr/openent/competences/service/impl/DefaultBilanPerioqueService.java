@@ -3,7 +3,6 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.EventType;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.service.*;
@@ -51,7 +50,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         devoirService = new DefaultDevoirService(eb);
         elementProgramme = new DefaultElementProgramme() ;
         defautlMatiereService = new DefaultMatiereService(eb);
-        structureOptionsService = new DefaultStructureOptions(Competences.EVAL_SCHEMA, Field.STRUTUCTURE_OPTIONS);
+        structureOptionsService = new DefaultStructureOptions();
         sql = Sql.getInstance();
     }
 
