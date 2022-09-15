@@ -153,7 +153,7 @@
                                         ng-disabled="modalite === lang.translate('multiples')" >[[modalite]]</option>
                             </select>
                         </div>
-                        <div class="cellTab one cellTab-center">
+                        <div class="cellTab one cellTab-center flex-row">
                             <div class="five inline-block">
                                 <div class="svg-image">
                                     <input ng-show="service.hasAllServicesEvaluable()" type="image" src="/competences/public/img/scss/checkbox-marked.svg"
@@ -176,7 +176,7 @@
                                 </div>
                             </div>
                         </div>
-                        </div>
+                    </div>
                     <!--SUBTOPICS -->
                     <div class="twelve row serviceList subList" ng-repeat="subTopic in service.subTopics" ng-show="service.deploy" >
                         <div class="[[columns.matiere.size]] cellTab ellipsis cellTab-left" tooltip="[[subTopic.libelle]"><span class="tabulation">[[subTopic.libelle]]</span></div>
