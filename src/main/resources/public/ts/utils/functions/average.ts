@@ -78,7 +78,7 @@ function getMoyenne (devoirs) {
 
 function getSumAndCoeff (devoirs) {
     if(devoirs.length == 0){
-        return ["NN", "NN"];
+        return [null, null];
     } else {
         let diviseurM = 20;
 
@@ -117,7 +117,7 @@ function getSumAndCoeff (devoirs) {
 
             return [sum, coeff];
         }else{
-            return ["NN", "NN"];
+            return [null, null];
         }
     }
 }
@@ -137,13 +137,13 @@ function addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales) {
 }
 
 function getMoyenneSubTopic(matiere: any, devoirsMatieres: any[], subTopicsServices, moyennesFinales) {
-    let coefficientTemp:number|string;
-    let sumMoyenneTemp:number|string;
+    let coefficientTemp:number;
+    let sumMoyenneTemp:number;
     let sumMoyenne:number = 0;
     let coefficientMoyenne:number = 0;
     for (let sousMat of matiere.sousMatieres.all) {
-        let coefficientSubTopic:number | string = 0;
-        let sumMoyenneSubTopic:number | string = 0;
+        let coefficientSubTopic:number = 0;
+        let sumMoyenneSubTopic:number = 0;
         let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
         let mapTeacherDevoirs = new Map();
 
@@ -176,14 +176,20 @@ function getMoyenneSubTopic(matiere: any, devoirsMatieres: any[], subTopicsServi
                     }
                 } else {
                     [sumMoyenneTemp, coefficientTemp] = getSumAndCoeff(devoirArray);
-
-                    sumMoyenneSubTopic += sumMoyenneTemp;
-                    coefficientSubTopic += coefficientTemp;
+                    if (sumMoyenneTemp != null && coefficientTemp != null) {
+                        sumMoyenneSubTopic += sumMoyenneTemp;
+                        coefficientSubTopic += coefficientTemp;
+                    }
                 }
             })
-            sousMat.moyenne = (sumMoyenneSubTopic / coefficientSubTopic).toFixed(1);
-            sumMoyenne += sousMat.moyenne * coefficient;
-            coefficientMoyenne += coefficient;
+            if (coefficientSubTopic == 0) {
+                sousMat.moyenne = "NN";
+            }
+            else {
+                sousMat.moyenne = (sumMoyenneSubTopic / coefficientSubTopic).toFixed(1);
+                sumMoyenne += sousMat.moyenne * coefficient;
+                coefficientMoyenne += coefficient;
+            }
         } else {
             sousMat.moyenne = "";
         }
@@ -192,7 +198,7 @@ function getMoyenneSubTopic(matiere: any, devoirsMatieres: any[], subTopicsServi
     if (coefficientMoyenne != 0)
         matiere.moyenne = (sumMoyenne / coefficientMoyenne).toFixed(1);
     else
-        matiere.moyenne = ""
+        matiere.moyenne = "";
 }
 
 export async function calculMoyennesWithSubTopic(periode_idType, id_eleve, matieresReleve, matieres, dataReleveDevoirs,subTopicsServices) {
