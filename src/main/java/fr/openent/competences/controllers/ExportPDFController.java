@@ -619,13 +619,13 @@ public class ExportPDFController extends ControllerHelper {
             formate(multiTeachersFuture, event);
         });
 
-        Promise<Object> multiTeachingPromise = Promise.promise();
+        Promise<JsonArray> multiTeachingPromise = Promise.promise();
         utilsService.getMultiTeachers(idEtablissement,
-                new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise));
+                new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
-        Promise<Object> servicesPromise = Promise.promise();
+        Promise<JsonArray> servicesPromise = Promise.promise();
         utilsService.getServices(idEtablissement,
-                new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
+                new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise.future()));
 
         Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
         utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
@@ -636,8 +636,8 @@ public class ExportPDFController extends ControllerHelper {
 
                 Structure structure = new Structure();
                 structure.setId(idEtablissement);
-                JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
-                JsonArray multiTeachers = (JsonArray) multiTeachingPromise.future().result();
+                JsonArray servicesJson = servicesPromise.future().result();
+                JsonArray multiTeachers = multiTeachingPromise.future().result();
                 List<SubTopic> subTopics = subTopicCoefPromise.future().result();
 
                 List<Service> services = new ArrayList<>();
@@ -682,8 +682,8 @@ public class ExportPDFController extends ControllerHelper {
                                     JsonObject lineObject = (JsonObject) line;
 
                                     JsonObject key = new JsonObject();
-                                    key.put("id_matiere", lineObject.getString("id_matiere"));
-                                    key.put("id_groupe", lineObject.getString("id_groupe"));
+                                    key.put(Field.ID_MATIERE, lineObject.getString(Field.ID_MATIERE));
+                                    key.put(Field.ID_GROUPE, lineObject.getString(Field.ID_GROUPE));
 
                                     MatGrp.add(key);
 
@@ -692,19 +692,19 @@ public class ExportPDFController extends ControllerHelper {
                                     for(int i = 0; i < servicesJSON.size(); i++){
                                         JsonObject service = servicesJSON.getJsonObject(i);
 
-                                        String serviceIdMatiere = service.getString("id_matiere");
-                                        String lineIdMatiere = lineObject.getString("id_matiere");
+                                        String serviceIdMatiere = service.getString(Field.ID_MATIERE);
+                                        String lineIdMatiere = lineObject.getString(Field.ID_MATIERE);
                                         if(serviceIdMatiere.equals(lineIdMatiere)) {
-                                            isVisible = service.getBoolean("is_visible");
+                                            isVisible = service.getBoolean(Field.IS_VISIBLE);
                                             break;
                                         }
                                     }
                                     if (!teachers.containsKey(key) && isVisible) {
-                                        teachers.put(key, lineObject.getString("owner"));
+                                        teachers.put(key, lineObject.getString(Field.OWNER));
                                     }
 
-                                    Matiere matiere = new Matiere(lineObject.getString("id_matiere"));
-                                    Teacher teacher = new Teacher(lineObject.getString("owner"));
+                                    Matiere matiere = new Matiere(lineObject.getString(Field.ID_MATIERE));
+                                    Teacher teacher = new Teacher(lineObject.getString(Field.OWNER));
                                     Group group = new Group(idClasse);
 
                                     Service service = services.stream()
@@ -718,22 +718,22 @@ public class ExportPDFController extends ControllerHelper {
                                         for(Object mutliTeachO: multiTeachers){
                                             //multiTeaching.getString("second_teacher_id").equals(teacher.getId()
                                             JsonObject multiTeaching  =(JsonObject) mutliTeachO;
-                                            if(multiTeaching.getString("main_teacher_id").equals(teacher.getId())
-                                                    && multiTeaching.getString("id_classe").equals(group.getId())
-                                                    && multiTeaching.getString("subject_id").equals(matiere.getId())){
+                                            if(multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                                                    && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
+                                                    && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
                                                 service = services.stream()
-                                                        .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString("second_teacher_id"))
+                                                        .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
                                                                 && matiere.getId().equals(el.getMatiere().getId())
                                                                 && group.getId().equals(el.getGroup().getId()))
                                                         .findFirst().orElse(null);
                                             }
 
-                                            if(multiTeaching.getString("second_teacher_id").equals(teacher.getId())
-                                                    && multiTeaching.getString("class_or_group_id").equals(group.getId())
-                                                    && multiTeaching.getString("subject_id").equals(matiere.getId())){
+                                            if(multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                                                    && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
+                                                    && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
 
                                                 service = services.stream()
-                                                        .filter(el -> multiTeaching.getString("main_teacher_id").equals(el.getTeacher().getId())
+                                                        .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
                                                                 && matiere.getId().equals(el.getMatiere().getId())
                                                                 && group.getId().equals(el.getGroup().getId()))
                                                         .findFirst().orElse(null);
@@ -741,39 +741,39 @@ public class ExportPDFController extends ControllerHelper {
                                         }
                                     }
 
-                                    Long sousMatiereId = lineObject.getLong("id_sousmatiere");
-                                    Long id_periode = lineObject.getLong("id_periode");
+                                    Long sousMatiereId = lineObject.getLong(Field.ID_SOUSMATIERE);
+                                    Long id_periode = lineObject.getLong(Field.ID_PERIODE);
 
-                                    NoteDevoir note = new NoteDevoir(Double.parseDouble(lineObject.getString("valeur")),
-                                            lineObject.getLong("diviseur").doubleValue(),
-                                            lineObject.getBoolean("ramener_sur"),
+                                    NoteDevoir note = new NoteDevoir(Double.parseDouble(lineObject.getString(Field.VALEUR)),
+                                            lineObject.getLong(Field.DIVISEUR).doubleValue(),
+                                            lineObject.getBoolean(Field.RAMENER_SUR),
                                             Double.parseDouble(lineObject.getString(COEFFICIENT)),
-                                            lineObject.getString("id_eleve"), id_periode, service, sousMatiereId);
+                                            lineObject.getString(Field.ID_ELEVE), id_periode, service, sousMatiereId);
 
                                     if (sousMatiereId != null) {
                                         if (!notesBySousMatiere.containsKey(key)) {
                                             notesBySousMatiere.put(key, new HashMap<>());
                                         }
 
-                                        if (!notesBySousMatiere.get(key).containsKey(lineObject.getString("id_eleve"))) {
-                                            notesBySousMatiere.get(key).put(lineObject.getString("id_eleve"), new HashMap<>());
+                                        if (!notesBySousMatiere.get(key).containsKey(lineObject.getString(Field.ID_ELEVE))) {
+                                            notesBySousMatiere.get(key).put(lineObject.getString(Field.ID_ELEVE), new HashMap<>());
                                         }
 
-                                        if (!notesBySousMatiere.get(key).get(lineObject.getString("id_eleve")).containsKey(sousMatiereId)) {
-                                            notesBySousMatiere.get(key).get(lineObject.getString("id_eleve")).put(sousMatiereId, new ArrayList<>());
+                                        if (!notesBySousMatiere.get(key).get(lineObject.getString(Field.ID_ELEVE)).containsKey(sousMatiereId)) {
+                                            notesBySousMatiere.get(key).get(lineObject.getString(Field.ID_ELEVE)).put(sousMatiereId, new ArrayList<>());
                                         }
 
-                                        notesBySousMatiere.get(key).get(lineObject.getString("id_eleve")).get(sousMatiereId).add(note);
+                                        notesBySousMatiere.get(key).get(lineObject.getString(Field.ID_ELEVE)).get(sousMatiereId).add(note);
                                     }
                                     else {
                                         if (!notes.containsKey(key)) {
                                             notes.put(key, new HashMap<>());
                                         }
 
-                                        if (!notes.get(key).containsKey(lineObject.getString("id_eleve"))) {
-                                            notes.get(key).put(lineObject.getString("id_eleve"), new ArrayList<>());
+                                        if (!notes.get(key).containsKey(lineObject.getString(Field.ID_ELEVE))) {
+                                            notes.get(key).put(lineObject.getString(Field.ID_ELEVE), new ArrayList<>());
                                         }
-                                        notes.get(key).get(lineObject.getString("id_eleve")).add(note);
+                                        notes.get(key).get(lineObject.getString(Field.ID_ELEVE)).add(note);
                                     }
                                 });
 
@@ -862,6 +862,8 @@ public class ExportPDFController extends ControllerHelper {
                                 if (!(moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() == null)) {
                                     double total = 0;
                                     double totalCoeff = 0;
+                                    Boolean statistiques = false;
+                                    Boolean annual = false;
                                     for (Map.Entry<Long, List<NoteDevoir>> sousMatMapEntry : notesBySousMatiere.get(matGrp).get(idEleve).entrySet()) {
                                         Long idSousMat = sousMatMapEntry.getKey();
                                         Service serv = sousMatMapEntry.getValue().get(0).getService();
@@ -876,19 +878,25 @@ public class ExportPDFController extends ControllerHelper {
                                                 coeff = subTopic.getCoefficient();
                                         }
 
-                                        Double moyenSousMat = utilsService.calculMoyenne(sousMatMapEntry.getValue(), false, 20, false).getDouble("moyenne");
+                                        Double moyenSousMat = utilsService.calculMoyenne(sousMatMapEntry.getValue(), statistiques, Field.DIVISEUR_NOTE, annual).getDouble(Field.MOYENNE);
 
                                         total += coeff * moyenSousMat;
                                         totalCoeff += coeff;
                                     }
-                                    Double moy = Math.round((total / totalCoeff) * 10.0) / 10.0;
-                                    matGrpNotes.add(new NoteDevoir(moy, false, 1.0));
+                                    if (totalCoeff == 0) {
+                                        log.error("Found a 0 or negative coefficient in getExportRecapAppreciations, please check your subtopics " +
+                                                "coefficients (value of totalCoeff : " + totalCoeff + ")");
+                                    }
+                                    else {
+                                        Double moy = Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER;
+                                        matGrpNotes.add(new NoteDevoir(moy, false, 1.0));
+                                    }
                                 }
                             }
                             else {
                                 if (notes.containsKey(matGrp) && notes.get(matGrp).containsKey(idEleve) && !(moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() == null)) {
                                     if(!"NN".equals(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null,false).getValue(MOYENNE))) {
-                                        matGrpNotes.add(new NoteDevoir(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null, false).getDouble(MOYENNE), false, new Double(1))); //TODO139 : Changer le calcul de moyenne pour prendre en compte les sous matières
+                                        matGrpNotes.add(new NoteDevoir(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null, false).getDouble(MOYENNE), false, new Double(1)));
                                     }
                                 }
                             }

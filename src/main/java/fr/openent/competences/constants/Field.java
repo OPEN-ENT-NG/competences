@@ -2,6 +2,8 @@ package fr.openent.competences.constants;
 
 public class Field {
 
+    public static final String IS_VISIBLE = "is_visible";
+
     private Field() {
         throw new IllegalStateException("Utility class");
     }

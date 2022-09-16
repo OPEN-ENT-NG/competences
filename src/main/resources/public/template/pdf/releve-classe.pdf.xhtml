@@ -268,13 +268,20 @@
             {{#isLast}}
             <td class="sousMat border-bottom">
                 <div  style="width: 40px">
-                    <span class="pretty center">{{libelle}}   <sup class="coeff">{{coeff}}</sup></span></div>
+                    <span class="pretty center">{{libelle}}
+                        <sup class="coeff">{{coeff}}</sup>
+                    </span>
+                </div>
             </td>
             <td class="border-left-right-bottom">
                 {{#devoirs}}
                 <span class="div-note">
-            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}</span>
+                    <span class="note">{{note}}</span>
+                    <span class="diviseur">/{{diviseur}}</span>
+                    {{#hasCoeff}}
+                    <sup class="coeff">({{coefficient}})</sup>
+                    {{/hasCoeff}}
+                </span>
                 {{/devoirs}}
             </td>
             <td class="border-bottom"><span class="diviseur">{{moyenne}}</span></td>

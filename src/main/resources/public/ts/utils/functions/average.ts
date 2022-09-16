@@ -76,30 +76,30 @@ function getMoyenne (devoirs) {
     }
 }
 
-function getSumAndCoeff (devoirs) {
+function getSumAndCoeff (devoirs:any[]) {
     if(devoirs.length == 0){
         return [null, null];
     } else {
-        let diviseurM = 20;
+        let diviseurM:number = 20;
 
         // (SUM ( ni *m *ci /di)  + SUM ( nj *cj)  ) / (S ( ci)  + SUM ( cj  *dj /m)  )
         // avec d : diviseurs, n : note, c : coefficient, m = 20 : si ramené sur
         // avec i les notes ramenées sur m, et j les notes non ramenées sur m
 
-        let sumCI = 0;
-        let sumCJDJParM = 0;
-        let sumCJDJ = 0;
-        let sumNIMCIParD = 0;
+        let sumCI:number = 0;
+        let sumCJDJParM:number = 0;
+        let sumCJDJ:number = 0;
+        let sumNIMCIParD:number = 0;
 
-        let hasNote = false;
+        let hasNote:boolean = false;
 
-        let coefficientTotalHomework = 0;
+        let coefficientTotalHomework:number = 0;
         devoirs.forEach(devoir => {
             if(devoir.note && devoir.coefficient && devoir.diviseur) {
                 hasNote = true;
-                let currNote = parseFloat(devoir.note);
-                let currCoefficient = parseFloat(devoir.coefficient);
-                let currDiviseur = devoir.diviseur;
+                let currNote:number = parseFloat(devoir.note);
+                let currCoefficient:number = parseFloat(devoir.coefficient);
+                let currDiviseur:number = devoir.diviseur;
 
                 if (!devoir.ramener_sur) {
                     sumCJDJParM += (currCoefficient * currDiviseur / diviseurM);
@@ -112,8 +112,8 @@ function getSumAndCoeff (devoirs) {
             }
         });
         if(hasNote && coefficientTotalHomework !== 0) {
-            let sum = sumNIMCIParD + sumCJDJ;
-            let coeff = sumCI + sumCJDJParM;
+            let sum:number = sumNIMCIParD + sumCJDJ;
+            let coeff:number = sumCI + sumCJDJParM;
 
             return [sum, coeff];
         }else{
