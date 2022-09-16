@@ -2,8 +2,6 @@ package fr.openent.competences.constants;
 
 public class Field {
 
-    public static final String IS_VISIBLE = "is_visible";
-
     private Field() {
         throw new IllegalStateException("Utility class");
     }
@@ -35,6 +33,7 @@ public class Field {
     public static final String SECOND_TEACHER_ID = "second_teacher_id";
     public static final String SUBJECT_ID = "subject_id";
     public static final String CLASS_OR_GROUP_ID = "class_or_group_id";
+    public static final String IS_VISIBLE = "is_visible";
 
     //transaction
     public static final String ACTION = "action";
