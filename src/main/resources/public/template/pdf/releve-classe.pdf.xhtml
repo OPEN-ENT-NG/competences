@@ -266,18 +266,31 @@
             </td>
             {{#first_sous_matieres}}
             {{#isLast}}
-            <td class="sousMat border-bottom"><span>{{libelle}}</span></td>
+            <td class="sousMat border-bottom">
+                <div  style="width: 40px">
+                    <span class="pretty center">{{libelle}}
+                        <sup class="coeff">{{coeff}}</sup>
+                    </span>
+                </div>
+            </td>
             <td class="border-left-right-bottom">
                 {{#devoirs}}
                 <span class="div-note">
-            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}</span>
+                    <span class="note">{{note}}</span>
+                    <span class="diviseur">/{{diviseur}}</span>
+                    {{#hasCoeff}}
+                    <sup class="coeff">({{coefficient}})</sup>
+                    {{/hasCoeff}}
+                </span>
                 {{/devoirs}}
             </td>
             <td class="border-bottom"><span class="diviseur">{{moyenne}}</span></td>
             {{/isLast}}
             {{^isLast}}
-            <td class="sousMat"><span>{{libelle}}</span></td>
+            <td class="sousMat">
+                <div  style="width: 40px">
+                    <span class="pretty center">{{libelle}}   <sup class="coeff">{{coeff}}</sup></span></div>
+            </td>
             <td class="border-left border-right">
                 {{#devoirs}}
                 <span class="div-note">
@@ -321,7 +334,10 @@
         {{#sous_matieres_tail}}
         <tr>
             {{^isLast}}
-            <td class="sousMat"><span>{{libelle}}</span></td>
+            <td class="sousMat">
+                <div  style="width: 40px">
+                    <span class="pretty center">{{libelle}}   <sup class="coeff">{{coeff}}</sup></span></div>
+            </td>
             <td class="border-left border-right">
                 {{#devoirs}}
                 <span class="div-note">
@@ -332,7 +348,10 @@
             <td class="border-none"><span class="diviseur">{{moyenne}}</span></td>
             {{/isLast}}
             {{#isLast}}
-            <td class="sousMat border-bottom"><span>{{libelle}}</span></td>
+            <td class="sousMat border-bottom">
+                <div  style="width: 40px">
+                    <span class="pretty center">{{libelle}}   <sup class="coeff">{{coeff}}</sup></span></div>
+            </td>
             <td class="border-left-right-bottom">
                 {{#devoirs}}
                 <span class="div-note">

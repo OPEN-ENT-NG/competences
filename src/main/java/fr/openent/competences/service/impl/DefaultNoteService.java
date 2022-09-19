@@ -2326,7 +2326,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 Double.valueOf(respNoteMoyFinale.getString(Field.COEFFICIENT)),
                 respNoteMoyFinale.getString(Field.ID_ELEVE), id_periode, service, sousMatiereId);
 
-        if (mapIdEleveIdMatIdSousMatListNotes.containsKey(idEleveNotes)) { //TODO139 : Faire en sorte que ça s'ajoute bien à notre nouveau tableau
+        if (mapIdEleveIdMatIdSousMatListNotes.containsKey(idEleveNotes)) {
             Map<String, HashMap<Long, List<NoteDevoir>>> mapIdMatIdSousMatListNotes = mapIdEleveIdMatIdSousMatListNotes.get(idEleveNotes);
             if (mapIdMatIdSousMatListNotes.containsKey(idMatiere)) {
                 HashMap<Long, List<NoteDevoir>> mapIdSousMatListNotes = mapIdMatIdSousMatListNotes.get(idMatiere);
@@ -4126,7 +4126,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     if(idPeriode != null) {
                         statMat.setMapIdMatStatclass(listNotes, services, multiTeachers, idClasse);
                         mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
-                        //TODO139 : Donner à la stateleve le notesBySousMat
                     } else { // notes order by periode
                         Map<Integer, JsonArray> mapIdPeriodeNotes = getListNotesByPeriode(listNotes, false);
                         if(!mapIdPeriodeNotes.isEmpty()) {

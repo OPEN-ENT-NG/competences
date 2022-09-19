@@ -101,7 +101,7 @@ public class StatMat {
                             Double.valueOf(note.getString(Field.MOYENNE)),null);
                 }
                 if (note.getString(Field.ID_ELEVE) != null && note.getString(Field.VALEUR) != null && !(note.getValue(Field.MOYENNE) != null && note.getValue(Field.MOYENNE).equals("-100"))) {
-                    Matiere matiere = new Matiere(note.getString(Field.MOYENNE));
+                    Matiere matiere = new Matiere(note.getString(Field.ID_MATIERE));
                     Teacher teacher = new Teacher(note.getString(Field.OWNER));
                     Group group = new Group(idClasse);
 
@@ -161,7 +161,7 @@ public class StatMat {
                 }
                 if (note.getString(Field.ID_ELEVE) != null && note.getString(Field.COEFFICIENT) != null
                         && note.getString(Field.VALEUR) != null && !(note.getValue(Field.MOYENNE) != null && note.getValue(Field.MOYENNE).equals("-100"))) {
-                    Matiere matiere = new Matiere(note.getString(Field.MOYENNE));
+                    Matiere matiere = new Matiere(note.getString(Field.ID_MATIERE));
                     Teacher teacher = new Teacher(note.getString(Field.OWNER));
                     Group group = new Group(idClasse);
 
