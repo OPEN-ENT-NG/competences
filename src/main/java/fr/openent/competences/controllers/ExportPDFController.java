@@ -642,7 +642,7 @@ public class ExportPDFController extends ControllerHelper {
 
                 List<Service> services = new ArrayList<>();
                 List<MultiTeaching> multiTeachings = new ArrayList<>();
-                new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClasse);
+                exportBulletinService.setMultiTeaching(structure, multiTeachers, multiTeachings, idClasse);
                 setServices(structure, servicesJson, services, subTopics);
 
                 Set<String> idGroups = new HashSet<>(Collections.singleton(idClasse));
