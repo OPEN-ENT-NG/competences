@@ -40,7 +40,8 @@ import http from "axios";
 import { evaluations as evaluationsParentFormat } from '../models/eval_parent_mdl';
 import {LengthLimit} from "../constants";
 import {getTitulairesForRemplacantsCoEnseignant} from "../utils/teacher";
-import {SubTopicsService, SubTopicsServices} from "../models/sniplets";
+import {SubTopicsServices} from "../models/sniplets";
+import {SubTopicsServiceService} from "../services/SubTopicServiceService";
 declare let _: any;
 declare let Chart: any;
 declare let location: any;
@@ -1440,8 +1441,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             if ($scope.dataReleve === undefined) {
                 return;
             }
-            let subTopicsServicesStruct = new SubTopicsServices([])
-            await subTopicsServicesStruct.get($scope.structure.id);
+            let subTopicsServiceService = new SubTopicsServiceService();
+            let {data} =  await subTopicsServiceService.get($scope.structure.id)
+            let subTopicsServicesStruct = new SubTopicsServices([],data)
             let subTopicsServices = subTopicsServicesStruct.filter(subTopic =>
                 subTopic.id_group  === $scope.search.classe.id
             );
