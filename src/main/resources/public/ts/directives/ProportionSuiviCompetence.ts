@@ -102,6 +102,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                         nb: 0
                     });
                 }
+
                 let unique = [];
                 let distinct = [];
                 $scope.competencesEvaluations.forEach((comp) => {
@@ -118,7 +119,6 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
 
                         for (var i = 0; i < $scope.competencesEvaluations.length; ++i) {
                             var competencesEval = $scope.competencesEvaluations[i];
-
                             if (!elevesMap.hasOwnProperty(competencesEval.id_eleve)) {
                                 elevesMap[competencesEval.id_eleve] = competencesEval;
                                 $scope.proportion[(competencesEval.niveauFinaltoShowAllEvaluations) + 1].nb++;
@@ -144,11 +144,22 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                             }
 
                         } else {
-                            var nb = _.where($scope.competencesEvaluations, {evaluation: parseInt($scope.proportion[i].eval)});
-                            $scope.proportion[i].percent = (nb.length / $scope.competencesEvaluations.length) * 100;
-                            $scope.proportion[i].nb = nb.length;
+                            var competencesEvaluated = _.where($scope.competencesEvaluations, {evaluation: parseInt($scope.proportion[i].eval)});
+                            $scope.proportion[i].percent = (competencesEvaluated.length / $scope.competencesEvaluations.length) * 100;
+                            let keyIdDevoirIdCompetences = [];
+                            let finalNb = 0 ;
+                            competencesEvaluated.forEach(elem =>{
+                                if(!keyIdDevoirIdCompetences.find(keyIdDevoirIdCompetence => {
+                                        return keyIdDevoirIdCompetence.id_devoir === elem.id_devoir
+                                            && keyIdDevoirIdCompetence.id_competences === elem.id_competence
+                                    }
+                                )) {
+                                    keyIdDevoirIdCompetences.push({id_devoir: elem.id_devoir , id_competences : elem.id_competence})
+                                    finalNb++;
+                                }
+                            })
+                            $scope.proportion[i].nb = finalNb;
                         }
-
                         let proportion = $scope.proportion[i];
                         let print = `${proportion.nb} ${$scope.mapProportionLettres[proportion.eval]}`;
                         $scope.proportion[i].print = print;
