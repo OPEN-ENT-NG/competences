@@ -3,6 +3,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.EventType;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.service.*;
@@ -472,25 +473,18 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     .getConversionNoteCompetence(idEtablissement, idClasse,  // note : Est ce que c'est pas l'idGroupeClasse qu'on doit passé ici ?
                             tableauEvent -> formate(tableauDeConversionFuture, tableauEvent));
 
-            Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
-            structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
-                if(event.isRight())
-                    isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
-                else
-                    isAvgSkillpromise.fail(event.left().getValue());
-            });
+            Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
 
             Future<String> subjectFuture = Future.future();
             subjectsFuture.add(subjectFuture);
 
-            isAvgSkillpromise.future()
+            isAvgSkillFuture
                     .onSuccess(isAvgSkillResult -> CompositeFuture.all(elementsProgFuture, appreciationMoyFinalePosFuture, notesFuture, compNotesFuture,
                             moyenneFinaleFuture, tableauDeConversionFuture).setHandler(event -> {
                         if(event.succeeded()){
                             List<String> idsClassWithNoteAppCompNoteStudent = new ArrayList<>();
                             setAppreciationMoyFinalePositionnementEleve(result, appreciationMoyFinalePosFuture.result(),
                                     idsClassWithNoteAppCompNoteStudent);
-                            //future isAvgSkill
                             setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(), moyenneFinaleFuture.result(),
                                     result, idEleve, idPeriod, tableauDeConversionFuture.result(), idsClassWithNoteAppCompNoteStudent, isAvgSkillResult );
                             setElementProgramme(result, elementsProgFuture.result(), idsClassWithNoteAppCompNoteStudent);
@@ -498,10 +492,12 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                             subjectFuture.complete();
                         } else {
                             subjectFuture.fail(event.cause().getMessage());
+                            log.error("[DefaultBilanPeriodique] : setSubjectLibelleAndTeachers subjectFuture " + event.cause().getMessage());
                         }
                     }))
                     .onFailure(err ->{
-                        subjectFuture.fail(err.getMessage());
+                        handler.handle(new Either.Left<>(err.getMessage()));
+                        log.error("[DefaultBilanPeriodique] : setSubjectLibelleAndTeachers isAvgSkillFuture " + err.getMessage());
                     });
         }
 

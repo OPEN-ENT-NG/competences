@@ -27,6 +27,9 @@ public class Field {
     // tables
     public static final String STRUTUCTURE_OPTIONS = "structure_options";
 
+    //colonne
+    public static final String IS_AVERAGE_SKILLS = "is_average_skills";
+
     //schema json
     public static final String SCHEMA_EVAL_CREATEORUPDATESTRUCTUREOPTIONISAVERAGESKILLS =
             "eval_createOrUpdateStructureOptionIsAverageSkills";

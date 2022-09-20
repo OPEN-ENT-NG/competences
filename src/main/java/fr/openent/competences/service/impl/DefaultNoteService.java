@@ -20,6 +20,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.*;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
@@ -497,7 +498,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                           Long periodeId, String eleveId, Integer typeClasse, Boolean withDomaineInfo,
                                           Boolean isYear, Handler<Either<String, JsonArray>> handler) {
         if(typeClasse == null){
-            log.info("ici ");
             runGetCompetencesNotesReleve(etablissementId, matiereId, null,
                     periodeId, eleveId, new ArrayList<>(), withDomaineInfo, isYear, handler);
         } else {
@@ -1513,7 +1513,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
         return notesByStudent;
     }
-    private void getMaxCompNoteByPeriode(JsonArray listCompNotes,
+    private void getMaxOrAvgCompNoteByPeriode(JsonArray listCompNotes,
                                          HashMap<Long, ArrayList<NoteDevoir>> notesByDevoirByPeriode,
                                          HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByPeriodeBySousMatiere,
                                          JsonArray tableauConversion,
@@ -1555,10 +1555,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         //2- loop map<idP, JAcompNote> -> JAcompNoteMaxByPeriode -> map<idP,list<NoteDevoirMax>> = notesByDevoirByPeriode
         compNotesByPeriode.forEach((id_period,compNotes) -> {
 
-            Map<String, JsonObject> MaxCompNotesByCompetence = calculMaxCompNoteItem(compNotes, tableauConversion,true, isAvg);
-            MaxCompNotesByCompetence.forEach((id_comp,maxCompNote) -> {
+            Map<String, JsonObject> MaxOrAvgCompNotesByCompetence = calculMaxOrAvgCompNoteItem(compNotes, tableauConversion,true, isAvg);
+            MaxOrAvgCompNotesByCompetence.forEach((id_comp,maxCompNote) -> {
                 NoteDevoir noteDevoir;
-                Long niveauFinal = maxCompNote.getLong("niveau_final");
+                Double niveauFinal = maxCompNote.getDouble("niveau_final");
                 Long niveauFinalAnnuel = maxCompNote.getLong("niveau_final_annuel");
                 if (isNotNull(niveauFinalAnnuel) ) {
                     noteDevoir = new NoteDevoir(Double.valueOf(niveauFinalAnnuel)+1,1.0,false,1.0);
@@ -1577,10 +1577,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         //3-loop map<idP,map<idssM,JAcompNote>> ->JAcompNoteMaxBySousMatByPerode -> map<idP,map<idssM,list<NoteDevoirMax>> = notesByPeriodeBySousMatiere
         compNotesBySousMatByPeriode.forEach((id_periode,mapSousMatCompNotes) ->{
             mapSousMatCompNotes.forEach((id_sousMat, compNotesSousMat) -> {
-                Map<String,JsonObject> MaxCompNoteSousMatByComp = calculMaxCompNoteItem(compNotesSousMat, tableauConversion,
+                Map<String,JsonObject> MaxOrAvgCompNoteSousMatByComp = calculMaxOrAvgCompNoteItem(compNotesSousMat, tableauConversion,
                         false, isAvg);
 
-                MaxCompNoteSousMatByComp.forEach((id_comp,maxCompNoteSousMat) -> {
+                MaxOrAvgCompNoteSousMatByComp.forEach((id_comp,maxCompNoteSousMat) -> {
                     NoteDevoir noteDevoir = new NoteDevoir(maxCompNoteSousMat.getDouble("evaluation") +1.d,
                             1.0, false, 1.0);
 
@@ -1603,7 +1603,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         result.put(POSITIONNEMENTS_AUTO, new JsonArray());
         result.put("_" + POSITIONNEMENTS_AUTO, new JsonObject());
 
-        getMaxCompNoteByPeriode(listCompNotes, notesByDevoirByPeriode,notesByPeriodeBySousMatiere, tableauConversion,
+        getMaxOrAvgCompNoteByPeriode(listCompNotes, notesByDevoirByPeriode,notesByPeriodeBySousMatiere, tableauConversion,
                 idsClassWithNoteAppCompNoteStudent, idPeriodAsked ,isAvgSkill);
 
         // Paramètre de calcul des moyennes de compétencesNotes
@@ -2309,14 +2309,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 List<Future> listFutures = new ArrayList<>(Arrays.asList(compNotesFuture, notesFuture,
                         moyennesFinalesFutures, appreciationsFutures, positionnementsFinauxFutures));
 
-                Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
-                structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
-                    if(event.isRight())
-                        isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
-                    else
-                        isAvgSkillpromise.fail(event.left().getValue());
-                });
-                listFutures.add(isAvgSkillpromise.future());
+                Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
+                listFutures.add(isAvgSkillFuture);
+
                 CompositeFuture.all(listFutures).setHandler( event -> {
                     if(event.succeeded()) {
                         // Rajout des moyennes finales
@@ -2332,7 +2327,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         if (idPeriode != null) {
                             // Cacul du positionnement auto
                             calculMoyennesCompetencesNotesForReleve(compNotesFuture.result(), resultHandler,
-                                    idPeriode, tableauDeConversionFuture.result(), elevesMapObject, isAvgSkillpromise.future().result());
+                                    idPeriode, tableauDeConversionFuture.result(), elevesMapObject, isAvgSkillFuture.result());
 
                             // Format sous matières moyennes
                             addSousMatieres(elevesMapObject, sousMatiereFuture.result(), resultHandler, idPeriode);
@@ -2430,17 +2425,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                         null, true, annual,
                                         compNotesEvent -> formate(compNotesFuture, compNotesEvent));
 
-                                Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
-                                structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
-                                    if(event.isRight())
-                                        isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
-                                    else
-                                        isAvgSkillpromise.fail(event.left().getValue());
-                                });
 
-
+                                Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
                                 List<Future> listFutures = new ArrayList<>(Arrays.asList(bigRequestFuture, compNotesFuture, notesFuture));
-                                listFutures.add(isAvgSkillpromise.future());
+                                listFutures.add(isAvgSkillFuture);
                                 CompositeFuture.all(listFutures).setHandler(event -> {
                                     try{
                                         if(event.succeeded()) {
@@ -2516,7 +2504,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                         JsonObject resultNotes = new JsonObject();
                                                         calculPositionnementAutoByEleveByMatiere(compNotesEleve, resultNotes,
                                                                 annual, tableauDeConversionFuture.result(),
-                                                                null , null, isAvgSkillpromise.future().result());
+                                                                null , null, isAvgSkillFuture.result());
                                                         if(eleveObject.containsKey(POSITIONNEMENT_AUTO)){
                                                             eleveObject.getJsonObject(POSITIONNEMENT_AUTO).put(idMatiere.toString(),
                                                                     resultNotes.getJsonArray(POSITIONNEMENTS_AUTO));
@@ -3515,16 +3503,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // On récupère le tableau de conversion des compétences notes pour Lire le positionnement
         competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse, tableauEvent ->
                 formate(tableauDeConversionFuture, tableauEvent));
+        Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
 
-        Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
-        structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
-            if(event.isRight())
-                isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
-            else
-                isAvgSkillpromise.fail(event.left().getValue());
-        });
-
-        isAvgSkillpromise.future()
+        isAvgSkillFuture
                 .onSuccess(isAvgSkillpromiseResult -> CompositeFuture.all(compNoteF, noteF, subjectF, tableauDeConversionFuture).setHandler(event -> {
                     if(event.failed()){
                         String message = "[getReleveDataForGraph] " + event.cause().getMessage();
@@ -3624,8 +3605,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                     // 6. On récupère tous les libelles des matières de l'établissement et on fait correspondre
                     // aux résultats par idMatière
-                    linkIdSubjectToLibelle(idEleve, idPeriode, getMaxByItem(matieresCompNotes, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ),
-                            getMaxByItem(matieresCompNotesEleve, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ), matieresNotes, matieresNotesEleve,
+                    linkIdSubjectToLibelle(idEleve, idPeriode, getMaxOrAvgByItem(matieresCompNotes, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ),
+                            getMaxOrAvgByItem(matieresCompNotesEleve, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ), matieresNotes, matieresNotesEleve,
                             mapMatieresStatClasseAndEleve, idMatieres, subjectF.result(), handler);
                 }))
                 .onFailure(err ->{
@@ -3671,15 +3652,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse,tableauEvent ->
                 formate(tableauDeConversionFuture, tableauEvent));
 
-        Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
-        structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
-            if(event.isRight())
-                isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
-            else
-                isAvgSkillpromise.fail(event.left().getValue());
-        });
+        Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
 
-        isAvgSkillpromise.future()
+        isAvgSkillFuture
                 .onSuccess(isAvgSkillpromiseResult -> {
                     CompositeFuture.all(compNotesFuture, domainesCycleFuture,tableauDeConversionFuture).setHandler(event -> {
                         if (event.succeeded()) {
@@ -3734,8 +3709,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonArray competencesNotes =
                     (data!=null)?data.getJsonArray("competencesNotes") : new JsonArray();
             if (data!= null) {
-                res.add(domaine.put("competencesNotes",   getMaxByItemDomaine(competencesNotes,tableauConversion, isAvgSkill))
-                        .put("competencesNotesEleve", getMaxByItemDomaine(competencesNotesEleve,tableauConversion, isAvgSkill)));
+                res.add(domaine.put("competencesNotes",   getMaxOrAvgByItemDomaine(competencesNotes,tableauConversion, isAvgSkill))
+                        .put("competencesNotesEleve", getMaxOrAvgByItemDomaine(competencesNotesEleve,tableauConversion, isAvgSkill)));
             }
         }
         return res;
@@ -3786,15 +3761,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return mapIdPeriodeListeNotes;
     }
     // Permet de Calculer le Max des Niveaux Atteints par Items regroupés par Matière
-    private Map<String,JsonArray> getMaxByItem(Map<String, JsonArray> mapData, JsonArray tableauConversion, boolean isAvgSkill){
+    private Map<String,JsonArray> getMaxOrAvgByItem(Map<String, JsonArray> mapData, JsonArray tableauConversion, boolean isAvgSkill){
         Map<String,JsonArray> result = new HashMap<>();
 
         for (Map.Entry<String,JsonArray> entry: mapData.entrySet()) {
             String idEntry = entry.getKey();
             JsonArray currentEntry = entry.getValue();
-            Map<String, JsonObject> maxComp = calculMaxCompNoteItem(currentEntry, tableauConversion,true, isAvgSkill);
+            Map<String, JsonObject> maxOrAvgComp = calculMaxOrAvgCompNoteItem(currentEntry, tableauConversion,true, isAvgSkill);
             result.put(idEntry, new JsonArray());
-            for (Map.Entry<String,JsonObject> max: maxComp.entrySet()) {
+            for (Map.Entry<String,JsonObject> max: maxOrAvgComp.entrySet()) {
                 result.get(idEntry).add(max.getValue());
             }
         }
@@ -3802,25 +3777,21 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     // Permet de Calculer le Max des Niveaux Atteints par Items regroupés par Domaine
-    private JsonArray getMaxByItemDomaine(JsonArray compNotes, JsonArray tableauConversion, boolean isAvgSkill){
+    private JsonArray getMaxOrAvgByItemDomaine(JsonArray compNotes, JsonArray tableauConversion, boolean isAvgSkill){
         JsonArray result = new JsonArray();
 
-        Map<String, JsonObject> maxCompNote = calculMaxCompNoteItem(compNotes, tableauConversion,true, isAvgSkill);
-        for (Map.Entry<String,JsonObject> max: maxCompNote.entrySet()) {
+        Map<String, JsonObject> maxOrAvgCompNote = calculMaxOrAvgCompNoteItem(compNotes, tableauConversion,true, isAvgSkill);
+        for (Map.Entry<String,JsonObject> max: maxOrAvgCompNote.entrySet()) {
             result.add(max.getValue());
         }
 
         return result;
     }
 
-    private Map<String, JsonObject> calculMaxCompNoteItem(JsonArray compNotes, JsonArray tableauConversion, Boolean takeNivFinal, boolean isAvg) {
+    private Map<String, JsonObject> calculMaxOrAvgCompNoteItem(JsonArray compNotes, JsonArray tableauConversion, Boolean takeNivFinal, boolean isAvg) {
         Map<String, JsonObject> maxComp = new HashMap<>();
         Map<String, List<JsonObject>> groupByStudent = new HashMap<>();
         JsonArray clone = compNotes.copy();
-
-        //TODO
-        //Call Structure Option
-//        structureOptionsService.getIsAverageSkills();
 
         //On groupe les items de compétences par élève
         for (int i = 0; i < clone.size(); i++) {
@@ -4123,14 +4094,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 formate(tableauDeConversionFuture, tableauEvent));
         detailsFuture.add(tableauDeConversionFuture);
 
-        Promise<Boolean> isAvgSkillpromise = Promise.promise() ;
-        detailsFuture.add(isAvgSkillpromise.future());
-        structureOptionsService.getIsAverageSkills(idEtablissement, event -> {
-            if(event.isRight())
-                isAvgSkillpromise.complete(event.right().getValue().getBoolean("is_average_skills"));
-            else
-                isAvgSkillpromise.fail(event.left().getValue());
-        });
+        Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
+        detailsFuture.add(isAvgSkillFuture);
 
         CompositeFuture.all(detailsFuture).setHandler(event -> {
             if(event.failed()){
@@ -4147,7 +4112,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             // Calcul des positionements
             JsonArray listCompNotes = listCompNotesF.result();
             calculPositionnementAutoByEleveByMatiere(listCompNotes, result,false, tableauDeConversionFuture.result(),
-                    null ,null, isAvgSkillpromise.future().result());
+                    null ,null, isAvgSkillFuture.result());
 
             // Calcul des moyennes par période pour la classe
             JsonArray moyFinalesEleves = moyFinalesElevesF.result();
