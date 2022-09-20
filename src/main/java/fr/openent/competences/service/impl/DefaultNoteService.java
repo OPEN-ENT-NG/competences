@@ -1562,9 +1562,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 Long niveauFinalAnnuel = maxCompNote.getLong("niveau_final_annuel");
                 if (isNotNull(niveauFinalAnnuel) ) {
                     noteDevoir = new NoteDevoir(Double.valueOf(niveauFinalAnnuel)+1,1.0,false,1.0);
-                } else if (isNotNull(niveauFinal) ) {
+                }/* else if (isNotNull(niveauFinal) ) {
                     noteDevoir = new NoteDevoir(Double.valueOf(niveauFinal)+1,1.0,false,1.0);
-                } else {
+                }*/ else {
                     noteDevoir = new NoteDevoir(maxCompNote.getDouble("evaluation") +1, 1.0,
                             false, 1.0);
                 }
@@ -3820,14 +3820,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     }
                     groupByMat.get(compNote.getString("id_matiere")).add(compNote);
                 }
-                List<JsonObject> listSameCompMaxMat = new ArrayList<>();
-                //On récupère les maxs de chaque matière
-                if(isAvg){
+                List<JsonObject> listSameCompMaxOrAvgMat = new ArrayList<>();
+
+                if(isAvg){ // moyenne de chaque competence par matiere
                     for (Map.Entry<String, List<JsonObject>> listMat : groupByMat.entrySet()) {
                         List<JsonObject> listSameMatComp = listMat.getValue();
-                        listSameCompMaxMat.addAll(listSameMatComp);
+                        JsonObject compMat = listSameMatComp.get(0);
+                        float moyenneComp = calculMoyCompetence(listSameMatComp, takeNivFinal);
+                        compMat.put("evaluation", moyenneComp);
+                        listSameCompMaxOrAvgMat.add(compMat);
                     }
-                }else {
+
+                }else {  //On récupère les maxs de chaque matière
                     for (Map.Entry<String, List<JsonObject>> listMat : groupByMat.entrySet()) {
                         List<JsonObject> listSameMatComp = listMat.getValue();
                         Long max = listSameMatComp.get(0).getLong("evaluation");
@@ -3850,7 +3854,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 JsonObjectToAdd = compNoteTemp;
                             }
                         }
-                        listSameCompMaxMat.add(JsonObjectToAdd);
+                        listSameCompMaxOrAvgMat.add(JsonObjectToAdd);
                     }
                 }
                 //Et on fait la moyenne des maxs de chaque matières dans l'item de compétences
@@ -3862,39 +3866,43 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 String idItem = (idCompetence != null) ? idCompetence.toString() : "null";
                 idItem += idEleve;
-                float sum = 0L;
-                float nbrofMat = 0L;
-                for (JsonObject compNoteTemp : listSameCompMaxMat) {
-                    Long evaluation = compNoteTemp.getLong("evaluation");
-                    Long niveauFinal = compNoteTemp.getLong("niveau_final");
-                    Long niveauFinalAnnuel = compNoteTemp.getLong("niveau_final_annuel");
-                    Long valueToTake;
-                    if (takeNivFinal) {
-                        if(niveauFinalAnnuel != null)
-                            valueToTake = niveauFinalAnnuel;
-                        else
-                            valueToTake = (niveauFinal != null) ? niveauFinal : evaluation;
-                    }else{
-                        valueToTake = evaluation;
-                    }
-                    if (valueToTake != null) {
-                        sum += valueToTake;
-                        nbrofMat++;
-
-                    }
-                }
-
-                float moyenneToSend;
-                if (nbrofMat != 0)
-                    moyenneToSend = sum / nbrofMat ;
-                else
-                    moyenneToSend = 1f;
-
-                compNote.put("evaluation", moyenneToSend).put("niveau_final", moyenneToSend);
+                float moyenneToSend = calculMoyCompetence(listSameCompMaxOrAvgMat,takeNivFinal);
+                int moyenneConverted = utilsService.getPositionnementValue(moyenneToSend+1, tableauConversion)-1;
+                //evaluations pour le calcul du positionnement sans la convertion et evaluationGraph converti pour les proportions du graphe
+                compNote.put("evaluation", moyenneToSend).put("niveau_final", moyenneToSend).put("evaluationGraph", moyenneConverted);
                 maxComp.put(idItem, compNote);
             }
         }
         return maxComp;
+    }
+
+    private float calculMoyCompetence(List<JsonObject> listSameComp, Boolean  takeNivFinal){
+        float avg;
+        float sum = 0L;
+        float nbrofElt = 0L;
+        for (JsonObject compNoteTemp : listSameComp) {
+            Float evaluation = compNoteTemp.getFloat("evaluation");
+            Float niveauFinal = compNoteTemp.getFloat("niveau_final");
+            Float niveauFinalAnnuel = compNoteTemp.getFloat("niveau_final_annuel");
+            Float valueToTake;
+            if (Boolean.TRUE.equals(takeNivFinal)){
+                if(niveauFinalAnnuel != null)
+                    valueToTake = niveauFinalAnnuel;
+                else
+                    valueToTake = (niveauFinal != null) ? niveauFinal : evaluation;
+            }else{
+                valueToTake = evaluation;
+            }
+            if (valueToTake != null) {
+                sum += valueToTake;
+                nbrofElt++;
+            }
+        }
+        if (nbrofElt != 0)
+            avg = sum / nbrofElt ;
+        else
+            avg = -2f;
+        return avg;
     }
 
     private void linkIdSubjectToLibelle(String idEleve, Long idPeriode, Map<String, JsonArray> matieresCompNotes,
