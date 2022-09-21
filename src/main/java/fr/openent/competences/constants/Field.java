@@ -61,6 +61,7 @@ public class Field {
     //Event bus
     public static final String OK = "ok";
     public static final String STATUS = "status";
+    public static final String RESULT = "result";
     public static final String RESULTS = "results";
     public static final String SUBJECTID = "subjectId";
     public static final String GROUPID = "groupId";
@@ -128,6 +129,85 @@ public class Field {
 
     public static final String ID_DEVOIR = "id_devoir";
     //public static final String ID_STRUCTURE = "idStructure";
+
+    //schemas
+    public static final String DB_SCHEMA = "db-schema";
+    public static final String DB_VIESCO_SCHEMA = "vsco-schema";
+
+    // TABLE
+    public static final String APPRECIATION_CLASSE_TABLE = "appreciation_classe";
+    public static final String APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE = "appreciation_elt_bilan_periodique_classe";
+    public static final String APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE = "appreciation_elt_bilan_periodique_eleve";
+    public static final String APPRECIATION_MATIERE_PERIODE_TABLE = "appreciation_matiere_periode";
+    public static final String APPRECIATIONS_TABLE = "appreciations";
+    public static final String AVIS_CONSEIL_DE_CLASSE_TABLE = "avis_conseil_de_classe";
+    public static final String AVIS_CONSEIL_BILAN_PERIODIQUE_TABLE = "avis_conseil_bilan_periodique";
+    public static final String AVIS_CONSEIL_ORIENTATION_TABLE ="avis_conseil_orientation";
+    public static final String BFC_SYNTHESE_TABLE = "bfc_synthese";
+    public static final String BFC_TABLE = "bilan_fin_cycle";
+    public static final String BFC_ARCHIVE_TABLE = "archive_bfc";
+
+    public static final String BULLETIN_ARCHIVE_TABLE = "archive_bulletins";
+    public static final String CLASS_APPRECIATION_DIGITAL_SKILLS = "class_appreciation_digital_skills";
+    public static final String COMPETENCE_NIVEAU_FINAL = "competence_niveau_final";
+    public static final String COMPETENCE_NIVEAU_FINAL_ANNUEL = "competence_niveau_final_annuel";
+    public static final String COMPETENCES_TABLE = "competences";
+    public static final String COMPETENCES_DEVOIRS = "competences_devoirs";
+    public static final String COMPETENCES_NOTES_TABLE = "competences_notes";
+    public static final String CYCLE_TABLE = "cycle";
+    public static final String DEVOIR_TABLE = "devoirs";
+
+    public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
+    public static final String DIGITAL_SKILLS_TABLE = "digital_skills";
+    public static final String DOMAINE_DIGITAL_SKILLS_TABLE = "domaines_digital_skills";
+    public static final String DISPENSE_DOMAINE_ELEVE = "dispense_domaine_eleve";
+    public static final String DOMAINES_TABLE = "domaines";
+
+    public static final String ELEMENT_PROGRAMME_TABLE = "element_programme";
+    public static final String ELEVE_ENSEIGNEMENT_COMPLEMENT = "eleve_enseignement_complement";
+    public static final String ELEVES_IGNORES_LSU_TABLE = "eleves_ignores_lsu";
+    public static final String ELT_BILAN_PERIODIQUE_TABLE = "elt_bilan_periodique";
+    public static final String ENSEIGNEMENT_COMPLEMENT = "enseignement_complement";
+    public static final String ENSEIGNEMENTS_TABLE = "enseignements";
+
+    public static final String LANGUES_CULTURE_REGIONALE = "langues_culture_regionale";
+    public static final String MATIERE_TABLE = "matiere";
+    public static final String MODALITES_TABLE = "modalites";
+    public static final String MOYENNE_FINALE_TABLE = "moyenne_finale";
+    public static final String NIVEAU_COMPETENCES_TABLE = "niveau_competences";
+    public static final String NIVEAU_ENS_COMPLEMENT = "niveau_ens_complement";
+
+    public static final String NOTES_TABLE = "notes";
+    public static final String PERSO_COMPETENCES_TABLE = "perso_competences";
+    public static final String PERSO_NIVEAU_COMPETENCES_TABLE = "perso_niveau_competences";
+    public static final String PERSO_COMPETENCES_ORDRE_TABLE = "perso_order_item_enseignement";
+    public static final String REL_ANNOTATIONS_DEVOIRS_TABLE = "rel_annotations_devoirs";
+    public static final String REL_COMPETENCES_DOMAINES_TABLE = "rel_competences_domaines";
+    public static final String REL_COMPETENCES_ENSEIGNEMENTS_TABLE = "rel_competences_enseignements";
+    public static final String REL_DEVOIRS_GROUPES_TABLE = "rel_devoirs_groupes";
+
+    public static final String REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE = "rel_groupe_appreciation_elt_eleve";
+    public static final String REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE = "rel_elt_bilan_periodique_groupe";
+    public static final String REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE = "rel_elt_bilan_periodique_intervenant_matiere";
+    public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
+    public static final String REL_APPRECIATION_USERS_NEO_TABLE = "rel_appreciations_users_neo";
+    public static final String STUDENT_APPRECIATION_DIGITAL_SKILLS_TABLE = "student_appreciation_digital_skills";
+    public static final String STUDENT_DIGITAL_SKILLS_TABLE = "student_digital_skills";
+    public static final String STSFILE_TABLE = "sts_file";
+    public static final String SYNTHESE_BILAN_PERIODIQUE_TABLE = "synthese_bilan_periodique";
+    public static final String THEMATIQUE_BILAN_PERIODIQUE_TABLE = "thematique_bilan_periodique";
+    public static final String TRANSITION_TABLE = "transition";
+    public static final String USERS_TABLE = "users";
+    public static final String USE_PERSO_NIVEAU_COMPETENCES_TABLE = "use_perso";
+    public static final String VIESCO_ABSENCES_ET_RETARDS_TABLE = "absences_et_retards";
+    public static final String VIESCO_PERIODE_TABLE = "periode";
+    public final static String VIESCO_MATIERE_LIBELLE_TABLE = "subject_libelle";
+    public final static String VIESCO_MODEL_MATIERE_LIBELLE_TABLE = "model_subject_libelle";
+    public static final String VIESCO_MULTI_TEACHING_TABLE = "multi_teaching";
+    public final static String VIESCO_MATIERE_TABLE = "matiere";
+    public final static String VIESCO_SOUS_MATIERE_TABLE = "sousmatiere";
+    public final static String VIESCO_TYPE_SOUS_MATIERE_TABLE = "type_sousmatiere";
+    public final static String VIESCO_SERVICES_TABLE = "services";
 
     //numbers
     public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
