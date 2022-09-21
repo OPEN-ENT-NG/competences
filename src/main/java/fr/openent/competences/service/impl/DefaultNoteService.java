@@ -601,6 +601,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             values.add(periodeId);
         }
 
+        query.append("AND devoirs.eval_lib_historise = false ");
+
         Sql.getInstance().prepared(query.toString(), values,Competences.DELIVERY_OPTIONS, validResultHandler(handler));
     }
 
