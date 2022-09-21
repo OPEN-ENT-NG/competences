@@ -2200,6 +2200,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             if($scope.devoir.matiere) {
                 $scope.devoir.id_matiere = $scope.devoir.matiere.id;
+                $scope.devoir.id_sousmatiere = null;
                 if ($scope.devoir.matiere.sousMatieres && $scope.devoir.matiere.sousMatieres.all.length > 0) {
                     // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
                     $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
