@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.StructureOptionsService;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
@@ -283,7 +284,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         + idStructureATraiter));
                 return;
             }
-            Boolean isSkillAverage = responseCalculate.right().getValue().getBoolean("is_average_skills");
+            Boolean isSkillAverage = responseCalculate.right().getValue().getBoolean(Field.IS_AVERAGE_SKILLS);
 
             JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
