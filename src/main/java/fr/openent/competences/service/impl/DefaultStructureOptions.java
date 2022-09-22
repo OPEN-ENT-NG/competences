@@ -4,7 +4,9 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.StructureOptionsService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -44,4 +46,22 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
         Sql.getInstance().prepared(query.toString(), params, Competences.DELIVERY_OPTIONS,
                 validUniqueResultHandler(handler));
     }
+
+    /**
+     * @param structureId structure id
+     * @return response
+     */
+    @Override
+    public Future<Boolean> isAverageSkills (String structureId) {
+
+        Promise<Boolean> promise = Promise.promise();
+        getIsAverageSkills(structureId, event -> {
+            if(event.isRight())
+                promise.complete(event.right().getValue().getBoolean(Field.IS_AVERAGE_SKILLS)); // pour "is_average_skills"
+            else
+                promise.fail(event.left().getValue());
+        });
+        return promise.future();
+    }
+
 }
