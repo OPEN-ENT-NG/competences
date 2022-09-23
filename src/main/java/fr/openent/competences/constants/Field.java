@@ -23,6 +23,7 @@ public class Field {
     public static final String ID_PERIODE = "id_periode";
     public static final String IDPERIODE = "idPeriode";
     public static final String ID_ELEVE = "id_eleve";
+    public static final String IDELEVE = "idEleve";
     public static final String ID_CLASSE = "id_classe";
     public static final String ID_ELEVE_MOYENNE_FINALE = "id_eleve_moyenne_finale";
     public static final String ID_SOUSMATIERE = "id_sousmatiere";
