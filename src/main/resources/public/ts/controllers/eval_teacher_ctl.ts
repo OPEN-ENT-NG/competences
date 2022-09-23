@@ -3206,7 +3206,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.calculerMoyenneEleve = async function (eleve, idClasse, idMatiere?) {
             if (idMatiere != null) {
-                await eleve.getMoyenne($scope.releveNote.devoirs.all, $scope.releveNote.idEtablissement, idClasse, $scope.releveNote.periode.id, idMatiere);
+                await eleve.getMoyenne($scope.releveNote.devoirs.all, $scope.releveNote.idEtablissement, idClasse, $scope.releveNote.periode.id_type, idMatiere);
             } else {
                 await eleve.getMoyenne($scope.releveNote.devoirs.all);
             }

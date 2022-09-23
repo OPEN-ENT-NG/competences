@@ -700,7 +700,7 @@ public class NoteController extends ControllerHelper {
             public void handle(final UserInfos user) {
                 if (user != null) {
                     List<String> idDevoirsList = request.params().getAll(Field.DEVOIRS);
-                    String idEleve = request.params().get(Field.ID_ELEVE);
+                    String idEleve = request.params().get(Field.IDELEVE);
                     String idEtablissement = request.params().get(Field.IDETABLISSEMENT);
                     String idClasse = request.params().get(Field.IDCLASSE);
                     String idMatiere = request.params().get(Field.IDMATIERE);
