@@ -37,7 +37,9 @@ export class SubtopicserviceService implements Selectable{
         this.id_group = data.id_group;
         this.id_topic = data.id_topic;
         this.id_subtopic = data.id_subtopic;
-        this.coefficient = (parseFloat(data.coefficient)) ? parseFloat(data.coefficient) : 1;
+        this.coefficient = (parseFloat(data.coefficient));
+        if (this.coefficient == null)
+            this.coefficient = 1;
         return this;
     }
 }
