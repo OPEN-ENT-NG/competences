@@ -848,7 +848,7 @@ public class DevoirController extends ControllerHelper {
     @ApiDoc("Permet de positionner une évaluation à 100% terminée même si des compétences ou des notes n'ont pas toutes été saisies")
     public void finishDevoir(final HttpServerRequest request) {
         try {
-            Long idDevoir = Long.parseLong(request.params().get(Field.ID_DEVOIR));
+            Long idDevoir = Long.parseLong(request.params().get(Field.IDDEVOIR));
             devoirsService.updatePercent(idDevoir, 100, arrayResponseHandler(request));
         } catch (NumberFormatException err) {
             leftToResponse(request, new Either.Left<>(err.toString()));
