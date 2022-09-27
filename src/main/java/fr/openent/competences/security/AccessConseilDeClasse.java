@@ -13,7 +13,7 @@ public class AccessConseilDeClasse implements ResourcesProvider {
 
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        final String idStructure = request.params().get(Field.ID_STRUCTURE);
+        final String idStructure = request.params().get(Field.IDSTRUCTURE);
         handler.handle(user.getStructures().contains(idStructure) &&
                         WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_CONSEIL_DE_CLASSE.toString()));
     }
