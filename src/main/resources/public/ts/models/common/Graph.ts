@@ -429,30 +429,22 @@ export class Graph extends Model{
                 let nbrCompNotes = (!matiereOrDomaine.competencesNotesEleve) ? 0 :
                     (matiereOrDomaine.competencesNotesEleve.length - nbrCompNotesUnevaluated);
 
-                let nbrCompNotes_set1 = _.union(
-                    _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 0, niveau_final: null}),
-                    _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 0}));
+                let nbrCompNotes_set1 = _.where(matiereOrDomaine.competencesNotesEleve, {evaluationGraph: 0});
                 nbrCompNotes_set1 = !(nbrCompNotes_set1) ? 0 : nbrCompNotes_set1.length;
                 let set1_val = Math.min(diviseur, diviseur * (nbrCompNotes_set1 / (nbrCompNotes)));
                 let set1_percent = `${(nbrCompNotes_set1 * 100 / (nbrCompNotes)).toFixed(1)} %`;
 
-                let nbrCompNotes_set2 = _.union(
-                    _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 1, niveau_final: null}),
-                    _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 1}));
+                let nbrCompNotes_set2 = _.where(matiereOrDomaine.competencesNotesEleve, {evaluationGraph: 1});
                 nbrCompNotes_set2 = !(nbrCompNotes_set2) ? 0 : nbrCompNotes_set2.length;
                 let set2_val = Math.min(diviseur, diviseur * (nbrCompNotes_set2 / (nbrCompNotes)) + set1_val);
                 let set2_percent = `${(nbrCompNotes_set2 * 100 / (nbrCompNotes)).toFixed(1)} %`;
 
-                let nbrCompNotes_set3 = _.union(
-                    _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 2, niveau_final: null}),
-                    _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 2}));
+                let nbrCompNotes_set3 = _.where(matiereOrDomaine.competencesNotesEleve, {evaluationGraph: 2});
                 nbrCompNotes_set3 = !(nbrCompNotes_set3) ? 0 : nbrCompNotes_set3.length;
                 let set3_val = Math.min(diviseur, diviseur * (nbrCompNotes_set3 / (nbrCompNotes)) + set2_val);
                 let set3_percent = `${(nbrCompNotes_set3 * 100 / (nbrCompNotes)).toFixed(1)} %`;
 
-                let nbrCompNotes_set4 = _.union(
-                    _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 3, niveau_final: null}),
-                    _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 3}));
+                let nbrCompNotes_set4 = _.where(matiereOrDomaine.competencesNotesEleve, {evaluationGraph: 3});
                 nbrCompNotes_set4 = !(nbrCompNotes_set4) ? 0 : nbrCompNotes_set4.length;
                 let set4_val = Math.min(diviseur, diviseur * (nbrCompNotes_set4 / (nbrCompNotes)) + set3_val);
                 let set4_percent = `${(nbrCompNotes_set4 * 100 / (nbrCompNotes)).toFixed(1)} %`;

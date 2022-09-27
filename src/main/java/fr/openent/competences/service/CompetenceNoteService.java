@@ -104,7 +104,16 @@ public interface CompetenceNoteService extends CrudService {
      */
     void dropCompetencesNotesDevoir(JsonArray oIdsJsonArray, Handler<Either<String, JsonArray>> handler);
 
-    void getMaxCompetenceNoteEleveByPeriod (String[] idEleves, Long idPeriode, Boolean isYear, Handler<Either<String, JsonArray>> handler);
+    /**
+     * Get max or average competenceNote
+     * @param idEleves id Eleves
+     * @param idPeriode id Periode
+     * @param isYear isYear
+     * @param isSkillAverage isSkillAverage
+     * @param  handler handler
+     */
+    void getMaxOrAverageCompetenceNoteEleveByPeriod (String[] idEleves, Long idPeriode, Boolean isYear, Boolean isSkillAverage,
+                                            Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère toutes les compétences notes d'un élève
@@ -117,27 +126,21 @@ public interface CompetenceNoteService extends CrudService {
     void getCompetencesNotesEleve(String idEleve, Long idPeriode, Long idCycle, boolean isCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
-     * Récupère toutes les compétences notes d'une classe
+     * Récupère toutes les compétences notes d'une classe soit le max de la note chaque item soit la moyenne des notes de chaque item
+     * pour un periode donnée ou l'année
      * @param idEleves identifiant des élèves de la classe
      * @param idPeriode identifiant de la période
+     * @param isSkillAverage chois du calcul
      * @param handler handler portant le résultat de la requête
      */
-    void getCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * Récupère toutes les compétences notes d'une classe
-     * @param idEleves identifiant des élèves de la classe
-     * @param idPeriode identifiant de la période
-     * @param handler handler portant le résultat de la requête
-     * @param idDomaines filtre sur les domaines
-     */
-    void getCompetencesNotesDomaineClasse(List<String> idEleves, Long idPeriode, List<String> idDomaines, Handler<Either<String, JsonArray>> handler);
+    void getMaxOrAverageCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Boolean isSkillAverage,
+                                               Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère la table de correspendance entre (Moyenne Note - Evaluation competence) d'un cycle et etablissment donné
      * @param idEtablissement identifiant de l'établissement
      * @param idclasse identifiant de la classe
-     * @param handler
+     * @param handler handler
      **/
     void getConversionNoteCompetence(String idEtablissement, String idclasse, Handler<Either<String, JsonArray>> handler);
 
@@ -148,7 +151,8 @@ public interface CompetenceNoteService extends CrudService {
      * @param isClassList boolean for the params of request
      * @param handler response
      */
-    void getConversionTableByClass(String idEtablissement, List<String> idsClasses, Boolean isClassList, Handler<Either<String, JsonArray>> handler);
+    void getConversionTableByClass(String idEtablissement, List<String> idsClasses, Boolean isClassList,
+                                   Handler<Either<String, JsonArray>> handler);
     /**
      * Récupère les cycles des groupes sur lequels un élève a des devoirs avec compétences notées
      * @param idEleve id de l'élève
@@ -156,7 +160,16 @@ public interface CompetenceNoteService extends CrudService {
      */
     void getCyclesEleve(String idEleve, Handler<Either<String, JsonArray>> handler);
 
-    void getMaxCompetenceNoteEleveByCycle (String[] id_eleve, Long idCycle, Handler<Either<String, JsonArray>> handler);
+    /**
+     * Récupère toutes les compétences notes d'une classe soit le max de la note chaque item soit la moyenne des notes de chaque item
+     * pour un cycle
+     * @param id_eleve identifiant des élèves de la classe
+     * @param idCycle id du cycle
+     * @param isSkillAverage choix du calcul
+     * @param handler handler portant le résultat de la requête
+     */
+    void getMaxOrAverageCompetenceNoteEleveByCycle (String[] id_eleve, Long idCycle, Boolean isSkillAverage,
+                                                    Handler<Either<String, JsonArray>> handler);
 
     /**
      * utilise la méthode getConversionNoteCompetence pour associer ordre du niveau de compétence au barème du brevet
@@ -164,5 +177,6 @@ public interface CompetenceNoteService extends CrudService {
      * @param idClasse id de la classe
      * @param handler retourne la réponse
      */
-    void getMaxBaremeMapOrderBaremeBrevet(String idEtablissement, String idClasse, Handler<Either<String,Map<Integer, Map<Integer,Integer>>>> handler);
+    void getMaxBaremeMapOrderBaremeBrevet(String idEtablissement, String idClasse,
+                                          Handler<Either<String,Map<Integer, Map<Integer,Integer>>>> handler);
 }

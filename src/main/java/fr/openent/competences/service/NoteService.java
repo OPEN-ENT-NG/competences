@@ -229,7 +229,7 @@ public interface NoteService extends CrudService {
 
     void calculPositionnementAutoByEleveByMatiere(JsonArray listNotes, JsonObject result, Boolean annual,
                                                   JsonArray tableauConversion,
-                                                  List<String> idsClassWithNoteAppCompNoteStudent, Long idPeriodAsked);
+                                                  List<String> idsClassWithNoteAppCompNoteStudent, Long idPeriodAsked, boolean isAvgSkill);
 
     void getMoyennesFinal(String[] idEleves, Integer idPeriode, String[] idMatieres, String[] idClasses,
                           Handler<Either<String, JsonArray>> handler);
