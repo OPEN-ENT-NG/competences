@@ -226,7 +226,7 @@ export const itemsCompetences = {
                 id_cycle: connaissance.id_cycle,
                 id_enseignement: connaissance.id_enseignement,
                 id_type: 2,
-                ids_domaine: connaissance.ids_domaine_int,
+                ids_domaine: (connaissance.ids_domaine_int != null ? connaissance.ids_domaine_int : []),
                 id_etablissement: this.itemsCompetences.that.structure.id
             };
             this.itemsCompetences.that.printDomaines = _.clone(domaines);
