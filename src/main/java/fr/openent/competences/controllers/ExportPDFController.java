@@ -1109,7 +1109,7 @@ public class ExportPDFController extends ControllerHelper {
                                         note.put("nonEvalue", false);
 
                                         DecimalFormat decimalFormat = new DecimalFormat("#.0");
-                                        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
+                                        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
 
                                         String moyCalcule = decimalFormat.format(resultNote.getDouble(MOYENNE).doubleValue());
                                         if (isHabilite)
