@@ -74,6 +74,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     private DefaultNoteService noteService;
     private DefaultMatiereService matiereService;
     private DefaultCompetenceNoteService competenceNoteService;
+    private DefaultSubTopicService subTopicService;
     private final Neo4j neo4j = Neo4j.getInstance();
     private EventBus eb;
     protected static final Logger log = LoggerFactory.getLogger(DefaultDevoirService.class);
@@ -84,6 +85,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         matiereService = new DefaultMatiereService(eb);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SUBTOPIC_TABLE);
         this.eb = eb;
     }
 
@@ -1503,9 +1505,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 final JsonArray matieres = matieresFuture.result();
                 final JsonArray groups = groupsFuture.result();
 
-                Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-                utilsService.getSubTopicCoeff(idEtablissement,subTopicCoefPromise);
-
                 Future<JsonArray> servicesFuture = Future.future();
                 utilsService.getServices(idEtablissement, groups,
                         servicesEvent -> formate(servicesFuture, servicesEvent)
@@ -1516,7 +1515,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent)
                 );
 
-                subTopicCoefPromise.future()
+                getSubTopicCoeff(idEtablissement)
                         .onSuccess(subTopics -> CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(teachersEvent -> {
                             if (teachersEvent.failed()) {
                                 handler.handle(new Either.Left<>(teachersEvent.cause().getMessage()));
@@ -1547,6 +1546,18 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         .onFailure(err -> handler.handle(new Either.Left<>(err.getMessage())));
             }
         });
+    }
+
+    public Future<List<SubTopic>> getSubTopicCoeff(String idEtablissement) {
+        Promise<List<SubTopic>> promise = Promise.promise();
+        subTopicService.getSubtopicServices(idEtablissement, event -> {
+            if(event.isRight()){
+                utilsService.setSubtopics(promise, event);
+            }else{
+                promise.fail(event.left().getValue());
+            }
+        });
+        return promise.future();
     }
 
     private void buildArrayFromHomeworks(JsonObject result, JsonArray devoirs, JsonArray annotations,
