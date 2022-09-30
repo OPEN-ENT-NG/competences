@@ -75,4 +75,15 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
         Sql.getInstance().prepared(query,params, validUniqueResultHandler(handler));
 
     }
+
+    @Override
+    public void deleteSubtopicServices(String idMatiere, String idEnseignant, JsonArray idGroups, Handler<Either<String, JsonArray>> handler) {
+        String query = "DELETE FROM " + this.resourceTable +
+                " WHERE id_topic = ? " +
+                " AND id_teacher = ? " +
+                " AND id_group = ? ";
+        JsonArray params = new JsonArray().add(idMatiere).add(idEnseignant).addAll(idGroups);
+        Sql.getInstance().prepared(query, params, validResultHandler(handler));
+
+    }
 }

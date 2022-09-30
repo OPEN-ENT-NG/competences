@@ -19,14 +19,12 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.service.DevoirService;
+import fr.openent.competences.constants.Field;
+import fr.openent.competences.service.SubTopicService;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.ShareCompetencesService;
 import fr.openent.competences.service.UtilsService;
-import fr.openent.competences.service.impl.DefaultDevoirService;
-import fr.openent.competences.service.impl.DefaultNoteService;
-import fr.openent.competences.service.impl.DefaultShareCompetencesService;
-import fr.openent.competences.service.impl.DefaultUtilsService;
+import fr.openent.competences.service.impl.*;
 import fr.wseduc.bus.BusAddress;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.security.SecuredAction;
@@ -46,11 +44,13 @@ public class EventBusController extends ControllerHelper {
     private final ShareCompetencesService competencesShareService;
     private UtilsService utilsService;
     private NoteService noteService;
+    private SubTopicService subTopicService;
 
     public EventBusController(Map<String, SecuredAction> securedActions) {
         utilsService = new DefaultUtilsService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
         competencesShareService = new DefaultShareCompetencesService(eb,securedActions);
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SERVICE_SUBTOPIC);
     }
 
     @BusAddress("competences")
@@ -81,6 +81,9 @@ public class EventBusController extends ControllerHelper {
                 homeworksBusService(method, message);
             }
             break;
+            case "services": {
+                servicesBusService(method, message);
+            }
         }
     }
 
@@ -148,6 +151,21 @@ public class EventBusController extends ControllerHelper {
             break;
             default: {
                 message.reply(getErrorReply("Method not found"));
+            }
+        }
+    }
+
+    private void servicesBusService(String method, Message<JsonObject> message) {
+        switch (method) {
+            case "deleteSubtopics": {
+                String idMatiere = message.body().getString("id_matiere");
+                String idEnseignant = message.body().getString("id_enseignant");
+                JsonArray idGroups = message.body().getJsonArray("id_groups");
+                subTopicService.deleteSubtopicServices(idMatiere, idEnseignant, idGroups, getJsonArrayBusResultHandler(message));
+            }
+            break;
+            default: {
+                message.reply(getErrorReply("Method in servicesBusService not found"));
             }
         }
     }
