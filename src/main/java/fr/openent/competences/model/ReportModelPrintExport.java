@@ -9,6 +9,8 @@ import fr.openent.competences.enums.report_model_print_export.ReportModelPrintEx
 import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportMongo;
 import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportPreferencesCheckbox;
 import io.vertx.core.json.JsonObject;
+
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +18,7 @@ public class ReportModelPrintExport extends Model implements Cloneable {
 
     private String id;
     private String userId;
+    private String structureId;
     private String title;
     private Boolean selected;
     private List<String> preferencesCheckbox;
@@ -29,6 +32,7 @@ public class ReportModelPrintExport extends Model implements Cloneable {
     }
 
     public ReportModelPrintExport(
+            String structureId,
             String title,
             Boolean selected,
             JsonObject preferencesCheckbox,
@@ -36,6 +40,7 @@ public class ReportModelPrintExport extends Model implements Cloneable {
         super();
         this.initListPreferencesCheckbox();
         this.initListPreferencesText();
+        this.structureId = structureId;
         this.title = title;
         this.selected = selected;
         if (preferencesCheckbox != null) this.setPreferencesCheckbox(preferencesCheckbox);
@@ -49,6 +54,9 @@ public class ReportModelPrintExport extends Model implements Cloneable {
 
     public String getUserId() {
         return this.userId;
+    }
+    public String getStructure() {
+        return this.structureId;
     }
 
     public String getTitle() {
@@ -74,6 +82,10 @@ public class ReportModelPrintExport extends Model implements Cloneable {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public void setStructure(String structure) {
+        this.structureId = structure;
     }
 
     private void setPreferencesCheckbox(JsonObject dirtyPreferences) {
@@ -112,6 +124,7 @@ public class ReportModelPrintExport extends Model implements Cloneable {
     public JsonObject toJsonObject() {
         JsonObject json = new JsonObject();
         if (this.getId() != null) json.put(ReportModelPrintExportMongo.KEY_ID.getString(), this.getId());
+        if (this.getStructure() != null) json.put(ReportModelPrintExportMongo.KEY_STRUCTUREID.getString(), this.getStructure());
         if (this.getUserId() != null) json.put(ReportModelPrintExportMongo.KEY_USER_ID.getString(), this.getUserId());
         if (this.getTitle() != null) json.put(ReportModelPrintExportMongo.KEY_TITLE.getString(), this.getTitle());
         if (this.getSelected() != null)

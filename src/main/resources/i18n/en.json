@@ -10,5 +10,6 @@
 	"competences.memento.widget.last.notes.no.notes": "There is no note saved for the moment",
 	"competences.memento.widget.average.subjects.no.notes": "There is no note for this period",
 	"competences.memento.widget.subject.detail.no.notes": "There are no ratings for the selected filters",
-	"competences.memento.notes.init.failed": "An error occurred while loading the notes widget"
+	"competences.memento.notes.init.failed": "An error occurred while loading the notes widget",
+	"competences.report-model.api.error.remove": "An error occurred when deleting a model"
 }

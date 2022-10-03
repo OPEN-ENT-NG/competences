@@ -1,6 +1,7 @@
 export interface ReportModelPrintExportType {
     //getters
     getId(): mongoId;
+    getIdStructure(): String;
     getTitle(): String;
     getSelected(): Boolean;
     getPreferencesCheckbox(): PreferencesCheckboxReportModel;
@@ -8,6 +9,7 @@ export interface ReportModelPrintExportType {
     getState(): String;
 
     //setters
+    setIdStructure(structureId:String);
     setTitle(title:String);
     setSelected(selected:Boolean);
     setPreferencesCheckbox(preferences:PreferencesCheckboxReportModel | {});
@@ -29,6 +31,7 @@ export interface ReportModelPrintExportType {
 }
 
 export interface toJson {
+    structureId: String;
     title: String;
     selected: Boolean;
     preferencesCheckbox: PreferencesCheckboxReportModel;

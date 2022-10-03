@@ -9,10 +9,11 @@ describe('ReportModelPrintExportService Test', () => {
             jest.spyOn(console, 'error').mockImplementation(() => {});
         });
 
+        let structureId = "9af51dc6-ead0-4edb-8978-da14a3e9f49a";
         it('returns data when retrieve request getAll is correctly called', done => {
             let spy = jest.spyOn(axios, "get");
-            reportModelPrintExportService.getAll().then(response => {
-                expect(spy).toHaveBeenCalledWith("/competences/reports-models-print-export");
+            reportModelPrintExportService.getAll(structureId).then(response => {
+                expect(spy).toHaveBeenCalledWith("/competences/reports-models-print-export/structure/" + structureId);
                 done();
             });
         });

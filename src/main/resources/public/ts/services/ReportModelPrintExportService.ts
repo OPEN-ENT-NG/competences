@@ -15,9 +15,9 @@ const {
 } = ReportModelPrintExportConstant;
 
 export const reportModelPrintExportService: ReportModelPrintExportServiceType = {
-    getAll: async ():Promise<Array<ReportModelPrintExport>> => {
+    getAll: async (structureId):Promise<Array<ReportModelPrintExport>> => {
         try {
-            const response = await http.get(URL_API_GET_ALL);
+            const response = await http.get(`${URL_API_GET_ALL}${structureId}`);
             const dirtyData:Array<ReportModelPrintExport> = controlDataAndGetResult(response);
             if(!dirtyData) return [];
             return preparedReportModels(dirtyData);

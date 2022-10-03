@@ -771,6 +771,7 @@
   "competences.report-model.api.error.getAll": "Erreur lors de la récupération des préferences pour le bulletin",
   "competences.report-model.api.error.update": "Erreur lors de la modification de la préference pour le bulletin",
   "competences.report-model.api.error.create": "Erreur lors de la création de la préference pour le bulletin",
+  "competences.report-model.api.error.remove": "Erreur lors de la suppression d'un modèle",
 
   "viescolaire.program.add": "Ajouter un élément à ce sous-domaine",
 

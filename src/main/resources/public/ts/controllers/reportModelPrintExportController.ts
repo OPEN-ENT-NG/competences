@@ -3,12 +3,11 @@ import {ReportModelPrintExportServiceType} from "../services/type";
 import * as utilsTeacher from '../utils/teacher';
 import {ReportModelPrintExportType} from "../models/type";
 import {ReportModelPrintExport} from "../models/teacher/ReportModelPrintExport";
-import {
-    ReportModelPrintExportConstant,
-} from "../constants"
+import {ReportModelPrintExportConstant,} from "../constants"
 
 const {
     DELETED,
+    KEY_STRUCTUREID,
     KEY_TITLE,
     KEY_SELECTED,
 } = ReportModelPrintExportConstant;
@@ -21,8 +20,8 @@ const reportModelPrintExportController = ng.controller(
                         ReportModelPrintExportService: ReportModelPrintExportServiceType) {
 
             const initDataReportModel = await Promise.all([
-                ReportModelPrintExportService.getAll(),
-                ReportModelPrintExportService.getAll(),
+                ReportModelPrintExportService.getAll($scope.evaluations.structure.id),
+                ReportModelPrintExportService.getAll($scope.evaluations.structure.id),
             ]);
             $scope.allReportModelPrintExport = initDataReportModel[0];
             const reportsModelForCheckSubmit = initDataReportModel[1];
@@ -160,6 +159,7 @@ const reportModelPrintExportController = ng.controller(
                         $scope.newReportModel.setPreferencesCheckboxWithClean(print);
                         $scope.newReportModel.setPreferencesTextWithClean(print);
                     }
+                    $scope.newReportModel.setIdStructure($scope.evaluations.structure.id);
                 }
                 await $scope.newReportModel.post();
             }
@@ -174,7 +174,7 @@ const reportModelPrintExportController = ng.controller(
                     cleanReportModelNoEdit();
                     cleanTitleEmptyBeforePut();
                     for (const reportModel of allReportModelPrintExportChecked()) {
-                        reportModel.put([KEY_TITLE, KEY_SELECTED]);
+                        reportModel.put([KEY_TITLE, KEY_STRUCTUREID, KEY_SELECTED]);
                     }
                 }
 

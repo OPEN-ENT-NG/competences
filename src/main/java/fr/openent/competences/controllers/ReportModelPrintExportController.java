@@ -1,9 +1,13 @@
 package fr.openent.competences.controllers;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.Common;
 import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportMongo;
 import fr.openent.competences.helper.ManageError;
 import fr.openent.competences.model.ReportModelPrintExport;
+import fr.openent.competences.security.UserIdStructure;
+import fr.openent.competences.security.modelbulletinrights.UserIdModelExportBulletin;
+import fr.openent.competences.security.modelbulletinrights.GetModelExportBulletin;
 import fr.openent.competences.service.ReportModelPrintExportService;
 import fr.openent.competences.service.impl.DefaultReportModelPrintExportService;
 import fr.wseduc.rs.*;
@@ -13,6 +17,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -27,7 +32,8 @@ public class ReportModelPrintExportController extends ControllerHelper {
 
     @Post("/report-model-print-export")
     @ApiDoc("Post report model")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(UserIdStructure.class)
     public void postReportModel(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "reportModelPrintExport", bodyRequest -> {
             UserUtils.getUserInfos(eb, request, user -> {
@@ -47,17 +53,16 @@ public class ReportModelPrintExportController extends ControllerHelper {
         });
     }
 
-    @Get("/reports-models-print-export")
-    @ApiDoc("Get all report model by user")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @Get("/reports-models-print-export/structure/:structureId")
+    @ApiDoc("Get all report model by idStructure")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(GetModelExportBulletin.class)
     public void getReportModel(final HttpServerRequest request) {
+        String idStructure = request.getParam("structureId");
         UserUtils.getUserInfos(eb, request, user -> {
-            if (!ManageError.haveUser(request, user)) {
-                return;
-            }
+            ReportModelPrintExport newReportModel = new ReportModelPrintExport();
             try {
-                ReportModelPrintExport newReportModel = new ReportModelPrintExport();
-                newReportModel.setUserId(user.getUserId());
+                newReportModel.setStructure(idStructure);
                 reportModelService.getReportModel(newReportModel, defaultResponseHandler(request));
             } catch (Exception errorUpdate) {
                 ManageError.requestFailError(request, Common.ERROR.getString(),
@@ -68,7 +73,8 @@ public class ReportModelPrintExportController extends ControllerHelper {
 
     @Put("/report-model-print-export/:idReportModel")
     @ApiDoc("Update report model")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(UserIdModelExportBulletin.class)
     public void putReportModel(final HttpServerRequest request) {
         String idReportModel = request.getParam("idReportModel");
         RequestUtils.bodyToJson(request, bodyRequest -> {
@@ -109,7 +115,8 @@ public class ReportModelPrintExportController extends ControllerHelper {
 
     @Delete("/report-model-print-export/:idReportModel")
     @ApiDoc("Delete report model")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(UserIdModelExportBulletin.class)
     public void deleteReportModel(final HttpServerRequest request) {
         String idReportModel = request.getParam("idReportModel");
         if (idReportModel.isEmpty()) {
@@ -127,13 +134,15 @@ public class ReportModelPrintExportController extends ControllerHelper {
         }
     }
 
-    private ReportModelPrintExport createReportModelWithBodyRequest( JsonObject bodyRequest){
+    private ReportModelPrintExport createReportModelWithBodyRequest(JsonObject bodyRequest) {
+        String structureId = bodyRequest.getString("structureId");
         String title = bodyRequest.getString("title");
         Boolean selected = bodyRequest.getBoolean("selected");
         JsonObject preferencesCheckbox = bodyRequest.getJsonObject("preferencesCheckbox");
         JsonObject preferencesText = bodyRequest.getJsonObject("preferencesText");
 
         return new ReportModelPrintExport(
+                structureId,
                 title,
                 selected,
                 preferencesCheckbox,

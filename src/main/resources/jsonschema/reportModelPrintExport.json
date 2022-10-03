@@ -3,6 +3,9 @@
   "type": "object",
   "additionalProperties": true,
   "properties": {
+    "idStructure": {
+      "type": "string"
+    },
     "title": {
       "type": "string"
     },
@@ -17,6 +20,7 @@
     }
   },
   "required": [
+    "idStructure",
     "title",
     "selected",
     "preferencesCheckbox",
