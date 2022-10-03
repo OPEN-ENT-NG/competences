@@ -1870,8 +1870,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     private void setAverageOfSubjects(JsonObject result, List<Service> services, JsonArray multiTeachers, Long idPeriod) {
-        Map<SubTopic, List<NoteDevoir>> subTopicNoteDevoirMap = new HashMap<>();
+        DecimalFormat decimalFormat = new DecimalFormat("#.0");
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
         for(Map.Entry<String, Object> resultEntry : result.getMap().entrySet()) {
+            Map<SubTopic, List<NoteDevoir>> subTopicNoteDevoirMap = new HashMap<>();
             JsonObject matiereJO = (JsonObject) resultEntry.getValue();
             List<NoteDevoir> notes = new ArrayList<>();
             Map<Long, SubTopic> subTopicsId = new HashMap<>();
@@ -1882,7 +1884,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     JsonObject matiereDevoirJson = (JsonObject) matiereDevoir;
                     if(matiereDevoirJson.containsKey("note")){
                         if(matiereDevoirJson.getValue("id_sousmatiere") != null){
-                            Service service = new Service();
                             AtomicReference<Double> coeff = new AtomicReference<>(1.d);
                             Matiere matiere = new Matiere(matiereDevoirJson.getString("id_matiere"));
                             Teacher teacher = new Teacher(matiereDevoirJson.getString("owner"));
@@ -1892,28 +1893,36 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                     matiereDevoirJson.getBoolean("ramener_sur"),
                                     Double.parseDouble(matiereDevoirJson.getString(COEFFICIENT)));
 
-                            for (Object mutliTeachO : multiTeachers) {
-                                //multiTeaching.getString("second_teacher_id").equals(teacher.getId()
-                                JsonObject multiTeaching = (JsonObject) mutliTeachO;
-                                if(multiTeaching.getString("main_teacher_id").equals(teacher.getId())
-                                        && multiTeaching.getString("id_classe").equals(group.getId())
-                                        && multiTeaching.getString("subject_id").equals(matiere.getId())){
-                                    service = services.stream()
-                                            .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString("second_teacher_id"))
-                                                    && matiere.getId().equals(el.getMatiere().getId())
-                                                    && group.getId().equals(el.getGroup().getId()))
-                                            .findFirst().orElse(null);
-                                }
+                            Service service = services.stream()
+                                    .filter(el -> teacher.getId().equals(el.getTeacher().getId())
+                                            && matiere.getId().equals(el.getMatiere().getId())
+                                            && group.getId().equals(el.getGroup().getId()))
+                                    .findFirst().orElse(null);
 
-                                if(multiTeaching.getString("second_teacher_id").equals(teacher.getId())
-                                        && multiTeaching.getString("class_or_group_id").equals(group.getId())
-                                        && multiTeaching.getString("subject_id").equals(matiere.getId())){
+                            if (service == null) {
+                                //On regarde les multiTeacher
+                                for (Object mutliTeachO : multiTeachers) {
+                                    JsonObject multiTeaching = (JsonObject) mutliTeachO;
+                                    if (multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                                            && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
+                                            && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
+                                        service = services.stream()
+                                                .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
+                                                        && matiere.getId().equals(el.getMatiere().getId())
+                                                        && group.getId().equals(el.getGroup().getId()))
+                                                .findFirst().orElse(null);
+                                    }
 
-                                    service = services.stream()
-                                            .filter(el -> multiTeaching.getString("main_teacher_id").equals(el.getTeacher().getId())
-                                                    && matiere.getId().equals(el.getMatiere().getId())
-                                                    && group.getId().equals(el.getGroup().getId()))
-                                            .findFirst().orElse(null);
+                                    if (multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                                            && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
+                                            && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
+
+                                        service = services.stream()
+                                                .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
+                                                        && matiere.getId().equals(el.getMatiere().getId())
+                                                        && group.getId().equals(el.getGroup().getId()))
+                                                .findFirst().orElse(null);
+                                    }
                                 }
                             }
                             if (service != null && service.getSubtopics() != null){
@@ -1982,18 +1991,18 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     AtomicReference<Double> coefTotal = new AtomicReference<>(0.d);
                     AtomicReference<Double> total = new AtomicReference<>(0.d);
                     subTopicNoteDevoirMap.forEach((subtopic,notesList) ->{
-                        total.updateAndGet(v -> v + utilsService.calculMoyenne(notesList, false, 20, false).getDouble("moyenne") * subtopic.getCoefficient());;
+                        total.updateAndGet(v -> v + utilsService.calculMoyenne(notesList, false, 20, false).getDouble("moyenne") * subtopic.getCoefficient());
                         coefTotal.updateAndGet(v -> v + subtopic.getCoefficient());
                     });
                     if(coefTotal.get() == 0){
                         matiereJO.put("moyenne", NN);
                     }else{
-                        matiereJO.put("moyenne", total.get() / coefTotal.get());
+                        matiereJO.put("moyenne", decimalFormat.format(total.get() / coefTotal.get()));
                     }
                 }else {
 
                     Double moy = utilsService.calculMoyenne(notes, false, 20, false).getDouble("moyenne");
-                    matiereJO.put("moyenne", moy.toString());
+                    matiereJO.put("moyenne", decimalFormat.format(moy));
                 }
             } else {
                 matiereJO.put("moyenne", NN);
