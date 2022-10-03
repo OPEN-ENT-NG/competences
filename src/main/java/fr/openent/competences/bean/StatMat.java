@@ -67,14 +67,14 @@ public class StatMat {
                                     note.getBoolean(Field.RAMENER_SUR),
                                     Double.valueOf(note.getString(Field.COEFFICIENT))));
                 }
-                this.mapIdMatStatclass.put(note.getString(Field.MOYENNE),statClass);
+                this.mapIdMatStatclass.put(note.getString(Field.ID_MATIERE),statClass);
             }
-            if(note.getString(Field.MOYENNE) == null && this.mapIdMatStatclass.containsKey(note.getString(Field.ID_MATIERE_MOYF))
+            if(note.getString(Field.ID_MATIERE) == null && this.mapIdMatStatclass.containsKey(note.getString(Field.ID_MATIERE_MOYF))
             && note.getValue(Field.MOYENNE) != null && !note.getValue(Field.MOYENNE).equals("-100")){
                 StatClass statClass = this.mapIdMatStatclass.get(note.getString(Field.ID_MATIERE_MOYF));
                 statClass.putMapEleveStat(note.getString(Field.ID_ELEVE_MOYENNE_FINALE),
                         Double.valueOf(note.getString(Field.MOYENNE)),null);
-            }else if(note.getString(Field.MOYENNE) == null && !this.mapIdMatStatclass.containsKey(note.getString(Field.ID_MATIERE_MOYF))
+            }else if(note.getString(Field.ID_MATIERE) == null && !this.mapIdMatStatclass.containsKey(note.getString(Field.ID_MATIERE_MOYF))
             && note.getValue(Field.MOYENNE) != null && !note.getValue(Field.MOYENNE).equals("-100")){
 
                 StatClass statClass = new StatClass();
@@ -92,8 +92,8 @@ public class StatMat {
         for(int i = 0; i < listNotes.size(); i++){
             JsonObject note = listNotes.getJsonObject(i);
 
-            if( note.getString(Field.MOYENNE) != null && this.mapIdMatStatclass.containsKey(note.getString(Field.MOYENNE))){
-                StatClass statClass = this.mapIdMatStatclass.get(note.getString(Field.MOYENNE));
+            if( note.getString(Field.ID_MATIERE) != null && this.mapIdMatStatclass.containsKey(note.getString(Field.ID_MATIERE))){
+                StatClass statClass = this.mapIdMatStatclass.get(note.getString(Field.ID_MATIERE));
 
                 if(note.getString(Field.ID_ELEVE_MOYENNE_FINALE) != null && note.getValue(Field.MOYENNE) != null && !note.getValue(Field.MOYENNE).equals("-100")) {
 
@@ -212,14 +212,14 @@ public class StatMat {
                         statClass.putSousMatiereMapEleveStat(note.getString(Field.ID_ELEVE), sousMatiereId, noteDevoir);
                     }
                 }
-                this.mapIdMatStatclass.put(note.getString(Field.MOYENNE),statClass);
+                this.mapIdMatStatclass.put(note.getString(Field.ID_MATIERE),statClass);
             }
-            if(note.getString(Field.MOYENNE) == null && this.mapIdMatStatclass.containsKey(note.getString(Field.ID_MATIERE_MOYF))
+            if(note.getString(Field.ID_MATIERE) == null && this.mapIdMatStatclass.containsKey(note.getString(Field.ID_MATIERE_MOYF))
                     && note.getValue(Field.MOYENNE) != null && !note.getValue(Field.MOYENNE).equals("-100")){
                 StatClass statClass = this.mapIdMatStatclass.get(note.getString(Field.ID_MATIERE_MOYF));
                 statClass.putMapEleveStat(note.getString(Field.ID_ELEVE_MOYENNE_FINALE),
                         Double.valueOf(note.getString(Field.MOYENNE)),null);
-            }else if(note.getString(Field.MOYENNE) == null && !this.mapIdMatStatclass.containsKey(note.getString(Field.ID_MATIERE_MOYF))
+            }else if(note.getString(Field.ID_MATIERE) == null && !this.mapIdMatStatclass.containsKey(note.getString(Field.ID_MATIERE_MOYF))
                     && note.getValue(Field.MOYENNE) != null && !note.getValue(Field.MOYENNE).equals("-100")){
 
                 StatClass statClass = new StatClass();
