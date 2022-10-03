@@ -9,8 +9,6 @@ import fr.openent.competences.enums.report_model_print_export.ReportModelPrintEx
 import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportMongo;
 import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportPreferencesCheckbox;
 import io.vertx.core.json.JsonObject;
-
-
 import java.util.ArrayList;
 import java.util.List;
 

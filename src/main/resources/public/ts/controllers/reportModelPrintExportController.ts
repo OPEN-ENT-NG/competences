@@ -21,6 +21,7 @@ const reportModelPrintExportController = ng.controller(
 
             const initDataReportModel = await Promise.all([
                 ReportModelPrintExportService.getAll($scope.evaluations.structure.id),
+                ReportModelPrintExportService.getAll($scope.evaluations.structure.id),
             ]);
             $scope.allReportModelPrintExport = initDataReportModel[0];
             const reportsModelForCheckSubmit = initDataReportModel[1];
