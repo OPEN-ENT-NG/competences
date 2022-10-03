@@ -305,7 +305,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             && $location.path() === "/competences/eleve"){
                             $scope.periode = periodes.findWhere({id_type: $scope.searchBilan.periode.id_type});
                             foundedPeriode = true;
-                        } else if ($scope.search.periode !== undefined && !foundedPeriode){
+                        } else if (($scope.search.periode) && !foundedPeriode){
                             $scope.periode = periodes.findWhere({id_type: $scope.search.periode.id_type});
                             foundedPeriode = true;
                         } else if(!foundedPeriode){
