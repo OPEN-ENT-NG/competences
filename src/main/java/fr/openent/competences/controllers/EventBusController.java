@@ -158,9 +158,9 @@ public class EventBusController extends ControllerHelper {
     private void servicesBusService(String method, Message<JsonObject> message) {
         switch (method) {
             case "deleteSubtopics": {
-                String idMatiere = message.body().getString("id_matiere");
-                String idEnseignant = message.body().getString("id_enseignant");
-                JsonArray idGroups = message.body().getJsonArray("id_groups");
+                String idMatiere = message.body().getString(Field.ID_MATIERE);
+                String idEnseignant = message.body().getString(Field.ID_ENSEIGNANT);
+                JsonArray idGroups = message.body().getJsonArray(Field.ID_GROUPS);
                 subTopicService.deleteSubtopicServices(idMatiere, idEnseignant, idGroups, getJsonArrayBusResultHandler(message));
             }
             break;

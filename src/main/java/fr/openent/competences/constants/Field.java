@@ -18,6 +18,7 @@ public class Field {
     public static final String ID_TEACHER = "id_teacher";
     public static final String ID_TOPIC = "id_topic";
     public static final String ID_GROUP = "id_group";
+    public static final String ID_GROUPS = "id_groups";
     public static final String ID_GROUPE = "id_groupe";
     public static final String ID_TYPESOUSMATIERE = "id_type_sousmatiere";
     public static final String ID_PERIODE = "id_periode";
@@ -28,6 +29,7 @@ public class Field {
     public static final String ID_ELEVE_MOYENNE_FINALE = "id_eleve_moyenne_finale";
     public static final String ID_SOUSMATIERE = "id_sousmatiere";
     public static final String ID_MATIERE_MOYF = "id_matiere_moyf";
+    public static final String ID_ENSEIGNANT = "id_enseignant";
 
 
     public static final String MAIN_TEACHER_ID = "main_teacher_id";
