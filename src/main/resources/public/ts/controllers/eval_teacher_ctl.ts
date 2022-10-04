@@ -3066,7 +3066,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
             if (isInReleve) {
-                $scope.calculerMoyenneEleve(eleve, eleve.idClasse, evaluation.id_matiere);
+                $scope.calculerMoyenneEleve(eleve, eleve.idClasse, devoir.id_matiere);
                 $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
             } else {
                 $scope.calculStatsDevoir();
