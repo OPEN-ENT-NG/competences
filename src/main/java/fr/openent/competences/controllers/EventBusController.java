@@ -81,8 +81,8 @@ public class EventBusController extends ControllerHelper {
                 homeworksBusService(method, message);
             }
             break;
-            case "services": {
-                servicesBusService(method, message);
+            case "subtopics": {
+                subtopicsService(method, message);
             }
         }
     }
@@ -155,13 +155,20 @@ public class EventBusController extends ControllerHelper {
         }
     }
 
-    private void servicesBusService(String method, Message<JsonObject> message) {
+    private void subtopicsService(String method, Message<JsonObject> message) {
         switch (method) {
             case "deleteSubtopics": {
                 String idMatiere = message.body().getString(Field.ID_MATIERE);
                 String idEnseignant = message.body().getString(Field.ID_ENSEIGNANT);
                 JsonArray idGroups = message.body().getJsonArray(Field.ID_GROUPS);
-                subTopicService.deleteSubtopicServices(idMatiere, idEnseignant, idGroups, getJsonArrayBusResultHandler(message));
+                if (idMatiere == null || idEnseignant == null || idGroups == null) {
+                    log.warn("[@BusAddress](competences) Parameters incorrect.");
+                    message.reply(new JsonObject().put("status", "error")
+                            .put("message", "Parameters incorrect."));
+                }
+                else {
+                    subTopicService.deleteSubtopicServices(idMatiere, idEnseignant, idGroups, getJsonArrayBusResultHandler(message));
+                }
             }
             break;
             default: {
