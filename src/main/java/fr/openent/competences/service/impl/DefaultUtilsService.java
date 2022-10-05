@@ -1482,7 +1482,7 @@ public class DefaultUtilsService implements UtilsService {
         });
     }
 
-    private void setSubtopics(Promise<List<SubTopic>> promise, Either<String, JsonArray> event) {
+    public void setSubtopics(Promise<List<SubTopic>> promise, Either<String, JsonArray> event) {
         List<SubTopic> subTopics= new ArrayList<>();
         for(Object subTopicobj : event.right().getValue()){
             SubTopic subTopic = new SubTopic();
