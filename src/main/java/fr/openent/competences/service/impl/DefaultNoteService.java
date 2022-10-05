@@ -4073,24 +4073,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse, tableauEvent ->
                 formate(tableauDeConversionFuture, tableauEvent));
 
-        //Récupération des Services
-        Promise<Object> servicesPromise = Promise.promise();
-        utilsService.getServices(idEtablissement,
-                new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
-
-        //Récupération des Multi-teachers
-        Promise<Object> multiTeachingPromise = Promise.promise();
-        utilsService.getMultiTeachers(idEtablissement,
-                new JsonArray().add(idClasse), (idPeriode != null ? idPeriode.intValue() : null), FutureHelper.handlerJsonArray(multiTeachingPromise));
-
-        //Récupération des Sous-Matières
-        Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-        utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
-
         Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
 
         isAvgSkillFuture
-                .onSuccess(isAvgSkillpromiseResult -> CompositeFuture.all(compNoteF, noteF, subjectF, tableauDeConversionFuture, servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefPromise.future()).setHandler(event -> {
+                .onSuccess(isAvgSkillpromiseResult -> CompositeFuture.all(compNoteF, noteF, subjectF, tableauDeConversionFuture).setHandler(event -> {
                     if(event.failed()){
                         String message = "[getReleveDataForGraph] " + event.cause().getMessage();
                         log.error(message);
@@ -4098,111 +4084,136 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         return;
                     }
 
-                    Structure structure = new Structure();
-                    structure.setId(idEtablissement);
-                    JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
-                    JsonArray multiTeachers = (JsonArray) multiTeachingPromise.future().result();
-                    List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+                    //Récupération des Services
+                    Promise<Object> servicesPromise = Promise.promise();
+                    utilsService.getServices(idEtablissement,
+                            new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
 
-                    List<Service> services = new ArrayList<>();
-                    List<MultiTeaching> multiTeachings = new ArrayList<>();
-                    new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClasse);
-                    setServices(structure, servicesJson, services, subTopics);
+                    //Récupération des Multi-teachers
+                    Promise<Object> multiTeachingPromise = Promise.promise();
+                    utilsService.getMultiTeachers(idEtablissement,
+                            new JsonArray().add(idClasse), (idPeriode != null ? idPeriode.intValue() : null), FutureHelper.handlerJsonArray(multiTeachingPromise));
 
-                    final JsonArray listCompNotes = compNoteF.result();
-                    final JsonArray listNotes = noteF.result();
-                    Map<String,JsonArray> matieresCompNotes = new HashMap<>();
-                    Map<String,JsonArray> matieresCompNotesEleve = new HashMap<>();
+                    //Récupération des Sous-Matières
+                    Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+                    utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
 
-                    // 4. On regroupe  les compétences notes par idMatière
-                    JsonArray idMatieres = groupDataByMatiere(listCompNotes, matieresCompNotes, matieresCompNotesEleve, idEleve,
-                            true);
+                    CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefPromise.future()).setHandler(e -> {
+                        if (e.failed()) {
+                            String message = "[getReleveDataForGraph] " + event.cause().getMessage();
+                            log.error(message);
+                            handler.handle(new Either.Left<>(message));
+                            return;
+                        }
+                        else {
 
-                    // 5. On regroupe les notes par idMatière
+                            Structure structure = new Structure();
+                            structure.setId(idEtablissement);
+                            JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
+                            JsonArray multiTeachers = (JsonArray) multiTeachingPromise.future().result();
+                            List<SubTopic> subTopics = subTopicCoefPromise.future().result();
 
-                    Map<String,JsonArray> matieresNotes = new HashMap<>();
-                    Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
-                    idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes, matieresNotes, matieresNotesEleve, idEleve,
-                            false), idMatieres);
+                            List<Service> services = new ArrayList<>();
+                            List<MultiTeaching> multiTeachings = new ArrayList<>();
+                            new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClasse);
+                            setServices(structure, servicesJson, services, subTopics);
 
-                    Map<String, StatClass> mapMatieresStatClasseAndEleve = new HashMap<>();
+                            final JsonArray listCompNotes = compNoteF.result();
+                            final JsonArray listNotes = noteF.result();
+                            Map<String,JsonArray> matieresCompNotes = new HashMap<>();
+                            Map<String,JsonArray> matieresCompNotesEleve = new HashMap<>();
 
-                    StatMat statMat = new StatMat();
-                    if(idPeriode != null) {
-                        statMat.setMapIdMatStatclass(listNotes, services, multiTeachers, idClasse);
-                        mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
-                    } else { // notes order by periode
-                        Map<Integer, JsonArray> mapIdPeriodeNotes = getListNotesByPeriode(listNotes, false);
-                        if(!mapIdPeriodeNotes.isEmpty()) {
-                            for (int i = 0; i < idMatieres.size(); i++) {
-                                String idMatiere = idMatieres.getString(i);
-                                List<NoteDevoir> listAverageClass = new ArrayList<>();
-                                List<NoteDevoir> listAverageStudent = new ArrayList<>();
-                                Double annualClassAverage;
-                                Double annualClassMin = null;
-                                Double annualClassMax = null;
-                                Double annualAverageStudent;
-                                for(Map.Entry<Integer, JsonArray> IdPeriodeNotesEntry : mapIdPeriodeNotes.entrySet()){
-                                    StatMat statMatP = new StatMat();
-                                    statMatP.setMapIdMatStatclass(IdPeriodeNotesEntry.getValue());
-                                    Map<String, StatClass> mapMatieresStatClasseAndEleveP = statMatP.getMapIdMatStatclass();
-                                    StatClass statClasseP = mapMatieresStatClasseAndEleveP.get(idMatiere);
+                            // 4. On regroupe  les compétences notes par idMatière
+                            JsonArray idMatieres = groupDataByMatiere(listCompNotes, matieresCompNotes, matieresCompNotesEleve, idEleve,
+                                    true);
 
-                                    if (statClasseP != null && !statClasseP.getMapEleveStat().isEmpty()) {
-                                        listAverageClass.add(new NoteDevoir
-                                                (statClasseP.getAverageClass(), new Double(20), false, 1.0));
-                                        if (annualClassMin == null) {
-                                            annualClassMin = statClasseP.getMinMaxClass(true);
-                                        } else {
-                                            if (statClasseP.getMinMaxClass(true) < annualClassMin)
-                                                annualClassMin = statClasseP.getMinMaxClass(true);
+                            // 5. On regroupe les notes par idMatière
+
+                            Map<String,JsonArray> matieresNotes = new HashMap<>();
+                            Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
+                            idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes, matieresNotes, matieresNotesEleve, idEleve,
+                                    false), idMatieres);
+
+                            Map<String, StatClass> mapMatieresStatClasseAndEleve = new HashMap<>();
+
+                            StatMat statMat = new StatMat();
+                            if(idPeriode != null) {
+                                statMat.setMapIdMatStatclass(listNotes, services, multiTeachers, idClasse);
+                                mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
+                            } else { // notes order by periode
+                                Map<Integer, JsonArray> mapIdPeriodeNotes = getListNotesByPeriode(listNotes, false);
+                                if(!mapIdPeriodeNotes.isEmpty()) {
+                                    for (int i = 0; i < idMatieres.size(); i++) {
+                                        String idMatiere = idMatieres.getString(i);
+                                        List<NoteDevoir> listAverageClass = new ArrayList<>();
+                                        List<NoteDevoir> listAverageStudent = new ArrayList<>();
+                                        Double annualClassAverage;
+                                        Double annualClassMin = null;
+                                        Double annualClassMax = null;
+                                        Double annualAverageStudent;
+                                        for(Map.Entry<Integer, JsonArray> IdPeriodeNotesEntry : mapIdPeriodeNotes.entrySet()){
+                                            StatMat statMatP = new StatMat();
+                                            statMatP.setMapIdMatStatclass(IdPeriodeNotesEntry.getValue());
+                                            Map<String, StatClass> mapMatieresStatClasseAndEleveP = statMatP.getMapIdMatStatclass();
+                                            StatClass statClasseP = mapMatieresStatClasseAndEleveP.get(idMatiere);
+
+                                            if (statClasseP != null && !statClasseP.getMapEleveStat().isEmpty()) {
+                                                listAverageClass.add(new NoteDevoir
+                                                        (statClasseP.getAverageClass(), new Double(20), false, 1.0));
+                                                if (annualClassMin == null) {
+                                                    annualClassMin = statClasseP.getMinMaxClass(true);
+                                                } else {
+                                                    if (statClasseP.getMinMaxClass(true) < annualClassMin)
+                                                        annualClassMin = statClasseP.getMinMaxClass(true);
+                                                }
+                                                if (annualClassMax == null) {
+                                                    annualClassMax = statClasseP.getMinMaxClass(false);
+                                                } else {
+                                                    if (statClasseP.getMinMaxClass(false) > annualClassMax)
+                                                        annualClassMax = statClasseP.getMinMaxClass(false);
+                                                }
+
+                                                if (statClasseP.getMoyenneEleve(idEleve) != null) {
+                                                    listAverageStudent.add(new NoteDevoir
+                                                            (statClasseP.getMoyenneEleve(idEleve), new Double(20), false, 1.0));
+                                                }
+                                            }
                                         }
-                                        if (annualClassMax == null) {
-                                            annualClassMax = statClasseP.getMinMaxClass(false);
-                                        } else {
-                                            if (statClasseP.getMinMaxClass(false) > annualClassMax)
-                                                annualClassMax = statClasseP.getMinMaxClass(false);
-                                        }
 
-                                        if (statClasseP.getMoyenneEleve(idEleve) != null) {
-                                            listAverageStudent.add(new NoteDevoir
-                                                    (statClasseP.getMoyenneEleve(idEleve), new Double(20), false, 1.0));
+                                        StatEleve statEleveAnnual = new StatEleve();
+                                        StatClass statClassAnnual = new StatClass();
+                                        if( !listAverageClass.isEmpty() ){
+                                            if( !listAverageStudent.isEmpty() ) {
+                                                annualAverageStudent = utilsService.calculMoyenneParDiviseur(listAverageStudent,
+                                                        false).getDouble("moyenne");
+                                                statEleveAnnual.setMoyenneAuto(annualAverageStudent);
+                                                statClassAnnual.getMapEleveStat().put(idEleve, statEleveAnnual);
+                                            }
+
+                                            annualClassAverage = utilsService.calculMoyenneParDiviseur(listAverageClass,
+                                                    false).getDouble("moyenne");
+
+                                            statClassAnnual.setAverageClass(annualClassAverage);
+                                            statClassAnnual.setMax(annualClassMax);
+                                            statClassAnnual.setMin(annualClassMin);
+                                            mapMatieresStatClasseAndEleve.put(idMatiere, statClassAnnual);
                                         }
                                     }
-                                }
 
-                                StatEleve statEleveAnnual = new StatEleve();
-                                StatClass statClassAnnual = new StatClass();
-                                if( !listAverageClass.isEmpty() ){
-                                    if( !listAverageStudent.isEmpty() ) {
-                                        annualAverageStudent = utilsService.calculMoyenneParDiviseur(listAverageStudent,
-                                                false).getDouble("moyenne");
-                                        statEleveAnnual.setMoyenneAuto(annualAverageStudent);
-                                        statClassAnnual.getMapEleveStat().put(idEleve, statEleveAnnual);
-                                    }
-
-                                    annualClassAverage = utilsService.calculMoyenneParDiviseur(listAverageClass,
-                                            false).getDouble("moyenne");
-
-                                    statClassAnnual.setAverageClass(annualClassAverage);
-                                    statClassAnnual.setMax(annualClassMax);
-                                    statClassAnnual.setMin(annualClassMin);
-                                    mapMatieresStatClasseAndEleve.put(idMatiere, statClassAnnual);
+                                    statMat.setMapIdMatStatclass(mapMatieresStatClasseAndEleve);
+                                } else {
+                                    statMat.setMapIdMatStatclass(listNotes);
+                                    mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
                                 }
                             }
 
-                            statMat.setMapIdMatStatclass(mapMatieresStatClasseAndEleve);
-                        } else {
-                            statMat.setMapIdMatStatclass(listNotes);
-                            mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
+                            // 6. On récupère tous les libelles des matières de l'établissement et on fait correspondre
+                            // aux résultats par idMatière
+                            linkIdSubjectToLibelle(idEleve, idPeriode, getMaxOrAvgByItem(matieresCompNotes, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ),
+                                    getMaxOrAvgByItem(matieresCompNotesEleve, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ), matieresNotes, matieresNotesEleve,
+                                    mapMatieresStatClasseAndEleve, idMatieres, subjectF.result(), handler);
                         }
-                    }
-
-                    // 6. On récupère tous les libelles des matières de l'établissement et on fait correspondre
-                    // aux résultats par idMatière
-                    linkIdSubjectToLibelle(idEleve, idPeriode, getMaxOrAvgByItem(matieresCompNotes, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ),
-                            getMaxOrAvgByItem(matieresCompNotesEleve, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ), matieresNotes, matieresNotesEleve,
-                            mapMatieresStatClasseAndEleve, idMatieres, subjectF.result(), handler);
+                    });
                 }))
                 .onFailure(err ->{
                     String message = "[getReleveDataForGraph] " + err.getMessage();

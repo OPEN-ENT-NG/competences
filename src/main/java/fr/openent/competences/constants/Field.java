@@ -109,7 +109,7 @@ public class Field {
 
 
     public static final String ID_DEVOIR = "idDevoir";
-    public static final String ID_STRUCTURE = "idStructure";
+    //public static final String ID_STRUCTURE = "idStructure";
 
     //numbers
     public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
