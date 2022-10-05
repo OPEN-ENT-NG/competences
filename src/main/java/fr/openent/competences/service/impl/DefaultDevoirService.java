@@ -20,17 +20,23 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.model.Devoir;
+import fr.openent.competences.constants.Field;
+import fr.openent.competences.model.*;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.webutils.Either;
-import fr.openent.competences.constants.Field;
-import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -38,18 +44,14 @@ import org.entcore.common.share.ShareService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import io.vertx.core.Handler;
-import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.joda.time.DateTime;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
@@ -57,11 +59,10 @@ import static fr.openent.competences.Utils.returnFailure;
 import static fr.openent.competences.helpers.DevoirControllerHelper.getDuplicationDevoirHandler;
 import static fr.openent.competences.helpers.FormSaisieHelper.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
+import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.badRequest;
-import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 /**
@@ -73,6 +74,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     private DefaultNoteService noteService;
     private DefaultMatiereService matiereService;
     private DefaultCompetenceNoteService competenceNoteService;
+    private DefaultSubTopicService subTopicService;
     private final Neo4j neo4j = Neo4j.getInstance();
     private EventBus eb;
     protected static final Logger log = LoggerFactory.getLogger(DefaultDevoirService.class);
@@ -83,6 +85,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         matiereService = new DefaultMatiereService(eb);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SUBTOPIC_TABLE);
         this.eb = eb;
     }
 
@@ -1512,30 +1515,49 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent)
                 );
 
-                CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(teachersEvent -> {
-                    if (teachersEvent.failed()) {
-                        handler.handle(new Either.Left<>(teachersEvent.cause().getMessage()));
-                    } else {
-                        final JsonArray services = servicesFuture.result();
-                        final JsonArray allMultiTeachers = multiTeachersFuture.result();
-
-                        ArrayList<Future> resultsFuture = new ArrayList<>();
-
-                        buildArrayFromHomeworks(result, devoirs, annotations, moyennesFinales, matieres,
-                                services, allMultiTeachers, resultsFuture, handler);
-
-                        CompositeFuture.all(resultsFuture).setHandler(resultEvent -> {
-                            if (resultEvent.failed()) {
-                                handler.handle(new Either.Left<>(resultEvent.cause().getMessage()));
+                getSubTopicCoeff(idEtablissement)
+                        .onSuccess(subTopics -> CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(teachersEvent -> {
+                            if (teachersEvent.failed()) {
+                                handler.handle(new Either.Left<>(teachersEvent.cause().getMessage()));
                             } else {
-                                setAverageOfSubjects(result, idPeriode);
-                                handler.handle(new Either.Right<>(result));
+                                final JsonArray servicesJson = servicesFuture.result();
+                                final JsonArray allMultiTeachers = multiTeachersFuture.result();
+                                ArrayList<Future> resultsFuture = new ArrayList<>();
+                                List<Service> services = new ArrayList<>();
+
+                                Structure structure = new Structure();
+                                structure.setId(idEtablissement);
+
+                                setServices(structure, servicesJson, services, subTopics);
+
+
+                                buildArrayFromHomeworks(result, devoirs, annotations, moyennesFinales, matieres,
+                                        servicesJson, allMultiTeachers, resultsFuture, handler);
+                                CompositeFuture.all(resultsFuture).setHandler(resultEvent -> {
+                                    if (resultEvent.failed()) {
+                                        handler.handle(new Either.Left<>(resultEvent.cause().getMessage()));
+                                    } else {
+                                        setAverageOfSubjects(result,services , allMultiTeachers, idPeriode);
+                                        handler.handle(new Either.Right<>(result));
+                                    }
+                                });
                             }
-                        });
-                    }
-                });
+                        }))
+                        .onFailure(err -> handler.handle(new Either.Left<>(err.getMessage())));
             }
         });
+    }
+
+    public Future<List<SubTopic>> getSubTopicCoeff(String idEtablissement) {
+        Promise<List<SubTopic>> promise = Promise.promise();
+        subTopicService.getSubtopicServices(idEtablissement, event -> {
+            if(event.isRight()){
+                utilsService.setSubtopics(promise, event);
+            }else{
+                promise.fail(event.left().getValue());
+            }
+        });
+        return promise.future();
     }
 
     private void buildArrayFromHomeworks(JsonObject result, JsonArray devoirs, JsonArray annotations,
@@ -1847,22 +1869,110 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         resultFuture.complete();
     }
 
-    private void setAverageOfSubjects(JsonObject result, Long idPeriod) {
+    private void setAverageOfSubjects(JsonObject result, List<Service> services, JsonArray multiTeachers, Long idPeriod) {
+        DecimalFormat decimalFormat = new DecimalFormat("#.0");
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
         for(Map.Entry<String, Object> resultEntry : result.getMap().entrySet()) {
-            JsonObject matiere = (JsonObject) resultEntry.getValue();
+            Map<SubTopic, List<NoteDevoir>> subTopicNoteDevoirMap = new HashMap<>();
+            JsonObject matiereJO = (JsonObject) resultEntry.getValue();
             List<NoteDevoir> notes = new ArrayList<>();
-            JsonArray moyennesFinales = matiere.containsKey("moyennes") ? matiere.getJsonArray("moyennes") : new JsonArray();
-
-            if(matiere.containsKey("devoirs")){
-                JsonArray matiereDevoirs = matiere.getJsonArray("devoirs");
+            Map<Long, SubTopic> subTopicsId = new HashMap<>();
+            JsonArray moyennesFinales = matiereJO.containsKey("moyennes") ? matiereJO.getJsonArray("moyennes") : new JsonArray();
+            if(matiereJO.containsKey("devoirs")){
+                JsonArray matiereDevoirs = matiereJO.getJsonArray("devoirs");
                 matiereDevoirs.forEach(matiereDevoir -> {
                     JsonObject matiereDevoirJson = (JsonObject) matiereDevoir;
                     if(matiereDevoirJson.containsKey("note")){
-                        NoteDevoir note = new NoteDevoir(Double.parseDouble(matiereDevoirJson.getString("note")),
-                                matiereDevoirJson.getLong("diviseur").doubleValue(),
-                                matiereDevoirJson.getBoolean("ramener_sur"),
-                                Double.parseDouble(matiereDevoirJson.getString(COEFFICIENT)));
-                        notes.add(note);
+                        if(matiereDevoirJson.getValue("id_sousmatiere") != null){
+                            AtomicReference<Double> coeff = new AtomicReference<>(1.d);
+                            Matiere matiere = new Matiere(matiereDevoirJson.getString("id_matiere"));
+                            Teacher teacher = new Teacher(matiereDevoirJson.getString("owner"));
+                            Group group = new Group(matiereDevoirJson.getString("id_groupe"));
+                            NoteDevoir note = new NoteDevoir(Double.parseDouble(matiereDevoirJson.getString("note")),
+                                    matiereDevoirJson.getLong("diviseur").doubleValue(),
+                                    matiereDevoirJson.getBoolean("ramener_sur"),
+                                    Double.parseDouble(matiereDevoirJson.getString(COEFFICIENT)));
+
+                            Service service = services.stream()
+                                    .filter(el -> teacher.getId().equals(el.getTeacher().getId())
+                                            && matiere.getId().equals(el.getMatiere().getId())
+                                            && group.getId().equals(el.getGroup().getId()))
+                                    .findFirst().orElse(null);
+
+                            if (service == null) {
+                                //On regarde les multiTeacher
+                                for (Object mutliTeachO : multiTeachers) {
+                                    JsonObject multiTeaching = (JsonObject) mutliTeachO;
+                                    if (multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                                            && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
+                                            && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
+                                        service = services.stream()
+                                                .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
+                                                        && matiere.getId().equals(el.getMatiere().getId())
+                                                        && group.getId().equals(el.getGroup().getId()))
+                                                .findFirst().orElse(null);
+                                    }
+
+                                    if (multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                                            && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
+                                            && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
+
+                                        service = services.stream()
+                                                .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
+                                                        && matiere.getId().equals(el.getMatiere().getId())
+                                                        && group.getId().equals(el.getGroup().getId()))
+                                                .findFirst().orElse(null);
+                                    }
+                                }
+                            }
+                            if (service != null && service.getSubtopics() != null){
+                                AtomicBoolean isAdded = new AtomicBoolean(false);
+                                service.getSubtopics().forEach(subtopic ->{
+                                    if(subtopic.getId().equals(matiereDevoirJson.getLong("id_sousmatiere"))){
+                                        coeff.set(subtopic.getCoefficient());
+                                        isAdded.set(true);
+
+                                        if(subTopicNoteDevoirMap.get(subtopic) == null){
+                                            List<NoteDevoir> noteDevoirs = new ArrayList<>();
+                                            noteDevoirs.add(note);
+                                            subTopicNoteDevoirMap.put(subtopic, noteDevoirs);
+                                        }else{
+                                            List<NoteDevoir> noteDevoirs = subTopicNoteDevoirMap.get(subtopic);
+                                            noteDevoirs.add(note);
+                                            subTopicNoteDevoirMap.put(subtopic,noteDevoirs);
+                                        }
+                                    }
+                                });
+                                if(!isAdded.get()){
+                                    SubTopic subTopicDefault;
+                                    if(subTopicsId.get(matiereDevoirJson.getLong("id_sousmatiere"))!= null){
+                                        subTopicDefault = subTopicsId.get(matiereDevoirJson.getLong("id_sousmatiere"));
+                                    }else{
+                                        subTopicDefault = new SubTopic();
+                                        subTopicDefault.setService(service);
+                                        subTopicDefault.setCoefficient(1.d);
+                                        subTopicDefault.setId(matiereDevoirJson.getLong("id_sousmatiere"));
+                                        subTopicsId.put(matiereDevoirJson.getLong("id_sousmatiere"),subTopicDefault);
+                                    }
+                                    if(subTopicNoteDevoirMap.get(subTopicDefault) == null){
+                                        List<NoteDevoir> noteDevoirs = new ArrayList<>();
+                                        noteDevoirs.add(note);
+                                        subTopicNoteDevoirMap.put(subTopicDefault, noteDevoirs);
+                                    }else{
+                                        List<NoteDevoir> noteDevoirs = subTopicNoteDevoirMap.get(subTopicDefault);
+                                        noteDevoirs.add(note);
+                                        subTopicNoteDevoirMap.put(subTopicDefault,noteDevoirs);
+                                    }
+                                }
+                            }
+                        }else{
+                            NoteDevoir note = new NoteDevoir(Double.parseDouble(matiereDevoirJson.getString("note")),
+                                    matiereDevoirJson.getLong("diviseur").doubleValue(),
+                                    matiereDevoirJson.getBoolean("ramener_sur"),
+                                    Double.parseDouble(matiereDevoirJson.getString(COEFFICIENT)));
+                            notes.add(note);
+                        }
+
                     }
                 });
             }
@@ -1875,14 +1985,29 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             }
 
             if(moyenneFinale != null) {
-                matiere.put("moyenne", (moyenneFinale.getString("moyenne") != null)? moyenneFinale.getString("moyenne"): NN);
-            } else if (!notes.isEmpty()) {
-                Double moy = utilsService.calculMoyenne(notes,false, 20, false).getDouble("moyenne");
-                matiere.put("moyenne", moy.toString());
+                matiereJO.put("moyenne", (moyenneFinale.getString("moyenne") != null)? moyenneFinale.getString("moyenne"): NN);
+            } else if (!notes.isEmpty() || subTopicNoteDevoirMap.size() > 0) {
+                if(subTopicNoteDevoirMap.size()> 0){
+                    AtomicReference<Double> coefTotal = new AtomicReference<>(0.d);
+                    AtomicReference<Double> total = new AtomicReference<>(0.d);
+                    subTopicNoteDevoirMap.forEach((subtopic,notesList) ->{
+                        total.updateAndGet(v -> v + utilsService.calculMoyenne(notesList, false, 20, false).getDouble("moyenne") * subtopic.getCoefficient());
+                        coefTotal.updateAndGet(v -> v + subtopic.getCoefficient());
+                    });
+                    if(coefTotal.get() == 0){
+                        matiereJO.put("moyenne", NN);
+                    }else{
+                        matiereJO.put("moyenne", decimalFormat.format(total.get() / coefTotal.get()));
+                    }
+                }else {
+
+                    Double moy = utilsService.calculMoyenne(notes, false, 20, false).getDouble("moyenne");
+                    matiereJO.put("moyenne", decimalFormat.format(moy));
+                }
             } else {
-                matiere.put("moyenne", NN);
+                matiereJO.put("moyenne", NN);
             }
-            matiere.remove("moyennes");
+            matiereJO.remove("moyennes");
         }
     }
 }
