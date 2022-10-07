@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.AccessConseilDeClasse;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
@@ -188,6 +189,20 @@ public class UtilsController extends ControllerHelper {
                 }
             }
         });
+    }
+
+    @Get("/multiTeaching/:idEtablissement/:idClasse/:idPeriode")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void multiTeaching(final HttpServerRequest request) {
+        if (request.params().contains(Field.IDETABLISSEMENT) && request.params().contains(Field.IDCLASSE)
+                && request.params().contains(Field.IDPERIODE)) {
+            String idEtablissement = request.params().get(Field.IDETABLISSEMENT);
+            JsonArray idClasse = new JsonArray(request.params().getAll(Field.IDCLASSE));
+            String idPeriode = request.params().get(Field.IDPERIODE);
+            utilsService.getMultiTeachers(idEtablissement, idClasse, Integer.parseInt(idPeriode), arrayResponseHandler(request));
+        } else {
+            Renders.badRequest(request, "Invalid parameters");
+        }
     }
 
     @Get("/classe/groupes")

@@ -1445,12 +1445,13 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             }
             let subTopicsServiceService = new SubTopicsServiceService();
             let {data} =  await subTopicsServiceService.get($scope.structure.id)
+            let multiTeachers = await subTopicsServiceService.getMultiTeachers($scope.structure.id, $scope.search.classe.id, $scope.search.periode.id_type);
             let subTopicsServicesStruct = new SubTopicsServices([],data)
             let subTopicsServices = subTopicsServicesStruct.filter(subTopic =>
                 subTopic.id_group  === $scope.search.classe.id
             );
             await utils.calculMoyennesWithSubTopic($scope.search.periode.id_type, $scope.search.eleve.id, $scope.matieresReleve,
-                $scope.matieres, $scope.dataReleve.devoirs,subTopicsServices);
+                $scope.matieres, $scope.dataReleve.devoirs, subTopicsServices, multiTeachers.data, $scope.search.classe.id);
             await utils.safeApply($scope);
         };
 
