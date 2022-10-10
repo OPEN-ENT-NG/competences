@@ -10,10 +10,6 @@ export class SubTopicsServiceService{
     async get(idStructure): Promise<AxiosResponse>{
       return  http.get(`/competences/subtopics/services/${idStructure}`);
     }
-    async getMultiTeachers(idStructure, idClasse, idPeriode): Promise<AxiosResponse>{
-        return  http.get(`/competences/multiTeaching/${idStructure}/${idClasse}/${idPeriode}`);
-    }
-
 }
 
 export const subTopicService = ng.service('SubTopicService', SubTopicsServiceService);

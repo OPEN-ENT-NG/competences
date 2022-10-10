@@ -19,6 +19,7 @@ import {Model, Collection, http, _} from 'entcore';
 import { Eleve, Periode, SuiviCompetenceClasse, BaremeBrevetEleves } from './index';
 import * as utils from '../../utils/teacher';
 import {TypePeriode} from "../common/TypePeriode";
+import {Service} from "../common/ServiceSnipplet";
 
 export class Classe extends Model {
     eleves : Collection<Eleve>;
@@ -38,6 +39,7 @@ export class Classe extends Model {
         periodes:  boolean
     };
     idGroups : any;
+    services : Collection<Service>;
 
     toString() {
         return this.name;

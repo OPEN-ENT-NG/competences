@@ -15,6 +15,7 @@ export class MultiTeaching {
     entered_end_date: Date;
     isCoteaching: boolean;
     is_visible: boolean;
+    group_id: string;
 
     constructor(o){
         this.structure_id = o.structure_id;
