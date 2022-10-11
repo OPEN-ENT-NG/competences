@@ -15,9 +15,12 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {_, workspace} from 'entcore';
+import {_, Collection, workspace} from 'entcore';
 import http from "axios";
 import service = workspace.v2.service;
+import {SubtopicserviceService, SubTopicsServices} from "../../models/sniplets";
+import {Matiere} from "../../models/parent_eleve/Matiere";
+import {Classe, Devoir, Devoirs} from "../../models/teacher";
 
 /**
  * @param arr liste de nombres
@@ -136,7 +139,7 @@ function addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales) {
     }
 }
 
-function getMoyenneSubTopic(matiere: any, devoirsMatieres: any[], subTopicsServices, moyennesFinales) {
+function getMoyenneSubTopic(matiere: any, devoirsMatieres: Devoir[], subTopicsServices: SubtopicserviceService[], moyennesFinales: any[], classe: Classe) {
     let coefficientTemp:number;
     let sumMoyenneTemp:number;
     let sumMoyenne:number = 0;
@@ -163,8 +166,31 @@ function getMoyenneSubTopic(matiere: any, devoirsMatieres: any[], subTopicsServi
             mapTeacherDevoirs.forEach((devoirArray, key) => {
                 let subTopicsService = subTopicsServices.find(subTopic => subTopic.id_subtopic === sousMat.id_type_sousmatiere
                     && subTopic.id_topic === matiere.id && subTopic.id_teacher === key)
+
+                if(subTopicsService == null){
+                    //On regarde les multiTeacher
+                    classe.services.filter(service => service.coTeachers.length > 0).forEach(multiTeaching => {
+                        multiTeaching.coTeachers.forEach(serviceMultiTeaching => {
+                            if(serviceMultiTeaching.main_teacher_id === key
+                                && serviceMultiTeaching.group_id === classe.id
+                                && serviceMultiTeaching.subject_id == matiere.id){
+                                subTopicsService = subTopicsServices.find(subTopic => subTopic.id_subtopic === sousMat.id_type_sousmatiere
+                                    && subTopic.id_topic === matiere.id && subTopic.id_teacher === serviceMultiTeaching.second_teacher_id)
+                            }
+
+                            if(serviceMultiTeaching.second_teacher_id === key
+                                && serviceMultiTeaching.group_id === classe.id
+                                && serviceMultiTeaching.subject_id == matiere.id){
+
+                                subTopicsService = subTopicsServices.find(subTopic => subTopic.id_subtopic === sousMat.id_type_sousmatiere
+                                    && subTopic.id_topic === matiere.id && subTopic.id_teacher === serviceMultiTeaching.main_teacher_id)
+                            }
+                        })
+                    })
+                }
+
                 if (subTopicsService)
-                    coefficient = subTopicsService.coefficient
+                    coefficient = subTopicsService.coefficient;
                 let moyenneFinale = _.findWhere(moyennesFinales, {id_matiere: sousMat.id_type_sousmatiere});
                 if (moyenneFinale) {
                     if (moyenneFinale.moyenne == null) {
@@ -201,7 +227,7 @@ function getMoyenneSubTopic(matiere: any, devoirsMatieres: any[], subTopicsServi
         matiere.moyenne = "";
 }
 
-export async function calculMoyennesWithSubTopic(periode_idType, id_eleve, matieresReleve, matieres, dataReleveDevoirs,subTopicsServices) {
+export async function calculMoyennesWithSubTopic(periode_idType: number, id_eleve: string, matieresReleve: Matiere[], matieres: Matiere[], dataReleveDevoirs: Collection<Devoir>, subTopicsServices: SubtopicserviceService[], classe: Classe) {
     return new Promise(async (resolve, reject) => {
         try {
             let url = '/competences/eleve/' + id_eleve + "/moyenneFinale?";
@@ -226,7 +252,7 @@ export async function calculMoyennesWithSubTopic(periode_idType, id_eleve, matie
 
                         }
                         if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
-                             getMoyenneSubTopic(matiere, devoirsMatieres, subTopicsServices, moyennesFinales);
+                             getMoyenneSubTopic(matiere, devoirsMatieres, subTopicsServices, moyennesFinales, classe);
                         }
                     }
                 }

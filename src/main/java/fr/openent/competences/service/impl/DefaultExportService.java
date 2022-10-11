@@ -23,9 +23,7 @@ import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.ExportEvaluationHelper;
 import fr.openent.competences.helpers.FormateFutureEvent;
-import fr.openent.competences.model.Service;
-import fr.openent.competences.model.Structure;
-import fr.openent.competences.model.SubTopic;
+import fr.openent.competences.model.*;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.Either.Left;
@@ -1923,7 +1921,7 @@ public class DefaultExportService implements ExportService {
                             .filter(el -> idMatiere.equals(((JsonObject) el).getString("id_matiere")))
                             .findFirst().orElse(new JsonObject());
 
-                    getDevoirsByMatiere(devoirsJson, matiere, services, moyenneFinale);
+                    getDevoirsByMatiere(devoirsJson, matiere, services, moyenneFinale, multiTeachers);
 
                     JsonArray _enseignantMatiere = matiere.getJsonArray("displayNameEnseignant");
                     if (_enseignantMatiere == null) {
@@ -2011,7 +2009,8 @@ public class DefaultExportService implements ExportService {
      * @param services
      * @param moyenneFinale
      */
-    private void getDevoirsByMatiere(JsonArray devoirsJson, JsonObject matiere, List<Service> services, JsonObject moyenneFinale) {
+    private void getDevoirsByMatiere(JsonArray devoirsJson, JsonObject matiere, List<Service> services, JsonObject moyenneFinale,
+                                     final JsonArray multiTeachers) {
         DecimalFormat df = new DecimalFormat("0.#");
         df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
 
@@ -2110,10 +2109,10 @@ public class DefaultExportService implements ExportService {
             }
         }
 
-        handleHasDevoirMatiere(matiere, services, listeNoteDevoirs, listNotesSousMatiere, devoirsSousMat, idMatiere, hasDevoirs);
+        handleHasDevoirMatiere(matiere, services, listeNoteDevoirs, listNotesSousMatiere, devoirsSousMat, idMatiere, hasDevoirs, multiTeachers);
     }
 
-    private void handleHasDevoirMatiere(JsonObject matiere, List<Service> services, List<NoteDevoir> listeNoteDevoirs, Map<Long, List<NoteDevoir>> listNotesSousMatiere, Map<String, Map<Long, JsonArray>> devoirsSousMat, String idMatiere, boolean hasDevoirs) {
+    private void handleHasDevoirMatiere(JsonObject matiere, List<Service> services, List<NoteDevoir> listeNoteDevoirs, Map<Long, List<NoteDevoir>> listNotesSousMatiere, Map<String, Map<Long, JsonArray>> devoirsSousMat, String idMatiere, boolean hasDevoirs, final JsonArray multiTeachers) {
         if (hasDevoirs) {
             Boolean statistiques = false;
             Boolean annual = false;
@@ -2157,11 +2156,42 @@ public class DefaultExportService implements ExportService {
                 if (devoirsSousMatieres.size() > 0) {
                     JsonArray finalDevoirsSousMatieres = devoirsSousMatieres;
 
+                    Teacher teacher = new Teacher(finalDevoirsSousMatieres.getJsonObject(0).getString(Field.OWNER));
+                    Group group = new Group(finalDevoirsSousMatieres.getJsonObject(0).getString(Field.ID_GROUPE));
+
                     //Récupération du coeff de sous-matière en fonction du Service
                     Service service = services.stream()
                             .filter(ser -> idMatiere.equals(ser.getMatiere().getId()) &&
                                     ser.getTeacher().getId().equals(finalDevoirsSousMatieres.getJsonObject(0).getString(Field.OWNER)))
                             .findFirst().orElse(null);
+
+                    if (service == null){
+                        //On regarde les multiTeacher
+                        for(Object mutliTeachO: multiTeachers){
+                            JsonObject multiTeaching = (JsonObject) mutliTeachO;
+                            if(multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                                    && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
+                                    && multiTeaching.getString(Field.SUBJECT_ID).equals(idMatiere)){
+                                service = services.stream()
+                                        .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
+                                                && idMatiere.equals(el.getMatiere().getId())
+                                                && group.getId().equals(el.getGroup().getId()))
+                                        .findFirst().orElse(null);
+                            }
+
+                            if(multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                                    && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
+                                    && multiTeaching.getString(Field.SUBJECT_ID).equals(idMatiere)){
+
+                                service = services.stream()
+                                        .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
+                                                && idMatiere.equals(el.getMatiere().getId())
+                                                && group.getId().equals(el.getGroup().getId()))
+                                        .findFirst().orElse(null);
+                            }
+                        }
+                    }
+
                     if (service != null) {
                         SubTopic subTopic  = service.getSubtopics().stream()
                                 .filter(subTopic1 ->  idSousMatiere.equals(subTopic1.getId())

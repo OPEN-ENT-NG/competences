@@ -2120,13 +2120,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 total += coeff * moyenSousMat;
                                 totalCoeff += coeff;
                             }
-                            if (totalCoeff == 0) {
-                                String msg = "Found a 0 or negative coefficient in getNotesAndMoyFinaleByClasseAndPeriodeHandler, " +
-                                        "please check your subtopics coefficients (value of totalCoeff : " + totalCoeff + ")";
-                                log.error(msg);
-                                handler.handle(new Either.Left<>(msg));
-                            }
-                            else {
+                            if (totalCoeff != 0) {
                                 Double moy = Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER;
                                 setMapIdEleveMatMoy(mapIdEleveIdMatMoy, moy, idEleve, idMat);
                             }

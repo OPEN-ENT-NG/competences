@@ -1450,7 +1450,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 subTopic.id_group  === $scope.search.classe.id
             );
             await utils.calculMoyennesWithSubTopic($scope.search.periode.id_type, $scope.search.eleve.id, $scope.matieresReleve,
-                $scope.matieres, $scope.dataReleve.devoirs,subTopicsServices);
+                $scope.matieres, $scope.dataReleve.devoirs, subTopicsServices, $scope.search.classe);
             await utils.safeApply($scope);
         };
 
@@ -1486,7 +1486,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         };
 
         $scope.hasDevoirWithUnderSubject = (sousMat) => {
-            let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) => {
+            let devoirWithNote = $scope.dataReleve.devoirs.all.filter((devoir) => {
                 return (devoir.note !== undefined || devoir.annotation !== undefined)
             });
             return _.some(devoirWithNote,
