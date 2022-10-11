@@ -5,6 +5,7 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.enums.EventType;
 import fr.openent.competences.message.MessageResponseHandler;
+import fr.openent.competences.model.Service;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
@@ -16,17 +17,20 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-
 
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
@@ -288,7 +292,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     public void getSuiviAcquis(final String idEtablissement, final Long idPeriode, final String idEleve,
-                               final JsonArray idClasseGroups, final JsonArray services, final JsonArray multiTeachers,
+                               final JsonArray idClasseGroups, final List<Service> services, final JsonArray multiTeachers,
                                Handler<Either<String, JsonArray>> handler) {
         List<Future> listOfFutures = new ArrayList<>();
 
@@ -336,7 +340,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
                     CompositeFuture.all(futures).setHandler(
                             setSubjectLibelleAndTeachersHandler(idEtablissement, idPeriode, idEleve,
-                                    handler, idsMatieresIdsTeachers, idClasseGroups, groupsStudent, futures)
+                                    handler, idsMatieresIdsTeachers, idClasseGroups, groupsStudent, futures, multiTeachers, services)
                     );
                 }
             } else {
@@ -351,13 +355,13 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     setSubjectLibelleAndTeachersHandler(String idEtablissement, Long idPeriode, String idEleve,
                                         Handler<Either<String, JsonArray>> handler,
                                         Map<String, JsonObject> idsMatieresIdsTeachers,
-                                        JsonArray idClasseGroups, JsonArray groupsStudent, List<Future> futures) {
+                                        JsonArray idClasseGroups, JsonArray groupsStudent, List<Future> futures, JsonArray multiTeachers, List<Service> services) {
         return event -> {
             if(event.succeeded()) {
                 Map<String, JsonObject> idsMatLibelle = (Map<String, JsonObject>) futures.get(0).result();
                 Map<String, JsonObject> teachersInfos = (Map<String, JsonObject>) futures.get(1).result();
                 setSubjectLibelleAndTeachers(idEleve, idClasseGroups, idEtablissement, groupsStudent,
-                        idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, handler);
+                        idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode,multiTeachers, services, handler);
             } else {
                 handler.handle(new Either.Right<>(new JsonArray()));
             }
@@ -414,7 +418,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                               JsonArray groupsStudent, Map<String, JsonObject> idsMatieresIdsTeachers,
                                               Map<String, JsonObject> idsMatLibelle,
                                               Map<String, JsonObject> teachersInfos, Long idPeriod,
-                                              Handler<Either<String, JsonArray>> handler) {
+                                              JsonArray multiTeachers, List<Service> services, Handler<Either<String, JsonArray>> handler) {
         ArrayList<Future> subjectsFuture = new ArrayList<>();
         JsonArray results = new JsonArray();
 
@@ -484,7 +488,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                             setAppreciationMoyFinalePositionnementEleve(result, appreciationMoyFinalePosFuture.result(),
                                     idsClassWithNoteAppCompNoteStudent);
                             setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(), moyenneFinaleFuture.result(),
-                                    result, idEleve, idPeriod, tableauDeConversionFuture.result(), idsClassWithNoteAppCompNoteStudent, isAvgSkillResult );
+                                    result, idEleve, idPeriod, tableauDeConversionFuture.result(), idsClassWithNoteAppCompNoteStudent, isAvgSkillResult, services , multiTeachers);
                             setElementProgramme(result, elementsProgFuture.result(), idsClassWithNoteAppCompNoteStudent);
                             results.add(result);
                             subjectFuture.complete();
@@ -512,7 +516,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     private void buildSubjectForSuivi(Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray idsTeachers,
                                       JsonArray subjects, final Long idPeriode,
-                                      JsonArray multiTeachers, JsonArray services) {
+                                      JsonArray multiTeachers, List<Service> services) {
         List<String> subjectsMissingTeachers = new ArrayList<>();
 
         for (int i = 0; i < subjects.size(); i++) {
@@ -538,7 +542,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
         // Ajoute les matieres manquantes pour un calcul correct de la moyenne général
         for (int i = 0; i < services.size(); i++) {
-            final String idMatiere = services.getJsonObject(i).getString(ID_MATIERE);
+            final String idMatiere = services.get(i).getMatiere().getId();
 
             if (!idsMatieresIdsTeachers.containsKey(idMatiere)) {
                 idsMatieresIdsTeachers.put(idMatiere, new JsonObject()
@@ -553,7 +557,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         }
     }
 
-    private void checkVisibilityAndAddTeachers(JsonArray services, JsonObject matiere, final String idMatiere,
+    private void checkVisibilityAndAddTeachers(List<Service> services, JsonObject matiere, final String idMatiere,
                                                JsonObject subject, JsonArray multiTeachers, JsonArray idsTeachers,
                                                List<String> subjectsMissingTeachers){
         JsonArray teachers = matiere.getJsonArray("teachers");
@@ -563,22 +567,22 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
         Boolean isVisible = false;
         for (int j = 0; j < services.size(); j++) {
-            JsonObject service = services.getJsonObject(j);
-            String serviceIdMatiere = service.getString("id_matiere");
-            String serviceIdTeacher = service.getString("id_enseignant");
-            String serviceIdGroup = service.getString("id_groupe");
+            Service service = services.get(j);
+            String serviceIdMatiere = service.getMatiere().getId();
+            String serviceIdTeacher = service.getTeacher().getId();
+            String serviceIdGroup = service.getGroup().getId();
 
             if (isNotNull(owner)) {
                 if (serviceIdMatiere.equals(idMatiere) && serviceIdTeacher.equals(owner) && serviceIdGroup.equals(id_groupe)) {
-                    isVisible = service.getBoolean("is_visible");
-                    coefficient = service.getLong(COEFFICIENT);
+                    isVisible = service.isVisible();
+                    coefficient = service.getCoefficient();
                     break;
                 }
             } else {
-                if (serviceIdMatiere.equals(idMatiere) && service.getBoolean("is_visible") && serviceIdGroup.equals(id_groupe)) {
+                if (serviceIdMatiere.equals(idMatiere) && service.isVisible() && serviceIdGroup.equals(id_groupe)) {
                     owner = serviceIdTeacher;
-                    isVisible = service.getBoolean("is_visible");
-                    coefficient = service.getLong(COEFFICIENT);
+                    isVisible = service.isVisible();
+                    coefficient = service.getCoefficient();
                     break;
                 }
             }
@@ -597,15 +601,14 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void getMissingTeachers(JsonArray idsTeachers, List<String> subjectsMissingTeachers,
-                                    Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray services) {
+                                    Map<String,JsonObject> idsMatieresIdsTeachers, List<Service> services) {
         subjectsMissingTeachers.forEach(idSubject -> {
             services.stream().forEach(service -> {
-                JsonObject serviceObj = (JsonObject) service;
-                String idServiceSubject = serviceObj.getString("id_matiere");
+                String idServiceSubject = service.getMatiere().getId();
 
-                if (idServiceSubject.equals(idSubject) && serviceObj.getBoolean("is_visible")) {
-                    String owner = serviceObj.getString("id_enseignant");
-                    Long coefficient = serviceObj.getLong(COEFFICIENT);;
+                if (idServiceSubject.equals(idSubject) && service.isVisible()) {
+                    String owner = service.getTeacher().getId();
+                    Long coefficient = service.getCoefficient();
                     coefficient = isNull(coefficient) ? 1L : coefficient;
                     JsonObject matiere = idsMatieresIdsTeachers.get(idSubject);
                     JsonArray teachers = matiere.getJsonArray("teachers");
@@ -770,12 +773,14 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     private void setMoyAndPosForSuivi(JsonArray notes, JsonArray compNotes, JsonArray moyFinalesEleves,
                                       JsonObject result, String idEleve, Long idPeriodAsked,
-                                      JsonArray tableauConversion, List<String> idsClassWithNoteAppCompNoteStudent, boolean isAvgSkill) {
+                                      JsonArray tableauConversion, List<String> idsClassWithNoteAppCompNoteStudent, boolean isAvgSkill,
+                                      List<Service> services, JsonArray multiTeachers) {
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
                 noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves,
-                        idsClassWithNoteAppCompNoteStudent, idPeriodAsked);
-        noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves);
+                        idsClassWithNoteAppCompNoteStudent, idPeriodAsked, services,multiTeachers);
+        noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves,services, multiTeachers);
+
         noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false, tableauConversion,
                 idsClassWithNoteAppCompNoteStudent, idPeriodAsked, isAvgSkill);
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);

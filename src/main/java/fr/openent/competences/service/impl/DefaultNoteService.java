@@ -21,6 +21,8 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.*;
 import fr.openent.competences.constants.Field;
+import fr.openent.competences.helpers.FutureHelper;
+import fr.openent.competences.model.*;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
@@ -35,17 +37,20 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
+import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
+import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.badRequest;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
@@ -56,6 +61,7 @@ import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
  */
 public class DefaultNoteService extends SqlCrudService implements NoteService {
 
+    public static final int NB_FUTURES = 6;
 
     public final String MOYENNES = "moyennes";
     public final String MOYENNESFINALES = "moyennesFinales";
@@ -87,6 +93,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private UtilsService utilsService;
     private AnnotationService annotationService;
     private CompetenceNoteService competenceNoteService;
+    private SubTopicService subTopicService;
     private StructureOptionsService structureOptionsService;
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultNoteService.class);
@@ -101,6 +108,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         utilsService = new DefaultUtilsService(eb);
         annotationService = new DefaultAnnotationService(COMPETENCES_SCHEMA, REL_ANNOTATIONS_DEVOIRS_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE);
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SUBTOPIC_TABLE);
         structureOptionsService = new DefaultStructureOptions();
     }
 
@@ -250,7 +258,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         boolean devoirs = idDevoirs != null && idDevoirs.length != 0;
         boolean periode = idPeriode != null;
 
-        query.append("SELECT notes.id_devoir, notes.id_eleve, notes.valeur, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, devoirs.owner, devoirs.id_matiere, grp.id_groupe " +
+        query.append("SELECT notes.id_devoir, notes.id_eleve, notes.valeur, devoirs.coefficient, devoirs.diviseur, " +
+                "devoirs.ramener_sur, devoirs.owner, devoirs.id_matiere, devoirs.id_sousmatiere, grp.id_groupe " +
                 "FROM " + COMPETENCES_SCHEMA + ".notes " +
                 "LEFT JOIN " + COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = notes.id_devoir " +
                 "LEFT JOIN " + COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS grp ON devoirs.id = grp.id_devoir WHERE devoirs.is_evaluated = true AND ");
@@ -313,7 +322,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, ")
+        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, devoirs.owner, ")
                 .append(" devoirs.ramener_sur, devoirs.is_evaluated, devoirs.id_periode, devoirs.id_sousmatiere,")
                 .append(" devoirs.id_matiere, devoirs.id_etablissement, rel_devoirs_groupes.id_groupe, notes.valeur, ")
                 .append(" notes.id, notes.id_eleve, services.coefficient as coef ")
@@ -383,7 +392,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient,")
+        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.owner,")
                 .append(" devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, devoirs.id_periode , notes.id_eleve,")
                 .append(" devoirs.is_evaluated, null as annotation, devoirs.id_matiere, devoirs.id_sousmatiere ")
                 .append(" FROM ").append(COMPETENCES_SCHEMA).append(".devoirs")
@@ -401,7 +410,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         setParamGetNotesReleve(idGroupes, idEleves, classeId, idMatieres, etablissementId, periodeId, values);
 
         query.append(" UNION ")
-                .append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient,")
+                .append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.owner,")
                 .append(" devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id, devoirs.id_periode, ")
                 .append(" rel_annotations_devoirs.id_eleve, devoirs.is_evaluated,")
                 .append(" rel_annotations_devoirs.id_annotation as annotation, devoirs.id_matiere, devoirs.id_sousmatiere ")
@@ -851,7 +860,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     public void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes,
-                                                 final JsonObject result, String idEleve, JsonArray idEleves){
+                                                 final JsonObject result, String idEleve, JsonArray idEleves, List<Service> services,
+                                                 JsonArray multiTeachers){
         Map<Long, JsonArray> notesByCoef = new HashMap<>();
         if(isNull(result.getJsonObject(COEFFICIENT))) {
             result.put(COEFFICIENT, new JsonObject());
@@ -883,7 +893,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             if(isNotNull(coef)) {
                 final HashMap<Long,HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
                         calculMoyennesEleveByPeriode(notes, resultCoef, idEleve, idEleves,
-                                null , null);
+                                null , null, services, multiTeachers);
                 calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, resultCoef);
                 if(isNull(result.getJsonObject(COEFFICIENT).getJsonObject(coef.toString()))){
                     result.getJsonObject(COEFFICIENT).put(coef.toString(), new JsonObject());
@@ -897,7 +907,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     public HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>
     calculMoyennesEleveByPeriode(JsonArray listNotes, final JsonObject result, String idEleve, JsonArray idEleves,
-                                 List<String> idsClassWithNoteAppCompNoteStudent, Long idPeriodeAsked) {
+                                 List<String> idsClassWithNoteAppCompNoteStudent, Long idPeriodeAsked, List<Service> services,
+                                 JsonArray multiTeachers) {
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriode = new HashMap<>();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse = new HashMap<>();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesClasseBySousMat = new HashMap<>();
@@ -907,56 +918,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         notesByDevoirByPeriodeClasse.put(null, new HashMap<>());
         notesByDevoirByPeriodeBySousMat.put(null, new HashMap<>());
         notesClasseBySousMat.put(null, new HashMap<>());
-
         //pour toutes les notes existantes dans la classe
-        for (int i = 0; i < listNotes.size(); i++) {
-            JsonObject note = listNotes.getJsonObject(i);
+        initMoyenneElevesArrays(listNotes, idEleve, idEleves, idsClassWithNoteAppCompNoteStudent, idPeriodeAsked, notesByDevoirByPeriode,
+                notesByDevoirByPeriodeClasse, notesClasseBySousMat, notesByDevoirByPeriodeBySousMat, services , multiTeachers);
 
-            if (note.getString("valeur") != null && note.getBoolean("is_evaluated")
-                    && note.getString("coefficient") != null && !"0".equals(note.getString("coefficient"))) {
-                Long id_periode = note.getLong("id_periode");
-                String id_eleve = note.getString("id_eleve");
-                Long id_sousMatiere = note.getLong(ID_SOUS_MATIERE);
-                String id_groupe = note.getString("id_groupe");
-                if(idsClassWithNoteAppCompNoteStudent != null && idPeriodeAsked != null){
-                    if(idEleve.equals(id_eleve) && idPeriodeAsked.equals(id_periode) && id_groupe != null &&
-                            !idsClassWithNoteAppCompNoteStudent.contains(id_groupe))
-                        idsClassWithNoteAppCompNoteStudent.add(id_groupe);
-                }
-
-                if (!notesByDevoirByPeriode.containsKey(id_periode)) {
-                    notesByDevoirByPeriode.put(id_periode, new HashMap<>());
-                    notesByDevoirByPeriodeClasse.put(id_periode, new HashMap<>());
-                    notesByDevoirByPeriodeBySousMat.put(id_periode.toString(), new HashMap<>());
-                    notesClasseBySousMat.put(id_periode, new HashMap<>());
-                }
-
-                if (!idEleves.contains(id_eleve)) {
-                    idEleves.add(id_eleve);
-                }
-
-                NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(note.getString("valeur")),
-                        Double.valueOf(note.getLong("diviseur")), note.getBoolean("ramener_sur"),
-                        Double.valueOf(note.getString("coefficient")), note.getString("id_eleve"),
-                        id_periode);
-
-                //ajouter la note à la période correspondante et à l'année pour l'élève
-                if (note.getString("id_eleve").equals(idEleve)) {
-                    utilsService.addToMap(id_periode, notesByDevoirByPeriode.get(id_periode), noteDevoir);
-                    utilsService.addToMap(null, notesByDevoirByPeriode.get(null), noteDevoir);
-                    utilsService.addToMap(id_periode.toString(), id_sousMatiere, notesByDevoirByPeriodeBySousMat,
-                            noteDevoir);
-                }
-
-                //ajouter la note à la période correspondante et à l'année pour toute la classe
-                utilsService.addToMap(id_periode, notesByDevoirByPeriodeClasse.get(id_periode), noteDevoir);
-                utilsService.addToMap(null, notesByDevoirByPeriodeClasse.get(null), noteDevoir);
-                if (isNotNull(id_sousMatiere)) {
-                    utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(id_periode), noteDevoir);
-                    utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(null), noteDevoir);
-                }
-            }
-        }
         // permettra de stocker les moyennes des sousMatières par période
         result.put(MOYENNES, new JsonArray());
         result.put("_"+ MOYENNE, new JsonObject());
@@ -975,23 +940,57 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             final Integer diviseur = 20;
             final Boolean annual = false;
 
-            // calcul des moyennes des notes de la matière de l'élève
-            for (Map.Entry<Long, ArrayList<NoteDevoir>> entry : entryPeriode.getValue().entrySet()) {
-                JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(), withStat, diviseur, annual);
-                moyenne.put("id", idPeriode);
-                listMoyDevoirs.get(idPeriode).add(moyenne);
-            }
-
             // Calcul des moyennes des notes par sous-matières pour la période courante
             HashMap<Long, ArrayList<NoteDevoir>> notesSubMatForPeriode = notesByDevoirByPeriodeBySousMat.get(periodeKey);
-            if(isNotNull(notesSubMatForPeriode)) {
+            if(isNotNull(notesSubMatForPeriode) && notesSubMatForPeriode.size() > 0 ) {
+                double total = 0;
+                double totalCoeff = 0;
+                boolean hasNote = false;
+
                 for (Map.Entry<Long, ArrayList<NoteDevoir>> smEntry : notesSubMatForPeriode.entrySet()) {
                     Long idSousMatiere = smEntry.getKey();
+                    Service serv = smEntry.getValue().get(0).getService();
+                    double coeff = 1.d;
+                    if(serv != null && serv.getSubtopics() != null && serv.getSubtopics().size() > 0 ) {
+                        SubTopic subTopic =  serv.getSubtopics().stream()
+                                .filter(el ->
+                                        el.getId().equals(idSousMatiere)
+                                ).findFirst().orElse(null);
+                        if(subTopic != null)
+                            coeff = subTopic.getCoefficient();
+                    }
                     if (isNotNull(idSousMatiere)) {
                         JsonObject moyenne = utilsService.calculMoyenne(smEntry.getValue(), withStat, diviseur, annual);
                         result.getJsonObject("_" + MOYENNE).getJsonObject(periodeKey).put(idSousMatiere.toString(),
                                 moyenne);
+                        total += coeff * moyenne.getDouble(Field.MOYENNE);
+                        totalCoeff += coeff;
+                        hasNote = true;
                     }
+                }
+                if (totalCoeff == 0) {
+                    log.error("Found a 0 or negative coefficient in calculMoyennesEleveByPeriode, please check your subtopics " +
+                            "coefficients (value of totalCoeff : " + totalCoeff + ")");
+                    return null;
+                }
+                Double moyenne = Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER;
+
+                if (hasNote)
+                    result.put(Field.MOYENNE, moyenne);
+                else
+                    result.put(Field.MOYENNE, "NN");
+
+                JsonObject moyenneTotale = new JsonObject().put(Field.MOYENNE,  moyenne)
+                        .put(Field.HASNOTE, true);
+                moyenneTotale.put(Field.ID, idPeriode);
+                listMoyDevoirs.get(idPeriode).add(moyenneTotale);
+            }
+            else {
+                // calcul des moyennes des notes de la matière de l'élève
+                for (Map.Entry<Long, ArrayList<NoteDevoir>> entry : entryPeriode.getValue().entrySet()) {
+                    JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(), withStat, diviseur, annual);
+                    moyenne.put(Field.ID, idPeriode);
+                    listMoyDevoirs.get(idPeriode).add(moyenne);
                 }
             }
 
@@ -1018,6 +1017,106 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         return notesByDevoirByPeriodeClasse;
+    }
+
+    private void  initMoyenneElevesArrays(JsonArray listNotes, String idEleve, JsonArray idEleves, List<String> idsClassWithNoteAppCompNoteStudent, Long idPeriodeAsked,
+                                          HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriode,
+                                          HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
+                                          HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesClasseBySousMat,
+                                          HashMap<String, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeBySousMat,
+                                          List<Service> services, JsonArray multiTeachers) {
+        for (int i = 0; i < listNotes.size(); i++) {
+            JsonObject note = listNotes.getJsonObject(i);
+
+            if (note.getString(Field.VALEUR) != null && note.getBoolean(Field.IS_EVALUATED)
+                    && note.getString(Field.COEFFICIENT) != null && !"0".equals(note.getString(Field.COEFFICIENT))) {
+                Long id_periode = note.getLong(Field.ID_PERIODE);
+                String id_eleve = note.getString(Field.ID_ELEVE);
+                Long id_sousMatiere = note.getLong(ID_SOUS_MATIERE);
+                String id_groupe = note.getString(Field.ID_GROUPE);
+                if(idsClassWithNoteAppCompNoteStudent != null && idPeriodeAsked != null){
+                    if(idEleve.equals(id_eleve) && idPeriodeAsked.equals(id_periode) && id_groupe != null &&
+                            !idsClassWithNoteAppCompNoteStudent.contains(id_groupe))
+                        idsClassWithNoteAppCompNoteStudent.add(id_groupe);
+                }
+
+                if (!notesByDevoirByPeriode.containsKey(id_periode)) {
+                    notesByDevoirByPeriode.put(id_periode, new HashMap<>());
+                    notesByDevoirByPeriodeClasse.put(id_periode, new HashMap<>());
+                    notesByDevoirByPeriodeBySousMat.put(id_periode.toString(), new HashMap<>());
+                    notesClasseBySousMat.put(id_periode, new HashMap<>());
+                }
+
+                if (!idEleves.contains(id_eleve)) {
+                    idEleves.add(id_eleve);
+                }
+
+                NoteDevoir noteDevoir = setNoteDevoir(services, multiTeachers, note, id_periode, id_sousMatiere);
+
+                //ajouter la note à la période correspondante et à l'année pour l'élève
+                if (note.getString(Field.ID_ELEVE).equals(idEleve)) {
+                    utilsService.addToMap(id_periode, notesByDevoirByPeriode.get(id_periode), noteDevoir);
+                    utilsService.addToMap(null, notesByDevoirByPeriode.get(null), noteDevoir);
+                    if(id_sousMatiere != null)
+                        utilsService.addToMap(id_periode.toString(), id_sousMatiere, notesByDevoirByPeriodeBySousMat,
+                                noteDevoir);
+                }
+
+                //ajouter la note à la période correspondante et à l'année pour toute la classe
+                utilsService.addToMap(id_periode, notesByDevoirByPeriodeClasse.get(id_periode), noteDevoir);
+                utilsService.addToMap(null, notesByDevoirByPeriodeClasse.get(null), noteDevoir);
+                if (isNotNull(id_sousMatiere)) {
+                    utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(id_periode), noteDevoir);
+                    utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(null), noteDevoir);
+                }
+            }
+        }
+    }
+
+    private NoteDevoir setNoteDevoir(List<Service> services, JsonArray multiTeachers, JsonObject note, Long id_periode, Long id_sousMatiere) {
+        Matiere matiere = new Matiere(note.getString(Field.ID_MATIERE));
+        Teacher teacher = new Teacher(note.getString(Field.OWNER));
+        Group group = new Group(note.getString(Field.ID_GROUPE));
+
+        Service service = services.stream()
+                .filter(el -> teacher.getId().equals(el.getTeacher().getId())
+                        && matiere.getId().equals(el.getMatiere().getId())
+                        && group.getId().equals(el.getGroup().getId()))
+                .findFirst().orElse(null);
+
+        if (service == null){
+            //On regarde les multiTeacher
+            for(Object mutliTeachO: multiTeachers){
+                //multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId()
+                JsonObject multiTeaching  =(JsonObject) mutliTeachO;
+                if(multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                        && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
+                        && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
+                    service = services.stream()
+                            .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
+                                    && matiere.getId().equals(el.getMatiere().getId())
+                                    && group.getId().equals(el.getGroup().getId()))
+                            .findFirst().orElse(null);
+                }
+
+                if(multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                        && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
+                        && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
+
+                    service = services.stream()
+                            .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
+                                    && matiere.getId().equals(el.getMatiere().getId())
+                                    && group.getId().equals(el.getGroup().getId()))
+                            .findFirst().orElse(null);
+                }
+            }
+        }
+
+        NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(note.getString(Field.VALEUR)),
+                Double.valueOf(note.getLong(Field.DIVISEUR)), note.getBoolean(Field.RAMENER_SUR),
+                Double.valueOf(note.getString(Field.COEFFICIENT)), note.getString(Field.ID_ELEVE),
+                id_periode, service, id_sousMatiere);
+        return noteDevoir;
     }
 
     private String nullPositionnemetFinal() {
@@ -1204,6 +1303,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         HashMap<String, ArrayList<NoteDevoir>> notesPeriodeByEleves = new HashMap<>();
+        HashMap<String, HashMap<Long, ArrayList<NoteDevoir>>> notesByElevesBySousMat = new HashMap<>();
+
         //mettre dans notesPeriodeByEleves idEleve -> notes de l'élève pour la période
         for(NoteDevoir note : allNotes){
             String id_eleve = note.getIdEleve();
@@ -1211,6 +1312,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     && moyFinalesNNElevesByPeriode.get(idPeriode).contains(id_eleve))) {
                 if (!notesPeriodeByEleves.containsKey(id_eleve)) {
                     notesPeriodeByEleves.put(id_eleve, new ArrayList<>());
+                }
+                if (!notesByElevesBySousMat.containsKey(id_eleve)) {
+                    notesByElevesBySousMat.put(id_eleve, new HashMap<Long, ArrayList<NoteDevoir>>());
+                    if(isNotNull(note.getService())){
+                        note.getService().getSubtopics().stream().filter(subtopic -> !notesByElevesBySousMat.get(id_eleve).containsKey(subtopic.getId()))
+                                .forEach(subtopic -> notesByElevesBySousMat.get(id_eleve).put(subtopic.getId(), new ArrayList<>()));
+                    }
                 }
                 notesPeriodeByEleves.get(id_eleve).add(note);
             }
@@ -1234,6 +1342,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         //pour tous les élèves qui ont une note mettre leur moyenne finale ou auto dans sumMoyClasse
         for(Map.Entry<String, ArrayList<NoteDevoir>> notesPeriodeByEleve : notesPeriodeByEleves.entrySet()){
+            //TODO : Séparer les moyennes des sous matières puis faire leur moyenne afin d'avoir la bonne moyenne par élève,
+            // par exemple à l'aide d'un tableau qui sépareraient les moyennes des différentes sous matières
             String idEleve = notesPeriodeByEleve.getKey();
             //si l'éleve en cours a une moyenne finale sur la période l'ajouter à sumMoyClasse
             //sinon calculer la moyenne de l'eleve et l'ajouter à sumMoyClasse
@@ -1242,8 +1352,53 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         false, 20,false).getValue("moyenne"))){
                     nbEleve--;
                 } else {
-                    Double moyEleve = utilsService.calculMoyenne(notesPeriodeByEleve.getValue(),
-                            false, 20,false).getDouble("moyenne");
+
+                    List<SubTopic> subTopics = notesPeriodeByEleve.getValue().get(0).getService().getSubtopics();
+                    Map<Long, ArrayList<NoteDevoir>> notesBySubTopic = new HashMap<>();
+                    for(NoteDevoir note: notesPeriodeByEleve.getValue()) {
+                        if(notesBySubTopic.containsKey(note.getIdSousMatiere())){
+                            ArrayList<NoteDevoir> noteDevoirList = notesBySubTopic.get(note.getIdSousMatiere());
+                            noteDevoirList.add(note);
+                            notesBySubTopic.put(note.getIdSousMatiere(),noteDevoirList);
+                        }else{
+                            ArrayList<NoteDevoir> noteDevoirList = new ArrayList<>();
+                            noteDevoirList.add(note);
+                            notesBySubTopic.put(note.getIdSousMatiere(),noteDevoirList);
+
+                        }
+                    }
+                    AtomicReference<Double> moyenne = new AtomicReference<>(0.d);
+                    AtomicReference<Double> coeff = new AtomicReference<>(0.d);
+                    Boolean withStat = false;
+                    Boolean annual = false;
+                    int diviseur = 20;
+
+                    notesBySubTopic.forEach((subTopicId,noteDevoirList) ->{
+                        SubTopic subTopic = subTopics.stream().filter(s -> subTopicId.equals(s.getId()))
+                                .findFirst().orElse(null);
+                        if(subTopic != null){
+                            if(!utilsService.calculMoyenne(noteDevoirList,
+                                    withStat, diviseur, annual).getValue(Field.MOYENNE).equals("NN"))
+                                moyenne.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
+                                        withStat, diviseur, annual).getDouble(Field.MOYENNE) * subTopic.getCoefficient());
+                            coeff.updateAndGet(v -> v + subTopic.getCoefficient());
+
+                        }else{
+                            if(!utilsService.calculMoyenne(noteDevoirList,
+                                    withStat, diviseur, annual).getValue(Field.MOYENNE).equals("NN"))
+                                moyenne.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
+                                        withStat, diviseur, annual).getDouble(Field.MOYENNE));
+                            coeff.updateAndGet(v -> v + 1.d);
+                        }
+                    });
+
+                    Double moyEleve;
+                    if(coeff.get() != 0.d){
+                        moyEleve = moyenne.get() / coeff.get();
+                    }else{
+                        moyEleve = utilsService.calculMoyenne(notesPeriodeByEleve.getValue(),
+                                withStat, diviseur,annual).getDouble(Field.MOYENNE);
+                    }
                     sumMoyClasse += moyEleve;
                     nbEleve++;
                     result.getJsonObject(NOTES_BY_PERIODE_BY_STUDENT).getJsonObject(periodeKey).put(idEleve, moyEleve);
@@ -1431,16 +1586,59 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 Map<String, Double> allMoyennes = new HashMap<>();
                 final Double[] min = {null};
                 final Double[] max = {null};
-                allNotesByEleve.forEach((key, value) -> {
-                    if(!moyennesFinalesNN.contains(key)) {
-                        JsonObject moyenne = utilsService.calculMoyenne(value, false, 20, false);
-                        if(!moyenne.getValue("moyenne").equals("NN")){
-                            Double moyenneTmp = moyenne.getDouble("moyenne");
 
+                allNotesByEleve.forEach((key, value) -> {
+                    Map<Long, ArrayList<NoteDevoir>> notesBySubTopic = new HashMap<>();
+                    List<SubTopic> subTopics;
+                    try {
+                        subTopics = value.get(0).getService().getSubtopics();
+                    }catch (NullPointerException e){
+                        subTopics = new ArrayList<>();
+                    }
+                    if(!moyennesFinalesNN.contains(key)) {
+                        value.forEach(note ->{
+                            if(notesBySubTopic.containsKey(note.getIdSousMatiere())){
+                                ArrayList<NoteDevoir> noteDevoirList = notesBySubTopic.get(note.getIdSousMatiere());
+                                noteDevoirList.add(note);
+                                notesBySubTopic.put(note.getIdSousMatiere(),noteDevoirList);
+                            }else{
+                                ArrayList<NoteDevoir> noteDevoirList = new ArrayList<>();
+                                noteDevoirList.add(note);
+                                notesBySubTopic.put(note.getIdSousMatiere(),noteDevoirList);
+                            }
+                        });
+
+                        AtomicReference<Double> moyenneAtomic = new AtomicReference<>(0.d);
+                        AtomicReference<Double> coeff = new AtomicReference<>(0.d);
+                        Boolean withStat = false;
+                        Boolean annual = false;
+                        int diviseur = 20;
+
+
+                        List<SubTopic> finalSubTopics = subTopics;
+                        notesBySubTopic.forEach((subTopicId, noteDevoirList) ->{
+                            SubTopic subTopic = finalSubTopics.stream().filter(s -> subTopicId.equals(s.getId()))
+                                    .findFirst().orElse(null);
+                            if(subTopic != null){
+                                if(!utilsService.calculMoyenne(noteDevoirList,
+                                        withStat, diviseur, annual).getValue(Field.MOYENNE).equals("NN"))
+                                    moyenneAtomic.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
+                                            withStat, diviseur, annual).getDouble(Field.MOYENNE) * subTopic.getCoefficient());
+                                coeff.updateAndGet(v -> v + subTopic.getCoefficient());
+
+                            }else{
+                                if(!utilsService.calculMoyenne(noteDevoirList,
+                                        withStat, diviseur, annual).getValue(Field.MOYENNE).equals("NN"))
+                                    moyenneAtomic.updateAndGet(v -> v + utilsService.calculMoyenne(noteDevoirList,
+                                            withStat, diviseur, annual).getDouble(Field.MOYENNE));
+                                coeff.updateAndGet(v -> v + 1.d);
+                            }
+                        });
+                        if(!coeff.get().equals(0.d)){
+                            Double moyenneTmp = moyenneAtomic.get() / coeff.get();
                             if (moyennesFinales.containsKey(key)) {
                                 moyenneTmp = moyennesFinales.get(key);
                             }
-
                             //manage min value
                             if (min[0] == null || min[0] > moyenneTmp) {
                                 min[0] = moyenneTmp;
@@ -1455,11 +1653,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     }
                 });
 
+
                 if (min[0] != null && max[0] != null) {
                     JsonObject minMaxObj = new JsonObject();
+                    DecimalFormat decimalFormat = new DecimalFormat("#.0");
+                    decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
                     minMaxObj.put("id_periode", idPeriode)
-                            .put("min", min[0])
-                            .put("max", max[0]);
+                            .put("min",decimalFormat.format(min[0]))
+                            .put("max", decimalFormat.format(max[0]));
                     if(idPeriodAsked.equals(idPeriode)){
                         allMinMax.add(minMaxObj);
                     }
@@ -1695,7 +1896,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         String query = "SELECT * FROM " +
                 "(SELECT notes.id_eleve AS id_eleve_notes, devoirs.id, devoirs.id_periode, devoirs.id_matiere, devoirs.owner, rel_devoirs_groupes.id_groupe, " +
-                "rel_devoirs_groupes.type_groupe, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, devoirs.is_evaluated, notes.valeur " +
+                "rel_devoirs_groupes.type_groupe, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, devoirs.is_evaluated, notes.valeur, devoirs.id_sousmatiere " +
                 "FROM notes.devoirs LEFT JOIN notes.notes ON (devoirs.id = notes.id_devoir AND " +
                 "notes.id_eleve IN " + Sql.listPrepared(idsEleve) + " ) " +
                 "INNER JOIN notes.rel_devoirs_groupes ON (devoirs.id = rel_devoirs_groupes.id_devoir AND " +
@@ -1789,32 +1990,43 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     } else {
                         JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
 
-                        idsGroups.add(idClasseGroups.getJsonObject(0).getString("id_classe"));
+                        idsGroups.add(idClasseGroups.getJsonObject(0).getString(Field.ID_CLASSE));
                         idsGroups.addAll(idClasseGroups.getJsonObject(0).getJsonArray("id_groupes"));
                         final String nameClasse = idClasseGroups.getJsonObject(0).getString("name_classe");
-                        final String idClass = idClasseGroups.getJsonObject(0).getString("id_classe");
+                        final String idClass = idClasseGroups.getJsonObject(0).getString(Field.ID_CLASSE);
 
-                        List<Future> futures = new ArrayList<>();
-                        Future<JsonArray> multiTeachersFuture = Future.future();
-                        utilsService.getMultiTeachers(idEtablissement, idsGroups, idPeriode, event -> {
-                            formate(multiTeachersFuture, event);
-                        });
-                        futures.add(multiTeachersFuture);
+                        //Récupération des Services
+                        Promise<JsonArray> servicesPromise = Promise.promise();
+                        utilsService.getServices(idEtablissement,
+                                new JsonArray().add(idClass), FutureHelper.handlerJsonArray(servicesPromise.future()));
 
-                        Future<JsonArray> servicesFuture = Future.future();
-                        utilsService.getServices(idEtablissement, idsGroups, event -> {
-                            formate(servicesFuture, event);
-                        });
-                        futures.add(servicesFuture);
+                        //Récupération des Multi-teachers
+                        Promise<JsonArray> multiTeachingPromise = Promise.promise();
+                        utilsService.getMultiTeachers(idEtablissement,
+                                new JsonArray().add(idClass), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
-                        CompositeFuture.all(futures).setHandler(event -> {
-                            final JsonArray multiTeachers = (JsonArray) futures.get(0).result();
-                            final JsonArray services = (JsonArray) futures.get(1).result();
+                        //Récupération des Sous-Matières
+                        Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+                        utilsService.getSubTopicCoeff(idEtablissement, idClass, subTopicCoefPromise);
 
-                            // 2- On récupère les notes des eleves
-                            getNotesAndMoyFinaleByClasseAndPeriode(idsEleve, idsGroups, idPeriode, idEtablissement,
-                                    getNotesAndMoyFinaleByClasseAndPeriodeHandler(nameClasse, idClass, handler, services,
-                                            multiTeachers, mapAllidMatAndidTeachers, eleves, mapIdMatListMoyByEleve));
+                        CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefPromise.future())
+                                .setHandler(event -> {
+                                    Structure structure = new Structure();
+                                    structure.setId(idEtablissement);
+                                    JsonArray servicesJson = servicesPromise.future().result();
+                                    JsonArray multiTeachers = multiTeachingPromise.future().result();
+                                    List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+
+                                    List<Service> services = new ArrayList<>();
+                                    List<MultiTeaching> multiTeachings = new ArrayList<>();
+                                    new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClass);
+                                    setServices(structure, servicesJson, services, subTopics);
+
+
+                                    // 2- On récupère les notes des eleves
+                                    getNotesAndMoyFinaleByClasseAndPeriode(idsEleve, idsGroups, idPeriode, idEtablissement,
+                                            getNotesAndMoyFinaleByClasseAndPeriodeHandler(nameClasse, idClass, handler, servicesJson,
+                                                    multiTeachers, mapAllidMatAndidTeachers, eleves, mapIdMatListMoyByEleve, services));
                         });
                     }
                 }
@@ -1825,10 +2037,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     //à tes souhaits
     private Handler<Either<String, JsonArray>> getNotesAndMoyFinaleByClasseAndPeriodeHandler(String nameClasse, String idClass,
                                                                                              Handler<Either<String, JsonObject>> handler,
-                                                                                             JsonArray services, JsonArray multiTeachers,
+                                                                                             JsonArray servicesJSON, JsonArray multiTeachers,
                                                                                              SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
                                                                                              List<Eleve> eleves,
-                                                                                             Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve) {
+                                                                                             Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
+                                                                                             List<Service> services) {
         return response -> {
             if (response.isLeft()) {
                 handler.handle(new Either.Left<>("eval not found"));
@@ -1840,6 +2053,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 } else {
                     Map<String, Map<String, Double>> mapIdEleveIdMatMoy = new HashMap<>();
                     Map<String, Map<String, List<NoteDevoir>>> mapIdEleveIdMatListNotes = new HashMap<>();
+                    HashMap<String, HashMap<String, HashMap<Long, List<NoteDevoir>>>> mapIdEleveIdMatIdSousMatListNotes = new HashMap<>();
 
                     for (int i = 0; i < respNotesMoysFinales.size(); i++) {
                         JsonObject respNoteMoyFinale = respNotesMoysFinales.getJsonObject(i);
@@ -1853,7 +2067,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         //récupérer les moysFinales => set mapIdEleveIdMatMoy
                         if (moyenneFinale != null ) {
                             if(!mapAllidMatAndidTeachers.containsKey(idMatMoyF))
-                                setListTeachers(services, multiTeachers,mapAllidMatAndidTeachers,idMatMoyF);
+                                setListTeachers(servicesJSON, multiTeachers,mapAllidMatAndidTeachers,idMatMoyF);
                             if(mapAllidMatAndidTeachers.containsKey(idMatMoyF)){//idMatMoyF is on service
                                 setMapIdEleveMatMoy(mapIdEleveIdMatMoy, moyenneFinale, idEleveMoyF, idMatMoyF);
                             } else {
@@ -1864,28 +2078,69 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 continue;
                             }
                             if(idEleveNotes != null){
-                                setMapIdEleveIdMatListNotes(mapIdEleveIdMatListNotes, respNoteMoyFinale, idEleveNotes, idMatiere);
+                                if(respNoteMoyFinale.getLong(Field.ID_SOUSMATIERE) != null){
+                                    setMapIdEleveIdMatIdSousMatListNotes(mapIdEleveIdMatIdSousMatListNotes, respNoteMoyFinale, idEleveNotes, idMatiere, services, multiTeachers, idClass);
+                                }
+                                else {
+                                    setMapIdEleveIdMatListNotes(mapIdEleveIdMatListNotes, respNoteMoyFinale, idEleveNotes, idMatiere);
+                                }
                             }
                             if(!mapAllidMatAndidTeachers.containsKey(idMatiere)){
-                                setListTeachers(services, multiTeachers, mapAllidMatAndidTeachers, idMatiere);
+                                setListTeachers(servicesJSON, multiTeachers, mapAllidMatAndidTeachers, idMatiere);
                             }
                         }
                     }
 
-                    //3 - calculate average by eleve by mat with mapIdEleveIdMatListNotes and set result in mapIdEleveIdMatMoy
-                    for (Map.Entry<String, Map<String, List<NoteDevoir>>> stringMapEntry : mapIdEleveIdMatListNotes.entrySet()) {
-                        for (Map.Entry<String, List<NoteDevoir>> stringListEntry : stringMapEntry.getValue().entrySet()) {
-                            String idEleve = stringMapEntry.getKey();
-                            String idMat = stringListEntry.getKey();
-                            List<NoteDevoir> noteDevoirList = stringListEntry.getValue();
-                            if (!"NN".equals(utilsService.calculMoyenne(noteDevoirList, false, 20, false).getValue("moyenne"))) {
-                                Double moy = utilsService.calculMoyenne(noteDevoirList, false, 20, false).getDouble("moyenne");
+                    //3 - calculate average by eleve by mat by sous mat with mapIdEleveIdMatIdSousMatListNotes and set result in mapIdEleveIdMatMoy
+                    Boolean stats = false;
+                    Boolean annual = false;
+                    for (Map.Entry<String, HashMap<String, HashMap<Long, List<NoteDevoir>>>> eleveMapEntry : mapIdEleveIdMatIdSousMatListNotes.entrySet()) {
+                        for (Map.Entry<String, HashMap<Long, List<NoteDevoir>>> matMapEntry : eleveMapEntry.getValue().entrySet()) {
+                            double total = 0;
+                            double totalCoeff = 0;
+                            String idEleve = eleveMapEntry.getKey();
+                            String idMat = matMapEntry.getKey();
+                            for (Map.Entry<Long, List<NoteDevoir>> sousMatMapEntry : matMapEntry.getValue().entrySet()) {
+                                Long idSousMat = sousMatMapEntry.getKey();
+                                Service serv = sousMatMapEntry.getValue().get(0).getService();
+                                double coeff = 1.d;
+
+                                if (serv != null && serv.getSubtopics() != null && serv.getSubtopics().size() > 0) {
+                                    SubTopic subTopic = serv.getSubtopics().stream()
+                                            .filter(el ->
+                                                    el.getId().equals(idSousMat)
+                                            ).findFirst().orElse(null);
+                                    if (subTopic != null)
+                                        coeff = subTopic.getCoefficient();
+                                }
+
+                                Double moyenSousMat = utilsService.calculMoyenne(sousMatMapEntry.getValue(), stats, Field.DIVISEUR_NOTE, annual)
+                                        .getDouble(Field.MOYENNE);
+
+                                total += coeff * moyenSousMat;
+                                totalCoeff += coeff;
+                            }
+                            if (totalCoeff != 0) {
+                                Double moy = Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER;
                                 setMapIdEleveMatMoy(mapIdEleveIdMatMoy, moy, idEleve, idMat);
                             }
                         }
                     }
 
-                    //4- il faut parcourir la mapIdMatIdsTeacher pour garder l'ordre des matieres pour tester qu l'élève à bien ttes les matières
+                    //4 - calculate average by eleve by mat with mapIdEleveIdMatListNotes and set result in mapIdEleveIdMatMoy
+                    for (Map.Entry<String, Map<String, List<NoteDevoir>>> stringMapEntry : mapIdEleveIdMatListNotes.entrySet()) {
+                        for (Map.Entry<String, List<NoteDevoir>> stringListEntry : stringMapEntry.getValue().entrySet()) {
+                            String idEleve = stringMapEntry.getKey();
+                            String idMat = stringListEntry.getKey();
+                            List<NoteDevoir> noteDevoirList = stringListEntry.getValue();
+                            if (!Field.NN.equals(utilsService.calculMoyenne(noteDevoirList, stats, Field.DIVISEUR_NOTE, annual).getValue(Field.MOYENNE))) {
+                                Double moy = utilsService.calculMoyenne(noteDevoirList, stats, Field.DIVISEUR_NOTE, annual).getDouble(Field.MOYENNE);
+                                setMapIdEleveMatMoy(mapIdEleveIdMatMoy, moy, idEleve, idMat);
+                            }
+                        }
+                    }
+
+                    //5- il faut parcourir la mapIdMatIdsTeacher pour garder l'ordre des matieres pour tester qu l'élève à bien ttes les matières
                     JsonArray elevesResult = new fr.wseduc.webutils.collections.JsonArray();
                     List<NoteDevoir> listMoyGeneraleEleve = new ArrayList<>();
 
@@ -1913,7 +2168,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                             .put("id_matiere", idMatOfAllMat)
                                             .put("moyenneByMat", mapIdMatMoy.get(idMatOfAllMat)));
 
-                                    JsonObject service = (JsonObject) services.stream()
+                                    JsonObject service = (JsonObject) servicesJSON.stream()
                                             .filter(el -> idMatOfAllMat.equals(((JsonObject) el).getString("id_matiere")))
                                             .findFirst().orElse(null);
                                     Double coefficient = 1.0;
@@ -2017,6 +2272,87 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
     }
 
+    private void setMapIdEleveIdMatIdSousMatListNotes (HashMap<String, HashMap<String, HashMap<Long, List<NoteDevoir>>>> mapIdEleveIdMatIdSousMatListNotes,
+                                              JsonObject respNoteMoyFinale, String idEleveNotes, String idMatiere,
+                                              List<Service> services, JsonArray multiTeachers, String idClasse) {
+
+        Matiere matiere = new Matiere(respNoteMoyFinale.getString(Field.ID_MATIERE));
+        Teacher teacher = new Teacher(respNoteMoyFinale.getString(Field.OWNER));
+        Group group = new Group(idClasse);
+
+        Service service = services.stream()
+                .filter(el -> teacher.getId().equals(el.getTeacher().getId())
+                        && matiere.getId().equals(el.getMatiere().getId())
+                        && group.getId().equals(el.getGroup().getId()))
+                .findFirst().orElse(null);
+
+        if (service == null){
+            //On regarde les multiTeacher
+            for(Object mutliTeachO: multiTeachers){
+                //multiTeaching.getString("second_teacher_id").equals(teacher.getId()
+                JsonObject multiTeaching  =(JsonObject) mutliTeachO;
+                if(multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                        && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
+                        && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
+                    service = services.stream()
+                            .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
+                                    && matiere.getId().equals(el.getMatiere().getId())
+                                    && group.getId().equals(el.getGroup().getId()))
+                            .findFirst().orElse(null);
+                }
+
+                if(multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                        && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
+                        && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
+
+                    service = services.stream()
+                            .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
+                                    && matiere.getId().equals(el.getMatiere().getId())
+                                    && group.getId().equals(el.getGroup().getId()))
+                            .findFirst().orElse(null);
+                }
+            }
+        }
+
+        Long sousMatiereId = respNoteMoyFinale.getLong(Field.ID_SOUSMATIERE);
+        Long id_periode = respNoteMoyFinale.getLong(Field.ID_PERIODE);
+
+        NoteDevoir noteDevoir = new NoteDevoir(
+                Double.valueOf(respNoteMoyFinale.getString(Field.VALEUR)),
+                Double.valueOf(respNoteMoyFinale.getInteger(Field.DIVISEUR)),
+                respNoteMoyFinale.getBoolean(Field.RAMENER_SUR),
+                Double.valueOf(respNoteMoyFinale.getString(Field.COEFFICIENT)),
+                respNoteMoyFinale.getString(Field.ID_ELEVE), id_periode, service, sousMatiereId);
+
+        if (mapIdEleveIdMatIdSousMatListNotes.containsKey(idEleveNotes)) {
+            Map<String, HashMap<Long, List<NoteDevoir>>> mapIdMatIdSousMatListNotes = mapIdEleveIdMatIdSousMatListNotes.get(idEleveNotes);
+            if (mapIdMatIdSousMatListNotes.containsKey(idMatiere)) {
+                HashMap<Long, List<NoteDevoir>> mapIdSousMatListNotes = mapIdMatIdSousMatListNotes.get(idMatiere);
+                if (mapIdSousMatListNotes.containsKey(sousMatiereId)){
+                    mapIdSousMatListNotes.get(sousMatiereId).add(noteDevoir);
+                } else {//nouvelle sous-matière dc nouvelle liste de notes
+                    List<NoteDevoir> newListNotes = new ArrayList<>();
+                    newListNotes.add(noteDevoir);
+                    mapIdSousMatListNotes.put(sousMatiereId, newListNotes);
+                }
+            } else {//nouvelle matière dc nouvelle liste de notes
+                HashMap<Long, List<NoteDevoir>> newListSousMatiereNotes = new HashMap<>();
+                List<NoteDevoir> newListNotes = new ArrayList<>();
+                newListNotes.add(noteDevoir);
+                newListSousMatiereNotes.put(sousMatiereId, newListNotes);
+                mapIdMatIdSousMatListNotes.put(idMatiere, newListSousMatiereNotes);
+            }
+        } else {//nouvel élève dc nelle map idMat-listnotes
+            HashMap<String, HashMap<Long, List<NoteDevoir>>> newMapIdMatIdSousMatListNotes = new HashMap<>();
+            HashMap<Long, List<NoteDevoir>> newListSousMatiereNotes = new HashMap<>();
+            List<NoteDevoir> newListNotes = new ArrayList<>();
+            newListNotes.add(noteDevoir);
+            newListSousMatiereNotes.put(sousMatiereId, newListNotes);
+            newMapIdMatIdSousMatListNotes.put(idMatiere, newListSousMatiereNotes);
+            mapIdEleveIdMatIdSousMatListNotes.put(idEleveNotes, newMapIdMatIdSousMatListNotes);
+        }
+    }
+
     private void setListTeachers (JsonArray services, JsonArray multiTeachers,
                                   SortedMap<String, Set<String>> mapAllidMatAndidTeachers, String idMatiere) {
         Set<String> listIdsTeacher = new HashSet();
@@ -2030,8 +2366,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             multiTeachers.forEach(item -> {
                 JsonObject teacher = (JsonObject) item;
 
-                String subjectId = teacher.getString("subject_id");
-                String coTeacherId = teacher.getString("second_teacher_id");
+                String subjectId = teacher.getString(Field.SUBJECT_ID);
+                String coTeacherId = teacher.getString(Field.SECOND_TEACHER_ID);
 
                 if (subjectId.equals(idMatiere)) {
                     listIdsTeacher.add(coTeacherId);
@@ -2053,7 +2389,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             futureListPeriodes.add(futurePeriode);
             JsonObject periode = periodes.getJsonObject(i);
             Map<String, List<NoteDevoir>> mapIdMatListMoyByEleveByPeriode = new LinkedHashMap<>();
-            getMoysEleveByMatByPeriode(periode.getString("id_classe"), periode.getInteger("id_type"), idEtablissement,
+            getMoysEleveByMatByPeriode(periode.getString(Field.ID_CLASSE), periode.getInteger("id_type"), idEtablissement,
                     mapAllidMatAndidTeachers, mapIdMatListMoyByEleveByPeriode, new Handler<Either<String, JsonObject>>() {
                         @Override
                         public void handle(Either<String, JsonObject> event) {
@@ -2191,12 +2527,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     public void getDatasReleve(final JsonObject params, final Handler<Either<String, JsonObject>> handler){
-        final String idEtablissement = params.getString(Competences.ID_ETABLISSEMENT_KEY);
-        final String idClasse = params.getString(Competences.ID_CLASSE_KEY);
-        final String idMatiere = params.getString(Competences.ID_MATIERE_KEY);
+        final String idEtablissement = params.getString(ID_ETABLISSEMENT_KEY);
+        final String idClasse = params.getString(ID_CLASSE_KEY);
+        final String idMatiere = params.getString(ID_MATIERE_KEY);
         String idEleve = params.getString(ID_ELEVE_KEY);
-        final Long idPeriode = params.getLong(Competences.ID_PERIODE_KEY);
-        final Integer typeClasse = params.getInteger(Competences.TYPE_CLASSE_KEY);
+        final Long idPeriode = params.getLong(ID_PERIODE_KEY);
+        final Integer typeClasse = params.getInteger(TYPE_CLASSE_KEY);
         final JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
         final JsonObject resultHandler = new JsonObject();
         Map<String, JsonObject> elevesMapObject = new HashMap<>();
@@ -2234,7 +2570,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // Récupération de l'appréciation de la classe
         Future<JsonArray> appreciationClassFuture = Future.future();
         if (idPeriode != null) {
-            new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE)
+            new DefaultAppreciationService(COMPETENCES_SCHEMA, APPRECIATIONS_TABLE)
                     .getAppreciationClasse(new String[]{idClasse}, idPeriode.intValue(), new String[]{idMatiere},
                             appreciationsEither -> formate(appreciationClassFuture, appreciationsEither));
         } else {
@@ -2304,12 +2640,29 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 // Récupération des Compétences-Notes du Relevé
                 Future<JsonArray> compNotesFuture = Future.future();
+                Promise<Object> servicesPromise = Promise.promise();
+                Promise<Object> multiTeachingPromise = Promise.promise();
+                Promise<Structure> structurePromise = Promise.promise();
+                Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
                 getCompetencesNotesReleveEleves(idEleves, idEtablissement, idMatiere,
                         null, idPeriode,null, true, false,
                         compNotesEvent -> formate(compNotesFuture, compNotesEvent));
 
+                //Récupération des Services
+                utilsService.getServices(idEtablissement,
+                        new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
+
+                //Récupération des Multi-teachers
+                utilsService.getMultiTeachers(idEtablissement,
+                        new JsonArray().add(idClasse), (idPeriode != null ? idPeriode.intValue() : null), FutureHelper.handlerJsonArray(multiTeachingPromise));
+
+                new DefaultExportBulletinService(eb, null).getStructure(idEtablissement, structurePromise);
+
+                utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
+
                 List<Future> listFutures = new ArrayList<>(Arrays.asList(compNotesFuture, notesFuture,
-                        moyennesFinalesFutures, appreciationsFutures, positionnementsFinauxFutures));
+                        moyennesFinalesFutures, appreciationsFutures, positionnementsFinauxFutures,
+                        servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefPromise.future()));
 
                 Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
                 listFutures.add(isAvgSkillFuture);
@@ -2320,10 +2673,23 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         FormateColonneFinaleReleve(moyennesFinalesFutures.result(), elevesMapObject,
                                 MOYENNE, idPeriode, hasEvaluatedHomeWork);
 
+                        Structure structure = new Structure();
+                        structure.setId(idEtablissement);
+                        JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
+                        JsonArray multiTeachers = (JsonArray) multiTeachingPromise.future().result();
+                        List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+
+                        List<Service> services = new ArrayList<>();
+                        List<MultiTeaching> multiTeachings = new ArrayList<>();
+                        new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClasse);
+                        setServices(structure, servicesJson, services, subTopics);
+
                         // Rajout des notes par devoir et Calcul des moyennes auto
                         resultHandler.put(NOTES, notesFuture.result());
+
                         calculMoyennesNotesForReleve(notesFuture.result(), resultHandler, idPeriode,
-                                elevesMapObject, hasEvaluatedHomeWork, isExport, false, null);
+                                elevesMapObject, hasEvaluatedHomeWork, isExport, false, null, idClasse,
+                                services, multiTeachers);
 
                         resultHandler.put(COMPETENCES_NOTES_KEY, compNotesFuture.result());
                         if (idPeriode != null) {
@@ -2395,10 +2761,25 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         formate(servicesFuture, event);
                     });
 
+                    //Récupération des Services
+                    Promise<JsonArray> servicesPromise = Promise.promise();
+                    utilsService.getServices(idEtablissement,
+                            new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise.future()));
+
+                    //Récupération des Multi-teachers
+                    Promise<JsonArray> multiTeachingPromise = Promise.promise();
+                    utilsService.getMultiTeachers(idEtablissement,
+                            new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+
+                    //Récupération des Sous-Matières
+                    Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+                    utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
+
                     List<Future> listFuturesFirst = new ArrayList<>(
-                            Arrays.asList(studentsClassFuture, tableauDeConversionFuture, servicesFuture));
+                            Arrays.asList(studentsClassFuture, tableauDeConversionFuture, servicesFuture,
+                                    servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefPromise.future()));
                     for (Object idMatiere : idMatieres){
-                        // Récupération du  nombre de devoirs avec évaluation numérique
+                        // Récupération du nombre de devoirs avec évaluation numérique
                         Future<JsonObject> nbEvaluatedHomeWork = Future.future();
                         getNbEvaluatedHomeWork(idClasse, idMatiere.toString(), idPeriode, idGroups, event ->
                                 formate(nbEvaluatedHomeWork, event)
@@ -2411,6 +2792,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     CompositeFuture.all(listFuturesFirst).setHandler(idElevesEvent -> {
                         try{
                             if(idElevesEvent.succeeded()) {
+                                //Récupération des services, multiteachers et subtopics afin de calculer la moyenne en prenant en compte le coefficient des sous-matières
+                                Structure structure = new Structure();
+                                structure.setId(idEtablissement);
+                                JsonArray servicesJson = servicesPromise.future().result();
+                                JsonArray multiTeachers = multiTeachingPromise.future().result();
+                                List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+
+                                List<Service> services = new ArrayList<>();
+                                List<MultiTeaching> multiTeachings = new ArrayList<>();
+                                new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClasse);
+                                setServices(structure, servicesJson, services, subTopics);
+
                                 // Récupération des moyennes, positionnement Finales, appréciations, avis conseil de classe et orientation
                                 Future<JsonArray> bigRequestFuture = Future.future();
                                 getColonneReleveTotale(idEleves, idPeriode, idMatieres, new JsonArray().add(idClasse),
@@ -2435,8 +2828,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     try{
                                         if(event.succeeded()) {
                                             // Rajout des moyennes finales
-                                            for (int i = 3; i < idMatieres.size() + 3; i++){
-                                                String idMatiere = idMatieres.getString(i - 3);
+                                            for (int i = NB_FUTURES; i < idMatieres.size() + NB_FUTURES; i++){
+                                                String idMatiere = idMatieres.getString(i - NB_FUTURES);
                                                 // Récupération du  nombre de devoirs avec évaluation numérique
                                                 Boolean hasEvaluatedHomeWork = (((JsonObject) listFuturesFirst.get(i).result())
                                                         .getLong("nb") > 0);
@@ -2460,7 +2853,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                 JsonObject resultNotes = new JsonObject();
 
                                                 calculMoyennesNotesForReleve(notesMatiere, resultNotes, idPeriode,
-                                                        elevesMapObject, hasEvaluatedHomeWork,false, annual, idMatiere);
+                                                        elevesMapObject, hasEvaluatedHomeWork,false, annual, idMatiere, idClasse, services, multiTeachers);
                                                 if(data.containsKey(MOYENNE)){
                                                     data.getJsonObject(MOYENNE).put(idMatiere, resultNotes);
                                                 }else{
@@ -2533,8 +2926,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                 }
                                             }
 
-                                            for (int i = 3; i < idMatieres.size() + 3; i++){
-                                                String idMatiere = idMatieres.getString(i - 3);
+                                            for (int i = 6; i < idMatieres.size() + 6; i++){
+                                                String idMatiere = idMatieres.getString(i - 6);
                                                 // Récupération du  nombre de devoirs avec évaluation numérique
                                                 Boolean hasEvaluatedHomeWork = (((JsonObject)listFuturesFirst.get(i).result()).getLong("nb") > 0);
                                                 FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
@@ -2591,13 +2984,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     private <T> void calculMoyennesNotesForReleve(JsonArray listNotes, JsonObject result, Long idPeriode,
                                                   Map<String, JsonObject> eleveMapObject,  Boolean hasEvaluatedHomeWork,
-                                                  Boolean isExport, Boolean annual, String idMatiere) {
+                                                  Boolean isExport, Boolean annual, String idMatiere, String idClasse,
+                                                  List<Service> services, JsonArray multiTeachers) {
         // Si pour il n'y a pas de devoirs avec évaluation numérique, la moyenne auto est NN
         if (!hasEvaluatedHomeWork) {
-            if(idMatiere == null){
+            if (idMatiere == null) {
                 List<NoteDevoir> listMoyF = new ArrayList<>();
                 for (Map.Entry<String, JsonObject> student : eleveMapObject.entrySet()) {
-                    if(idPeriode != null) {
+                    if (idPeriode != null) {
                         student.getValue().put(MOYENNE, NN);
                         if (student.getValue().getString("moyenneFinale") != null && !"NN".equals(student.getValue().getString("moyenneFinale"))) {
 
@@ -2608,19 +3002,19 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     }
                 }
 
-                if(idPeriode != null){
+                if (idPeriode != null) {
                     JsonObject o_statClasseF = new JsonObject();
-                    if(listMoyF.isEmpty()){
+                    if (listMoyF.isEmpty()) {
                         o_statClasseF.put("min", NN)
                                 .put("max", NN)
                                 .put("moyenne", NN);
-                    }else{
+                    } else {
                         JsonObject statMoyF = utilsService.calculMoyenneParDiviseur(listMoyF, true);
                         o_statClasseF.put("min", statMoyF.getValue("noteMin"))
                                 .put("max", statMoyF.getValue("noteMax"))
                                 .put("moyenne", statMoyF.getValue("moyenne"));
                     }
-                    result.put("_moyenne_classe",  new JsonObject().put("nullFinal", o_statClasseF));
+                    result.put("_moyenne_classe", new JsonObject().put("nullFinal", o_statClasseF));
                     JsonObject o_statClasse = new JsonObject()
                             .put("min", NN)
                             .put("max", NN)
@@ -2650,19 +3044,20 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonArray listMoyEleves = new fr.wseduc.webutils.collections.JsonArray();
             HashMap<Long, ArrayList<NoteDevoir>> notesByDevoir = new HashMap<>();
             HashMap<String, T> notesByEleve = new HashMap<>();
-            HashMap<String,HashMap<Long,ArrayList<NoteDevoir>>> notesByEleveBySousMatiere = new HashMap<>();
+            HashMap<String, HashMap<Long, ArrayList<NoteDevoir>>> notesByEleveBySousMatiere = new HashMap<>();
 
             Map<String, HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>>
                     notesByDevoirByPeriodeByEleve = new HashMap<>();
-            Map<String, HashMap<Long, HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>>>
+            Map<String, HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>>
                     notesByDevoirByPeriodeByEleveBySousMatiere = new HashMap<>();
 
             if (idPeriode == null) {
                 result.put(MOYENNES, new JsonArray());
-                result.put("_"+ MOYENNES, new JsonArray());
+                result.put("_" + MOYENNES, new JsonArray());
             }
 
             String matiereId = idMatiere;
+            Boolean hasSousMatieres = false;
             for (int i = 0; i < listNotes.size(); i++) {
                 JsonObject note = listNotes.getJsonObject(i);
                 if (note.getString(VALEUR) == null || note.getString(COEFFICIENT) == null ||
@@ -2672,9 +3067,47 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     // elle n'est pas prise en compte dans le calcul de la moyenne
                 }
 
-                if(isNull(matiereId)){
+                if (isNull(matiereId)) {
                     matiereId = listNotes.getJsonObject(i).getString(ID_MATIERE);
                 }
+
+                Matiere matiere = new Matiere(matiereId);
+                Teacher teacher = new Teacher(note.getString("owner"));
+                Group group = new Group(idClasse);
+
+                Service service = services.stream()
+                        .filter(el -> teacher.getId().equals(el.getTeacher().getId())
+                                && matiere.getId().equals(el.getMatiere().getId())
+                                && group.getId().equals(el.getGroup().getId()))
+                        .findFirst().orElse(null);
+
+                if (service == null) {
+                    //On regarde les multiTeacher
+                    for (Object mutliTeachO : multiTeachers) {
+                        JsonObject multiTeaching = (JsonObject) mutliTeachO;
+                        if (multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                                && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
+                                && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
+                            service = services.stream()
+                                    .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
+                                            && matiere.getId().equals(el.getMatiere().getId())
+                                            && group.getId().equals(el.getGroup().getId()))
+                                    .findFirst().orElse(null);
+                        }
+
+                        if (multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                                && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
+                                && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
+
+                            service = services.stream()
+                                    .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
+                                            && matiere.getId().equals(el.getMatiere().getId())
+                                            && group.getId().equals(el.getGroup().getId()))
+                                    .findFirst().orElse(null);
+                        }
+                    }
+                }
+
                 Long sousMatiereId = listNotes.getJsonObject(i).getLong(ID_SOUS_MATIERE);
                 Long idDevoir = note.getLong(ID_DEVOIR);
                 String idEleve = note.getString(ID_ELEVE);
@@ -2684,7 +3117,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         Double.valueOf(note.getString(VALEUR)),
                         Double.valueOf(note.getLong(DIVISEUR)),
                         note.getBoolean(RAMENER_SUR),
-                        Double.valueOf(note.getString(COEFFICIENT)), idEleve, id_periode);
+                        Double.valueOf(note.getString(COEFFICIENT)), idEleve, id_periode, service, sousMatiereId);
 
                 if (idPeriode == null) {
                     if (!notesByDevoirByPeriodeByEleve.containsKey(idEleve)) {
@@ -2704,24 +3137,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 notesByDevoirByPeriodeByEleve.get(idEleve).get(id_periode), noteDevoir);
                         utilsService.addToMap(null, notesByDevoirByPeriodeByEleve.get(idEleve).get(null),
                                 noteDevoir);
-                        Map<Long, HashMap<Long, ArrayList<NoteDevoir>>> m =
-                                notesByDevoirByPeriodeByEleveBySousMatiere.get(idEleve).get(id_periode);
-                        Map<Long, HashMap<Long, ArrayList<NoteDevoir>>> mNull =
-                                notesByDevoirByPeriodeByEleveBySousMatiere.get(idEleve).get(null);
-                        if(isNotNull(sousMatiereId)) {
-                            if (!m.containsKey(sousMatiereId)) {
-                                m.put(sousMatiereId, new HashMap<>());
-                                mNull.put(sousMatiereId, new HashMap<>());
-                            }
-                            utilsService.addToMap(id_periode, m.get(sousMatiereId), noteDevoir);
-                            utilsService.addToMap(null, mNull.get(sousMatiereId), noteDevoir);
+                        if (isNotNull(sousMatiereId)) {
+                            utilsService.addToMap(sousMatiereId,
+                                    notesByDevoirByPeriodeByEleveBySousMatiere.get(idEleve).get(id_periode), noteDevoir);
                         }
                     }
                 }
                 utilsService.addToMap(idDevoir, notesByDevoir, noteDevoir);
                 utilsService.addToMap(idEleve, (HashMap<String, ArrayList<NoteDevoir>>) notesByEleve, noteDevoir);
-                if(isNotNull(sousMatiereId)) {
+                if (isNotNull(sousMatiereId)) {
                     utilsService.addToMap(idEleve, sousMatiereId, notesByEleveBySousMatiere, noteDevoir);
+                    hasSousMatieres = true;
                 }
                 utilsService.addToMap(idEleve, null, notesByEleveBySousMatiere, noteDevoir);
             }
@@ -2729,10 +3155,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             // Calcul des Moyennes de la classe par devoir
             for (Map.Entry<Long, ArrayList<NoteDevoir>> entry : notesByDevoir.entrySet()) {
                 JsonObject moyenne = utilsService.calculMoyenneParDiviseur(entry.getValue(), true);
-                moyenne.put("id", entry.getKey());
+                moyenne.put(Field.ID, entry.getKey());
                 listMoyDevoirs.add(moyenne);
             }
-            result.put("devoirs", listMoyDevoirs);
+            result.put(Field.DEVOIRS, listMoyDevoirs);
 
             Double sumMoyClasse = 0.0;
             int nbMoyenneClasse = 0;
@@ -2740,28 +3166,64 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             Double max = null;
             //  Double globalCoefficientState = new Double(0);
 
-            Map<Long, Double>  mapSumMoyClasse = new HashMap<>();
+            Map<Long, Double> mapSumMoyClasse = new HashMap<>();
             Map<Long, Integer> mapNbMoyenneClasse = new HashMap<>();
             Map<Long, Double> mapMin = new HashMap<>();
             Map<Long, Double> mapMax = new HashMap<>();
             // Calcul des moyennes par élève
             for (Map.Entry<String, T> entry : notesByEleve.entrySet()) {
-                JsonObject moyenne;
                 String idEleve = entry.getKey();
 
-                moyenne = utilsService.calculMoyenne((ArrayList<NoteDevoir>) entry.getValue(),
-                        false, 20, annual);
                 JsonObject submoyenne = new JsonObject().put(matiereId, new JsonObject());
-                if(isNotNull(notesByEleveBySousMatiere.get(idEleve))) {
+
+                final Boolean withStat = false;
+                final Integer diviseur = 20;
+                Double moyenneComputed = 0.0;
+                boolean hasNote = false;
+
+                if (isNotNull(notesByEleveBySousMatiere.get(idEleve))) {
+                    //Si on a des sous-matières, on calcule la moyenne par sous-matière, puis la moyenne de la matière.
+                    double total = 0;
+                    double totalCoeff = 0;
+
                     for (Map.Entry<Long, ArrayList<NoteDevoir>> subEntry :
                             notesByEleveBySousMatiere.get(idEleve).entrySet()) {
                         Long idSousMat = subEntry.getKey();
-                        JsonObject moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(),
-                                false, 20, annual);
-                        String key = (isNull(idSousMat)? "null" : idSousMat.toString());
-                        submoyenne.getJsonObject(matiereId).put(key, moyenSousMat);
+                        Service serv = subEntry.getValue().get(0).getService();
+                        double coeff = 1.d;
+                        if (serv != null && serv.getSubtopics() != null && serv.getSubtopics().size() > 0) {
+                            SubTopic subTopic = serv.getSubtopics().stream()
+                                    .filter(el ->
+                                            el.getId().equals(idSousMat)
+                                    ).findFirst().orElse(null);
+                            if (subTopic != null)
+                                coeff = subTopic.getCoefficient();
+                        }
 
-                        if(isNotNull(moyenSousMat)) {
+                        JsonObject moyenSousMat;
+
+                        if (isNotNull(idSousMat)) {
+                            moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(), withStat, diviseur, annual);
+
+                            String key = (isNull(idSousMat) ? "null" : idSousMat.toString());
+                            submoyenne.getJsonObject(matiereId).put(key, moyenSousMat);
+
+                            total += coeff * moyenSousMat.getDouble(Field.MOYENNE);
+                            totalCoeff += coeff;
+                            hasNote = true;
+                        } else {
+                            moyenSousMat = utilsService.calculMoyenne(subEntry.getValue(),
+                                    withStat, diviseur, annual);
+                            submoyenne.getJsonObject(matiereId).put("null", moyenSousMat);
+
+                            if (!hasSousMatieres) {
+                                total += coeff * moyenSousMat.getDouble(Field.MOYENNE);
+                                totalCoeff += coeff;
+                                hasNote = true;
+                            }
+                        }
+
+                        if (isNotNull(moyenSousMat) && isNotNull(idSousMat)) {
                             if (!mapNbMoyenneClasse.containsKey(idSousMat)) {
                                 mapNbMoyenneClasse.put(idSousMat, 0);
                                 mapSumMoyClasse.put(idSousMat, 0.0);
@@ -2774,20 +3236,50 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             Double sumMoySous = mapSumMoyClasse.get(idSousMat);
                             mapNbMoyenneClasse.put(idSousMat, nbSousMoyClass + 1);
                             mapSumMoyClasse.put(idSousMat, sumMoySous + moySousMat);
-                            if(isNull(mapMax.get(idSousMat)) || mapMax.get(idSousMat).compareTo(moySousMat) < 0) {
+                            if (isNull(mapMax.get(idSousMat)) || mapMax.get(idSousMat).compareTo(moySousMat) < 0) {
                                 mapMax.put(idSousMat, moySousMat);
                             }
-                            if(isNull(mapMin.get(idSousMat)) || mapMin.get(idSousMat).compareTo(moySousMat) > 0) {
+                            if (isNull(mapMin.get(idSousMat)) || mapMin.get(idSousMat).compareTo(moySousMat) > 0) {
                                 mapMin.put(idSousMat, moySousMat);
                             }
                         }
                     }
+                    moyenneComputed = Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER;
+
+                    if (!mapNbMoyenneClasse.containsKey(null)) {
+                        mapNbMoyenneClasse.put(null, 0);
+                        mapSumMoyClasse.put(null, 0.0);
+                    }
+                    int nbSousMoyClass = mapNbMoyenneClasse.get(null);
+                    Double sumMoySous = mapSumMoyClasse.get(null);
+                    mapNbMoyenneClasse.put(null, nbSousMoyClass + 1);
+                    mapSumMoyClasse.put(null, sumMoySous + moyenneComputed);
+                    if (isNull(mapMax.get(null)) || mapMax.get(null).compareTo(moyenneComputed) < 0) {
+                        mapMax.put(null, moyenneComputed);
+                    }
+                    if (isNull(mapMin.get(null)) || mapMin.get(null).compareTo(moyenneComputed) > 0) {
+                        mapMin.put(null, moyenneComputed);
+                    }
+                } else {
+                    //Sinon, on calcule la moyenne avec toutes les notes, sans distinction de sous-matières.
+                    moyenneComputed = utilsService.calculMoyenne((ArrayList<NoteDevoir>) entry.getValue(),
+                            false, 20, annual).getDouble(Field.MOYENNE);
+                    hasNote = true;
+                }
+
+                JsonObject moyenne = new JsonObject().put(Field.MOYENNE, moyenneComputed)
+                        .put(Field.HASNOTE, hasNote);
+                if (!hasNote) {
+                    moyenne.put(Field.MOYENNE, "NN");
+                }
+                if (withStat) {
+                    moyenne.put("noteMax", moyenneComputed).put("noteMin", moyenneComputed);
                 }
 
                 if (eleveMapObject.containsKey(idEleve)) {
                     Double moy = 0.0;
-                    if (!NN.equals(moyenne.getValue(MOYENNE))) {
-                        moy = moyenne.getDouble(MOYENNE);
+                    if (!NN.equals(moyenneComputed)) {
+                        moy = moyenneComputed;
                     }
                     JsonObject el = eleveMapObject.get(idEleve);
                     Double moyEl = null;
@@ -2798,10 +3290,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         el.getJsonObject(MOYENNE).put(idMatiere, NN.equals(moyenne.getValue(MOYENNE)) ? NN : moy);
 
                         if (el.containsKey(HAS_NOTE)) {
-                            el.getJsonObject(HAS_NOTE).put(idMatiere, moyenne.getBoolean(HAS_NOTE));
+                            el.getJsonObject(HAS_NOTE).put(idMatiere, hasNote);
                         } else {
                             JsonObject moyMat = new JsonObject();
-                            moyMat.put(idMatiere, moyenne.getBoolean(HAS_NOTE));
+                            moyMat.put(idMatiere, hasNote);
                             el.put(HAS_NOTE, moyMat);
                         }
 
@@ -2814,7 +3306,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         }
 
                         if (el.getJsonObject(MOYENNEFINALE).containsKey(idMatiere)) {
-                            if(isNotNull(el.getJsonObject(MOYENNEFINALE).getValue(idMatiere))) {
+                            if (isNotNull(el.getJsonObject(MOYENNEFINALE).getValue(idMatiere))) {
                                 try {
                                     moyEl = Double.valueOf(el.getJsonObject(MOYENNEFINALE).getString(idMatiere));
                                     sumMoyClasse += moyEl;
@@ -2824,20 +3316,20 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 } catch (Exception error) {
                                     log.info("NN in average note" + error);
                                 }
-                            }else{
-                                el.put("hasMoyenneFinaleNN",true);
+                            } else {
+                                el.put("hasMoyenneFinaleNN", true);
                             }
                         } else {
                             moyEl = moy;
                             sumMoyClasse += moyEl;
                         }
                     } else {
-                        el.put(MOYENNE, moy).put(HAS_NOTE, moyenne.getBoolean(HAS_NOTE));
+                        el.put(MOYENNE, moy).put(HAS_NOTE, hasNote);
                         if (isExport && !el.containsKey(MOYENNEFINALE)) {
                             el.put(MOYENNEFINALE, moy);
                         }
                         if (el.containsKey(MOYENNEFINALE)) {
-                            if(isNotNull(el.getValue(MOYENNEFINALE))) {
+                            if (isNotNull(el.getValue(MOYENNEFINALE))) {
                                 try {
                                     moyEl = Double.valueOf(el.getString(MOYENNEFINALE));
                                     sumMoyClasse += moyEl;
@@ -2845,15 +3337,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     moyEl = el.getDouble(MOYENNEFINALE);
                                     sumMoyClasse += moyEl;
                                 }
-                            }else{
-                                el.put("hasMoyenneFinaleNN",true);
+                            } else {
+                                el.put("hasMoyenneFinaleNN", true);
                             }
                         } else {
                             moyEl = moy;
                             sumMoyClasse += moyEl;
                         }
                     }
-                    if(isNotNull(moyEl)){
+                    if (isNotNull(moyEl)) {
                         if (isNull(min) || isNull(max)) {
                             min = moyEl;
                             max = moyEl;
@@ -2861,18 +3353,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         if (moyEl < min) {
                             min = moyEl;
                         }
-                        if(moyEl > max){
+                        if (moyEl > max) {
                             max = moyEl;
                         }
                         ++nbMoyenneClasse;
                     }
-                    if (!el.containsKey("_" +MOYENNE)) {
-                        el.put("_"+ MOYENNE, new JsonObject());
+                    if (!el.containsKey("_" + MOYENNE)) {
+                        el.put("_" + MOYENNE, new JsonObject());
                     }
-                    if(!el.getJsonObject("_"+MOYENNE).containsKey(matiereId)){
-                        el.getJsonObject("_"+MOYENNE).put(matiereId, new JsonObject());
+                    if (!el.getJsonObject("_" + MOYENNE).containsKey(matiereId)) {
+                        el.getJsonObject("_" + MOYENNE).put(matiereId, new JsonObject());
                     }
-                    el.getJsonObject("_"+ MOYENNE).getJsonObject(matiereId).getMap()
+                    el.getJsonObject("_" + MOYENNE).getJsonObject(matiereId).getMap()
                             .putAll(submoyenne.getJsonObject(matiereId).getMap());
                 }
 
@@ -2883,10 +3375,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             Object moyClasse;
             DecimalFormat decimalFormat = new DecimalFormat("#.0");
             decimalFormat.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
-            if(!annual) {
+            if (!annual) {
                 moyClasse = (nbMoyenneClasse > 0) ? decimalFormat.format((sumMoyClasse / nbMoyenneClasse)) : " ";
                 result.put("moyenne_classe", moyClasse);
-            }else{
+            } else {
                 moyClasse = (nbMoyenneClasse > 0) ? (sumMoyClasse / nbMoyenneClasse) : " ";
                 result.put("moyenne_classe", moyClasse);
             }
@@ -2903,72 +3395,60 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         .put("max", mapMax.get(idSousMat)).put(MOYENNE, decimalFormat.format(moySous));
                 result.getJsonObject("_moyenne_classe").put(key, moySousMatCl);
             }
+
+            HashMap<Long, JsonArray> listMoy = new HashMap<>();
             if (idPeriode == null) {
-                HashMap<Long, JsonArray> listMoy = new HashMap<>();
-
-                for (Map.Entry<String, HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>> entryEleve
-                        : notesByDevoirByPeriodeByEleve.entrySet()) {
-                    for (Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
-                            : notesByDevoirByPeriodeByEleve.get(entryEleve.getKey()).entrySet()) {
-                        listMoy.put(entryPeriode.getKey(), new fr.wseduc.webutils.collections.JsonArray());
-                        JsonArray moyennesFinales;
-                        if (idMatiere != null) {
-                            if (!eleveMapObject.get(entryEleve.getKey()).containsKey(MOYENNES)) {
-                                JsonObject matMoy = new JsonObject();
-                                matMoy.put(idMatiere, new JsonArray());
-                                eleveMapObject.get(entryEleve.getKey()).put(MOYENNES, matMoy);
-                            } else if (!eleveMapObject.get(entryEleve.getKey()).getJsonObject(MOYENNES).containsKey(idMatiere)) {
-                                eleveMapObject.get(entryEleve.getKey()).getJsonObject(MOYENNES).put(idMatiere, new JsonArray());
+                if (hasSousMatieres) {
+                    for (Map.Entry<String, HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>> entryEleve
+                            : notesByDevoirByPeriodeByEleveBySousMatiere.entrySet()) {
+                        for (Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
+                                : notesByDevoirByPeriodeByEleveBySousMatiere.get(entryEleve.getKey()).entrySet()) {
+                            double total = 0;
+                            double totalCoeff = 0;
+                            listMoy.put(entryPeriode.getKey(), new fr.wseduc.webutils.collections.JsonArray());
+                            JsonArray moyennesFinales;
+                            if (idMatiere != null) {
+                                if (!eleveMapObject.get(entryEleve.getKey()).containsKey(MOYENNES)) {
+                                    JsonObject matMoy = new JsonObject();
+                                    matMoy.put(idMatiere, new JsonArray());
+                                    eleveMapObject.get(entryEleve.getKey()).put(MOYENNES, matMoy);
+                                } else if (!eleveMapObject.get(entryEleve.getKey()).getJsonObject(MOYENNES).containsKey(idMatiere)) {
+                                    eleveMapObject.get(entryEleve.getKey()).getJsonObject(MOYENNES).put(idMatiere, new JsonArray());
+                                }
+                                moyennesFinales = eleveMapObject.get(entryEleve.getKey()).getJsonObject(MOYENNESFINALES).getJsonArray(idMatiere);
+                            } else {
+                                if (!eleveMapObject.get(entryEleve.getKey()).containsKey(MOYENNES)) {
+                                    eleveMapObject.get(entryEleve.getKey()).put(MOYENNES, new JsonArray());
+                                }
+                                moyennesFinales = eleveMapObject.get(entryEleve.getKey()).getJsonArray(MOYENNESFINALES);
                             }
-                            moyennesFinales = eleveMapObject.get(entryEleve.getKey()).getJsonObject(MOYENNESFINALES).getJsonArray(idMatiere);
-                        } else {
-                            if (!eleveMapObject.get(entryEleve.getKey()).containsKey(MOYENNES)) {
-                                eleveMapObject.get(entryEleve.getKey()).put(MOYENNES, new JsonArray());
-                            }
-                            moyennesFinales = eleveMapObject.get(entryEleve.getKey()).getJsonArray(MOYENNESFINALES);
-                        }
-                        for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
-                                entryPeriode.getValue().entrySet()) {
-                            JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(), false,
-                                    20, annual);
-
-                            Boolean isFinale = false;
-                            if (moyennesFinales != null) {
-                                if (entry.getKey() == null) {
-                                    List<NoteDevoir> notePeriode = entry.getValue();
-                                    int nbMoy = moyennesFinales.size();
-                                    double sumMoy = 0.0;
-                                    for (int i = 0; i < nbMoy; i++) {
-                                        JsonObject moyFin = moyennesFinales.getJsonObject(i);
-                                        Long periode = moyFin.getLong(ID_PERIODE);
-                                        notePeriode = notePeriode.stream()
-                                                .filter(line -> !(line.getIdPeriode().equals(periode)))
-                                                .collect(Collectors.toList());
-                                        if (moyFin.getString(MOYENNE) != null) sumMoy += Double.valueOf(moyFin.getString(MOYENNE));
-                                    }
-                                    if (!notePeriode.isEmpty()) {
-                                        ++nbMoy;
-                                        moyenne = utilsService.calculMoyenne(notePeriode, false, 20,
-                                                annual);
-                                        sumMoy += moyenne.getDouble(MOYENNE);
-                                    }
-                                    moyenne.remove(MOYENNE);
-                                    moyenne.put(MOYENNE, sumMoy / nbMoy);
-                                } else {
-                                    JsonObject moyObj = utilsService.getObjectForPeriode(moyennesFinales,
-                                            entry.getKey(), ID_PERIODE);
-                                    if (moyObj != null) {
-                                        moyenne.remove(MOYENNE);
-                                        if ((moyObj.getString(MOYENNE) != null)) {
-                                            moyenne.put(MOYENNE, moyObj.getString(MOYENNE));
-                                        } else {
-                                            moyenne.put(MOYENNE, "NN");
-                                        }
-                                        isFinale = true;
-                                    }
+                            for (Map.Entry<Long, ArrayList<NoteDevoir>> entrySousMatieres
+                                    : entryPeriode.getValue().entrySet()) {
+                                Long idSousMatiere = entrySousMatieres.getKey();
+                                Service serv = entrySousMatieres.getValue().get(0).getService();
+                                double coeff = 1.d;
+                                if(serv != null && serv.getSubtopics() != null && serv.getSubtopics().size() > 0 ) {
+                                    SubTopic subTopic =  serv.getSubtopics().stream()
+                                            .filter(el ->
+                                                    el.getId().equals(idSousMatiere)
+                                            ).findFirst().orElse(null);
+                                    if(subTopic != null)
+                                        coeff = subTopic.getCoefficient();
+                                }
+                                if (isNotNull(idSousMatiere)) {
+                                    JsonObject moyenne = utilsService.calculMoyenne(entrySousMatieres.getValue(), false, 20, annual);
+                                    total += coeff * moyenne.getDouble(Field.MOYENNE);
+                                    totalCoeff += coeff;
                                 }
                             }
-                            moyenne.put(ID_PERIODE, entry.getKey());
+
+                            JsonObject moyenne = new JsonObject().put(Field.MOYENNE, Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER)
+                                    .put("hasNote", true);
+                            if(totalCoeff == 0)
+                                moyenne.put(Field.MOYENNE,Field.NN);
+
+                            Boolean isFinale = false;
+                            moyenne.put(ID_PERIODE, entryPeriode.getKey());
                             moyenne.put(ID_ELEVE, entryEleve.getKey());
                             moyenne.put("isFinale", isFinale);
                             listMoy.get(entryPeriode.getKey()).add(moyenne);
@@ -2977,10 +3457,91 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             } else {
                                 eleveMapObject.get(entryEleve.getKey()).getJsonArray(MOYENNES).add(moyenne);
                             }
+
+                            if (listMoy.get(entryPeriode.getKey()).size() > 0) {
+                                result.getJsonArray(MOYENNES).add(
+                                        listMoy.get(entryPeriode.getKey()).getJsonObject(0));
+                            }
                         }
-                        if (listMoy.get(entryPeriode.getKey()).size() > 0) {
-                            result.getJsonArray(MOYENNES).add(
-                                    listMoy.get(entryPeriode.getKey()).getJsonObject(0));
+                    }
+                }
+                else {
+                    for (Map.Entry<String, HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>> entryEleve
+                            : notesByDevoirByPeriodeByEleve.entrySet()) {
+                        for (Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
+                                : notesByDevoirByPeriodeByEleve.get(entryEleve.getKey()).entrySet()) {
+                            listMoy.put(entryPeriode.getKey(), new fr.wseduc.webutils.collections.JsonArray());
+                            JsonArray moyennesFinales;
+                            if (idMatiere != null) {
+                                if (!eleveMapObject.get(entryEleve.getKey()).containsKey(MOYENNES)) {
+                                    JsonObject matMoy = new JsonObject();
+                                    matMoy.put(idMatiere, new JsonArray());
+                                    eleveMapObject.get(entryEleve.getKey()).put(MOYENNES, matMoy);
+                                } else if (!eleveMapObject.get(entryEleve.getKey()).getJsonObject(MOYENNES).containsKey(idMatiere)) {
+                                    eleveMapObject.get(entryEleve.getKey()).getJsonObject(MOYENNES).put(idMatiere, new JsonArray());
+                                }
+                                moyennesFinales = eleveMapObject.get(entryEleve.getKey()).getJsonObject(MOYENNESFINALES).getJsonArray(idMatiere);
+                            } else {
+                                if (!eleveMapObject.get(entryEleve.getKey()).containsKey(MOYENNES)) {
+                                    eleveMapObject.get(entryEleve.getKey()).put(MOYENNES, new JsonArray());
+                                }
+                                moyennesFinales = eleveMapObject.get(entryEleve.getKey()).getJsonArray(MOYENNESFINALES);
+                            }
+                            for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
+                                    entryPeriode.getValue().entrySet()) {
+                                JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(), false,
+                                        20, annual);
+
+                                Boolean isFinale = false;
+                                if (moyennesFinales != null) {
+                                    if (entry.getKey() == null) {
+                                        List<NoteDevoir> notePeriode = entry.getValue();
+                                        int nbMoy = moyennesFinales.size();
+                                        double sumMoy = 0.0;
+                                        for (int i = 0; i < nbMoy; i++) {
+                                            JsonObject moyFin = moyennesFinales.getJsonObject(i);
+                                            Long periode = moyFin.getLong(ID_PERIODE);
+                                            notePeriode = notePeriode.stream()
+                                                    .filter(line -> !(line.getIdPeriode().equals(periode)))
+                                                    .collect(Collectors.toList());
+                                            if (moyFin.getString(MOYENNE) != null) sumMoy += Double.valueOf(moyFin.getString(MOYENNE));
+                                        }
+                                        if (!notePeriode.isEmpty()) {
+                                            ++nbMoy;
+                                            moyenne = utilsService.calculMoyenne(notePeriode, false, 20,
+                                                    annual);
+                                            sumMoy += moyenne.getDouble(MOYENNE);
+                                        }
+                                        moyenne.remove(MOYENNE);
+                                        moyenne.put(MOYENNE, sumMoy / nbMoy);
+                                    } else {
+                                        JsonObject moyObj = utilsService.getObjectForPeriode(moyennesFinales,
+                                                entry.getKey(), ID_PERIODE);
+                                        if (moyObj != null) {
+                                            moyenne.remove(MOYENNE);
+                                            if ((moyObj.getString(MOYENNE) != null)) {
+                                                moyenne.put(MOYENNE, moyObj.getString(MOYENNE));
+                                            } else {
+                                                moyenne.put(MOYENNE, "NN");
+                                            }
+                                            isFinale = true;
+                                        }
+                                    }
+                                }
+                                moyenne.put(ID_PERIODE, entry.getKey());
+                                moyenne.put(ID_ELEVE, entryEleve.getKey());
+                                moyenne.put("isFinale", isFinale);
+                                listMoy.get(entryPeriode.getKey()).add(moyenne);
+                                if (idMatiere != null) {
+                                    eleveMapObject.get(entryEleve.getKey()).getJsonObject(MOYENNES).getJsonArray(idMatiere).add(moyenne);
+                                } else {
+                                    eleveMapObject.get(entryEleve.getKey()).getJsonArray(MOYENNES).add(moyenne);
+                                }
+                            }
+                            if (listMoy.get(entryPeriode.getKey()).size() > 0) {
+                                result.getJsonArray(MOYENNES).add(
+                                        listMoy.get(entryPeriode.getKey()).getJsonObject(0));
+                            }
                         }
                     }
                 }
@@ -3505,6 +4066,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // On récupère le tableau de conversion des compétences notes pour Lire le positionnement
         competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse, tableauEvent ->
                 formate(tableauDeConversionFuture, tableauEvent));
+
         Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
 
         isAvgSkillFuture
@@ -3516,100 +4078,136 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         return;
                     }
 
-                    final JsonArray listCompNotes = compNoteF.result();
-                    final JsonArray listNotes = noteF.result();
-                    Map<String,JsonArray> matieresCompNotes = new HashMap<>();
-                    Map<String,JsonArray> matieresCompNotesEleve = new HashMap<>();
+                    //Récupération des Services
+                    Promise<Object> servicesPromise = Promise.promise();
+                    utilsService.getServices(idEtablissement,
+                            new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
 
-                    // 4. On regroupe  les compétences notes par idMatière
-                    JsonArray idMatieres = groupDataByMatiere(listCompNotes, matieresCompNotes, matieresCompNotesEleve, idEleve,
-                            true);
+                    //Récupération des Multi-teachers
+                    Promise<Object> multiTeachingPromise = Promise.promise();
+                    utilsService.getMultiTeachers(idEtablissement,
+                            new JsonArray().add(idClasse), (idPeriode != null ? idPeriode.intValue() : null), FutureHelper.handlerJsonArray(multiTeachingPromise));
 
-                    // 5. On regroupe les notes par idMatière
+                    //Récupération des Sous-Matières
+                    Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+                    utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
 
-                    Map<String,JsonArray> matieresNotes = new HashMap<>();
-                    Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
-                    idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes, matieresNotes, matieresNotesEleve, idEleve,
-                            false), idMatieres);
+                    CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefPromise.future()).setHandler(e -> {
+                        if (e.failed()) {
+                            String message = "[getReleveDataForGraph] " + event.cause().getMessage();
+                            log.error(message);
+                            handler.handle(new Either.Left<>(message));
+                            return;
+                        }
+                        else {
 
-                    Map<String, StatClass> mapMatieresStatClasseAndEleve = new HashMap<>();
+                            Structure structure = new Structure();
+                            structure.setId(idEtablissement);
+                            JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
+                            JsonArray multiTeachers = (JsonArray) multiTeachingPromise.future().result();
+                            List<SubTopic> subTopics = subTopicCoefPromise.future().result();
 
-                    StatMat statMat = new StatMat();
-                    if(idPeriode != null) {
-                        statMat.setMapIdMatStatclass(listNotes);
-                        mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
-                    } else { // notes order by periode
-                        Map<Integer, JsonArray> mapIdPeriodeNotes = getListNotesByPeriode(listNotes, false);
-                        if(!mapIdPeriodeNotes.isEmpty()) {
-                            for (int i = 0; i < idMatieres.size(); i++) {
-                                String idMatiere = idMatieres.getString(i);
-                                List<NoteDevoir> listAverageClass = new ArrayList<>();
-                                List<NoteDevoir> listAverageStudent = new ArrayList<>();
-                                Double annualClassAverage;
-                                Double annualClassMin = null;
-                                Double annualClassMax = null;
-                                Double annualAverageStudent;
-                                for(Map.Entry<Integer, JsonArray> IdPeriodeNotesEntry : mapIdPeriodeNotes.entrySet()){
-                                    StatMat statMatP = new StatMat();
-                                    statMatP.setMapIdMatStatclass(IdPeriodeNotesEntry.getValue());
-                                    Map<String, StatClass> mapMatieresStatClasseAndEleveP = statMatP.getMapIdMatStatclass();
-                                    StatClass statClasseP = mapMatieresStatClasseAndEleveP.get(idMatiere);
+                            List<Service> services = new ArrayList<>();
+                            List<MultiTeaching> multiTeachings = new ArrayList<>();
+                            new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClasse);
+                            setServices(structure, servicesJson, services, subTopics);
 
-                                    if (statClasseP != null && !statClasseP.getMapEleveStat().isEmpty()) {
-                                        listAverageClass.add(new NoteDevoir
-                                                (statClasseP.getAverageClass(), new Double(20), false, 1.0));
-                                        if (annualClassMin == null) {
-                                            annualClassMin = statClasseP.getMinMaxClass(true);
-                                        } else {
-                                            if (statClasseP.getMinMaxClass(true) < annualClassMin)
-                                                annualClassMin = statClasseP.getMinMaxClass(true);
+                            final JsonArray listCompNotes = compNoteF.result();
+                            final JsonArray listNotes = noteF.result();
+                            Map<String,JsonArray> matieresCompNotes = new HashMap<>();
+                            Map<String,JsonArray> matieresCompNotesEleve = new HashMap<>();
+
+                            // 4. On regroupe  les compétences notes par idMatière
+                            JsonArray idMatieres = groupDataByMatiere(listCompNotes, matieresCompNotes, matieresCompNotesEleve, idEleve,
+                                    true);
+
+                            // 5. On regroupe les notes par idMatière
+
+                            Map<String,JsonArray> matieresNotes = new HashMap<>();
+                            Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
+                            idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes, matieresNotes, matieresNotesEleve, idEleve,
+                                    false), idMatieres);
+
+                            Map<String, StatClass> mapMatieresStatClasseAndEleve = new HashMap<>();
+
+                            StatMat statMat = new StatMat();
+                            if(idPeriode != null) {
+                                statMat.setMapIdMatStatclass(listNotes, services, multiTeachers, idClasse);
+                                mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
+                            } else { // notes order by periode
+                                Map<Integer, JsonArray> mapIdPeriodeNotes = getListNotesByPeriode(listNotes, false);
+                                if(!mapIdPeriodeNotes.isEmpty()) {
+                                    for (int i = 0; i < idMatieres.size(); i++) {
+                                        String idMatiere = idMatieres.getString(i);
+                                        List<NoteDevoir> listAverageClass = new ArrayList<>();
+                                        List<NoteDevoir> listAverageStudent = new ArrayList<>();
+                                        Double annualClassAverage;
+                                        Double annualClassMin = null;
+                                        Double annualClassMax = null;
+                                        Double annualAverageStudent;
+                                        for(Map.Entry<Integer, JsonArray> IdPeriodeNotesEntry : mapIdPeriodeNotes.entrySet()){
+                                            StatMat statMatP = new StatMat();
+                                            statMatP.setMapIdMatStatclass(IdPeriodeNotesEntry.getValue());
+                                            Map<String, StatClass> mapMatieresStatClasseAndEleveP = statMatP.getMapIdMatStatclass();
+                                            StatClass statClasseP = mapMatieresStatClasseAndEleveP.get(idMatiere);
+
+                                            if (statClasseP != null && !statClasseP.getMapEleveStat().isEmpty()) {
+                                                listAverageClass.add(new NoteDevoir
+                                                        (statClasseP.getAverageClass(), new Double(20), false, 1.0));
+                                                if (annualClassMin == null) {
+                                                    annualClassMin = statClasseP.getMinMaxClass(true);
+                                                } else {
+                                                    if (statClasseP.getMinMaxClass(true) < annualClassMin)
+                                                        annualClassMin = statClasseP.getMinMaxClass(true);
+                                                }
+                                                if (annualClassMax == null) {
+                                                    annualClassMax = statClasseP.getMinMaxClass(false);
+                                                } else {
+                                                    if (statClasseP.getMinMaxClass(false) > annualClassMax)
+                                                        annualClassMax = statClasseP.getMinMaxClass(false);
+                                                }
+
+                                                if (statClasseP.getMoyenneEleve(idEleve) != null) {
+                                                    listAverageStudent.add(new NoteDevoir
+                                                            (statClasseP.getMoyenneEleve(idEleve), new Double(20), false, 1.0));
+                                                }
+                                            }
                                         }
-                                        if (annualClassMax == null) {
-                                            annualClassMax = statClasseP.getMinMaxClass(false);
-                                        } else {
-                                            if (statClasseP.getMinMaxClass(false) > annualClassMax)
-                                                annualClassMax = statClasseP.getMinMaxClass(false);
-                                        }
 
-                                        if (statClasseP.getMoyenneEleve(idEleve) != null) {
-                                            listAverageStudent.add(new NoteDevoir
-                                                    (statClasseP.getMoyenneEleve(idEleve), new Double(20), false, 1.0));
+                                        StatEleve statEleveAnnual = new StatEleve();
+                                        StatClass statClassAnnual = new StatClass();
+                                        if( !listAverageClass.isEmpty() ){
+                                            if( !listAverageStudent.isEmpty() ) {
+                                                annualAverageStudent = utilsService.calculMoyenneParDiviseur(listAverageStudent,
+                                                        false).getDouble("moyenne");
+                                                statEleveAnnual.setMoyenneAuto(annualAverageStudent);
+                                                statClassAnnual.getMapEleveStat().put(idEleve, statEleveAnnual);
+                                            }
+
+                                            annualClassAverage = utilsService.calculMoyenneParDiviseur(listAverageClass,
+                                                    false).getDouble("moyenne");
+
+                                            statClassAnnual.setAverageClass(annualClassAverage);
+                                            statClassAnnual.setMax(annualClassMax);
+                                            statClassAnnual.setMin(annualClassMin);
+                                            mapMatieresStatClasseAndEleve.put(idMatiere, statClassAnnual);
                                         }
                                     }
-                                }
 
-                                StatEleve statEleveAnnual = new StatEleve();
-                                StatClass statClassAnnual = new StatClass();
-                                if( !listAverageClass.isEmpty() ){
-                                    if( !listAverageStudent.isEmpty() ) {
-                                        annualAverageStudent = utilsService.calculMoyenneParDiviseur(listAverageStudent,
-                                                false).getDouble("moyenne");
-                                        statEleveAnnual.setMoyenneAuto(annualAverageStudent);
-                                        statClassAnnual.getMapEleveStat().put(idEleve, statEleveAnnual);
-                                    }
-
-                                    annualClassAverage = utilsService.calculMoyenneParDiviseur(listAverageClass,
-                                            false).getDouble("moyenne");
-
-                                    statClassAnnual.setAverageClass(annualClassAverage);
-                                    statClassAnnual.setMax(annualClassMax);
-                                    statClassAnnual.setMin(annualClassMin);
-                                    mapMatieresStatClasseAndEleve.put(idMatiere, statClassAnnual);
+                                    statMat.setMapIdMatStatclass(mapMatieresStatClasseAndEleve);
+                                } else {
+                                    statMat.setMapIdMatStatclass(listNotes);
+                                    mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
                                 }
                             }
 
-                            statMat.setMapIdMatStatclass(mapMatieresStatClasseAndEleve);
-                        } else {
-                            statMat.setMapIdMatStatclass(listNotes);
-                            mapMatieresStatClasseAndEleve = statMat.getMapIdMatStatclass();
+                            // 6. On récupère tous les libelles des matières de l'établissement et on fait correspondre
+                            // aux résultats par idMatière
+                            linkIdSubjectToLibelle(idEleve, idPeriode, getMaxOrAvgByItem(matieresCompNotes, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ),
+                                    getMaxOrAvgByItem(matieresCompNotesEleve, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ), matieresNotes, matieresNotesEleve,
+                                    mapMatieresStatClasseAndEleve, idMatieres, subjectF.result(), handler);
                         }
-                    }
-
-                    // 6. On récupère tous les libelles des matières de l'établissement et on fait correspondre
-                    // aux résultats par idMatière
-                    linkIdSubjectToLibelle(idEleve, idPeriode, getMaxOrAvgByItem(matieresCompNotes, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ),
-                            getMaxOrAvgByItem(matieresCompNotesEleve, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ), matieresNotes, matieresNotesEleve,
-                            mapMatieresStatClasseAndEleve, idMatieres, subjectF.result(), handler);
+                    });
                 }))
                 .onFailure(err ->{
                     String message = "[getReleveDataForGraph] " + err.getMessage();
@@ -4104,6 +4702,22 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 formate(tableauDeConversionFuture, tableauEvent));
         detailsFuture.add(tableauDeConversionFuture);
 
+        Promise<Object> servicesPromise = Promise.promise();
+        Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+        detailsFuture.add(servicesPromise.future());
+        detailsFuture.add(subTopicCoefPromise.future());
+
+        Promise<Object> multiTeachingPromise = Promise.promise();
+        detailsFuture.add(multiTeachingPromise.future());
+
+        utilsService.getMultiTeachers(idEtablissement,
+                new JsonArray().add(idClasse), null ,FutureHelper.handlerJsonArray(multiTeachingPromise));
+
+        utilsService.getSubTopicCoeff(idEtablissement,idClasse,subTopicCoefPromise);
+        utilsService.getServices(idEtablissement,
+                new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
+
+
         Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
         detailsFuture.add(isAvgSkillFuture);
 
@@ -4114,6 +4728,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 Renders.renderError(request, new JsonObject().put(ERROR, error));
                 return;
             }
+
+            List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+            JsonArray servicesJson =(JsonArray) servicesPromise.future().result();
+
+            Structure structure = new Structure();
+            structure.setId(idEtablissement);
+            List<Service> services = new ArrayList<>();
+
+            JsonArray multiTeachers =(JsonArray) multiTeachingPromise.future().result();
+            setServices(structure, servicesJson, services,subTopics);
+
 
             result.put("appreciations", appreciationMatierePeriode.result());
             result.put("moyennes_finales", moyenneFinalesF.result());
@@ -4126,9 +4751,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
             // Calcul des moyennes par période pour la classe
             JsonArray moyFinalesEleves = moyFinalesElevesF.result();
+
             HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
                     calculMoyennesEleveByPeriode(listNoteF.result(), result, idEleve, idEleves,
-                            null , null );
+                            null , null,services,multiTeachers );
             calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
             Renders.renderJson(request, result);
         });

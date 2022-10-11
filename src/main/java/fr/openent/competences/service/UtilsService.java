@@ -18,14 +18,14 @@
 package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.model.SubTopic;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
-import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
-import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.user.UserInfos;
 
 import java.util.*;
 
@@ -176,6 +176,7 @@ public interface UtilsService {
      * @param <K> Le type de la clé
      */
     <K,V> void addToMap(K key, HashMap<K, ArrayList<V>> map, V valueToAdd);
+    <K,V> void addToMap(K key, Map<K, ArrayList<V>> map, V valueToAdd);
     void addToMap(String key, Long sousmatiere, HashMap<String,HashMap<Long,ArrayList<NoteDevoir>>> map,
                   NoteDevoir valueToAdd);
     <K,V> void addToMapWithJsonArray(K id, HashMap<K, JsonArray> map, V valueToAdd);
@@ -327,4 +328,8 @@ public interface UtilsService {
                              Long idPeriode, final Handler<Either<String, JsonArray>> handler);
 
     void getYearsArchive(String idStructure, String type,  Handler<Either<String, JsonArray>> defaultResponseHandler);
+
+    void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<List<SubTopic>> promise);
+
+    void getSubTopicCoeff(String idEtablissement,  Promise<List<SubTopic>> promise);
 }

@@ -238,7 +238,10 @@
             </td>
             {{#first_sous_matieres}}
             {{#isLast}}
-            <td class="sousMat bottom"><span class="pretty center">{{libelle}}</span></td>
+            <td class="sousMat bottom">
+                <div  style="width: 40px">
+                    <span class="pretty center">{{libelle}}   <sup class="coeff">{{coeff}}</sup></span></div>
+            </td>
             <td class="left-right align-left">
                 {{#devoirs}}
                 <span class="div-note">
@@ -251,7 +254,10 @@
             <td class="bottom"><span class="diviseur">{{moyenne}}</span></td>
             {{/isLast}}
             {{^isLast}}
-            <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
+            <td class="sousMat">
+             <div  style="width: 40px">
+                 <span class="pretty center">{{libelle}}   <sup class="coeff">{{coeff}}</sup></span></div>
+            </td>
             <td class="left right align-left">
                 {{#devoirs}}
                 <span class="div-note">
@@ -293,7 +299,8 @@
         {{#sous_matieres_tail}}
         <tr>
             {{^isLast}}
-            <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
+            <td class="sousMat">          <div  style="width: 40px">
+                <span class="pretty center">{{libelle}}   <sup class="coeff">{{coeff}}</sup></span></div></td>
             <td class="left right align-left">
                 {{#devoirs}}
                 <span class="div-note">
@@ -306,7 +313,10 @@
             <td  class="none"><span class="diviseur">{{moyenne}}</span></td>
             {{/isLast}}
             {{#isLast}}
-            <td class="sousMat bottom"><span class="pretty center">{{libelle}}</span></td>
+            <td class="sousMat bottom">
+                <div  style="width: 40px">
+                    <span class="pretty center">{{libelle}}   <sup class="coeff">{{coeff}}</sup></span></div>
+            </td>
             <td class="left-right align-left">
                 {{#devoirs}}
                 <span class="div-note">

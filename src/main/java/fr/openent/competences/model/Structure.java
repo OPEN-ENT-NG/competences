@@ -20,6 +20,10 @@ public class Structure  extends  Model{
         super();
     }
 
+    public Structure(String id) {
+        super(id);
+    }
+
     public String getUAI() {
         return UAI;
     }

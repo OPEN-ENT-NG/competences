@@ -139,7 +139,7 @@ export let releveController = ng.controller('ReleveController', [
         };
 
         $scope.hasDevoirWithUnderSubject = (sousMat) => {
-            let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) => {
+            let devoirWithNote = $scope.dataReleve.devoirs.all.filter((devoir) => {
                 return (devoir.note !== undefined || devoir.annotation !== undefined)
             });
             return _.some(devoirWithNote,

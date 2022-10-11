@@ -40,6 +40,8 @@ import http from "axios";
 import { evaluations as evaluationsParentFormat } from '../models/eval_parent_mdl';
 import {LengthLimit} from "../constants";
 import {getTitulairesForRemplacantsCoEnseignant} from "../utils/teacher";
+import {SubTopicsServices} from "../models/sniplets";
+import {SubTopicsServiceService} from "../services/SubTopicServiceService";
 declare let _: any;
 declare let Chart: any;
 declare let location: any;
@@ -322,8 +324,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
          */
         $scope.hasValueInConversionTable = (domaine, Conversion, $index) => {
             return (domaine.moyenne !== -1 &&
-                    (($index !== 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne < Conversion.valmax) ||
-                        ($index === 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <= Conversion.valmax))) ||
+                (($index !== 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne < Conversion.valmax) ||
+                    ($index === 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <= Conversion.valmax))) ||
                 ((domaine.moyenne === -1 && domaine.bfc !== undefined) &&
                     (($index !== 0 && domaine.bfc.valeur >= Conversion.valmin && domaine.bfc.valeur < Conversion.valmax) ||
                         ($index === 0 && domaine.bfc.valeur >= Conversion.valmin && domaine.bfc.valeur <= Conversion.valmax)))
@@ -1441,8 +1443,14 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             if ($scope.dataReleve === undefined) {
                 return;
             }
-            await utils.calculMoyennes($scope.search.periode.id_type, $scope.search.eleve.id, $scope.matieresReleve,
-                $scope.matieres, $scope.dataReleve.devoirs);
+            let subTopicsServiceService = new SubTopicsServiceService();
+            let {data} =  await subTopicsServiceService.get($scope.structure.id)
+            let subTopicsServicesStruct = new SubTopicsServices([],data)
+            let subTopicsServices = subTopicsServicesStruct.filter(subTopic =>
+                subTopic.id_group  === $scope.search.classe.id
+            );
+            await utils.calculMoyennesWithSubTopic($scope.search.periode.id_type, $scope.search.eleve.id, $scope.matieresReleve,
+                $scope.matieres, $scope.dataReleve.devoirs, subTopicsServices, $scope.search.classe);
             await utils.safeApply($scope);
         };
 
@@ -1478,7 +1486,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         };
 
         $scope.hasDevoirWithUnderSubject = (sousMat) => {
-            let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) => {
+            let devoirWithNote = $scope.dataReleve.devoirs.all.filter((devoir) => {
                 return (devoir.note !== undefined || devoir.annotation !== undefined)
             });
             return _.some(devoirWithNote,

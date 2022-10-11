@@ -2849,9 +2849,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param evaluation évaluation à enregistrer
          * @param $event evenement déclenchant
          * @param eleve élève propriétaire de l'évaluation
-         * @param isAnnotaion sauvegarde depuis un champ de type annotation (evaluation devoir actuellement)
+         * @param isAnnotation sauvegarde depuis un champ de type annotation (evaluation devoir actuellement)
          */
-        $scope.saveAnnotationDevoirEleve = function (evaluation, $event, eleve, isAnnotaion) {
+        $scope.saveAnnotationDevoirEleve = function (evaluation, $event, eleve, isAnnotation) {
             if (evaluation.id_annotation !== undefined && evaluation.id_annotation > 0) {
                 if (evaluation.oldId_annotation !== evaluation.id_annotation && evaluation.oldValeur !== evaluation.valeur) {
                     evaluation.saveAnnotation().then(() => {
@@ -2867,8 +2867,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             }
                         }
                         evaluation.oldId_annotation = evaluation.id_annotation;
-                        if (evaluation.valeur === utils.getNN() && !isAnnotaion) {
-                            $scope.calculerMoyenneEleve(eleve);
+                        if (evaluation.valeur === utils.getNN() && !isAnnotation) {
+                            $scope.calculerMoyenneEleve(eleve, eleve.idClasse, evaluation.id_matiere);
                             $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
                         }
                         else {
@@ -3041,7 +3041,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     evaluation.id = undefined;
                     evaluation.data.id = undefined;
                 }
-                $scope.calculerMoyenneEleve(eleve);
+                $scope.calculerMoyenneEleve(eleve, eleve.idClasse, evaluation.id_matiere);
                 $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
             } else {
                 if (res.rows === 1) {
@@ -3066,7 +3066,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
             if (isInReleve) {
-                $scope.calculerMoyenneEleve(eleve);
+                $scope.calculerMoyenneEleve(eleve, eleve.idClasse, devoir.id_matiere);
                 $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
             } else {
                 $scope.calculStatsDevoir();
@@ -3205,15 +3205,18 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Calcul la moyenne pour un élève
          * @param eleve élève
          */
-        $scope.calculerMoyenneEleve = function (eleve) {
-            eleve.getMoyenne($scope.releveNote.devoirs.all).then(() => {
-                if(!eleve.moyenneFinaleIsSet){
-                    eleve.moyenneFinale = eleve.moyenne;
-                    eleve.oldMoyenneFinale = eleve.moyenne;
-                }
-                $scope.calculerMoyenneClasse();
-                utils.safeApply($scope);
-            });
+        $scope.calculerMoyenneEleve = async function (eleve, idClasse, idMatiere?) {
+            if (idMatiere != null) {
+                await eleve.getMoyenne($scope.releveNote.devoirs.all, $scope.releveNote.idEtablissement, idClasse, $scope.releveNote.periode.id_type, idMatiere);
+            } else {
+                await eleve.getMoyenne($scope.releveNote.devoirs.all);
+            }
+            if(!eleve.moyenneFinaleIsSet){
+                eleve.moyenneFinale = eleve.moyenne;
+                eleve.oldMoyenneFinale = eleve.moyenne;
+            }
+            $scope.calculerMoyenneClasse();
+            utils.safeApply($scope);
         };
 
         $scope.calculerMoyenneClasse = function() {
@@ -3260,7 +3263,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
 
             utils.safeApply($scope);
-        }
+            }
 
         /**
          * Ouvre la fenêtre détail des compétences sur un devoir

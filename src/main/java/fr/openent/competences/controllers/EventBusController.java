@@ -19,14 +19,12 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.service.DevoirService;
+import fr.openent.competences.constants.Field;
+import fr.openent.competences.service.SubTopicService;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.ShareCompetencesService;
 import fr.openent.competences.service.UtilsService;
-import fr.openent.competences.service.impl.DefaultDevoirService;
-import fr.openent.competences.service.impl.DefaultNoteService;
-import fr.openent.competences.service.impl.DefaultShareCompetencesService;
-import fr.openent.competences.service.impl.DefaultUtilsService;
+import fr.openent.competences.service.impl.*;
 import fr.wseduc.bus.BusAddress;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.security.SecuredAction;
@@ -46,11 +44,13 @@ public class EventBusController extends ControllerHelper {
     private final ShareCompetencesService competencesShareService;
     private UtilsService utilsService;
     private NoteService noteService;
+    private SubTopicService subTopicService;
 
     public EventBusController(Map<String, SecuredAction> securedActions) {
         utilsService = new DefaultUtilsService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
         competencesShareService = new DefaultShareCompetencesService(eb,securedActions);
+        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SERVICE_SUBTOPIC);
     }
 
     @BusAddress("competences")
@@ -81,6 +81,9 @@ public class EventBusController extends ControllerHelper {
                 homeworksBusService(method, message);
             }
             break;
+            case "subtopics": {
+                subtopicsService(method, message);
+            }
         }
     }
 
@@ -148,6 +151,28 @@ public class EventBusController extends ControllerHelper {
             break;
             default: {
                 message.reply(getErrorReply("Method not found"));
+            }
+        }
+    }
+
+    private void subtopicsService(String method, Message<JsonObject> message) {
+        switch (method) {
+            case "deleteSubtopics": {
+                String idMatiere = message.body().getString(Field.ID_MATIERE);
+                String idEnseignant = message.body().getString(Field.ID_ENSEIGNANT);
+                JsonArray idGroups = message.body().getJsonArray(Field.ID_GROUPS);
+                if (idMatiere == null || idEnseignant == null || idGroups == null) {
+                    log.warn("[@BusAddress](competences) Parameters incorrect.");
+                    message.reply(new JsonObject().put("status", "error")
+                            .put("message", "Parameters incorrect."));
+                }
+                else {
+                    subTopicService.deleteSubtopicServices(idMatiere, idEnseignant, idGroups, getJsonArrayBusResultHandler(message));
+                }
+            }
+            break;
+            default: {
+                message.reply(getErrorReply("Method in servicesBusService not found"));
             }
         }
     }

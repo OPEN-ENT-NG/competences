@@ -1,6 +1,5 @@
 package fr.openent.competences.model;
 
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
 
@@ -12,6 +11,10 @@ public class Matiere {
     private static final String LIBELLE_MATIERE = "libelleMatiere";
 
     public Matiere() {
+    }
+
+    public Matiere(String id) {
+        this.id = id;
     }
 
     public String getBackgroundColor() {
