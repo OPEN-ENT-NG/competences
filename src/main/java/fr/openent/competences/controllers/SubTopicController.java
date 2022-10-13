@@ -27,8 +27,7 @@ public class SubTopicController extends ControllerHelper {
 
     @Post("/subtopics/services/update")
     @ApiDoc("set SubtopicsServices")
-    @ResourceFilter(AccessVisibilityAppreciation.class)
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @SecuredAction(value = "competences.paramSubtopics", type = ActionType.WORKFLOW)
     public void updateSubtopicsServices(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request,pathPrefix +
                 Competences.SCHEMA_SUBTOPIC_COEFF_UPDATE, body -> subTopicService.upsertCoefficent(body,arrayResponseHandler(request)));
@@ -36,8 +35,7 @@ public class SubTopicController extends ControllerHelper {
 
     @Get("/subtopics/services/:idStructure")
     @ApiDoc("get SubtopicsServices")
-    @ResourceFilter(AccessVisibilityAppreciation.class)
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getDefaultSubtopicsServices(final HttpServerRequest request) {
         String idStructure = request.params().get(IDSTRUCTURE);
         subTopicService.getSubtopicServices(idStructure,arrayResponseHandler(request));
