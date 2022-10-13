@@ -10,7 +10,7 @@ export interface IStructureOptionsService {
 
     getStructureOptionsIsAverageSkills(structureId: String): Promise<StructureOptions>;
 
-    saveStrustureOptinsIsAverageSkills(options: StructureOptions): Promise<AxiosResponse>;
+    saveStrustureOptionsIsAverageSkills(options: StructureOptions): Promise<AxiosResponse>;
 
     initRecuperationAbsencesRetardsFromPresences(paramImportCSV: any): Promise<any[]>;
 
@@ -31,8 +31,8 @@ export const structureOptionsService: IStructureOptionsService = {
 
     },
 
-    saveStrustureOptinsIsAverageSkills: async(options: StructureOptions): Promise<AxiosResponse> =>{
-        return http.post(`competences/structure/options/isAverageSkills`, options);
+    saveStrustureOptionsIsAverageSkills: async(options: StructureOptions): Promise<AxiosResponse> =>{
+        return http.post(`competences/structure/options/isSkillAverage`, options);
     },
 
     /**

@@ -2,7 +2,6 @@
 import {
     structureOptionsService,
     IStructureOptionsService,
-    StructureOptionsService,
     StructureOptions
 } from "../services";
 
@@ -28,7 +27,7 @@ export class SnipletStructureOptions {
 
     async saveOptionIsAverageSkills () : Promise<void> {
         try {
-            await this.structureOptionsService.saveStrustureOptinsIsAverageSkills(this.option);
+            await this.structureOptionsService.saveStrustureOptionsIsAverageSkills(this.option);
         } catch (err ) {
             console.error(err);
             this.option.isSkillAverage = !this.option.isSkillAverage;
