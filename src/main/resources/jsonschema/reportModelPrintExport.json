@@ -3,7 +3,7 @@
   "type": "object",
   "additionalProperties": true,
   "properties": {
-    "idStructure": {
+    "structureId": {
       "type": "string"
     },
     "title": {
@@ -20,7 +20,7 @@
     }
   },
   "required": [
-    "idStructure",
+    "structureId",
     "title",
     "selected",
     "preferencesCheckbox",

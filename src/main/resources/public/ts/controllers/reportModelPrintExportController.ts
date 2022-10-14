@@ -159,7 +159,7 @@ const reportModelPrintExportController = ng.controller(
                         $scope.newReportModel.setPreferencesCheckboxWithClean(print);
                         $scope.newReportModel.setPreferencesTextWithClean(print);
                     }
-                    $scope.newReportModel.setIdStructure($scope.evaluations.structure.id);
+                    $scope.newReportModel.setStructureId($scope.evaluations.structure.id);
                 }
                 await $scope.newReportModel.post();
             }

@@ -44,7 +44,7 @@ const {
 
 export class ReportModelPrintExport implements ReportModelPrintExportType {
     private _id: mongoId;
-    private idStructure: String;
+    private structureId: String;
     private title: String;
     private selected: Boolean;
     private preferencesCheckbox: PreferencesCheckboxReportModel;
@@ -60,8 +60,8 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
         return this._id || undefined
     };
 
-    public getIdStructure(): String {
-        return this.idStructure || undefined
+    public getStructureId(): String {
+        return this.structureId || undefined
     };
 
     public getTitle(): String {
@@ -85,8 +85,8 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
     };
 
     //Setters
-    public setIdStructure (idStructure: String){
-        this.idStructure = idStructure
+    public setStructureId (structureId: String){
+        this.structureId = structureId
     };
 
     public setTitle(title: String) {
@@ -188,7 +188,7 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
     public isEqual(reportModel: ReportModelPrintExportType): Boolean {
         return this.constructor.name === reportModel.constructor.name
             && this.getId() === reportModel.getId()
-            && this.getIdStructure() === reportModel.getIdStructure()
+            && this.getStructureId() === reportModel.getStructureId()
             && this.getTitle() === reportModel.getTitle()
             && this.getSelected() === reportModel.getSelected()
             && _.isEqual(this.getPreferencesCheckbox(), reportModel.getPreferencesCheckbox())
@@ -197,7 +197,7 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
 
     private toJSON(): toJson {
         return {
-            structureId: this.getIdStructure(),
+            structureId: this.getStructureId(),
             title: this.getTitle(),
             selected: this.getSelected(),
             preferencesCheckbox: this.getPreferencesCheckbox(),
@@ -217,7 +217,7 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
 
     private preparedReportModel(reportModel: ReportModelPrintExport): void {
         this.setId(reportModel[KEY_ID]);
-        this.setIdStructure(reportModel[KEY_STRUCTUREID]);
+        this.setStructureId(reportModel[KEY_STRUCTUREID]);
         this.setTitle(reportModel[KEY_TITLE]);
         this.setSelected(reportModel[KEY_SELECTED]);
         this.setPreferencesCheckboxWithInit(reportModel[KEY_PREFERENCES_CHECKBOX]);

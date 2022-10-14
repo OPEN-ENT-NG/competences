@@ -5,7 +5,7 @@ import fr.openent.competences.enums.Common;
 import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportMongo;
 import fr.openent.competences.helper.ManageError;
 import fr.openent.competences.model.ReportModelPrintExport;
-import fr.openent.competences.security.UserIdStructure;
+import fr.openent.competences.security.modelbulletinrights.PostModelExportBulletion;
 import fr.openent.competences.security.modelbulletinrights.UserIdModelExportBulletin;
 import fr.openent.competences.security.modelbulletinrights.GetModelExportBulletin;
 import fr.openent.competences.service.ReportModelPrintExportService;
@@ -33,7 +33,7 @@ public class ReportModelPrintExportController extends ControllerHelper {
     @Post("/report-model-print-export")
     @ApiDoc("Post report model")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(UserIdStructure.class)
+    @ResourceFilter(PostModelExportBulletion.class)
     public void postReportModel(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "reportModelPrintExport", bodyRequest -> {
             UserUtils.getUserInfos(eb, request, user -> {
@@ -58,7 +58,7 @@ public class ReportModelPrintExportController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(GetModelExportBulletin.class)
     public void getReportModel(final HttpServerRequest request) {
-        String idStructure = request.getParam("structureId");
+        String idStructure = request.getParam(Field.STRUCTUREID);
         UserUtils.getUserInfos(eb, request, user -> {
             ReportModelPrintExport newReportModel = new ReportModelPrintExport();
             try {

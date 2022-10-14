@@ -9,7 +9,6 @@ public class Field {
 
     //id
     public static final String ID = "id";
-    public static final String IDREPORTMODEL = "_id";
     public static final String IDSTRUCTURE = "idStructure";
     public static final String IDETABLISSEMENT = "idEtablissement";
     public static final String IDCLASSE = "idClasse";
