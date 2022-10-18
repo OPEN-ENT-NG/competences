@@ -1239,17 +1239,19 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void importExercizerCSV(final HttpServerRequest request) {
         // typeImport
-        ExercizerImportNote exercizerImportNote = new ExercizerImportNote();
-        exercizerImportNote.process(request)
-                .compose()
-                .compose()
-                .compose()
+        ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request);
+        exercizerImportNote.run()
+                .compose(res -> {
+                    // injection SQL via ton service (3 - service qui utilise cet outil pour faire son insertion SQL)
+                    // service usage
+                    return Future.succeededFuture();
+                })
                 .onSuccess(err -> {
-
+                    // renderJson
                 })
                 .onFailure(err -> {
-
-                })
+                    // renderError
+                });
     }
 
 }
