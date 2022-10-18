@@ -22,6 +22,7 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
+import fr.openent.competences.importservice.ExercizerImportNote;
 import fr.openent.competences.model.*;
 import fr.openent.competences.security.*;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
@@ -1231,6 +1232,24 @@ public class NoteController extends ControllerHelper {
         final String idPeriodeString = request.params().get("idPeriode");
         notesService.getDataGraphDomaine(idEleve, null, idEtablissement, idClasse, typeClasse, idPeriodeString,
                 isNull(idPeriodeString),arrayResponseHandler(request));
+    }
+
+    @Post("/notes/:id/:typeImportService/csv")
+    @ApiDoc("Set notes of a devoir by importing a CSV.")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void importExercizerCSV(final HttpServerRequest request) {
+        // typeImport
+        ExercizerImportNote exercizerImportNote = new ExercizerImportNote();
+        exercizerImportNote.process(request)
+                .compose()
+                .compose()
+                .compose()
+                .onSuccess(err -> {
+
+                })
+                .onFailure(err -> {
+
+                })
     }
 
 }
