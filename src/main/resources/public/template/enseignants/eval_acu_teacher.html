@@ -27,12 +27,16 @@
             <!-- Select structure -->
             <div class="twelve cell ">
                 <header>
-                    <button class="marginFive right-magnet" ng-if="canCreateEval()" ng-click="openCreateEval()"><i18n>evaluations.evaluation.create</i18n></button>
+                    <button class="marginFive right-magnet" ng-if="canCreateEval()" ng-click="openTm();"><i18n>evaluations.evaluation.create</i18n></button>
                     <label class="select right-magnet" ng-if="evaluations.structures.all.length > 1">
                         <select ng-model="evaluations.structure" ng-options="structure.libelle for structure in structures.all track by structure.id"  ng-change="changeEtablissementAccueil()"></select>
                     </label>
                 </header>
             </div>
+
+            <lightbox show="opened.test" on-close="opened.test=false">
+                <container template="lightboxTest"></container>
+            </lightbox>
 
             <!-- Search student bar -->
             <article class="twelve cell" ng-if="canAccessSuiviEleve()">

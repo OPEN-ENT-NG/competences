@@ -15,10 +15,11 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { ng, _ } from 'entcore';
+import {ng, _, template} from 'entcore';
 import { evaluations } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Utils} from "../models/teacher";
+import http from "axios";
 
 export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', [
     '$scope', 'route', 'model', '$rootScope',
@@ -186,10 +187,20 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
         /**
          * ouvrir la page de création devoir
          */
-        $scope.openCreateEval = () => {
-            let path = '/devoir/create';
-            $scope.goTo(path);
+        $scope.openCreateEval = async function() {
+            let formData = new FormData();
+            formData.append('file', $scope.testI.files[0], $scope.testI.files[0].name);
+            console.log($scope.testI.files[0]);
+            let response;
+            try {
+                response = await http.post(`competences/csv/1/exercizer/import`,
+                    formData, {'headers' : { 'Content-Type': 'multipart/form-data' }});
+            } catch (err) {
+                throw err.response.data;
+            }
+            return response;
         };
+
         $scope.FilterGroupEmpty = (item) => {
             let nameofclasse = $scope.getClasseData(item.id_groupe, 'name');
             if ( item.id_groupe !== '' && nameofclasse !== undefined && nameofclasse !== '') {
@@ -236,5 +247,49 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
 
         };
 
+        $scope.openTm = function(){
+            $scope.testI = new TestImporter();
+            $scope.opened.test = true;
+            template.open('lightboxTest', 'enseignants/test');
+        };
+
+
     }
 ]);
+
+export class TestImporter {
+    files: File[];
+    id_campaign: number;
+    message: string;
+
+    constructor () {
+        this.files = [];
+    }
+
+    isValid(): boolean {
+        return this.files.length > 0
+            ? this.files[0].name.endsWith('.csv') && this.files[0].name.trim() !== ''
+            : false;
+    }
+
+    async validate(): Promise<any> {
+        try {
+            await this.postFile();
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    private async postFile(): Promise<any> {
+        let formData = new FormData();
+        formData.append('file', this.files[0], this.files[0].name);
+        let response;
+        try {
+            response = await http.post(`/lystore/campaign/${this.id_campaign}/purses/import`,
+                formData, {'headers' : { 'Content-Type': 'multipart/form-data' }});
+        } catch (err) {
+            throw err.response.data;
+        }
+        return response;
+    }
+}
