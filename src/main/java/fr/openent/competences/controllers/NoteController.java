@@ -43,6 +43,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import io.vertx.core.Handler;
@@ -81,8 +82,11 @@ public class NoteController extends ControllerHelper {
     private final UtilsService utilsService;
     private final ElementProgramme elementProgramme;
 
-    public NoteController(EventBus eb) {
+    private final Storage storage;
+
+    public NoteController(EventBus eb, Storage storage) {
         this.eb = eb;
+        this.storage = storage;
         notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         devoirsService = new DefaultDevoirService(this.eb);
         utilsService = new DefaultUtilsService(this.eb);
@@ -1239,7 +1243,7 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void importExercizerCSV(final HttpServerRequest request) {
         // typeImport
-        ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request);
+        ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage);
         exercizerImportNote.run()
                 .compose(res -> {
                     // injection SQL via ton service (3 - service qui utilise cet outil pour faire son insertion SQL)

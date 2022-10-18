@@ -3,7 +3,7 @@ package fr.openent.competences.helpers;
 import fr.openent.competences.constants.Field;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.file.FileSystem;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -57,6 +57,18 @@ public class FileHelper {
                 message.remove(Field.STATUS);
                 promise.complete(message);
             }
+        });
+        return promise.future();
+    }
+
+    public static Future<Buffer> readFile(Storage storage, String fileId) {
+        Promise<Buffer> promise = Promise.promise();
+        storage.readFile(fileId, result -> {
+            if (result == null) {
+                promise.complete();
+                return;
+            }
+            promise.complete(result);
         });
         return promise.future();
     }
