@@ -35,7 +35,7 @@ public class ExercizerImportNote extends ImportFile {
 
                 })
                 .onFailure(err -> {
-
+                    err.printStackTrace();
                 });
         return promise.future();
     }
