@@ -26,16 +26,9 @@ public class ExercizerImportNote extends ImportFile {
     public Future<JsonObject> run() {
         Promise<JsonObject> promise = Promise.promise();
         super.processImportFile()
-                .compose(resFile -> {
-                    Buffer buffer = Buffer.buffer();
-                    RecordParser recordParser = RecordParser.newDelimited("\n", bufferedLine -> {
-                        if (!bufferedLine.getString(0, 7).equals("Moyenne"))
-                            buffer.appendBuffer(bufferedLine);
-                    });
-                    recordParser.handle(resFile);
-                    parseCsv(buffer);
-                    // read en CSV avec tes colonnes spécifiques (p-e à externaliser dans ImportFile)
-                    // read CSV avec ton buffer (Recordparser)
+                .compose(this::parseAndFormatBuffer)
+                .compose(exercizerBuffer -> {
+                    fetchDataFromBuffer(exercizerBuffer);
                     return Future.succeededFuture();
                 })
                 .onSuccess(res -> {
@@ -47,11 +40,26 @@ public class ExercizerImportNote extends ImportFile {
         return promise.future();
     }
 
+    private Future<Buffer> parseAndFormatBuffer(Buffer resFile) {
+        Promise<Buffer> promise = Promise.promise();
+        Buffer buffer = Buffer.buffer();
+        RecordParser recordParser = RecordParser.newDelimited("\n", bufferedLine -> {
+            if (!bufferedLine.getString(0, 7).equals("Moyenne"))
+                buffer.appendBuffer(bufferedLine);
+        });
+        recordParser.handle(resFile);
+        recordParser.endHandler(event -> promise.complete(buffer));
 
-    private void parseCsv(Buffer buffer) {
+        return promise.future();
+    }
+
+    private void fetchDataFromBuffer(Buffer buffer) {
         Reader reader = new InputStreamReader(new ByteArrayInputStream(buffer.getBytes()));
         List<ExercizerStudent> students = new CsvToBeanBuilder<ExercizerStudent>(reader)
-                .withType(ExercizerStudent.class).withSeparator(';').build().parse();
+                .withType(ExercizerStudent.class)
+                .withSeparator(';')
+                .build()
+                .parse();
         for (ExercizerStudent student : students) {
             System.out.println(student.getStudentName());
             System.out.println(student.getNote());
