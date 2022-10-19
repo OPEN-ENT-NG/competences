@@ -193,7 +193,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
             console.log($scope.testI.files[0]);
             let response;
             try {
-                response = await http.post(`competences/csv/1/exercizer/import`,
+                response = await http.post(`competences/notes/1/1/csv`,
                     formData, {'headers' : { 'Content-Type': 'multipart/form-data' }});
             } catch (err) {
                 throw err.response.data;

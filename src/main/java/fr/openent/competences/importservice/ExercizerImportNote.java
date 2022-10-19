@@ -5,6 +5,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.parsetools.RecordParser;
 import org.entcore.common.storage.Storage;
 
 public class ExercizerImportNote extends ImportFile {
@@ -18,6 +19,12 @@ public class ExercizerImportNote extends ImportFile {
         Promise<JsonObject> promise = Promise.promise();
         super.processImportFile()
                 .compose(resFile -> {
+                    RecordParser recordParser = RecordParser.newDelimited("\n", bufferedLine -> {
+                        if (bufferedLine.getString(0, 7).equals("Moyenne"))
+                            System.out.println("plop");
+
+                    });
+                    recordParser.handle(resFile);
                     // read en CSV avec tes colonnes spécifiques (p-e à externaliser dans ImportFile)
                     // read CSV avec ton buffer (Recordparser)
                     return Future.succeededFuture();
