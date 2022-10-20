@@ -189,7 +189,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
         $scope.openCreateEval = () => {
             let path = '/devoir/create';
             $scope.goTo(path);
-        }
+        };
         $scope.FilterGroupEmpty = (item) => {
             let nameofclasse = $scope.getClasseData(item.id_groupe, 'name');
             if ( item.id_groupe !== '' && nameofclasse !== undefined && nameofclasse !== '') {
@@ -236,4 +236,5 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
 
         };
     }
+
 ]);
