@@ -1,8 +1,6 @@
-package fr.openent.competences.bean;
+package fr.openent.competences.model.importservice;
 
 import com.opencsv.bean.CsvBindByName;
-import com.opencsv.bean.CsvNumber;
-import com.opencsv.bean.CsvNumbers;
 
 public class ExercizerStudent {
 
@@ -10,12 +8,6 @@ public class ExercizerStudent {
     private String studentName;
 
     @CsvBindByName(column = "Score final", required = true)
-    @CsvNumbers({
-            @CsvNumber("#"),
-            @CsvNumber("##"),
-            @CsvNumber("#,#"),
-            @CsvNumber("##,#"),
-    })
     private double note;
 
     @CsvBindByName(column = "Commentaire")

@@ -1,7 +1,7 @@
 package fr.openent.competences.controllers;
 
 import com.opencsv.bean.CsvToBeanBuilder;
-import fr.openent.competences.bean.ExercizerStudent;
+import fr.openent.competences.model.importservice.ExercizerStudent;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
@@ -11,7 +11,6 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.storage.Storage;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.List;

@@ -1246,7 +1246,7 @@ public class NoteController extends ControllerHelper {
         ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage);
         exercizerImportNote.run()
                 .compose(res -> {
-                    // injection SQL via ton service (3 - service qui utilise cet outil pour faire son insertion SQL)
+                    // injection SQL via le service (3 - service qui utilise cet outil pour faire son insertion SQL)
                     // service usage
                     return Future.succeededFuture();
                 })
