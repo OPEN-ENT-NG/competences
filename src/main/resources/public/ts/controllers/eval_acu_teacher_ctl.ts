@@ -235,6 +235,6 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
 
 
         };
-    }
 
+    }
 ]);
