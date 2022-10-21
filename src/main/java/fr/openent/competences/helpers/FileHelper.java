@@ -34,7 +34,7 @@ public class FileHelper {
         } else {
             storage.removeFiles(new JsonArray(fileIds), result -> {
                 if (!"ok".equals(result.getString("status"))) {
-                    String message = "[PresenceCommon@FileHelper::removeFiles] Failed to remove files.";
+                    String message = "[Competences@FileHelper::removeFiles] Failed to remove files.";
                     log.error(message, result.getString("message"));
                     promise.fail(message);
                     return;
