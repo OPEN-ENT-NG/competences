@@ -12,7 +12,7 @@ import org.entcore.common.user.UserInfos;
 
 import static fr.openent.competences.security.utils.WorkflowActionUtils.hasRight;
 
-public class PostModelExportBulletion implements ResourcesProvider {
+public class PostModelExportBulletin implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         // Verify if idStructure front equals idStructure user && user right export.bulletins.periodique

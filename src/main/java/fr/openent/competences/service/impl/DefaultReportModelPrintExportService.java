@@ -31,8 +31,8 @@ public class DefaultReportModelPrintExportService extends MongoDbCrudService imp
         if(reportModelPrintExport.getUserId() != null){
             matcher.put(ReportModelPrintExportMongo.KEY_USER_ID.getString(), reportModelPrintExport.getUserId());
         }
-        if(reportModelPrintExport.getStructure() != null){
-            matcher.put(ReportModelPrintExportMongo.KEY_STRUCTUREID.getString(), reportModelPrintExport.getStructure());
+        if(reportModelPrintExport.getStructureId() != null){
+            matcher.put(ReportModelPrintExportMongo.KEY_STRUCTUREID.getString(), reportModelPrintExport.getStructureId());
         }
         mongo.find(collection, matcher, validActionResultHandler(handler));
     }
@@ -54,7 +54,7 @@ public class DefaultReportModelPrintExportService extends MongoDbCrudService imp
 
     public void getReportModelSelected(ReportModelPrintExport reportModelPrintExport, Handler<Either<String, JsonObject>> handler) {
         JsonObject matcher = new JsonObject()
-                .put(ReportModelPrintExportMongo.KEY_USER_ID.getString(), reportModelPrintExport.getUserId())
+                .put(ReportModelPrintExportMongo.KEY_STRUCTUREID.getString(), reportModelPrintExport.getStructureId())
                 .put(ReportModelPrintExportMongo.KEY_SELECTED.getString(), true);
         mongo.find(collection, matcher, validActionResultHandler(handler));
     }

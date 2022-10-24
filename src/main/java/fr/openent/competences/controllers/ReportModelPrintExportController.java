@@ -5,7 +5,7 @@ import fr.openent.competences.enums.Common;
 import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportMongo;
 import fr.openent.competences.helper.ManageError;
 import fr.openent.competences.model.ReportModelPrintExport;
-import fr.openent.competences.security.modelbulletinrights.PostModelExportBulletion;
+import fr.openent.competences.security.modelbulletinrights.PostModelExportBulletin;
 import fr.openent.competences.security.modelbulletinrights.UserIdModelExportBulletin;
 import fr.openent.competences.security.modelbulletinrights.GetModelExportBulletin;
 import fr.openent.competences.service.ReportModelPrintExportService;
@@ -33,7 +33,7 @@ public class ReportModelPrintExportController extends ControllerHelper {
     @Post("/report-model-print-export")
     @ApiDoc("Post report model")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PostModelExportBulletion.class)
+    @ResourceFilter(PostModelExportBulletin.class)
     public void postReportModel(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "reportModelPrintExport", bodyRequest -> {
             UserUtils.getUserInfos(eb, request, user -> {
@@ -62,7 +62,7 @@ public class ReportModelPrintExportController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             ReportModelPrintExport newReportModel = new ReportModelPrintExport();
             try {
-                newReportModel.setStructure(idStructure);
+                newReportModel.setStructureId(idStructure);
                 reportModelService.getReportModel(newReportModel, defaultResponseHandler(request));
             } catch (Exception errorUpdate) {
                 ManageError.requestFailError(request, Common.ERROR.getString(),

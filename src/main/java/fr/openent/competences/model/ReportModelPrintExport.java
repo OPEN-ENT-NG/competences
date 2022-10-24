@@ -55,7 +55,7 @@ public class ReportModelPrintExport extends Model implements Cloneable {
     public String getUserId() {
         return this.userId;
     }
-    public String getStructure() {
+    public String getStructureId() {
         return this.structureId;
     }
 
@@ -84,7 +84,7 @@ public class ReportModelPrintExport extends Model implements Cloneable {
         this.userId = userId;
     }
 
-    public void setStructure(String structure) {
+    public void setStructureId(String structure) {
         this.structureId = structure;
     }
 
@@ -124,7 +124,7 @@ public class ReportModelPrintExport extends Model implements Cloneable {
     public JsonObject toJsonObject() {
         JsonObject json = new JsonObject();
         if (this.getId() != null) json.put(ReportModelPrintExportMongo.KEY_ID.getString(), this.getId());
-        if (this.getStructure() != null) json.put(ReportModelPrintExportMongo.KEY_STRUCTUREID.getString(), this.getStructure());
+        if (this.getStructureId() != null) json.put(ReportModelPrintExportMongo.KEY_STRUCTUREID.getString(), this.getStructureId());
         if (this.getUserId() != null) json.put(ReportModelPrintExportMongo.KEY_USER_ID.getString(), this.getUserId());
         if (this.getTitle() != null) json.put(ReportModelPrintExportMongo.KEY_TITLE.getString(), this.getTitle());
         if (this.getSelected() != null)
