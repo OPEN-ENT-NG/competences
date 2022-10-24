@@ -1504,4 +1504,19 @@ public class DefaultUtilsService implements UtilsService {
         }
         promise.complete(subTopics);
     }
+
+    public Future<JsonArray> getClasseDisplaynames(String idClasse) {
+        Promise<JsonArray> promise = Promise.promise();
+        getClasseDisplaynames(idClasse, FutureHelper.handlerJsonArray(promise.future()));
+        return promise.future();
+    }
+
+    public void getClasseDisplaynames(String idClasse, Handler<Either<String, JsonArray>> result){
+        StringBuilder query = new StringBuilder();
+        query.append("MATCH (:Class {id: {idClasse}})")
+                .append("--(:Group {filter: 'Student'})")
+                .append("--(u:User) ")
+                .append("RETURN u.id, u.displayName");
+        neo4j.execute(query.toString(), new JsonObject().put("idClasse", idClasse), Neo4jResult.validResultHandler(result));
+    }
 }

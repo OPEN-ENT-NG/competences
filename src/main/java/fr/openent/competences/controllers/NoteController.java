@@ -24,6 +24,7 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.importservice.ExercizerImportNote;
 import fr.openent.competences.model.*;
+import fr.openent.competences.model.importservice.ExercizerStudent;
 import fr.openent.competences.security.*;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
@@ -64,8 +65,8 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static fr.wseduc.webutils.Utils.isNotEmpty;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
@@ -1238,23 +1239,31 @@ public class NoteController extends ControllerHelper {
                 isNull(idPeriodeString),arrayResponseHandler(request));
     }
 
-    @Post("/notes/:id/:typeImportService/csv")
+    @Post("/notes/:id/:typeImportService/csv/:classId/:devoirId")
     @ApiDoc("Set notes of a devoir by importing a CSV.")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void importExercizerCSV(final HttpServerRequest request) {
         // typeImport
+        final String idClasse = request.params().get("classId");
+        final String idDevoir = request.params().get("devoirId");
+        AtomicReference<Boolean> hasStudentConflict = new AtomicReference<>(true);
         ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage);
         exercizerImportNote.run()
                 .compose(res -> {
+                    Promise<Boolean> promise = Promise.promise();
                     // injection SQL via le service (3 - service qui utilise cet outil pour faire son insertion SQL)
-                    // service usage
-                    return Future.succeededFuture();
+                    exercizerImportNote.sql(idClasse, idDevoir, res)
+                            .onSuccess(promise::complete)
+                            .onFailure(promise::fail);
+                    return promise.future();
                 })
-                .onSuccess(err -> {
-                    // renderJson
+                .onSuccess(res -> {
+                    renderJson(request, new JsonObject()
+                            .put("status", res)
+                    );
                 })
                 .onFailure(err -> {
-                    // renderError
+                    renderError(request);
                 });
     }
 

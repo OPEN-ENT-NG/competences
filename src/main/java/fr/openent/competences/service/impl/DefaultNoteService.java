@@ -4759,4 +4759,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             Renders.renderJson(request, result);
         });
     }
+
+    public void insertOrUpdateDevoirNote (String idDevoir, String idEleve,  Double valeur, Handler<Either<String, JsonObject>> handler){
+        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + NOTES_TABLE +
+                " (id_devoir, id_eleve, valeur) VALUES (?, ?, ?)" +
+                " ON CONFLICT (id_devoir, id_eleve) DO UPDATE SET valeur = ? ";
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        values.add(idDevoir);
+        values.add(idEleve);
+        values.add(valeur);
+        values.add(valeur);
+        Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(handler));
+    }
 }

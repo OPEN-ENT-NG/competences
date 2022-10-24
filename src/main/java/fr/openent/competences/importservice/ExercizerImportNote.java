@@ -1,11 +1,17 @@
 package fr.openent.competences.importservice;
 
 import com.opencsv.bean.CsvToBeanBuilder;
+import fr.openent.competences.Competences;
 import fr.openent.competences.model.importservice.ExercizerStudent;
+import fr.openent.competences.service.NoteService;
+import fr.openent.competences.service.UtilsService;
+import fr.openent.competences.service.impl.DefaultNoteService;
+import fr.openent.competences.service.impl.DefaultUtilsService;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.parsetools.RecordParser;
 import org.entcore.common.storage.Storage;
 
@@ -18,8 +24,13 @@ import java.util.regex.Pattern;
 
 public class ExercizerImportNote extends ImportFile {
 
+    UtilsService utilsService;
+    NoteService noteService;
+
     public ExercizerImportNote(HttpServerRequest request, Storage storage) {
         super(request, storage);
+        utilsService = new DefaultUtilsService();
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
     }
 
     @Override
@@ -30,6 +41,33 @@ public class ExercizerImportNote extends ImportFile {
                 .compose(this::fetchDataFromBuffer)
                 .onSuccess(promise::complete)
                 .onFailure(Throwable::printStackTrace);
+        return promise.future();
+    }
+
+    @Override
+    public Future<Boolean> sql(String idClasse, String idDevoir, List<ExercizerStudent> students) {
+        Promise<Boolean> promise = Promise.promise();
+        utilsService.getClasseDisplaynames(idClasse)
+                .compose(displayNames -> {
+                    Boolean hasStudentConflict = false;
+                    for(ExercizerStudent student: students){
+                        JsonObject j = displayNames.stream()
+                                .map(JsonObject.class::cast).filter(dn -> dn.getString("u.displayName").equalsIgnoreCase(student.getStudentName()))
+                                .findFirst().orElse(null);
+                        if(j != null){
+                            noteService.insertOrUpdateDevoirNote(idDevoir, j.getString("u.id"), student.getNote(), handler -> {
+
+                            });
+                        }
+                        else{
+                            hasStudentConflict = true;
+                        }
+                    }
+                    return Future.succeededFuture(hasStudentConflict);
+                })
+                .onSuccess(promise::complete)
+                .onFailure(promise::fail);
+
         return promise.future();
     }
 
