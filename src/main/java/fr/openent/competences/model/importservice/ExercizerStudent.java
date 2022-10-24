@@ -8,7 +8,7 @@ public class ExercizerStudent {
     private String studentName;
 
     @CsvBindByName(column = "Score final", required = true)
-    private double note;
+    private Double note;
 
     @CsvBindByName(column = "Commentaire")
     private String annotation;
@@ -21,11 +21,11 @@ public class ExercizerStudent {
         this.studentName = studentName;
     }
 
-    public double getNote() {
+    public Double getNote() {
         return note;
     }
 
-    public void setNote(int note) {
+    public void setNote(Double note) {
         this.note = note;
     }
 

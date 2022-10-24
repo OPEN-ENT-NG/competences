@@ -19,6 +19,7 @@ package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.model.SubTopic;
+import fr.openent.competences.model.importservice.ExercizerStudent;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -332,4 +333,6 @@ public interface UtilsService {
     void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<List<SubTopic>> promise);
 
     void getSubTopicCoeff(String idEtablissement,  Promise<List<SubTopic>> promise);
+
+    Future<JsonArray> getClasseDisplaynames(String idClasse);
 }
