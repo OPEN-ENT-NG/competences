@@ -82,8 +82,8 @@ public class ReportModelPrintExport extends Model implements Cloneable {
         this.userId = userId;
     }
 
-    public void setStructureId(String structure) {
-        this.structureId = structure;
+    public void setStructureId(String structureId) {
+        this.structureId = structureId;
     }
 
     private void setPreferencesCheckbox(JsonObject dirtyPreferences) {
