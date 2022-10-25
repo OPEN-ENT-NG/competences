@@ -54,7 +54,7 @@ public class DefaultReportModelPrintExportService extends MongoDbCrudService imp
 
     public void getReportModelSelected(ReportModelPrintExport reportModelPrintExport, Handler<Either<String, JsonObject>> handler) {
         JsonObject matcher = new JsonObject()
-                .put(ReportModelPrintExportMongo.KEY_STRUCTUREID.getString(), reportModelPrintExport.getStructureId())
+                .put(ReportModelPrintExportMongo.KEY_USER_ID.getString(), reportModelPrintExport.getUserId())
                 .put(ReportModelPrintExportMongo.KEY_SELECTED.getString(), true);
         mongo.find(collection, matcher, validActionResultHandler(handler));
     }
