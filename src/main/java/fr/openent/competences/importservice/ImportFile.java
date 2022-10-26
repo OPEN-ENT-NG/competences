@@ -46,6 +46,4 @@ public abstract class ImportFile implements Import {
                 });
         return promise.future();
     }
-
-    public abstract Future<Boolean> sql(String idClasse, String idDevoir, List<ExercizerStudent> students);
 }

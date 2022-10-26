@@ -4764,7 +4764,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + NOTES_TABLE +
                 " (id_devoir, id_eleve, valeur) VALUES (?, ?, ?)" +
                 " ON CONFLICT (id_devoir, id_eleve) DO UPDATE SET valeur = ? ";
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        JsonArray values = new JsonArray();
         values.add(idDevoir);
         values.add(idEleve);
         values.add(valeur);

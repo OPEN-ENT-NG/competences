@@ -1505,7 +1505,7 @@ public class DefaultUtilsService implements UtilsService {
         promise.complete(subTopics);
     }
 
-    public Future<JsonArray> getClasseDisplaynames(String idClasse) {
+    public Future<JsonArray> getEleveClasseInfos(String idClasse) {
         Promise<JsonArray> promise = Promise.promise();
         studentAvailableForPeriode(idClasse, null, 0, message -> {
             JsonObject body = message.body();
@@ -1513,19 +1513,10 @@ public class DefaultUtilsService implements UtilsService {
                 JsonArray classInfo = body.getJsonArray(Field.RESULTS);
                 promise.complete(classInfo);
             } else {
-                log.error("getClasseDisplaynames : can not get class info : "+ idClasse);
+                log.error("getEleveClasseInfos : can not get students class info : "+ idClasse);
                 promise.fail(body.getString(MESSAGE));
             }
         });
         return promise.future();
-    }
-
-    public void getClasseDisplaynames(String idClasse, Handler<Either<String, JsonArray>> result){
-        StringBuilder query = new StringBuilder();
-        query.append("MATCH (:Class {id: {idClasse}})")
-                .append("--(:Group {filter: 'Student'})")
-                .append("--(u:User) ")
-                .append("RETURN u.id, u.displayName");
-        neo4j.execute(query.toString(), new JsonObject().put("idClasse", idClasse), Neo4jResult.validResultHandler(result));
     }
 }

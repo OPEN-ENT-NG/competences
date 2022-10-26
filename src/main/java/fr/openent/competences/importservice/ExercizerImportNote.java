@@ -47,10 +47,9 @@ public class ExercizerImportNote extends ImportFile {
         return promise.future();
     }
 
-    @Override
-    public Future<Boolean> sql(String idClasse, String idDevoir, List<ExercizerStudent> students) {
+    public Future<Boolean> insertOrUpdateNotesDevoir(String idClasse, String idDevoir, List<ExercizerStudent> students) {
         Promise<Boolean> promise = Promise.promise();
-        utilsService.getClasseDisplaynames(idClasse)
+        utilsService.getEleveClasseInfos(idClasse)
                 .compose(classStudents -> {
                     Boolean hasNoStudentConflict = true;
                     Promise<Boolean> insertOrUpdatePromiseAll = Promise.promise();

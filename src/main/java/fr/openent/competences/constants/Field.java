@@ -30,6 +30,8 @@ public class Field {
     public static final String ID_SOUSMATIERE = "id_sousmatiere";
     public static final String ID_MATIERE_MOYF = "id_matiere_moyf";
     public static final String ID_ENSEIGNANT = "id_enseignant";
+    public static final String CLASSID = "classId";
+    public static final String DEVOIRID = "devoirId";
 
 
     public static final String MAIN_TEACHER_ID = "main_teacher_id";

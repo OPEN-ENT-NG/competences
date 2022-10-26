@@ -334,5 +334,9 @@ public interface UtilsService {
 
     void getSubTopicCoeff(String idEtablissement,  Promise<List<SubTopic>> promise);
 
-    Future<JsonArray> getClasseDisplaynames(String idClasse);
+    /**
+     * get the students infos of a class
+     * @param idClasse
+     */
+    Future<JsonArray> getEleveClasseInfos(String idClasse);
 }

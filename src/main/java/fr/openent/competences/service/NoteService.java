@@ -357,5 +357,12 @@ public interface NoteService extends CrudService {
     void getDetailsReleve(final String idEleve, final String idClasse, final String idMatiere,
                           final String idEtablissement, final HttpServerRequest request);
 
+    /**
+     * Insère ou met à jour la note du devoir d'un élève
+     * @param idDevoir idDevoir
+     * @param idEleve idEleve
+     * @param valeur valeur
+     * @param handler handler
+     */
     void insertOrUpdateDevoirNote (String idDevoir, String idEleve,  Double valeur, Handler<Either<String, JsonObject>> handler);
 }
