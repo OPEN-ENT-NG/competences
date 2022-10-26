@@ -90,7 +90,7 @@ class Controller implements ng.IController, IViewModel {
             let formData = new FormData();
             formData.append('file', this.files[0], this.files[0].name);
 
-            await NoteService.importNote(this.devoir.id_groupe, this.devoir.id)
+            await NoteService.importNote(this.devoir.id_groupe, this.devoir.id, formData)
                 .then((response: AxiosResponse) => {
                     if (response.data.status) {
                         this.cancelLightboxImportNote();
@@ -117,13 +117,11 @@ function directive() {
         restrict: 'E',
         templateUrl: `${RootsConst.directive}import-note/import-note.html`,
         scope: {
-            //onImport: "&",
             devoir: "="
         },
         controllerAs: 'vm',
         bindToController: true,
         controller: ['$scope','$location','$window', Controller],
-        /* interaction DOM/element */
         link: function (scope: ng.IScope,
                         element: ng.IAugmentedJQuery,
                         attrs: ng.IAttributes,
