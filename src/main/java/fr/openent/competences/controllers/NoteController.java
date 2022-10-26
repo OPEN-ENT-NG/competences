@@ -1247,7 +1247,7 @@ public class NoteController extends ControllerHelper {
         final String idClasse = request.params().get("classId");
         final String idDevoir = request.params().get("devoirId");
         AtomicReference<Boolean> hasStudentConflict = new AtomicReference<>(true);
-        ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage);
+        ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage, utilsService);
         exercizerImportNote.run()
                 .compose(res -> {
                     Promise<Boolean> promise = Promise.promise();

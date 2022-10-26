@@ -1507,7 +1507,16 @@ public class DefaultUtilsService implements UtilsService {
 
     public Future<JsonArray> getClasseDisplaynames(String idClasse) {
         Promise<JsonArray> promise = Promise.promise();
-        getClasseDisplaynames(idClasse, FutureHelper.handlerJsonArray(promise.future()));
+        studentAvailableForPeriode(idClasse, null, 0, message -> {
+            JsonObject body = message.body();
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                JsonArray classInfo = body.getJsonArray(Field.RESULTS);
+                promise.complete(classInfo);
+            } else {
+                log.error("getClasseDisplaynames : can not get class info : "+ idClasse);
+                promise.fail(body.getString(MESSAGE));
+            }
+        });
         return promise.future();
     }
 
