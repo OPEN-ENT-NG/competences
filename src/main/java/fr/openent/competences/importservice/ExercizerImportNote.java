@@ -2,12 +2,12 @@ package fr.openent.competences.importservice;
 
 import com.opencsv.bean.CsvToBeanBuilder;
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.importservice.ExercizerStudent;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultNoteService;
-import fr.openent.competences.service.impl.DefaultUtilsService;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -56,12 +56,12 @@ public class ExercizerImportNote extends ImportFile {
                     List<Future> futures = new ArrayList<>();
                     for(ExercizerStudent student: students){
                         JsonObject j = classStudents.stream()
-                                .map(JsonObject.class::cast).filter(dn -> dn.getString("displayName").equalsIgnoreCase(student.getStudentName()))
+                                .map(JsonObject.class::cast).filter(dn -> dn.getString(Field.DISPLAYNAME).equalsIgnoreCase(student.getStudentName()))
                                 .findFirst().orElse(null);
                         if(j != null){
                             Promise<JsonObject> insertOrUpdatePromise = Promise.promise();
                             futures.add(insertOrUpdatePromise.future());
-                            noteService.insertOrUpdateDevoirNote(idDevoir, j.getString("id"), student.getNote(), FutureHelper.handlerJsonObject(insertOrUpdatePromise));
+                            noteService.insertOrUpdateDevoirNote(idDevoir, j.getString(Field.ID), student.getNote(), FutureHelper.handlerJsonObject(insertOrUpdatePromise));
                         }
                         else{
                             hasNoStudentConflict = false;

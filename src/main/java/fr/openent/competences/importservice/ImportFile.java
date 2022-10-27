@@ -1,14 +1,11 @@
 package fr.openent.competences.importservice;
 
 import fr.openent.competences.helpers.FileHelper;
-import fr.openent.competences.model.importservice.ExercizerStudent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.storage.Storage;
-
-import java.util.List;
 
 public abstract class ImportFile implements Import {
 

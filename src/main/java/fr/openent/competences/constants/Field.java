@@ -79,6 +79,7 @@ public class Field {
     public static final String _TAIL = "_tail";
     public static final String HASSOUSMATIERE = "hasSousMatiere";
     public static final String COEFF = "coeff";
+    public static final String DISPLAYNAME = "displayName";
 
 
     //subTopic
