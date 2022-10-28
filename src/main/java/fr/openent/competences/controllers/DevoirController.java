@@ -155,7 +155,7 @@ public class DevoirController extends ControllerHelper {
                             if(null != resource.getLong("type_groupe")
                                     && resource.getLong("type_groupe") > -1){
                                 DevoirControllerHelper.creationDevoir(request, user, resource, pathPrefix,
-                                        devoirsService, shareService, eb);
+                                        devoirsService, eb);
                                 eventStore.createAndStoreEvent(EventStoresCompetences.CREATE_HOMEWORK.name(), request);
                             } else {
                                 checkEleveEvaluable(resource, request, user);
@@ -184,7 +184,7 @@ public class DevoirController extends ControllerHelper {
                 if ("ok".equals(body.getString("status"))) {
                     if(body.getJsonArray("results").size() > 0){
                         DevoirControllerHelper.creationDevoir(request, user, resource, pathPrefix,
-                                devoirsService, shareService, eb);
+                                devoirsService, eb);
                     } else {
                         log.debug("Student not evaluable on this period");
                         Renders.unauthorized(request);

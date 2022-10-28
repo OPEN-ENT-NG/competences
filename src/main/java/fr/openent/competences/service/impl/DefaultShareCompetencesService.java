@@ -45,8 +45,10 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
             futures.add(getMainTeacherHomewokFuture);
             futures.add(getSecondTeacherHomewokFuture);
 //
-            devoirService.getHomeworksFromSubjectAndTeacher(subjectId, userIdMainTeacher,groupId, getShareHandler(getHandlerJsonArray(getSecondTeacherHomewokFuture), userIdSecondTeacher, actions));
-            devoirService.getHomeworksFromSubjectAndTeacher(subjectId,userIdSecondTeacher,groupId,  getShareHandler(getHandlerJsonArray(getMainTeacherHomewokFuture), userIdMainTeacher, actions));
+            devoirService.getHomeworksFromSubjectAndTeacher(subjectId, userIdMainTeacher,groupId,
+                    getShareHandler(getHandlerJsonArray(getSecondTeacherHomewokFuture), userIdSecondTeacher, actions));
+            devoirService.getHomeworksFromSubjectAndTeacher(subjectId,userIdSecondTeacher,groupId,
+                    getShareHandler(getHandlerJsonArray(getMainTeacherHomewokFuture), userIdMainTeacher, actions));
 
             CompositeFuture.all(futures).setHandler( eventFuture -> {
                 jsonArrayBusResultHandler.handle(new Either.Right(new JsonArray(eventFuture.result().list())));
@@ -64,7 +66,7 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
                     JsonArray statements = new JsonArray();
                     for(int i = 0 ; i < results.size(); i++) {
                         Long homeworkId = results.getJsonObject(i).getLong("id");
-                        statements.add(getNewShareStatements(userIdSecondTeacher,homeworkId.toString(),actions));
+                        statements.add(devoirService.getNewShareStatements(userIdSecondTeacher,homeworkId.toString(),actions));
                     }
                     if(statements.size() > 0)
                         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(jsonArrayBusResultHandler));
@@ -78,16 +80,16 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
         };
     }
 
-    private JsonObject getNewShareStatements(String userIdSecondTeacher, String devoirID, List<String> actions) {
+    /*private JsonObject getNewShareStatements(String userIdSecondTeacher, String devoirID, List<String> actions) {
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares (member_id ,resource_id,action)" +
                 "VALUES (?,?,?) ON CONFLICT DO NOTHING";
-        JsonArray paramsDeleteAnnotation = new fr.wseduc.webutils.collections.JsonArray();
-        paramsDeleteAnnotation.add(userIdSecondTeacher).add(devoirID).add(actions.get(0));
+        JsonArray paramsDevoirShare = new fr.wseduc.webutils.collections.JsonArray();
+        paramsDevoirShare.add(userIdSecondTeacher).add(devoirID).add(actions.get(0));
         return new JsonObject()
                 .put("statement", query)
-                .put("values",paramsDeleteAnnotation)
+                .put("values",paramsDevoirShare)
                 .put("action", "prepared");
-    }
+    }*/
 
     @Override
     public void removeShareHomeworks(JsonArray idsArray, Handler<Either<String, JsonArray>> jsonArrayBusResultHandler, ShareService shareService) {

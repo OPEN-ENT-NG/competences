@@ -335,7 +335,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 for (int j = 0; j < resultSql.size(); j++) {
                     ids.add(resultSql.getJsonObject(j).getJsonArray(Field.RESULTS).getJsonArray(0).getInteger(0));
                 }
-                insertDuplication(ids, devoir, classes, user, getDuplicationDevoirHandler(user, shareService, request, eb));
+                insertDuplication(ids, devoir, classes, user, getDuplicationDevoirHandler(user,this, request, eb));
             } else {
                 badRequest(request);
             }
@@ -362,7 +362,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         String timestamp_end = periode.getString("timestamp_fn");
                         DateTime begin = new DateTime(timestamp_begin);
                         DateTime end = new DateTime(timestamp_end);
-                        if (!begin.isAfterNow() && !end.isBeforeNow() && (listClasses.get(i).equals(periode.getString("id_classe")) || listClasses.get(i).equals(periode.getString("id_groupe")))) {
+                        if (!begin.isAfterNow() && !end.isBeforeNow() && (listClasses.get(i).equals(periode.getString("id_classe"))
+                                || listClasses.get(i).equals(periode.getString("id_groupe")))) {
                             periodesResult.put(listClasses.get(i), periode);
                         }
                     }
@@ -1770,6 +1771,18 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 });
             }
         });
+    }
+
+    @Override
+    public JsonObject getNewShareStatements (String userIdSecondTeacher, String devoirID, List<String> actions) {
+        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares (member_id ,resource_id,action)" +
+                "VALUES (?,?,?) ON CONFLICT DO NOTHING";
+        JsonArray paramsDevoirShare = new fr.wseduc.webutils.collections.JsonArray();
+        paramsDevoirShare.add(userIdSecondTeacher).add(devoirID).add(actions.get(0));
+        return new JsonObject()
+                .put("statement", query)
+                .put("values",paramsDevoirShare)
+                .put("action", "prepared");
     }
 
     private void buildArrayOfHomeworks(JsonArray orderedDevoirs, JsonArray matieres, JsonArray services,

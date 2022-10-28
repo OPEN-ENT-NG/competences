@@ -15,6 +15,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.share.ShareService;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
 import java.util.ArrayList;
@@ -27,7 +29,7 @@ public class DevoirControllerHelper {
     protected static final Logger log = LoggerFactory.getLogger(DevoirControllerHelper.class);
 
     public static void creationDevoir(HttpServerRequest request, UserInfos user, JsonObject resource, String pathPrefix,
-                                      DevoirService devoirsService, ShareService shareService, EventBus eb) {
+                                      DevoirService devoirsService, EventBus eb) {
         resource.remove("competences");
         resource.remove("competencesAdd");
         resource.remove("competencesRem");
@@ -39,12 +41,13 @@ public class DevoirControllerHelper {
             public void handle(final JsonObject devoirJO) {
                 Devoir devoir = new Devoir(devoirJO);
                 devoirsService.createDevoir(devoir.getOldModel(), user,
-                        getCreationDevoirHandler(devoir,  user, shareService, request, eb));
+                        getCreationDevoirHandler(devoir,  user,devoirsService, request, eb));
             }
         });
     }
 
-    private static Handler<Either<String, JsonObject>> getCreationDevoirHandler(Devoir devoir, UserInfos user, ShareService shareService, HttpServerRequest request, EventBus eb) {
+    private static Handler<Either<String, JsonObject>>
+    getCreationDevoirHandler(Devoir devoir, UserInfos user,DevoirService devoirsService, HttpServerRequest request, EventBus eb) {
         return new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> event) {
@@ -58,7 +61,7 @@ public class DevoirControllerHelper {
                             .put("structureId", devoir.getStructureId())
                             .put("groupId", devoir.getGroupId())
                             .put("userId", user.getUserId());
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirWithId, shareService, user, request));
+                    eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirWithId, user,devoirsService, request));
                 } else {
                     badRequest(request);
                 }
@@ -66,7 +69,8 @@ public class DevoirControllerHelper {
         };
     }
 
-    public static Handler<Either<String, JsonArray>> getDuplicationDevoirHandler(UserInfos user, ShareService shareService, HttpServerRequest request, EventBus eb) {
+    public static Handler<Either<String, JsonArray>>
+    getDuplicationDevoirHandler(UserInfos user,DevoirService devoirService, HttpServerRequest request, EventBus eb) {
         return new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
@@ -85,7 +89,7 @@ public class DevoirControllerHelper {
                                 .put("structureId", devoir.getStructureId())
                                 .put("groupId", devoir.getGroupId())
                                 .put("userId", user.getUserId());
-                        eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirJO, shareService, user, promise));
+                        eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirJO, devoirService, user, promise));
                     }
                     FutureHelper.all(futures)
                             .onSuccess(success -> request.response().setStatusCode(200).end())
@@ -97,50 +101,46 @@ public class DevoirControllerHelper {
             }
         };
     }
-    private static Handler<AsyncResult<Message<JsonObject>>> getReplyHandler(JsonObject devoirWithId, ShareService shareService, UserInfos user, Promise<JsonObject> promise) {
+    private static Handler<AsyncResult<Message<JsonObject>>>
+    getReplyHandler(JsonObject devoirWithId, DevoirService devoirService, UserInfos user, Promise<JsonObject> promise) {
         return event -> {
             JsonArray results = event.result().body().getJsonArray("results");
-            List<Future> futures = new ArrayList<>();
+            JsonArray statements = new JsonArray();
             List<String> actions = new ArrayList<String>();
             actions.add(Competences.DEVOIR_ACTION_UPDATE);
             for (int i = 0; i < results.size(); i++) {
-                Future<JsonObject> shareServiceFuture = Future.future();
-                futures.add(shareServiceFuture);
-
                 String id = results.getJsonObject(i).getString("teacher_id");
-                shareService.userShare(user.getUserId(), id, devoirWithId.getLong("id").toString(),
-                        actions, getFutureHandler(shareServiceFuture));
+                statements.add(devoirService.getNewShareStatements(id,devoirWithId.getLong("id").toString(),actions));
             }
-            CompositeFuture.all(futures)
-                    .onSuccess(compositeEvent -> promise.complete(devoirWithId))
-                    .onFailure(failure -> promise.fail(failure.getMessage())
-
-            );
+            Sql.getInstance().transaction(statements, SqlResult.validResultHandler(responseInsert -> {
+                if(responseInsert.isRight()){
+                    promise.complete(devoirWithId);
+                }else{
+                    promise.fail(responseInsert.left().getValue());
+                }
+            }));
         };
     }
-    private static Handler<AsyncResult<Message<JsonObject>>> getReplyHandler(JsonObject devoirWithId, ShareService shareService, UserInfos user, HttpServerRequest request) {
+    private static Handler<AsyncResult<Message<JsonObject>>>
+    getReplyHandler(JsonObject devoirWithId, UserInfos user, DevoirService devoirsService, HttpServerRequest request) {
         return new Handler<AsyncResult<Message<JsonObject>>>() {
             @Override
             public void handle(AsyncResult<Message<JsonObject>> event) {
                 JsonArray results = event.result().body().getJsonArray("results");
-                List<Future> futures = new ArrayList<>();
                 List<String> actions = new ArrayList<String>();
                 actions.add(Competences.DEVOIR_ACTION_UPDATE);
+                JsonArray statements = new JsonArray();
                 for(int i = 0; i < results.size() ; i++){
-                    Future<JsonObject> shareServiceFuture = Future.future();
-                    futures.add(shareServiceFuture);
-
                     String id = results.getJsonObject(i).getString("teacher_id");
-                    shareService.userShare(user.getUserId(), id, devoirWithId.getLong("id").toString(),
-                        actions, getFutureHandler(shareServiceFuture));
+                    statements.add(devoirsService.getNewShareStatements(id,devoirWithId.getLong("id").toString(),actions) );
                 }
-                CompositeFuture.all(futures).setHandler(futuresEvent -> {
-                    if (event.succeeded()) {
+                Sql.getInstance().transaction(statements, SqlResult.validResultHandler(responseInsert -> {
+                    if(responseInsert.isRight()){
                         Renders.renderJson(request, devoirWithId);
                     }else{
                         leftToResponse(request, new Either.Left<>("Error during futures in DevoirControllerHelper"));
                     }
-                });
+                }));
             }
         };
     }
