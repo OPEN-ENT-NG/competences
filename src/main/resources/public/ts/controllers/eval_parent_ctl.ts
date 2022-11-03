@@ -307,8 +307,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             foundedPeriode = true;
                         } else if (($scope.search.periode) && !foundedPeriode){
                             $scope.periode = periodes.findWhere({id_type: $scope.search.periode.id_type});
-                            foundedPeriode = true;
-                        } else if(!foundedPeriode){
+                            if ($scope.periode != null)
+                                foundedPeriode = true;
+                        }
+                        if(!foundedPeriode){
                             if (momentCurrPeriodeDebut.diff(momentCurrDate) <= 0
                                 && momentCurrDate.diff(momentCurrPeriodeFin) <= 0) {
                                 $scope.periode = periodes.findWhere({id: periodes.all[i].id});
