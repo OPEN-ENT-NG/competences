@@ -20,6 +20,7 @@ package fr.openent.competences.service;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.model.Service;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.service.CrudService;
@@ -362,7 +363,7 @@ public interface NoteService extends CrudService {
      * @param idDevoir idDevoir
      * @param idEleve idEleve
      * @param valeur valeur
-     * @param handler handler
+     * @Return {@link Future} of result {@link JsonObject}
      */
-    void insertOrUpdateDevoirNote (String idDevoir, String idEleve,  Double valeur, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> insertOrUpdateDevoirNote (String idDevoir, String idEleve, Double valeur);
 }

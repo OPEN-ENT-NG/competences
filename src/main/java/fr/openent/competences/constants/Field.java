@@ -8,6 +8,7 @@ public class Field {
 
     //id
     public static final String ID = "id";
+    public static final String _ID = "_id";
     public static final String IDSTRUCTURE = "idStructure";
     public static final String IDETABLISSEMENT = "idEtablissement";
     public static final String IDCLASSE = "idClasse";
@@ -50,6 +51,8 @@ public class Field {
     public static final String INSTALLED = "installed";
     public static final String ACTIF = "actif";
     public static final String ACTIVATE = "activate";
+    public static final String MISSING = "missing";
+
 
     //Event bus
     public static final String OK = "ok";

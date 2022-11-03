@@ -13,6 +13,8 @@ public class ExercizerStudent {
     @CsvBindByName(column = "Commentaire")
     private String annotation;
 
+    private String id;
+
     public String getStudentName() {
         return studentName;
     }
@@ -35,6 +37,15 @@ public class ExercizerStudent {
 
     public void setAnnotation(String annotation) {
         this.annotation = annotation;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    // id to check if its verified
+    public String id() {
+       return this.id;
     }
 }
 

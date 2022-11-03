@@ -4760,7 +4760,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         });
     }
 
-    public void insertOrUpdateDevoirNote (String idDevoir, String idEleve,  Double valeur, Handler<Either<String, JsonObject>> handler){
+    @Override
+    public Future<JsonObject> insertOrUpdateDevoirNote(String idDevoir, String idEleve, Double valeur) {
+        Promise<JsonObject> promise = Promise.promise();
+
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + NOTES_TABLE +
                 " (id_devoir, id_eleve, valeur) VALUES (?, ?, ?)" +
                 " ON CONFLICT (id_devoir, id_eleve) DO UPDATE SET valeur = ? ";
@@ -4769,6 +4772,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         values.add(idEleve);
         values.add(valeur);
         values.add(valeur);
-        Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(event -> {
+            if (event.isLeft()) {
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(event.right().getValue());
+            }
+        }));
+        return promise.future();
     }
 }
