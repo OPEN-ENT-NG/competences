@@ -151,7 +151,7 @@ public class FormSaisieHelper {
         result.put("date", date[2] + '/' + date[1] + '/' + date[0]);
         result.put("devoirName", devoirInfos.getString("name"));
         result.put("devoirCoefficient", devoirInfos.getString("coefficient"));
-        result.put("devoirDiviseur", devoirInfos.getLong("diviseur"));
+        result.put("devoirDiviseur", devoirInfos.getDouble("diviseur"));
         result.put("evaluation", devoirInfos.getBoolean("is_evaluated"));
         String libelleSoumatiere = devoirInfos.getString(LIBELLE);
         result.put("sousMatiere", libelleSoumatiere);

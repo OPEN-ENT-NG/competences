@@ -1170,7 +1170,7 @@ public class DefaultExportService implements ExportService {
         devoirMap.put(ID_KEY, devoir.getLong(ID_KEY));
         devoirMap.put("nom", devoir.getString("name"));
         devoirMap.put("coeff", devoir.getString("coefficient"));
-        devoirMap.put("sur", devoir.getLong("diviseur"));
+        devoirMap.put("sur", devoir.getDouble("diviseur"));
         devoirMap.put("periode", I18n.getInstance().translate(
                 "viescolaire.periode." + String.valueOf(devoir.getLong("periodetype")),
                 getHost(request),

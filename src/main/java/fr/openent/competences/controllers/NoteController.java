@@ -1070,7 +1070,7 @@ public class NoteController extends ControllerHelper {
                                                                     }
                                                                     NoteDevoir noteDevoir = new NoteDevoir(
                                                                             Double.valueOf(note.getString("valeur")),
-                                                                            Double.valueOf(note.getLong("diviseur")),
+                                                                            note.getDouble("diviseur"),
                                                                             note.getBoolean("ramener_sur"),
                                                                             Double.valueOf(note.getString("coefficient")));
                                                                     if(note.getString("id_eleve").equals(idEleve)) {

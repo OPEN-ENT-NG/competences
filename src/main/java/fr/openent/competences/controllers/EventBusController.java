@@ -118,7 +118,7 @@ public class EventBusController extends ControllerHelper {
                     if(note.getInteger("coefficient") != null) {
                         listeNoteDevoirs.add(
                                 new NoteDevoir(Double.parseDouble(note.getInteger("valeur").toString()),
-                                        Double.parseDouble(note.getInteger("diviseur").toString()),
+                                        Double.parseDouble(note.getDouble("diviseur").toString()),
                                         note.getBoolean("ramener_sur"),
                                         Double.parseDouble(note.getInteger("coefficient").toString())));
                     }
