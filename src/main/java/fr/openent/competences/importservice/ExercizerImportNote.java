@@ -25,6 +25,9 @@ import java.util.stream.Collectors;
 public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
 
     private static final String AVERAGE_RULE = "Moyenne";
+    private static final String DELIMITER_RULE = "\n";
+    private static final String PATTERN_RULE = "[0-9],[0-9]";
+    private static final String LINE_BREAK = "\n";
 
     UtilsService utilsService;
     String idClasse;
@@ -54,18 +57,18 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
     public Future<Buffer> parseAndFormatBuffer(Buffer resFile) {
         Promise<Buffer> promise = Promise.promise();
         Buffer buffer = Buffer.buffer();
-        RecordParser recordParser = RecordParser.newDelimited("\n", bufferedLine -> {
+        RecordParser recordParser = RecordParser.newDelimited(DELIMITER_RULE, bufferedLine -> {
             String buff = bufferedLine.getString(0, bufferedLine.length() - 1);
             if (!buff.startsWith(AVERAGE_RULE)){
-                Pattern patt = Pattern.compile("[0-9],[0-9]");
-                Matcher m = patt.matcher(buff);
+                Pattern pattern = Pattern.compile(PATTERN_RULE);
+                Matcher matcher = pattern.matcher(buff);
                 StringBuffer sb = new StringBuffer(buff.length());
-                while (m.find()) {
-                    String text = m.group();
-                    m.appendReplacement(sb, Matcher.quoteReplacement(text.replace(',', '.')));
+                while (matcher.find()) {
+                    String text = matcher.group();
+                    matcher.appendReplacement(sb, Matcher.quoteReplacement(text.replace(',', '.')));
                 }
-                m.appendTail(sb);
-                buffer.appendString(sb.toString()).appendString("\n");
+                matcher.appendTail(sb);
+                buffer.appendString(sb.toString()).appendString(LINE_BREAK);
             }
         });
         recordParser.handle(resFile);
