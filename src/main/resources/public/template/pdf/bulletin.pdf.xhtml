@@ -653,6 +653,13 @@
             {{/hasSousMatiere}}
             {{/printSousMatieres}}
             {{^printSousMatieres}}
+            {{#printCoefficient}}
+            <td rowspan="{{rowSpan}}"
+                style="text-align: center; background-color: {{{backgroundColor}}};word-wrap:break-word; {{{style}}}"
+                class="onePadding">
+                {{coef}}
+            </td>
+            {{/printCoefficient}}
             {{#getMoyenneEleve}}
             <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}} "
                 class="onePadding">
