@@ -1,8 +1,10 @@
-package fr.openent.competences.service.impl;
+package fr.openent.competences.service.share.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.DevoirService;
-import fr.openent.competences.service.ShareCompetencesService;
+import fr.openent.competences.service.impl.DefaultDevoirService;
+import fr.openent.competences.service.share.ShareCompetencesService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.security.SecuredAction;
 import io.vertx.core.CompositeFuture;
@@ -22,15 +24,17 @@ import java.util.List;
 import java.util.Map;
 
 public class DefaultShareCompetencesService implements ShareCompetencesService {
-    private DevoirService devoirService ;
+    private DevoirService devoirService;
 
-    public DefaultShareCompetencesService(EventBus eb , Map<String, SecuredAction> securedActions){
+    public DefaultShareCompetencesService(EventBus eb, Map<String, SecuredAction> securedActions) {
         this.devoirService = new DefaultDevoirService(eb);
     }
+
     protected static final Logger log = LoggerFactory.getLogger(ShareCompetencesService.class);
+
     @Override
     public void shareHomeworks(JsonArray idsArray, Handler<Either<String, JsonArray>> jsonArrayBusResultHandler, ShareService shareService) {
-        for(int i = 0 ; i< idsArray.size();i++){
+        for (int i = 0; i < idsArray.size(); i++) {
             JsonArray ids = idsArray.getJsonArray(i);
             String userIdSecondTeacher = ids.getString(0);
             String userIdMainTeacher = ids.getString(1);
@@ -39,18 +43,18 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
             List<String> actions = new ArrayList<String>();
             actions.add(Competences.DEVOIR_ACTION_UPDATE);
             List<Future> futures = new ArrayList<>();
-            Future<JsonArray>  getSecondTeacherHomewokFuture = Future.future();
-            Future<JsonArray>  getMainTeacherHomewokFuture = Future.future();
+            Future<JsonArray> getSecondTeacherHomewokFuture = Future.future();
+            Future<JsonArray> getMainTeacherHomewokFuture = Future.future();
 
             futures.add(getMainTeacherHomewokFuture);
             futures.add(getSecondTeacherHomewokFuture);
 //
-            devoirService.getHomeworksFromSubjectAndTeacher(subjectId, userIdMainTeacher,groupId,
+            devoirService.getHomeworksFromSubjectAndTeacher(subjectId, userIdMainTeacher, groupId,
                     getShareHandler(getHandlerJsonArray(getSecondTeacherHomewokFuture), userIdSecondTeacher, actions));
-            devoirService.getHomeworksFromSubjectAndTeacher(subjectId,userIdSecondTeacher,groupId,
+            devoirService.getHomeworksFromSubjectAndTeacher(subjectId, userIdSecondTeacher, groupId,
                     getShareHandler(getHandlerJsonArray(getMainTeacherHomewokFuture), userIdMainTeacher, actions));
 
-            CompositeFuture.all(futures).setHandler( eventFuture -> {
+            CompositeFuture.all(futures).setHandler(eventFuture -> {
                 jsonArrayBusResultHandler.handle(new Either.Right(new JsonArray(eventFuture.result().list())));
             });
         }
@@ -61,19 +65,19 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
         return new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
-                if(event.isRight()){
+                if (event.isRight()) {
                     JsonArray results = event.right().getValue();
                     JsonArray statements = new JsonArray();
-                    for(int i = 0 ; i < results.size(); i++) {
+                    for (int i = 0; i < results.size(); i++) {
                         Long homeworkId = results.getJsonObject(i).getLong("id");
-                        statements.add(devoirService.getNewShareStatements(userIdSecondTeacher,homeworkId.toString(),actions));
+                        statements.add(devoirService.getNewShareStatements(userIdSecondTeacher, homeworkId.toString(), actions));
                     }
-                    if(statements.size() > 0)
+                    if (statements.size() > 0)
                         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(jsonArrayBusResultHandler));
-                    else{
+                    else {
                         jsonArrayBusResultHandler.handle(new Either.Right<>(new JsonArray()));
                     }
-                }else{
+                } else {
                     log.error("Error when getting devoirs from POSTGRES");
                 }
             }
@@ -93,7 +97,7 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
 
     @Override
     public void removeShareHomeworks(JsonArray idsArray, Handler<Either<String, JsonArray>> jsonArrayBusResultHandler, ShareService shareService) {
-        for(int i = 0 ; i< idsArray.size();i++){
+        for (int i = 0; i < idsArray.size(); i++) {
             JsonArray ids = idsArray.getJsonArray(i);
             String userIdSecondTeacher = ids.getString(0);
             String userIdMainTeacher = ids.getString(1);
@@ -101,44 +105,49 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
             String groupId = ids.getString(3);
             List<String> actions = new ArrayList<String>();
 //            actions.add(Competences.DEVOIR_ACTION_UPDATE);
-            devoirService.getHomeworksFromSubjectAndTeacher(subjectId, userIdMainTeacher, groupId, getRemoveShareHandler(jsonArrayBusResultHandler, shareService, userIdSecondTeacher,
-                    userIdMainTeacher, actions));
+            devoirService.getHomeworksFromSubjectAndTeacher(subjectId, userIdMainTeacher, groupId, getRemoveShareHandler(jsonArrayBusResultHandler,
+                    userIdSecondTeacher
+            ));
         }
     }
 
-    private Handler<Either<String, JsonArray>> getRemoveShareHandler(Handler<Either<String, JsonArray>> jsonArrayBusResultHandler, ShareService shareService,
-                                                                     String userIdSecondTeacher, String userIdMainTeacher, List<String> actions) {
-        return new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if(event.isRight()){
-                    JsonArray results = event.right().getValue();
-                    List resultList = results.getList();
-                    List<Future> futures = new ArrayList<>();
-                    for(int i = 0 ; i < results.size(); i++) {
-                        Future<Boolean>  removeShareHomeworkFuture = Future.future();
-                        futures.add(removeShareHomeworkFuture);
-                        Long homeworkId = results.getJsonObject(i).getLong("id");
-                        //ON GARDE l appel service car il est rapide
-                        shareService.removeUserShare(userIdSecondTeacher,
-                                homeworkId.toString(),
-                                actions,getHandlerJsonObject(removeShareHomeworkFuture));
-
-                    }
-                    CompositeFuture.all(futures).setHandler(result -> {
-                        log.info("getRemoveShareHandler end futures");
-                        if (result.succeeded()) {
-                            jsonArrayBusResultHandler.handle(new Either.Right<>(new JsonArray().add(results.size())));
-                        }else{
-                            jsonArrayBusResultHandler.handle(new Either.Left<>("Error when gettings subjects and classes"));
-                        }
-                    });
-                }else{
-                    log.error("Error when getting devoirs from POSTGRES");
+    private Handler<Either<String, JsonArray>> getRemoveShareHandler(Handler<Either<String, JsonArray>> jsonArrayBusResultHandler,
+                                                                     String userIdSecondTeacher) {
+        return event -> {
+            if (event.isRight()) {
+                JsonArray results = event.right().getValue();
+                JsonArray statements = new JsonArray();
+                for (int i = 0; i < results.size(); i++) {
+                    Long homeworkId = results.getJsonObject(i).getLong("id");
+                    removeDevoirUserShareStatement(userIdSecondTeacher,
+                            homeworkId.toString()
+                    );
                 }
+                Sql.getInstance().transaction(statements, SqlResult.validResultHandler(response -> {
+                    log.info("getRemoveShareHandler end futures");
+                    if (response.isRight()) {
+                        jsonArrayBusResultHandler.handle(new Either.Right<>(new JsonArray().add(results.size())));
+                    } else {
+                        jsonArrayBusResultHandler.handle(new Either.Left<>("Error when gettings subjects and classes"));
+                    }
+                }));
+            } else {
+                log.error("Error when getting devoirs from POSTGRES");
             }
         };
     }
+
+    private JsonObject removeDevoirUserShareStatement(String idUser, String homeworkId) {
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE +
+                " WHERE member_id = ? AND ressource_id = ? ";
+        JsonArray params = new JsonArray().add(idUser).add(homeworkId);
+
+        return new JsonObject()
+                .put("statement", query)
+                .put("values", params)
+                .put("action", "prepared");
+    }
+
     private Handler<Either<String, JsonArray>> getHandlerJsonArray(Future<JsonArray> serviceFuture) {
         return event -> {
             if (event.isRight()) {
