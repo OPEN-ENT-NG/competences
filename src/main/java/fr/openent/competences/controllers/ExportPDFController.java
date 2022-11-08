@@ -745,7 +745,7 @@ public class ExportPDFController extends ControllerHelper {
                                     Long id_periode = lineObject.getLong(Field.ID_PERIODE);
 
                                     NoteDevoir note = new NoteDevoir(Double.parseDouble(lineObject.getString(Field.VALEUR)),
-                                            lineObject.getDouble(Field.DIVISEUR),
+                                            Double.valueOf(lineObject.getString(Field.DIVISEUR)),
                                             lineObject.getBoolean(Field.RAMENER_SUR),
                                             Double.parseDouble(lineObject.getString(COEFFICIENT)),
                                             lineObject.getString(Field.ID_ELEVE), id_periode, service, sousMatiereId);

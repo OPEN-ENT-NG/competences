@@ -1170,7 +1170,7 @@ public class DefaultExportService implements ExportService {
         devoirMap.put(ID_KEY, devoir.getLong(ID_KEY));
         devoirMap.put("nom", devoir.getString("name"));
         devoirMap.put("coeff", devoir.getString("coefficient"));
-        devoirMap.put("sur", devoir.getDouble("diviseur"));
+        devoirMap.put("sur", Double.valueOf(devoir.getString(Field.DIVISEUR)));
         devoirMap.put("periode", I18n.getInstance().translate(
                 "viescolaire.periode." + String.valueOf(devoir.getLong("periodetype")),
                 getHost(request),
@@ -2038,7 +2038,7 @@ public class DefaultExportService implements ExportService {
                 if (isNotNull(coefficient) && idMatiere.equals(devoirJson.getString("id_matiere"))) {
                     devoirsMatiereJson.add(devoirJson);
                     Double note = Double.valueOf(devoirJson.getString("note"));
-                    Double diviseur = Double.valueOf(devoirJson.getInteger("diviseur"));
+                    Double diviseur = Double.valueOf(devoirJson.getString(Field.DIVISEUR));
                     Boolean ramenerSur = devoirJson.getBoolean("ramener_sur");
                     NoteDevoir noteDevoir = new NoteDevoir(note, diviseur, ramenerSur, coefficient);
                     Long idSousMatiere = devoirJson.getLong("id_sousmatiere");

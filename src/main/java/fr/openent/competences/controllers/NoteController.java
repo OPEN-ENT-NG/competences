@@ -821,7 +821,7 @@ public class NoteController extends ControllerHelper {
                                                 Long sousMatiereId = note.getLong(Field.ID_SOUSMATIERE);
                                                 Long id_periode = note.getLong(ID_PERIODE);
                                                 NoteDevoir noteDevoir = new NoteDevoir(Double.parseDouble(note.getString(Field.VALEUR).replace(",",".")),
-                                                        Double.parseDouble(note.getInteger(Field.DIVISEUR).toString().replace(",",".")),
+                                                        Double.parseDouble(note.getString(Field.DIVISEUR).replace(",",".")),
                                                         note.getBoolean(Field.RAMENER_SUR),
                                                         Double.parseDouble(note.getString(Field.COEFFICIENT).replace(",",".")),
                                                         idEleve, id_periode, service, sousMatiereId);
@@ -1070,7 +1070,7 @@ public class NoteController extends ControllerHelper {
                                                                     }
                                                                     NoteDevoir noteDevoir = new NoteDevoir(
                                                                             Double.valueOf(note.getString("valeur")),
-                                                                            note.getDouble("diviseur"),
+                                                                            Double.valueOf(note.getString(Field.DIVISEUR)),
                                                                             note.getBoolean("ramener_sur"),
                                                                             Double.valueOf(note.getString("coefficient")));
                                                                     if(note.getString("id_eleve").equals(idEleve)) {
