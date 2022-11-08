@@ -406,9 +406,6 @@
                 {{/getProgramElements}}
 
                 <td class="thirdSuivi">{{suiviAcquisitionLibelle}}</td>
-                {{#printCoefficient}}
-                <td>{{coefficientLibelle}}</td>
-                {{/printCoefficient}}
                 {{#getStudentRank}}
                 <td>{{studentRankLibelle}}</td>
                 {{/getStudentRank}}
@@ -417,9 +414,11 @@
                 <td class="onePadding">{{classAverageMaxLibelle}}</td>
                 {{/getClassAverageMinMax}}
                 {{#printSousMatieres}}
-                <td></td>
+                <td class="onePadding">{{subTopicLibelle}}</td>
                 {{/printSousMatieres}}
-
+                {{#printCoefficient}}
+                <td>{{coefficientLibelle}}</td>
+                {{/printCoefficient}}
                 {{#getMoyenneEleve}}
                 <td>{{moyenneStudentLibelle}}</td>
                 {{/getMoyenneEleve}}
@@ -458,13 +457,6 @@
                     {{/display}}
                     {{appreciation}}
                 </td>
-                {{#printCoefficient}}
-                <td rowspan="{{rowSpan}}"
-                    style="text-align: center; background-color: #ffffff;word-wrap:break-word; {{{style}}}"
-                    class="onePadding">
-                    {{coef}}
-                </td>
-                {{/printCoefficient}}
 
                 {{#getStudentRank}}
                 <td rowspan="{{rowSpan}}"
@@ -500,6 +492,13 @@
                     class="onePadding">
                     <br/>
                 </td>
+                {{#printCoefficient}}
+                <td rowspan="{{rowSpan}}"
+                    style="text-align: center; background-color: #ffffff;word-wrap:break-word; {{{style}}}"
+                    class="onePadding">
+                    {{coef}}
+                </td>
+                {{/printCoefficient}}
                 {{#getMoyenneEleve}}
                 <td style="font-size: x-small; font-weight: bold; background-color: #ffffff "
                     class="onePadding">
@@ -520,6 +519,11 @@
                 <td style=" border-left: none;background-color: #ffffff" class="onePadding">
                     <span style="font-size: xx-small; font-weight: normal">{{libelle}}</span>
                 </td>
+                {{#printCoefficient}}
+                <td style="text-align: center; background-color: #ffffff;" class="onePadding">
+                    <span style="font-size: xx-small; font-weight: normal"> {{subCoef}} </span>
+                </td>
+                {{/printCoefficient}}
                 {{#getMoyenneEleve}}
                 <td style="background-color: #ffffff" class="onePadding">
                     {{#moyenneEleveSousMat}}
@@ -538,6 +542,13 @@
                 {{/hasSousMatiere}}
                 {{/printSousMatieres}}
                 {{^printSousMatieres}}
+                {{#printCoefficient}}
+                <td rowspan="{{rowSpan}}"
+                    style="text-align: center; background-color: #ffffff;word-wrap:break-word; {{{style}}}"
+                    class="onePadding">
+                    {{coef}}
+                </td>
+                {{/printCoefficient}}
                 {{#getMoyenneEleve}}
                 <td style="font-size: x-small; font-weight: bold; background-color: #ffffff "
                     class="onePadding">
@@ -559,6 +570,11 @@
                 <td style=" border-left: none;background-color: #ffffff" class="onePadding">
                     <span style="font-size: xx-small; font-weight: normal">{{libelle}}</span>
                 </td>
+                {{#printCoefficient}}
+                <td style="text-align: center; background-color: #ffffff;" class="onePadding">
+                    <span style="font-size: xx-small; font-weight: normal"> {{subCoef}} </span>
+                </td>
+                {{/printCoefficient}}
                 {{#getMoyenneEleve}}
                 <td style="background-color: #ffffff" class="onePadding">
                     {{#moyenneEleveSousMat}}
@@ -583,6 +599,11 @@
                     class="onePadding">
                     <br/>
                 </td>
+                {{#printCoefficient}}
+                <td  style=" border-left: none;background-color: {{{backgroundColor}}}" class="onePadding">
+                    <span style="font-size: xx-small; font-weight: bold"> {{coef}} </span>
+                </td>
+                {{/printCoefficient}}
                 {{/printSousMatieres}}
                 {{#getMoyenneEleve}}
                 <td style="font-size: x-small; font-weight: bold; background-color: #ffffff "
