@@ -20,6 +20,7 @@ import {messageLoader} from "./utils/directives/messageLoading";
 import {inputTextList} from "./directives/inputTextList";
 import {teachingsSkills} from "./directives/teachingsSkills";
 import {cSkillsBubble} from "./directives/cSkillsBubble";
+import {importNote} from "./directives/import-note/import-note.directive";
 
 ng.addRequiredModule('chart.js');
 ng.services.push(ParameterService);

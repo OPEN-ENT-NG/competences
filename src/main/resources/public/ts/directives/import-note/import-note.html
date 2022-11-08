@@ -1,0 +1,30 @@
+<button ng-click = 'vm.toggleLightbox()' tooltip="evaluations.import.format.csv" >
+        <i class="upload"></i>
+</button>
+
+
+<lightbox show="vm.openLightboxImportNote" on-close="vm.cancelLightboxImportNote()">
+    <h2><i18n>competences.import.notes.title</i18n></h2>
+    <div ng-hide="vm.isErrorStudent" >
+        <p><i18n>competences.import.notes.file.csv</i18n></p>
+        <p><i18n>competences.import.notes.description.divisor.part.one</i18n><strong>[[vm.devoir.diviseur]]</strong>
+        <i18n>competences.import.notes.description.divisor.part.two</i18n></p>
+        <file-picker-list files="vm.files" multiple="false" hideList="false"></file-picker-list>
+
+        <div class="warning" ng-if="vm.errorMessage">
+            <p>[[vm.lang.translate(vm.errorMessage)]]</p>
+        </div>
+    </div>
+
+    <div ng-if = "vm.isErrorStudent">
+        <p><i18n>competences.import.notes.warning</i18n></p>
+    </div>
+    <div>
+        <button class= "right-magnet" ng-click = "vm.validImport()" ng-disabled = "vm.disabledButton()" type="button">
+            <i18n>competences.valid</i18n>
+        </button>
+        <button class= "right-magnet cancel" ng-click = "vm.cancelLightboxImportNote()" type="button">
+            <i18n>evaluations.devoir.annuler</i18n>
+        </button>
+    </div>
+</lightbox>
