@@ -1,18 +1,15 @@
 package fr.openent.competences.importservice;
 
-import fr.openent.competences.model.importservice.ExercizerStudent;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 
-import java.util.List;
-
-public interface Import {
+public interface Import <T> {
 
     Future<Buffer> processImportFile();
 
-    Future<List<ExercizerStudent>> run();
+    Future<T> run();
 
     Future<Buffer> parseAndFormatBuffer(Buffer resFile);
 
-    Future<List<ExercizerStudent>> fetchDataFromBuffer(Buffer buffer);
+    Future<T> fetchDataFromBuffer(Buffer buffer);
 }

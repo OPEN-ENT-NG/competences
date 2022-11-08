@@ -9,6 +9,7 @@ public class Field {
 
     //id
     public static final String ID = "id";
+    public static final String _ID = "_id";
     public static final String IDSTRUCTURE = "idStructure";
     public static final String IDETABLISSEMENT = "idEtablissement";
     public static final String IDCLASSE = "idClasse";
@@ -31,6 +32,8 @@ public class Field {
     public static final String ID_SOUSMATIERE = "id_sousmatiere";
     public static final String ID_MATIERE_MOYF = "id_matiere_moyf";
     public static final String ID_ENSEIGNANT = "id_enseignant";
+    public static final String CLASSID = "classId";
+    public static final String DEVOIRID = "devoirId";
     public static final String TEACHER_ID = "teacher_id";
 
 
@@ -50,6 +53,8 @@ public class Field {
     public static final String INSTALLED = "installed";
     public static final String ACTIF = "actif";
     public static final String ACTIVATE = "activate";
+    public static final String MISSING = "missing";
+
 
     //Event bus
     public static final String OK = "ok";
@@ -84,6 +89,7 @@ public class Field {
     public static final String _TAIL = "_tail";
     public static final String HASSOUSMATIERE = "hasSousMatiere";
     public static final String COEFF = "coeff";
+    public static final String DISPLAYNAME = "displayName";
 
 
     //subTopic
