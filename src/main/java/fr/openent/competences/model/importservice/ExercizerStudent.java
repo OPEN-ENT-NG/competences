@@ -8,10 +8,12 @@ public class ExercizerStudent {
     private String studentName;
 
     @CsvBindByName(column = "Score final", required = true)
-    private double note;
+    private Double note;
 
     @CsvBindByName(column = "Commentaire")
     private String annotation;
+
+    private String id;
 
     public String getStudentName() {
         return studentName;
@@ -21,11 +23,11 @@ public class ExercizerStudent {
         this.studentName = studentName;
     }
 
-    public double getNote() {
+    public Double getNote() {
         return note;
     }
 
-    public void setNote(int note) {
+    public void setNote(Double note) {
         this.note = note;
     }
 
@@ -35,6 +37,15 @@ public class ExercizerStudent {
 
     public void setAnnotation(String annotation) {
         this.annotation = annotation;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    // id to check if its verified
+    public String id() {
+       return this.id;
     }
 }
 
