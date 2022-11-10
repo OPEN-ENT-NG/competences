@@ -125,7 +125,6 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
                 }
                 if (statements.size() > 0) {
                     Sql.getInstance().transaction(statements, SqlResult.validResultHandler(response -> {
-                        log.info("getRemoveShareHandler end futures");
                         if (response.isRight()) {
                             jsonArrayBusResultHandler.handle(new Either.Right<>(new JsonArray().add(results.size())));
                         } else {

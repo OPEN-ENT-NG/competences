@@ -96,7 +96,6 @@ public class EventBusController extends ControllerHelper {
             }
             case "removeShare": {
                 JsonArray idsArray = message.body().getJsonArray("ids");
-                log.info("idsArray" + idsArray);
                 competencesShareService.removeShareHomeworks(idsArray, getJsonArrayBusResultHandler(message),this.shareService);
             }
             break;
