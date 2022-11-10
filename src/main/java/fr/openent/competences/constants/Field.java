@@ -85,7 +85,7 @@ public class Field {
 
     //db
     public static final String SUBTOPIC_TABLE = "services_subtopic";
-    public static final String DEVOIR_SHARE_TABLE = "devoirs_share";
+    public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
 
 
     //

@@ -200,7 +200,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
 
         StringBuilder queryForMerge = new StringBuilder()
-                .append("SELECT " + schema + "merge_users(?,?)");
+                .append("SELECT " + schema + "merge_users(?,?) ");
         statements.add(new JsonObject()
                 .put("statement", queryForMerge.toString())
                 .put("values", paramsForMerge)
@@ -234,7 +234,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
         queryParams.append(" )");
         valueParams.append(" ) ");
-        queryParams.append(" VALUES ").append(valueParams.toString());
+        queryParams.append(" VALUES ").append(valueParams.toString()).append("RETURNING * ");
         StringBuilder query = new StringBuilder()
                 .append("INSERT INTO " + resourceTable + queryParams.toString());
         statements.add(new JsonObject()
@@ -301,7 +301,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         if(null != devoir.getLong(attributeTypeGroupe) && devoir.getLong(attributeTypeGroupe) > -1){
             JsonArray paramsAddRelDevoirsGroupes = new fr.wseduc.webutils.collections.JsonArray();
             String queryAddRelDevoirsGroupes = new String("INSERT INTO " + Competences.COMPETENCES_SCHEMA +
-                    ".rel_devoirs_groupes(id_groupe, id_devoir,type_groupe) VALUES (?, ?, ?)");
+                    ".rel_devoirs_groupes(id_groupe, id_devoir,type_groupe) VALUES (?, ?, ?) RETURNING * ");
             paramsAddRelDevoirsGroupes.add(devoir.getValue(attributeIdGroupe));
             paramsAddRelDevoirsGroupes.add(idDevoir);
             paramsAddRelDevoirsGroupes.add(devoir.getInteger(attributeTypeGroupe).intValue());
@@ -390,7 +390,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     }
 
                 }
-                Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
+                Sql.getInstance().transaction(statements, SqlResult.validResultsHandler(handler));
             });
         } else {
             log.error("An error occured when collecting ids in duplication sequence.");

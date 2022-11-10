@@ -119,18 +119,22 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
                 JsonArray statements = new JsonArray();
                 for (int i = 0; i < results.size(); i++) {
                     Long homeworkId = results.getJsonObject(i).getLong("id");
-                    removeDevoirUserShareStatement(userIdSecondTeacher,
+                    statements.add(removeDevoirUserShareStatement(userIdSecondTeacher,
                             homeworkId.toString()
-                    );
+                    ));
                 }
-                Sql.getInstance().transaction(statements, SqlResult.validResultHandler(response -> {
-                    log.info("getRemoveShareHandler end futures");
-                    if (response.isRight()) {
-                        jsonArrayBusResultHandler.handle(new Either.Right<>(new JsonArray().add(results.size())));
-                    } else {
-                        jsonArrayBusResultHandler.handle(new Either.Left<>("Error when gettings subjects and classes"));
-                    }
-                }));
+                if (statements.size() > 0) {
+                    Sql.getInstance().transaction(statements, SqlResult.validResultHandler(response -> {
+                        log.info("getRemoveShareHandler end futures");
+                        if (response.isRight()) {
+                            jsonArrayBusResultHandler.handle(new Either.Right<>(new JsonArray().add(results.size())));
+                        } else {
+                            jsonArrayBusResultHandler.handle(new Either.Left<>("Error when gettings subjects and classes"));
+                        }
+                    }));
+                } else {
+                    jsonArrayBusResultHandler.handle(new Either.Right<>(new JsonArray()));
+                }
             } else {
                 log.error("Error when getting devoirs from POSTGRES");
             }
@@ -139,7 +143,7 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
 
     private JsonObject removeDevoirUserShareStatement(String idUser, String homeworkId) {
         String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE +
-                " WHERE member_id = ? AND ressource_id = ? ";
+                " WHERE member_id = ? AND resource_id = ? ";
         JsonArray params = new JsonArray().add(idUser).add(homeworkId);
 
         return new JsonObject()

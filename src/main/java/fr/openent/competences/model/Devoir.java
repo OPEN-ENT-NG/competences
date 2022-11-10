@@ -14,7 +14,7 @@ public class Devoir extends Model implements Cloneable {
     private String publishDate;
     private boolean ramenerSur;
     private boolean isEvalued;
-    private int coefficient;
+    private double coefficient;
     private int diviseur;
     private String date;
     private int percent;
@@ -44,7 +44,7 @@ public class Devoir extends Model implements Cloneable {
         try{
             this.coefficient = devoirJO.getInteger("coefficient");
         } catch (ClassCastException c) {
-            this.coefficient = Integer.parseInt(devoirJO.getString("coefficient"));
+            this.coefficient = Double.parseDouble(devoirJO.getString("coefficient"));
         }
         this.diviseur = devoirJO.getInteger("diviseur");
         this.periodId = devoirJO.getInteger("id_periode");
@@ -168,11 +168,11 @@ public class Devoir extends Model implements Cloneable {
         this.subjectId = subjectId;
     }
 
-    public int getCoefficient() {
+    public double getCoefficient() {
         return coefficient;
     }
 
-    public void setCoefficient(int coefficient) {
+    public void setCoefficient(double coefficient) {
         this.coefficient = coefficient;
     }
 
