@@ -385,8 +385,6 @@ export class ReleveNote extends  Model implements IModel {
 
                 _.each(_devoirstat, (dstat) => {
                     let d = _.findWhere(this.devoirs.all, {id: dstat.id});
-                    if(d.eleves.length() === 0)
-                        d.eleves.all = this.classe.eleves.all;
                     if (d) {
                         d.statistiques = dstat;
                         if (d.percent === undefined) {
@@ -396,6 +394,8 @@ export class ReleveNote extends  Model implements IModel {
                         } else {
                             d.statistiques.percentDone = d.percent;
                         }
+                        if( d.eleves.all.length === 0)
+                            d.eleves.all = this.classe.eleves.all;
                     }
                 });
 

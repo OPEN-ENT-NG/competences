@@ -1034,6 +1034,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 String id_eleve = note.getString(Field.ID_ELEVE);
                 Long id_sousMatiere = note.getLong(ID_SOUS_MATIERE);
                 String id_groupe = note.getString(Field.ID_GROUPE);
+                NoteDevoir noteDevoir = setNoteDevoir(services, multiTeachers, note, id_periode, id_sousMatiere);
+                if(isNotNull(noteDevoir)) {
                 if(idsClassWithNoteAppCompNoteStudent != null && idPeriodeAsked != null){
                     if(idEleve.equals(id_eleve) && idPeriodeAsked.equals(id_periode) && id_groupe != null &&
                             !idsClassWithNoteAppCompNoteStudent.contains(id_groupe))
@@ -1051,23 +1053,24 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     idEleves.add(id_eleve);
                 }
 
-                NoteDevoir noteDevoir = setNoteDevoir(services, multiTeachers, note, id_periode, id_sousMatiere);
 
-                //ajouter la note à la période correspondante et à l'année pour l'élève
-                if (note.getString(Field.ID_ELEVE).equals(idEleve)) {
-                    utilsService.addToMap(id_periode, notesByDevoirByPeriode.get(id_periode), noteDevoir);
-                    utilsService.addToMap(null, notesByDevoirByPeriode.get(null), noteDevoir);
-                    if(id_sousMatiere != null)
-                        utilsService.addToMap(id_periode.toString(), id_sousMatiere, notesByDevoirByPeriodeBySousMat,
-                                noteDevoir);
-                }
 
-                //ajouter la note à la période correspondante et à l'année pour toute la classe
-                utilsService.addToMap(id_periode, notesByDevoirByPeriodeClasse.get(id_periode), noteDevoir);
-                utilsService.addToMap(null, notesByDevoirByPeriodeClasse.get(null), noteDevoir);
-                if (isNotNull(id_sousMatiere)) {
-                    utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(id_periode), noteDevoir);
-                    utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(null), noteDevoir);
+                    //ajouter la note à la période correspondante et à l'année pour l'élève
+                    if (note.getString(Field.ID_ELEVE).equals(idEleve)) {
+                        utilsService.addToMap(id_periode, notesByDevoirByPeriode.get(id_periode), noteDevoir);
+                        utilsService.addToMap(null, notesByDevoirByPeriode.get(null), noteDevoir);
+                        if (id_sousMatiere != null)
+                            utilsService.addToMap(id_periode.toString(), id_sousMatiere, notesByDevoirByPeriodeBySousMat,
+                                    noteDevoir);
+                    }
+
+                    //ajouter la note à la période correspondante et à l'année pour toute la classe
+                    utilsService.addToMap(id_periode, notesByDevoirByPeriodeClasse.get(id_periode), noteDevoir);
+                    utilsService.addToMap(null, notesByDevoirByPeriodeClasse.get(null), noteDevoir);
+                    if (isNotNull(id_sousMatiere)) {
+                        utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(id_periode), noteDevoir);
+                        utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(null), noteDevoir);
+                    }
                 }
             }
         }
@@ -1112,10 +1115,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
         }
 
-        NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(note.getString(Field.VALEUR)),
+        NoteDevoir noteDevoir = (service != null) ? new NoteDevoir(Double.valueOf(note.getString(Field.VALEUR)),
                 Double.valueOf(note.getLong(Field.DIVISEUR)), note.getBoolean(Field.RAMENER_SUR),
                 Double.valueOf(note.getString(Field.COEFFICIENT)), note.getString(Field.ID_ELEVE),
-                id_periode, service, id_sousMatiere);
+                id_periode, service, id_sousMatiere) : null;
         return noteDevoir;
     }
 
@@ -1306,16 +1309,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         HashMap<String, HashMap<Long, ArrayList<NoteDevoir>>> notesByElevesBySousMat = new HashMap<>();
 
         //mettre dans notesPeriodeByEleves idEleve -> notes de l'élève pour la période
-        for(NoteDevoir note : allNotes){
+
+        for (NoteDevoir note : allNotes) {
             String id_eleve = note.getIdEleve();
-            if(!(moyFinalesNNElevesByPeriode != null && moyFinalesNNElevesByPeriode.containsKey(idPeriode)
+            if (!(moyFinalesNNElevesByPeriode != null && moyFinalesNNElevesByPeriode.containsKey(idPeriode)
                     && moyFinalesNNElevesByPeriode.get(idPeriode).contains(id_eleve))) {
                 if (!notesPeriodeByEleves.containsKey(id_eleve)) {
                     notesPeriodeByEleves.put(id_eleve, new ArrayList<>());
                 }
                 if (!notesByElevesBySousMat.containsKey(id_eleve)) {
                     notesByElevesBySousMat.put(id_eleve, new HashMap<Long, ArrayList<NoteDevoir>>());
-                    if(isNotNull(note.getService())){
+                    if (isNotNull(note.getService())) {
                         note.getService().getSubtopics().stream().filter(subtopic -> !notesByElevesBySousMat.get(id_eleve).containsKey(subtopic.getId()))
                                 .forEach(subtopic -> notesByElevesBySousMat.get(id_eleve).put(subtopic.getId(), new ArrayList<>()));
                     }
@@ -1323,6 +1327,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 notesPeriodeByEleves.get(id_eleve).add(note);
             }
         }
+
 
         Integer nbEleve = 0;
         Double sumMoyClasse = 0.0;
