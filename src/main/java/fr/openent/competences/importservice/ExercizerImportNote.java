@@ -31,11 +31,16 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
 
     UtilsService utilsService;
     String idClasse;
+    String typeClasse;
+    String idPeriode;
 
-    public ExercizerImportNote(HttpServerRequest request, Storage storage, String idClasse, UtilsService utilsService) {
+    public ExercizerImportNote(HttpServerRequest request, Storage storage, String idClasse, String typeClasse,
+                               String idPeriode, UtilsService utilsService) {
         super(request, storage);
         this.utilsService = utilsService;
         this.idClasse = idClasse;
+        this.typeClasse = typeClasse;
+        this.idPeriode = idPeriode;
     }
 
     @Override
@@ -44,7 +49,7 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
         super.processImportFile()
                 .compose(this::parseAndFormatBuffer)
                 .compose(this::fetchDataFromBuffer)
-                .compose(students -> this.resolveStudents(students, this.idClasse))
+                .compose(students -> this.resolveStudents(students, this.idClasse, this.typeClasse, this.idPeriode))
                 .onSuccess(promise::complete)
                 .onFailure(err -> {
                     err.printStackTrace();
@@ -89,9 +94,10 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
         return promise.future();
     }
 
-    private Future<List<ExercizerStudent>> resolveStudents(List<ExercizerStudent> students, String idClasse) {
+    private Future<List<ExercizerStudent>> resolveStudents(List<ExercizerStudent> students, String idClasse,
+                                                           String typeClasse, String idPeriode) {
         Promise<List<ExercizerStudent>> promise = Promise.promise();
-        utilsService.getEleveClasseInfos(idClasse)
+        utilsService.getEleveClasseInfos(idClasse, typeClasse, idPeriode)
                 .onSuccess(classStudents -> {
                     Map<String, JsonObject> studentsClassesMap = classStudents.stream()
                             .map(JsonObject.class::cast)

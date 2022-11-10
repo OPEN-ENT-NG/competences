@@ -1239,23 +1239,29 @@ public class NoteController extends ControllerHelper {
                 isNull(idPeriodeString),arrayResponseHandler(request));
     }
 
-    @Post("/notes/:id/:typeImportService/csv/:classId/:devoirId")
+    @Post("/notes/:typeImportService/csv/exercizer/import/:classId/:devoirId/:classType/:periodeId")
     @ApiDoc("Set notes of a devoir by importing a CSV.")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void importExercizerCSV(final HttpServerRequest request) {
         // typeImport
         final String idClasse = request.params().get(Field.CLASSID);
         final String idDevoir = request.params().get(Field.DEVOIRID);
-        ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage, idClasse, utilsService);
+        final String typeClasse = request.params().get(Field.CLASSTYPE);
+        final String idPeriode = request.params().get(Field.PERIODEID);
+        ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage, idClasse, typeClasse,
+                idPeriode, utilsService);
         exercizerImportNote.run()
                 .onSuccess(students -> {
                     List<Future<JsonObject>> futures = new ArrayList<>();
-                    students.forEach(student -> notesService.insertOrUpdateDevoirNote(idDevoir, student.id(), student.getNote()));
+                    students.forEach(student -> {
+                        if (isNotNull(student.id()))
+                            futures.add(notesService.insertOrUpdateDevoirNote(idDevoir, student.id(), student.getNote()));
+                        });
                     FutureHelper.all(futures)
                             .onSuccess(res -> renderJson(request, new JsonObject()
                                     .put(Field.STATUS, Field.OK)
                                     .put(Field.MISSING, students.stream()
-                                            .filter(student -> Boolean.TRUE.equals(student.id().isEmpty()))
+                                            .filter(student -> isNull(student.id()))
                                             .collect(Collectors.toList())))
                             )
                             .onFailure(err -> {

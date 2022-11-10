@@ -4776,7 +4776,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             if (event.isLeft()) {
                 promise.fail(event.left().getValue());
             } else {
-                promise.complete(event.right().getValue());
+                promise.complete();
             }
         }));
         return promise.future();

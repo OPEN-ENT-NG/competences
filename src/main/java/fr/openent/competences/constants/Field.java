@@ -33,6 +33,7 @@ public class Field {
     public static final String ID_ENSEIGNANT = "id_enseignant";
     public static final String CLASSID = "classId";
     public static final String DEVOIRID = "devoirId";
+    public static final String PERIODEID = "periodeId";
 
 
     public static final String MAIN_TEACHER_ID = "main_teacher_id";
@@ -83,6 +84,7 @@ public class Field {
     public static final String HASSOUSMATIERE = "hasSousMatiere";
     public static final String COEFF = "coeff";
     public static final String DISPLAYNAME = "displayName";
+    public static final String CLASSTYPE = "classType";
 
 
     //subTopic

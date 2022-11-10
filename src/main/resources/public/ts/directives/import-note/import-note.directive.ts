@@ -1,4 +1,4 @@
-import {ng, angular, idiom} from "entcore";
+import {ng, angular, idiom, _} from "entcore";
 import {IScope, ILocationService, IWindowService} from "angular";
 import {Devoir} from "../../models/teacher";
 import {RootsConst} from "../../constants/roots.const";
@@ -90,14 +90,19 @@ class Controller implements ng.IController, IViewModel {
             let formData = new FormData();
             formData.append('file', this.files[0], this.files[0].name);
 
-            await NoteService.importNote(this.devoir.id_groupe, this.devoir.id, formData)
+            await NoteService.importNote(this.devoir.id_groupe, this.devoir.id, this.devoir.type_groupe,
+                this.devoir.id_periode, formData)
                 .then((response: AxiosResponse) => {
                     if (response.data.status) {
-                        this.cancelLightboxImportNote();
-                        this.$window.location.reload(true);
+                        if (_.isEmpty(response.data.missing)){
+                            this.cancelLightboxImportNote();
+                            this.$window.location.reload(true);
+                        } else {
+                            this.isErrorStudent = true;
+                        }
 
                     } else {
-                        this.isErrorStudent = true;
+                        this.errorMessage = "competences.error.import.csv";
                     }
 
                 })
