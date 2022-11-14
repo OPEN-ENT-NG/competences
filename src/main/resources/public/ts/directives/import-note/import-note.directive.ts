@@ -75,6 +75,7 @@ class Controller implements ng.IController, IViewModel {
                 await utils.safeApply(this.$scope);
             } else {
                 this.cancelLightboxImportNote();
+                this.$window.location.reload(true);
             }
         } else {
             this.errorMessage = "competences.error.import.type.csv";
