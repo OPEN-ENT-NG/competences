@@ -50,10 +50,10 @@
                                 </div>
                             </div>
                             <div class="gradetooltip"
-                                 ng-if="devoirReleveNotes.id_matiere === matiere.id && me.type === 'PERSRELELEVE'"
+                                 ng-if="devoirReleveNotes.id_matiere === matiere.id"
                                  tooltip="[[getFormatedDate(devoirReleveNotes.date)]]<p>[[devoirReleveNotes.name]]<div>[[devoirReleveNotes._sousmatiere_libelle]]</p>[[devoirReleveNotes.appreciation]]"></div>
                             <div class="gradetooltip"
-                                 ng-if="me.type === 'ELEVE' && devoirReleveNotes.id_matiere === matiere.id"
+                                 ng-if="devoirReleveNotes.id_matiere === matiere.id"
                                  tooltip="[[getFormatedDate(devoirReleveNotes.date)]]<br>[[devoirReleveNotes.name]]<div>[[devoirReleveNotes._sousmatiere_libelle]]</div>"></div>
                         </div>
                     </div>
@@ -115,11 +115,11 @@
                                 </div>
                             </div>
                             <div class="gradetooltip"
-                                 ng-if="me.type === 'PERSRELELEVE'"
+                                 ng-if="devoirReleveNotes.id_sousmatiere === sousMatiere.id_type_sousmatiere"
                                  tooltip="[[getFormatedDate(devoirReleveNotes.date)]]<p>[[devoirReleveNotes.name]]
 						            <div>[[devoirReleveNotes._sousmatiere_libelle]]</p>[[devoirReleveNotes.appreciation]]"></div>
                             <div class="gradetooltip"
-                                 ng-if="me.type === 'ELEVE'"
+                                 ng-if="devoirReleveNotes.id_sousmatiere === sousMatiere.id_type_sousmatiere"
                                  tooltip="[[getFormatedDate(devoirReleveNotes.date)]]<br>[[devoirReleveNotes.name]]
                                     <div>[[devoirReleveNotes._sousmatiere_libelle]]</div>"></div>
                         </div>
