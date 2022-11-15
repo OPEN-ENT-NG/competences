@@ -1,6 +1,7 @@
 package fr.openent.competences.helpers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.Devoir;
 import fr.openent.competences.service.DevoirService;
 import fr.wseduc.webutils.Either;
@@ -74,15 +75,15 @@ public class DevoirControllerHelper {
     public static Handler<Either<String, JsonArray>>
     getDuplicationDevoirHandler(UserInfos user, DevoirService devoirService, HttpServerRequest request, EventBus eb) {
         return event -> {
-            if (event.isRight()) {
+            if (event.isRight() && event.right().getValue().size() >= 4) {
                 final JsonArray devoirs = event.right().getValue().getJsonArray(1);
                 final JsonArray groupes_rel = event.right().getValue().getJsonArray(3);
                 ArrayList<Future<JsonObject>> futures = new ArrayList<>();
                 for (Object devoirO : devoirs) {
                     JsonObject devoirJO = (JsonObject) devoirO;
                     groupes_rel.forEach(group -> {
-                        if (((JsonObject) group).getLong("id_devoir").equals(devoirJO.getLong("id"))) {
-                            devoirJO.put("id_groupe", ((JsonObject) group).getString("id_groupe"));
+                        if (((JsonObject) group).getLong(Field.ID_DEVOIR).equals(devoirJO.getLong(Field.ID))) {
+                            devoirJO.put(Field.ID_GROUPE, ((JsonObject) group).getString(Field.ID_GROUPE));
                         }
                     });
                     Promise<JsonObject> promise = Promise.promise();
@@ -90,11 +91,11 @@ public class DevoirControllerHelper {
                     // recuperation des professeurs que l'utilisateur connecté remplacent
                     Devoir devoir = new Devoir(devoirJO);
                     JsonObject action = new JsonObject()
-                            .put("action", "multiTeaching.getIdMultiTeachers")
-                            .put("subjectId", devoir.getSubjectId())
-                            .put("structureId", devoir.getStructureId())
-                            .put("groupId", devoir.getGroupId())
-                            .put("userId", user.getUserId());
+                            .put(Field.ACTION, Field.MULTITEACHING + "." + Field.GETIDMULTITEACHERS)
+                            .put(Field.SUBJECTID, devoir.getSubjectId())
+                            .put(Field.STRUCTUREID, devoir.getStructureId())
+                            .put(Field.GROUPID, devoir.getGroupId())
+                            .put(Field.USERID, user.getUserId());
                     eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirJO, devoirService, user, promise));
                 }
                 FutureHelper.all(futures)
@@ -110,24 +111,28 @@ public class DevoirControllerHelper {
     private static Handler<AsyncResult<Message<JsonObject>>>
     getReplyHandler(JsonObject devoirWithId, DevoirService devoirService, UserInfos user, Promise<JsonObject> promise) {
         return event -> {
-            JsonArray results = event.result().body().getJsonArray("results");
-            JsonArray statements = new JsonArray();
-            List<String> actions = new ArrayList<String>();
-            actions.add(Competences.DEVOIR_ACTION_UPDATE);
-            if(results.size() > 0) {
-                for (int i = 0; i < results.size(); i++) {
-                    String id = results.getJsonObject(i).getString("teacher_id");
-                    statements.add(devoirService.getNewShareStatements(id, devoirWithId.getLong("id").toString(), actions));
-                }
-                Sql.getInstance().transaction(statements, SqlResult.validResultHandler(responseInsert -> {
-                    if (responseInsert.isRight()) {
-                        promise.complete(devoirWithId);
-                    } else {
-                        promise.fail(responseInsert.left().getValue());
+            if (event.succeeded() && Field.OK.equals(event.result().body().getString(Field.STATUS))) {
+                JsonArray results = event.result().body().getJsonArray(Field.RESULTS, new JsonArray());
+                JsonArray statements = new JsonArray();
+                List<String> actions = new ArrayList<String>();
+                actions.add(Competences.DEVOIR_ACTION_UPDATE);
+                if (results.size() > 0) {
+                    for (int i = 0; i < results.size(); i++) {
+                        String id = results.getJsonObject(i).getString(Field.TEACHER_ID);
+                        statements.add(devoirService.getNewShareStatements(id, devoirWithId.getLong(Field.ID).toString(), actions));
                     }
-                }));
-            }else{
-                promise.complete(devoirWithId);
+                    Sql.getInstance().transaction(statements, SqlResult.validResultHandler(responseInsert -> {
+                        if (responseInsert.isRight()) {
+                            promise.complete(devoirWithId);
+                        } else {
+                            promise.fail(responseInsert.left().getValue());
+                        }
+                    }));
+                } else {
+                    promise.complete(devoirWithId);
+                }
+            } else {
+                promise.fail(event.cause().getMessage());
             }
         };
     }
@@ -135,21 +140,26 @@ public class DevoirControllerHelper {
     private static Handler<AsyncResult<Message<JsonObject>>>
     getReplyHandler(JsonObject devoirWithId, UserInfos user, DevoirService devoirsService, HttpServerRequest request) {
         return event -> {
-            JsonArray results = event.result().body().getJsonArray("results");
-            List<String> actions = new ArrayList<String>();
-            actions.add(Competences.DEVOIR_ACTION_UPDATE);
-            JsonArray statements = new JsonArray();
-            for (int i = 0; i < results.size(); i++) {
-                String id = results.getJsonObject(i).getString("teacher_id");
-                statements.add(devoirsService.getNewShareStatements(id, devoirWithId.getLong("id").toString(), actions));
-            }
-            Sql.getInstance().transaction(statements, SqlResult.validResultHandler(responseInsert -> {
-                if (responseInsert.isRight()) {
-                    Renders.renderJson(request, devoirWithId);
-                } else {
-                    leftToResponse(request, new Either.Left<>("Error during futures in DevoirControllerHelper"));
+            if (event.succeeded() && Field.OK.equals(event.result().body().getString(Field.STATUS))) {
+                JsonArray results = event.result().body().getJsonArray("results");
+                List<String> actions = new ArrayList<String>();
+                actions.add(Competences.DEVOIR_ACTION_UPDATE);
+                JsonArray statements = new JsonArray();
+                for (int i = 0; i < results.size(); i++) {
+                    String id = results.getJsonObject(i).getString("teacher_id");
+                    statements.add(devoirsService.getNewShareStatements(id, devoirWithId.getLong("id").toString(), actions));
                 }
-            }));
+                Sql.getInstance().transaction(statements, SqlResult.validResultHandler(responseInsert -> {
+                    if (responseInsert.isRight()) {
+                        Renders.renderJson(request, devoirWithId);
+                    } else {
+                        leftToResponse(request, new Either.Left<>("Error during futures in DevoirControllerHelper"));
+                    }
+                }));
+            } else {
+                leftToResponse(request, new Either.Left<>(event.cause().getMessage()));
+
+            }
         };
     }
 

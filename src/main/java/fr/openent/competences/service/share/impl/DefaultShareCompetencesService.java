@@ -84,16 +84,6 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
         };
     }
 
-    /*private JsonObject getNewShareStatements(String userIdSecondTeacher, String devoirID, List<String> actions) {
-        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares (member_id ,resource_id,action)" +
-                "VALUES (?,?,?) ON CONFLICT DO NOTHING";
-        JsonArray paramsDevoirShare = new fr.wseduc.webutils.collections.JsonArray();
-        paramsDevoirShare.add(userIdSecondTeacher).add(devoirID).add(actions.get(0));
-        return new JsonObject()
-                .put("statement", query)
-                .put("values",paramsDevoirShare)
-                .put("action", "prepared");
-    }*/
 
     @Override
     public void removeShareHomeworks(JsonArray idsArray, Handler<Either<String, JsonArray>> jsonArrayBusResultHandler, ShareService shareService) {
@@ -103,8 +93,6 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
             String userIdMainTeacher = ids.getString(1);
             String subjectId = ids.getString(2);
             String groupId = ids.getString(3);
-            List<String> actions = new ArrayList<String>();
-//            actions.add(Competences.DEVOIR_ACTION_UPDATE);
             devoirService.getHomeworksFromSubjectAndTeacher(subjectId, userIdMainTeacher, groupId, getRemoveShareHandler(jsonArrayBusResultHandler,
                     userIdSecondTeacher
             ));
@@ -144,11 +132,10 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
         String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE +
                 " WHERE member_id = ? AND resource_id = ? ";
         JsonArray params = new JsonArray().add(idUser).add(homeworkId);
-
         return new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared");
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params)
+                .put(Field.ACTION, Field.PREPARED);
     }
 
     private Handler<Either<String, JsonArray>> getHandlerJsonArray(Future<JsonArray> serviceFuture) {
@@ -161,15 +148,5 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
         };
     }
 
-
-    private Handler<Either<String, JsonObject>> getHandlerJsonObject(Future<Boolean> future) {
-        return event -> {
-            if (event.isRight()) {
-                future.complete(event.isRight());
-            } else {
-                future.fail(event.left().getValue());
-            }
-        };
-    }
 
 }
