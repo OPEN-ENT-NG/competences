@@ -1247,16 +1247,14 @@ public class NoteController extends ControllerHelper {
         final String idClasse = request.params().get(Field.CLASSID);
         final String idDevoir = request.params().get(Field.DEVOIRID);
         final String typeClasse = request.params().get(Field.CLASSTYPE);
-        final String idPeriode = request.params().get(Field.PERIODEID);
+        final Long idPeriode = Long.valueOf(request.params().get(Field.PERIODEID));
         ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage, idClasse, typeClasse,
                 idPeriode, utilsService);
         exercizerImportNote.run()
                 .onSuccess(students -> {
-                    List<Future<JsonObject>> futures = new ArrayList<>();
-                    students.forEach(student -> {
-                        if (isNotNull(student.id()))
-                            futures.add(notesService.insertOrUpdateDevoirNote(idDevoir, student.id(), student.getNote()));
-                        });
+                    List<Future<Void>> futures = students.stream().filter(student -> isNotNull(student.id()))
+                            .map(student -> notesService.insertOrUpdateDevoirNote(idDevoir, student.id(), student.getNote()))
+                            .collect(Collectors.toList());
                     FutureHelper.all(futures)
                             .onSuccess(res -> renderJson(request, new JsonObject()
                                     .put(Field.STATUS, Field.OK)

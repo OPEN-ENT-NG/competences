@@ -32,10 +32,10 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
     UtilsService utilsService;
     String idClasse;
     String typeClasse;
-    String idPeriode;
+    Long idPeriode;
 
     public ExercizerImportNote(HttpServerRequest request, Storage storage, String idClasse, String typeClasse,
-                               String idPeriode, UtilsService utilsService) {
+                               Long idPeriode, UtilsService utilsService) {
         super(request, storage);
         this.utilsService = utilsService;
         this.idClasse = idClasse;
@@ -95,7 +95,7 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
     }
 
     private Future<List<ExercizerStudent>> resolveStudents(List<ExercizerStudent> students, String idClasse,
-                                                           String typeClasse, String idPeriode) {
+                                                           String typeClasse, Long idPeriode) {
         Promise<List<ExercizerStudent>> promise = Promise.promise();
         utilsService.getEleveClasseInfos(idClasse, typeClasse, idPeriode)
                 .onSuccess(classStudents -> {

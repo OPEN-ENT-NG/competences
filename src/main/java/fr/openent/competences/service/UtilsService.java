@@ -339,5 +339,5 @@ public interface UtilsService {
      * @param typeClasse
      * @param idPeriode
      */
-    Future<JsonArray> getEleveClasseInfos(String idClasse, String typeClasse, String idPeriode);
+    Future<JsonArray> getEleveClasseInfos(String idClasse, String typeClasse, Long idPeriode);
 }

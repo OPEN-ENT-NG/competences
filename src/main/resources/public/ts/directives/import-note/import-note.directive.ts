@@ -92,7 +92,7 @@ class Controller implements ng.IController, IViewModel {
             formData.append('file', this.files[0], this.files[0].name);
 
             await NoteService.importNote(this.devoir.id_groupe, this.devoir.id, this.devoir.type_groupe,
-                this.devoir.id_periode, formData)
+                parseInt(<string>this.devoir.id_periode), formData)
                 .then((response: AxiosResponse) => {
                     if (response.data.status) {
                         if (_.isEmpty(response.data.missing)){

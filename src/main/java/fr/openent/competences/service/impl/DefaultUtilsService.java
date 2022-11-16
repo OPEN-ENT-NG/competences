@@ -1505,9 +1505,9 @@ public class DefaultUtilsService implements UtilsService {
         promise.complete(subTopics);
     }
 
-    public Future<JsonArray> getEleveClasseInfos(String idClasse, String typeClasse, String idPeriode) {
+    public Future<JsonArray> getEleveClasseInfos(String idClasse, String typeClasse, Long idPeriode) {
         Promise<JsonArray> promise = Promise.promise();
-        studentAvailableForPeriode(idClasse, Long.valueOf(idPeriode), Integer.valueOf(typeClasse), message -> {
+        studentAvailableForPeriode(idClasse, idPeriode, Integer.valueOf(typeClasse), message -> {
             JsonObject body = message.body();
             if (Field.OK.equals(body.getString(Field.STATUS))) {
                 JsonArray classInfo = body.getJsonArray(Field.RESULTS);
