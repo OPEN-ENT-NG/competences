@@ -1058,6 +1058,11 @@ public class ExportPDFController extends ControllerHelper {
         });
     }
 
+    @Post("/export/bulletins")
+    @SecuredAction(value = "export.bulletins.periodique", type = ActionType.WORKFLOW)
+    public void exportBulletins(final HttpServerRequest request) {
+    }
+
     @Get("/recapEval/print/:idClasse/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getExportRecapEval(final HttpServerRequest request) {
