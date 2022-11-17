@@ -1239,7 +1239,7 @@ public class NoteController extends ControllerHelper {
                 isNull(idPeriodeString),arrayResponseHandler(request));
     }
 
-    @Post("/notes/:typeImportService/csv/exercizer/import/:classId/:devoirId/:classType/:periodeId")
+    @Post("/notes/:typeImportService/csv/exercizer/import/classes/:classId/devoirs/:devoirId/:classType/periods/:periodeId")
     @ApiDoc("Set notes of a devoir by importing a CSV.")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void importExercizerCSV(final HttpServerRequest request) {
