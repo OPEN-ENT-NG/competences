@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
@@ -369,8 +370,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     }
                 }
                 JsonObject o, g;
+                List<Future<JsonArray>> futures = new ArrayList<>();
+
                 for (int i = 0; i < ids.size(); i++) {
                     try {
+
                         g = classes.getJsonObject(i);
                         o = HomeworkUtils.formatDevoirForDuplication(devoir);
                         o.put("id_groupe", g.getString("id"));
@@ -382,6 +386,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         for (int j = 0; j < tempStatements.size(); j++) {
                             statements.add(tempStatements.getValue(j));
                         }
+                        futures.add(statementFuture(tempStatements));
                         JsonObject devoirtoAdd = new JsonObject().put("id",(ids.getLong(i))).put("devoir",o);
                         devoirs.add(devoirtoAdd);
                     } catch (ClassCastException e) {
@@ -390,12 +395,38 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     }
 
                 }
-                Sql.getInstance().transaction(statements, SqlResult.validResultsHandler(handler));
+                // Ici on récupère le résultats de tout les statements indépendants
+                FutureHelper.all(futures).onSuccess(event -> {
+                    JsonArray results = new JsonArray();
+                    event.list().forEach(elemObject ->{
+                        JsonArray elem = (JsonArray) elemObject;
+                        for(int i = 0 ; i < elem.size(); i++){
+                            try{
+                                results.getJsonArray(i).addAll(elem.getJsonArray(i));
+                            }catch (IndexOutOfBoundsException e){
+                                results.add(elem.getJsonArray(i));
+                            }
+                        }
+                    });
+                    handler.handle(new Either.Right<>(results));
+                }).onFailure(error ->  handler.handle(new Either.Left<>(error.getMessage())));
             });
         } else {
             log.error("An error occured when collecting ids in duplication sequence.");
             handler.handle(new Either.Left<String, JsonArray>("An error occured when collecting ids in duplication sequence."));
         }
+    }
+
+    private Future<JsonArray> statementFuture(JsonArray statements) {
+        Promise<JsonArray> promise = Promise.promise();
+        Sql.getInstance().transaction(statements, SqlResult.validResultsHandler(event -> {
+            if(event.isRight()){
+                promise.complete(event.right().getValue());
+            }else{
+                promise.fail(event.left().getValue());
+            }
+        }));
+        return promise.future();
     }
 
 

@@ -75,9 +75,8 @@ public class DevoirControllerHelper {
     public static Handler<Either<String, JsonArray>>
     getDuplicationDevoirHandler(UserInfos user, DevoirService devoirService, HttpServerRequest request, EventBus eb) {
         return event -> {
-            if (event.isRight() && event.right().getValue().size() >= 4) {
                 final JsonArray devoirs = event.right().getValue().getJsonArray(1);
-                final JsonArray groupes_rel = event.right().getValue().getJsonArray(3);
+                final JsonArray groupes_rel = event.right().getValue().getJsonArray(event.right().getValue().size() - 1 );
                 ArrayList<Future<JsonObject>> futures = new ArrayList<>();
                 for (Object devoirO : devoirs) {
                     JsonObject devoirJO = (JsonObject) devoirO;
@@ -102,9 +101,6 @@ public class DevoirControllerHelper {
                         .onSuccess(success -> request.response().setStatusCode(200).end())
                         .onFailure(failure -> badRequest(request, failure.getMessage()));
 
-            } else {
-                badRequest(request);
-            }
         };
     }
 
