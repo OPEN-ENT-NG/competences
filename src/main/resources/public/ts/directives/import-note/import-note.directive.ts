@@ -1,6 +1,6 @@
 import {ng, angular, idiom, _} from "entcore";
 import {IScope, ILocationService, IWindowService} from "angular";
-import {Devoir} from "../../models/teacher";
+import {Devoir, Periode, Utils} from "../../models/teacher";
 import {RootsConst} from "../../constants/roots.const";
 import {NoteService} from "../../services/note.service";
 import {AxiosError, AxiosResponse} from "axios";
@@ -22,11 +22,11 @@ interface IViewModel {
     validImport(): Promise<void>;
     importNote(): Promise<any>;
     disabledButton() : boolean;
-
 }
 
 interface IImportNoteProps {
     devoir: Devoir;
+    onImport;
 }
 
 interface IImportScope extends IScope   {
@@ -46,7 +46,8 @@ class Controller implements ng.IController, IViewModel {
 
     constructor(private $scope: IImportScope,
                 private $location:ILocationService,
-                private $window: IWindowService
+                private $window: IWindowService,
+                private $parse: any
                ) {
         this.lang = idiom;
         this.files = [];
@@ -75,7 +76,7 @@ class Controller implements ng.IController, IViewModel {
                 await utils.safeApply(this.$scope);
             } else {
                 this.cancelLightboxImportNote();
-                this.$window.location.reload(true);
+                this.$parse(this.$scope.vm.onImport())();
             }
         } else {
             this.errorMessage = "competences.error.import.type.csv";
@@ -86,7 +87,7 @@ class Controller implements ng.IController, IViewModel {
         return this.files.length === 0 || (this.errorMessage && this.errorMessage.length > 0);
     }
 
-    async importNote() : Promise<any> {
+    async importNote(): Promise<any> {
             delete this.errorMessage;
             let formData = new FormData();
             formData.append('file', this.files[0], this.files[0].name);
@@ -97,7 +98,7 @@ class Controller implements ng.IController, IViewModel {
                     if (response.data.status) {
                         if (_.isEmpty(response.data.missing)){
                             this.cancelLightboxImportNote();
-                            this.$window.location.reload(true);
+                            this.$parse(this.$scope.vm.onImport())();
                         } else {
                             this.isErrorStudent = true;
                         }
@@ -112,22 +113,24 @@ class Controller implements ng.IController, IViewModel {
                 });
     }
 
-    isValid() : boolean {
+    isValid(): boolean {
         return  this.files.length > 0 ?
             this.files[0].name.endsWith('.csv') && this.files[0].name.trim() !== '' : false ;
     }
+
 }
 
-function directive() {
+function directive($parse) {
     return {
         restrict: 'E',
         templateUrl: `${RootsConst.directive}import-note/import-note.html`,
         scope: {
-            devoir: "="
+            devoir: "=",
+            onImport: "&"
         },
         controllerAs: 'vm',
         bindToController: true,
-        controller: ['$scope','$location','$window', Controller],
+        controller: ['$scope','$location','$window', '$parse', Controller],
         link: function (scope: ng.IScope,
                         element: ng.IAugmentedJQuery,
                         attrs: ng.IAttributes,
