@@ -1811,9 +1811,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         JsonArray paramsDevoirShare = new fr.wseduc.webutils.collections.JsonArray();
         paramsDevoirShare.add(userIdSecondTeacher).add(devoirID).add(actions.get(0));
         return new JsonObject()
-                .put("statement", query)
-                .put("values",paramsDevoirShare)
-                .put("action", "prepared");
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES,paramsDevoirShare)
+                .put(Field.ACTION, Field.PREPARED);
     }
 
     private void buildArrayOfHomeworks(JsonArray orderedDevoirs, JsonArray matieres, JsonArray services,
