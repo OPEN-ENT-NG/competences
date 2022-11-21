@@ -33,7 +33,7 @@
       "type" : "string"
     },
     "diviseur" : {
-      "type" : "integer"
+      "type" : "number"
     },
     "ramener_sur" : {
       "type" : "boolean"

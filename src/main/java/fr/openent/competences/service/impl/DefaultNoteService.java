@@ -1116,7 +1116,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         NoteDevoir noteDevoir = (service != null) ? new NoteDevoir(Double.valueOf(note.getString(Field.VALEUR)),
-                Double.valueOf(note.getLong(Field.DIVISEUR)), note.getBoolean(Field.RAMENER_SUR),
+                Double.valueOf(note.getString(Field.DIVISEUR)), note.getBoolean(Field.RAMENER_SUR),
                 Double.valueOf(note.getString(Field.COEFFICIENT)), note.getString(Field.ID_ELEVE),
                 id_periode, service, id_sousMatiere) : null;
         return noteDevoir;
@@ -2255,7 +2255,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                               JsonObject respNoteMoyFinale, String idEleveNotes, String idMatiere) {
         NoteDevoir noteDevoir = new NoteDevoir(
                 Double.valueOf(respNoteMoyFinale.getString("valeur")),
-                Double.valueOf(respNoteMoyFinale.getInteger("diviseur")),
+                Double.valueOf(respNoteMoyFinale.getString(Field.DIVISEUR)),
                 respNoteMoyFinale.getBoolean("ramener_sur"),
                 Double.valueOf(respNoteMoyFinale.getString("coefficient")));
 
@@ -2324,7 +2324,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         NoteDevoir noteDevoir = new NoteDevoir(
                 Double.valueOf(respNoteMoyFinale.getString(Field.VALEUR)),
-                Double.valueOf(respNoteMoyFinale.getInteger(Field.DIVISEUR)),
+                Double.valueOf(respNoteMoyFinale.getString(Field.DIVISEUR)),
                 respNoteMoyFinale.getBoolean(Field.RAMENER_SUR),
                 Double.valueOf(respNoteMoyFinale.getString(Field.COEFFICIENT)),
                 respNoteMoyFinale.getString(Field.ID_ELEVE), id_periode, service, sousMatiereId);
@@ -3120,7 +3120,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 NoteDevoir noteDevoir;
                 noteDevoir = new NoteDevoir(
                         Double.valueOf(note.getString(VALEUR)),
-                        Double.valueOf(note.getLong(DIVISEUR)),
+                        Double.valueOf(note.getString(DIVISEUR)),
                         note.getBoolean(RAMENER_SUR),
                         Double.valueOf(note.getString(COEFFICIENT)), idEleve, id_periode, service, sousMatiereId);
 

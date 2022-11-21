@@ -1,6 +1,7 @@
 package fr.openent.competences.helpers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.Future;
@@ -30,7 +31,7 @@ public class ExportEvaluationHelper {
         devoirMap.put(ID_KEY, devoir.getLong(ID_KEY));
         devoirMap.put("nom", devoir.getString("name"));
         devoirMap.put("coeff", devoir.getString("coefficient"));
-        devoirMap.put("sur", devoir.getLong("diviseur"));
+        devoirMap.put("sur", Double.valueOf(devoir.getString(Field.DIVISEUR)));
         devoirMap.put("periode", I18n.getInstance().translate("viescolaire.periode." + devoir.getLong("periodetype").toString(), language,host)
                 + " " + String.valueOf(devoir.getLong("periodeordre")));
         devoirMap.put("sousMatiere", devoir.getString("libelle", ""));
