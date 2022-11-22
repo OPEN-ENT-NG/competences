@@ -12,6 +12,7 @@ const {
 const {
     URL_API_GET_ALL,
     URL_API_GET_SELECTED,
+    URL_API_GET_ONE
 } = ReportModelPrintExportConstant;
 
 export const reportModelPrintExportService: ReportModelPrintExportServiceType = {
@@ -36,18 +37,20 @@ export const reportModelPrintExportService: ReportModelPrintExportServiceType = 
             notify.error('competences.report-model.api.error.getSelected');
         }
     },
-     getFirstSelected: async():Promise<ReportModelPrintExport> => {
-         try {
-        const reportsModels =  await reportModelPrintExportService.getAllSelected();
-        if(reportsModels.length > 0){
-            return reportsModels[0];
+
+    getModelSelected: async(id : string): Promise<ReportModelPrintExport> => {
+        try {
+            const { status, data } = await http.get(URL_API_GET_ONE);
+            const reportModel = data.response;
+            if(status === 200){
+                return new ReportModelPrintExport(reportModel);
+            }
+            return undefined;
+        } catch (error) {
+            notify.error('competences.report-model.api.error.getSelected');
         }
-        return new ReportModelPrintExport(undefined);
-         } catch (error) {
-             notify.error('competences.report-model.api.error.getFirstSelected');
-             return new ReportModelPrintExport(undefined);
-         }
-    },
+
+    }
 };
 
 function preparedReportModels(reportModels:Array<ReportModelPrintExport>):Array<ReportModelPrintExport>{

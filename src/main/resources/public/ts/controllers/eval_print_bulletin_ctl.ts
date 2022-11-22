@@ -217,54 +217,6 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 }
             }
 
-
-           /* let classes = _.groupBy($scope.allElevesClasses, 'classeName');
-            let hasOneArchive = false;
-            for (let classe in classes) {
-                if (classes.hasOwnProperty(classe)) {
-                    let val = classes[classe];
-                    options.classeName = classe;
-                    options.idStructure = $scope.structure.id;
-                    if (val !== undefined && val.length > 0) {
-                        options.idClasse = val[0].idClasse;
-                        if (options.showBilanPerDomaines === true || !$scope.niveauCompetences) {
-                            selectPersonnalisation(val[0].id_cycle);
-                        }
-                    }
-                    options.students = _.filter(val, function (student) {
-                        return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
-                    });
-                    options.idStudents = _.pluck(options.students, 'id');
-                    if (options.idStudents !== undefined && options.idStudents.length > 0) {
-                        try {
-                            let studentsToSend = []
-                            options.students.forEach(student => {
-                                let studentTemp = {
-                                    id:student.id,
-                                    idClasse:student.idClasse
-                                }
-                                studentsToSend.push(studentTemp)
-                            })
-                            let {status} =await ExportBulletins.checkBulletins(studentsToSend,$scope.selected.periode.id_type,options.idStructure);
-                            if(status == 201){
-                                $scope.optionsBulletins = options ;
-                                $scope.display.bulletinAlert = true;
-                                hasOneArchive = true;
-                                utils.safeApply($scope);
-                                return
-                            }
-                        } catch (e) {
-                            await stopMessageLoader();
-                        }
-                    }
-                }
-            }
-            //si y a pas duplicata
-            if(!hasOneArchive) {
-                $scope.sendBulletins(options)
-            }
-*/
-
         };
         $scope.sendBulletins = async (options) =>{
             let classes = _.groupBy($scope.allElevesClasses, 'classeName');
@@ -298,13 +250,11 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
 
         $scope.cancelBulletinDuplicateForm=  async () =>{
             $scope.display.bulletinAlert = false;
-            // template.close('bulletinAlert');
             await stopMessageLoader();
         }
 
         $scope.validBulletinDuplicateForm=  async () =>{
             $scope.display.bulletinAlert = false;
-            // template.close('bulletinAlert');
             //TODO plûtot appeller la boucle là
             await $scope.sendBulletins( $scope.optionsBulletins);
             $scope.optionsBulletins = {};
@@ -400,15 +350,16 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
         async function getPreferences(): Promise<void> {
             const competences = await Me.preference('competences');
             const optionsPrintBulletin = (Utils.isNull(competences) ? undefined : competences.printBulletin);
+            const idModelBulletinSelected =  (Utils.isNull(competences) ? undefined : competences.modelBulletinSelected);
             $scope.print = (Utils.isNull(optionsPrintBulletin)) ? {} : optionsPrintBulletin;
-            await getReportModelAllSelected();
+            await getReportModelAllSelected(idModelBulletinSelected._id);
             utils.safeApply($scope);
         }
 
         let userReportModel: ReportModelPrintExport;
 
-        async function getReportModelAllSelected(): Promise<void> {
-            userReportModel = await ReportModelPrintExportService.getFirstSelected();
+        async function getReportModelAllSelected(idModel : string): Promise<void> {
+            userReportModel = await ReportModelPrintExportService.getModelSelected(idModel);
             await syncPreferences(userReportModel);
         }
 

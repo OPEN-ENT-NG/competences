@@ -33,7 +33,6 @@ export interface ReportModelPrintExportType {
 export interface toJson {
     structureId: String;
     title: String;
-    selected: Boolean;
     preferencesCheckbox: PreferencesCheckboxReportModel;
     preferencesText: PreferencesTextReportModel;
 }

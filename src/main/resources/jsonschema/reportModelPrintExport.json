@@ -9,9 +9,6 @@
     "title": {
       "type": "string"
     },
-    "selected": {
-      "type": "boolean"
-    },
     "preferencesCheckbox": {
       "type": "object"
     },
@@ -22,7 +19,6 @@
   "required": [
     "structureId",
     "title",
-    "selected",
     "preferencesCheckbox",
     "preferencesText"
   ]

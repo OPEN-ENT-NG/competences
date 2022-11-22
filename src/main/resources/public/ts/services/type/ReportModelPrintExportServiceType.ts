@@ -3,5 +3,5 @@ import {ReportModelPrintExport} from "../../models/teacher/ReportModelPrintExpor
 export interface ReportModelPrintExportServiceType {
     getAll: (structureId: String) => Promise<Array<ReportModelPrintExport>>;
     getAllSelected: () => Promise<Array<ReportModelPrintExport>>;
-    getFirstSelected: () => Promise<ReportModelPrintExport>;
+    getModelSelected: (id : string) => Promise<ReportModelPrintExport>;
 }

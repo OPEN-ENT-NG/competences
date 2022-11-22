@@ -26,7 +26,6 @@ const {
     KEY_ID,
     KEY_STRUCTUREID,
     KEY_TITLE,
-    KEY_SELECTED,
     KEY_PREFERENCES_CHECKBOX,
     KEY_PREFERENCES_TEXT,
 } = ReportModelPrintExportConstant;
@@ -190,7 +189,6 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
             && this.getId() === reportModel.getId()
             && this.getStructureId() === reportModel.getStructureId()
             && this.getTitle() === reportModel.getTitle()
-            && this.getSelected() === reportModel.getSelected()
             && _.isEqual(this.getPreferencesCheckbox(), reportModel.getPreferencesCheckbox())
             && _.isEqual(this.getPreferencesText(), reportModel.getPreferencesText())
     }
@@ -199,7 +197,6 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
         return {
             structureId: this.getStructureId(),
             title: this.getTitle(),
-            selected: this.getSelected(),
             preferencesCheckbox: this.getPreferencesCheckbox(),
             preferencesText: this.getPreferencesText(),
         };
@@ -219,7 +216,6 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
         this.setId(reportModel[KEY_ID]);
         this.setStructureId(reportModel[KEY_STRUCTUREID]);
         this.setTitle(reportModel[KEY_TITLE]);
-        this.setSelected(reportModel[KEY_SELECTED]);
         this.setPreferencesCheckboxWithInit(reportModel[KEY_PREFERENCES_CHECKBOX]);
         this.setPreferencesTextWithClean(reportModel[KEY_PREFERENCES_TEXT]);
     }
