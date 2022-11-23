@@ -109,7 +109,11 @@ class Controller implements ng.IController, IViewModel {
 
                 })
                 .catch((e: AxiosError) => {
-                    this.errorMessage = "competences.error.import.csv";
+                    if (e.response.data.status == "formate"){
+                        this.errorMessage = "competences.error.import.csv.formate";
+                    }
+                    else
+                        this.errorMessage = "competences.error.import.csv";
                 });
     }
 

@@ -17,6 +17,7 @@
 
 package fr.openent.competences.controllers;
 
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
@@ -1269,7 +1270,11 @@ public class NoteController extends ControllerHelper {
                 })
                 .onFailure(err -> {
                     err.printStackTrace();
-                    renderError(request);
+                    if(err.getCause().getClass().equals(CsvRequiredFieldEmptyException.class))
+                        renderError(request, new JsonObject()
+                                .put(Field.STATUS, "formate"));
+                    else
+                        renderError(request);
                 });
     }
 

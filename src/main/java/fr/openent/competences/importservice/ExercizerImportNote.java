@@ -1,5 +1,6 @@
 package fr.openent.competences.importservice;
 
+import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.importservice.ExercizerStudent;
@@ -53,7 +54,7 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
                 .onSuccess(promise::complete)
                 .onFailure(err -> {
                     err.printStackTrace();
-                    promise.fail(err.getMessage());
+                    promise.fail(err);
                 });
         return promise.future();
     }
@@ -85,12 +86,20 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
     public Future<List<ExercizerStudent>> fetchDataFromBuffer(Buffer buffer) {
         Promise<List<ExercizerStudent>> promise = Promise.promise();
         Reader reader = new InputStreamReader(new ByteArrayInputStream(buffer.getBytes()));
-        List<ExercizerStudent> students = new CsvToBeanBuilder<ExercizerStudent>(reader)
+        CsvToBean<ExercizerStudent> beans = new CsvToBeanBuilder<ExercizerStudent>(reader)
                 .withType(ExercizerStudent.class)
                 .withSeparator(';')
-                .build()
-                .parse();
-        promise.complete(students);
+                .withThrowExceptions(false)
+                .build();
+        List<ExercizerStudent> students;
+
+        try {
+            students = beans.parse();
+            promise.complete(students);
+        } catch(Exception e){
+            e.printStackTrace();
+            promise.fail(e);
+        }
         return promise.future();
     }
 
