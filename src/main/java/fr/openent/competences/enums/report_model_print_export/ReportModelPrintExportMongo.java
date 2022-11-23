@@ -6,7 +6,6 @@ public enum ReportModelPrintExportMongo {
     KEY_USER_ID("userId"),
     KEY_STRUCTUREID("structureId"),
     KEY_TITLE("title"),
-    KEY_SELECTED("selected"),
     KEY_PREFERENCES_CHECKBOX("preferencesCheckbox"),
     KEY_PREFERENCES_TEXT("preferencesText"),
     STATUS("status");

@@ -18,7 +18,6 @@ public class ReportModelPrintExport extends Model implements Cloneable {
     private String userId;
     private String structureId;
     private String title;
-    private Boolean selected;
     private List<String> preferencesCheckbox;
     private JsonObject preferencesText;
     private ArrayList<String> allKeyPreferencesCheckbox = new ArrayList();
@@ -32,7 +31,6 @@ public class ReportModelPrintExport extends Model implements Cloneable {
     public ReportModelPrintExport(
             String structureId,
             String title,
-            Boolean selected,
             JsonObject preferencesCheckbox,
             JsonObject preferencesText) {
         super();
@@ -40,7 +38,6 @@ public class ReportModelPrintExport extends Model implements Cloneable {
         this.initListPreferencesText();
         this.structureId = structureId;
         this.title = title;
-        this.selected = selected;
         if (preferencesCheckbox != null) this.setPreferencesCheckbox(preferencesCheckbox);
         if (preferencesText != null) this.setPreferencesText(preferencesText);
     }
@@ -59,10 +56,6 @@ public class ReportModelPrintExport extends Model implements Cloneable {
 
     public String getTitle() {
         return this.title;
-    }
-
-    public Boolean getSelected() {
-        return this.selected;
     }
 
     public List<String> getPreferencesCheckbox() {
@@ -125,8 +118,6 @@ public class ReportModelPrintExport extends Model implements Cloneable {
         if (this.getStructureId() != null) json.put(ReportModelPrintExportMongo.KEY_STRUCTUREID.getString(), this.getStructureId());
         if (this.getUserId() != null) json.put(ReportModelPrintExportMongo.KEY_USER_ID.getString(), this.getUserId());
         if (this.getTitle() != null) json.put(ReportModelPrintExportMongo.KEY_TITLE.getString(), this.getTitle());
-        if (this.getSelected() != null)
-            json.put(ReportModelPrintExportMongo.KEY_SELECTED.getString(), this.getSelected());
         if (this.getPreferencesCheckbox() != null)
             json.put(ReportModelPrintExportMongo.KEY_PREFERENCES_CHECKBOX.getString(), this.getPreferencesCheckbox());
         if (this.getPreferencesText() != null)

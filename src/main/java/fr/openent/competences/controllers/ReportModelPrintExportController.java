@@ -5,6 +5,7 @@ import fr.openent.competences.enums.Common;
 import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportMongo;
 import fr.openent.competences.helper.ManageError;
 import fr.openent.competences.model.ReportModelPrintExport;
+import fr.openent.competences.security.modelbulletinrights.AccessExportModelBulletin;
 import fr.openent.competences.security.modelbulletinrights.PostModelExportBulletin;
 import fr.openent.competences.security.modelbulletinrights.UserIdModelExportBulletin;
 import fr.openent.competences.security.modelbulletinrights.GetModelExportBulletin;
@@ -94,23 +95,25 @@ public class ReportModelPrintExportController extends ControllerHelper {
         });
     }
 
-    @Get("/reports-models-print-export/selected")
-    @ApiDoc("Get report model by user selected")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getReportModelsSelected(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            if (!ManageError.haveUser(request, user)) {
-                return;
-            }
-            try {
-                ReportModelPrintExport newReportModel = new ReportModelPrintExport();
-                newReportModel.setUserId(user.getUserId());
-                reportModelService.getReportModelSelected(newReportModel, defaultResponseHandler(request));
-            } catch (Exception errorUpdate) {
-                ManageError.requestFailError(request, Common.ERROR.getString(),
-                        "Error during the GET report model. ", errorUpdate.toString());
-            }
-        });
+    @Get("/report-model-print-export/:idReportModel")
+    @ApiDoc("Get report model by idReportModel")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessExportModelBulletin.class)
+    public void getReportModelbyId(final HttpServerRequest request) {
+        String idReportModel = request.getParam("idReportModel");
+        if (idReportModel == null) {
+            ManageError.requestFail(request, Common.INFO.getString(), "Id Report model is null.");
+            return;
+        }
+        ReportModelPrintExport newReportModel = new ReportModelPrintExport();
+        try {
+            newReportModel.setId(idReportModel);
+            reportModelService.getReportModel(newReportModel, defaultResponseHandler(request));
+        } catch (Exception errorUpdate) {
+            ManageError.requestFailError(request,
+                    Common.ERROR.getString(), "Error during the GET report model by ID. ",
+                    errorUpdate.toString());
+        }
     }
 
     @Delete("/report-model-print-export/:idReportModel")
@@ -137,14 +140,12 @@ public class ReportModelPrintExportController extends ControllerHelper {
     private ReportModelPrintExport createReportModelWithBodyRequest(JsonObject bodyRequest) {
         String structureId = bodyRequest.getString("structureId");
         String title = bodyRequest.getString("title");
-        Boolean selected = bodyRequest.getBoolean("selected");
         JsonObject preferencesCheckbox = bodyRequest.getJsonObject("preferencesCheckbox");
         JsonObject preferencesText = bodyRequest.getJsonObject("preferencesText");
 
         return new ReportModelPrintExport(
                 structureId,
                 title,
-                selected,
                 preferencesCheckbox,
                 preferencesText);
     }
