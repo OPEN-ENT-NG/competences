@@ -2281,7 +2281,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             teacher.setId(((JsonObject)o).getString(Field.ID));
             Service matiereService = new Service();
             Group group = new Group();
-            group.setId(params.getString(Field.IDCLASSE));
+            group.setId(params.getString(IDCLASSE));
             Matiere matiere1 = new Matiere();
             matiere1.setId(matiere.getString(Field.ID_MATIERE));
             matiereService.setTeacher(teacher);
@@ -2993,8 +2993,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             multiTeaching.setStartDate(multiTeachinJo.getString("start_date",""));
             multiTeaching.setEndDate(multiTeachinJo.getString("end_date",""));
             multiTeaching.setEnteredEndDate(multiTeachinJo.getString("entered_end_date"));
-            if(multiTeachinJo.containsKey("is_coteaching") && multiTeachinJo.getBoolean("is_coteaching")!= null)
-                multiTeaching.setCoTeaching(multiTeachinJo.getBoolean("is_coteaching"));
+            if(multiTeachinJo.getValue(Field.IS_COTEACHING) != null)
+                 multiTeaching.setCoTeaching(multiTeachinJo.getBoolean(Field.IS_COTEACHING));
+            else{
+                multiTeaching.setIsDeleted(true);
+            }
             multiTeaching.setVisible(multiTeachinJo.getBoolean("is_visible"));
             multiTeaching.setLibelle(multiTeachinJo.getString("libelle",""));
             multiTeaching.setTimestampDt(multiTeachinJo.getString("timestamp_dt",""));

@@ -145,6 +145,7 @@ public class DefaultUtilsService implements UtilsService {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray result = body.getJsonArray(RESULTS);
+                log.info("results getMultiTeachersByClass" + result);
                 handler.handle(new Either.Right<>(result));
             } else {
                 handler.handle(new Either.Left<>(body.getString("message")));
@@ -165,6 +166,7 @@ public class DefaultUtilsService implements UtilsService {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray result = body.getJsonArray(RESULTS);
+                log.info("results " + result);
                 handler.handle(new Either.Right<>(result));
             } else {
                 handler.handle(new Either.Left<>(body.getString("message")));

@@ -63,7 +63,7 @@ public class DevoirControllerHelper {
                             .put("subjectId", devoir.getSubjectId())
                             .put("structureId", devoir.getStructureId())
                             .put("groupId", devoir.getGroupId())
-                            .put("userId", user.getUserId());
+                            .put("userId", devoir.getOwner());
                     eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirWithId, user, devoirsService, request));
                 } else {
                     badRequest(request);
@@ -113,10 +113,10 @@ public class DevoirControllerHelper {
         return event -> {
             if (event.succeeded() && Field.OK.equals(event.result().body().getString(Field.STATUS))) {
                 JsonArray results = event.result().body().getJsonArray(Field.RESULTS, new JsonArray());
-                JsonArray statements = new JsonArray();
-                List<String> actions = new ArrayList<String>();
-                actions.add(Competences.DEVOIR_ACTION_UPDATE);
-                if (results.size() > 0) {
+                log.info("getReplyHandler results " + results);
+            JsonArray statements = new JsonArray();
+            List<String> actions = new ArrayList<String>();
+            actions.add(Competences.DEVOIR_ACTION_UPDATE);if (results.size() > 0) {
                     for (int i = 0; i < results.size(); i++) {
                         String id = results.getJsonObject(i).getString(Field.TEACHER_ID);
                         statements.add(devoirService.getNewShareStatements(id, devoirWithId.getLong(Field.ID).toString(), actions));
@@ -142,6 +142,7 @@ public class DevoirControllerHelper {
         return event -> {
             if (event.succeeded() && Field.OK.equals(event.result().body().getString(Field.STATUS))) {
                 JsonArray results = event.result().body().getJsonArray("results");
+                log.info("getReplyHandler results " + results);
                 List<String> actions = new ArrayList<String>();
                 actions.add(Competences.DEVOIR_ACTION_UPDATE);
                 JsonArray statements = new JsonArray();

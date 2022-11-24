@@ -83,7 +83,7 @@ public class Field {
     public static final String SAVE_BFC = "saveBFC";
     public static final String SUBCOEF = "subCoef";
     public static final String SERVICE_SUBTOPIC = "services_subtopic";
-    public static final String COEFFICIENT = "coefficient" ;
+    public static final String COEFFICIENT = "coefficient";
     public static final String GROUPS = "groups";
     public static final String TEACHERS = "teachers";
     public static final String MOYENNE = "moyenne";
@@ -155,6 +155,7 @@ public class Field {
     public static final String ELT_BILAN_PERIODIQUE_TABLE = "elt_bilan_periodique";
     public static final String ENSEIGNEMENT_COMPLEMENT = "enseignement_complement";
     public static final String ENSEIGNEMENTS_TABLE = "enseignements";
+    public static String IS_COTEACHING = "is_coteaching";
 
     public static final String LANGUES_CULTURE_REGIONALE = "langues_culture_regionale";
     public static final String MATIERE_TABLE = "matiere";

@@ -118,7 +118,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     else {
                         // Récupération de l'id du devoir à créer
                         JsonArray statements = createStatement(devoirId, devoir, user);
-
                         // Exécution de la transaction avec roleBack
                         Sql.getInstance().transaction(statements, new Handler<Message<JsonObject>>() {
                             @Override

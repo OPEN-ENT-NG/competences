@@ -24,7 +24,11 @@ public class MultiTeaching extends Model {
     int type;
     String dateConseilClass;
     boolean publicationBulletin;
+
+    private boolean isDeleted ;
+
     public MultiTeaching() {
+        isDeleted = false;
     }
 
     public Structure getStructure() {
@@ -201,5 +205,13 @@ public class MultiTeaching extends Model {
 
     public void setIdInteger(Integer id) {
         this.idInt = id;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
     }
 }
