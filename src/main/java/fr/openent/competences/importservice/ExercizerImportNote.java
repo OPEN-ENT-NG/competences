@@ -97,7 +97,6 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
             students = beans.parse();
             promise.complete(students);
         } catch(Exception e){
-            e.printStackTrace();
             promise.fail(e);
         }
         return promise.future();
