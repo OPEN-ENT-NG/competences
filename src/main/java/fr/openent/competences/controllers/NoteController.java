@@ -1272,7 +1272,7 @@ public class NoteController extends ControllerHelper {
                     err.printStackTrace();
                     if(err.getCause().getClass().equals(CsvRequiredFieldEmptyException.class))
                         renderError(request, new JsonObject()
-                                .put(Field.STATUS, "formate"));
+                                .put(Field.STATUS, Field.FORMATE));
                     else
                         renderError(request);
                 });

@@ -85,6 +85,7 @@ public class Field {
     public static final String COEFF = "coeff";
     public static final String DISPLAYNAME = "displayName";
     public static final String CLASSTYPE = "classType";
+    public static final String FORMATE = "formate";
 
 
     //subTopic
