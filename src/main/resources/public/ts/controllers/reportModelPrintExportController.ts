@@ -1,4 +1,4 @@
-import {_, ng, Me} from "entcore";
+import {_, ng, model, Me} from "entcore";
 import {ReportModelPrintExportServiceType} from "../services/type";
 import * as utilsTeacher from '../utils/teacher';
 import {ReportModelPrintExportType} from "../models/type";
@@ -8,9 +8,7 @@ import {Utils} from "../models/teacher";
 
 const {
     DELETED,
-    KEY_STRUCTUREID,
     KEY_TITLE,
-    KEY_SELECTED,
 } = ReportModelPrintExportConstant;
 
 const reportModelPrintExportController = ng.controller(
@@ -30,7 +28,13 @@ const reportModelPrintExportController = ng.controller(
             const reportsModelForCheckSubmit = initDataReportModel[1];
             const competencesPreferences = initDataReportModel[2];
             const idModelBulletinSelected =  (Utils.isNull(competencesPreferences) ? undefined : competencesPreferences.idModelBulletinSelected);
-            initSelected(idModelBulletinSelected._id);
+            if(idModelBulletinSelected) {
+                initSelected(idModelBulletinSelected._id);
+            }
+
+            $scope.checkUpdateReportModel = function (reportModel: ReportModelPrintExportType): Boolean {
+                return reportModel.getUserId().toString() === model.me.userId;
+            }
 
             utilsTeacher.safeApply($scope);
 
@@ -57,6 +61,9 @@ const reportModelPrintExportController = ng.controller(
             };
 
             $scope.openUpdateMode = function (reportModel: ReportModelPrintExportType): void {
+                if(!$scope.checkUpdateReportModel(reportModel)) {
+                    return;
+                }
                 reportModel["iAmUpdated"] = true;
                 reportModel["backupLastTitle"] = reportModel.getTitle();
             };
@@ -67,6 +74,9 @@ const reportModelPrintExportController = ng.controller(
             };
             const reportsModelsPrepareToDelete: Array<ReportModelPrintExportType> = [];
             $scope.remove = async function (reportModel: ReportModelPrintExportType): Promise<void> {
+                if(!$scope.checkUpdateReportModel(reportModel)) {
+                    return;
+                }
                 reportModel.setState(DELETED);
                 reportsModelsPrepareToDelete.push(reportModel);
                 $scope.allReportModelPrintExport = allReportModelPrintExportChecked()
@@ -82,18 +92,21 @@ const reportModelPrintExportController = ng.controller(
                     return;
                 }
                 $scope.enableSubmit = false;
-                const reportModelSelected: ReportModelPrintExport = _.findWhere(allReportModelPrintExportChecked(),
-                    {id: idModelBulletinSelected._id} )
+                const reportModelSelected: ReportModelPrintExport = (_.findWhere(allReportModelPrintExportChecked(), {selected: true})) ?
+                    _.findWhere(allReportModelPrintExportChecked(), {selected: true}) :
+                    new ReportModelPrintExport(undefined);
                 if(reportModelSelected && reportModelSelected.haveId()) saveSelectedPreferenceModel(reportModelSelected.getId());
                 putReportsModels();
                 deleteReportsModels();
                 if ($scope.newReportModel.getSelected()) {
-                    sendNew();
-                    saveSelectedPreferenceModel($scope.newReportModel);
+                    sendNew().then(() =>
+                        saveSelectedPreferenceModel($scope.newReportModel.getId())
+                    );
+
                     $scope.$parent.closeLightBoxSelectModelReport($scope.newReportModel.getId());
                     return;
                 }
-                if (!($scope.allReportModelPrintExport.length > 0)) {
+                if (!reportModelSelected) {
                     $scope.$parent.closeLightBoxSelectModelReport();
                 } else {
                     $scope.$parent.closeLightBoxSelectModelReport(reportModelSelected);
@@ -193,20 +206,20 @@ const reportModelPrintExportController = ng.controller(
                     cleanReportModelNoEdit();
                     cleanTitleEmptyBeforePut();
                     for (const reportModel of allReportModelPrintExportChecked()) {
-                        reportModel.put([KEY_TITLE, KEY_STRUCTUREID]);
+                        reportModel.put([KEY_TITLE]);
                     }
                 }
-
             }
 
             function initSelected(idModelBulletinSelected: string): void {
                 $scope.allReportModelPrintExport.forEach((model: ReportModelPrintExportType) => {
-                    if(_.equals(model.getId(), idModelBulletinSelected)) model.setSelected(true);
+                    if(model.getId() === idModelBulletinSelected) model.setSelected(true);
                 });
                 reportsModelForCheckSubmit.forEach((model: ReportModelPrintExportType) => {
-                    if(_.equals(model.getId(), idModelBulletinSelected )) model.setSelected(true);
+                    if(model.getId() === idModelBulletinSelected) model.setSelected(true);
                 })
             }
+
         }
     ]);
 

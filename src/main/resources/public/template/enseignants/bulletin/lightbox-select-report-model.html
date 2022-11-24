@@ -20,6 +20,7 @@
                 <!--no edit-->
                 <div class="cell two"
                      ng-if="!reportModel.iAmUpdated"
+                     ng-class="{disabled: !checkUpdateReportModel(reportModel)}"
                      ng-click="openUpdateMode(reportModel)">
                     [[reportModel.title]]
                 </div>
@@ -29,13 +30,16 @@
                        ng-blur="saveTitleEdit(reportModel)"
                        type="text"
                        ng-change="permanentControlTitle(reportModel.title)"
+                       ng-disabled="!checkUpdateReportModel(reportModel)"
                        ng-model="reportModel.title"
                        autofocus
                 />
                 <i ng-click="openUpdateMode(reportModel)"
-                   class="edit cell one"></i>
+                   class="edit cell one"
+                   ng-class="{disabled: !checkUpdateReportModel(reportModel)}"></i>
                 <i ng-click="remove(reportModel)"
-                   class="trash cell one"></i>
+                   class="trash cell one"
+                   ng-class="{disabled: !checkUpdateReportModel(reportModel)}"></i>
             </li>
         </ul>
         <ul class="ul-competences">

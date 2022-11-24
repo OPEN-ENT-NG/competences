@@ -347,16 +347,20 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             }
         };
 
+        let userReportModel: ReportModelPrintExport = new ReportModelPrintExport(undefined);
+
         async function getPreferences(): Promise<void> {
             const competences = await Me.preference('competences');
             const optionsPrintBulletin = (Utils.isNull(competences) ? undefined : competences.printBulletin);
             const idModelBulletinSelected =  (Utils.isNull(competences) ? undefined : competences.modelBulletinSelected);
             $scope.print = (Utils.isNull(optionsPrintBulletin)) ? {} : optionsPrintBulletin;
-            await getReportModelAllSelected(idModelBulletinSelected._id);
+            if(idModelBulletinSelected) {
+                await getReportModelAllSelected(idModelBulletinSelected._id);
+            } else {
+                await syncPreferences(userReportModel);
+            }
             utils.safeApply($scope);
         }
-
-        let userReportModel: ReportModelPrintExport;
 
         async function getReportModelAllSelected(idModel : string): Promise<void> {
             userReportModel = await ReportModelPrintExportService.getModelSelected(idModel);

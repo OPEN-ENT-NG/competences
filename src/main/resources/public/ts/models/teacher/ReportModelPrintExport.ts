@@ -24,6 +24,7 @@ const {
     POSTED,
     PUTED,
     KEY_ID,
+    KEY_USER_ID,
     KEY_STRUCTUREID,
     KEY_TITLE,
     KEY_PREFERENCES_CHECKBOX,
@@ -43,6 +44,7 @@ const {
 
 export class ReportModelPrintExport implements ReportModelPrintExportType {
     private _id: mongoId;
+    private userId: String;
     private structureId: String;
     private title: String;
     private selected: Boolean;
@@ -58,6 +60,10 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
     public getId(): mongoId {
         return this._id || undefined
     };
+
+    public getUserId(): String {
+        return this.userId || undefined
+    }
 
     public getStructureId(): String {
         return this.structureId || undefined
@@ -84,6 +90,9 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
     };
 
     //Setters
+    public setUserId(userId: String){
+        this.userId = userId
+    }
     public setStructureId (structureId: String){
         this.structureId = structureId
     };
@@ -214,6 +223,7 @@ export class ReportModelPrintExport implements ReportModelPrintExportType {
 
     private preparedReportModel(reportModel: ReportModelPrintExport): void {
         this.setId(reportModel[KEY_ID]);
+        this.setUserId(reportModel[KEY_USER_ID]);
         this.setStructureId(reportModel[KEY_STRUCTUREID]);
         this.setTitle(reportModel[KEY_TITLE]);
         this.setPreferencesCheckboxWithInit(reportModel[KEY_PREFERENCES_CHECKBOX]);

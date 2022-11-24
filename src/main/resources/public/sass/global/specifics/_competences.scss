@@ -292,6 +292,7 @@ body.evaluations {
 
   .disabled{
     opacity: 0.45;
+    cursor: default;
   }
 
   @media screen and (min-device-width:$tablette ) {

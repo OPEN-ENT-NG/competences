@@ -1,6 +1,7 @@
 export interface ReportModelPrintExportType {
     //getters
     getId(): mongoId;
+    getUserId(): String;
     getStructureId(): String;
     getTitle(): String;
     getSelected(): Boolean;
@@ -9,6 +10,7 @@ export interface ReportModelPrintExportType {
     getState(): String;
 
     //setters
+    setUserId(userId: String);
     setStructureId(structureId:String);
     setTitle(title:String);
     setSelected(selected:Boolean);
