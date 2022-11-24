@@ -75,32 +75,36 @@ public class DevoirControllerHelper {
     public static Handler<Either<String, JsonArray>>
     getDuplicationDevoirHandler(UserInfos user, DevoirService devoirService, HttpServerRequest request, EventBus eb) {
         return event -> {
-            final JsonArray devoirs = event.right().getValue().getJsonArray(1);
-            final JsonArray groupes_rel = event.right().getValue().getJsonArray(event.right().getValue().size() - 1);
-            ArrayList<Future<JsonObject>> futures = new ArrayList<>();
-            for (Object devoirO : devoirs) {
-                JsonObject devoirJO = (JsonObject) devoirO;
-                groupes_rel.forEach(group -> {
-                    if (((JsonObject) group).getLong(Field.ID_DEVOIR).equals(devoirJO.getLong(Field.ID))) {
-                        devoirJO.put(Field.ID_GROUPE, ((JsonObject) group).getString(Field.ID_GROUPE));
-                    }
-                });
-                Promise<JsonObject> promise = Promise.promise();
-                futures.add(promise.future());
-                // recuperation des professeurs que l'utilisateur connecté remplacent
-                Devoir devoir = new Devoir(devoirJO);
-                JsonObject action = new JsonObject()
-                        .put(Field.ACTION, Field.MULTITEACHING + "." + Field.GETIDMULTITEACHERS)
-                        .put(Field.SUBJECTID, devoir.getSubjectId())
-                        .put(Field.STRUCTUREID, devoir.getStructureId())
-                        .put(Field.GROUPID, devoir.getGroupId())
-                        .put(Field.USERID, user.getUserId());
-                eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirJO, devoirService, user, promise));
-            }
-            FutureHelper.all(futures)
-                    .onSuccess(success -> request.response().setStatusCode(200).end())
-                    .onFailure(failure -> badRequest(request, failure.getMessage()));
+            if (event.right().getValue().size() > 2) {
 
+                final JsonArray devoirs = event.right().getValue().getJsonArray(1);
+                final JsonArray groupes_rel = event.right().getValue().getJsonArray(event.right().getValue().size() - 1);
+                ArrayList<Future<JsonObject>> futures = new ArrayList<>();
+                for (Object devoirO : devoirs) {
+                    JsonObject devoirJO = (JsonObject) devoirO;
+                    groupes_rel.forEach(group -> {
+                        if (((JsonObject) group).getLong(Field.ID_DEVOIR).equals(devoirJO.getLong(Field.ID))) {
+                            devoirJO.put(Field.ID_GROUPE, ((JsonObject) group).getString(Field.ID_GROUPE));
+                        }
+                    });
+                    Promise<JsonObject> promise = Promise.promise();
+                    futures.add(promise.future());
+                    // recuperation des professeurs que l'utilisateur connecté remplacent
+                    Devoir devoir = new Devoir(devoirJO);
+                    JsonObject action = new JsonObject()
+                            .put(Field.ACTION, Field.MULTITEACHING + "." + Field.GETIDMULTITEACHERS)
+                            .put(Field.SUBJECTID, devoir.getSubjectId())
+                            .put(Field.STRUCTUREID, devoir.getStructureId())
+                            .put(Field.GROUPID, devoir.getGroupId())
+                            .put(Field.USERID, user.getUserId());
+                    eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirJO, devoirService, user, promise));
+                }
+                FutureHelper.all(futures)
+                        .onSuccess(success -> request.response().setStatusCode(200).end())
+                        .onFailure(failure -> badRequest(request, failure.getMessage()));
+            }else{
+                badRequest(request,"[Competences@getDuplicationDevoirHandller] error where duplicate devoirs");
+            }
         };
     }
 
