@@ -363,7 +363,7 @@ public interface NoteService extends CrudService {
      * @param idDevoir idDevoir
      * @param idEleve idEleve
      * @param valeur valeur
-     * @Return {@link Future} of result {@link JsonObject}
+     * @Return {@link Future} of result {@link Void}
      */
-    Future<JsonObject> insertOrUpdateDevoirNote (String idDevoir, String idEleve, Double valeur);
+    Future<Void> insertOrUpdateDevoirNote (String idDevoir, String idEleve, Double valeur);
 }

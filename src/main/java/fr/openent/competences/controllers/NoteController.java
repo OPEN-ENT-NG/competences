@@ -17,6 +17,7 @@
 
 package fr.openent.competences.controllers;
 
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
@@ -1239,23 +1240,27 @@ public class NoteController extends ControllerHelper {
                 isNull(idPeriodeString),arrayResponseHandler(request));
     }
 
-    @Post("/notes/:id/:typeImportService/csv/:classId/:devoirId")
+    @Post("/notes/:typeImportService/csv/exercizer/import/classes/:classId/devoirs/:devoirId/:classType/periods/:periodeId")
     @ApiDoc("Set notes of a devoir by importing a CSV.")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void importExercizerCSV(final HttpServerRequest request) {
         // typeImport
         final String idClasse = request.params().get(Field.CLASSID);
         final String idDevoir = request.params().get(Field.DEVOIRID);
-        ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage, idClasse, utilsService);
+        final String typeClasse = request.params().get(Field.CLASSTYPE);
+        final Long idPeriode = Long.valueOf(request.params().get(Field.PERIODEID));
+        ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage, idClasse, typeClasse,
+                idPeriode, utilsService);
         exercizerImportNote.run()
                 .onSuccess(students -> {
-                    List<Future<JsonObject>> futures = new ArrayList<>();
-                    students.forEach(student -> notesService.insertOrUpdateDevoirNote(idDevoir, student.id(), student.getNote()));
+                    List<Future<Void>> futures = students.stream().filter(student -> isNotNull(student.id()))
+                            .map(student -> notesService.insertOrUpdateDevoirNote(idDevoir, student.id(), student.getNote()))
+                            .collect(Collectors.toList());
                     FutureHelper.all(futures)
                             .onSuccess(res -> renderJson(request, new JsonObject()
                                     .put(Field.STATUS, Field.OK)
                                     .put(Field.MISSING, students.stream()
-                                            .filter(student -> Boolean.TRUE.equals(student.id().isEmpty()))
+                                            .filter(student -> isNull(student.id()))
                                             .collect(Collectors.toList())))
                             )
                             .onFailure(err -> {
@@ -1265,7 +1270,11 @@ public class NoteController extends ControllerHelper {
                 })
                 .onFailure(err -> {
                     err.printStackTrace();
-                    renderError(request);
+                    if(err.getCause().getClass().equals(CsvRequiredFieldEmptyException.class))
+                        renderError(request, new JsonObject()
+                                .put(Field.STATUS, Field.FORMATE));
+                    else
+                        renderError(request);
                 });
     }
 

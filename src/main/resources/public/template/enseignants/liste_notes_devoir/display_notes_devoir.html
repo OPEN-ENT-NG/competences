@@ -124,7 +124,7 @@
                                             'button-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
                 <i class="check"></i>
             </button>
-            <import-note  devoir="currentDevoir"></import-note>
+            <import-note on-import = "loadNoteDevoirAndCalculStats" devoir="currentDevoir"></import-note>
             <button ng-click="printOption.display =true ; closeWarningMessages();" tooltip="evaluations.export.format.pdf"
                     ng-class="{'button-devoir-not-fixed' : currentDevoir.competences.all.length === 0,
                                             'button-evaluation-devoir' : currentDevoir.competences.all.length > 0}">

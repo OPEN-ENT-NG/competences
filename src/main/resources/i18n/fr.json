@@ -772,6 +772,7 @@
   "competences.import.notes.warning": "Des élèves ont été ignorés lors de l'import. Vérifier que les noms des élèves sont corrects dans le fichier importé",
   "competences.error.import.type.csv": "Vous n'avez pas importé un fichier csv. Veuillez sélectionner un fichier csv",
   "competences.error.import.csv": "Une erreur est survenue lors de l'import des notes. Veuillez vérifier votre ficher csv.",
+  "competences.error.import.csv.formate": "Erreur lors de l'import du fichier, veuillez vérifier les champs ou l'encodage du fichier",
   "competences.reportModel.info.problem.title" : "Problème de doublon ou de titre vides, ils ne seront pas enregistés",
   "competences.report-model.api.error.getFirstSelected": "Erreur lors de la récupération des préferences pour le bulletin",
   "competences.report-model.api.error.getSelected": "Erreur lors de la récupération des préferences pour le bulletin",

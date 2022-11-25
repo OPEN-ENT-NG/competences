@@ -4766,8 +4766,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     @Override
-    public Future<JsonObject> insertOrUpdateDevoirNote(String idDevoir, String idEleve, Double valeur) {
-        Promise<JsonObject> promise = Promise.promise();
+    public Future<Void> insertOrUpdateDevoirNote(String idDevoir, String idEleve, Double valeur) {
+        Promise<Void> promise = Promise.promise();
 
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + NOTES_TABLE +
                 " (id_devoir, id_eleve, valeur) VALUES (?, ?, ?)" +
@@ -4781,7 +4781,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             if (event.isLeft()) {
                 promise.fail(event.left().getValue());
             } else {
-                promise.complete(event.right().getValue());
+                promise.complete();
             }
         }));
         return promise.future();

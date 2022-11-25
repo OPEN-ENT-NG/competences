@@ -554,6 +554,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         route(routesActions);
 
+        $scope.loadNoteDevoirAndCalculStats = async() => {
+            await Utils.runMessageLoader($scope);
+            $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode).then(async () => {
+                await $scope.currentDevoir.calculStats();
+                await Utils.stopMessageLoader($scope);
+            });
+        }
 
         $scope.disabledExportSuiviClasseButton = function () {
             if ($scope.suiviClasse.print === "printReleveComp" && _.findIndex($scope.allMatieresSorted, {select: true}) === -1) {
@@ -3950,7 +3957,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.usePerso = evaluations.structure.usePerso;
             $scope.useDefaut = !$scope.usePerso;
             $scope.structure = evaluations.structure;
-            // $scope.initPeriodesList();
             utils.safeApply($scope);
         };
 

@@ -26,6 +26,7 @@ import {
     evaluations,
     Matiere,
     Type,
+    Periode
 } from './index';
 import axioshttp from 'axios';
 
@@ -51,6 +52,7 @@ export interface Devoir {
     libelle: string;
     id_sousmatiere: number | string;
     id_periode: number | string;
+    periode: Periode;
     id_type: number | string;
     id_matiere: string;
     id_etat: number | string;

@@ -1,5 +1,6 @@
 package fr.openent.competences.importservice;
 
+import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.importservice.ExercizerStudent;
@@ -31,11 +32,16 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
 
     UtilsService utilsService;
     String idClasse;
+    String typeClasse;
+    Long idPeriode;
 
-    public ExercizerImportNote(HttpServerRequest request, Storage storage, String idClasse, UtilsService utilsService) {
+    public ExercizerImportNote(HttpServerRequest request, Storage storage, String idClasse, String typeClasse,
+                               Long idPeriode, UtilsService utilsService) {
         super(request, storage);
         this.utilsService = utilsService;
         this.idClasse = idClasse;
+        this.typeClasse = typeClasse;
+        this.idPeriode = idPeriode;
     }
 
     @Override
@@ -44,11 +50,11 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
         super.processImportFile()
                 .compose(this::parseAndFormatBuffer)
                 .compose(this::fetchDataFromBuffer)
-                .compose(students -> this.resolveStudents(students, this.idClasse))
+                .compose(students -> this.resolveStudents(students, this.idClasse, this.typeClasse, this.idPeriode))
                 .onSuccess(promise::complete)
                 .onFailure(err -> {
                     err.printStackTrace();
-                    promise.fail(err.getMessage());
+                    promise.fail(err);
                 });
         return promise.future();
     }
@@ -80,18 +86,26 @@ public class ExercizerImportNote extends ImportFile <List<ExercizerStudent>> {
     public Future<List<ExercizerStudent>> fetchDataFromBuffer(Buffer buffer) {
         Promise<List<ExercizerStudent>> promise = Promise.promise();
         Reader reader = new InputStreamReader(new ByteArrayInputStream(buffer.getBytes()));
-        List<ExercizerStudent> students = new CsvToBeanBuilder<ExercizerStudent>(reader)
+        CsvToBean<ExercizerStudent> beans = new CsvToBeanBuilder<ExercizerStudent>(reader)
                 .withType(ExercizerStudent.class)
                 .withSeparator(';')
-                .build()
-                .parse();
-        promise.complete(students);
+                .withThrowExceptions(false)
+                .build();
+        List<ExercizerStudent> students;
+
+        try {
+            students = beans.parse();
+            promise.complete(students);
+        } catch(Exception e){
+            promise.fail(e);
+        }
         return promise.future();
     }
 
-    private Future<List<ExercizerStudent>> resolveStudents(List<ExercizerStudent> students, String idClasse) {
+    private Future<List<ExercizerStudent>> resolveStudents(List<ExercizerStudent> students, String idClasse,
+                                                           String typeClasse, Long idPeriode) {
         Promise<List<ExercizerStudent>> promise = Promise.promise();
-        utilsService.getEleveClasseInfos(idClasse)
+        utilsService.getEleveClasseInfos(idClasse, typeClasse, idPeriode)
                 .onSuccess(classStudents -> {
                     Map<String, JsonObject> studentsClassesMap = classStudents.stream()
                             .map(JsonObject.class::cast)

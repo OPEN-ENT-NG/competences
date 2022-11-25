@@ -1,6 +1,6 @@
-import {ng, angular, idiom} from "entcore";
+import {ng, angular, idiom, _} from "entcore";
 import {IScope, ILocationService, IWindowService} from "angular";
-import {Devoir} from "../../models/teacher";
+import {Devoir, Periode, Utils} from "../../models/teacher";
 import {RootsConst} from "../../constants/roots.const";
 import {NoteService} from "../../services/note.service";
 import {AxiosError, AxiosResponse} from "axios";
@@ -22,11 +22,11 @@ interface IViewModel {
     validImport(): Promise<void>;
     importNote(): Promise<any>;
     disabledButton() : boolean;
-
 }
 
 interface IImportNoteProps {
     devoir: Devoir;
+    onImport;
 }
 
 interface IImportScope extends IScope   {
@@ -46,7 +46,8 @@ class Controller implements ng.IController, IViewModel {
 
     constructor(private $scope: IImportScope,
                 private $location:ILocationService,
-                private $window: IWindowService
+                private $window: IWindowService,
+                private $parse: any
                ) {
         this.lang = idiom;
         this.files = [];
@@ -75,6 +76,7 @@ class Controller implements ng.IController, IViewModel {
                 await utils.safeApply(this.$scope);
             } else {
                 this.cancelLightboxImportNote();
+                this.$parse(this.$scope.vm.onImport())();
             }
         } else {
             this.errorMessage = "competences.error.import.type.csv";
@@ -85,43 +87,54 @@ class Controller implements ng.IController, IViewModel {
         return this.files.length === 0 || (this.errorMessage && this.errorMessage.length > 0);
     }
 
-    async importNote() : Promise<any> {
+    async importNote(): Promise<any> {
             delete this.errorMessage;
             let formData = new FormData();
             formData.append('file', this.files[0], this.files[0].name);
 
-            await NoteService.importNote(this.devoir.id_groupe, this.devoir.id, formData)
+            await NoteService.importNote(this.devoir.id_groupe, this.devoir.id, this.devoir.type_groupe,
+                parseInt(<string>this.devoir.id_periode), formData)
                 .then((response: AxiosResponse) => {
                     if (response.data.status) {
-                        this.cancelLightboxImportNote();
-                        this.$window.location.reload(true);
+                        if (_.isEmpty(response.data.missing)){
+                            this.cancelLightboxImportNote();
+                            this.$parse(this.$scope.vm.onImport())();
+                        } else {
+                            this.isErrorStudent = true;
+                        }
 
                     } else {
-                        this.isErrorStudent = true;
+                        this.errorMessage = "competences.error.import.csv";
                     }
 
                 })
                 .catch((e: AxiosError) => {
-                    this.errorMessage = "competences.error.import.csv";
+                    if (e.response.data.status && e.response.data.status == "formate"){
+                        this.errorMessage = "competences.error.import.csv.formate";
+                    }
+                    else
+                        this.errorMessage = "competences.error.import.csv";
                 });
     }
 
-    isValid() : boolean {
+    isValid(): boolean {
         return  this.files.length > 0 ?
             this.files[0].name.endsWith('.csv') && this.files[0].name.trim() !== '' : false ;
     }
+
 }
 
-function directive() {
+function directive($parse) {
     return {
         restrict: 'E',
         templateUrl: `${RootsConst.directive}import-note/import-note.html`,
         scope: {
-            devoir: "="
+            devoir: "=",
+            onImport: "&"
         },
         controllerAs: 'vm',
         bindToController: true,
-        controller: ['$scope','$location','$window', Controller],
+        controller: ['$scope','$location','$window', '$parse', Controller],
         link: function (scope: ng.IScope,
                         element: ng.IAugmentedJQuery,
                         attrs: ng.IAttributes,

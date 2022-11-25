@@ -19,7 +19,6 @@ package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.model.SubTopic;
-import fr.openent.competences.model.importservice.ExercizerStudent;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -337,6 +336,8 @@ public interface UtilsService {
     /**
      * get the students infos of a class
      * @param idClasse
+     * @param typeClasse
+     * @param idPeriode
      */
-    Future<JsonArray> getEleveClasseInfos(String idClasse);
+    Future<JsonArray> getEleveClasseInfos(String idClasse, String typeClasse, Long idPeriode);
 }
