@@ -560,7 +560,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await $scope.currentDevoir.calculStats();
                 await Utils.stopMessageLoader($scope);
             });
-            console.log("methodLoadNote");
         }
 
         $scope.disabledExportSuiviClasseButton = function () {
