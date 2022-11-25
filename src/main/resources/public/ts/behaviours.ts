@@ -50,7 +50,6 @@ Behaviours.register('competences', {
             canSaveAppMatierePosiBilanPeriodique: "fr.openent.competences.controllers.NoteController|saveAppreciationMatiereAndPositionnementWorfklow",
             canUpdateBFCSynthese: 'fr.openent.competences.controllers.BFCController|createSyntheseWorfklow',
             canUpdateAvisConseilOrientation: 'fr.openent.competences.controllers.BilanPeriodiqueController|setAvisWorfklow',
-            paramServices: "fr.openent.competences.controllers.ServicesController|createService",
             canCreateEval: "fr.openent.competences.controllers.DevoirController|createDevoir",
             accessReleve: "fr.openent.competences.controllers.NoteController|getNoteElevePeriode",
             accessSuiviEleve: "fr.openent.competences.controllers.CompetenceNoteController|getCompetenceNoteEleve",
