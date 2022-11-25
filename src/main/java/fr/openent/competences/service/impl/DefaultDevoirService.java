@@ -1888,7 +1888,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         result.put("date", devoirJson.getString("date"));
         result.put("title", devoirJson.getString("name"));
         result.put("matiere", matiere != null ? matiere.getString("name") : "");
-        result.put("diviseur", devoirJson.getLong("diviseur"));
+        result.put(Field.DIVISEUR, Double.valueOf(devoirJson.getString(Field.DIVISEUR)));
         result.put("coefficient", devoirJson.getString("coefficient"));
 
         String note = devoirJson.getString("note");
@@ -1933,7 +1933,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                             Teacher teacher = new Teacher(matiereDevoirJson.getString("owner"));
                             Group group = new Group(matiereDevoirJson.getString("id_groupe"));
                             NoteDevoir note = new NoteDevoir(Double.parseDouble(matiereDevoirJson.getString("note")),
-                                    matiereDevoirJson.getLong("diviseur").doubleValue(),
+                                    Double.valueOf(matiereDevoirJson.getString(Field.DIVISEUR)),
                                     matiereDevoirJson.getBoolean("ramener_sur"),
                                     Double.parseDouble(matiereDevoirJson.getString(COEFFICIENT)));
 
@@ -2011,7 +2011,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                             }
                         }else{
                             NoteDevoir note = new NoteDevoir(Double.parseDouble(matiereDevoirJson.getString("note")),
-                                    matiereDevoirJson.getLong("diviseur").doubleValue(),
+                                    Double.valueOf(matiereDevoirJson.getString(Field.DIVISEUR)),
                                     matiereDevoirJson.getBoolean("ramener_sur"),
                                     Double.parseDouble(matiereDevoirJson.getString(COEFFICIENT)));
                             notes.add(note);

@@ -17,12 +17,15 @@
 
 package fr.openent.competences.controllers;
 
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
+import fr.openent.competences.importservice.ExercizerImportNote;
 import fr.openent.competences.model.*;
+import fr.openent.competences.model.importservice.ExercizerStudent;
 import fr.openent.competences.security.*;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
@@ -42,6 +45,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import io.vertx.core.Handler;
@@ -62,8 +66,8 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static fr.wseduc.webutils.Utils.isNotEmpty;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
@@ -80,8 +84,11 @@ public class NoteController extends ControllerHelper {
     private final UtilsService utilsService;
     private final ElementProgramme elementProgramme;
 
-    public NoteController(EventBus eb) {
+    private final Storage storage;
+
+    public NoteController(EventBus eb, Storage storage) {
         this.eb = eb;
+        this.storage = storage;
         notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         devoirsService = new DefaultDevoirService(this.eb);
         utilsService = new DefaultUtilsService(this.eb);
@@ -816,7 +823,7 @@ public class NoteController extends ControllerHelper {
                                                 Long sousMatiereId = note.getLong(Field.ID_SOUSMATIERE);
                                                 Long id_periode = note.getLong(ID_PERIODE);
                                                 NoteDevoir noteDevoir = new NoteDevoir(Double.parseDouble(note.getString(Field.VALEUR).replace(",",".")),
-                                                        Double.parseDouble(note.getInteger(Field.DIVISEUR).toString().replace(",",".")),
+                                                        Double.parseDouble(note.getString(Field.DIVISEUR).replace(",",".")),
                                                         note.getBoolean(Field.RAMENER_SUR),
                                                         Double.parseDouble(note.getString(Field.COEFFICIENT).replace(",",".")),
                                                         idEleve, id_periode, service, sousMatiereId);
@@ -1065,7 +1072,7 @@ public class NoteController extends ControllerHelper {
                                                                     }
                                                                     NoteDevoir noteDevoir = new NoteDevoir(
                                                                             Double.valueOf(note.getString("valeur")),
-                                                                            Double.valueOf(note.getLong("diviseur")),
+                                                                            Double.valueOf(note.getString(Field.DIVISEUR)),
                                                                             note.getBoolean("ramener_sur"),
                                                                             Double.valueOf(note.getString("coefficient")));
                                                                     if(note.getString("id_eleve").equals(idEleve)) {
@@ -1231,6 +1238,44 @@ public class NoteController extends ControllerHelper {
         final String idPeriodeString = request.params().get("idPeriode");
         notesService.getDataGraphDomaine(idEleve, null, idEtablissement, idClasse, typeClasse, idPeriodeString,
                 isNull(idPeriodeString),arrayResponseHandler(request));
+    }
+
+    @Post("/notes/:typeImportService/csv/exercizer/import/classes/:classId/devoirs/:devoirId/:classType/periods/:periodeId")
+    @ApiDoc("Set notes of a devoir by importing a CSV.")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void importExercizerCSV(final HttpServerRequest request) {
+        // typeImport
+        final String idClasse = request.params().get(Field.CLASSID);
+        final String idDevoir = request.params().get(Field.DEVOIRID);
+        final String typeClasse = request.params().get(Field.CLASSTYPE);
+        final Long idPeriode = Long.valueOf(request.params().get(Field.PERIODEID));
+        ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage, idClasse, typeClasse,
+                idPeriode, utilsService);
+        exercizerImportNote.run()
+                .onSuccess(students -> {
+                    List<Future<Void>> futures = students.stream().filter(student -> isNotNull(student.id()))
+                            .map(student -> notesService.insertOrUpdateDevoirNote(idDevoir, student.id(), student.getNote()))
+                            .collect(Collectors.toList());
+                    FutureHelper.all(futures)
+                            .onSuccess(res -> renderJson(request, new JsonObject()
+                                    .put(Field.STATUS, Field.OK)
+                                    .put(Field.MISSING, students.stream()
+                                            .filter(student -> isNull(student.id()))
+                                            .collect(Collectors.toList())))
+                            )
+                            .onFailure(err -> {
+                                err.printStackTrace();
+                                renderError(request);
+                            });
+                })
+                .onFailure(err -> {
+                    err.printStackTrace();
+                    if(err.getCause().getClass().equals(CsvRequiredFieldEmptyException.class))
+                        renderError(request, new JsonObject()
+                                .put(Field.STATUS, Field.FORMATE));
+                    else
+                        renderError(request);
+                });
     }
 
 }

@@ -63,6 +63,7 @@ import {inputTextList} from './directives/inputTextList';
 import {cSkillsBubble} from './directives/cSkillsBubble';
 import {messageLoader} from "./utils/directives/messageLoading";
 import {teachingsSkills} from "./directives/teachingsSkills";
+import {importNote} from "./directives/import-note/import-note.directive";
 
 ng.addRequiredModule('chart.js');
 
@@ -109,6 +110,7 @@ ng.directives.push(messageLoader);
 ng.directives.push(inputTextList);
 ng.directives.push(teachingsSkills);
 ng.directives.push(cSkillsBubble);
+ng.directives.push(importNote);
 
 
 routes.define(function ($routeProvider) {

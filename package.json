@@ -43,6 +43,7 @@
     "@mdi/font": "^4.4.95"
   },
   "devDependencies": {
+    "@types/angular": "^1.6.55",
     "@types/jest": "^22.2.0",
     "jest": "^24.7.1",
     "axios-mock-adapter": "^1.19.0",

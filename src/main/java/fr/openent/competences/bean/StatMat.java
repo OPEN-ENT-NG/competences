@@ -46,7 +46,7 @@ public class StatMat {
                     statClass.putMapEleveStat(note.getString(Field.ID_ELEVE),null,
                             new NoteDevoir(
                                     Double.valueOf(note.getString(Field.VALEUR)),
-                                    Double.valueOf(note.getInteger(Field.DIVISEUR)),
+                                    Double.valueOf(note.getString(Field.DIVISEUR)),
                                     note.getBoolean(Field.RAMENER_SUR),
                                     Double.valueOf(note.getString(Field.COEFFICIENT))));
                 }
@@ -63,7 +63,7 @@ public class StatMat {
                     statClass.putMapEleveStat(note.getString(Field.ID_ELEVE), null,
                             new NoteDevoir(
                                     Double.valueOf(note.getString(Field.VALEUR)),
-                                    Double.valueOf(note.getInteger(Field.DIVISEUR)),
+                                    Double.valueOf(note.getString(Field.DIVISEUR)),
                                     note.getBoolean(Field.RAMENER_SUR),
                                     Double.valueOf(note.getString(Field.COEFFICIENT))));
                 }
@@ -142,7 +142,7 @@ public class StatMat {
                     Long periodId = note.getLong(Field.ID_PERIODE);
                     NoteDevoir noteDevoir = new NoteDevoir(
                             Double.valueOf(note.getString(Field.VALEUR)),
-                            Double.valueOf(note.getInteger(Field.DIVISEUR)),
+                            Double.valueOf(note.getString(Field.DIVISEUR)),
                             note.getBoolean(Field.RAMENER_SUR),
                             Double.valueOf(note.getString(Field.COEFFICIENT)),
                             note.getString(Field.ID_ELEVE), periodId, service, sousMatiereId);
@@ -203,7 +203,7 @@ public class StatMat {
                     Long id_periode = note.getLong(Field.ID_PERIODE);
                     NoteDevoir noteDevoir = new NoteDevoir(
                             Double.valueOf(note.getString(Field.VALEUR)),
-                            Double.valueOf(note.getInteger(Field.DIVISEUR)),
+                            Double.valueOf(note.getString(Field.DIVISEUR)),
                             note.getBoolean(Field.RAMENER_SUR),
                             Double.valueOf(note.getString(Field.COEFFICIENT)),
                             note.getString(Field.ID_ELEVE), id_periode, service, sousMatiereId);

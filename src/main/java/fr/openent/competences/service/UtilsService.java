@@ -332,4 +332,12 @@ public interface UtilsService {
     void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<List<SubTopic>> promise);
 
     void getSubTopicCoeff(String idEtablissement,  Promise<List<SubTopic>> promise);
+
+    /**
+     * get the students infos of a class
+     * @param idClasse
+     * @param typeClasse
+     * @param idPeriode
+     */
+    Future<JsonArray> getEleveClasseInfos(String idClasse, String typeClasse, Long idPeriode);
 }
