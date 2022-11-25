@@ -77,7 +77,7 @@ public class ReportModelPrintExportController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(UserIdModelExportBulletin.class)
     public void putReportModel(final HttpServerRequest request) {
-        String idReportModel = request.getParam("idReportModel");
+        String idReportModel = request.getParam(Field.IDREPORTMODEL);
         RequestUtils.bodyToJson(request, bodyRequest -> {
             if (idReportModel == null) {
                 ManageError.requestFail(request, Common.INFO.getString(), "Id Report model is null.");
@@ -100,7 +100,7 @@ public class ReportModelPrintExportController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessExportModelBulletin.class)
     public void getReportModelbyId(final HttpServerRequest request) {
-        String idReportModel = request.getParam("idReportModel");
+        String idReportModel = request.getParam(Field.IDREPORTMODEL);
         if (idReportModel == null) {
             ManageError.requestFail(request, Common.INFO.getString(), "Id Report model is null.");
             return;
@@ -121,7 +121,7 @@ public class ReportModelPrintExportController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(UserIdModelExportBulletin.class)
     public void deleteReportModel(final HttpServerRequest request) {
-        String idReportModel = request.getParam("idReportModel");
+        String idReportModel = request.getParam(Field.IDREPORTMODEL);
         if (idReportModel.isEmpty()) {
             ManageError.requestFail(request, Common.INFO.getString(), "Id report model is empty.");
             return;
@@ -138,7 +138,7 @@ public class ReportModelPrintExportController extends ControllerHelper {
     }
 
     private ReportModelPrintExport createReportModelWithBodyRequest(JsonObject bodyRequest) {
-        String structureId = bodyRequest.getString("structureId");
+        String structureId = bodyRequest.getString(Field.STRUCTUREID);
         String title = bodyRequest.getString("title");
         JsonObject preferencesCheckbox = bodyRequest.getJsonObject("preferencesCheckbox");
         JsonObject preferencesText = bodyRequest.getJsonObject("preferencesText");
