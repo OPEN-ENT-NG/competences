@@ -1,6 +1,7 @@
 package fr.openent.competences.security.modelbulletinrights;
 
 import com.mongodb.QueryBuilder;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportMongo;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.mongodb.MongoQueryBuilder;
@@ -24,7 +25,7 @@ import static fr.openent.competences.security.utils.WorkflowActionUtils.hasRight
             return;
         }
         // Verify if userId equals id user mongo
-        String idReportModel = request.getParam("idReportModel");
+        String idReportModel = request.getParam(Field.IDREPORTMODEL);
         QueryBuilder query = QueryBuilder.start(ReportModelPrintExportMongo.KEY_ID.getString()).is(idReportModel).and(ReportModelPrintExportMongo.KEY_USER_ID.getString()).is(user.getUserId());
         MongoAppFilter.executeCountQuery(request, ReportModelPrintExportMongo.COLLECTION_REPORT_MODEL.getString(), MongoQueryBuilder.build(query), 1, event -> {
             if (Boolean.TRUE.equals(event)) {
