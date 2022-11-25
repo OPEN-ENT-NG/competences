@@ -1,4 +1,4 @@
-package fr.openent.competences.service;
+package fr.openent.competences.service.share;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
