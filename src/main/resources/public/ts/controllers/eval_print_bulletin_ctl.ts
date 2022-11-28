@@ -352,7 +352,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
         async function getPreferences(): Promise<void> {
             const competences = await Me.preference('competences');
             const optionsPrintBulletin = (Utils.isNull(competences) ? undefined : competences.printBulletin);
-            const idModelBulletinSelected =  (Utils.isNull(competences) ? undefined : competences.modelBulletinSelected);
+            const idModelBulletinSelected =  (Utils.isNull(competences) ? undefined : competences.idModelBulletinSelected);
             $scope.print = (Utils.isNull(optionsPrintBulletin)) ? {} : optionsPrintBulletin;
             if(idModelBulletinSelected) {
                 await getReportModelAllSelected(idModelBulletinSelected._id);
@@ -364,7 +364,8 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
 
         async function getReportModelAllSelected(idModel : string): Promise<void> {
             userReportModel = await ReportModelPrintExportService.getModelSelected(idModel);
-            await syncPreferences(userReportModel);
+            if(userReportModel) await syncPreferences(userReportModel);
+
         }
 
         async function syncPreferencesText(): Promise<void> {

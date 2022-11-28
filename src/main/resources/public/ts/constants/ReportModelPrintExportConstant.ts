@@ -12,7 +12,7 @@ export enum ReportModelPrintExportConstant {
     URL_API_GET_ALL = "/competences/reports-models-print-export/structure/",
     URL_API_PUT = "/competences/report-model-print-export/",
     URL_API_GET_SELECTED = "/competences/reports-models-print-export/selected",
-    URL_API_GET_ONE = "/competences/reports-models-print-export/",
+    URL_API_GET_ONE = "/competences/report-model-print-export/",
     URL_API_DELETE = "/competences/report-model-print-export/",
     DELETED = "deleted",
     PUTED = "puted",
