@@ -57,30 +57,6 @@ public interface ReportModelPrintExportService {
      */
     void putReportModel(ReportModelPrintExport reportModelPrintExport, Handler<Either<String, JsonObject>> handler);
 
-
-    /**
-     * Get reports models selected in mongoDB
-     *
-     * @param reportModelPrintExport { ReportModelPrintExport } user id
-     * @param handler { Handler<Either<String, JsonObject>> } Response of mongoDB =>
-     * {
-     *      "results":
-     *         [
-     *                {
-     *                   "_id": "b61898c3-d5c9-4e82-87e1-5b1781fc0418",
-     *                   "userId": "43512bf6-8f0d-4a78-ae3d-a32f8e48a1d8",
-     *                   "title": "no seleted",
-     *                   "selected": true,
-     *                   "preferences": {
-     *                   "moyenneClasse": false
-     *                   }
-     *               }, ...
-     *           ],
-     *      "number": 4
-     * }
-     */
-    void getReportModelSelected(ReportModelPrintExport reportModelPrintExport, Handler<Either<String, JsonObject>> handler);
-
     /**
      * Delete report model in mongoDB
      *

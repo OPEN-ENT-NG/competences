@@ -292,6 +292,7 @@ body.evaluations {
 
   .disabled{
     opacity: 0.45;
+    cursor: default;
   }
 
   @media screen and (min-device-width:$tablette ) {
@@ -3501,6 +3502,13 @@ body.evaluations {
 
     .margin-left-10p {
       margin: 0 0 0 10% !important;
+    }
+  }
+
+  .lightbox-reportmodel {
+    .warning {
+      width: 61%;
+      display: inline-block;
     }
   }
 

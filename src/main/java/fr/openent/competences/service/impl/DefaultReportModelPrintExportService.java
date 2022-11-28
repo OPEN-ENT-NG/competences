@@ -24,9 +24,17 @@ public class DefaultReportModelPrintExportService extends MongoDbCrudService imp
     }
 
     public void getReportModel(ReportModelPrintExport reportModelPrintExport, Handler<Either<String, JsonObject>> handler) {
-        JsonObject matcher = new JsonObject()
-                .put(ReportModelPrintExportMongo.KEY_USER_ID.getString(), reportModelPrintExport.getUserId());
-        mongo.find(collection, matcher,validActionResultHandler(handler));
+        JsonObject matcher = new JsonObject();
+        if(reportModelPrintExport.getId() != null){
+            matcher.put(ReportModelPrintExportMongo.KEY_ID.getString(), reportModelPrintExport.getId());
+        }
+        if(reportModelPrintExport.getUserId() != null){
+            matcher.put(ReportModelPrintExportMongo.KEY_USER_ID.getString(), reportModelPrintExport.getUserId());
+        }
+        if(reportModelPrintExport.getStructureId() != null){
+            matcher.put(ReportModelPrintExportMongo.KEY_STRUCTUREID.getString(), reportModelPrintExport.getStructureId());
+        }
+        mongo.find(collection, matcher, validActionResultHandler(handler));
     }
 
     public void putReportModel(ReportModelPrintExport reportModelPrintExport, Handler<Either<String, JsonObject>> handler){
@@ -42,13 +50,6 @@ public class DefaultReportModelPrintExportService extends MongoDbCrudService imp
             update.set(attr, jsonReportModel.getValue(attr));
         }
         mongo.update(this.collection, MongoQueryBuilder.build(matcher), update.build(),  validActionResultHandler(handler));
-    }
-
-    public void getReportModelSelected(ReportModelPrintExport reportModelPrintExport, Handler<Either<String, JsonObject>> handler) {
-        JsonObject matcher = new JsonObject()
-                .put(ReportModelPrintExportMongo.KEY_USER_ID.getString(), reportModelPrintExport.getUserId())
-                .put(ReportModelPrintExportMongo.KEY_SELECTED.getString(), true);
-        mongo.find(collection, matcher, validActionResultHandler(handler));
     }
 
     public void deleteReportModel(ReportModelPrintExport reportModelPrintExport, Handler<Either<String, JsonObject>> handler) {

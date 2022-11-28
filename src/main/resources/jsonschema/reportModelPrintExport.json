@@ -3,11 +3,11 @@
   "type": "object",
   "additionalProperties": true,
   "properties": {
-    "title": {
+    "structureId": {
       "type": "string"
     },
-    "selected": {
-      "type": "boolean"
+    "title": {
+      "type": "string"
     },
     "preferencesCheckbox": {
       "type": "object"
@@ -17,8 +17,8 @@
     }
   },
   "required": [
+    "structureId",
     "title",
-    "selected",
     "preferencesCheckbox",
     "preferencesText"
   ]

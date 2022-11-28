@@ -36,6 +36,7 @@ public class Field {
     public static final String DEVOIRID = "devoirId";
     public static final String PERIODEID = "periodeId";
     public static final String TEACHER_ID = "teacher_id";
+    public static final String IDREPORTMODEL = "idReportModel";
 
 
     public static final String MAIN_TEACHER_ID = "main_teacher_id";
