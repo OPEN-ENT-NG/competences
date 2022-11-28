@@ -137,7 +137,7 @@ public class DefaultUtilsService implements UtilsService {
     public void getMultiTeachersByClass(final String idEtablissement, final String idClasse, final Integer idPeriode,
                                         Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "multiTeaching.getMultiTeachersByClass")
+                .put("action", "multiTeaching.getMultiteachersAndDeletedByClass")
                 .put("structureId", idEtablissement)
                 .put("groupId", idClasse)
                 .put("periodId", idPeriode != null ? idPeriode.toString() : null);
@@ -145,7 +145,6 @@ public class DefaultUtilsService implements UtilsService {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray result = body.getJsonArray(RESULTS);
-                log.info("results getMultiTeachersByClass" + result);
                 handler.handle(new Either.Right<>(result));
             } else {
                 handler.handle(new Either.Left<>(body.getString("message")));
@@ -158,7 +157,7 @@ public class DefaultUtilsService implements UtilsService {
     public void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
                                  Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "multiTeaching.getMultiteachers")
+                .put("action", "multiTeaching.getMultiteachersAndDeleted")
                 .put("structureId", structureId)
                 .put("groupIds", groupIds)
                 .put("periodId", PeriodeId != null ? PeriodeId.toString() : null);
@@ -166,7 +165,6 @@ public class DefaultUtilsService implements UtilsService {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray result = body.getJsonArray(RESULTS);
-                log.info("results " + result);
                 handler.handle(new Either.Right<>(result));
             } else {
                 handler.handle(new Either.Left<>(body.getString("message")));
