@@ -50,6 +50,8 @@ import java.util.stream.Collectors;
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.constants.Field.MULTI_TEACHERS_AND_DELETED;
+import static fr.openent.competences.constants.Field.MULTI_TEACHERS_AND_DELETED_BY_CLASS;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.CONNECTION_WAS_CLOSED;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
@@ -137,7 +139,7 @@ public class DefaultUtilsService implements UtilsService {
     public void getMultiTeachersByClass(final String idEtablissement, final String idClasse, final Integer idPeriode,
                                         Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "multiTeaching.getMultiteachersAndDeletedByClass")
+                .put("action", MULTI_TEACHERS_AND_DELETED_BY_CLASS)
                 .put("structureId", idEtablissement)
                 .put("groupId", idClasse)
                 .put("periodId", idPeriode != null ? idPeriode.toString() : null);
@@ -157,7 +159,7 @@ public class DefaultUtilsService implements UtilsService {
     public void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
                                  Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "multiTeaching.getMultiteachersAndDeleted")
+                .put("action", MULTI_TEACHERS_AND_DELETED)
                 .put("structureId", structureId)
                 .put("groupIds", groupIds)
                 .put("periodId", PeriodeId != null ? PeriodeId.toString() : null);

@@ -113,7 +113,6 @@ public class DevoirControllerHelper {
         return event -> {
             if (event.succeeded() && Field.OK.equals(event.result().body().getString(Field.STATUS))) {
                 JsonArray results = event.result().body().getJsonArray(Field.RESULTS, new JsonArray());
-                log.info("getReplyHandler results " + results);
             JsonArray statements = new JsonArray();
             List<String> actions = new ArrayList<String>();
             actions.add(Competences.DEVOIR_ACTION_UPDATE);if (results.size() > 0) {
@@ -142,7 +141,6 @@ public class DevoirControllerHelper {
         return event -> {
             if (event.succeeded() && Field.OK.equals(event.result().body().getString(Field.STATUS))) {
                 JsonArray results = event.result().body().getJsonArray("results");
-                log.info("getReplyHandler results " + results);
                 List<String> actions = new ArrayList<String>();
                 actions.add(Competences.DEVOIR_ACTION_UPDATE);
                 JsonArray statements = new JsonArray();

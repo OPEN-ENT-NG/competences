@@ -74,6 +74,8 @@ public class Field {
 
     public static final String MULTITEACHING = "multiTeaching";
     public static final String GETIDMULTITEACHERS = "getIdMultiTeachers";
+    public static final String MULTI_TEACHERS_AND_DELETED_BY_CLASS= "multiTeaching.getMultiteachersAndDeletedByClass";
+    public static final String MULTI_TEACHERS_AND_DELETED = "multiTeaching.getMultiteachersAndDeleted";
 
     //Modules
     public static final String PRESENCES = "presences";
