@@ -156,11 +156,38 @@ public class DefaultUtilsService implements UtilsService {
     @Override
     public void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
                                  Handler<Either<String, JsonArray>> handler) {
+
+        getClasseGroupe("afba9101-14b5-4554-a50c-36967dc79522", classesEvent -> {
+            if (classesEvent.isRight()) {
+                List<String> idClasses = new ArrayList<>();
+                for(Object o : ((JsonObject) classesEvent.right().getValue().iterator().next()).getJsonArray("id_classes")) {
+                    idClasses.add((String) o);
+                }
+                JsonObject action = new JsonObject()
+                        .put("action", "multiTeaching.getMultiteachers")
+                        .put("structureId", structureId)
+                        .put("groupIds", groupIds)
+                        .put("periodId", PeriodeId != null ? PeriodeId.toString() : null)
+                        .put("classId", idClasses.get(0));
+                eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+                    JsonObject body = message.body();
+                    if (OK.equals(body.getString(STATUS))) {
+                        JsonArray result = body.getJsonArray(RESULTS);
+                        handler.handle(new Either.Right<>(result));
+                    } else {
+                        handler.handle(new Either.Left<>(body.getString("message")));
+                        log.error("[Competences] DefaultUtilsService at getMultiteachers : " + body.getString("message"));
+                    }
+                }));
+            }
+        });
+    }
+
+    @Override
+    public void getClasseGroupe(final String idGroup, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "multiTeaching.getMultiteachers")
-                .put("structureId", structureId)
-                .put("groupIds", groupIds)
-                .put("periodId", PeriodeId != null ? PeriodeId.toString() : null);
+                .put("action", "multiTeaching.getClasseGroupe")
+                .put("groupId", idGroup);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
