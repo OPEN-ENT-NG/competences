@@ -105,6 +105,11 @@ public class Field {
     public static final String FORMATE = "formate";
     public static final String IS_VISIBLE = "is_visible";
 
+    public static final String USERID = "userId";
+
+    //
+
+    public static final String STRUCTUREID = "structureId";
     public static final String ISSKILLAVERAGE = "isSkillAverage";
     public static final String TYPECLASSE = "typeClasse";
 
@@ -205,4 +210,5 @@ public class Field {
     //numbers
     public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
     public static final int DIVISEUR_NOTE = 20;
+
 }

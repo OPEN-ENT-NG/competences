@@ -25,6 +25,7 @@ import org.entcore.common.user.UserInfos;
 import java.util.ArrayList;
 import java.util.List;
 
+import static fr.openent.competences.constants.Field.USERID;
 import static fr.wseduc.webutils.http.Renders.badRequest;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
@@ -63,7 +64,7 @@ public class DevoirControllerHelper {
                             .put("subjectId", devoir.getSubjectId())
                             .put("structureId", devoir.getStructureId())
                             .put("groupId", devoir.getGroupId())
-                            .put("userId", devoir.getOwner());
+                            .put(USERID, devoir.getOwner());
                     eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirWithId, user, devoirsService, request));
                 } else {
                     badRequest(request);
