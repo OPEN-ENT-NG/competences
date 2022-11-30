@@ -27,6 +27,7 @@ import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.webutils.Either;
+import io.netty.handler.codec.DateFormatter;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -46,10 +47,12 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -361,9 +364,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         JsonObject periode = periodes.getJsonObject(j);
                         String timestamp_begin = periode.getString("timestamp_dt");
                         String timestamp_end = periode.getString("timestamp_fn");
-                        DateTime begin = new DateTime(timestamp_begin);
-                        DateTime end = new DateTime(timestamp_end);
-                        if (!begin.isAfterNow() && !end.isBeforeNow() && (listClasses.get(i).equals(periode.getString("id_classe"))
+                        LocalDate begin = new DateTime(timestamp_begin).toLocalDate();
+                        LocalDate end = new DateTime(timestamp_end).toLocalDate();
+                        LocalDate now = LocalDate.now();
+                        if ((begin.isBefore(now) || begin.isEqual(now)) && (end.isAfter(now) || end.isEqual(now))
+                                && (listClasses.get(i).equals(periode.getString("id_classe"))
                                 || listClasses.get(i).equals(periode.getString("id_groupe")))) {
                             periodesResult.put(listClasses.get(i), periode);
                         }
