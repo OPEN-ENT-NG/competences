@@ -294,6 +294,9 @@ body.evaluations {
     opacity: 0.45;
     cursor: default;
   }
+  .noClick{
+    cursor: default;
+  }
 
   @media screen and (min-device-width:$tablette ) {
     .enLargedLightBox div.content {
