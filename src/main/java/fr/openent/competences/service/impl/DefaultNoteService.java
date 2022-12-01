@@ -2977,10 +2977,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             log.error("getTotaleDatasReleve (idElevesEvent.failed()): " +
                                     idElevesEvent.cause());
                         }
-//                        } catch (Exception error) {
-//                            log.error("getTotaleDatasReleve (prepare data) failed: " + error);
-//                            handler.handle(new Either.Left<>("getTotaleDatasReleve (prepare data) failed : " + error));
-//                        }
                     });
                 }
             });
