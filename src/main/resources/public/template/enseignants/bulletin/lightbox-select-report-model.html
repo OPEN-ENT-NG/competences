@@ -18,10 +18,10 @@
                     <span></span>
                 </label>
                 <!--no edit-->
-                <div class="cell two"
+                <div class="cell six"
                      ng-if="!reportModel.iAmUpdated"
-                     ng-class="{disabled: !checkUpdateReportModel(reportModel)}"
-                     ng-click="openUpdateMode(reportModel)">
+                     ng-click="openUpdateMode(reportModel)"
+                     ng-class="{noClick: !checkUpdateReportModel(reportModel)}">
                     [[reportModel.title]]
                 </div>
                 <!--edit-->
