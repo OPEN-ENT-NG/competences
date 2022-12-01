@@ -37,7 +37,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 
 import java.math.RoundingMode;
@@ -2007,7 +2006,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         //Récupération des Multi-teachers
                         Promise<JsonArray> multiTeachingPromise = Promise.promise();
-                        utilsService.getMultiTeachers(idEtablissement,
+                        utilsService.getMultiTeachers(idEtablissement, new JsonArray().add(idClass),
                                 new JsonArray().add(idClass), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
                         //Récupération des Sous-Matières
@@ -2658,7 +2657,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
 
                 //Récupération des Multi-teachers
-                utilsService.getMultiTeachers(idEtablissement,
+                utilsService.getMultiTeachers(idEtablissement, new JsonArray().add(idClasse),
                         new JsonArray().add(idClasse), (idPeriode != null ? idPeriode.intValue() : null), FutureHelper.handlerJsonArray(multiTeachingPromise));
 
                 new DefaultExportBulletinService(eb, null).getStructure(idEtablissement, structurePromise);
@@ -2773,7 +2772,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                     //Récupération des Multi-teachers
                     Promise<JsonArray> multiTeachingPromise = Promise.promise();
-                    utilsService.getMultiTeachers(idEtablissement,
+                    utilsService.getMultiTeachers(idEtablissement, new JsonArray().add(idClasse),
                             new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
                     //Récupération des Sous-Matières
@@ -4090,7 +4089,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                     //Récupération des Multi-teachers
                     Promise<Object> multiTeachingPromise = Promise.promise();
-                    utilsService.getMultiTeachers(idEtablissement,
+                    utilsService.getMultiTeachers(idEtablissement, new JsonArray().add(idClasse),
                             new JsonArray().add(idClasse), (idPeriode != null ? idPeriode.intValue() : null), FutureHelper.handlerJsonArray(multiTeachingPromise));
 
                     //Récupération des Sous-Matières
@@ -4715,8 +4714,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         Promise<Object> multiTeachingPromise = Promise.promise();
         detailsFuture.add(multiTeachingPromise.future());
 
-        utilsService.getMultiTeachers(idEtablissement,
-                new JsonArray().add(idClasse), null ,FutureHelper.handlerJsonArray(multiTeachingPromise));
+        utilsService.getMultiTeachers(idEtablissement, new JsonArray().add(idClasse),
+                new JsonArray().add(idClasse), null, FutureHelper.handlerJsonArray(multiTeachingPromise));
 
         utilsService.getSubTopicCoeff(idEtablissement,idClasse,subTopicCoefPromise);
         utilsService.getServices(idEtablissement,

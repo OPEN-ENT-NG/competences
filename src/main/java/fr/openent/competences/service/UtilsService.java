@@ -57,7 +57,11 @@ public interface UtilsService {
 
     void getMultiTeachersByClass( final String idEtablissement, final String idClasse, final Integer idPeriode,
                                    Handler<Either<String, JsonArray>> handler);
-    void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
+
+    void getMultiTeachers(String structureId, JsonArray classIds, JsonArray groupIds, Integer PeriodeId,
+                          Promise<JsonArray> promise);
+
+    void getMultiTeachers(final String structureId, final JsonArray classIds, final JsonArray groupIds, final Integer PeriodeId,
                           Handler<Either<String, JsonArray>> handler);
 
     void getClasseGroupe(String idGroup, Handler<Either<String, JsonArray>> handler);

@@ -1543,9 +1543,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 );
 
                 Future<JsonArray> multiTeachersFuture = Future.future();
-                utilsService.getMultiTeachers(idEtablissement, groups, idPeriode != null ? idPeriode.intValue() : null,
-                        multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent)
-                );
+                utilsService.getMultiTeachers(idEtablissement, groups, groups,  //FIXME CHANGE 1st GROUPS to IDCLASSE
+                        idPeriode != null ? idPeriode.intValue() : null,
+                        multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
 
                 getSubTopicCoeff(idEtablissement)
                         .onSuccess(subTopics -> CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(teachersEvent -> {
@@ -1735,9 +1735,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 );
 
                 Future<JsonArray> multiTeachersFuture = Future.future();
-                utilsService.getMultiTeachers(idEtablissement, groups, idPeriode != null ? idPeriode.intValue() : null,
-                        multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent)
-                );
+                utilsService.getMultiTeachers(idEtablissement, groups, groups,  //FIXME CHANGE 1st GROUPS to idClasse
+                        idPeriode != null ? idPeriode.intValue() : null,
+                        multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
 
                 Future<JsonArray> devoirWithCompetencesFuture = Future.future();
                 listDevoirsWithCompetences(idEleve, idPeriode, idMatiere, groups,

@@ -25,7 +25,6 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.importservice.ExercizerImportNote;
 import fr.openent.competences.model.*;
-import fr.openent.competences.model.importservice.ExercizerStudent;
 import fr.openent.competences.security.*;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
@@ -740,7 +739,7 @@ public class NoteController extends ControllerHelper {
 
                     //Récupération des Multi-teachers
                     Promise<JsonArray> multiTeachingPromise = Promise.promise();
-                    utilsService.getMultiTeachers(idEtablissement,
+                    utilsService.getMultiTeachers(idEtablissement, new JsonArray().add(idClasse),
                             new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
                     //Récupération des Sous-Matières

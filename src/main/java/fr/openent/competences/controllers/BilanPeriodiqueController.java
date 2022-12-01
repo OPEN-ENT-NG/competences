@@ -90,18 +90,18 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     utilsService.getServices(idEtablissement, idGroupClasse,
                             servicesEvent -> formate(servicesFuture, servicesEvent));
 
-                    Future<JsonArray> multiTeachersFuture = Future.future();
-                    utilsService.getMultiTeachers(idEtablissement, idGroupClasse, idPeriode != null ? idPeriode.intValue() : null,
-                            multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
+                    Promise<JsonArray> multiTeachersFuture = Promise.promise();
+                    utilsService.getMultiTeachers(idEtablissement, new JsonArray().add(idClasse), idGroupClasse,
+                            idPeriode != null ? idPeriode.intValue() : null, multiTeachersFuture);
 
-                    CompositeFuture.all(servicesFuture, multiTeachersFuture,subTopicCoefPromise.future()).setHandler(futuresEvent -> {
+                    CompositeFuture.all(servicesFuture, multiTeachersFuture.future(),subTopicCoefPromise.future()).setHandler(futuresEvent -> {
                         if (futuresEvent.failed()) {
                             String error = futuresEvent.cause().getMessage();
                             log.error(error);
                             badRequest(request);
                         } else {
                             JsonArray servicesJsonArray = servicesFuture.result();
-                            JsonArray multiTeachers = multiTeachersFuture.result();
+                            JsonArray multiTeachers = multiTeachersFuture.future().result();
                             List<SubTopic> subTopics = subTopicCoefPromise.future().result();
                             Structure structure = new Structure();
                             structure.setId(idEtablissement);

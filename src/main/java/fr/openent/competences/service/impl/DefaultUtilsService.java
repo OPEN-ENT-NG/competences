@@ -154,33 +154,108 @@ public class DefaultUtilsService implements UtilsService {
     }
 
     @Override
-    public void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
+    public void getMultiTeachers(final String structureId, JsonArray classIds, final JsonArray groupIds, final Integer PeriodeId,
+                                 Promise<JsonArray> promise) {
+
+        JsonArray idClasses = new JsonArray();
+
+        if(classIds.size() == 1){
+            getClasseGroupe(classIds.getString(0), classesEvent -> {
+                if (classesEvent.isRight()) {
+                    JsonArray classes = classesEvent.right().getValue();
+                    if (classes.isEmpty())
+                        getMultiTeachers(structureId, groupIds, PeriodeId, promise, new JsonArray().add(classIds.getString(0)));
+                    else {
+                        for(Object o : ((JsonObject) classes.iterator().next()).getJsonArray("id_classes")) {
+                            idClasses.add((String) o);
+                        }
+                        getMultiTeachers(structureId, groupIds, PeriodeId, promise, idClasses);
+                    }
+
+                }
+                else {
+                    promise.fail(classesEvent.left().getValue());
+                }
+            });
+        }
+        else if (classIds.size() > 1){
+            for(Object o : ((JsonObject) classIds.iterator().next()).getJsonArray("id_classes")) {
+                idClasses.add((String) o);
+            }
+            getMultiTeachers(structureId, groupIds, PeriodeId, promise, idClasses);
+        }
+        //FIXME : Can put error if classIds.size < 1
+    }
+
+    private void getMultiTeachers(String structureId, JsonArray groupIds, Integer PeriodeId, Promise<JsonArray> promise, JsonArray idClasses) {
+        JsonObject action = new JsonObject()
+                .put("action", "multiTeaching.getMultiteachers")
+                .put("structureId", structureId)
+                .put("groupIds", groupIds)
+                .put("periodId", PeriodeId != null ? PeriodeId.toString() : null)
+                .put("classIds", idClasses);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                promise.complete(body.getJsonArray(RESULTS));
+            } else {
+                promise.fail((body.getString("message")));
+                log.error("[Competences] DefaultUtilsService at getMultiteachers : " + body.getString("message"));
+            }
+        }));
+    }
+
+
+
+    @Override
+    public void getMultiTeachers(final String structureId, JsonArray classIds, final JsonArray groupIds, final Integer PeriodeId,
                                  Handler<Either<String, JsonArray>> handler) {
 
-        getClasseGroupe("afba9101-14b5-4554-a50c-36967dc79522", classesEvent -> {
-            if (classesEvent.isRight()) {
-                List<String> idClasses = new ArrayList<>();
-                for(Object o : ((JsonObject) classesEvent.right().getValue().iterator().next()).getJsonArray("id_classes")) {
-                    idClasses.add((String) o);
-                }
-                JsonObject action = new JsonObject()
-                        .put("action", "multiTeaching.getMultiteachers")
-                        .put("structureId", structureId)
-                        .put("groupIds", groupIds)
-                        .put("periodId", PeriodeId != null ? PeriodeId.toString() : null)
-                        .put("classId", idClasses.get(0));
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
-                    JsonObject body = message.body();
-                    if (OK.equals(body.getString(STATUS))) {
-                        JsonArray result = body.getJsonArray(RESULTS);
-                        handler.handle(new Either.Right<>(result));
-                    } else {
-                        handler.handle(new Either.Left<>(body.getString("message")));
-                        log.error("[Competences] DefaultUtilsService at getMultiteachers : " + body.getString("message"));
+        JsonArray idClasses = new JsonArray();
+
+        if(classIds.size() == 1){
+            getClasseGroupe(classIds.getString(0), classesEvent -> {
+                if (classesEvent.isRight()) {
+                    JsonArray classes = classesEvent.right().getValue();
+                    if (classes.isEmpty())
+                        getMultiTeachers(structureId, groupIds, PeriodeId, handler, new JsonArray().add(classIds.getString(0)));
+                    else {
+                        for(Object o : ((JsonObject) classes.iterator().next()).getJsonArray("id_classes")) {
+                            idClasses.add((String) o);
+                        }
+                        getMultiTeachers(structureId, groupIds, PeriodeId, handler, idClasses);
                     }
-                }));
+
+                }
+            });
+        }
+        else if (classIds.size() > 1){
+            for(Object o : ((JsonObject) classIds.iterator().next()).getJsonArray("id_classes")) {
+                idClasses.add((String) o);
             }
-        });
+            getMultiTeachers(structureId, groupIds, PeriodeId, handler, idClasses);
+        }
+        //FIXME : Can put error if classIds.size < 1
+    }
+
+
+    private void getMultiTeachers(String structureId, JsonArray groupIds, Integer PeriodeId, Handler<Either<String, JsonArray>> handler, JsonArray idClasses) {
+        JsonObject action = new JsonObject()
+                .put("action", "multiTeaching.getMultiteachers")
+                .put("structureId", structureId)
+                .put("groupIds", groupIds)
+                .put("periodId", PeriodeId != null ? PeriodeId.toString() : null)
+                .put("classIds", idClasses);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray result = body.getJsonArray(RESULTS);
+                handler.handle(new Either.Right<>(result));
+            } else {
+                handler.handle(new Either.Left<>(body.getString("message")));
+                log.error("[Competences] DefaultUtilsService at getMultiteachers : " + body.getString("message"));
+            }
+        }));
     }
 
     @Override
@@ -305,8 +380,8 @@ public class DefaultUtilsService implements UtilsService {
         getServices(idEtablissement, idClasses, event -> formate(servicesFuture, event));
 
         Future<JsonArray> multiTeachersFuture = Future.future();
-        getMultiTeachers(idEtablissement, idClasses, idPeriode != null ? idPeriode.intValue() : null,
-                event -> formate(multiTeachersFuture, event));
+        getMultiTeachers(idEtablissement, idClasses, idClasses,
+                idPeriode != null ? idPeriode.intValue() : null, event -> formate(multiTeachersFuture, event));
 
         CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(event -> {
             if(event.failed()) {

@@ -2792,8 +2792,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         Utils.getElevesClasse(eb, idClasse, idPeriode, listStudentsPromise);
                         utilsService.getServices(firstStudent.getString(IDETABLISSEMENT),
                                 new JsonArray(groupIds),FutureHelper.handlerJsonArray(servicesPromise));
-                        utilsService.getMultiTeachers(firstStudent.getString(IDETABLISSEMENT),
-                                new JsonArray(groupIds),idPeriode.intValue() ,FutureHelper.handlerJsonArray(multiTeachingPromise));
+                        utilsService.getMultiTeachers(firstStudent.getString(IDETABLISSEMENT), new JsonArray().add(idClasse),
+                                new JsonArray(groupIds), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise));
 
                         int finalNbOptions = nbOptions;
                         CompositeFuture.all(promises).onSuccess(success -> {

@@ -31,7 +31,6 @@ import fr.openent.competences.service.digitalSkills.DigitalSkillsService;
 import fr.openent.competences.service.digitalSkills.impl.DefaultClassAppreciationDigitalSkills;
 import fr.openent.competences.service.digitalSkills.impl.DefaultDigitalSkillsService;
 import fr.openent.competences.service.impl.*;
-import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -53,7 +52,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.xml.sax.SAXException;
@@ -642,9 +640,9 @@ public class LSUController extends ControllerHelper {
                                     servicesEvent -> formate(servicesFuture, servicesEvent));
 
                             Future<JsonArray> multiTeachersFuture = Future.future();
-                            listGetProjectAndCompNum.add(multiTeachersFuture);
-                            utilsService.getMultiTeachers(idStructure, new JsonArray(idsGroupsClasses), null,
-                                    multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
+                            listGetProjectAndCompNum.add(multiTeachersFuture); //FIXME : Check si le jsonarray de idsclasse donne un résultat correct pour appeler la fonction
+                            utilsService.getMultiTeachers(idStructure, new JsonArray(idsClasse), new JsonArray(idsGroupsClasses),
+                                    null, multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
 
                             CompositeFuture.all(listGetProjectAndCompNum).setHandler(eventProjectCompNum -> {
                                 if(eventProjectCompNum.succeeded()){

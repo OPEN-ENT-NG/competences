@@ -23,7 +23,6 @@ import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
-import fr.openent.competences.security.AccessAdminHeadTeacherFilter;
 import fr.openent.competences.security.AccessChildrenParentFilter;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
@@ -620,7 +619,7 @@ public class ExportPDFController extends ControllerHelper {
         });
 
         Promise<JsonArray> multiTeachingPromise = Promise.promise();
-        utilsService.getMultiTeachers(idEtablissement,
+        utilsService.getMultiTeachers(idEtablissement, new JsonArray().add(idClasse),
                 new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
         Promise<JsonArray> servicesPromise = Promise.promise();
