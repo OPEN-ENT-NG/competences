@@ -105,8 +105,6 @@ public class Field {
     public static final String FORMATE = "formate";
     public static final String IS_VISIBLE = "is_visible";
 
-    public static final String USERID = "userId";
-
     //
 
     public static final String STRUCTUREID = "structureId";
