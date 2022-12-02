@@ -10,7 +10,9 @@ public class Field {
     //id
     public static final String ID = "id";
     public static final String _ID = "_id";
+    public static final String IDDOMAINE = "idDomaine";
     public static final String IDSTRUCTURE = "idStructure";
+    public static final String STRUCTUREID = "structureId";
     public static final String IDETABLISSEMENT = "idEtablissement";
     public static final String IDCLASSE = "idClasse";
     public static final String ID_STRUCTURE = "id_structure";
@@ -34,16 +36,22 @@ public class Field {
     public static final String ID_ENSEIGNANT = "id_enseignant";
     public static final String CLASSID = "classId";
     public static final String DEVOIRID = "devoirId";
+    public static final String IDDEVOIR = "idDevoir";
+    public static final String ID_DEVOIR = "id_devoir";
+
     public static final String PERIODEID = "periodeId";
     public static final String TEACHER_ID = "teacher_id";
     public static final String IDREPORTMODEL = "idReportModel";
+    public static final String SUBJECTID = "subjectId";
+    public static final String GROUPID = "groupId";
+    public static final String USERID = "userId";
 
 
     public static final String MAIN_TEACHER_ID = "main_teacher_id";
     public static final String SECOND_TEACHER_ID = "second_teacher_id";
     public static final String SUBJECT_ID = "subject_id";
     public static final String CLASS_OR_GROUP_ID = "class_or_group_id";
-    public static final String IS_VISIBLE = "is_visible";
+
 
     //transaction
     public static final String ACTION = "action";
@@ -63,9 +71,7 @@ public class Field {
     public static final String STATUS = "status";
     public static final String RESULT = "result";
     public static final String RESULTS = "results";
-    public static final String SUBJECTID = "subjectId";
-    public static final String GROUPID = "groupId";
-    public static final String USERID = "userId";
+
     public static final String MULTITEACHING = "multiTeaching";
     public static final String GETIDMULTITEACHERS = "getIdMultiTeachers";
 
@@ -95,27 +101,12 @@ public class Field {
     public static final String DISPLAYNAME = "displayName";
     public static final String CLASSTYPE = "classType";
     public static final String FORMATE = "formate";
+    public static final String IS_VISIBLE = "is_visible";
 
-
-    //subTopic
-
-    public static final String IDDEVOIR = "idDevoir";
-
-    //db
-    public static final String SUBTOPIC_TABLE = "services_subtopic";
-    public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
-
-
-    //
-
-    public static final String STRUCTUREID = "structureId";
     public static final String ISSKILLAVERAGE = "isSkillAverage";
     public static final String TYPECLASSE = "typeClasse";
-    public static final String IDDOMAINE = "idDomaine";
-    public static final String ERROR = "error";
 
-    // tables
-    public static final String STRUTUCTURE_OPTIONS = "structure_options";
+    public static final String ERROR = "error";
 
     //colonne
     public static final String IS_AVERAGE_SKILLS = "is_average_skills";
@@ -124,11 +115,6 @@ public class Field {
     //schema json
     public static final String SCHEMA_EVAL_CREATEORUPDATESTRUCTUREOPTIONISAVERAGESKILLS =
             "eval_createOrUpdateStructureOptionIsAverageSkills";
-
-
-
-    public static final String ID_DEVOIR = "id_devoir";
-    //public static final String ID_STRUCTURE = "idStructure";
 
     //schemas
     public static final String DB_SCHEMA = "db-schema";
@@ -181,20 +167,24 @@ public class Field {
     public static final String PERSO_COMPETENCES_TABLE = "perso_competences";
     public static final String PERSO_NIVEAU_COMPETENCES_TABLE = "perso_niveau_competences";
     public static final String PERSO_COMPETENCES_ORDRE_TABLE = "perso_order_item_enseignement";
+
     public static final String REL_ANNOTATIONS_DEVOIRS_TABLE = "rel_annotations_devoirs";
     public static final String REL_COMPETENCES_DOMAINES_TABLE = "rel_competences_domaines";
     public static final String REL_COMPETENCES_ENSEIGNEMENTS_TABLE = "rel_competences_enseignements";
     public static final String REL_DEVOIRS_GROUPES_TABLE = "rel_devoirs_groupes";
-
     public static final String REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE = "rel_groupe_appreciation_elt_eleve";
     public static final String REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE = "rel_elt_bilan_periodique_groupe";
     public static final String REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE = "rel_elt_bilan_periodique_intervenant_matiere";
     public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
     public static final String REL_APPRECIATION_USERS_NEO_TABLE = "rel_appreciations_users_neo";
+
+    public static final String STRUTUCTURE_OPTIONS = "structure_options";
     public static final String STUDENT_APPRECIATION_DIGITAL_SKILLS_TABLE = "student_appreciation_digital_skills";
     public static final String STUDENT_DIGITAL_SKILLS_TABLE = "student_digital_skills";
     public static final String STSFILE_TABLE = "sts_file";
+    public static final String SUBTOPIC_TABLE = "services_subtopic";
     public static final String SYNTHESE_BILAN_PERIODIQUE_TABLE = "synthese_bilan_periodique";
+
     public static final String THEMATIQUE_BILAN_PERIODIQUE_TABLE = "thematique_bilan_periodique";
     public static final String TRANSITION_TABLE = "transition";
     public static final String USERS_TABLE = "users";
