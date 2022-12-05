@@ -29,8 +29,9 @@
            "timeout-transaction" : 1000
         },
         "node-pdf-generator" : {
-           "authorization" : "${pdfGeneratorAuth}",
-           "url": "${pdfGeneratorUrl}"
+           "pdf-connector-id": "exportpdf",
+             "auth": "",
+             "url": "http://pdf:3000"
         }
       }
     }

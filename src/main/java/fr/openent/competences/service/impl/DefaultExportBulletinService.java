@@ -16,7 +16,6 @@ import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.file.FileSystemException;
@@ -32,6 +31,8 @@ import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.http.request.JsonHttpServerRequest;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
+import org.entcore.common.pdf.PdfFactory;
+import org.entcore.common.pdf.PdfGenerator;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.storage.Storage;
@@ -51,8 +52,8 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
-import static fr.openent.competences.constants.Field.IDETABLISSEMENT;
 import static fr.openent.competences.constants.Field.IDCLASSE;
+import static fr.openent.competences.constants.Field.IDETABLISSEMENT;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
 import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
@@ -194,7 +195,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private SubTopicService subTopicService;
     private WorkspaceHelper workspaceHelper;
     private MongoExportService mongoExportService;
-
+    private PdfFactory pdfFactory;
     public DefaultExportBulletinService(EventBus eb, Storage storage) {
         this.eb = eb;
         bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
@@ -217,7 +218,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     }
 
-    public DefaultExportBulletinService(EventBus eb, Storage storage, Vertx vertx) {
+    public DefaultExportBulletinService(EventBus eb, Storage storage, Vertx vertx, JsonObject config) {
         this.eb = eb;
         bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
         elementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService(eb);
@@ -236,7 +237,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         this.httpClient =  createHttpClient(vertx);
         workspaceHelper = new WorkspaceHelper(eb,storage);
-        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SERVICE_SUBTOPIC);
+
+        pdfFactory = new PdfFactory(vertx,
+                new JsonObject().put("node-pdf-generator",
+                        config.getJsonObject("node-pdf-generator", new JsonObject())));
 
     }
 
@@ -3335,31 +3339,39 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private Handler<Writer> getRenderProcessHandler(JsonObject templateProps, String baseUrl, String _node,
                                                     HttpServerRequest request, String prefixPdfName, String dateDebut,
                                                     JsonObject eleve, Handler<Either<String, String>> finalHandler) {
-        return new Handler<Writer>() {
-            @Override
-            public void handle(Writer writer) {
-                try{
-                    String processedTemplate = ((StringWriter) writer).getBuffer().toString();
-                    JsonObject actionObject = new JsonObject();
-                    byte[] bytes;
-                    try {
-                        bytes = processedTemplate.getBytes("UTF-8");
-                    } catch (UnsupportedEncodingException e) {
-                        bytes = processedTemplate.getBytes();
-                        log.error("[DefaultExportBulletinService | getRenderProcessHandler] " + e.getMessage() + " "+
-                                eleve.getString("idEleve") + " " + eleve.getString("lastName"));
-                        finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | getRenderProcessHandler] " + e.getMessage() + " "+
-                                eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+        return writer -> {
+            try{
+                PdfGenerator pdfGenerator = pdfFactory.getPdfGenerator();
+                log.info("getRenderProcessHandler");
+                log.info(pdfGenerator);
+                String processedTemplate = ((StringWriter) writer).getBuffer().toString();
+                pdfGenerator.generatePdfFromTemplate("title", processedTemplate, ar -> {
+                    if (ar.failed()) {
+                        log.info(ar.cause().getMessage());
+                        log.error("[Formulaire@generatePDF] Failed to generatePdfFromTemplate : " + ar.cause().getMessage());
+                    } else {
+                        log.info("LETSGOOOOOOOOOOOOOOOOOOO");
                     }
-                    actionObject.put("content", bytes).put("baseUrl", baseUrl);
-                    eb.send(_node + "entcore.pdf.generator", actionObject,
-                            new DeliveryOptions().setSendTimeout(
-                                    TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
-                            handlerToAsyncHandler(getPdfRenderHandler(request, templateProps, prefixPdfName, dateDebut, eleve, finalHandler)));
-                }catch (Exception e){
-                    finalHandler.handle(new Either.Left<>("getRenderProcessHandler " + e.getMessage() + " "+
-                            eleve.getString("idEleve") + " " + eleve.getString("lastName")));
-                }
+                });
+                JsonObject actionObject = new JsonObject();
+                byte[] bytes;
+//                try {
+//                    bytes = processedTemplate.getBytes("UTF-8");
+//                } catch (UnsupportedEncodingException e) {
+//                    bytes = processedTemplate.getBytes();
+//                    log.error("[DefaultExportBulletinService | getRenderProcessHandler] " + e.getMessage() + " "+
+//                            eleve.getString("idEleve") + " " + eleve.getString("lastName"));
+//                    finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | getRenderProcessHandler] " + e.getMessage() + " "+
+//                            eleve.getString("idEleve") + " " + eleve.getString("lastName")));
+//                }
+//                actionObject.put("content", bytes).put("baseUrl", baseUrl);
+//                eb.send(_node + "entcore.pdf.generator", actionObject,
+//                        new DeliveryOptions().setSendTimeout(
+//                                TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+//                        handlerToAsyncHandler(getPdfRenderHandler(request, templateProps, prefixPdfName, dateDebut, eleve, finalHandler)));
+            }catch (Exception e){
+//                finalHandler.handle(new Either.Left<>("getRenderProcessHandler " + e.getMessage() + " "+
+//                        eleve.getString("idEleve") + " " + eleve.getString("lastName")));
             }
         };
     }
