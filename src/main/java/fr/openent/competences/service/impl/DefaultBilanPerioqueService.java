@@ -3,6 +3,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.EventType;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.model.Service;
@@ -322,7 +323,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     JsonArray idsTeachers = new fr.wseduc.webutils.collections.JsonArray();
 
                     buildSubjectForSuivi(idsMatieresIdsTeachers, idsTeachers, subjects,
-                            idPeriode, multiTeachers, services);
+                            idPeriode, multiTeachers, services, groupsStudent);
 
                     List<Future> futures = new ArrayList<>();
 
@@ -516,7 +517,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     private void buildSubjectForSuivi(Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray idsTeachers,
                                       JsonArray subjects, final Long idPeriode,
-                                      JsonArray multiTeachers, List<Service> services) {
+                                      JsonArray multiTeachers, List<Service> services, JsonArray groupsStudent) {
         List<String> subjectsMissingTeachers = new ArrayList<>();
 
         for (int i = 0; i < subjects.size(); i++) {
@@ -536,7 +537,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
 
                 checkVisibilityAndAddTeachers(services, matiere, idMatiere, subject,
-                        multiTeachers, idsTeachers, subjectsMissingTeachers);
+                        multiTeachers, idsTeachers, subjectsMissingTeachers, groupsStudent);
             }
         }
 
@@ -559,7 +560,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     private void checkVisibilityAndAddTeachers(List<Service> services, JsonObject matiere, final String idMatiere,
                                                JsonObject subject, JsonArray multiTeachers, JsonArray idsTeachers,
-                                               List<String> subjectsMissingTeachers){
+                                               List<String> subjectsMissingTeachers, JsonArray groupsStudent){
         JsonArray teachers = matiere.getJsonArray("teachers");
         Long coefficient = isNull(subject.getLong(COEFFICIENT)) ? 1L : subject.getLong(COEFFICIENT);
         String id_groupe = subject.getString("id_groupe");
@@ -588,7 +589,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             }
         }
 
-        addMultiTeachers(multiTeachers, idMatiere, teachers, idsTeachers);
+        addMultiTeachers(multiTeachers, idMatiere, teachers, idsTeachers, groupsStudent);
 
         if(isVisible && !teachers.contains(owner)) {
             addTeachers(teachers, idsTeachers, owner, matiere, coefficient);
@@ -621,15 +622,17 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         });
     }
 
-    private void addMultiTeachers(JsonArray multiTeachers, String idMatiere, JsonArray teachers, JsonArray idsTeachers){
+    private void addMultiTeachers(JsonArray multiTeachers, String idMatiere, JsonArray teachers, JsonArray idsTeachers,
+                                  JsonArray groupsStudent){
         multiTeachers.forEach(item -> {
             JsonObject multiTeacher = (JsonObject) item;
 
-            String subjectId = multiTeacher.getString("subject_id");
-            String coTeacherId = multiTeacher.getString("second_teacher_id");
+            String subjectId = multiTeacher.getString(Field.SUBJECT_ID);
+            String coTeacherId = multiTeacher.getString(Field.SECOND_TEACHER_ID);
+            String class_or_group_id = multiTeacher.getString(Field.CLASS_OR_GROUP_ID);
 
-            if (subjectId.equals(idMatiere)) {
-                if (isNotNull(coTeacherId) && !teachers.contains(coTeacherId)) {
+            if (subjectId.equals(idMatiere) && multiTeacher.getBoolean(Field.IS_VISIBLE) && groupsStudent.contains(class_or_group_id)) {
+                if (isNotNull(coTeacherId) && !teachers.contains(coTeacherId) ) {
                     teachers.add(coTeacherId);
                 }
                 if (isNotNull(coTeacherId) && !idsTeachers.contains(coTeacherId))

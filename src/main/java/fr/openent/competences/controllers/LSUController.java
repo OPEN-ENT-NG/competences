@@ -643,9 +643,8 @@ public class LSUController extends ControllerHelper {
 
                             Future<JsonArray> multiTeachersFuture = Future.future();
                             listGetProjectAndCompNum.add(multiTeachersFuture);
-                            utilsService.getMultiTeachers(idStructure, new JsonArray(idsGroupsClasses), null,
+                            utilsService.getAllMultiTeachers(idStructure, new JsonArray(idsGroupsClasses),
                                     multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
-
                             CompositeFuture.all(listGetProjectAndCompNum).setHandler(eventProjectCompNum -> {
                                 if(eventProjectCompNum.succeeded()){
                                     final JsonArray absencesAndRetards = getAbsencesAndRetardsFuture.result();
@@ -2549,12 +2548,7 @@ public class LSUController extends ControllerHelper {
 
                 Boolean isgnorated = lsuService.isIgnorated(idEleve, idClasse, idPeriode, periodeUnheededStudents);
 
-                JsonArray multiTeachersClasse = new JsonArray(multiTeachers.stream()
-                        .filter(el -> idClasse.equals(((JsonObject) el).getString("class_or_group_id")) &&
-                                idPeriode.equals(((JsonObject) el).getLong("id_type")) ||
-                                (idClasseGroups.getList()).contains(((JsonObject) el).getString("id_groupe")) &&
-                                        idPeriode.equals(((JsonObject) el).getLong("id_type")))
-                        .collect(Collectors.toList()));
+                JsonArray multiTeachersClasse = multiTeachers;
 
                 if(isgnorated || !(createDateEleve == null || createDateEleve.before(dateFnPeriode)) &&
                         (deletedDate == null || deletedDate.after(dateDtPeriode))) {

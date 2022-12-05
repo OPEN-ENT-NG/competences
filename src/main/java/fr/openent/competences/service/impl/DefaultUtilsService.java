@@ -173,6 +173,24 @@ public class DefaultUtilsService implements UtilsService {
         }));
     }
 
+    @Override
+    public void getAllMultiTeachers(final String structureId, final JsonArray groupIds, Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "multiTeaching.getAllMultiteachers")
+                .put("structureId", structureId)
+                .put("groupIds", groupIds);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray result = body.getJsonArray(RESULTS);
+                handler.handle(new Either.Right<>(result));
+            } else {
+                handler.handle(new Either.Left<>(body.getString("message")));
+                log.error("[Competences] DefaultUtilsService at getMultiteachers : " + body.getString("message"));
+            }
+        }));
+    }
+
     public static void setServices(Structure structure, JsonArray servicesJson, List<Service> services, List<SubTopic> subTopics) {
         for (int i = 0 ; i < servicesJson.size();i++){
             JsonObject serviceJo = servicesJson.getJsonObject(i);

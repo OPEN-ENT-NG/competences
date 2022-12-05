@@ -60,6 +60,8 @@ public interface UtilsService {
     void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
                           Handler<Either<String, JsonArray>> handler);
 
+    void getAllMultiTeachers(String structureId, JsonArray groupIds, Handler<Either<String, JsonArray>> handler);
+
     void getServices(final String idEtablissement, final JsonArray idClasse, Handler<Either<String, JsonArray>> handler);
 
     void getDefaultServices(final String structureId, final JsonArray groupIds, Handler<Either<String,JsonArray>> handler);

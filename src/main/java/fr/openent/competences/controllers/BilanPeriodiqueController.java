@@ -91,8 +91,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                             servicesEvent -> formate(servicesFuture, servicesEvent));
 
                     Future<JsonArray> multiTeachersFuture = Future.future();
-                    utilsService.getMultiTeachers(idEtablissement, idGroupClasse, idPeriode != null ? idPeriode.intValue() : null,
-                            multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
+                    utilsService.getAllMultiTeachers(idEtablissement, idGroupClasse, multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
 
                     CompositeFuture.all(servicesFuture, multiTeachersFuture,subTopicCoefPromise.future()).setHandler(futuresEvent -> {
                         if (futuresEvent.failed()) {

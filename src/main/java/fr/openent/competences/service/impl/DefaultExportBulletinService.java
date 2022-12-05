@@ -51,8 +51,8 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
-import static fr.openent.competences.constants.Field.IDETABLISSEMENT;
 import static fr.openent.competences.constants.Field.IDCLASSE;
+import static fr.openent.competences.constants.Field.IDETABLISSEMENT;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
 import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
@@ -2792,8 +2792,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         Utils.getElevesClasse(eb, idClasse, idPeriode, listStudentsPromise);
                         utilsService.getServices(firstStudent.getString(IDETABLISSEMENT),
                                 new JsonArray(groupIds),FutureHelper.handlerJsonArray(servicesPromise));
-                        utilsService.getMultiTeachers(firstStudent.getString(IDETABLISSEMENT),
-                                new JsonArray(groupIds),idPeriode.intValue() ,FutureHelper.handlerJsonArray(multiTeachingPromise));
+                        utilsService.getAllMultiTeachers(firstStudent.getString(IDETABLISSEMENT),
+                                new JsonArray(groupIds), FutureHelper.handlerJsonArray(multiTeachingPromise));
 
                         int finalNbOptions = nbOptions;
                         CompositeFuture.all(promises).onSuccess(success -> {
@@ -2992,7 +2992,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             multiTeaching.setStartDate(multiTeachinJo.getString("start_date",""));
             multiTeaching.setEndDate(multiTeachinJo.getString("end_date",""));
             multiTeaching.setEnteredEndDate(multiTeachinJo.getString("entered_end_date"));
-            multiTeaching.setCoTeaching(multiTeachinJo.getBoolean("is_coteaching"));
+            if(multiTeachinJo.containsKey("is_coteaching") && multiTeachinJo.getBoolean("is_coteaching")!= null)
+                multiTeaching.setCoTeaching(multiTeachinJo.getBoolean("is_coteaching"));
             multiTeaching.setVisible(multiTeachinJo.getBoolean("is_visible"));
             multiTeaching.setLibelle(multiTeachinJo.getString("libelle",""));
             multiTeaching.setTimestampDt(multiTeachinJo.getString("timestamp_dt",""));
@@ -3000,8 +3001,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             multiTeaching.setEndDateSaisie(multiTeachinJo.getString("date_fin_saisie"));
             multiTeaching.setDateConseilClass(multiTeachinJo.getString("date_conseil_classe"));
             multiTeaching.setClasse(classe);
-            multiTeaching.setType(multiTeachinJo.getInteger("id_type"));
-            multiTeaching.setPublicationBulletin(multiTeachinJo.getBoolean("publication_bulletin"));
+            if(multiTeachinJo.containsKey("id_type"))
+                multiTeaching.setType(multiTeachinJo.getInteger("id_type"));
+//            multiTeaching.setPublicationBulletin(multiTeachinJo.getBoolean("publication_bulletin"));
             multiTeachings.add(multiTeaching);
         }
     }
