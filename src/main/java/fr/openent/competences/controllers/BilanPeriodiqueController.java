@@ -69,51 +69,51 @@ public class BilanPeriodiqueController extends ControllerHelper{
             final String idEleve = request.params().get("idEleve");
             final String idClasse = request.params().get("idClasse");
 
-            Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), responseGroupsClass -> {
-                if(responseGroupsClass.isLeft()) {
-                    String error = responseGroupsClass.left().getValue();
-                    log.error("[Competence] BilanPeriodiqueController at getSuiviDesAcquisEleve : getGroupesClasse " + error);
-                    badRequest(request);
-                } else {
-                    JsonArray groupsClassResult = responseGroupsClass.right().getValue();
-                    JsonArray idGroupClasse = new JsonArray()
-                            .add(idClasse);
+            Utils.getGroupesClasseNew(eb, new JsonArray().add(idClasse))
+                    .onFailure(Throwable::printStackTrace)
+                    //String error = responseGroupsClass.left().getValue();
+                    //log.error("[Competence] BilanPeriodiqueController at getSuiviDesAcquisEleve : getGroupesClasse " + error);
+                    //badRequest(request);
+                    .onSuccess(groups -> {
+                        JsonArray groupsClassResult = groups;
+                        JsonArray idGroupClasse = new JsonArray()
+                                .add(idClasse);
 
-                    if(groupsClassResult != null && !groupsClassResult.isEmpty()){
-                        idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray("id_groupes"));
-                    }
-
-                    Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-                    utilsService.getSubTopicCoeff(idEtablissement,idClasse,subTopicCoefPromise);
-
-                    Future<JsonArray> servicesFuture = Future.future();
-                    utilsService.getServices(idEtablissement, idGroupClasse,
-                            servicesEvent -> formate(servicesFuture, servicesEvent));
-
-                    Promise<JsonArray> multiTeachersFuture = Promise.promise();
-                    utilsService.getMultiTeachers(idEtablissement, new JsonArray().add(idClasse), idGroupClasse,
-                            idPeriode != null ? idPeriode.intValue() : null, multiTeachersFuture);
-
-                    CompositeFuture.all(servicesFuture, multiTeachersFuture.future(),subTopicCoefPromise.future()).setHandler(futuresEvent -> {
-                        if (futuresEvent.failed()) {
-                            String error = futuresEvent.cause().getMessage();
-                            log.error(error);
-                            badRequest(request);
-                        } else {
-                            JsonArray servicesJsonArray = servicesFuture.result();
-                            JsonArray multiTeachers = multiTeachersFuture.future().result();
-                            List<SubTopic> subTopics = subTopicCoefPromise.future().result();
-                            Structure structure = new Structure();
-                            structure.setId(idEtablissement);
-                            List<Service> services = new ArrayList<>();
-                            setServices(structure, servicesJsonArray, services,subTopics);
-                            bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve, idGroupClasse,
-                                    services, multiTeachers, arrayResponseHandler(request));
+                        if(groupsClassResult != null && !groupsClassResult.isEmpty()){
+                            idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray("id_groupes"));
                         }
+
+                        Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+                        utilsService.getSubTopicCoeff(idEtablissement,idClasse,subTopicCoefPromise);
+
+                        Future<JsonArray> servicesFuture = Future.future();
+                        utilsService.getServices(idEtablissement, idGroupClasse,
+                                servicesEvent -> formate(servicesFuture, servicesEvent));
+
+                        Promise<JsonArray> multiTeachersFuture = Promise.promise();
+                    /*utilsService.getMultiTeachers(idEtablissement, new JsonArray().add(idClasse), idGroupClasse,
+                            idPeriode != null ? idPeriode.intValue() : null, multiTeachersFuture);*/
+                        utilsService.getMultiTeachers(idEtablissement, idGroupClasse, idPeriode != null ? idPeriode.intValue() : null, multiTeachersFuture, new JsonArray().add(idClasse));
+
+                        CompositeFuture.all(servicesFuture, multiTeachersFuture.future(),subTopicCoefPromise.future()).setHandler(futuresEvent -> {
+                            if (futuresEvent.failed()) {
+                                String error = futuresEvent.cause().getMessage();
+                                log.error(error);
+                                badRequest(request);
+                            } else {
+                                JsonArray servicesJsonArray = servicesFuture.result();
+                                JsonArray multiTeachers = multiTeachersFuture.future().result();
+                                List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+                                Structure structure = new Structure();
+                                structure.setId(idEtablissement);
+                                List<Service> services = new ArrayList<>();
+                                setServices(structure, servicesJsonArray, services,subTopics);
+                                bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve, idGroupClasse,
+                                        services, multiTeachers, arrayResponseHandler(request));
+                            }
+                        });
                     });
-                }
             });
-        });
     }
 
     @Get("/eleve/evenements/:idEleve")

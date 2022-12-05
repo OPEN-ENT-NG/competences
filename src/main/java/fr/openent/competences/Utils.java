@@ -29,6 +29,7 @@ import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -100,8 +101,7 @@ public class Utils {
      * retourne une classe avec ses groups (ids)
      *
      * @param eb         eventbus
-     * @param idsClasses array une clase
-     * @param handler    response l'id de classe avec ses groups s'ils existent sinon retourne que id de la classe
+     * @param idsClasses array une classe
      */
     public static void getGroupesClasse(EventBus eb, final JsonArray idsClasses,
                                         final Handler<Either<String, JsonArray>> handler) {
@@ -119,6 +119,25 @@ public class Utils {
                 log.error("getGroupesClasse : " + body.getString("message"));
             }
         }));
+    }
+
+    public static Future<JsonArray> getGroupesClasseNew(EventBus eb, final JsonArray idsClasses) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonObject action = new JsonObject()
+                .put(ACTION, "classe.getGroupesClasse")
+                .put("idClasses", idsClasses);
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray queryResult = body.getJsonArray(RESULTS);
+                promise.complete(queryResult);
+            } else {
+                promise.fail(body.getString("message"));
+                log.error("getGroupesClasse : " + body.getString("message"));
+            }
+        }));
+        return promise.future();
     }
 
     /**

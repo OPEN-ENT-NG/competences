@@ -157,19 +157,19 @@ public class DefaultUtilsService implements UtilsService {
     public void getMultiTeachers(final String structureId, JsonArray classIds, final JsonArray groupIds, final Integer PeriodeId,
                                  Promise<JsonArray> promise) {
 
-        /*JsonArray idClasses = new JsonArray();
+        JsonArray idClasses = new JsonArray();
 
         if(classIds.size() == 1){
             getClasseGroupe(classIds.getString(0))
                 .onSuccess(classes -> {
-                    if (classes.isEmpty())
+                    /*if (classes.isEmpty())
                         getMultiTeachers(structureId, groupIds, PeriodeId, promise, new JsonArray().add(classIds.getString(0)));
                     else {
                         for(Object o : ((JsonObject) classes.iterator().next()).getJsonArray("id_classes")) {
                             idClasses.add((String) o);
                         }
                         getMultiTeachers(structureId, groupIds, PeriodeId, promise, idClasses);
-                    }
+                    }*/
                 })
                 .onFailure(err -> {
                     promise.fail(err);
@@ -179,10 +179,10 @@ public class DefaultUtilsService implements UtilsService {
             for(Object o : ((JsonObject) classIds.iterator().next()).getJsonArray("id_classes")) {
                 idClasses.add((String) o);
             }
-            getMultiTeachers(structureId, groupIds, PeriodeId, promise, idClasses);
-        }*/
+            //getMultiTeachers(structureId, groupIds, PeriodeId, promise, idClasses);
+        }
 
-        JsonObject action = new JsonObject()
+        /*JsonObject action = new JsonObject()
                 .put("action", "multiTeaching.getMultiteachers")
                 .put("structureId", structureId)
                 .put("groupIds", groupIds)
@@ -196,12 +196,12 @@ public class DefaultUtilsService implements UtilsService {
                 log.error("[Competences] DefaultUtilsService at getMultiteachers : " + body.getString("message"));
                 promise.fail(body.getString("message"));
             }
-        }));
+        }));*/
         //FIXME : Can put error if classIds.size < 1
     }
 
-    private void getMultiTeachers(String structureId, JsonArray groupIds, Integer PeriodeId, Promise<JsonArray> promise, JsonArray idClasses) {
-        JsonObject action = new JsonObject()
+    public void getMultiTeachers(String structureId, JsonArray groupIds, Integer PeriodeId, Promise<JsonArray> promise, JsonArray idClasses) {
+        /*JsonObject action = new JsonObject()
                 .put("action", "multiTeaching.getMultiteachers")
                 .put("structureId", structureId)
                 .put("groupIds", groupIds)
@@ -214,6 +214,15 @@ public class DefaultUtilsService implements UtilsService {
             } else {
                 promise.fail((body.getString("message")));
                 log.error("[Competences] DefaultUtilsService at getMultiteachers : " + body.getString("message"));
+            }
+        }));*/
+        String query = "WITH  p AS(SELECT * FROM viesco.periode WHERE id_classe = 'ae517572-647c-45a6-949b-230cc0bdf440' AND id_type = 5 ) SELECT * FROM viesco.multi_teaching JOIN p on p.id_etablissement = structure_id WHERE  structure_id = '9af51dc6-ead0-4edb-8978-da14a3e9f49a' AND class_or_group_id IN ('ae517572-647c-45a6-949b-230cc0bdf440','ba808993-5c8f-4930-8584-df4d73a6e083','8e3270b2-a419-4986-b000-1c8d15c84eca','afba9101-14b5-4554-a50c-36967dc79522','8a9d62f1-b26e-4567-ae6e-4e71bee98566','79ec2901-249e-4de2-80b3-1aaa3d0ea796','36bdd015-deb4-40fc-b380-96d1aa2546d3','51182755-f88c-43b3-8753-635f26e291ac') AND is_visible = true AND id_type = 5 AND (is_coteaching = TRUE OR (is_coteaching = FALSE AND ((timestamp_dt <= start_date AND start_date <= timestamp_fn) OR (timestamp_dt <= end_date AND end_date <= timestamp_fn) OR (start_date <= timestamp_dt AND timestamp_dt <= end_date) OR (start_date <= timestamp_fn AND timestamp_fn <= end_date) )))";
+
+        Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(event -> {
+            if (event.isLeft()) {
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(event.right().getValue());
             }
         }));
     }
