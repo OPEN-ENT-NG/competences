@@ -23,27 +23,20 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.helpers.DevoirControllerHelper;
 import fr.openent.competences.security.*;
-import fr.openent.competences.security.AccessVisibilityAppreciation;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.CompetencesService;
-import fr.openent.competences.service.impl.*;
-
-import static fr.openent.competences.Competences.NN;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-
+import fr.openent.competences.service.impl.DefaultCompetencesService;
+import fr.openent.competences.service.impl.DefaultDevoirService;
+import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import org.entcore.common.controller.ControllerHelper;
-import org.entcore.common.events.EventStore;
-import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.user.UserInfos;
-import org.entcore.common.user.UserUtils;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.eventbus.EventBus;
@@ -51,15 +44,22 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.Future;
-import io.vertx.core.CompositeFuture;
+import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.events.EventStore;
+import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.user.UserInfos;
+import org.entcore.common.user.UserUtils;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static org.entcore.common.http.response.DefaultResponseHandler.*;
+import static fr.openent.competences.Competences.NN;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
+import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 /**
  * Created by ledunoiss on 04/08/2016.
@@ -98,7 +98,7 @@ public class DevoirController extends ControllerHelper {
 
                 // si l'utilisateur a la fonction d'admin
                 if(WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString()) && !forStudentReleve) {
-                    devoirsService.listDevoirsChefEtab(user, idEtablissement, iLimit, arrayResponseHandler(request));
+                    devoirsService.listDevoirsChefEtab(user, idEtablissement, iLimit, getDevoirHandler(request));
                 } else {
                     String idClasse = request.params().get("idClasse");
                     String idMatiere = request.params().get("idMatiere");
@@ -107,7 +107,7 @@ public class DevoirController extends ControllerHelper {
                     final String _RELATIVE = "Relative";
                     if (idClasse == null && !_STUDENT.equals(user.getType())
                             && !_RELATIVE.equals(user.getType()) && !forStudentReleve) {
-                        devoirsService.listDevoirs(user, idEtablissement, iLimit, arrayResponseHandler(request));
+                        devoirsService.listDevoirs(user, idEtablissement, iLimit, getDevoirHandler(request));
                     } else {
                         boolean historise = false;
                         if (request.params().get("historise") != null) {
@@ -121,11 +121,11 @@ public class DevoirController extends ControllerHelper {
                         if(_STUDENT.equals(user.getType()) || _RELATIVE.equals(user.getType()) || forStudentReleve){
                             String idEleve = request.params().get("idEleve");
                             devoirsService.listDevoirs(idEleve, idEtablissement, idClasse, null,
-                                    idPeriode, historise, arrayResponseHandler(request));
+                                    idPeriode, historise, getDevoirHandler(request));
                         } else if (!idEtablissement.equals("undefined") && !idClasse.equals("undefined")
                                 && !idMatiere.equals("undefined") && !request.params().get("idPeriode").equals("undefined")) {
                             devoirsService.listDevoirs(null, idEtablissement, idClasse, idMatiere,
-                                    idPeriode, historise, arrayResponseHandler(request));
+                                    idPeriode, historise, getDevoirHandler(request));
                         } else {
                             Renders.badRequest(request, "Invalid parameters");
                         }
@@ -135,6 +135,23 @@ public class DevoirController extends ControllerHelper {
                 unauthorized(request);
             }
         });
+    }
+
+    private Handler<Either<String, JsonArray>> getDevoirHandler(HttpServerRequest request) {
+        return event -> {
+            event.right().getValue().stream().forEach(obj -> {
+                JsonObject result = (JsonObject) obj;
+                if (result.containsKey(Field.DIVISEUR)) {
+                    result.put(Field.DIVISEUR, HomeworkUtils.safeGetDouble(result, Field.DIVISEUR));
+                }
+            });
+            if (event.isRight()) {
+                Renders.renderJson(request, event.right().getValue());
+            } else {
+                JsonObject error = (new JsonObject()).put(Field.ERROR, event.left().getValue());
+                Renders.renderJson(request, error, 400);
+            }
+        };
     }
 
     /**
