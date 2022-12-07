@@ -1256,6 +1256,9 @@ public class NoteController extends ControllerHelper {
                     List<Future<Void>> futures = students.stream().filter(student -> isNotNull(student.id()))
                             .map(student -> notesService.insertOrUpdateDevoirNote(idDevoir, student.id(), student.getNote()))
                             .collect(Collectors.toList());
+                    futures.addAll(students.stream().filter(student -> isNotNull(student.id()))
+                            .map(student -> notesService.insertOrUpdateAnnotation(idDevoir, student.id(), student.getAnnotation()))
+                            .collect(Collectors.toList()));
                     FutureHelper.all(futures)
                             .onSuccess(res -> renderJson(request, new JsonObject()
                                     .put(Field.STATUS, Field.OK)

@@ -37,7 +37,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 
 import java.math.RoundingMode;
@@ -4777,6 +4776,28 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         values.add(idEleve);
         values.add(valeur);
         values.add(valeur);
+        Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(event -> {
+            if (event.isLeft()) {
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete();
+            }
+        }));
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> insertOrUpdateAnnotation(String idDevoir, String idEleve, String annotation) {
+        Promise<Void> promise = Promise.promise();
+
+        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + APPRECIATIONS_TABLE +
+                " (id_devoir, id_eleve, valeur) VALUES (?, ?, ?)" +
+                " ON CONFLICT (id_devoir, id_eleve) DO UPDATE SET valeur = ? ";
+        JsonArray values = new JsonArray();
+        values.add(idDevoir);
+        values.add(idEleve);
+        values.add(annotation);
+        values.add(annotation);
         Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(event -> {
             if (event.isLeft()) {
                 promise.fail(event.left().getValue());

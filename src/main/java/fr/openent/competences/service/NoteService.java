@@ -366,4 +366,13 @@ public interface NoteService extends CrudService {
      * @Return {@link Future} of result {@link Void}
      */
     Future<Void> insertOrUpdateDevoirNote (String idDevoir, String idEleve, Double valeur);
+
+    /**
+     * Insère ou met à jour l'annotation du devoir d'un élève
+     * @param idDevoir idDevoir
+     * @param idEleve idEleve
+     * @param annotation annotation
+     * @Return {@link Future} of result {@link Void}
+     */
+    Future<Void> insertOrUpdateAnnotation(String idDevoir, String idEleve, String annotation);
 }
