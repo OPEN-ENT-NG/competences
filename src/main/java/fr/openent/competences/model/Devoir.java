@@ -1,5 +1,7 @@
 package fr.openent.competences.model;
 
+import fr.openent.competences.constants.Field;
+import fr.openent.competences.utils.HomeworkUtils;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -30,7 +32,7 @@ public class Devoir extends Model implements Cloneable {
     //TODO supprimer une fois le model totalement integré
     private JsonObject oldModel;
 
-    public Devoir(JsonObject devoirJO) {
+    public  Devoir(JsonObject devoirJO) {
         super();
         this.structureId = devoirJO.getString("id_etablissement");
         this.name = devoirJO.getString("name");
@@ -42,42 +44,17 @@ public class Devoir extends Model implements Cloneable {
         this.ramenerSur = devoirJO.getBoolean("ramener_sur");
         this.isEvalued = devoirJO.getBoolean("is_evaluated");
         try{
-            this.coefficient = devoirJO.getInteger("coefficient");
+            this.coefficient = devoirJO.getInteger(Field.COEFFICIENT);
         } catch (ClassCastException c) {
-            this.coefficient = Double.parseDouble(devoirJO.getString("coefficient"));
+            this.coefficient = HomeworkUtils.safeGetDouble(devoirJO, Field.COEFFICIENT);
         }
-        this.diviseur = devoirJO.getDouble("diviseur");
+        this.diviseur = HomeworkUtils.safeGetDouble(devoirJO, Field.DIVISEUR);
         this.periodId = devoirJO.getInteger("id_periode");
         this.typeId = devoirJO.getInteger("id_type");
         this.idsCompetences = devoirJO.getJsonArray("competences");
 
         this.oldModel = devoirJO;
     }
-
-    //{
-//"name":"plzep",
-//"owner":"9cad577e-c9d8-49b3-92af-820f7a28e2f8",
-//"id_groupe":"3df48ba8-96df-4b7d-b13c-9b2878507b4c",
-//"type_groupe":0,
-//"id_sousmatiere":null,
-//"id_periode":5,
-//"id_type":36,
-//"id_matiere":"1872570-1566493593334",
-//"id_etat":1,
-//"date_publication":"27/03/2020",
-//"id_etablissement":"92feb6f1-2016-4215-b53f-5337fbcba244",
-//"diviseur":20,
-//"coefficient":1,
-//"date":"27/03/2020",
-//"ramener_sur":false,
-//"is_evaluated":false,
-//"competences":[
-//3441
-//],
-//"competencesAdd":null,
-//"competencesRem":null,
-//"competencesUpdate":null
-//}
 
     public String getGroupId() {
         return groupId;
