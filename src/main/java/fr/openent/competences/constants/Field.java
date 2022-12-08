@@ -3,6 +3,7 @@ package fr.openent.competences.constants;
 public class Field {
 
 
+
     private Field() {
         throw new IllegalStateException("Utility class");
     }
@@ -38,6 +39,7 @@ public class Field {
     public static final String DEVOIRID = "devoirId";
     public static final String IDDEVOIR = "idDevoir";
     public static final String ID_DEVOIR = "id_devoir";
+    public static final String DELETED_DATE = "deleted_date";
 
     public static final String PERIODEID = "periodeId";
     public static final String TEACHER_ID = "teacher_id";
@@ -74,9 +76,6 @@ public class Field {
 
     public static final String MULTITEACHING = "multiTeaching";
     public static final String GETIDMULTITEACHERS = "getIdMultiTeachers";
-    public static final String MULTI_TEACHERS_AND_DELETED_BY_CLASS= "multiTeaching.getMultiteachersAndDeletedByClass";
-    public static final String MULTI_TEACHERS_AND_DELETED = "multiTeaching.getMultiteachersAndDeleted";
-
     //Modules
     public static final String PRESENCES = "presences";
 
@@ -107,7 +106,6 @@ public class Field {
 
     //
 
-    public static final String STRUCTUREID = "structureId";
     public static final String ISSKILLAVERAGE = "isSkillAverage";
     public static final String TYPECLASSE = "typeClasse";
 

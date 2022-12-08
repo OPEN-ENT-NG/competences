@@ -12,6 +12,7 @@ public class MultiTeaching extends Model {
     String groupOrClassId;
     String startDate;
     String endDate;
+    String deletedDate;
     String enteredEndDate;
     boolean isCoTeaching;
     boolean visible;
@@ -175,6 +176,14 @@ public class MultiTeaching extends Model {
         this.subject = subject;
     }
 
+
+    public String getDeletedDate() {
+        return deletedDate;
+    }
+
+    public void setDeletedDate(String deletedDate) {
+        this.deletedDate = deletedDate;
+    }
 
     @Override
     public JsonObject toJsonObject() {
