@@ -2823,14 +2823,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             setServices(structure, servicesJson, services, subTopics);
 
                             for (int i = 0; i < eleves.size(); i++) {
-                                futures.add(Future.future());
+                                Promise<JsonObject> promise = Promise.promise();
+                                futures.add(promise.future());
                                 JsonObject eleve = eleves.getJsonObject(i);
                                 String idEleve = eleve.getString(ID_ELEVE_KEY);
                                 Student student = initStudent(structure, periode, paramBulletins, services, multiTeachings,
                                         eleve, typePeriode, idPeriode, classe, showBilanPerDomaines, images, params);
                                 students.put(idEleve, student);
                                 getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe, host, acceptLanguage, vertx,
-                                        futureGetHandler(futures.get(i)));
+                                        futureGetHandler(promise.future()));
                             }
                             CompositeFuture.all(futures).setHandler(compositeEvent -> {
                                 if (compositeEvent.succeeded()) {
