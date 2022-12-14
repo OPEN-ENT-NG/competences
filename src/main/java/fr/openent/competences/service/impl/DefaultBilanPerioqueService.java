@@ -631,7 +631,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             String coTeacherId = multiTeacher.getString(Field.SECOND_TEACHER_ID);
             String class_or_group_id = multiTeacher.getString(Field.CLASS_OR_GROUP_ID);
 
-            if (subjectId.equals(idMatiere) && multiTeacher.getBoolean(Field.IS_VISIBLE) && groupsStudent.contains(class_or_group_id)) {
+            if (subjectId.equals(idMatiere) && multiTeacher.getBoolean(Field.IS_VISIBLE) &&
+                    groupsStudent.contains(class_or_group_id) && (multiTeacher.getString("deleted_date") == null)) {
                 if (isNotNull(coTeacherId) && !teachers.contains(coTeacherId) ) {
                     teachers.add(coTeacherId);
                 }

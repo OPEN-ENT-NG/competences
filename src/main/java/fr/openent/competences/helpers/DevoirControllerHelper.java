@@ -25,6 +25,7 @@ import org.entcore.common.user.UserInfos;
 import java.util.ArrayList;
 import java.util.List;
 
+import static fr.openent.competences.constants.Field.USERID;
 import static fr.wseduc.webutils.http.Renders.badRequest;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
@@ -63,7 +64,7 @@ public class DevoirControllerHelper {
                             .put("subjectId", devoir.getSubjectId())
                             .put("structureId", devoir.getStructureId())
                             .put("groupId", devoir.getGroupId())
-                            .put("userId", user.getUserId());
+                            .put(USERID, devoir.getOwner());
                     eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirWithId, user, devoirsService, request));
                 } else {
                     badRequest(request);
@@ -113,10 +114,9 @@ public class DevoirControllerHelper {
         return event -> {
             if (event.succeeded() && Field.OK.equals(event.result().body().getString(Field.STATUS))) {
                 JsonArray results = event.result().body().getJsonArray(Field.RESULTS, new JsonArray());
-                JsonArray statements = new JsonArray();
-                List<String> actions = new ArrayList<String>();
-                actions.add(Competences.DEVOIR_ACTION_UPDATE);
-                if (results.size() > 0) {
+            JsonArray statements = new JsonArray();
+            List<String> actions = new ArrayList<String>();
+            actions.add(Competences.DEVOIR_ACTION_UPDATE);if (results.size() > 0) {
                     for (int i = 0; i < results.size(); i++) {
                         String id = results.getJsonObject(i).getString(Field.TEACHER_ID);
                         statements.add(devoirService.getNewShareStatements(id, devoirWithId.getLong(Field.ID).toString(), actions));

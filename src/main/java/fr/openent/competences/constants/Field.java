@@ -3,6 +3,7 @@ package fr.openent.competences.constants;
 public class Field {
 
 
+
     private Field() {
         throw new IllegalStateException("Utility class");
     }
@@ -38,6 +39,7 @@ public class Field {
     public static final String DEVOIRID = "devoirId";
     public static final String IDDEVOIR = "idDevoir";
     public static final String ID_DEVOIR = "id_devoir";
+    public static final String DELETED_DATE = "deleted_date";
 
     public static final String PERIODEID = "periodeId";
     public static final String TEACHER_ID = "teacher_id";
@@ -74,7 +76,6 @@ public class Field {
 
     public static final String MULTITEACHING = "multiTeaching";
     public static final String GETIDMULTITEACHERS = "getIdMultiTeachers";
-
     //Modules
     public static final String PRESENCES = "presences";
 
@@ -83,7 +84,7 @@ public class Field {
     public static final String SAVE_BFC = "saveBFC";
     public static final String SUBCOEF = "subCoef";
     public static final String SERVICE_SUBTOPIC = "services_subtopic";
-    public static final String COEFFICIENT = "coefficient" ;
+    public static final String COEFFICIENT = "coefficient";
     public static final String GROUPS = "groups";
     public static final String TEACHERS = "teachers";
     public static final String MOYENNE = "moyenne";
@@ -102,6 +103,8 @@ public class Field {
     public static final String CLASSTYPE = "classType";
     public static final String FORMATE = "formate";
     public static final String IS_VISIBLE = "is_visible";
+
+    //
 
     public static final String ISSKILLAVERAGE = "isSkillAverage";
     public static final String TYPECLASSE = "typeClasse";
@@ -155,6 +158,7 @@ public class Field {
     public static final String ELT_BILAN_PERIODIQUE_TABLE = "elt_bilan_periodique";
     public static final String ENSEIGNEMENT_COMPLEMENT = "enseignement_complement";
     public static final String ENSEIGNEMENTS_TABLE = "enseignements";
+    public static String IS_COTEACHING = "is_coteaching";
 
     public static final String LANGUES_CULTURE_REGIONALE = "langues_culture_regionale";
     public static final String MATIERE_TABLE = "matiere";
@@ -202,4 +206,5 @@ public class Field {
     //numbers
     public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
     public static final int DIVISEUR_NOTE = 20;
+
 }

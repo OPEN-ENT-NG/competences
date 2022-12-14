@@ -12,6 +12,7 @@ public class MultiTeaching extends Model {
     String groupOrClassId;
     String startDate;
     String endDate;
+    String deletedDate;
     String enteredEndDate;
     boolean isCoTeaching;
     boolean visible;
@@ -24,7 +25,11 @@ public class MultiTeaching extends Model {
     int type;
     String dateConseilClass;
     boolean publicationBulletin;
+
+    private boolean isDeleted ;
+
     public MultiTeaching() {
+        isDeleted = false;
     }
 
     public Structure getStructure() {
@@ -172,6 +177,14 @@ public class MultiTeaching extends Model {
     }
 
 
+    public String getDeletedDate() {
+        return deletedDate;
+    }
+
+    public void setDeletedDate(String deletedDate) {
+        this.deletedDate = deletedDate;
+    }
+
     @Override
     public JsonObject toJsonObject() {
 
@@ -201,5 +214,13 @@ public class MultiTeaching extends Model {
 
     public void setIdInteger(Integer id) {
         this.idInt = id;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
     }
 }
