@@ -1091,15 +1091,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             for(Object mutliTeachO: multiTeachers){
                 //multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId()
                 JsonObject multiTeaching  =(JsonObject) mutliTeachO;
-                if(multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
-                        && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
-                        && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
-                    service = services.stream()
-                            .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
-                                    && matiere.getId().equals(el.getMatiere().getId())
-                                    && group.getId().equals(el.getGroup().getId()))
-                            .findFirst().orElse(null);
-                }
 
                 if(multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
                         && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
