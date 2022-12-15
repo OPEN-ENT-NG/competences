@@ -205,10 +205,8 @@ public class MultiTeaching extends Model {
                 .put("timestamp_fn",timestampFn)
                 .put("date_fin_saisie",endDateSaisie)
                 .put("id_classe",classe.getId())
-//                .put("id_type",type)
-                .put("date_conseil_classe",dateConseilClass)
-//                .put("publication_bulletin",publicationBulletin)
-                ;
+                .put("deleted_date", deletedDate)
+                .put("date_conseil_classe",dateConseilClass);
     }
 
 

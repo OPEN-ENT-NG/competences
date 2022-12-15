@@ -574,7 +574,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             String serviceIdGroup = service.getGroup().getId();
 
             if (isNotNull(owner)) {
-                if (serviceIdMatiere.equals(idMatiere) && serviceIdTeacher.equals(owner) && serviceIdGroup.equals(id_groupe)) {
+                if (serviceIdMatiere.equals(idMatiere) && serviceIdTeacher.equals(owner)
+                        && serviceIdGroup.equals(id_groupe) ) {
                     isVisible = service.isVisible();
                     coefficient = service.getCoefficient();
                     break;
