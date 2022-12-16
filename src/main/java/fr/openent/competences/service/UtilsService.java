@@ -152,15 +152,10 @@ public interface UtilsService {
      *
      *
      * @param structureId
-     * @param classId
-     * @param groupId
      * @param types
-     * @param filterActive
-     * @param nameFilter
-     * @param user
      * @param eitherHandler
      */
-    void list(String structureId, String classId, String groupId, JsonArray types, String filterActive, String nameFilter, UserInfos user, Handler<Either<String, JsonArray>> eitherHandler);
+    void list(String structureId, JsonArray types, Handler<Either<String, JsonArray>> eitherHandler);
 
     /**
      * Réalise une union de deux JsonArray de String
