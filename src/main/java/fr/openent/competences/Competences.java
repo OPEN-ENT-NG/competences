@@ -310,7 +310,6 @@ public class Competences extends BaseServer {
         addController(new LSUController(eb));
         addController(new NiveauDeMaitriseController());
         addController(new NoteController(eb, storage));
-        addController(new DevoirRemplacementController());
         addController(new ElementProgrammeController());
         addController(new UtilsController(storage,eb));
         addController(new BilanPeriodiqueController(eb));

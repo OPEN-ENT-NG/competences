@@ -20,10 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.constants.Field;
-import fr.openent.competences.security.AccessChildrenParentFilter;
-import fr.openent.competences.security.AccessCompetenceNoteFilter;
-import fr.openent.competences.security.AccessSuiviCompetenceFilter;
-import fr.openent.competences.security.CreateEvaluationWorkflow;
+import fr.openent.competences.security.*;
 import fr.openent.competences.service.BfcSyntheseService;
 import fr.openent.competences.service.CompetenceNiveauFinalService;
 import fr.openent.competences.service.CompetenceNoteService;
@@ -193,7 +190,7 @@ public class CompetenceNoteController extends ControllerHelper {
     @Get("/competence/notes/devoir/:devoirId")
     @ApiDoc("Retourne les compétences notes pour un devoir donné")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessSuiviCompetenceFilter.class)
+    @ResourceFilter(AccessEvaluationFilter.class)
     public void getCompetenceNotesDevoir(final HttpServerRequest request) {
         if (request.params().contains("devoirId")) {
             Long devoirId;

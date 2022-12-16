@@ -1,6 +1,7 @@
 package fr.openent.competences.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.DefaultDevoirService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -20,57 +21,31 @@ public class HomeworkUtils {
 
     protected static final Logger log = LoggerFactory.getLogger(HomeworkUtils.class);
 
-    public static void addValueForRequest(JsonArray values, UserInfos user, Boolean isChefEtab) {
-        if (!isChefEtab) {
-            // Ajout des params pour les devoirs dont on est le propriétaire
-            values.add(user.getUserId());
-
-            // Ajout des params pour la récupération des devoirs de mes tiulaires
-            values.add(user.getUserId());
-            for (int i = 0; i < user.getStructures().size(); i++) {
-                values.add(user.getStructures().get(i));
-            }
-
-            // Ajout des params pour les devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir
-            // pour un titulaire par exemple)
-            values.add(user.getUserId());
-        }
-
-    }
-
     public static void getNbNotesDevoirs(UserInfos user, Long idDevoir, Handler<Either<String, JsonArray>> handler,
                                          Boolean isChefEtab) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT count(notes.id) as nb_notes , devoirs.id, rel_devoirs_groupes.id_groupe")
+        query.append("SELECT count(" + Field.NOTES_TABLE + ".id) as nb_notes , " + Field.DEVOIR_TABLE + "." + Field.ID + ", " + Field.REL_DEVOIRS_GROUPES_TABLE + "." + Field.ID_GROUPE)
                 .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.NOTES_TABLE)
                 .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_TABLE)
                 .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.REL_DEVOIRS_GROUPES)
-                .append(" WHERE notes.id_devoir = devoirs.id")
-                .append(" AND rel_devoirs_groupes.id_devoir = devoirs.id")
-                .append(" AND devoirs.id = ?");
+                .append(" WHERE " + Field.NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIR_TABLE + "." + Field.ID)
+                .append(" AND " + Field.REL_DEVOIRS_GROUPES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIR_TABLE + "." + Field.ID)
+                .append(" AND " + Field.DEVOIR_TABLE + "." + Field.ID + " = ?");
 
         values.add(idDevoir);
 
         if (!isChefEtab) {
-            query.append(" AND (devoirs.owner = ? OR") // devoirs dont on est le propriétaire
-                    .append(" devoirs.owner IN (SELECT DISTINCT id_titulaire") // ou dont l'un de mes tiulaires le sont (on regarde sur tous mes établissments)
-                    .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.REL_PROFESSEURS_REMPLACANTS_TABLE)
-                    .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_TABLE)
-                    .append(" ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement")
-                    .append(" WHERE id_remplacant = ?")
-                    .append(" AND rel_professeurs_remplacants.id_etablissement IN ").append(Sql.listPrepared(user.getStructures().toArray()))
-                    .append(" ) OR")
+            query.append(" AND (" + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ? OR") // devoirs dont on est le propriétaire
                     .append(" ? IN (SELECT member_id") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
                     .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_SHARE_TABLE)
-                    .append(" WHERE resource_id = devoirs.id")
+                    .append(" WHERE resource_id = " + Field.DEVOIR_TABLE + "." + Field.ID)
                     .append(" AND action = '").append(Competences.DEVOIR_ACTION_UPDATE).append("')")
                     .append(" )");
+            values.add(user.getUserId());
         }
-        query.append(" GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
-
-        HomeworkUtils.addValueForRequest(values, user, isChefEtab);
+        query.append(" GROUP by " + Field.DEVOIR_TABLE + "." + Field.ID + ", " + Field.REL_DEVOIRS_GROUPES_TABLE + "." + Field.ID_GROUPE);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
@@ -101,11 +76,11 @@ public class HomeworkUtils {
         JsonObject o = new JsonObject(devoir.getMap());
         o.remove("created");
         o.remove("modified");
-        o.remove("id");
+        o.remove(Field.ID);
         // le pourcentage d'avancement n'est pas conservé lors de la duplication d'un devoir
         o.put("percent", 0);
         try {
-            o.put("coefficient", safeGetDouble(devoir, "coefficient"));
+            o.put(Field.COEFFICIENT, safeGetDouble(devoir, Field.COEFFICIENT));
         } catch (ClassCastException e) {
             log.error("An error occured when casting devoir object to duplication format.");
             log.error(e);
@@ -113,8 +88,8 @@ public class HomeworkUtils {
         if (o.getString("libelle") == null) {
             o.remove("libelle");
         }
-        if (o.getLong("id_sousmatiere") == null) {
-            o.remove("id_sousmatiere");
+        if (o.getLong(Field.ID_SOUSMATIERE) == null) {
+            o.remove(Field.ID_SOUSMATIERE);
         }
         return o;
     }
