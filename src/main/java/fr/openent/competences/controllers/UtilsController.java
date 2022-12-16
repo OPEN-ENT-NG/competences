@@ -20,6 +20,8 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.security.AccessConseilDeClasse;
+import fr.openent.competences.security.AccessIfMyStructure;
+import fr.openent.competences.security.modelbulletinrights.AccessExportModelBulletin;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.*;
@@ -169,20 +171,17 @@ public class UtilsController extends ControllerHelper {
     }
 
     @Get("/user/list")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void list(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(UserInfos user) {
                 if (user != null) {
                     final String structureId = request.params().get("structureId");
-                    final String classId = request.params().get("classId");
                     final JsonArray types = new fr.wseduc.webutils.collections.JsonArray(request.params().getAll("profile"));
-                    final String groupId = request.params().get("groupId");
-                    final String nameFilter = request.params().get("name");
-                    final String filterActive = request.params().get("filterActive");
 
-                    utilsService.list(structureId, classId, groupId, types, filterActive, nameFilter, user, arrayResponseHandler(request));
+                    utilsService.list(structureId, types, arrayResponseHandler(request));
                 } else {
                     unauthorized(request);
                 }
