@@ -43,7 +43,7 @@ public class HomeworkUtils {
                     .append(" WHERE resource_id = " + Field.DEVOIR_TABLE + "." + Field.ID)
                     .append(" AND action = '").append(Competences.DEVOIR_ACTION_UPDATE).append("')")
                     .append(" )");
-            values.add(user.getUserId());
+            values.add(user.getUserId()).add(user.getUserId());
         }
         query.append(" GROUP by " + Field.DEVOIR_TABLE + "." + Field.ID + ", " + Field.REL_DEVOIRS_GROUPES_TABLE + "." + Field.ID_GROUPE);
 

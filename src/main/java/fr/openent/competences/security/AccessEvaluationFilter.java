@@ -17,6 +17,7 @@
 
 package fr.openent.competences.security;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.utils.FilterDevoirUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
@@ -46,11 +47,11 @@ public class AccessEvaluationFilter implements ResourcesProvider {
         } else {
             if ("Teacher".equals(user.getType())) {
 
-                if (!resourceRequest.params().contains("idDevoir")) {
+                if (!resourceRequest.params().contains(Field.IDDEVOIR)) {
                     handler.handle(false);
                 }
                 try {
-                    final Long idDevoir = Long.parseLong(resourceRequest.params().get("idDevoir"));
+                    final Long idDevoir = Long.parseLong(resourceRequest.params().get(Field.IDDEVOIR));
 
                     new FilterDevoirUtils().validateAccessDevoir(idDevoir, user, isValid -> {
                             resourceRequest.resume();
