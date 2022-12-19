@@ -30,7 +30,6 @@ export class Classe extends Model {
     type_groupe_libelle : string;
     suiviCompetenceClasse : Collection<SuiviCompetenceClasse>;
     mapEleves : any;
-    remplacement: boolean;
     id_cycle: any;
     selected : boolean;
     baremeBrevetEleves : BaremeBrevetEleves;

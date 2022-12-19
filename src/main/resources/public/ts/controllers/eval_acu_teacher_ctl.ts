@@ -100,8 +100,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                         return $scope.filterValidDevoir(devoir);
                     });
                     $scope.devoirsClasses = _.filter(evaluations.structure.classes.all, (classe) => {
-                        return _.contains(_.uniq(_.pluck($scope.devoirsNotDone, 'id_groupe')), classe.id)
-                            && classe.remplacement !== true;
+                        return _.contains(_.uniq(_.pluck($scope.devoirsNotDone, 'id_groupe')), classe.id);
                     });
                     if ($scope.devoirsClasses.length > 0 ) {
                         $scope.chartOptions.selectedClasse = _.first(_.sortBy($scope.devoirsClasses, 'name')).id;
