@@ -18,3 +18,4 @@ node_modules
 build.sh
 docker-compose.yml
 /coverage/
+package-lock.json
