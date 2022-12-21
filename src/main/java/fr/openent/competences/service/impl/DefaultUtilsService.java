@@ -1469,6 +1469,17 @@ public class DefaultUtilsService implements UtilsService {
     }
 
     @Override
+    public void getSubTopicCoeff(String idEtablissement, JsonArray idsClasse, Promise<List<SubTopic>> promise) {
+        subTopicService.getSubtopicServices(idEtablissement, idsClasse, event -> {
+            if(event.isRight()){
+                setSubtopics(promise, event);
+            }else{
+                promise.fail(event.left().getValue());
+            }
+        });
+    }
+
+    @Override
     public void getSubTopicCoeff(String idEtablissement, Promise<List<SubTopic>> promise) {
         subTopicService.getSubtopicServices(idEtablissement,event -> {
             if(event.isRight()){

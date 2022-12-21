@@ -2006,7 +2006,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         //Récupération des Sous-Matières
                         Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-                        utilsService.getSubTopicCoeff(idEtablissement, idClass, subTopicCoefPromise);
+                        utilsService.getSubTopicCoeff(idEtablissement, idsGroups, subTopicCoefPromise);
 
                         CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefPromise.future())
                                 .setHandler(event -> {

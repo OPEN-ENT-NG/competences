@@ -328,6 +328,14 @@ public interface UtilsService {
 
     void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<List<SubTopic>> promise);
 
+    /**
+     * Get subtopic coeffs from an array idsClasse and id Structure
+     * @param idEtablissement
+     * @param idsClasse
+     * @param promise
+     */
+    void getSubTopicCoeff(String idEtablissement, JsonArray idsClasse, Promise<List<SubTopic>> promise);
+
     void getSubTopicCoeff(String idEtablissement,  Promise<List<SubTopic>> promise);
 
     /**

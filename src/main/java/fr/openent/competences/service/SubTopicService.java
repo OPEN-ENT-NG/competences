@@ -28,6 +28,14 @@ public interface SubTopicService {
      */
     void getSubtopicServices(String idStructure,String idClasse, Handler<Either<String, JsonArray>> defaultResponseHandler);
 
+    /**
+     * Get subtopic coeffs from an array idsClasse and id Structure
+     * @param idStructure
+     * @param idsClasse
+     * @param handler
+     */
+    void getSubtopicServices(String idStructure, JsonArray idsClasse, Handler<Either<String, JsonArray>> handler);
+
     void getSubtopicServices(String idStructure, String idClasse, String idTeacher, String idMatiere, Handler<Either<String, JsonObject>> handler);
 
     void deleteSubtopicServices(String idMatiere, String idEnseignant, JsonArray idGroups, Handler<Either<String, JsonArray>> handler);
