@@ -139,7 +139,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
      */
     @Get("/syntheseBilanPeriodique")
     @ApiDoc("Récupère la synthèse d'un élève pour une période donnée")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @ResourceFilter(AccessConseilDeClasse.class)
     public void getSyntheseBilanPeriodique(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
             @Override
@@ -165,7 +166,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @Get("/bilan/periodique/datas/avis/synthses")
     @ApiDoc("Récupère les synthèses et avis de l'élève sur l'année")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessChildrenParentFilter.class)
+    @ResourceFilter(AccessConseilDeClasse.class)
     public void getSynthesesAvisBilanPeriodique(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
             @Override
@@ -330,7 +331,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
      */
     @Get("/avis/bilan/periodique")
     @ApiDoc("Retourne la liste des avis prédéfinis du conseil de classe du bilan périodique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessConseilDeClasse.class)
     public void getLibelleAvis(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -386,7 +388,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Delete("/avis/bilan/periodique")
     @ApiDoc("Supprime un avis de conseil de classe")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateAvisConseilBilanPeriodique.class)
     public void deleteOpinion(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -404,7 +407,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Put("/avis/bilan/periodique")
     @ApiDoc("Mets à jour un avis de conseil de classe")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateAvisConseilBilanPeriodique.class)
     public void updateOpinion(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -502,7 +506,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
      */
     @Get("/avis/orientation")
     @ApiDoc("Récupère l'avis d'orientation d'un élève pour une période donnée")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessConseilDeClasse.class)
     public void getAvisOrientation(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
