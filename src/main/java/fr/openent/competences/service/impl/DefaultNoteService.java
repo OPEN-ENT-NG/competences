@@ -393,7 +393,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.owner,")
                 .append(" devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, devoirs.id_periode , notes.id_eleve,")
-                .append(" devoirs.is_evaluated, null as annotation, devoirs.id_matiere, devoirs.id_sousmatiere ")
+                .append(" devoirs.is_evaluated, null as annotation, devoirs.id_matiere, devoirs.id_sousmatiere, rel_devoirs_groupes.id_groupe as id_groupe ")
                 .append(" FROM ").append(COMPETENCES_SCHEMA).append(".devoirs")
                 .append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".notes")
                 .append(" ON ( devoirs.id = notes.id_devoir ")
@@ -412,7 +412,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.owner,")
                 .append(" devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id, devoirs.id_periode, ")
                 .append(" rel_annotations_devoirs.id_eleve, devoirs.is_evaluated,")
-                .append(" rel_annotations_devoirs.id_annotation as annotation, devoirs.id_matiere, devoirs.id_sousmatiere ")
+                .append(" rel_annotations_devoirs.id_annotation as annotation, devoirs.id_matiere, devoirs.id_sousmatiere, rel_devoirs_groupes.id_groupe as id_groupe ")
                 .append(" FROM ").append(COMPETENCES_SCHEMA).append(".devoirs")
                 .append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".rel_annotations_devoirs")
                 .append(" ON (devoirs.id = rel_annotations_devoirs.id_devoir ")
@@ -3065,7 +3065,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 Matiere matiere = new Matiere(matiereId);
                 Teacher teacher = new Teacher(note.getString("owner"));
-                Group group = new Group(idClasse);
+                Group group = new Group(note.getString("id_groupe"));
 
                 Service service = services.stream()
                         .filter(el -> teacher.getId().equals(el.getTeacher().getId())
