@@ -1,0 +1,1 @@
+DROP TABLE notes.rel_professeurs_remplacants;

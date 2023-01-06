@@ -45,7 +45,6 @@ import {StructureOptions, structureOptionsService} from "../../services";
 function castClasses(classes: any) {
     return _.map(classes, (classe) => {
         classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
-        if (!classe.hasOwnProperty("remplacement")) classe.remplacement = false;
         classe = new Classe(classe);
         return classe;
     });
@@ -74,7 +73,6 @@ export class Structure extends Model {
     typeSousMatieres: TypeSousMatiere[];
     niveauCompetences: Collection<NiveauCompetence>;
     usePerso: any;
-    private syncRemplacement: () => any;
     responsables: Collection<Responsable>;
     moyenneVisible: boolean|number;
     baremeDNBvisible: number;
@@ -99,7 +97,6 @@ export class Structure extends Model {
             CLASSE: {
                 synchronization: '/viescolaire/classes?idEtablissement=' + this.id,
                 synchronizationAllClasses: '/viescolaire/classes?idEtablissement=' + this.id + "&forAdmin=true",
-                synchronizationRemplacement: '/viescolaire/classes/secondary?idStructure=' + this.id
             },
             ELEVE: {
                 synchronization: '/viescolaire/classe/eleves?idEtablissement=' + this.id
@@ -331,21 +328,6 @@ export class Structure extends Model {
         });
         this.collection(ReleveNote);
 
-        this.syncRemplacement = function () {
-            return new Promise((resolve, reject) => {
-                http().getJson(that.api.CLASSE.synchronizationRemplacement)
-                    .done((res) => {
-                        let classes = this.classes.all;
-                        let classesToAdd = _.filter(res, (classe) => {
-                            let cloneClasse = _.findWhere(classes, {id: classe.id});
-                            return cloneClasse === undefined;
-                        });
-                        this.classes.addRange(castClasses(classesToAdd));
-                        model.trigger('apply');
-                        resolve();
-                    });
-            });
-        };
         this.collection(Classe, {
             sync: () => {
                 return new Promise(async (resolve) => {
@@ -371,13 +353,6 @@ export class Structure extends Model {
                         if (Utils.isChefEtabOrHeadTeacher())
                             resolve();
                     });
-
-                    if (!Utils.isChefEtabOrHeadTeacher()) {
-                        this.syncRemplacement().then(() => {
-                            model.trigger('apply');
-                        });
-                        resolve();
-                    }
                     this.synchronized.classes = true;
                 });
             }

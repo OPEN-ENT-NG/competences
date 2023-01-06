@@ -122,8 +122,6 @@ routes.define(function ($routeProvider) {
         .when('/releve', {action: 'displayReleveNotes'})
         .when('/competences/eleve', {action: 'displaySuiviEleve'})
         .when('/competences/classe', {action: 'displaySuiviCompetencesClasse'})
-        .when('/remplacements/list', {action: 'listRemplacements'})
-        .when('/remplacement/create', {action: 'createRemplacements'})
         .when('/projets', {action: 'displayEpiApParcours'})
         .when('/conseil/de/classe', {action: 'displayBilanPeriodique'})
         .when('/export', {action: 'export'})
