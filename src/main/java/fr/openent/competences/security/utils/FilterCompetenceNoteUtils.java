@@ -18,6 +18,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
@@ -36,11 +37,12 @@ public class FilterCompetenceNoteUtils {
     public void validateCompetenceNoteOwner(Long idNote, String owner,
                                             final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
-                .append("SELECT count(devoirs.*) " +
-                        "FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes " +
-                        "ON (competences_notes.id_devoir = devoirs.id) " +
-                        "WHERE competences_notes.id = ? " +
-                        "AND devoirs.owner = ?;");
+                .append("SELECT count(" + Field.DEVOIRS + ".*) " +
+                        "FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.DEVOIRS +
+                        " INNER JOIN "+ Competences.COMPETENCES_SCHEMA +"." + Field.COMPETENCES_NOTES_TABLE +
+                        " ON (" + Field.COMPETENCES_NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIRS + "." + Field.ID + ") " +
+                        "WHERE " + Field.COMPETENCES_NOTES_TABLE + "." + Field.ID + " = ? " +
+                        "AND " + Field.DEVOIRS + "." + Field.OWNER + " = ?;");
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idNote).add(owner);
 
@@ -56,11 +58,12 @@ public class FilterCompetenceNoteUtils {
     }
 
     public void validateCompetencesNotesOwner(List<Long> idNotes, String owner, final Handler<Boolean> handler) {
-        StringBuilder query = new StringBuilder().append("SELECT count(DISTINCT devoirs.*) " +
-                "FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes " +
-                "ON (competences_notes.id_devoir = devoirs.id) " +
-                "WHERE competences_notes.id IN " + Sql.listPrepared(idNotes.toArray()) + " " +
-                "AND devoirs.owner = ?;");
+        StringBuilder query = new StringBuilder().append("SELECT count(DISTINCT " + Field.DEVOIRS + ".*) " +
+                "FROM "+ Competences.COMPETENCES_SCHEMA +"." + Field.DEVOIRS +
+                " INNER JOIN "+ Competences.COMPETENCES_SCHEMA +"." + Field.COMPETENCES_NOTES_TABLE +
+                " ON (" + Field.COMPETENCES_NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIRS + "." + Field.ID + ") " +
+                "WHERE " + Field.COMPETENCES_NOTES_TABLE + "." + Field.ID + " IN " + Sql.listPrepared(idNotes.toArray()) +
+                " AND " + Field.DEVOIRS + "." + Field.OWNER + " = ?;");
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -84,32 +87,18 @@ public class FilterCompetenceNoteUtils {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder()
-                .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".competences_notes ON (competences_notes.id_devoir = devoirs.id) ")
-                .append("WHERE competences_notes.id IN " + Sql.listPrepared(idNotes.toArray()) + " ")
-                .append("AND (devoirs.owner = ? OR ")
-                        .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ")
-                                    .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
-                                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement  ")
-                                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".competences_notes ON (competences_notes.id_devoir = devoirs.id) ")
-                                    .append("WHERE competences_notes.id IN " + Sql.listPrepared(idNotes.toArray()) + " ")
-                                    .append("AND id_remplacant = ? ")
-                                    .append(") OR ")
-
-                        .append("? IN (SELECT member_id ")
-                                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares ")
-                                .append("WHERE resource_id = devoirs.id ")
-                                .append("AND action = '" + Competences.DEVOIR_ACTION_UPDATE+"')")
-
-                    .append(")");
+                .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE)
+                .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_NOTES_TABLE +
+                        " ON (" + Field.COMPETENCES_NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIR_TABLE + "." + Field.ID + ") ")
+                .append("WHERE " + Field.COMPETENCES_NOTES_TABLE + "." + Field.ID + " IN " + Sql.listPrepared(idNotes.toArray()) + " ")
+                .append("AND (" + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ? OR ")
+                .append("? IN (SELECT member_id ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE)
+                .append(" WHERE resource_id = " + Field.DEVOIR_TABLE + "." + Field.ID)
+                .append(" AND action = '" + Competences.DEVOIR_ACTION_UPDATE + "')")
+                .append(")");
 
         // Ajout des params pour la partie de la requête où on vérifie si on est le propriétaire
-        for (int i = 0; i < idNotes.size(); i++) {
-            params.add(idNotes.get(i));
-        }
-        params.add(user.getUserId());
-
-        // Ajout des params pour la partie de la requête où on vérifie si on a des titulaires propriétaire
         for (int i = 0; i < idNotes.size(); i++) {
             params.add(idNotes.get(i));
         }

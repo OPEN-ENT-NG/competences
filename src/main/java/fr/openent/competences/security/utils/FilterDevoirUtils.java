@@ -18,6 +18,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.BaseServer;
@@ -42,10 +43,10 @@ public class FilterDevoirUtils  extends ControllerHelper {
 
     public void validateOwnerDevoir(Integer idDevoir, String owner, final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
-                .append("SELECT count(devoirs.*) " +
-                        "FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
-                        "WHERE devoirs.id = ? " +
-                        "AND devoirs.owner = ?;");
+                .append("SELECT count(" + Field.DEVOIR_TABLE + ".*) " +
+                        "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE +
+                        "WHERE " + Field.DEVOIR_TABLE + "." + Field.ID + " = ? " +
+                        "AND " + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ?;");
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idDevoir).add(owner);
 
@@ -60,11 +61,11 @@ public class FilterDevoirUtils  extends ControllerHelper {
 
     public void validateDevoirFinSaisie(Long idDevoir, UserInfos user, final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
-                .append("SELECT count(devoir.id) " +
-                        "FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs, " + Competences.VSCO_SCHEMA + ".periode "+
-                        "WHERE devoirs.id = ? " +
-                        "AND devoirs.owner = ?  " +
-                        "AND now() < periode.date_fin_saisie;" );
+                .append("SELECT count(" + Field.DEVOIR_TABLE + "." + Field.ID + ") " +
+                        "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.NOTES_TABLE + ", " + Competences.VSCO_SCHEMA + ".periode "+
+                        "WHERE " + Field.DEVOIR_TABLE + "." + Field.ID + " = ? " +
+                        "AND " + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ?  " +
+                        "AND now() < " + Field.VIESCO_PERIODE_TABLE + ".date_fin_saisie;" );
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idDevoir).add(user.getUserId());
 
@@ -82,32 +83,16 @@ public class FilterDevoirUtils  extends ControllerHelper {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder()
-                .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs ");
-        query.append("WHERE devoirs.id = ? ")
-                .append("AND (devoirs.owner = ? OR ")
-                .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA)
-                .append(".rel_professeurs_remplacants ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA )
-                .append(".devoirs ON devoirs.id_etablissement = ")
-                .append(" rel_professeurs_remplacants.id_etablissement  ")
-                .append("WHERE devoirs.id = ? ")
-                .append("AND id_remplacant = ? ")
-                .append(") OR ")
-
+                .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE);
+        query.append(" WHERE " + Field.DEVOIR_TABLE + "." + Field.ID + " = ? ")
+                .append("AND (" + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ? OR ")
                 .append("? IN (SELECT member_id ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares ")
-                .append("WHERE resource_id = ? ")
-                .append("AND action = '" + Competences.DEVOIR_ACTION_UPDATE+"')")
-
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE)
+                .append(" WHERE resource_id = ? ")
+                .append("AND action = '" + Competences.DEVOIR_ACTION_UPDATE + "')")
                 .append(")");
 
         // Ajout des params pour la partie de la requête où on vérifie si on est le propriétaire
-        params.add(idDevoir);
-        params.add(user.getUserId());
-
-        // Ajout des params pour la partie de la requête où on vérifie si on a
-        // des titulaires propriétaire
         params.add(idDevoir);
         params.add(user.getUserId());
 

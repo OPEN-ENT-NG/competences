@@ -22,8 +22,7 @@ import {
     evaluations,
     ReleveNote,
     ReleveNoteTotale,
-    GestionRemplacement,
-    Classe, Annotation
+    Classe
 } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
@@ -42,7 +41,6 @@ import { LengthLimit} from "../constants/ConstantCommonLength"
 import {isValidClasse} from "../utils/functions/isValidClasse";
 import {isValidDevoir} from "../utils/filters/isValidDevoir";
 import {AppreciationSubjectPeriodStudent} from "../models/teacher/AppreciationSubjectPeriodStudent";
-import {Periode} from "../models/common/Periode";
 
 declare let $: any;
 declare let document: any;
@@ -158,15 +156,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
                 endAccueil();
-            },
-
-            listRemplacements: function () {
-                $scope.opened.lightbox = false;
-                if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
-                    $scope.cleanRoot();
-                    $scope.listRemplacements();
-                    utils.safeApply($scope);
-                }
             },
 
             createDevoir: function () {
@@ -817,7 +806,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     {id_cycle: $scope.search.classe.id_cycle});
                 $scope.structure.cycle = evaluations.structure.cycle;
                 utils.safeApply($scope);
-                if (!$scope.search.classe.remplacement && $scope.search.classe.eleves
+                if ( $scope.search.classe.eleves
                     && $scope.search.classe.eleves.length() === 0) {
                     $scope.search.classe.eleves.sync().then(() => {
                         utils.safeApply($scope);
@@ -3438,10 +3427,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($scope.classes !== undefined) {
                 let matiereClasse = $filter('getMatiereClasse')($scope.structure.matieres.all, idClasse, $scope.classes, model.me.userId);
                 if(idMatiere)
-                    return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
+                    return $scope.classes.findWhere({id: idClasse }) !== undefined
                         && !_.isEmpty(matiereClasse) && _.findWhere(matiereClasse, {id : idMatiere});
                 else
-                    return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
+                    return $scope.classes.findWhere({id: idClasse}) !== undefined
                         && !_.isEmpty(matiereClasse);
             }
         };
@@ -3606,186 +3595,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             template.close('lightboxEleveDetails');
         };
 
-        /**
-         * Affiche la liste des remplacements en cours et initialise le
-         * formulaire de creation d'un remplacement
-         */
-        $scope.listRemplacements = function () {
-            $scope.gestionRemplacement = new GestionRemplacement();
-            // TODO gérer les établissements ?
-            $scope.gestionRemplacement.remplacements.sync();
-            $scope.gestionRemplacement.enseignants.sync();
 
-            $scope.gestionRemplacement.sortType = 'date_debut'; // set the default sort type
-            $scope.gestionRemplacement.sortReverse = false;  // set the default sort order
-
-            template.open('main', 'personnels/remplacements/eval_remp_chef_etab');
-        };
-
-        /**
-         * Sélectionne/Déselectionne tous les remplacemnts
-         */
-        $scope.selectAllRemplacements = function () {
-            if ($scope.gestionRemplacement.selectAll === false) {
-                // maj de la vue
-                $scope.selectElement($scope.gestionRemplacement.remplacements.all, false);
-
-                // vidage de la sélection
-                $scope.gestionRemplacement.selectedRemplacements = [];
-            } else {
-
-                // maj de la vue
-                $scope.selectElement($scope.gestionRemplacement.remplacements.all, true);
-
-                // ajout à la liste de sélection
-                $scope.gestionRemplacement.selectedRemplacements = _.where($scope.gestionRemplacement.remplacements.all, {selected: true});
-            }
-
-
-        };
-
-
-        /**
-         * Supprime les remplacments sélectionnés
-         */
-        $scope.deleteSelectedRemplacement = function () {
-            var iNbSupp = $scope.gestionRemplacement.selectedRemplacements.length;
-            var iCpteur = 0;
-
-            for (var i = 0; i < iNbSupp; ++i) {
-                var oRemplacement = $scope.gestionRemplacement.selectedRemplacements[i];
-
-                // suppression des remplacments en BDD
-                oRemplacement.remove().then(function (poRemplacementSupp) {
-
-                    $scope.gestionRemplacement.remplacements.remove(poRemplacementSupp);
-                    $scope.gestionRemplacement.selectedRemplacements
-
-                    iCpteur++;
-
-                    // si toutes les suppressions ont été faites on refresh la vue
-                    if (iNbSupp === iCpteur) {
-
-                        // fermeture popup
-                        $scope.gestionRemplacement.confirmation = false;
-
-                        // désélection de tous les remplacements
-                        $scope.gestionRemplacement.selectAll = false;
-
-                        // vidage de la liste des remplacements sélectionnés
-                        $scope.gestionRemplacement.selectedRemplacements = [];
-
-                        utils.safeApply($scope);
-                    }
-                });
-
-            }
-        };
-
-
-        /**
-         * Sélectionne/Déselectionne un remplacment
-         * @param poRemplacement le remplacement
-         */
-        $scope.selectRemplacement = function (poRemplacement) {
-            var index = _.indexOf($scope.gestionRemplacement.selectedRemplacements, poRemplacement);
-
-            // ajout dans la liste des remplacements sélectionnés s'il n'y est pas présent
-            if (index === -1) {
-                $scope.gestionRemplacement.selectedRemplacements.push(poRemplacement);
-                poRemplacement.selected = true;
-            } else {
-                // retrait sinon
-                $scope.gestionRemplacement.selectedRemplacements = _.without($scope.gestionRemplacement.selectedRemplacements, poRemplacement);
-                poRemplacement.selected = false;
-            }
-
-            // coche de la checkbox de sélection de tous les remplacements s'ils on tous été sélectionnés (un à un)
-            $scope.gestionRemplacement.selectAll = $scope.gestionRemplacement.selectedRemplacements.length > 0 &&
-                ($scope.gestionRemplacement.selectedRemplacements.length === $scope.gestionRemplacement.remplacements.all.length);
-
-        };
-
-        /**
-         * Vérification de la cohérence de l'ajout du remplacement (verif remplacement déjà existant par exemple)
-         *
-         * @return true si aucune erreur, false sinon
-         */
-        $scope.controlerNewRemplacement = function () {
-            // var oRemplacements = [];
-
-            // _.each($scope.gestionRemplacement.remplacements.all, function (remp) {
-            //     if (oRemplacement.titulaire.id == $scope.gestionRemplacement.remplacement.titulaire.id) {
-            //         oRemplacements.push(remp);
-            //     }
-            // });
-
-            $scope.gestionRemplacement.showError = false;
-
-            for (var i = 0; i < $scope.gestionRemplacement.remplacements.all.length; i++) {
-                var oRemplacement = $scope.gestionRemplacement.remplacements.all[i];
-                if (oRemplacement.titulaire.id == $scope.gestionRemplacement.remplacement.titulaire.id) {
-
-                    // la date de fin du nouveau  remplacement doit etre avant la date de debut d'un remplacement existant
-                    var isRemplacementApresExistant = moment($scope.gestionRemplacement.remplacement.date_fin).diff(moment(oRemplacement.date_debut), "days") < 0;
-
-                    // la date de fin d'un remplacement existant doit être avant la date de début d'un nouveau remplacement
-                    var isFinApresFinRemplacementExistant = moment(oRemplacement.date_fin).diff(moment($scope.gestionRemplacement.remplacement.date_debut), "days") < 0;
-
-                    // si l'une des 2 conditions n'est pas remplie le remplacement chevauche un remplacent existant
-                    if (!(isRemplacementApresExistant || isFinApresFinRemplacementExistant)) {
-                        $scope.gestionRemplacement.showError = true;
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        };
-
-
-        /**
-         * Enregistre un remplacemnt en base de données
-         */
-        $scope.saveNewRemplacement = function () {
-
-            // Vérification de la cohérence de l'ajout du remplacement (verif remplacement déjà existant par exemple)
-            var hasError = !$scope.controlerNewRemplacement();
-
-            if (hasError) {
-                return;
-            }
-
-            // TODO Recupere le bon établissement
-            $scope.gestionRemplacement.remplacement.id_etablissement = $scope.evaluations.structure.id;
-
-            // Conversion des dates en string
-            /*$scope.gestionRemplacement.remplacement.date_debut = $scope.getDateFormated($scope.gestionRemplacement.remplacement.date_debut);
-             $scope.gestionRemplacement.remplacement.date_fin = $scope.getDateFormated($scope.gestionRemplacement.remplacement.date_fin);*/
-
-            // enregistrement du remplacement et refressh de la liste
-            $scope.gestionRemplacement.remplacement.create().then(function () {
-
-                // Mise à jour de la liste des remplacements
-                $scope.gestionRemplacement.remplacements.sync().then(function () {
-                    // Réinitialisation du formulaire d'ajout de remplacement
-                    $scope.gestionRemplacement.remplacement.date_debut = new Date();
-
-                    var today = new Date();
-                    today.setFullYear(today.getFullYear() + 1);
-                    $scope.gestionRemplacement.remplacement.date_fin = today;
-                    $scope.gestionRemplacement.remplacement.titulaire = undefined;
-                    $scope.gestionRemplacement.remplacement.remplacant = undefined;
-
-                    $scope.gestionRemplacement.selectAll = false;
-                    $scope.gestionRemplacement.selectedRemplacements = [];
-
-                    utils.safeApply($scope);
-                });
-
-
-            });
-        };
         $scope.disabledDevoir = [];
         $rootScope.$on("$locationChangeSuccess", function ($event, $nextRoute, $oldRoute) {
             if ($oldRoute === $nextRoute && ($route.current.originalPath === '/devoir/:idDevoir/edit' || $route.current.originalPath === '/devoir/:idDevoir/edit/')) {
@@ -3896,32 +3706,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         // };
 
         $scope.filterDuplicationAction = () => {
-            try {
-                if ($scope.selected.devoirs.list.length > 1) {
-                    return false;
-                }
-                let classe = evaluations.structure.classes.findWhere({id: $scope.selected.devoirs.list[0].id_groupe});
-                return !classe.remplacement;
-            } catch (e) {
-
-            }
+            return !($scope.selected.devoirs.list.length > 1);
         };
 
-        /**
-         * Controle la validité du formulaire de création d'un remplacement
-         * @returns {boolean} Validité du formulaire
-         */
-        $scope.controleNewRemplacementForm = function () {
-            return !(
-                $scope.gestionRemplacement.remplacement !== undefined
-                && $scope.gestionRemplacement.remplacement.titulaire !== undefined
-                && $scope.gestionRemplacement.remplacement.remplacant !== undefined
-                && $scope.gestionRemplacement.remplacement.titulaire.id !== $scope.gestionRemplacement.remplacement.remplacant.id
-                && $scope.gestionRemplacement.remplacement.date_debut !== undefined
-                && $scope.gestionRemplacement.remplacement.date_fin !== undefined
-                && (moment($scope.gestionRemplacement.remplacement.date_fin).diff(moment($scope.gestionRemplacement.remplacement.date_debut), "days") >= 0)
-            );
-        };
 
         $scope.initReferences = () => {
             evaluations.enseignements = evaluations.structure.enseignements;

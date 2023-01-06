@@ -18,6 +18,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
@@ -32,11 +33,12 @@ import io.vertx.core.json.JsonObject;
 public class FilterAppreciationUtils {
         public void validateAppreciationOwner (Long idAppreciation, String owner, final Handler<Boolean> handler) {
             StringBuilder query = new StringBuilder()
-                    .append("SELECT count(devoirs.*) " +
-                            "FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
-                            "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".appreciations ON (appreciations.id_devoir = devoirs.id) " +
-                            "WHERE appreciations.id = ? " +
-                            "AND devoirs.owner = ?;");
+                    .append("SELECT count(" + Field.DEVOIR_TABLE + ".*) " +
+                            "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE +
+                            " INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATIONS_TABLE +
+                            " ON (" + Field.APPRECIATION_CLASSE_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIR_TABLE + "." + Field.ID + ") " +
+                            "WHERE " + Field.APPRECIATIONS_TABLE + "." + Field.ID + " = ? " +
+                            "AND " + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ?;");
 
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idAppreciation).add(owner);
 
@@ -55,31 +57,18 @@ public class FilterAppreciationUtils {
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
             StringBuilder query = new StringBuilder()
-                    .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs ")
-                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".appreciations ON " +
-                            "(appreciations.id_devoir = devoirs.id) ")
-                    .append("WHERE appreciations.id = ? ")
-                    .append("AND (devoirs.owner = ? OR ")
-                    .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ")
-                    .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
-                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement  ")
-                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".appreciations ON (appreciations.id_devoir = devoirs.id) ")
-                    .append("WHERE appreciations.id = ? ")
-                    .append("AND id_remplacant = ? ")
-                    .append(") OR ")
-
+                    .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE)
+                    .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.APPRECIATIONS_TABLE + " ON " +
+                            "(" + Field.APPRECIATIONS_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIR_TABLE + "." + Field.ID + ") ")
+                    .append("WHERE " + Field.APPRECIATIONS_TABLE + "." + Field.ID + " = ? ")
+                    .append("AND (" + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ? OR ")
                     .append("? IN (SELECT member_id ")
-                    .append("FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares ")
-                    .append("WHERE resource_id = devoirs.id ")
-                    .append("AND action = '" + Competences.DEVOIR_ACTION_UPDATE+"')")
-
+                    .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE)
+                    .append(" WHERE resource_id = " + Field.DEVOIR_TABLE + "." + Field.ID)
+                    .append(" AND action = '" + Competences.DEVOIR_ACTION_UPDATE+"')")
                     .append(")");
 
             // Ajout des params pour la partie de la requête où on vérifie si on est le propriétaire
-            params.add(idNote);
-            params.add(user.getUserId());
-
-            // Ajout des params pour la partie de la requête où on vérifie si on a des titulaires propriétaire
             params.add(idNote);
             params.add(user.getUserId());
 
