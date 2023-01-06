@@ -18,6 +18,7 @@
 package fr.openent.competences;
 
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.MatiereService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultMatiereService;
@@ -25,7 +26,10 @@ import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
-import io.vertx.core.*;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -37,14 +41,16 @@ import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.text.Normalizer;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
-
-import java.util.*;
-import java.text.*;
-import java.util.stream.Collectors;
 
 public class Utils {
 
@@ -96,6 +102,46 @@ public class Utils {
         }));
     }
 
+    public static JsonArray filterSubtitute(List<Object> periodes, JsonArray multiTeachers) {
+        for (Object periodeO : periodes) {
+            JsonObject periode = (JsonObject) periodeO;
+            multiTeachers = new JsonArray(multiTeachers.stream().filter(obj -> {
+                JsonObject multi = (JsonObject) obj;
+                if (!multi.getBoolean(Field.IS_COTEACHING)) {
+                    String classOrGroupId =
+                            (periode.containsKey(Field.ID_CLASSE))
+                                    ? periode.getString(Field.ID_CLASSE) : periode.getString(Field.ID_GROUPE);
+                    if (classOrGroupId.equals(multi.getString(Field.CLASS_OR_GROUP_ID))) {
+                        SimpleDateFormat formatter1 = new SimpleDateFormat(Field.dateFormateYYYYMMDDTHHMMSS);
+                        Date multiStartDate;
+                        Date multiEndDate;
+                        Date periodeStartDate;
+                        Date periodeEndDate;
+                        try {
+                            multiStartDate = formatter1.parse(multi.getString(Field.START_DATE));
+                            multiEndDate = formatter1.parse(multi.getString(Field.END_DATE));
+                            periodeStartDate = formatter1.parse(periode.getString(Field.TIMESTAMP_DT));
+                            periodeEndDate = formatter1.parse(periode.getString(Field.TIMESTAMP_FN));
+                        } catch (ParseException e) {
+                            log.error("[Competences@FilterSubtitute] cannot parse dates");
+                            return true;
+                        }
+                        if (multiStartDate != null && multiEndDate != null && periodeEndDate != null && periodeStartDate != null)
+                            return (multiStartDate.after(periodeStartDate) && multiStartDate.before(periodeEndDate))
+                                    || (multiEndDate.after(periodeStartDate) && multiEndDate.before(periodeEndDate));
+                        else {
+                            return true;
+                        }
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
+            }).collect(Collectors.toList()));
+        }
+        return multiTeachers;
+    }
     /**
      * retourne une classe avec ses groups (ids)
      *

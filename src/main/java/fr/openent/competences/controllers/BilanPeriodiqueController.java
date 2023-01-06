@@ -30,11 +30,8 @@ import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -112,7 +109,7 @@ public class BilanPeriodiqueController extends ControllerHelper {
                             JsonArray servicesJsonArray = servicesFuture.result();
                             JsonArray multiTeachers = multiTeachersFuture.result();
 
-                            multiTeachers = FilterSubtitute(periodes, multiTeachers);
+                            multiTeachers = Utils.filterSubtitute(periodes, multiTeachers);
                             List<SubTopic> subTopics = subTopicCoefPromise.future().result();
                             Structure structure = new Structure();
                             structure.setId(idEtablissement);
@@ -127,46 +124,7 @@ public class BilanPeriodiqueController extends ControllerHelper {
         });
     }
 
-    private JsonArray FilterSubtitute(List<Object> periodes, JsonArray multiTeachers) {
-        for (Object periodeO : periodes) {
-            JsonObject periode = (JsonObject) periodeO;
-            multiTeachers = new JsonArray(multiTeachers.stream().filter(obj -> {
-                JsonObject multi = (JsonObject) obj;
-                if (!multi.getBoolean(Field.IS_COTEACHING)) {
-                    String classOrGroupId =
-                            (periode.containsKey(Field.ID_CLASSE))
-                                    ? periode.getString(Field.ID_CLASSE) : periode.getString(Field.ID_GROUPE);
-                    if (classOrGroupId.equals(multi.getString(Field.CLASS_OR_GROUP_ID))) {
-                        SimpleDateFormat formatter1 = new SimpleDateFormat(Field.dateFormateYYYYMMDDTHHMMSS);
-                        Date multiStartDate;
-                        Date multiEndDate;
-                        Date periodeStartDate;
-                        Date periodeEndDate;
-                        try {
-                            multiStartDate = formatter1.parse(multi.getString(Field.START_DATE));
-                            multiEndDate = formatter1.parse(multi.getString(Field.END_DATE));
-                            periodeStartDate = formatter1.parse(periode.getString(Field.TIMESTAMP_DT));
-                            periodeEndDate = formatter1.parse(periode.getString(Field.TIMESTAMP_FN));
-                        } catch (ParseException e) {
-                            log.error("[Competences:BilanPeriodiqueController] cannot parse dates");
-                            return true;
-                        }
-                        if (multiStartDate != null && multiEndDate != null && periodeEndDate != null && periodeStartDate != null)
-                            return (multiStartDate.after(periodeStartDate) && multiStartDate.before(periodeEndDate))
-                                    || multiEndDate.after(periodeStartDate) && multiEndDate.before(periodeEndDate);
-                        else {
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
-                } else {
-                    return true;
-                }
-            }).collect(Collectors.toList()));
-        }
-        return multiTeachers;
-    }
+
 
     @Get("/eleve/evenements/:idEleve")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
