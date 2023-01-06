@@ -111,30 +111,7 @@ public class Utils {
                     String classOrGroupId =
                             (periode.containsKey(Field.ID_CLASSE))
                                     ? periode.getString(Field.ID_CLASSE) : periode.getString(Field.ID_GROUPE);
-                    if (classOrGroupId.equals(multi.getString(Field.CLASS_OR_GROUP_ID))) {
-                        SimpleDateFormat formatter1 = new SimpleDateFormat(Field.dateFormateYYYYMMDDTHHMMSS);
-                        Date multiStartDate;
-                        Date multiEndDate;
-                        Date periodeStartDate;
-                        Date periodeEndDate;
-                        try {
-                            multiStartDate = formatter1.parse(multi.getString(Field.START_DATE));
-                            multiEndDate = formatter1.parse(multi.getString(Field.END_DATE));
-                            periodeStartDate = formatter1.parse(periode.getString(Field.TIMESTAMP_DT));
-                            periodeEndDate = formatter1.parse(periode.getString(Field.TIMESTAMP_FN));
-                        } catch (ParseException e) {
-                            log.error("[Competences@FilterSubtitute] cannot parse dates");
-                            return true;
-                        }
-                        if (multiStartDate != null && multiEndDate != null && periodeEndDate != null && periodeStartDate != null)
-                            return (multiStartDate.after(periodeStartDate) && multiStartDate.before(periodeEndDate))
-                                    || (multiEndDate.after(periodeStartDate) && multiEndDate.before(periodeEndDate));
-                        else {
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
+                    return filterSubtituteByDatePeriode(periode, multi, classOrGroupId);
                 } else {
                     return true;
                 }
@@ -142,6 +119,34 @@ public class Utils {
         }
         return multiTeachers;
     }
+
+    private static boolean filterSubtituteByDatePeriode(JsonObject periode, JsonObject multi, String classOrGroupId) {
+        if (classOrGroupId.equals(multi.getString(Field.CLASS_OR_GROUP_ID))) {
+            SimpleDateFormat formatter1 = new SimpleDateFormat(Field.dateFormateYYYYMMDDTHHMMSS);
+            Date multiStartDate;
+            Date multiEndDate;
+            Date periodeStartDate;
+            Date periodeEndDate;
+            try {
+                multiStartDate = formatter1.parse(multi.getString(Field.START_DATE));
+                multiEndDate = formatter1.parse(multi.getString(Field.END_DATE));
+                periodeStartDate = formatter1.parse(periode.getString(Field.TIMESTAMP_DT));
+                periodeEndDate = formatter1.parse(periode.getString(Field.TIMESTAMP_FN));
+            } catch (ParseException e) {
+                log.error("[Competences@FilterSubtitute] cannot parse dates");
+                return true;
+            }
+            if (multiStartDate != null && multiEndDate != null && periodeEndDate != null && periodeStartDate != null)
+                return (multiStartDate.after(periodeStartDate) && multiStartDate.before(periodeEndDate))
+                        || (multiEndDate.after(periodeStartDate) && multiEndDate.before(periodeEndDate));
+            else {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+
     /**
      * retourne une classe avec ses groups (ids)
      *
