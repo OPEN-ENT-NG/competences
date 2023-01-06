@@ -11,6 +11,7 @@ import fr.openent.competences.security.CreateSyntheseBilanPeriodiqueFilter;
 import fr.openent.competences.security.SetAvisConseilFilter;
 import fr.openent.competences.service.BilanPeriodiqueService;
 import fr.openent.competences.service.impl.*;
+import fr.openent.competences.utils.MultiTeachersUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -109,7 +110,7 @@ public class BilanPeriodiqueController extends ControllerHelper {
                             JsonArray servicesJsonArray = servicesFuture.result();
                             JsonArray multiTeachers = multiTeachersFuture.result();
 
-                            multiTeachers = Utils.filterSubtitute(periodes, multiTeachers);
+                            multiTeachers = MultiTeachersUtils.filterSubtitute(periodes, multiTeachers);
                             List<SubTopic> subTopics = subTopicCoefPromise.future().result();
                             Structure structure = new Structure();
                             structure.setId(idEtablissement);
