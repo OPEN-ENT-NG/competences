@@ -1,5 +1,6 @@
 package fr.openent.competences.service.impl;
 
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.service.SubTopicService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -11,6 +12,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,8 +63,10 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
         String query = "SELECT  id_subtopic, id_teacher, id_topic, id_group, coefficient::numeric, id_structure " +
                 " From " + this.resourceTable + " WHERE id_structure = ? ";
         JsonArray params = new JsonArray().add(idStructure);
-        return getJsonArrayFuture(promise, query, params);
-
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(promise,
+                String.format("[Competences@%s::getSubtopicServices(String)] Fail to get subtopics.",
+                        this.getClass().getSimpleName()))));
+        return promise.future();
     }
 
     @Override
@@ -71,8 +75,10 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
         String query = "SELECT  id_subtopic, id_teacher, id_topic, id_group, coefficient::numeric, id_structure " +
                 " From " + this.resourceTable + " WHERE id_structure = ? AND id_group = ? ";
         JsonArray params = new JsonArray().add(idStructure).add(idClasse);
-        return getJsonArrayFuture(promise, query, params);
-
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(promise,
+                String.format("[Competences@%s::getSubtopicServices(String, String)] Fail to get subtopics.",
+                        this.getClass().getSimpleName()))));
+        return promise.future();
     }
 
     @Override
@@ -81,19 +87,9 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
         String query = "SELECT  id_subtopic, id_teacher, id_topic, id_group, coefficient::numeric, id_structure " +
                 " From " + this.resourceTable + " WHERE id_structure = ? AND id_group IN " + Sql.listPrepared(idsClasse);
         JsonArray params = new JsonArray().add(idStructure).addAll(idsClasse);
-        return getJsonArrayFuture(promise, query, params);
-    }
-
-    private Future<JsonArray> getJsonArrayFuture(Promise<JsonArray> promise, String query, JsonArray params) {
-        Sql.getInstance().prepared(query,params,validResultHandler(event -> {
-            if (event.isRight()) {
-                promise.complete(event.right().getValue());
-            } else {
-                log.error(String.format("[DefaultUtilsService@%s::getSubtopicServices] Error during request : %s.",
-                        this.getClass().getSimpleName(), event.left().getValue()));
-                promise.fail(event.left().getValue());
-            }
-        }));
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(promise,
+                String.format("[Competences@%s::getSubtopicServices(String, JsonArray)] Fail to get subtopics.",
+                        this.getClass().getSimpleName()))));
         return promise.future();
     }
 
