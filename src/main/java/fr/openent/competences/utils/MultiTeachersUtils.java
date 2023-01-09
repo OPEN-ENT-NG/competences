@@ -42,7 +42,7 @@ public class MultiTeachersUtils {
             Date periodeEndDate;
             try {
                 multiStartDate = formatter1.parse(multi.getString(Field.START_DATE));
-                multiEndDate = formatter1.parse(multi.getString(Field.END_DATE));
+                multiEndDate = formatter1.parse(multi.getString(Field.ENTERED_END_DATE));
                 periodeStartDate = formatter1.parse(periode.getString(Field.TIMESTAMP_DT));
                 periodeEndDate = formatter1.parse(periode.getString(Field.TIMESTAMP_FN));
             } catch (ParseException e) {
