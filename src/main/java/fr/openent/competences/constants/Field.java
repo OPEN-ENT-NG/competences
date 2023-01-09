@@ -42,6 +42,7 @@ public class Field {
     public static final String DELETED_DATE = "deleted_date";
     public static final String START_DATE = "start_date";
     public static final String END_DATE = "end_date";
+    public static final String ENTERED_END_DATE = "entered_end_date";
     public static final String TIMESTAMP_DT = "timestamp_dt";
     public static final String TIMESTAMP_FN = "timestamp_fn";
     public static final String ID_TYPE = "id_type";
