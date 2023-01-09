@@ -24,6 +24,7 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.model.*;
+import fr.openent.competences.model.importservice.ExercizerStudent;
 import fr.openent.competences.service.SubTopicService;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
@@ -1458,41 +1459,40 @@ public class DefaultUtilsService implements UtilsService {
     }
 
     @Override
-    public void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<List<SubTopic>> promise) {
-        subTopicService.getSubtopicServices(idEtablissement,idClasse,event -> {
-            if(event.isRight()){
-                setSubtopics(promise, event);
-            }else{
-                promise.fail(event.left().getValue());
-            }
-        });
+    public Future<List<SubTopic>> getSubTopicCoeff(String idEtablissement, String idClasse) {
+        Promise<List<SubTopic>> promise = Promise.promise();
+        subTopicService.getSubtopicServices(idEtablissement,idClasse)
+                .compose(this::setSubtopics)
+                .onSuccess(promise::complete)
+                .onFailure(promise::fail);
+        return promise.future();
     }
 
     @Override
-    public void getSubTopicCoeff(String idEtablissement, JsonArray idsClasse, Promise<List<SubTopic>> promise) {
-        subTopicService.getSubtopicServices(idEtablissement, idsClasse, event -> {
-            if(event.isRight()){
-                setSubtopics(promise, event);
-            }else{
-                promise.fail(event.left().getValue());
-            }
-        });
+    public Future<List<SubTopic>> getSubTopicCoeff(String idEtablissement, JsonArray idsClasse) {
+        Promise<List<SubTopic>> promise = Promise.promise();
+        subTopicService.getSubtopicServices(idEtablissement, idsClasse)
+                .compose(this::setSubtopics)
+                .onSuccess(promise::complete)
+                .onFailure(promise::fail);
+        return promise.future();
     }
+
 
     @Override
-    public void getSubTopicCoeff(String idEtablissement, Promise<List<SubTopic>> promise) {
-        subTopicService.getSubtopicServices(idEtablissement,event -> {
-            if(event.isRight()){
-                setSubtopics(promise, event);
-            }else{
-                promise.fail(event.left().getValue());
-            }
-        });
+    public Future<List<SubTopic>> getSubTopicCoeff(String idEtablissement) {
+        Promise<List<SubTopic>> promise = Promise.promise();
+        subTopicService.getSubtopicServices(idEtablissement)
+                .compose(this::setSubtopics)
+                .onSuccess(promise::complete)
+                .onFailure(promise::fail);
+        return promise.future();
     }
 
-    public void setSubtopics(Promise<List<SubTopic>> promise, Either<String, JsonArray> event) {
-        List<SubTopic> subTopics= new ArrayList<>();
-        for(Object subTopicobj : event.right().getValue()){
+    public Future<List<SubTopic>> setSubtopics(JsonArray subtopics) {
+        Promise<List<SubTopic>> promise = Promise.promise();
+        List<SubTopic> subTopics = new ArrayList<>();
+        for(Object subTopicobj : subtopics){
             SubTopic subTopic = new SubTopic();
             JsonObject subTopicJo = (JsonObject) subTopicobj;
             Service service = new Service();
@@ -1511,6 +1511,7 @@ public class DefaultUtilsService implements UtilsService {
             subTopics.add(subTopic);
         }
         promise.complete(subTopics);
+        return promise.future();
     }
 
     public Future<JsonArray> getEleveClasseInfos(String idClasse, String typeClasse, Long idPeriode) {

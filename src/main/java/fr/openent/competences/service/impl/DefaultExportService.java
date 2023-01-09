@@ -1795,8 +1795,8 @@ public class DefaultExportService implements ExportService {
                     idPeriode != null ? idPeriode.intValue() : null, multiTeacherEvent -> {
                         formate(multiTeachersFuture, multiTeacherEvent);
                     });
-            Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-            utilsService.getSubTopicCoeff(idEtablissement,subTopicCoefPromise);
+
+            Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement);
 
             Future<JsonArray> servicesFuture = Future.future();
             utilsService.getServices(idEtablissement, new JsonArray().add(idClass), servicesEvent -> {
@@ -1854,10 +1854,10 @@ public class DefaultExportService implements ExportService {
             }
 
             final Boolean finalBackUp = isBackup;
-            CompositeFuture.all(multiTeachersFuture, servicesFuture , subTopicCoefPromise.future()).setHandler(futuresEvent -> {
+            CompositeFuture.all(multiTeachersFuture, servicesFuture , subTopicCoefFuture).setHandler(futuresEvent -> {
                 final JsonArray multiTeachers = multiTeachersFuture.result();
                 final JsonArray servicesJson = servicesFuture.result();
-                final List<SubTopic> subTopics =  subTopicCoefPromise.future().result();
+                final List<SubTopic> subTopics =  subTopicCoefFuture.result();
                 final JsonArray idEnseignants = new JsonArray();
                 List<Service> services = new ArrayList<>();
                 Structure structure = new Structure();

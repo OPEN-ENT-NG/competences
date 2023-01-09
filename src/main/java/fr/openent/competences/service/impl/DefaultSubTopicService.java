@@ -2,9 +2,13 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.service.SubTopicService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 
@@ -16,6 +20,8 @@ import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 public class DefaultSubTopicService extends SqlCrudService implements SubTopicService {
+
+    protected static final Logger log = LoggerFactory.getLogger(DefaultSubTopicService.class);
 
     public DefaultSubTopicService(String schema, String table) {
         super(schema, table);
@@ -50,38 +56,63 @@ public class DefaultSubTopicService extends SqlCrudService implements SubTopicSe
     }
 
     @Override
-    public void getSubtopicServices(String idStructure, Handler<Either<String, JsonArray>> handler) {
+    public Future<JsonArray> getSubtopicServices(String idStructure) {
+        Promise<JsonArray> promise = Promise.promise();
         String query = "SELECT  id_subtopic, id_teacher, id_topic, id_group, coefficient::numeric, id_structure " +
                 " From " + this.resourceTable + " WHERE id_structure = ? ";
         JsonArray params = new JsonArray().add(idStructure);
-        Sql.getInstance().prepared(query,params,validResultHandler(handler));
+        return getJsonArrayFuture(promise, query, params);
 
     }
 
     @Override
-    public void getSubtopicServices(String idStructure, String idClasse, Handler<Either<String, JsonArray>> handler) {
+    public Future<JsonArray> getSubtopicServices(String idStructure, String idClasse) {
+        Promise<JsonArray> promise = Promise.promise();
         String query = "SELECT  id_subtopic, id_teacher, id_topic, id_group, coefficient::numeric, id_structure " +
                 " From " + this.resourceTable + " WHERE id_structure = ? AND id_group = ? ";
         JsonArray params = new JsonArray().add(idStructure).add(idClasse);
-        Sql.getInstance().prepared(query,params,validResultHandler(handler));
+        return getJsonArrayFuture(promise, query, params);
 
     }
 
     @Override
-    public void getSubtopicServices(String idStructure, JsonArray idsClasse, Handler<Either<String, JsonArray>> handler) {
+    public Future<JsonArray> getSubtopicServices(String idStructure, JsonArray idsClasse) {
+        Promise<JsonArray> promise = Promise.promise();
         String query = "SELECT  id_subtopic, id_teacher, id_topic, id_group, coefficient::numeric, id_structure " +
                 " From " + this.resourceTable + " WHERE id_structure = ? AND id_group IN " + Sql.listPrepared(idsClasse);
         JsonArray params = new JsonArray().add(idStructure).addAll(idsClasse);
-        Sql.getInstance().prepared(query,params,validResultHandler(handler));
+        return getJsonArrayFuture(promise, query, params);
+    }
 
+    private Future<JsonArray> getJsonArrayFuture(Promise<JsonArray> promise, String query, JsonArray params) {
+        Sql.getInstance().prepared(query,params,validResultHandler(event -> {
+            if (event.isRight()) {
+                promise.complete(event.right().getValue());
+            } else {
+                log.error(String.format("[DefaultUtilsService@%s::getSubtopicServices] Error during request : %s.",
+                        this.getClass().getSimpleName(), event.left().getValue()));
+                promise.fail(event.left().getValue());
+            }
+        }));
+        return promise.future();
     }
 
     @Override
-    public void getSubtopicServices(String idStructure, String idClasse, String idTeacher, String idMatiere, Handler<Either<String, JsonObject>> handler) {
+    public Future<JsonObject> getSubtopicServices(String idStructure, String idClasse, String idTeacher, String idMatiere) {
+        Promise<JsonObject> promise = Promise.promise();
         String query = "SELECT  id_subtopic, id_teacher, id_topic, id_group, coefficient::numeric, id_structure " +
                 " From " + this.resourceTable + " WHERE id_structure = ? AND id_group = ? AND id_teacher = ? AND id_topic = ?";
         JsonArray params = new JsonArray().add(idStructure).add(idClasse).add(idTeacher).add(idMatiere);
-        Sql.getInstance().prepared(query,params, validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query,params, validUniqueResultHandler(event -> {
+            if (event.isRight()) {
+                promise.complete(event.right().getValue());
+            } else {
+                log.error(String.format("[DefaultUtilsService@%s::getSubtopicServices] Error during request : %s.",
+                        this.getClass().getSimpleName(), event.left().getValue()));
+                promise.fail(event.left().getValue());
+            }
+        }));
+        return promise.future();
 
     }
 
