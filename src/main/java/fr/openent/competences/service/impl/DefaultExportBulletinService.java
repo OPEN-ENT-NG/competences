@@ -10,6 +10,7 @@ import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
 import fr.openent.competences.service.*;
 import fr.openent.competences.utils.BulletinUtils;
+import fr.openent.competences.utils.MultiTeachersUtils;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.data.FileResolver;
@@ -2752,6 +2753,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         if (eleves.size() > 0) {
             JsonObject firstStudent = eleves.getJsonObject(0);
             String idClasse = firstStudent.getString("idClasse");
+            log.info("plop");
             Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), new Handler<Either<String, JsonArray>>() {
                 @Override
                 public void handle(Either<String, JsonArray> event) {
@@ -2765,6 +2767,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         Promise<Object> listStudentsPromise = Promise.promise();
                         Promise<Object> servicesPromise = Promise.promise();
                         Promise<Object> multiTeachingPromise = Promise.promise();
+                        Promise<JsonArray> allPeriodesPromises = Promise.promise();
                         Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
                         List<Future> promises = new ArrayList<>();
                         promises.add(structurePromise.future());
@@ -2775,6 +2778,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         promises.add(servicesPromise.future());
                         promises.add(multiTeachingPromise.future());
                         promises.add(subTopicCoefPromise.future());
+                        promises.add(allPeriodesPromises.future());
+                        utilsService.getPeriodes(groupIds, firstStudent.getString(IDETABLISSEMENT),
+                                FutureHelper.handlerJsonArray(allPeriodesPromises.future()));
+
                         int nbOptions= 0;
                         if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
                             Promise<Object> getHeadTeachersPromise = Promise.promise();
@@ -2819,6 +2826,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             List<Service> services = new ArrayList<>();
                             List<MultiTeaching> multiTeachings = new ArrayList<>();
 
+                            List<Object> periodes = (allPeriodesPromises.future().result().stream().filter(obj ->
+                                    ((JsonObject) obj).getLong(Field.ID_TYPE).equals(idPeriode)).collect(Collectors.toList()));
+                            multiTeachinJsonArray = MultiTeachersUtils.filterSubtitute(periodes, multiTeachinJsonArray);
                             setMultiTeaching(structure, multiTeachinJsonArray, multiTeachings, idClasse);
                             setServices(structure, servicesJson, services, subTopics);
 
