@@ -25,7 +25,10 @@ import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
-import io.vertx.core.*;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -37,14 +40,16 @@ import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.text.Normalizer;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
-
-import java.util.*;
-import java.text.*;
-import java.util.stream.Collectors;
 
 public class Utils {
 
@@ -95,6 +100,7 @@ public class Utils {
             }
         }));
     }
+
 
     /**
      * retourne une classe avec ses groups (ids)

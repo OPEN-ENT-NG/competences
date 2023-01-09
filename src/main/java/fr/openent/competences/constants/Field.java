@@ -40,7 +40,11 @@ public class Field {
     public static final String IDDEVOIR = "idDevoir";
     public static final String ID_DEVOIR = "id_devoir";
     public static final String DELETED_DATE = "deleted_date";
-
+    public static final String START_DATE = "start_date";
+    public static final String END_DATE = "end_date";
+    public static final String TIMESTAMP_DT = "timestamp_dt";
+    public static final String TIMESTAMP_FN = "timestamp_fn";
+    public static final String ID_TYPE = "id_type";
     public static final String PERIODEID = "periodeId";
     public static final String TEACHER_ID = "teacher_id";
     public static final String IDREPORTMODEL = "idReportModel";
@@ -103,7 +107,7 @@ public class Field {
     public static final String CLASSTYPE = "classType";
     public static final String FORMATE = "formate";
     public static final String IS_VISIBLE = "is_visible";
-
+    public static final String dateFormateYYYYMMDDTHHMMSS  = "yyyy-MM-dd'T'HH:mm:ss";
     //
 
     public static final String ISSKILLAVERAGE = "isSkillAverage";
