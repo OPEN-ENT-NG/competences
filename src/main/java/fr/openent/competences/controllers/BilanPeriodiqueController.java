@@ -124,7 +124,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Get("/eleve/evenements/:idEleve")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessChildrenParentFilter.class)
+    @ResourceFilter(AccessChildrenParentFilterStructureId.class)
     public void getAbsencesAndRetards(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
         final String idStructure = request.params().get("idEtablissement");
