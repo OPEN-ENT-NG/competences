@@ -2005,16 +2005,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 new JsonArray().add(idClass), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
                         //Récupération des Sous-Matières
-                        Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-                        utilsService.getSubTopicCoeff(idEtablissement, idClass, subTopicCoefPromise);
+                        Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idsGroups);
 
-                        CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefPromise.future())
+                        CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefFuture)
                                 .setHandler(event -> {
                                     Structure structure = new Structure();
                                     structure.setId(idEtablissement);
                                     JsonArray servicesJson = servicesPromise.future().result();
                                     JsonArray multiTeachers = multiTeachingPromise.future().result();
-                                    List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+                                    List<SubTopic> subTopics = subTopicCoefFuture.result();
 
                                     List<Service> services = new ArrayList<>();
                                     List<MultiTeaching> multiTeachings = new ArrayList<>();
@@ -2642,7 +2641,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 Promise<Object> servicesPromise = Promise.promise();
                 Promise<Object> multiTeachingPromise = Promise.promise();
                 Promise<Structure> structurePromise = Promise.promise();
-                Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
                 getCompetencesNotesReleveEleves(idEleves, idEtablissement, idMatiere,
                         null, idPeriode,null, true, false,
                         compNotesEvent -> formate(compNotesFuture, compNotesEvent));
@@ -2657,11 +2655,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 new DefaultExportBulletinService(eb, null).getStructure(idEtablissement, structurePromise);
 
-                utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
+                Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
 
                 List<Future> listFutures = new ArrayList<>(Arrays.asList(compNotesFuture, notesFuture,
                         moyennesFinalesFutures, appreciationsFutures, positionnementsFinauxFutures,
-                        servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefPromise.future()));
+                        servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefFuture));
 
                 Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
                 listFutures.add(isAvgSkillFuture);
@@ -2676,7 +2674,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         structure.setId(idEtablissement);
                         JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
                         JsonArray multiTeachers = (JsonArray) multiTeachingPromise.future().result();
-                        List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+                        List<SubTopic> subTopics = subTopicCoefFuture.result();
 
                         List<Service> services = new ArrayList<>();
                         List<MultiTeaching> multiTeachings = new ArrayList<>();
@@ -2771,12 +2769,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
                     //Récupération des Sous-Matières
-                    Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-                    utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
+                    Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
 
                     List<Future> listFuturesFirst = new ArrayList<>(
                             Arrays.asList(studentsClassFuture, tableauDeConversionFuture, servicesFuture,
-                                    servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefPromise.future()));
+                                    servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefFuture));
                     for (Object idMatiere : idMatieres){
                         // Récupération du nombre de devoirs avec évaluation numérique
                         Future<JsonObject> nbEvaluatedHomeWork = Future.future();
@@ -2796,7 +2793,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             structure.setId(idEtablissement);
                             JsonArray servicesJson = servicesPromise.future().result();
                             JsonArray multiTeachers = multiTeachingPromise.future().result();
-                            List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+                            List<SubTopic> subTopics = subTopicCoefFuture.result();
 
                             List<Service> services = new ArrayList<>();
                             List<MultiTeaching> multiTeachings = new ArrayList<>();
@@ -4084,10 +4081,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             new JsonArray().add(idClasse), (idPeriode != null ? idPeriode.intValue() : null), FutureHelper.handlerJsonArray(multiTeachingPromise));
 
                     //Récupération des Sous-Matières
-                    Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-                    utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
+                    Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
 
-                    CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefPromise.future()).setHandler(e -> {
+                    CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefFuture).setHandler(e -> {
                         if (e.failed()) {
                             String message = "[getReleveDataForGraph] " + event.cause().getMessage();
                             log.error(message);
@@ -4100,7 +4096,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             structure.setId(idEtablissement);
                             JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
                             JsonArray multiTeachers = (JsonArray) multiTeachingPromise.future().result();
-                            List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+                            List<SubTopic> subTopics = subTopicCoefFuture.result();
 
                             List<Service> services = new ArrayList<>();
                             List<MultiTeaching> multiTeachings = new ArrayList<>();
@@ -4698,9 +4694,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         detailsFuture.add(tableauDeConversionFuture);
 
         Promise<Object> servicesPromise = Promise.promise();
-        Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
         detailsFuture.add(servicesPromise.future());
-        detailsFuture.add(subTopicCoefPromise.future());
 
         Promise<Object> multiTeachingPromise = Promise.promise();
         detailsFuture.add(multiTeachingPromise.future());
@@ -4708,7 +4702,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         utilsService.getMultiTeachers(idEtablissement,
                 new JsonArray().add(idClasse), null ,FutureHelper.handlerJsonArray(multiTeachingPromise));
 
-        utilsService.getSubTopicCoeff(idEtablissement,idClasse,subTopicCoefPromise);
+        Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
+        detailsFuture.add(subTopicCoefFuture);
+
         utilsService.getServices(idEtablissement,
                 new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
 
@@ -4724,7 +4720,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 return;
             }
 
-            List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+            List<SubTopic> subTopics = subTopicCoefFuture.result();
             JsonArray servicesJson =(JsonArray) servicesPromise.future().result();
 
             Structure structure = new Structure();

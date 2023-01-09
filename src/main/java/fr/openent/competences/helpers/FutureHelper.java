@@ -53,6 +53,19 @@ public class FutureHelper {
             }
         };
     }
+
+    public static Handler<Either<String, JsonArray>> handlerJsonArray(Promise<JsonArray> promise, String logs) {
+        return event -> {
+            if (event.isRight()) {
+                promise.complete(event.right().getValue());
+            } else {
+                LOGGER.error(String.format("%s %s",
+                        (logs != null ? logs : ""), event.left().getValue()));
+                promise.fail(event.left().getValue());
+            }
+        };
+    }
+
     public static <T> CompositeFuture all(List<Future<T>> futures) {
         return CompositeFutureImpl.all(futures.toArray(new Future[futures.size()]));
     }
