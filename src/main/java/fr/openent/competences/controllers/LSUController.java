@@ -627,9 +627,8 @@ public class LSUController extends ControllerHelper {
                             List<String> idEleves = donnees.getEleves().getEleve().stream()
                                     .map(Eleve::getIdNeo4j).collect(Collectors.toList());
 
-                            Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-                            utilsService.getSubTopicCoeff(idStructure,subTopicCoefPromise);
-                            listGetProjectAndCompNum.add(subTopicCoefPromise.future());
+                            Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idStructure);
+                            listGetProjectAndCompNum.add(subTopicCoefFuture);
 
                             Future<JsonArray> getAbsencesAndRetardsFuture = Future.future();
                             listGetProjectAndCompNum.add(getAbsencesAndRetardsFuture);
@@ -650,7 +649,7 @@ public class LSUController extends ControllerHelper {
                                     final JsonArray absencesAndRetards = getAbsencesAndRetardsFuture.result();
                                     final JsonArray servicesJsonArray = servicesFuture.result();
                                     final JsonArray multiTeachers = multiTeachersFuture.result();
-                                    List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+                                    List<SubTopic> subTopics = subTopicCoefFuture.result();
 
                                     fr.openent.competences.model.Structure structure = new fr.openent.competences.model.Structure();
                                     structure.setId(idStructure);

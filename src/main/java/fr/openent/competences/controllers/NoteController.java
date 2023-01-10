@@ -744,11 +744,10 @@ public class NoteController extends ControllerHelper {
                             new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
                     //Récupération des Sous-Matières
-                    Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-                    utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
+                    Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
 
                     CompositeFuture.all(notesFuture, moyenneFinaleFuture, servicesPromise.future(),
-                                    multiTeachingPromise.future(), subTopicCoefPromise.future())
+                                    multiTeachingPromise.future(), subTopicCoefFuture)
                             .setHandler(event -> {
                                 if (event.failed()) {
                                     renderError(request, new JsonObject().put("error",request.params()));
@@ -762,7 +761,7 @@ public class NoteController extends ControllerHelper {
                                     structure.setId(idEtablissement);
                                     JsonArray servicesJson = servicesPromise.future().result();
                                     JsonArray multiTeachers = multiTeachingPromise.future().result();
-                                    List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+                                    List<SubTopic> subTopics = subTopicCoefFuture.result();
 
                                     List<Service> services = new ArrayList<>();
                                     List<MultiTeaching> multiTeachings = new ArrayList<>();
