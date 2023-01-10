@@ -138,7 +138,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @Get("/syntheseBilanPeriodique")
     @ApiDoc("Récupère la synthèse d'un élève pour une période donnée")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessConseilDeClasse.class)
+    @ResourceFilter(AccessConseilDeClasseStructureId.class)
     public void getSyntheseBilanPeriodique(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
             @Override
@@ -164,7 +164,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @Get("/bilan/periodique/datas/avis/synthses")
     @ApiDoc("Récupère les synthèses et avis de l'élève sur l'année")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessConseilDeClasse.class)
+    @ResourceFilter(AccessConseilDeClasseEtablissementId.class)
     public void getSynthesesAvisBilanPeriodique(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
             @Override
@@ -331,7 +331,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @Get("/avis/bilan/periodique")
     @ApiDoc("Retourne la liste des avis prédéfinis du conseil de classe du bilan périodique")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessConseilDeClasse.class)
+    @ResourceFilter(AccessConseilDeClasseStructureId.class)
     public void getLibelleAvis(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -506,7 +506,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @Get("/avis/orientation")
     @ApiDoc("Récupère l'avis d'orientation d'un élève pour une période donnée")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessConseilDeClasse.class)
+    @ResourceFilter(AccessConseilDeClasseStructureId.class)
     public void getAvisOrientation(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
