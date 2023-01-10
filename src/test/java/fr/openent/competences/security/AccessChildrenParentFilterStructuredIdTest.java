@@ -19,7 +19,7 @@ import java.util.List;
 
 @RunWith(VertxUnitRunner.class)
 public class AccessChildrenParentFilterStructuredIdTest {
-    AccessChildrenParentFilterStructureId access;
+    AccessChildrenParentFilterEtablissementId access;
     HttpServerRequest request;
     Binding binding;
     MultiMap map;
@@ -29,7 +29,7 @@ public class AccessChildrenParentFilterStructuredIdTest {
     UserInfos.Action role1;
     @Before
     public void setUp() throws NoSuchFieldException {
-        access = new AccessChildrenParentFilterStructureId();
+        access = new AccessChildrenParentFilterEtablissementId();
         request = Mockito.mock(HttpServerRequest.class);
         binding = Mockito.mock(Binding.class);
         map = Mockito.spy(new HeadersAdaptor(new DefaultHttpHeaders()));
