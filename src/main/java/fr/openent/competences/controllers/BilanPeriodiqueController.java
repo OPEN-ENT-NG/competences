@@ -2,6 +2,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.Service;
 import fr.openent.competences.model.Structure;
 import fr.openent.competences.model.SubTopic;
@@ -10,6 +11,7 @@ import fr.openent.competences.security.CreateSyntheseBilanPeriodiqueFilter;
 import fr.openent.competences.security.SetAvisConseilFilter;
 import fr.openent.competences.service.BilanPeriodiqueService;
 import fr.openent.competences.service.impl.*;
+import fr.openent.competences.utils.MultiTeachersUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -32,6 +34,7 @@ import org.entcore.common.user.UserUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
@@ -83,6 +86,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                         idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray("id_groupes"));
                     }
 
+                    Future<JsonArray> periodesFuture = utilsService.getPeriodes(idGroupClasse.getList(), idEtablissement);
                     Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
 
                     Future<JsonArray> servicesFuture = Future.future();
@@ -92,14 +96,18 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     Future<JsonArray> multiTeachersFuture = Future.future();
                     utilsService.getAllMultiTeachers(idEtablissement, idGroupClasse, multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
 
-                    CompositeFuture.all(servicesFuture, multiTeachersFuture, subTopicCoefFuture).setHandler(futuresEvent -> {
+                    CompositeFuture.all(servicesFuture, multiTeachersFuture, subTopicCoefFuture, periodesFuture).setHandler(futuresEvent -> {
                         if (futuresEvent.failed()) {
                             String error = futuresEvent.cause().getMessage();
                             log.error(error);
                             badRequest(request);
                         } else {
+                            List<Object> periodes = (periodesFuture.result().stream().filter(obj ->
+                                    ((JsonObject) obj).getLong(Field.ID_TYPE).equals(idPeriode)).collect(Collectors.toList()));
+
                             JsonArray servicesJsonArray = servicesFuture.result();
                             JsonArray multiTeachers = multiTeachersFuture.result();
+                            multiTeachers = MultiTeachersUtils.filterSubtitute(periodes, multiTeachers);
                             List<SubTopic> subTopics = subTopicCoefFuture.result();
                             Structure structure = new Structure();
                             structure.setId(idEtablissement);
