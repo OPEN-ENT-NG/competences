@@ -27,7 +27,6 @@ import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.webutils.Either;
-import io.netty.handler.codec.DateFormatter;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -52,7 +51,6 @@ import org.joda.time.LocalDate;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -1551,7 +1549,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent)
                 );
 
-                getSubTopicCoeff(idEtablissement)
+                utilsService.getSubTopicCoeff(idEtablissement)
                         .onSuccess(subTopics -> CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(teachersEvent -> {
                             if (teachersEvent.failed()) {
                                 handler.handle(new Either.Left<>(teachersEvent.cause().getMessage()));
@@ -1582,18 +1580,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         .onFailure(err -> handler.handle(new Either.Left<>(err.getMessage())));
             }
         });
-    }
-
-    public Future<List<SubTopic>> getSubTopicCoeff(String idEtablissement) {
-        Promise<List<SubTopic>> promise = Promise.promise();
-        subTopicService.getSubtopicServices(idEtablissement, event -> {
-            if(event.isRight()){
-                utilsService.setSubtopics(promise, event);
-            }else{
-                promise.fail(event.left().getValue());
-            }
-        });
-        return promise.future();
     }
 
     private void buildArrayFromHomeworks(JsonObject result, JsonArray devoirs, JsonArray annotations,

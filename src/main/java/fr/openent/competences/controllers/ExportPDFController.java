@@ -627,18 +627,17 @@ public class ExportPDFController extends ControllerHelper {
         utilsService.getServices(idEtablissement,
                 new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise.future()));
 
-        Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-        utilsService.getSubTopicCoeff(idEtablissement, idClasse, subTopicCoefPromise);
+        Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
 
         CompositeFuture.all(idElevesFuture, idGroupesFuture, multiTeachersFuture, multiTeachingPromise.future(),
-                servicesPromise.future(), subTopicCoefPromise.future()).setHandler(event -> {
+                servicesPromise.future(), subTopicCoefFuture).setHandler(event -> {
             if(event.succeeded()) {
 
                 Structure structure = new Structure();
                 structure.setId(idEtablissement);
                 JsonArray servicesJson = servicesPromise.future().result();
                 JsonArray multiTeachers = multiTeachingPromise.future().result();
-                List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+                List<SubTopic> subTopics = subTopicCoefFuture.result();
 
                 List<Service> services = new ArrayList<>();
                 List<MultiTeaching> multiTeachings = new ArrayList<>();

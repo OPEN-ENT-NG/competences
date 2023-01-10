@@ -2855,32 +2855,30 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<List<SubTopic>> promise) {
-        subTopicService.getSubtopicServices(idEtablissement,idClasse,event -> {
-            if(event.isRight()){
-                List<SubTopic> subTopics= new ArrayList<>();
-                for(Object subTopicobj : event.right().getValue()){
-                    SubTopic subTopic = new SubTopic();
-                    JsonObject subTopicJo = (JsonObject) subTopicobj;
-                    Service service = new Service();
-                    Matiere matiere = new Matiere();
-                    Group group = new Group();
-                    Teacher teacher = new Teacher();
-                    group.setId(subTopicJo.getString(Field.ID_GROUP));
-                    matiere.setId(subTopicJo.getString(Field.ID_TOPIC));
-                    teacher.setId(subTopicJo.getString(Field.ID_TEACHER));
-                    service.setMatiere(matiere);
-                    service.setGroup(group);
-                    service.setTeacher(teacher);
-                    subTopic.setService(service);
-                    subTopic.setId(subTopicJo.getLong(Field.ID_SUBTOPIC));
-                    subTopic.setCoefficient(safeGetDouble(subTopicJo,Field.COEFFICIENT));
-                    subTopics.add(subTopic);
-                }
-                promise.complete(subTopics);
-            }else{
-                promise.fail(event.left().getValue());
-            }
-        });
+        subTopicService.getSubtopicServices(idEtablissement, idClasse)
+                .onSuccess(res -> {
+                    List<SubTopic> subTopics = new ArrayList<>();
+                    for(Object subTopicobj : res){
+                        SubTopic subTopic = new SubTopic();
+                        JsonObject subTopicJo = (JsonObject) subTopicobj;
+                        Service service = new Service();
+                        Matiere matiere = new Matiere();
+                        Group group = new Group();
+                        Teacher teacher = new Teacher();
+                        group.setId(subTopicJo.getString(Field.ID_GROUP));
+                        matiere.setId(subTopicJo.getString(Field.ID_TOPIC));
+                        teacher.setId(subTopicJo.getString(Field.ID_TEACHER));
+                        service.setMatiere(matiere);
+                        service.setGroup(group);
+                        service.setTeacher(teacher);
+                        subTopic.setService(service);
+                        subTopic.setId(subTopicJo.getLong(Field.ID_SUBTOPIC));
+                        subTopic.setCoefficient(safeGetDouble(subTopicJo,Field.COEFFICIENT));
+                        subTopics.add(subTopic);
+                    }
+                    promise.complete(subTopics);
+                })
+                .onFailure(promise::fail);
     }
 
     private Student initStudent(Structure structure, Periode periode, ParamsBulletins paramBulletins, List<Service> services, List<MultiTeaching> multiTeachings, JsonObject eleve, Long typePeriode, Long idPeriode, JsonObject classe, Boolean showBilanPerDomaines, JsonObject images, JsonObject params) {

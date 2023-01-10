@@ -326,9 +326,16 @@ public interface UtilsService {
 
     void getYearsArchive(String idStructure, String type,  Handler<Either<String, JsonArray>> defaultResponseHandler);
 
-    void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<List<SubTopic>> promise);
+    Future<List<SubTopic>> getSubTopicCoeff(String idEtablissement, String idClasse);
 
-    void getSubTopicCoeff(String idEtablissement,  Promise<List<SubTopic>> promise);
+    /**
+     * Get subtopic coeffs from an array idsClasse and id Structure
+     * @param idEtablissement
+     * @param idsClasse
+     */
+    Future<List<SubTopic>> getSubTopicCoeff(String idEtablissement, JsonArray idsClasse);
+
+    Future<List<SubTopic>> getSubTopicCoeff(String idEtablissement);
 
     /**
      * get the students infos of a class
