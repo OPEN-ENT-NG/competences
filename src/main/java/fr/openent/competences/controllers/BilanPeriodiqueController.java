@@ -122,7 +122,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Get("/eleve/evenements/:idEleve")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessChildrenParentFilterStructureId.class)
+    @ResourceFilter(AccessChildrenParentFilterEtablissementId.class)
     public void getAbsencesAndRetards(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
         final String idStructure = request.params().get("idEtablissement");
@@ -357,7 +357,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @Post("/avis/bilan/periodique")
     @ApiDoc("Créer un avis de conseil de classe")
     @SecuredAction(value = "", type=ActionType.RESOURCE)
-    @ResourceFilter(CreateAvisConseilBilanPeriodique.class)
+    @ResourceFilter(CreateAvisConseilBilanPeriodiqueEtablissementId.class)
     public void createOpinion(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
