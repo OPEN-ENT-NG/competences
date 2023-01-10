@@ -9,12 +9,11 @@ import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 
-public class AccessConseilDeClasse implements ResourcesProvider {
-
+public class AccessConseilDeClasseStructureId implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        final String idStructure = request.params().get(Field.IDSTRUCTURE);
+        final String idStructure = request.params().get(Field.ID_STRUCTURE);
         handler.handle(user.getStructures().contains(idStructure) &&
-            WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_CONSEIL_DE_CLASSE.toString()));
+        WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_CONSEIL_DE_CLASSE.toString()));
     }
 }
