@@ -1888,7 +1888,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if ($location.path() === "/devoir/create") {
                         initCompetencesDevoir();
                     }
-                    //$scope.$broadcast("test");
                     utils.safeApply($scope);
                 });
             }
@@ -2175,8 +2174,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.devoir.owner = $scope.devoir.teachersByClass[0].id;
                     }
                 }
-            } else { //Sinon c'est le professeur connecté qui est le créateur du devoir
-                $scope.devoir.owner = model.me.userId;
             }
             $scope.setEnseignantMatieres();
         };
