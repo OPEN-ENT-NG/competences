@@ -1997,12 +1997,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         //Récupération des Services
                         Promise<JsonArray> servicesPromise = Promise.promise();
                         utilsService.getServices(idEtablissement,
-                                new JsonArray().add(idClass), FutureHelper.handlerJsonArray(servicesPromise.future()));
+                                idsGroups, FutureHelper.handlerJsonArray(servicesPromise.future()));
 
                         //Récupération des Multi-teachers
                         Promise<JsonArray> multiTeachingPromise = Promise.promise();
                         utilsService.getMultiTeachers(idEtablissement,
-                                new JsonArray().add(idClass), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+                                idsGroups, idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
                         //Récupération des Sous-Matières
                         Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idsGroups);
@@ -2276,7 +2276,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         Matiere matiere = new Matiere(respNoteMoyFinale.getString(Field.ID_MATIERE));
         Teacher teacher = new Teacher(respNoteMoyFinale.getString(Field.OWNER));
-        Group group = new Group(idClasse);
+        Group group = new Group(respNoteMoyFinale.getString(Field.ID_GROUPE));
 
         Service service = services.stream()
                 .filter(el -> teacher.getId().equals(el.getTeacher().getId())
