@@ -1,4 +1,5 @@
 package fr.openent.competences.security;
+
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
@@ -14,14 +15,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-
 @RunWith(VertxUnitRunner.class)
-public class AccessConseilDeClasseStructureIdTest {
-
-    AccessConseilDeClasseStructureId access;
+public class AccessChildrenParentFilterStructuredIdTest {
+    AccessChildrenParentFilterStructureId access;
     HttpServerRequest request;
     Binding binding;
     MultiMap map;
@@ -31,7 +29,7 @@ public class AccessConseilDeClasseStructureIdTest {
     UserInfos.Action role1;
     @Before
     public void setUp() throws NoSuchFieldException {
-        access = new AccessConseilDeClasseStructureId();
+        access = new AccessChildrenParentFilterStructureId();
         request = Mockito.mock(HttpServerRequest.class);
         binding = Mockito.mock(Binding.class);
         map = Mockito.spy(new HeadersAdaptor(new DefaultHttpHeaders()));
@@ -41,12 +39,13 @@ public class AccessConseilDeClasseStructureIdTest {
         role1 = new UserInfos.Action();
     }
 
+
     @Test
     public void testAuthorize(TestContext ctx){
         role1.setDisplayName(WorkflowActions.ACCESS_CONSEIL_DE_CLASSE.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
-        map.set("id_structure", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
+        map.set("idEtablissement", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         Mockito.doReturn(map).when(request).params();
         structures.add("9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         user.setStructures(structures);
@@ -60,7 +59,7 @@ public class AccessConseilDeClasseStructureIdTest {
         role1.setDisplayName(WorkflowActions.ACCESS_CONSEIL_DE_CLASSE.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
-        map.set("id_structure", "11111");
+        map.set("idEtablissement", "11111");
         Mockito.doReturn(map).when(request).params();
         structures.add("9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         user.setStructures(structures);
@@ -75,7 +74,7 @@ public class AccessConseilDeClasseStructureIdTest {
         role1.setDisplayName(WorkflowActions.DIGITAL_SKILLS.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
-        map.set("id_structure", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
+        map.set("idEtablissement", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         Mockito.doReturn(map).when(request).params();
         structures.add("9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         user.setStructures(structures);
