@@ -25,6 +25,7 @@ import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
+import fr.openent.competences.service.CompetencesService;
 import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
@@ -318,7 +319,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     @Override
     public void duplicateDevoir(final JsonObject devoir, final JsonArray classes, final UserInfos user,
-                                ShareService shareService, HttpServerRequest request, EventBus eb) {
+                                ShareService shareService, Promise<Void> promise, EventBus eb) {
         final JsonArray ids = new JsonArray();
         JsonArray statements = new JsonArray();
         for (int i = 0; i < classes.size(); i++) {
@@ -336,9 +337,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 for (int j = 0; j < resultSql.size(); j++) {
                     ids.add(resultSql.getJsonObject(j).getJsonArray(Field.RESULTS).getJsonArray(0).getInteger(0));
                 }
-                insertDuplication(ids, devoir, classes, user, getDuplicationDevoirHandler(user,this, request, eb));
+                insertDuplication(ids, devoir, classes, user, getDuplicationDevoirHandler(user,this, promise, eb));
             } else {
-                badRequest(request);
+                promise.fail(result.getString(Field.ERROR));
             }
 
         });
@@ -2046,6 +2047,95 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 matiereJO.put(Field.MOYENNE, Field.NN);
             }
             matiereJO.remove(Field.MOYENNES);
+        }
+    }
+
+    @Override
+    public void duplicateDevoirs(HttpServerRequest request, UserInfos user, JsonObject body,
+                                 CompetencesService competencesService, ShareService shareService) {
+        try {
+            Promise<Void> finalPromise = Promise.promise();
+            finalPromise.future().onSuccess(success -> request.response().setStatusCode(200).end())
+                    .onFailure(failure -> badRequest(request, failure.getMessage()));
+
+            final long idDevoir = Long.parseLong(request.params().get("idDevoir"));
+            retrieve(Long.toString(idDevoir), result -> {
+                if (result.isRight()) {
+                    final JsonObject devoir = result.right().getValue();
+                    competencesService.getDevoirCompetences(idDevoir, null, competencesResult -> {
+                        if (competencesResult.isRight()) {
+                            if(user.getType().equals("Teacher")){
+                                devoir.put("owner", user.getUserId());
+                                JsonArray competences = competencesResult.right().getValue();
+                                if (competences.size() > 0) {
+                                    JsonArray idCompetences = new fr.wseduc.webutils.collections.JsonArray();
+                                    JsonObject o;
+                                    for (int i = 0; i < competences.size(); i++) {
+                                        o = competences.getJsonObject(i);
+                                        if (o.containsKey("id")) {
+                                            idCompetences.add(o.getLong("id_competence"));
+                                        }
+                                    }
+                                    devoir.put("competences", idCompetences);
+                                }
+                                duplicateDevoir(devoir,
+                                        body.getJsonArray("classes"), user, shareService, finalPromise, eb);
+
+                            }
+                            else{
+                                List<String> classes= body.getJsonArray("classes").stream()
+                                        .map(classe -> ((JsonObject)classe).getString("id"))
+                                        .collect(Collectors.toList());
+                                Promise<Void> promise = Promise.promise();
+
+                                Promise<JsonArray> promiseService = Promise.promise();
+                                promiseService.future().onSuccess(event -> event.stream()
+                                        .filter(elem ->
+                                                ((JsonObject)elem).getString("id_matiere")
+                                                        .equals(devoir.getString("id_matiere"))
+                                        ).forEach(elem ->
+                                        {
+                                            Promise<Void> promise1 = Promise.promise();
+                                            log.info(elem);
+                                            String teacherId = ((JsonObject)elem).getString("id_enseignant");
+                                            devoir.put("owner",teacherId);
+                                            JsonArray competences = competencesResult.right().getValue();
+                                            if (competences.size() > 0) {
+                                                JsonArray idCompetences = new fr.wseduc.webutils.collections.JsonArray();
+                                                JsonObject o;
+                                                for (int i = 0; i < competences.size(); i++) {
+                                                    o = competences.getJsonObject(i);
+                                                    if (o.containsKey("id")) {
+                                                        idCompetences.add(o.getLong("id_competence"));
+                                                    }
+                                                }
+                                                devoir.put("competences", idCompetences);
+                                            }
+
+                                            duplicateDevoir(devoir,
+                                                    body.getJsonArray("classes"), user, shareService, promise1, eb);
+                                        }));
+                                utilsService.getServices(devoir.getString("id_etablissement"),
+                                        new JsonArray(classes),
+                                        event -> {
+                                            if(event.isRight()){
+                                                promiseService.complete(event.right().getValue());
+                                            }else {
+                                                promiseService.fail(event.left().getValue());
+                                            }
+                                        });
+                            }
+                        } else {
+                            finalPromise.fail("An error occured when collecting competences for devoir id " + idDevoir);
+                        }
+                    });
+                } else {
+                    finalPromise.fail("An error occured when collecting devoir data for id " + idDevoir);
+                }
+            });
+        } catch (ClassCastException e) {
+            log.error("idDevoir parameter must be a long object.");
+            log.error(e);
         }
     }
 }

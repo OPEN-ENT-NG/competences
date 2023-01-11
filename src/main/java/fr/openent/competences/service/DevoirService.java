@@ -18,6 +18,7 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.service.CrudService;
@@ -80,11 +81,11 @@ public interface DevoirService extends CrudService {
      * @param classes liste des classes
      * @param user utilisateur courant
      * @param shareService
-     * @param request
+     * @param promise
      * @param eb
      */
     void duplicateDevoir(JsonObject devoir, JsonArray classes, UserInfos user, ShareService shareService,
-                         HttpServerRequest request, EventBus eb);
+                         Promise<Void> promise, EventBus eb);
 
     /**
      * Met à jour un devoir
@@ -269,4 +270,7 @@ public interface DevoirService extends CrudService {
                          Handler<Either<String, JsonObject>> handler);
 
     JsonObject getNewShareStatements(String userIdSecondTeacher, String devoirID, List<String> actions);
+
+    void duplicateDevoirs(HttpServerRequest request, UserInfos user, JsonObject body,
+                          CompetencesService competencesService, ShareService shareService);
 }
