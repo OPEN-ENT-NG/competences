@@ -15,6 +15,6 @@ public class AccessConseilDeClasse implements ResourcesProvider {
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         final String idStructure = request.params().get(Field.IDSTRUCTURE);
         handler.handle(user.getStructures().contains(idStructure) &&
-            WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_CONSEIL_DE_CLASSE.toString()));
+                WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_CONSEIL_DE_CLASSE.toString()));
     }
 }
