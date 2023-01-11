@@ -24,6 +24,7 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
 import fr.openent.competences.security.AccessChildrenParentFilter;
+import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessSuiviClasse;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
@@ -299,7 +300,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/devoirs/print/:idDevoir/formsaisie")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessEvaluationFilter.class)
     public void getFormsaisi(final HttpServerRequest request) {
         MultiMap params = request.params();
         final Long idDevoir;
@@ -331,7 +333,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/devoirs/print/:idDevoir/cartouche")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessEvaluationFilter.class)
     public void getCartouche(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (user != null) {
@@ -359,7 +362,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/devoirs/print/:idDevoir/export")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessEvaluationFilter.class)
     public void getExportDevoir(final HttpServerRequest request) {
         Long idDevoir = 0L;
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
@@ -560,7 +564,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/recapAppreciations/print/:idClasse/export")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessSuiviClasse.class)
     public void getExportRecapAppreciations(final HttpServerRequest request) {
         final String idClasse = request.params().get("idClasse");
         final String idEtablissement = request.params().get("idStructure");
@@ -1064,7 +1069,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/recapEval/print/:idClasse/export")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessSuiviClasse.class)
     public void getExportRecapEval(final HttpServerRequest request) {
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
