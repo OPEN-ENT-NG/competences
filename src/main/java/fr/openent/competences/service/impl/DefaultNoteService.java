@@ -3064,8 +3064,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 }
 
                 Matiere matiere = new Matiere(matiereId);
-                Teacher teacher = new Teacher(note.getString("owner"));
-                Group group = new Group(note.getString("id_groupe"));
+                Teacher teacher = new Teacher(note.getString(Field.OWNER));
+                Group group = new Group(note.getString(Field.ID_GROUPE));
 
                 Service service = services.stream()
                         .filter(el -> teacher.getId().equals(el.getTeacher().getId())
