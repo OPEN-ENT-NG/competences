@@ -2783,7 +2783,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             nbOptions++;
                         }
 
-                        getSubTopicCoeff(firstStudent.getString(IDETABLISSEMENT), firstStudent.getString(IDCLASSE),
+                        getSubTopicCoeff(firstStudent.getString(IDETABLISSEMENT), new JsonArray(groupIds),
                                 subTopicCoefPromise);
                         getStructure(firstStudent.getString(IDETABLISSEMENT),structurePromise);
                         getLibellePeriode(idPeriode,host,acceptLanguage,periodeLibellePromise);
@@ -2854,8 +2854,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    private void getSubTopicCoeff(String idEtablissement, String idClasse, Promise<List<SubTopic>> promise) {
-        subTopicService.getSubtopicServices(idEtablissement, idClasse)
+    private void getSubTopicCoeff(String idEtablissement, JsonArray groupIds, Promise<List<SubTopic>> promise) {
+        subTopicService.getSubtopicServices(idEtablissement, groupIds)
                 .onSuccess(res -> {
                     List<SubTopic> subTopics = new ArrayList<>();
                     for(Object subTopicobj : res){
