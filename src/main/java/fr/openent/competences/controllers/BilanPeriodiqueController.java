@@ -356,8 +356,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Post("/avis/bilan/periodique")
     @ApiDoc("Créer un avis de conseil de classe")
-    @SecuredAction(value = "", type=ActionType.RESOURCE)
-    @ResourceFilter(CreateAvisConseilBilanPeriodiqueEtablissementId.class)
+    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type=ActionType.WORKFLOW)
     public void createOpinion(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -388,7 +387,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Delete("/avis/bilan/periodique")
     @ApiDoc("Supprime un avis de conseil de classe")
-    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type=ActionType.WORKFLOW)
+    @SecuredAction(value = "", type=ActionType.RESOURCE)
+    @ResourceFilter(CreateAvisConseilBilanPeriodique.class)
     public void deleteOpinion(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override

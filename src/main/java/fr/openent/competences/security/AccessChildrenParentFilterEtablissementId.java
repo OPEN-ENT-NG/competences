@@ -22,15 +22,12 @@ public class AccessChildrenParentFilterEtablissementId implements ResourcesProvi
                 || "Personnel".equals(user.getType()) || "Teacher".equals(user.getType());
 
         if ("GET".equals(request.method().toString())) {
-            handler.handle(isAdminTeacherPersonnel
-                    || isInStructure && user.getUserId().equals(request.params().get(ID_ELEVE_KEY))
-                    || isInStructure && user.getChildrenIds().contains(request.params().get(ID_ELEVE_KEY))
-            );
+            handler.handle(isInStructure && ( isAdminTeacherPersonnel || user.getUserId().equals(request.params().get(ID_ELEVE_KEY))
+                    || user.getChildrenIds().contains(request.params().get(ID_ELEVE_KEY))));
         } else {
             RequestUtils.bodyToJson(request, params -> {
-                handler.handle(isAdminTeacherPersonnel
-                        || isInStructure && user.getUserId().equals(params.getString(ID_ELEVE_KEY))
-                        || isInStructure && user.getChildrenIds().contains(params.getString(ID_ELEVE_KEY))
+                handler.handle(isInStructure && (isAdminTeacherPersonnel || user.getUserId().equals(params.getString(ID_ELEVE_KEY))
+                        || user.getChildrenIds().contains(params.getString(ID_ELEVE_KEY)))
                 );
             });
         }
