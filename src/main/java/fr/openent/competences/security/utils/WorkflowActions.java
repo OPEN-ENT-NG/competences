@@ -39,6 +39,7 @@ public enum WorkflowActions {
 	ACCESS_CONSEIL_DE_CLASSE("access.conseil.de.classe"),
 	PARAM_SUBTOPICS ("competences.paramSubtopics"),
 	ACCESS_MODEL_BULLETIN("export.bulletins.periodique"),
+	ACCESS_SUIVI_CLASSE("access.suivi.classe"),
 	CREATE_AVIS_CONSEIL_BILAN_PERIODIQUE("create.avis.conseil.bilan.periodique");
 	private final String actionName;
 
