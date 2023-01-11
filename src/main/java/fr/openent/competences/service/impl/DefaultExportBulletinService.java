@@ -2753,7 +2753,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         if (eleves.size() > 0) {
             JsonObject firstStudent = eleves.getJsonObject(0);
             String idClasse = firstStudent.getString("idClasse");
-            log.info("plop");
             Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), new Handler<Either<String, JsonArray>>() {
                 @Override
                 public void handle(Either<String, JsonArray> event) {
