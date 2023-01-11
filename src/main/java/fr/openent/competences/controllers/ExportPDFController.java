@@ -23,8 +23,8 @@ import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
-import fr.openent.competences.security.AccessAdminHeadTeacherFilter;
 import fr.openent.competences.security.AccessChildrenParentFilter;
+import fr.openent.competences.security.AccessSuiviClasse;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
@@ -149,7 +149,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Post("/releve/classe/pdf")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessSuiviClasse.class)
     public void getReleve(final HttpServerRequest request){
         RequestUtils.bodyToJson(request, params -> {
             final String idClasse = params.getString(ID_CLASSE_KEY);
