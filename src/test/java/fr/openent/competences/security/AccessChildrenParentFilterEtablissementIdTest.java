@@ -47,17 +47,33 @@ public class AccessChildrenParentFilterEtablissementIdTest {
 
 
     @Test
-    public void testAuthorizeAdmin(TestContext ctx){
+    public void testAuthorizeAdminInStructure(TestContext ctx){
         role1.setDisplayName(WorkflowActions.ADMIN_RIGHT.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
         map.set("idEtablissement", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         Mockito.doReturn(HttpMethod.GET).when(request).method();
         Mockito.doReturn(map).when(request).params();
-        structures.add("11111111");
+        structures.add("9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         user.setStructures(structures);
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(true, result);
+        });
+    }
+
+
+    @Test
+    public void testAuthorizeAdminNotInStructure(TestContext ctx){
+        role1.setDisplayName(WorkflowActions.ADMIN_RIGHT.toString());
+        actions.add(role1);
+        user.setAuthorizedActions(actions);
+        map.set("idEtablissement", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
+        Mockito.doReturn(HttpMethod.GET).when(request).method();
+        Mockito.doReturn(map).when(request).params();
+        structures.add("111111");
+        user.setStructures(structures);
+        access.authorize(request, binding, user, result -> {
+            ctx.assertEquals(false, result);
         });
     }
 
