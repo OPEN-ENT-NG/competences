@@ -2779,7 +2779,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         promises.add(subTopicCoefPromise.future());
                         promises.add(allPeriodesPromises.future());
                         utilsService.getPeriodes(groupIds, firstStudent.getString(IDETABLISSEMENT),
-                                FutureHelper.handlerJsonArray(allPeriodesPromises.future()));
+                                FutureHelper.handlerJsonArray(allPeriodesPromises,"utilsGetPeriodes"));
 
                         int nbOptions= 0;
                         if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
