@@ -87,7 +87,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     }
 
                     Future<JsonArray> periodesFuture = utilsService.getPeriodes(idGroupClasse.getList(), idEtablissement);
-                    Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
+                    Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idGroupClasse);
 
                     Future<JsonArray> servicesFuture = Future.future();
                     utilsService.getServices(idEtablissement, idGroupClasse,
