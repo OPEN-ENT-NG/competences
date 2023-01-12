@@ -1,6 +1,7 @@
 package fr.openent.competences.security;
 
 import fr.openent.competences.constants.Field;
+import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
