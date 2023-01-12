@@ -164,7 +164,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @Get("/bilan/periodique/datas/avis/synthses")
     @ApiDoc("Récupère les synthèses et avis de l'élève sur l'année")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessConseilDeClasseEtablissementId.class)
+    @ResourceFilter(AccessConseilDeClasseStructureId.class)
     public void getSynthesesAvisBilanPeriodique(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
             @Override

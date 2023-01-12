@@ -64,6 +64,11 @@ public class Field {
     public static final String CLASS_OR_GROUP_ID = "class_or_group_id";
 
 
+    //fonction
+    public static final String TEACHER = "Teacher";
+    public static final String PERSONNEL = "Personnel";
+
+
     //transaction
     public static final String ACTION = "action";
     public static final String VALUES = "values";

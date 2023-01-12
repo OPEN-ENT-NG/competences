@@ -1,6 +1,7 @@
 package fr.openent.competences.security;
 
 import fr.openent.competences.constants.Field;
+import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
@@ -16,7 +17,7 @@ public class AccessChildrenParentFilter implements ResourcesProvider {
     @Override
     public void authorize(final HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         boolean isAdminTeacherPersonnel = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())
-                || "Personnel".equals(user.getType()) || "Teacher".equals(user.getType());
+                || Field.PERSONNEL.equals(user.getType()) || Field.TEACHER.equals(user.getType());
 
         if ("GET".equals(request.method().toString())) {
             handler.handle(isAdminTeacherPersonnel

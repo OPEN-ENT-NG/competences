@@ -19,7 +19,7 @@ public class AccessChildrenParentFilterEtablissementId implements ResourcesProvi
         final boolean isInStructure = user.getStructures().contains(idStructure);
 
         boolean isAdminTeacherPersonnel = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())
-                || "Personnel".equals(user.getType()) || "Teacher".equals(user.getType());
+                || Field.PERSONNEL.equals(user.getType()) || Field.TEACHER.equals(user.getType());
 
         if ("GET".equals(request.method().toString())) {
             handler.handle(isInStructure && (isAdminTeacherPersonnel
