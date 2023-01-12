@@ -67,6 +67,7 @@ dependencies {
   testCompile "io.vertx:vertx-codegen:$vertxVersion"
   testCompile "io.vertx:vertx-unit:$vertxVersion"
   testCompile "org.entcore:tests:$entCoreVersion"
+  testCompile "io.vertx:vertx-codegen:$vertxVersion"
   testCompile 'io.gatling.highcharts:gatling-charts-highcharts:2.2.2'
   testCompile "org.mockito:mockito-core:$mockitoVersion"
   testCompile "org.powermock:powermock-core:$powerMockVersion"
