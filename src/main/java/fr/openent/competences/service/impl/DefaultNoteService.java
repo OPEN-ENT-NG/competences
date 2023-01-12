@@ -2761,15 +2761,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     //Récupération des Services
                     Promise<JsonArray> servicesPromise = Promise.promise();
                     utilsService.getServices(idEtablissement,
-                            new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise.future()));
+                            idGroups, FutureHelper.handlerJsonArray(servicesPromise.future()));
 
                     //Récupération des Multi-teachers
                     Promise<JsonArray> multiTeachingPromise = Promise.promise();
                     utilsService.getMultiTeachers(idEtablissement,
-                            new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+                            idGroups, idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
                     //Récupération des Sous-Matières
-                    Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
+                    Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idGroups);
 
                     List<Future> listFuturesFirst = new ArrayList<>(
                             Arrays.asList(studentsClassFuture, tableauDeConversionFuture, servicesFuture,
