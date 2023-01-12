@@ -2776,8 +2776,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         promises.add(listStudentsPromise.future());
                         promises.add(servicesPromise.future());
                         promises.add(multiTeachingPromise.future());
-                        promises.add(subTopicCoefPromise.future());
                         promises.add(allPeriodesPromises.future());
+                        promises.add(subTopicCoefPromise.future());
                         utilsService.getPeriodes(groupIds, firstStudent.getString(IDETABLISSEMENT),
                                 FutureHelper.handlerJsonArray(allPeriodesPromises,"utilsGetPeriodes"));
 
@@ -2812,15 +2812,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             ParamsBulletins paramBulletins = new ParamsBulletins();
                             paramBulletins.setParams(params);
                             paramBulletins.setHasImgLoaded(true);
-                            paramBulletins.addParams((JsonObject) success.result().list().get(3));
-                            JsonArray idEleves = new JsonArray(((JsonArray) success.result().list().get(4)).stream()
+                            paramBulletins.addParams((JsonObject) imgPromise.future().result() );
+                            JsonArray idEleves = new JsonArray(((JsonArray) listStudentsPromise.future().result()).stream()
                                     .map(e -> ((JsonObject) e).getString(ID_ELEVE_KEY)).collect(Collectors.toList()));
                             Map<String, Student> students = new HashMap<>();
 
-                            JsonArray servicesJson = (JsonArray) success.result().list().get(5);
-                            JsonArray multiTeachinJsonArray = (JsonArray) success.result().list().get(6);
+                            JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
+                            JsonArray multiTeachinJsonArray = (JsonArray) multiTeachingPromise.future().result();
+
                             for(int i = 1; i <= finalNbOptions; i++) {
-                                paramBulletins.addParams((JsonObject) success.result().list().get(7 + i));
+                                paramBulletins.addParams((JsonObject) success.result().list().get(8 + i));
                             }
                             List<Service> services = new ArrayList<>();
                             List<MultiTeaching> multiTeachings = new ArrayList<>();
@@ -2842,6 +2843,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe, host, acceptLanguage, vertx,
                                         futureGetHandler(promise.future()));
                             }
+
                             CompositeFuture.all(futures).setHandler(compositeEvent -> {
                                 if (compositeEvent.succeeded()) {
                                     //ici créer le Json
