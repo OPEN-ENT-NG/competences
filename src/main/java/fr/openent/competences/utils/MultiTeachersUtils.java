@@ -46,7 +46,7 @@ public class MultiTeachersUtils {
                 periodeStartDate = formatter1.parse(periode.getString(Field.TIMESTAMP_DT));
                 periodeEndDate = formatter1.parse(periode.getString(Field.TIMESTAMP_FN));
             } catch (ParseException e) {
-                log.error("[Competences@MultiTeachersUtils:filterSubtituteByDatePeriode] cannot parse dates");
+                log.error("[Competences@MultiTeachersUtils:filterSubtituteByDatePeriode] cannot parse dates " + e.getMessage());
                 return true;
             }
             if (multiStartDate != null && multiEndDate != null && periodeEndDate != null && periodeStartDate != null)
