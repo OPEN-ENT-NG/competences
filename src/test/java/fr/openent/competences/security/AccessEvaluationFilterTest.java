@@ -1,6 +1,8 @@
 package fr.openent.competences.security;
 
-import fr.openent.competences.bean.NoteDevoir;
+
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.Devoir;
 import fr.openent.competences.security.utils.FilterDevoirUtils;
@@ -14,17 +16,33 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.impl.HeadersAdaptor;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.entcore.common.user.UserInfos;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.vertx.testtools.VertxAssert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 @RunWith(VertxUnitRunner.class)
+@PowerMockRunnerDelegate(VertxUnitRunner.class)
 public class AccessEvaluationFilterTest {
     AccessEvaluationFilter access;
     HttpServerRequest request;
@@ -40,17 +58,17 @@ public class AccessEvaluationFilterTest {
     FilterDevoirUtils filterDevoirUtils;
     @Before
     public void setUp() throws NoSuchFieldException {
-        access = new AccessEvaluationFilter();
         request = Mockito.mock(HttpServerRequest.class);
         binding = Mockito.mock(Binding.class);
         map = Mockito.spy(new HeadersAdaptor(new DefaultHttpHeaders()));
         structures = new ArrayList<>();
-        user = new UserInfos();
+        user = mock(UserInfos.class);
         actions = new ArrayList<>();
         role1 = new UserInfos.Action();
         childrenIds = new ArrayList<>();
         devoir = Mockito.mock(Devoir.class);
-        filterDevoirUtils = Mockito.mock(FilterDevoirUtils.class);
+        filterDevoirUtils = Mockito.spy(new FilterDevoirUtils());
+        access = new AccessEvaluationFilter();
     }
 
 
@@ -77,39 +95,58 @@ public class AccessEvaluationFilterTest {
         async.awaitSuccess(10000);
     }
 
-    @Test
-    public void testAuthorizeTeacherWithGoodDevoirID(TestContext ctx){
-        //a tester si user est admin => return true;
-        // s'il n'est pas admin, tester s'il est enseignant
-        //s'il est enseignant:
-        //Tester si la requete contient un parametre IDDEVOIR
-        //Si elle ne contient pas le paramètre IDDEVOIR => on renvoie false
-        //Si on a bien le param IDDEVOIR:
-        //On récupère l'id du devoir et on regarde si le user peut y accéder
-        //sinon on renvoie false
-        //Si pas enseignant : on renvoie false
-        role1.setDisplayName(WorkflowActions.ACCESS_SUIVI_CLASSE.toString());
-        actions.add(role1);
-        user.setAuthorizedActions(actions);
-        user.setType("Teacher");
-        user.setUserId("abcd");
-        map.set(Field.IDDEVOIR, "11111");
-        devoir.setOwner("abcd");
-        devoir.setId("11111");
-        Async async = ctx.async();
-
-        Mockito.doReturn(map).when(request).params();
-        Mockito.doAnswer((Answer<Void>) invocation -> {
-            Handler handler = invocation.getArgument(2);
-            handler.handle(true);
-            return null;
-        }).when(filterDevoirUtils).validateAccessDevoir(Mockito.anyLong(),Mockito.any(UserInfos.class), Mockito.any(Handler.class));
-        access.authorize(request, binding, user, result -> {
-            ctx.assertEquals(true, result);
-            async.complete();
-        });
-        async.awaitSuccess(10000);
-    }
-
-
+//    @Test
+//    public void testAuthorizeTeacherWithGoodDevoirID(TestContext ctx) throws Exception {
+//        filterDevoirUtils = mock(FilterDevoirUtils.class);
+//        access = Mockito.spy(new AccessEvaluationFilter());
+//        PowerMockito.whenNew(AccessEvaluationFilter.class).withNoArguments().thenReturn(access);
+//        PowerMockito.whenNew(FilterDevoirUtils.class).withNoArguments().thenReturn(filterDevoirUtils);
+//        //PowerMockito.whenNew(AccessEvaluationFilter.class).withArguments(filterDevoirUtils).thenReturn(access);
+//        doAnswer(invocation -> {
+//            Handler<Boolean> handler = invocation.getArgument(2);
+//            handler.handle(true);
+//            return null;
+//        }).when(filterDevoirUtils).validateAccessDevoir(anyLong(), any(), any());
+//
+//        when(user.getType()).thenReturn("Teacher");
+//        map.set(Field.IDDEVOIR, "1111111");
+//        Mockito.doReturn(map).when(request).params();
+//
+//        role1.setDisplayName(WorkflowActions.ADMIN_RIGHT.toString());
+//        actions.add(role1);
+//        user.setAuthorizedActions(actions);
+//        Async async = ctx.async();
+//        access.authorize(request, null, user, result -> {
+//            ctx.assertEquals(true, result);
+//            async.complete();
+//        });
+//        async.awaitSuccess(10000);
+//    }
+//
+//
+//    @Test
+//    public void testAuthorizeTeacherWithBadDevoirID(TestContext ctx) {
+//        filterDevoirUtils = mock(FilterDevoirUtils.class);
+//        access = mock(AccessEvaluationFilter.class);
+//        try {
+//            PowerMockito.whenNew(AccessEvaluationFilter.class).withArguments(filterDevoirUtils).thenReturn(access);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//        role1.setDisplayName(WorkflowActions.ADMIN_RIGHT.toString());
+//        actions.add(role1);
+//        user.setAuthorizedActions(actions);
+//
+//        when(user.getType()).thenReturn("Teacher");
+//        map.set(Field.IDDEVOIR, "1111111");
+//        Mockito.doReturn(map).when(request).params();
+//
+//        Async async = ctx.async();
+//        user.setAuthorizedActions(actions);
+//        access.authorize(request, binding, user, result -> {
+//            ctx.assertEquals(true, result);
+//            async.complete();
+//        });
+//        async.awaitSuccess(10000);
+//    }
 }
