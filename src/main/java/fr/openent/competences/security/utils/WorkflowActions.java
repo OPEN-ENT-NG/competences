@@ -22,6 +22,9 @@ package fr.openent.competences.security.utils;
  */
 public enum WorkflowActions {
 	CREATE_EVALUATION ("competences.create.evaluation"),
+
+	COMPETENCES_ACCESS("competences.access"),
+
 	ADMIN_RIGHT ("Viescolaire.view"),
 	CREATE_DISPENSE_DOMAINE_ELEVE ("create.dispense.domaine.eleve"),
 	CREATE_ELEMENT_BILAN_PERIODIQUE ("create.element.bilan.periodique"),
@@ -36,8 +39,7 @@ public enum WorkflowActions {
 	ACCESS_CONSEIL_DE_CLASSE("access.conseil.de.classe"),
 	PARAM_SUBTOPICS ("competences.paramSubtopics"),
 	ACCESS_MODEL_BULLETIN("export.bulletins.periodique"),
-	CREATE_AVIS_CONSEIL_BILAN_PERIODIQUE("create.avis.conseil.bilan.periodique"),
-	COMPETENCES_ACCESS("competences.access");
+	CREATE_AVIS_CONSEIL_BILAN_PERIODIQUE("create.avis.conseil.bilan.periodique");
 	private final String actionName;
 
 	WorkflowActions(String actionName) {

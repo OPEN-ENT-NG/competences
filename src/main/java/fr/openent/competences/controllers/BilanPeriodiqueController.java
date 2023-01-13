@@ -18,7 +18,6 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -309,7 +308,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @Get("/appreciation/CPE/bilan/periodique")
     @ApiDoc("Récupère l'appreciation CPE du bilan périodique d'un élève pour une période donnée")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessCPEConseilDeClasse.class)
+    @ResourceFilter(AccessCompetencesAdminTeacherPersonnel.class)
     public void getAppreciationCPE(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -433,28 +432,6 @@ public class BilanPeriodiqueController extends ControllerHelper{
         badRequest(request);
     }
 
-    /**
-     * Récupère les avis de conseil de classe de l'élève
-     *
-     * @param request
-     */
-    @Get("/avis/conseil")
-    @ApiDoc("Récupère l'avis de conseil d'un élève pour une période donnée")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getAvisConseil(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                if (user != null) {
-                    avisConseilService.getAvisConseil(request.params().get("id_eleve"),
-                            Long.parseLong(request.params().get("id_periode")), request.params().get("id_structure"),
-                            arrayResponseHandler(request));
-                } else {
-                    badRequest(request);
-                }
-            }
-        });
-    }
 
     /**
      * Ajoute un avis du conseil de classe avec les données passées en POST

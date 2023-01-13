@@ -2,10 +2,7 @@ package fr.openent.competences.security;
 
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.http.impl.HeadersAdaptor;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.entcore.common.user.UserInfos;
@@ -20,7 +17,7 @@ import java.util.List;
 @RunWith(VertxUnitRunner.class)
 public class AccessCPEConseilDeClasseTest {
 
-    AccessCPEConseilDeClasse access;
+    AccessCompetencesAdminTeacherPersonnel access;
     HttpServerRequest request;
     Binding binding;
     UserInfos user = new UserInfos();
@@ -28,7 +25,7 @@ public class AccessCPEConseilDeClasseTest {
     UserInfos.Action role1;
     @Before
     public void setUp() throws NoSuchFieldException {
-        access = new AccessCPEConseilDeClasse();
+        access = new AccessCompetencesAdminTeacherPersonnel();
         request = Mockito.mock(HttpServerRequest.class);
         binding = Mockito.mock(Binding.class);
         user = new UserInfos();
