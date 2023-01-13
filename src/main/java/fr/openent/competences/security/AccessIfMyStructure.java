@@ -16,7 +16,10 @@ public class AccessIfMyStructure implements ResourcesProvider {
 
             String structureId = httpServerRequest.params().get(Field.STRUCTUREID);
             if (structureId == null) {
-                handler.handle(false);
+                structureId = httpServerRequest.params().get(Field.IDSTRUCTURE);
+                if (structureId == null) {
+                    handler.handle(false);
+                }
             }
             handler.handle(new FilterUserUtils(userInfos,null).validateStructure(structureId));
 

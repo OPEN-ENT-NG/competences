@@ -191,7 +191,7 @@ public class UtilsController extends ControllerHelper {
 
     @Get("/classe/groupes")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessConseilDeClasse.class)
+    @ResourceFilter(AccessIfMyStructure.class)
     @ApiDoc("Retourne une classe avec ses groupes (s'il y en a)")
     public void getGroupesClasse(final HttpServerRequest request){
         final String idStructure = request.params().get("idStructure");

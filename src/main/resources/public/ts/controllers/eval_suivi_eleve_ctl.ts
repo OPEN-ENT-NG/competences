@@ -42,6 +42,7 @@ import {LengthLimit} from "../constants";
 import {getTitulairesForRemplacantsCoEnseignant} from "../utils/teacher";
 import {SubTopicsServices} from "../models/sniplets";
 import {SubTopicsServiceService} from "../services/SubTopicServiceService";
+import {ClassesService} from "../services/classes.service";
 declare let _: any;
 declare let Chart: any;
 declare let location: any;
@@ -1445,9 +1446,11 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             }
             let subTopicsServiceService = new SubTopicsServiceService();
             let {data} =  await subTopicsServiceService.get($scope.structure.id)
-            let subTopicsServicesStruct = new SubTopicsServices([],data)
+            let classAndGroups = await ClassesService.getClassesAndGroup($scope.structure.id);
+            let subTopicsServicesStruct = new SubTopicsServices([],data);
+            let classe = _.findWhere(classAndGroups, {id_classe : $scope.search.classe.id});
             let subTopicsServices = subTopicsServicesStruct.filter(subTopic =>
-                subTopic.id_group  === $scope.search.classe.id
+                subTopic.id_group === $scope.search.classe.id || _.contains(classe.id_groupes, subTopic.id_group)
             );
             await utils.calculMoyennesWithSubTopic($scope.search.periode.id_type, $scope.search.eleve.id, $scope.matieresReleve,
                 $scope.matieres, $scope.dataReleve.devoirs, subTopicsServices, $scope.search.classe);
