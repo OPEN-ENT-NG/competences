@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessElementBilanPeriodiqueFilter;
+import fr.openent.competences.security.AccessStructureAndAdminOrTeacherCourseFilter;
 import fr.openent.competences.security.CreateElementBilanPeriodique;
 import fr.openent.competences.security.utils.AccessThematiqueBilanPeriodique;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
@@ -316,7 +317,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     @Get("/elementsBilanPeriodique")
     @ApiDoc("Retourne les élèments du bilan périodique")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    //@ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    @ResourceFilter(AccessStructureAndAdminOrTeacherCourseFilter.class)
     public void getElementBilanPeriodique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request,  user -> {
             if(user != null){
