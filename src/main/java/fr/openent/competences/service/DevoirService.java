@@ -18,15 +18,15 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.service.CrudService;
 import org.entcore.common.share.ShareService;
 import org.entcore.common.user.UserInfos;
-import io.vertx.core.Handler;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 import java.util.List;
 
@@ -78,13 +78,14 @@ public interface DevoirService extends CrudService {
     /**
      * Duplique le devoir passé en paramètre sur la liste de classes passée en paramètre
      * @param devoir devoir à dupliquer
+     * @param teacherId
      * @param classes liste des classes
      * @param user utilisateur courant
      * @param shareService
      * @param promise
      * @param eb
      */
-    void duplicateDevoir(JsonObject devoir, JsonArray classes, UserInfos user, ShareService shareService,
+    void duplicateDevoir(JsonObject devoir, String teacherId, JsonArray classes, UserInfos user, ShareService shareService,
                          Promise<Void> promise, EventBus eb);
 
     /**
