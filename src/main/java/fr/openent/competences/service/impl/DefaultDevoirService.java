@@ -1578,18 +1578,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         });
     }
 
-    public Future<List<SubTopic>> getSubTopicCoeff(String idEtablissement) {
-        Promise<List<SubTopic>> promise = Promise.promise();
-        subTopicService.getSubtopicServices(idEtablissement, event -> {
-            if (event.isRight()) {
-                utilsService.setSubtopics(promise, event);
-            } else {
-                promise.fail(event.left().getValue());
-            }
-        });
-        return promise.future();
-    }
-
     private void buildArrayFromHomeworks(JsonObject result, JsonArray devoirs, JsonArray annotations,
                                          JsonArray moyennesFinales, JsonArray matieres, JsonArray services,
                                          JsonArray allMultiTeachers, ArrayList<Future> resultsFuture,
