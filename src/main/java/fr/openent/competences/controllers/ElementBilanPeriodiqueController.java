@@ -316,7 +316,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsBilanPeriodique")
     @ApiDoc("Retourne les élèments du bilan périodique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessStructureAndAdminOrTeacherCourseFilter.class)
     public void getElementBilanPeriodique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request,  user -> {

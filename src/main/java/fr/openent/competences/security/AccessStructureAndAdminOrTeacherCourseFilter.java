@@ -26,7 +26,8 @@ public class AccessStructureAndAdminOrTeacherCourseFilter implements ResourcesPr
         //Check if the user is a teacher, if yes check if the class belongs to this teacher
         if(request.params().contains(Field.IDCLASSE) && request.params().contains(Field.IDENSEIGNANT)){
             if(user.getType().equals(Field.TEACHER)){
-                isTeacherWhomClassBelong = user.getClasses().contains(request.params().get(Field.IDCLASSE));
+                String idClass = request.params().get(Field.IDCLASSE);
+                isTeacherWhomClassBelong = filterUserUtils.validateClasse(idClass);
             }
         }
 

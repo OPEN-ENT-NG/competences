@@ -26,6 +26,7 @@ public class AccessStructureAndAdminOrTeacherCourseFilterTest {
     UserInfos user;
     List<UserInfos.Action> actions;
     UserInfos.Action role1;
+    List<String> groupsId;
     MultiMap params;
     List structures;
 
@@ -39,6 +40,7 @@ public class AccessStructureAndAdminOrTeacherCourseFilterTest {
         actions = new ArrayList<>();
         role1 = new UserInfos.Action();
         structures = new ArrayList<String>();
+        groupsId = new ArrayList<>();
     }
 
     @Test
@@ -86,6 +88,7 @@ public class AccessStructureAndAdminOrTeacherCourseFilterTest {
         user.setClasses(classes);
         params.set(Field.IDCLASSE,"000");
 
+
         Mockito.doReturn(params).when(request).params();
 
         access.authorize(request,binding,user,result -> {
@@ -108,6 +111,8 @@ public class AccessStructureAndAdminOrTeacherCourseFilterTest {
         classes.add("000");
         user.setClasses(classes);
         params.set(Field.IDCLASSE,"222");
+        //Set teacher Groups
+        user.setGroupsIds(groupsId);
 
         Mockito.doReturn(params).when(request).params();
 
