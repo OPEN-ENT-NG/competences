@@ -316,8 +316,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsBilanPeriodique")
     @ApiDoc("Retourne les élèments du bilan périodique")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessStructureAndAdminOrTeacherCourseFilter.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    //@ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getElementBilanPeriodique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request,  user -> {
             if(user != null){
@@ -520,8 +520,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsAppreciations")
     @ApiDoc("Retourne les appreciations liées au élèments du bilan périodiques passés en paramètre")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    //@ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessStructureAndAdminOrTeacherCourseFilter.class)
     public void getAppreciations(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
