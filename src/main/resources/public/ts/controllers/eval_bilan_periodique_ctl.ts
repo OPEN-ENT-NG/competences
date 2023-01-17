@@ -687,7 +687,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
                     if ($scope.bilanPeriodique.elements !== undefined && $scope.bilanPeriodique.elements.length > 0) {
                         await $scope.bilanPeriodique.syncAppreciations($scope.bilanPeriodique.elements,
-                            $scope.search.periode, $scope.search.classe);
+                            $scope.search.periode, $scope.search.classe, $scope.structure);
                         await utils.safeApply($scope);
                     } else {
                         delete $scope.bilanPeriodique;

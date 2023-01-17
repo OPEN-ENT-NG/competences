@@ -36,6 +36,7 @@ public class Field {
     public static final String ID_SOUSMATIERE = "id_sousmatiere";
     public static final String ID_MATIERE_MOYF = "id_matiere_moyf";
     public static final String ID_ENSEIGNANT = "id_enseignant";
+    public static final String IDENSEIGNANT = "idEnseignant";
     public static final String CLASSID = "classId";
     public static final String DEVOIRID = "devoirId";
     public static final String IDDEVOIR = "idDevoir";
@@ -234,4 +235,7 @@ public class Field {
     public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
     public static final int DIVISEUR_NOTE = 20;
 
+
+    //UserType
+    public static final String TEACHER = "Teacher";
 }
