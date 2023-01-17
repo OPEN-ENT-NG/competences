@@ -104,9 +104,10 @@ export class BilanPeriodique extends  Model {
         }
     }
 
-    async syncAppreciations (elements, periode, classe) {
+    async syncAppreciations (elements, periode, classe, structure:Structure) {
         try {
-            let url = BilanPeriodique.api.GET_APPRECIATIONS + '?idPeriode=' + periode.id + '&idClasse=' + classe.id;;
+            let url:string = BilanPeriodique.api.GET_APPRECIATIONS + '?idPeriode=' + periode.id + '&idClasse=' + classe.id +
+                "&idEtablissement=" + structure.id;
 
             for (let i = 0; i < elements.length; i++) {
                 url += "&idElement=" + elements[i].id;

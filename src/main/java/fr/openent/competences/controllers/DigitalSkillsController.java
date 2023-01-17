@@ -1,6 +1,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.security.AccessConseilDeClasse;
 import fr.openent.competences.security.DigitalSkillsFilter;
 import fr.openent.competences.service.digitalSkills.ClassAppreciationDigitalSkillsService;
 import fr.openent.competences.service.digitalSkills.DigitalSkillsService;
@@ -46,7 +47,8 @@ public class DigitalSkillsController extends ControllerHelper {
 
     @Get("/digitalSkills/appreciations/evaluation")
     @ApiDoc("get student digital skills and appreciations of digital skills")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessConseilDeClasse.class)
     public void getDigitalSkills(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, userInfo -> {
             if (userInfo != null) {
