@@ -16,23 +16,21 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import static fr.openent.competences.Competences.ID_ELEVE_KEY;
+import static fr.openent.competences.Competences.ID_ETABLISSEMENT_KEY;
 
 public class AccessCompetencesAdminTeacherPersonnel implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
-//        String idStructure = WorkflowActionUtils.getParamStructure(request);
-//        Boolean isInStructure =  new FilterUserUtils(user, null).validateStructure(idStructure);
+        String etablissementId = request.params().get(Field.ID_ETABLISSEMENT);
         Boolean isTeacher = Field.TEACHER.equals(user.getType());
         Boolean isPersonnel = Field.PERSONNEL.equals(user.getType());
         Boolean isAdmin = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
-        String eleveId = request.params().get(ID_ELEVE_KEY);
-        //TODO
-        //Trouver l'id de la structure en utilisant l'id de la periode et vérifier si le user peut accéder
-        //à cette structure.
+        Boolean haveAccess = WorkflowActionUtils.hasRight(user, WorkflowActions.COMPETENCES_ACCESS.toString());
 
-
-
+        if(isTeacher || isPersonnel || isAdmin) {
+            handler.handle(haveAccess && user.getStructures().contains(etablissementId));
+        } else {
+            handler.handle(false);
+        }
     }
-
-
 }

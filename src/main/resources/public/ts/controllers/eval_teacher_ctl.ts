@@ -3382,7 +3382,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             if(eleve.appreciationCPE == null) {
                 if(Utils.isNotNull(idPeriode)) {
-                    eleve.appreciationCPE = new AppreciationCPE(eleve.id, idPeriode);
+                    eleve.appreciationCPE = new AppreciationCPE(eleve.id, idPeriode, $scope.structure.id);
                     allPromise.push(eleve.appreciationCPE.syncAppreciationCPE());
                 }
             }
