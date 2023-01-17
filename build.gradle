@@ -58,6 +58,8 @@ compileTestJava {
 
 dependencies {
   compileOnly "io.vertx:vertx-core:$vertxVersion"
+  testCompile "io.vertx:vertx-codegen:$vertxVersion"
+  testCompile "io.vertx:vertx-unit:$vertxVersion"
   compile "org.entcore:common:$entCoreVersion"
   compile "org.apache.pdfbox:pdfbox:1.8.3"
   compile "com.opencsv:opencsv:5.7.0"
