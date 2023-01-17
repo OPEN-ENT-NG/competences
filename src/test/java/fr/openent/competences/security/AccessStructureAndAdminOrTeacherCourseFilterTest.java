@@ -76,8 +76,6 @@ public class AccessStructureAndAdminOrTeacherCourseFilterTest {
         user.setAuthorizedActions(actions);
 
         user.setType(Field.TEACHER);
-        user.setUserId("111");
-        params.set(Field.IDENSEIGNANT,"111");
         //Set structure
         params.set(Field.IDETABLISSEMENT,"111111");
         structures.add("111111");
@@ -100,8 +98,6 @@ public class AccessStructureAndAdminOrTeacherCourseFilterTest {
         user.setAuthorizedActions(actions);
 
         user.setType(Field.TEACHER);
-        user.setUserId("111");
-        params.set(Field.IDENSEIGNANT,"111");
         //Set structure
         params.set(Field.IDETABLISSEMENT,"111111");
         structures.add("111111");
