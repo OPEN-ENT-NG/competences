@@ -335,7 +335,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 for (int j = 0; j < resultSql.size(); j++) {
                     ids.add(resultSql.getJsonObject(j).getJsonArray(Field.RESULTS).getJsonArray(0).getInteger(0));
                 }
-                insertDuplication(ids,teacherId, devoir, classes, user, getDuplicationDevoirHandler(user, this, promise, eb));
+                insertDuplication(ids, teacherId, devoir, classes, user, getDuplicationDevoirHandler(user, this, promise, eb));
             } else {
                 promise.fail(result.getString(Field.ERROR));
             }
@@ -2050,7 +2050,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         try {
             Promise<Void> finalPromise = Promise.promise();
             finalPromise.future().onSuccess(success -> request.response().setStatusCode(200).end())
-                    .onFailure(failure -> badRequest(request, failure.getMessage()));
+                    .onFailure(failure -> {
+                        log.error("[Competences@duplicateDevoirs ] : " +failure.getMessage());
+                        badRequest(request, failure.getMessage());
+                    });
 
             final long idDevoir = Long.parseLong(request.params().get(Field.IDDEVOIR));
             retrieve(Long.toString(idDevoir), result -> {
@@ -2085,24 +2088,25 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         Promise<JsonArray> promiseService = Promise.promise();
         List<Future<Void>> promises = new ArrayList<>();
 
-        promiseService.future().onSuccess(event -> event.stream()
-                .filter(elem ->
-                        ((JsonObject) elem).getString(Field.ID_MATIERE)
-                                .equals(devoir.getString(Field.ID_MATIERE))
-                ).forEach(elem ->
-                {
-                    Promise<Void> promise1 = Promise.promise();
-                    promises.add(promise1.future());
-                    String teacherId = ((JsonObject) elem).getString(Field.ID_ENSEIGNANT);
-                    devoir.put(Field.OWNER, teacherId);
-                    String idGroupe = ((JsonObject) elem).getString(Field.ID_GROUPE);
-                    JsonArray groupFiltered = new JsonArray(body.getJsonArray(Field.CLASSES)
-                            .stream()
-                            .filter(group -> ((JsonObject) group).getString(Field.ID).equals(idGroupe))
-                            .collect(Collectors.toList()));
+        promiseService.future()
+                .onSuccess(event -> event.stream()
+                        .filter(elem ->
+                                ((JsonObject) elem).getString(Field.ID_MATIERE)
+                                        .equals(devoir.getString(Field.ID_MATIERE)))
+                        .forEach(elem ->
+                        {
+                            Promise<Void> promise1 = Promise.promise();
+                            promises.add(promise1.future());
+                            String teacherId = ((JsonObject) elem).getString(Field.ID_ENSEIGNANT);
+                            devoir.put(Field.OWNER, teacherId);
+                            String idGroupe = ((JsonObject) elem).getString(Field.ID_GROUPE);
+                            JsonArray groupFiltered = new JsonArray(body.getJsonArray(Field.CLASSES)
+                                    .stream()
+                                    .filter(group -> ((JsonObject) group).getString(Field.ID).equals(idGroupe))
+                                    .collect(Collectors.toList()));
 
-                    callDuplicateDevoir(user, teacherId, groupFiltered, shareService, promise1, devoir, competencesResult);
-                }));
+                            callDuplicateDevoir(user, teacherId, groupFiltered, shareService, promise1, devoir, competencesResult);
+                        }));
 
         FutureHelper.all(promises).onSuccess(event -> finalPromise.complete());
         getServices(devoir, classes, promiseService);
