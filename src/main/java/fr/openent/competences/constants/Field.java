@@ -25,6 +25,7 @@ public class Field {
     public static final String ID_GROUP = "id_group";
     public static final String ID_GROUPS = "id_groups";
     public static final String ID_GROUPE = "id_groupe";
+    public static final String ID_GROUPES = "id_groupes";
     public static final String ID_TYPESOUSMATIERE = "id_type_sousmatiere";
     public static final String ID_PERIODE = "id_periode";
     public static final String IDPERIODE = "idPeriode";
@@ -52,6 +53,7 @@ public class Field {
     public static final String SUBJECTID = "subjectId";
     public static final String GROUPID = "groupId";
     public static final String USERID = "userId";
+    public static final String IDTYPEPERIODE = "idTypePeriode";
 
 
     public static final String MAIN_TEACHER_ID = "main_teacher_id";
@@ -109,6 +111,14 @@ public class Field {
     public static final String FORMATE = "formate";
     public static final String IS_VISIBLE = "is_visible";
     public static final String dateFormateYYYYMMDDTHHMMSS  = "yyyy-MM-dd'T'HH:mm:ss";
+    public static final String IS_ANNOTATION = "is_annotation";
+    public static final String NOTE = "note";
+    public static final String LIBELLE_COURT = "libelle_court";
+    public static final String HASDIVISEUR = "hasDiviseur";
+    public static final String DATA = "data";
+    public static final String ORDREPERIODE = "ordrePeriode";
+    public static final String LIBELLE = "libelle";
+    public static final String ANNEE = "Ann\u00E9e";
     //
 
     public static final String ISSKILLAVERAGE = "isSkillAverage";

@@ -1803,12 +1803,12 @@ public class DefaultExportService implements ExportService {
                             .add(idClass);
 
                     if(groupsClassResult != null && !groupsClassResult.isEmpty()){
-                        idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray("id_groupes"));
+                        idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray(Field.ID_GROUPES));
                     }
 
                     Promise<JsonArray> multiTeachingPromise = Promise.promise();
-                    utilsService.getMultiTeachers(idEtablissement,
-                            idGroupClasse, idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+                    utilsService.getAllMultiTeachers(idEtablissement,
+                            idGroupClasse, FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
                     Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idGroupClasse);
 
@@ -1824,10 +1824,10 @@ public class DefaultExportService implements ExportService {
 
                     annotationsJSON.stream().forEach(annotation -> {
                         JsonObject annotationJson = (JsonObject) annotation;
-                        annotationJson.put("is_annotation", true);
-                        annotationJson.put("id", annotationJson.getInteger("id_devoir"));
-                        annotationJson.put("note", annotationJson.getString("libelle_court"));
-                        annotationJson.put("hasDiviseur", false);
+                        annotationJson.put(Field.IS_ANNOTATION, true);
+                        annotationJson.put(Field.ID, annotationJson.getInteger(Field.ID_DEVOIR));
+                        annotationJson.put(Field.NOTE, annotationJson.getString(Field.LIBELLE_COURT));
+                        annotationJson.put(Field.HASDIVISEUR, false);
                         devoirsJSON.add(annotationJson);
                     });
 
@@ -1854,17 +1854,17 @@ public class DefaultExportService implements ExportService {
                         }
                     }
 
-                    final JsonObject etabJSON = structureFuture.result().getJsonObject("s").getJsonObject("data");
+                    final JsonObject etabJSON = structureFuture.result().getJsonObject("s").getJsonObject(Field.DATA);
                     final JsonObject periodeJSON = new JsonObject();
 
-                    if (null != params.get("idTypePeriode") && null != params.get("ordrePeriode")) {
-                        final long idTypePeriode = Long.parseLong(params.get("idTypePeriode"));
-                        final long ordrePeriode = Long.parseLong(params.get("ordrePeriode"));
-                        String libellePeriode = getLibelle("viescolaire.periode." + idTypePeriode) + " " + ordrePeriode;
-                        periodeJSON.put("libelle", libellePeriode);
+                    if (null != params.get(Field.IDTYPEPERIODE) && null != params.get(Field.ORDREPERIODE)) {
+                        final long idTypePeriode = Long.parseLong(params.get(Field.IDTYPEPERIODE));
+                        final long ordrePeriode = Long.parseLong(params.get(Field.ORDREPERIODE));
+                        String libellePeriode = getLibelle(VIESCO_BUS_ADDRESS + "." + Field.VIESCO_PERIODE_TABLE + "." + idTypePeriode) + " " + ordrePeriode;
+                        periodeJSON.put(Field.LIBELLE, libellePeriode);
                     } else {
                         // Construction de la période année
-                        periodeJSON.put("libelle", "Ann\u00E9e");
+                        periodeJSON.put(Field.LIBELLE, Field.ANNEE);
                     }
 
                     CompositeFuture.all(multiTeachingPromise.future(), servicesFuture , subTopicCoefFuture).setHandler(futuresEvent -> {
@@ -1877,13 +1877,13 @@ public class DefaultExportService implements ExportService {
                         structure.setId(idEtablissement);
                         for (int i = 0; i < servicesJson.size(); i++) {
                             JsonObject service = servicesJson.getJsonObject(i);
-                            idEnseignants.add(service.getString("id_enseignant"));
+                            idEnseignants.add(service.getString(Field.ID_ENSEIGNANT));
                         }
                         setServices(structure, servicesJson, services,subTopics);
 
                         for (int i = 0; i < multiTeachers.size(); i++) {
                             JsonObject multiTeacher = multiTeachers.getJsonObject(i);
-                            idEnseignants.add(multiTeacher.getString("second_teacher_id"));
+                            idEnseignants.add(multiTeacher.getString(Field.SECOND_TEACHER_ID));
                         }
 
                         getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON, periodeJSON, userJSON, etabJSON,
