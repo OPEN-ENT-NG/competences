@@ -1450,7 +1450,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             let subTopicsServicesStruct = new SubTopicsServices([],data);
             let classe = _.findWhere(classAndGroups, {id_classe : $scope.search.classe.id});
             let subTopicsServices = subTopicsServicesStruct.filter(subTopic =>
-                subTopic.id_group === $scope.search.classe.id || _.contains(classe.id_groupes, subTopic.id_group)
+                subTopic.id_group === $scope.search.classe.id || (classe != undefined && _.contains(classe.id_groupes, subTopic.id_group))
             );
             await utils.calculMoyennesWithSubTopic($scope.search.periode.id_type, $scope.search.eleve.id, $scope.matieresReleve,
                 $scope.matieres, $scope.dataReleve.devoirs, subTopicsServices, $scope.search.classe);

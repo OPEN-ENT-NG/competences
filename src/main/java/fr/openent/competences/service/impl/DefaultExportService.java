@@ -23,6 +23,7 @@ import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.ExportEvaluationHelper;
 import fr.openent.competences.helpers.FormateFutureEvent;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
@@ -1790,91 +1791,106 @@ public class DefaultExportService implements ExportService {
             String idClass = !userJSON.containsKey("c") ? userJSON.getString("idClasse") :
                     userJSON.getJsonObject("c").getJsonObject("data").getString("id");
 
-            Future<JsonArray> multiTeachersFuture = Future.future();
-            utilsService.getMultiTeachersByClass(idEtablissement, idClass,
-                    idPeriode != null ? idPeriode.intValue() : null, multiTeacherEvent -> {
-                        formate(multiTeachersFuture, multiTeacherEvent);
+            final Boolean finalBackUp = isBackup;
+            Utils.getGroupesClasse(eb, new JsonArray().add(idClass), responseGroupsClass -> {
+                if(responseGroupsClass.isLeft()) {
+                    String error = responseGroupsClass.left().getValue();
+                    log.error("[Competence] DefaultExportService at getDataForExportReleveEleve : getGroupesClasse " + error);
+                    return;
+                } else {
+                    JsonArray groupsClassResult = responseGroupsClass.right().getValue();
+                    JsonArray idGroupClasse = new JsonArray()
+                            .add(idClass);
+
+                    if(groupsClassResult != null && !groupsClassResult.isEmpty()){
+                        idGroupClasse.addAll(groupsClassResult.getJsonObject(0).getJsonArray(Field.ID_GROUPES));
+                    }
+
+                    Promise<JsonArray> multiTeachingPromise = Promise.promise();
+                    utilsService.getAllMultiTeachers(idEtablissement,
+                            idGroupClasse, FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+
+                    Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idGroupClasse);
+
+                    Future<JsonArray> servicesFuture = Future.future();
+                    utilsService.getServices(idEtablissement, idGroupClasse, servicesEvent -> {
+                        formate(servicesFuture, servicesEvent);
                     });
 
-            Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement);
+                    // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
+                    final JsonArray devoirsJSON = devoirsFuture.result();
+                    final JsonArray annotationsJSON = annotationsFuture.result();
+                    final JsonArray moyennesFinales = moyenneFinaleFuture.result();
 
-            Future<JsonArray> servicesFuture = Future.future();
-            utilsService.getServices(idEtablissement, new JsonArray().add(idClass), servicesEvent -> {
-                formate(servicesFuture, servicesEvent);
-            });
+                    annotationsJSON.stream().forEach(annotation -> {
+                        JsonObject annotationJson = (JsonObject) annotation;
+                        annotationJson.put(Field.IS_ANNOTATION, true);
+                        annotationJson.put(Field.ID, annotationJson.getInteger(Field.ID_DEVOIR));
+                        annotationJson.put(Field.NOTE, annotationJson.getString(Field.LIBELLE_COURT));
+                        annotationJson.put(Field.HASDIVISEUR, false);
+                        devoirsJSON.add(annotationJson);
+                    });
 
-            // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
-            final JsonArray devoirsJSON = devoirsFuture.result();
-            final JsonArray annotationsJSON = annotationsFuture.result();
-            final JsonArray moyennesFinales = moyenneFinaleFuture.result();
+                    final JsonArray idMatieres = new JsonArray();
 
-            annotationsJSON.stream().forEach(annotation -> {
-                JsonObject annotationJson = (JsonObject) annotation;
-                annotationJson.put("is_annotation", true);
-                annotationJson.put("id", annotationJson.getInteger("id_devoir"));
-                annotationJson.put("note", annotationJson.getString("libelle_court"));
-                annotationJson.put("hasDiviseur", false);
-                devoirsJSON.add(annotationJson);
-            });
+                    for (int i = 0; i < devoirsJSON.size(); i++) {
+                        JsonObject devoir = devoirsJSON.getJsonObject(i);
+                        String idMatiere = devoir.getString(ID_MATIERE);
+                        idMatieres.add(idMatiere);
+                    }
 
-            final JsonArray idMatieres = new JsonArray();
+                    for (int i = 0; i < moyennesFinales.size(); i++) {
+                        JsonObject moyenneFinale = moyennesFinales.getJsonObject(i);
+                        String idMatiere = moyenneFinale.getString(ID_MATIERE);
+                        idMatieres.add(idMatiere);
+                    }
 
-            for (int i = 0; i < devoirsJSON.size(); i++) {
-                JsonObject devoir = devoirsJSON.getJsonObject(i);
-                String idMatiere = devoir.getString(ID_MATIERE);
-                idMatieres.add(idMatiere);
-            }
+                    JsonArray matieres = new JsonArray();
+                    for (int i = 0; i < subjectF.result().size(); i++) {
+                        JsonObject o = subjectF.result().getJsonObject(i);
+                        String idMatiere = o.getString(ID_KEY);
+                        if (idMatieres.contains(idMatiere)) {
+                            matieres.add(o);
+                        }
+                    }
 
-            for (int i = 0; i < moyennesFinales.size(); i++) {
-                JsonObject moyenneFinale = moyennesFinales.getJsonObject(i);
-                String idMatiere = moyenneFinale.getString(ID_MATIERE);
-                idMatieres.add(idMatiere);
-            }
+                    final JsonObject etabJSON = structureFuture.result().getJsonObject("s").getJsonObject(Field.DATA);
+                    final JsonObject periodeJSON = new JsonObject();
 
-            JsonArray matieres = new JsonArray();
-            for (int i = 0; i < subjectF.result().size(); i++) {
-                JsonObject o = subjectF.result().getJsonObject(i);
-                String idMatiere = o.getString(ID_KEY);
-                if (idMatieres.contains(idMatiere)) {
-                    matieres.add(o);
+                    if (null != params.get(Field.IDTYPEPERIODE) && null != params.get(Field.ORDREPERIODE)) {
+                        final long idTypePeriode = Long.parseLong(params.get(Field.IDTYPEPERIODE));
+                        final long ordrePeriode = Long.parseLong(params.get(Field.ORDREPERIODE));
+                        String libellePeriode = getLibelle(VIESCO_BUS_ADDRESS + "." + Field.VIESCO_PERIODE_TABLE + "." + idTypePeriode) + " " + ordrePeriode;
+                        periodeJSON.put(Field.LIBELLE, libellePeriode);
+                    } else {
+                        // Construction de la période année
+                        periodeJSON.put(Field.LIBELLE, Field.ANNEE);
+                    }
+
+                    CompositeFuture.all(multiTeachingPromise.future(), servicesFuture , subTopicCoefFuture).setHandler(futuresEvent -> {
+                        final JsonArray multiTeachers = multiTeachingPromise.future().result();
+                        final JsonArray servicesJson = servicesFuture.result();
+                        final List<SubTopic> subTopics =  subTopicCoefFuture.result();
+                        final JsonArray idEnseignants = new JsonArray();
+                        List<Service> services = new ArrayList<>();
+                        Structure structure = new Structure();
+                        structure.setId(idEtablissement);
+                        for (int i = 0; i < servicesJson.size(); i++) {
+                            JsonObject service = servicesJson.getJsonObject(i);
+                            idEnseignants.add(service.getString(Field.ID_ENSEIGNANT));
+                        }
+                        setServices(structure, servicesJson, services,subTopics);
+
+                        for (int i = 0; i < multiTeachers.size(); i++) {
+                            JsonObject multiTeacher = multiTeachers.getJsonObject(i);
+                            idEnseignants.add(multiTeacher.getString(Field.SECOND_TEACHER_ID));
+                        }
+
+                        getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON, periodeJSON, userJSON, etabJSON,
+                                finalBackUp, moyennesFinales, multiTeachers, services,  handler);
+
+                    });
                 }
-            }
-
-            final JsonObject etabJSON = structureFuture.result().getJsonObject("s").getJsonObject("data");
-            final JsonObject periodeJSON = new JsonObject();
-
-            if (null != params.get("idTypePeriode") && null != params.get("ordrePeriode")) {
-                final long idTypePeriode = Long.parseLong(params.get("idTypePeriode"));
-                final long ordrePeriode = Long.parseLong(params.get("ordrePeriode"));
-                String libellePeriode = getLibelle("viescolaire.periode." + idTypePeriode) + " " + ordrePeriode;
-                periodeJSON.put("libelle", libellePeriode);
-            } else {
-                // Construction de la période année
-                periodeJSON.put("libelle", "Ann\u00E9e");
-            }
-
-            final Boolean finalBackUp = isBackup;
-            CompositeFuture.all(multiTeachersFuture, servicesFuture , subTopicCoefFuture).setHandler(futuresEvent -> {
-                final JsonArray multiTeachers = multiTeachersFuture.result();
-                final JsonArray servicesJson = servicesFuture.result();
-                final List<SubTopic> subTopics =  subTopicCoefFuture.result();
-                final JsonArray idEnseignants = new JsonArray();
-                List<Service> services = new ArrayList<>();
-                Structure structure = new Structure();
-                structure.setId(idEtablissement);
-                for (int i = 0; i < servicesJson.size(); i++) {
-                    JsonObject service = servicesJson.getJsonObject(i);
-                    idEnseignants.add(service.getString("id_enseignant"));
-                }
-                setServices(structure, servicesJson, services,subTopics);
-
-                for (int i = 0; i < multiTeachers.size(); i++) {
-                    JsonObject multiTeacher = multiTeachers.getJsonObject(i);
-                    idEnseignants.add(multiTeacher.getString("second_teacher_id"));
-                }
-
-                getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON, periodeJSON, userJSON, etabJSON,
-                        finalBackUp, moyennesFinales, multiTeachers, services,  handler);
             });
         });
     }
