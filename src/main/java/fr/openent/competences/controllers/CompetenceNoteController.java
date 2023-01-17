@@ -70,28 +70,6 @@ public class CompetenceNoteController extends ControllerHelper {
         devoirsService = new DefaultDevoirService(eb);
     }
 
-    /**
-     * Récupère la liste des compétences notes pour un devoir et un élève donné
-     *
-     * @param request
-     */
-    @Get("/competences/note")
-    @ApiDoc("Récupère la liste des compétences notes pour un devoir et un élève donné")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getCompetencesNotes(final HttpServerRequest request) {
-
-        Long idDevoir;
-        try {
-            idDevoir = Long.parseLong(request.params().get("iddevoir"));
-        } catch (NumberFormatException e) {
-            log.error("Error : idDevoir must be a long object", e);
-            badRequest(request, e.getMessage());
-            return;
-        }
-
-        competencesNotesService.getCompetencesNotes(idDevoir,
-                request.params().get("ideleve"), false, null, arrayResponseHandler(request));
-    }
 
     /**
      * Créé une note correspondante à une compétence pour un utilisateur donné
