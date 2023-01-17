@@ -104,9 +104,11 @@ export class BilanPeriodique extends  Model {
         }
     }
 
-    async syncAppreciations (elements, periode, classe) {
+    async syncAppreciations (elements, periode, classe, structure) {
         try {
-            let url = BilanPeriodique.api.GET_APPRECIATIONS + '?idPeriode=' + periode.id + '&idClasse=' + classe.id;;
+            console.log(structure.id)
+            let url = BilanPeriodique.api.GET_APPRECIATIONS + '?idPeriode=' + periode.id + '&idClasse=' + classe.id +
+                "&idEtablissement=" + structure.id;
 
             for (let i = 0; i < elements.length; i++) {
                 url += "&idElement=" + elements[i].id;
@@ -149,6 +151,7 @@ export class BilanPeriodique extends  Model {
             });
         } catch (e) {
             notify.error('evaluations.appreciations.get.error');
+            console.error(e);
         }
 
 
