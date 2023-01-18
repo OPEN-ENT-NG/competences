@@ -10,10 +10,13 @@ import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 
-public class AccessConseilDeClasse implements ResourcesProvider {
-
+public class AccessConseilDeClasseStructureId implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        handler.handle(WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_CONSEIL_DE_CLASSE.toString()));
+        String idStructure = WorkflowActionUtils.getParamStructure(request);
+        handler.handle(
+                idStructure != null && new FilterUserUtils(user, null).validateStructure(idStructure) &&
+                        WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_CONSEIL_DE_CLASSE.toString())
+        );
     }
 }

@@ -15,6 +15,7 @@ public class Field {
     public static final String IDSTRUCTURE = "idStructure";
     public static final String STRUCTUREID = "structureId";
     public static final String IDETABLISSEMENT = "idEtablissement";
+    public static final String ID_ETABLISSEMENT = "id_etablissement";
     public static final String IDCLASSE = "idClasse";
     public static final String ID_STRUCTURE = "id_structure";
     public static final String ID_MATIERE = "id_matiere";
@@ -61,6 +62,10 @@ public class Field {
     public static final String SECOND_TEACHER_ID = "second_teacher_id";
     public static final String SUBJECT_ID = "subject_id";
     public static final String CLASS_OR_GROUP_ID = "class_or_group_id";
+
+
+    //fonction
+    public static final String PERSONNEL = "Personnel";
 
 
     //transaction
