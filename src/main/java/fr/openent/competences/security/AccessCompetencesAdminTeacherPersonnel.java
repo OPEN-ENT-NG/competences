@@ -27,10 +27,8 @@ public class AccessCompetencesAdminTeacherPersonnel implements ResourcesProvider
         Boolean isAdmin = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
         Boolean haveAccess = WorkflowActionUtils.hasRight(user, WorkflowActions.COMPETENCES_ACCESS.toString());
 
-        if(isTeacher || isPersonnel || isAdmin) {
-            handler.handle(haveAccess && user.getStructures().contains(etablissementId));
-        } else {
-            handler.handle(false);
-        }
+        handler.handle(
+                (isTeacher || isPersonnel || isAdmin) && haveAccess && user.getStructures().contains(etablissementId)
+        );
     }
 }

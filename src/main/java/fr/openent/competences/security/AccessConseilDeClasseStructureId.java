@@ -14,11 +14,9 @@ public class AccessConseilDeClasseStructureId implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         String idStructure = WorkflowActionUtils.getParamStructure(request);
-        if(idStructure == null){
-            handler.handle(false);
-        }else {
-            handler.handle(new FilterUserUtils(user, null).validateStructure(idStructure) &&
-                    WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_CONSEIL_DE_CLASSE.toString()));
-        }
+        handler.handle(
+                idStructure != null && new FilterUserUtils(user, null).validateStructure(idStructure) &&
+                        WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_CONSEIL_DE_CLASSE.toString())
+        );
     }
 }
