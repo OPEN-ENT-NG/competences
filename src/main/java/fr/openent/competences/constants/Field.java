@@ -65,7 +65,6 @@ public class Field {
 
 
     //fonction
-    public static final String TEACHER = "Teacher";
     public static final String PERSONNEL = "Personnel";
 
 
