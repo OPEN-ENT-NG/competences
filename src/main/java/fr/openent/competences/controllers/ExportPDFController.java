@@ -1564,15 +1564,15 @@ public class ExportPDFController extends ControllerHelper {
                 } else {
                     String idClasse = request.params().get(Field.IDCLASSE);
                     String idEtablissement = request.params().get(Field.IDETABLISSEMENT);
-                    final Integer typeGroupe = Integer.valueOf(request.params().get(Field.TYPEGROUPE));
                     String name = request.params().get(Field.NAME);
 
                     Boolean withMoyGeneraleByEleve = Boolean.valueOf(request.params().get(Field.WITHMOYGENERALEBYELEVE));
                     Boolean withMoyMinMaxByMat = Boolean.valueOf(request.params().get(Field.WITHMOYMINMAXBYMAT));
                     Boolean text = Boolean.parseBoolean(request.params().get(Field.TEXT));
 
-                    Integer idPeriode = null;
+                    Integer typeGroup, idPeriode = null;
                     try {
+                        typeGroup = Integer.parseInt(request.params().get(Field.TYPEGROUPE));
                         if (request.params().contains(Field.IDPERIODE) && request.params().get(Field.IDPERIODE) != null) {
                             idPeriode = Integer.parseInt(request.params().get(Field.IDPERIODE));
                         }
@@ -1657,7 +1657,7 @@ public class ExportPDFController extends ControllerHelper {
 
                     if(idPeriode != null){
                         //in this case, in mapIdMatListMoyByEleve, this average is the average of the periode
-                        noteService.getMoysEleveByMatByPeriode(idClasse, idPeriode, idEtablissement, typeGroupe,
+                        noteService.getMoysEleveByMatByPeriode(idClasse, idPeriode, idEtablissement, typeGroup,
                                 name, mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
                     } else {
                         List<String> listIdClasse = new ArrayList<>();
@@ -1671,7 +1671,7 @@ public class ExportPDFController extends ControllerHelper {
                                 } else{
                                     JsonArray periodes = event.right().getValue();
                                     //in this case, in mapIdMatListMoyByEleve, this average is the average of the year
-                                    noteService.getMoysEleveByMatByYear(idEtablissement, periodes, typeGroupe,
+                                    noteService.getMoysEleveByMatByYear(idEtablissement, periodes, typeGroup,
                                             name, mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
                                 }
                             }

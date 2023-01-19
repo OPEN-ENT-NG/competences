@@ -1986,55 +1986,55 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     JsonArray idClasseGroups = responseQuerry.right().getValue();
                     if ((idClasseGroups == null || idClasseGroups.isEmpty()) && typeGroupe == 0) {
                         handler.handle(new Either.Left<>("idClasseGroups null or empty"));
-                    } else {
-                        JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
-                        final String nameClasse, idClass;
-
-                        if(typeGroupe != 0){
-                            idsGroups.add(idClasse);
-                            nameClasse = name;
-                            idClass = idClasse;
-                        }
-                        else {
-                            idsGroups.add(idClasseGroups.getJsonObject(0).getString(Field.ID_CLASSE));
-                            idsGroups.addAll(idClasseGroups.getJsonObject(0).getJsonArray("id_groupes"));
-                            nameClasse = idClasseGroups.getJsonObject(0).getString("name_classe");
-                            idClass = idClasseGroups.getJsonObject(0).getString(Field.ID_CLASSE);
-                        }
-
-                        //Récupération des Services
-                        Promise<JsonArray> servicesPromise = Promise.promise();
-                        utilsService.getServices(idEtablissement,
-                                idsGroups, FutureHelper.handlerJsonArray(servicesPromise.future()));
-
-                        //Récupération des Multi-teachers
-                        Promise<JsonArray> multiTeachingPromise = Promise.promise();
-                        utilsService.getMultiTeachers(idEtablissement,
-                                idsGroups, idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
-
-                        //Récupération des Sous-Matières
-                        Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idsGroups);
-
-                        CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefFuture)
-                                .setHandler(event -> {
-                                    Structure structure = new Structure();
-                                    structure.setId(idEtablissement);
-                                    JsonArray servicesJson = servicesPromise.future().result();
-                                    JsonArray multiTeachers = multiTeachingPromise.future().result();
-                                    List<SubTopic> subTopics = subTopicCoefFuture.result();
-
-                                    List<Service> services = new ArrayList<>();
-                                    List<MultiTeaching> multiTeachings = new ArrayList<>();
-                                    new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClass);
-                                    setServices(structure, servicesJson, services, subTopics);
-
-
-                                    // 2- On récupère les notes des eleves
-                                    getNotesAndMoyFinaleByClasseAndPeriode(idsEleve, idsGroups, idPeriode, idEtablissement,
-                                            getNotesAndMoyFinaleByClasseAndPeriodeHandler(nameClasse, idClass, handler, servicesJson,
-                                                    multiTeachers, mapAllidMatAndidTeachers, eleves, mapIdMatListMoyByEleve, services));
-                                });
+                        return;
                     }
+                    JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
+                    final String nameClasse, idClass;
+
+                    if(typeGroupe != 0){
+                        idsGroups.add(idClasse);
+                        nameClasse = name;
+                        idClass = idClasse;
+                    }
+                    else {
+                        idsGroups.add(idClasseGroups.getJsonObject(0).getString(Field.ID_CLASSE));
+                        idsGroups.addAll(idClasseGroups.getJsonObject(0).getJsonArray("id_groupes"));
+                        nameClasse = idClasseGroups.getJsonObject(0).getString("name_classe");
+                        idClass = idClasseGroups.getJsonObject(0).getString(Field.ID_CLASSE);
+                    }
+
+                    //Récupération des Services
+                    Promise<JsonArray> servicesPromise = Promise.promise();
+                    utilsService.getServices(idEtablissement,
+                            idsGroups, FutureHelper.handlerJsonArray(servicesPromise.future()));
+
+                    //Récupération des Multi-teachers
+                    Promise<JsonArray> multiTeachingPromise = Promise.promise();
+                    utilsService.getMultiTeachers(idEtablissement,
+                            idsGroups, idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+
+                    //Récupération des Sous-Matières
+                    Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idsGroups);
+
+                    CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefFuture)
+                            .setHandler(event -> {
+                                Structure structure = new Structure();
+                                structure.setId(idEtablissement);
+                                JsonArray servicesJson = servicesPromise.future().result();
+                                JsonArray multiTeachers = multiTeachingPromise.future().result();
+                                List<SubTopic> subTopics = subTopicCoefFuture.result();
+
+                                List<Service> services = new ArrayList<>();
+                                List<MultiTeaching> multiTeachings = new ArrayList<>();
+                                new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClass);
+                                setServices(structure, servicesJson, services, subTopics);
+
+
+                                // 2- On récupère les notes des eleves
+                                getNotesAndMoyFinaleByClasseAndPeriode(idsEleve, idsGroups, idPeriode, idEtablissement,
+                                        getNotesAndMoyFinaleByClasseAndPeriodeHandler(nameClasse, idClass, handler, servicesJson,
+                                                multiTeachers, mapAllidMatAndidTeachers, eleves, mapIdMatListMoyByEleve, services));
+                            });
                 }
             }
         };
