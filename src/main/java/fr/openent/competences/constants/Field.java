@@ -130,6 +130,7 @@ public class Field {
     public static final String RANK = "rank";
     public static final String PERIODE = "periode";
     public static final String NAMECLASSE = "nameClasse";
+    public static final String NAMECLASS = "nameClass";
     //
 
     public static final String ISSKILLAVERAGE = "isSkillAverage";

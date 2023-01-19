@@ -1626,7 +1626,7 @@ public class ExportPDFController extends ControllerHelper {
                                             String libellePeriode = event.right().getValue();
                                             result.put(Field.PERIODE, libellePeriode);
                                             String prefix = result.getJsonArray(Field.ELEVES).getJsonObject(0).getString(Field.NAMECLASSE);
-                                            result.put(Field.NAMECLASSE, prefix);
+                                            result.put(Field.NAMECLASS, prefix);
                                             prefix += "_" + libellePeriode;
                                             prefix = prefix.replaceAll(" ", "_");
                                             setParamsExportMoys(result, withMoyGeneraleByEleve, withMoyMinMaxByMat,
@@ -1637,7 +1637,7 @@ public class ExportPDFController extends ControllerHelper {
                             } else {
                                 result.put(Field.PERIODE, Field.ANNEE);
                                 String prefix = result.getJsonArray(Field.ELEVES).getJsonObject(0).getString(Field.NAMECLASSE);
-                                result.put(Field.NAMECLASSE, prefix);
+                                result.put(Field.NAMECLASS, prefix);
                                 prefix = prefix.replaceAll(" ", "_") + "_" + Field.ANNEE;
                                 setParamsExportMoys(result, withMoyGeneraleByEleve, withMoyMinMaxByMat,
                                         text, request, prefix);
