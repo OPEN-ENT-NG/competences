@@ -1940,8 +1940,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     @Override
-    public void getMoysEleveByMatByPeriode(String idClasse, Integer idPeriode, String idEtablissement,
-                                           SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
+    public void getMoysEleveByMatByPeriode(String idClasse, Integer idPeriode, String idEtablissement, Integer typeGroupe,
+                                           String name, SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
                                            Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
                                            Handler<Either<String,JsonObject>> handler) {
         List<String> idsEleve = new ArrayList();
@@ -1961,7 +1961,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 //on récupère les groups de la classe
                                 Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections.JsonArray().add(idClasse),
                                         getGroupesClasseHandler(eleves, handler, idsEleve, idPeriode,
-                                                idEtablissement, mapAllidMatAndidTeachers, mapIdMatListMoyByEleve));
+                                                idEtablissement, idClasse, typeGroupe, name, mapAllidMatAndidTeachers, mapIdMatListMoyByEleve));
                             }
                         }
                     }
@@ -1972,8 +1972,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private Handler<Either<String, JsonArray>> getGroupesClasseHandler(List<Eleve> eleves,
                                                                        Handler<Either<String, JsonObject>> handler,
                                                                        List<String> idsEleve, Integer idPeriode,
-                                                                       String idEtablissement,
-                                                                       SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
+                                                                       String idEtablissement, String idClasse, Integer typeGroupe,
+                                                                       String name, SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
                                                                        Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve) {
         return new Handler<Either<String, JsonArray>>() {
             @Override
@@ -1984,15 +1984,23 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     handler.handle(new Either.Left<>(error));
                 } else {
                     JsonArray idClasseGroups = responseQuerry.right().getValue();
-                    if (idClasseGroups == null || idClasseGroups.isEmpty()) {
+                    if ((idClasseGroups == null || idClasseGroups.isEmpty()) && typeGroupe == 0) {
                         handler.handle(new Either.Left<>("idClasseGroups null or empty"));
                     } else {
                         JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
+                        final String nameClasse, idClass;
 
-                        idsGroups.add(idClasseGroups.getJsonObject(0).getString(Field.ID_CLASSE));
-                        idsGroups.addAll(idClasseGroups.getJsonObject(0).getJsonArray("id_groupes"));
-                        final String nameClasse = idClasseGroups.getJsonObject(0).getString("name_classe");
-                        final String idClass = idClasseGroups.getJsonObject(0).getString(Field.ID_CLASSE);
+                        if(typeGroupe != 0){
+                            idsGroups.add(idClasse);
+                            nameClasse = name;
+                            idClass = idClasse;
+                        }
+                        else {
+                            idsGroups.add(idClasseGroups.getJsonObject(0).getString(Field.ID_CLASSE));
+                            idsGroups.addAll(idClasseGroups.getJsonObject(0).getJsonArray("id_groupes"));
+                            nameClasse = idClasseGroups.getJsonObject(0).getString("name_classe");
+                            idClass = idClasseGroups.getJsonObject(0).getString(Field.ID_CLASSE);
+                        }
 
                         //Récupération des Services
                         Promise<JsonArray> servicesPromise = Promise.promise();
@@ -2376,7 +2384,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     @Override
-    public void getMoysEleveByMatByYear(String idEtablissement, JsonArray periodes,
+    public void getMoysEleveByMatByYear(String idEtablissement, JsonArray periodes, Integer typeGroupe, String name,
                                         SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
                                         Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
                                         Handler<Either<String, JsonObject>> handler) {
@@ -2388,7 +2396,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonObject periode = periodes.getJsonObject(i);
             Map<String, List<NoteDevoir>> mapIdMatListMoyByEleveByPeriode = new LinkedHashMap<>();
             getMoysEleveByMatByPeriode(periode.getString(Field.ID_CLASSE), periode.getInteger("id_type"), idEtablissement,
-                    mapAllidMatAndidTeachers, mapIdMatListMoyByEleveByPeriode, new Handler<Either<String, JsonObject>>() {
+                    typeGroupe, name, mapAllidMatAndidTeachers, mapIdMatListMoyByEleveByPeriode,
+                    new Handler<Either<String, JsonObject>>() {
                         @Override
                         public void handle(Either<String, JsonObject> event) {
                             if(event.isLeft()){

@@ -1562,17 +1562,19 @@ public class ExportPDFController extends ControllerHelper {
                 if (eventUser == null) {
                     unauthorized(request);
                 } else {
-                    String idClasse = request.params().get("idClasse");
-                    String idEtablissement = request.params().get("idEtablissement");
+                    String idClasse = request.params().get(Field.IDCLASSE);
+                    String idEtablissement = request.params().get(Field.IDETABLISSEMENT);
+                    final Integer typeGroupe = Integer.valueOf(request.params().get(Field.TYPEGROUPE));
+                    String name = request.params().get(Field.NAME);
 
-                    Boolean withMoyGeneraleByEleve = Boolean.valueOf(request.params().get("withMoyGeneraleByEleve"));
-                    Boolean withMoyMinMaxByMat = Boolean.valueOf(request.params().get("withMoyMinMaxByMat"));
-                    Boolean text = Boolean.parseBoolean(request.params().get("text"));
+                    Boolean withMoyGeneraleByEleve = Boolean.valueOf(request.params().get(Field.WITHMOYGENERALEBYELEVE));
+                    Boolean withMoyMinMaxByMat = Boolean.valueOf(request.params().get(Field.WITHMOYMINMAXBYMAT));
+                    Boolean text = Boolean.parseBoolean(request.params().get(Field.TEXT));
 
                     Integer idPeriode = null;
                     try {
-                        if (request.params().contains("idPeriode") && request.params().get("idPeriode") != null) {
-                            idPeriode = Integer.parseInt(request.params().get("idPeriode"));
+                        if (request.params().contains(Field.IDPERIODE) && request.params().get(Field.IDPERIODE) != null) {
+                            idPeriode = Integer.parseInt(request.params().get(Field.IDPERIODE));
                         }
                     } catch (NumberFormatException err) {
                         badRequest(request, err.getMessage());
@@ -1596,23 +1598,23 @@ public class ExportPDFController extends ControllerHelper {
                             JsonObject result = new JsonObject(resultEleves.getMap());
 
                             // Re order moy by rank
-                            for(Object eleve : result.getJsonArray("eleves")){
+                            for(Object eleve : result.getJsonArray(Field.ELEVES)){
                                 JsonObject jsonEleve = (JsonObject) eleve;
                                 JsonArray orderedEleveMoy = new JsonArray();
-                                for(Object eleveMoy : jsonEleve.getJsonArray("eleveMoyByMat")){
+                                for(Object eleveMoy : jsonEleve.getJsonArray(Field.ELEVEMOYBYMAT)){
                                     JsonObject jsonEleveMoy = (JsonObject) eleveMoy;
                                     int rank = 0;
-                                    for(Object matiere : resultMatieres.getJsonArray("matieres")){
+                                    for(Object matiere : resultMatieres.getJsonArray(Field.MATIERES)){
                                         JsonObject jsonMatiere = (JsonObject) matiere;
-                                        if(jsonEleveMoy.getString("id_matiere").equals(jsonMatiere.getString("id"))){
-                                            rank = jsonMatiere.getInteger("rank");
+                                        if(jsonEleveMoy.getString(Field.ID_MATIERE).equals(jsonMatiere.getString(Field.ID))){
+                                            rank = jsonMatiere.getInteger(Field.RANK);
                                             break;
                                         }
                                     }
-                                    jsonEleveMoy.put("rank", rank);
+                                    jsonEleveMoy.put(Field.RANK, rank);
                                     orderedEleveMoy.add(jsonEleveMoy);
                                 }
-                                jsonEleve.put("eleveMoyByMat", Utils.sortJsonArrayIntValue("rank", orderedEleveMoy));
+                                jsonEleve.put(Field.ELEVEMOYBYMAT, Utils.sortJsonArrayIntValue(Field.RANK, orderedEleveMoy));
                             }
                             if(idPeriodeFinal != null) {
                                 Utils.getLibellePeriode(eb, request, idPeriodeFinal, new Handler<Either<String, String>>() {
@@ -1622,9 +1624,9 @@ public class ExportPDFController extends ControllerHelper {
                                             leftToResponse(request, event.left());
                                         } else {
                                             String libellePeriode = event.right().getValue();
-                                            result.put("periode", libellePeriode);
-                                            String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClasse");
-                                            result.put("nameClass", prefix);
+                                            result.put(Field.PERIODE, libellePeriode);
+                                            String prefix = result.getJsonArray(Field.ELEVES).getJsonObject(0).getString(Field.NAMECLASSE);
+                                            result.put(Field.NAMECLASSE, prefix);
                                             prefix += "_" + libellePeriode;
                                             prefix = prefix.replaceAll(" ", "_");
                                             setParamsExportMoys(result, withMoyGeneraleByEleve, withMoyMinMaxByMat,
@@ -1633,10 +1635,10 @@ public class ExportPDFController extends ControllerHelper {
                                     }
                                 });
                             } else {
-                                result.put("periode", "Année");
-                                String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClasse");
-                                result.put("nameClass", prefix);
-                                prefix = prefix.replaceAll(" ", "_") + "_" + "Année";
+                                result.put(Field.PERIODE, Field.ANNEE);
+                                String prefix = result.getJsonArray(Field.ELEVES).getJsonObject(0).getString(Field.NAMECLASSE);
+                                result.put(Field.NAMECLASSE, prefix);
+                                prefix = prefix.replaceAll(" ", "_") + "_" + Field.ANNEE;
                                 setParamsExportMoys(result, withMoyGeneraleByEleve, withMoyMinMaxByMat,
                                         text, request, prefix);
                             }
@@ -1655,8 +1657,8 @@ public class ExportPDFController extends ControllerHelper {
 
                     if(idPeriode != null){
                         //in this case, in mapIdMatListMoyByEleve, this average is the average of the periode
-                        noteService.getMoysEleveByMatByPeriode(idClasse, idPeriode, idEtablissement,
-                                mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
+                        noteService.getMoysEleveByMatByPeriode(idClasse, idPeriode, idEtablissement, typeGroupe,
+                                name, mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
                     } else {
                         List<String> listIdClasse = new ArrayList<>();
                         listIdClasse.add(idClasse);
@@ -1669,8 +1671,8 @@ public class ExportPDFController extends ControllerHelper {
                                 } else{
                                     JsonArray periodes = event.right().getValue();
                                     //in this case, in mapIdMatListMoyByEleve, this average is the average of the year
-                                    noteService.getMoysEleveByMatByYear(idEtablissement, periodes,
-                                            mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
+                                    noteService.getMoysEleveByMatByYear(idEtablissement, periodes, typeGroupe,
+                                            name, mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
                                 }
                             }
                         });
