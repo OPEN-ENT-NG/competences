@@ -387,6 +387,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     url += "/export?withMoyGeneraleByEleve=" + withMoyGeneraleByEleve;
                     url += "&withMoyMinMaxByMat=" + withMoyMinMaxByMat + "&text=" + !textMod;
                     url += "&idEtablissement=" + $scope.structure.id;
+                    url += "&typeGroupe=" + $scope.search.classe.type_groupe;
+                    url += "&name=" + $scope.search.classe.name;
                     if (idPeriode) {
                         url += "&idPeriode=" + idPeriode;
                     }

@@ -119,6 +119,18 @@ public class Field {
     public static final String ORDREPERIODE = "ordrePeriode";
     public static final String LIBELLE = "libelle";
     public static final String ANNEE = "Ann\u00E9e";
+    public static final String TYPEGROUPE = "typeGroupe";
+    public static final String NAME = "name";
+    public static final String WITHMOYGENERALEBYELEVE = "withMoyGeneraleByEleve";
+    public static final String WITHMOYMINMAXBYMAT = "withMoyMinMaxByMat";
+    public static final String TEXT = "text";
+    public static final String ELEVES = "eleves";
+    public static final String ELEVEMOYBYMAT = "eleveMoyByMat";
+    public static final String MATIERES = "matieres";
+    public static final String RANK = "rank";
+    public static final String PERIODE = "periode";
+    public static final String NAMECLASSE = "nameClasse";
+    public static final String NAMECLASS = "nameClass";
     //
 
     public static final String ISSKILLAVERAGE = "isSkillAverage";
