@@ -82,6 +82,4 @@ public class AccessEvaluationFilterTest {
             ctx.assertEquals(false, result);
         });
     }
-
-
 }
