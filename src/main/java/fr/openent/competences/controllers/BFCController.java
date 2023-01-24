@@ -19,10 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
-import fr.openent.competences.security.AccessBFCFilter;
-import fr.openent.competences.security.AccessChildrenParentFilter;
-import fr.openent.competences.security.AccessControleByClassFilter;
-import fr.openent.competences.security.CanUpdateBFCSyntheseRight;
+import fr.openent.competences.security.*;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.openent.competences.utils.ArchiveUtils;
@@ -335,7 +332,8 @@ public class BFCController extends ControllerHelper {
 
     @Get("/ListEnseignementComplement")
     @ApiDoc("Récupère la liste des enseignements ")
-    @SecuredAction(value="",type = ActionType.AUTHENTICATED)
+    @SecuredAction(value="",type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getEnseignementsDeComplement(final  HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override

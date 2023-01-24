@@ -21,6 +21,7 @@
 import {IModel, Model, notify, _} from "entcore";
 import http from "axios";
 import {Mix} from "entcore-toolkit";
+import {evaluations, Structure} from "./teacher";
 export class EnsCpl extends Model  {
     id : number;
     libelle : string;
@@ -33,10 +34,11 @@ export class EnsCpl extends Model  {
 
 export class EnsCpls extends Model implements IModel{
     all : EnsCpl[];
-
-    constructor(){
+    structure : Structure
+    constructor(structure){
         super();
         this.all=[];
+        this.structure = evaluations.structure;
     }
     get api() {
         return {
@@ -46,7 +48,7 @@ export class EnsCpls extends Model implements IModel{
 
     async sync() {
         return new Promise( async (resolve)=> {
-            let { data } = await http.get(this.api.get);
+            let { data } = await http.get(this.api.get + "?idEtablissement=" + this.structure.id);
             this.all = Mix.castArrayAs(EnsCpl, data);
             resolve();
         });
