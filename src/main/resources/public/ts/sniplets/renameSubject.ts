@@ -86,7 +86,7 @@ export const renameSubject = {
 
         deleteModel: async function(model) {
           try{
-              await http.delete(`/competences/matieres/model/${model.id}`);
+              await http.delete(`/competences/matieres/model/${model.id}?idEtablissement=${renameSubject.that.id}`);
               notify.success('evaluations.rename.subject.success.delete.model');
               await this.getSubjects();
           } catch (e) {
