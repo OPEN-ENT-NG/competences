@@ -4,6 +4,7 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.enums.Common;
 import fr.openent.competences.helper.ManageError;
 import fr.openent.competences.model.Subject;
+import fr.openent.competences.security.AccessIfMyStructure;
 import fr.openent.competences.security.AdministratorRight;
 import fr.openent.competences.service.MatiereService;
 import fr.openent.competences.service.impl.DefaultMatiereService;
@@ -99,7 +100,8 @@ public class MatiereController extends ControllerHelper {
 
     @Get("/subjects/short-label/subjects")
     @ApiDoc("Get subjects with sort-labels")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getShortLabetToSubjects(final HttpServerRequest request) {
         try{
             JsonArray idsSubjectPrepared = new JsonArray();
@@ -127,7 +129,8 @@ public class MatiereController extends ControllerHelper {
 
     @Delete("/subjects/:idStructure/id-structure/initialization-rank")
     @ApiDoc("Initialization rank all subjects with id structure")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
     public void initializationRank(final HttpServerRequest request) {
         String idStructure;
         try {
@@ -150,7 +153,8 @@ public class MatiereController extends ControllerHelper {
 
     @Put("/subjects/reshuffle-rank")
     @ApiDoc("Reshuffle the order of subject after drag it one")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
     public void organisationOrderSubject(final HttpServerRequest request) {
 
         RequestUtils.bodyToJson(request, subjectBody -> {
