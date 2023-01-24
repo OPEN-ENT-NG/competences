@@ -54,7 +54,7 @@ public class NiveauDeMaitriseController extends ControllerHelper {
     @Get("/maitrise/level/:idEtablissement")
     @ApiDoc("Recupere tous les niveaux de maitrise d'un établissement")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getMaitriseLevel(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
