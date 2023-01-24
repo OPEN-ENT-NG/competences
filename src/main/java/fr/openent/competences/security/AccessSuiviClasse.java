@@ -21,12 +21,11 @@ public class AccessSuiviClasse implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         final String idStructure = WorkflowActionUtils.getParamStructure(request);
-        String classId = request.params().get(ID_CLASSE_KEY);
         FilterUserUtils filter = new FilterUserUtils(user, null);
-        if (idStructure == null | classId == null){
+        if (idStructure == null){
             handler.handle(false);
         }else{
-            handler.handle(filter.validateStructure(idStructure) && filter.validateClasse(classId) && WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_SUIVI_CLASSE.toString()));
+            handler.handle(filter.validateStructure(idStructure) && WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_SUIVI_CLASSE.toString()));
         }
     }
 }
