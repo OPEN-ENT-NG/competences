@@ -29,9 +29,8 @@ import io.vertx.core.http.HttpServerRequest;
  * Chefs étab et personnes habilités
  */
 public class AdministratorRight implements ResourcesProvider {
-
     @Override
     public void authorize(HttpServerRequest resourceRequest, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        handler.handle(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString()));
+        handler.handle(WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString()));
     }
 }

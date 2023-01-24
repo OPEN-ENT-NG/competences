@@ -18,6 +18,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.SuperAdminFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,8 +40,8 @@ public class MatiereController extends ControllerHelper {
 
     @Post("/matieres/libelle/model/save")
     @ApiDoc("sauvegarde un model de libelle de matiere pour un établissement")
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     public void setModel(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, ressource -> {
             String idStructure = ressource.getString(ID_STRUCTURE_KEY);
@@ -64,7 +65,8 @@ public class MatiereController extends ControllerHelper {
 
     @Get("/matieres/models/:idStructure")
     @ApiDoc("Retourne les models de libellé d'un établissement")
-    @SecuredAction(value = "", type=ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type=ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
     public void getModels(final HttpServerRequest request) {
         String idStructure = request.params().get(ID_STRUCTURE_KEY);
         if(idStructure != null) {
@@ -81,15 +83,16 @@ public class MatiereController extends ControllerHelper {
     }
 
     @Delete("/matieres/model/:id")
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     public void deleteModel(final HttpServerRequest request) {
         matiereService.deleteModeleLibelle(request.params().get("id"), arrayResponseHandler(request));
     }
 
     @Get("/matieres/devoirs/update")
-    @ApiDoc("ont met par défaut une sousMatiere à chaque devoir")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @ApiDoc("on met par défaut une sousMatiere à chaque devoir")
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @ResourceFilter(SuperAdminFilter.class)
     public void updateDevoirs(final HttpServerRequest request) {
         matiereService.updateDevoirs(null, arrayResponseHandler(request));
     }
