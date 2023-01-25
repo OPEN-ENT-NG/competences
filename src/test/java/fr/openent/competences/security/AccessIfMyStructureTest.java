@@ -25,7 +25,7 @@ public class AccessIfMyStructureTest {
     Binding binding;
     MultiMap map;
     List<String> structures;
-    UserInfos user = new UserInfos();
+    UserInfos user;
 
     @Before
     public void setUp() throws NoSuchFieldException {
