@@ -75,7 +75,7 @@ export const renameSubject = {
             try {
                 renameSubject.that.opened.lightboxCreateModel = false;
                 await safeApply(renameSubject.that);
-                await http.post('/competences/matieres/libelle/model/save', this.toJson());
+                await http.post(`/competences/matieres/libelle/model/save?idEtablissement=${renameSubject.that.id}`, this.toJson());
                 notify.success('evaluations.rename.subject.success.save.model');
                 await this.getSubjects();
             } catch (e) {
