@@ -61,7 +61,7 @@ export class NiveauCompetence extends Model {
 
     create(): Promise<any> {
         return new Promise((resolve, reject) => {
-            http().postJson(this.api.POST + `?idEtablissement${this.id_etablissement}`, this.toJson())
+            http().postJson(this.api.POST + `?idEtablissement=${this.id_etablissement}`, this.toJson())
                 .done((data) => {
                     data = data [0];
                     if (!data.hasOwnProperty('id')) {
@@ -103,7 +103,7 @@ export class NiveauCompetence extends Model {
 
     update(): Promise<any> {
         return new Promise((resolve, reject) => {
-            http().putJson(this.api.UPDATE + `?idEtablissement${this.id_etablissement}`, this.toJson())
+            http().putJson(this.api.UPDATE + `?idEtablissement=${this.id_etablissement}`, this.toJson())
                 .done((data) => {
                     if (resolve && typeof resolve === 'function') {
                         resolve();
@@ -119,7 +119,7 @@ export class NiveauCompetence extends Model {
 
     delete(): Promise<any> {
         return new Promise((resolve, reject) => {
-            http().delete(this.api.DELETE + `?idEtablissement${this.id_etablissement}`)
+            http().delete(this.api.DELETE + `?idEtablissement=${this.id_etablissement}`)
                 .done((data) => {
                     if (resolve && typeof resolve === 'function') {
                         resolve();
