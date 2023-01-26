@@ -38,9 +38,10 @@ public enum WorkflowActions {
 	DIGITAL_SKILLS("digital.skills"),
 	ACCESS_CONSEIL_DE_CLASSE("access.conseil.de.classe"),
 	PARAM_SUBTOPICS ("competences.paramSubtopics"),
+	CREATE_AVIS_CONSEIL_BILAN_PERIODIQUE("create.avis.conseil.bilan.periodique"),
+	CAN_UPDATE_NIVEAU_ENS_CPL("can.update.niveau.ens.cpl"),
 	ACCESS_EXPORT_BULLETIN("export.bulletins.periodique"),
-	ACCESS_SUIVI_CLASSE("access.suivi.classe"),
-	CREATE_AVIS_CONSEIL_BILAN_PERIODIQUE("create.avis.conseil.bilan.periodique");
+	ACCESS_SUIVI_CLASSE("access.suivi.classe");
 
 	private final String actionName;
 

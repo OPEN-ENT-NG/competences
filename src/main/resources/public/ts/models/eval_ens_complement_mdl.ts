@@ -35,7 +35,7 @@ export class EnsCpl extends Model  {
 export class EnsCpls extends Model implements IModel{
     all : EnsCpl[];
     structure : Structure
-    constructor(structure){
+    constructor(){
         super();
         this.all=[];
         this.structure = evaluations.structure;
@@ -71,13 +71,15 @@ export class NiveauEnseignementCpl extends Model  {
 export class NiveauEnseignementCpls extends Model {
     all : NiveauEnseignementCpl[];
 
+    structure : Structure;
     constructor(){
         super();
+        this.structure = evaluations.structure;
     }
 
     async sync(){
         return new Promise( async (resolve) => {
-            let {data} = await http.get(`/competences/niveaux/enseignement/complement/list`);
+            let {data} = await http.get(`/competences/niveaux/enseignement/complement/list?idEtablissement=${this.structure.id}`);
             this.all = Mix.castArrayAs(NiveauEnseignementCpl, data);
             resolve();
         });
