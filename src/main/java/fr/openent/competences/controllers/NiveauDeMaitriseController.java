@@ -74,8 +74,7 @@ public class NiveauDeMaitriseController extends ControllerHelper {
 
     @Get("/maitrise/perso/use/:idUser")
     @ApiDoc("Vérifie si un utilisateur utilise la personnification des couleurs de compétence de son établissement")
-    @SecuredAction(value = "", type= ActionType.RESOURCE)
-    @ResourceFilter(AccessIfMyStructure.class)
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     public void getPersoNiveauMaitrise(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -127,8 +126,7 @@ public class NiveauDeMaitriseController extends ControllerHelper {
      */
     @Post("/maitrise/perso/use")
     @ApiDoc("Marquer l'utilisateur comme utilisant la personnification du niveau de maitrise de son établissement")
-    @SecuredAction(value = "", type= ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     public void markUserInUsePerso(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -206,8 +204,7 @@ public class NiveauDeMaitriseController extends ControllerHelper {
      */
     @Delete("/maitrise/perso/use/:idUser")
     @ApiDoc("Permet à un utilisateur de ne plus  utiliser la personnalisation des niveaux de compétences")
-    @SecuredAction(value = "", type= ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     public void deleteUserFromPerso(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
