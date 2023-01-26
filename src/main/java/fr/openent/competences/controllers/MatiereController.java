@@ -6,6 +6,7 @@ import fr.openent.competences.helper.ManageError;
 import fr.openent.competences.model.Subject;
 import fr.openent.competences.security.AccessIfMyStructure;
 import fr.openent.competences.security.AdministratorRight;
+import fr.openent.competences.security.modelbulletinrights.AccessExportModelBulletinStructureId;
 import fr.openent.competences.service.MatiereService;
 import fr.openent.competences.service.impl.DefaultMatiereService;
 import fr.wseduc.rs.*;
@@ -67,7 +68,7 @@ public class MatiereController extends ControllerHelper {
     @Get("/matieres/models/:idStructure")
     @ApiDoc("Retourne les models de libellé d'un établissement")
     @SecuredAction(value = "", type=ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
+    @ResourceFilter(AccessExportModelBulletinStructureId.class)
     public void getModels(final HttpServerRequest request) {
         String idStructure = request.params().get(ID_STRUCTURE_KEY);
         if(idStructure != null) {
