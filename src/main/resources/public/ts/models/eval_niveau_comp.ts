@@ -45,7 +45,7 @@ export class NiveauCompetence extends Model {
             UPDATE: '/competences/maitrise/level/' + this.id,
             DELETE:'/competences/maitrise/level/' + this.id,
             MARK_USER: '/competences/maitrise/perso/use',
-            UNMARK_USER:'/competences56/maitrise/perso/use/' + model.me.userId
+            UNMARK_USER:'/competences/maitrise/perso/use/' + model.me.userId
         };
     }
 
