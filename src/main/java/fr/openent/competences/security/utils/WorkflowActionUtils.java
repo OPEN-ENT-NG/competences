@@ -61,7 +61,7 @@ public class WorkflowActionUtils {
 	}
 
 	public static String getParamStructure(HttpServerRequest request){
-		List<String> structureIdFields = Arrays.asList(Field.ID_STRUCTURE, Field.IDETABLISSEMENT, Field.ID_ETABLISSEMENT, Field.IDSTRUCTURE);
+		List<String> structureIdFields = Arrays.asList(Field.ID_STRUCTURE, Field.IDETABLISSEMENT, Field.ID_ETABLISSEMENT, Field.IDSTRUCTURE, Field.STRUCTUREID);
 		return structureIdFields.stream()
 				.map(structureIdField -> request.params().get(structureIdField))
 				.filter(structureIdField ->  structureIdField != null && !structureIdField.isEmpty())
