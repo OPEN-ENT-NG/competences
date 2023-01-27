@@ -81,7 +81,7 @@ public class AccessSuiviClasseTest {
 
     @Test
     public void testAuthorizeBadRights(TestContext ctx){
-        role1.setDisplayName(WorkflowActions.ACCESS_MODEL_BULLETIN.toString());
+        role1.setDisplayName(WorkflowActions.ACCESS_EXPORT_BULLETIN.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
         map.set("structureId", "aaa123");
