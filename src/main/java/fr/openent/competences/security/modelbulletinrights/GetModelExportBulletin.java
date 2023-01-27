@@ -21,6 +21,6 @@ public class GetModelExportBulletin implements ResourcesProvider {
             return;
         }
 
-        handler.handle(new FilterUserUtils(user,null).validateStructure(structureId) && hasRight(user, WorkflowActions.ACCESS_MODEL_BULLETIN.toString()));
+        handler.handle(new FilterUserUtils(user,null).validateStructure(structureId) && hasRight(user, WorkflowActions.ACCESS_EXPORT_BULLETIN.toString()));
     }
 }

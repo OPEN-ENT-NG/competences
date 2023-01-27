@@ -20,7 +20,7 @@ import static fr.openent.competences.security.utils.WorkflowActionUtils.hasRight
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         // Verify user right export.bulletins.periodique
-        if(!hasRight(user, WorkflowActions.ACCESS_MODEL_BULLETIN.toString())){
+        if(!hasRight(user, WorkflowActions.ACCESS_EXPORT_BULLETIN.toString())){
             handler.handle(false);
             return;
         }

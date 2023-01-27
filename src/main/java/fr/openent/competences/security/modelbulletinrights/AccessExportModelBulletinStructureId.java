@@ -17,7 +17,7 @@ public class AccessExportModelBulletinStructureId implements ResourcesProvider {
         if(structureId == null){
             handler.handle(false);
         } else {
-            handler.handle(user.getStructures().contains(structureId) && hasRight(user, WorkflowActions.ACCESS_MODEL_BULLETIN.toString()));
+            handler.handle(user.getStructures().contains(structureId) && hasRight(user, WorkflowActions.ACCESS_EXPORT_BULLETIN.toString()));
         }
 
     }
