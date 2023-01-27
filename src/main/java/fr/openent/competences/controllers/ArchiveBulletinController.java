@@ -1,5 +1,6 @@
 package fr.openent.competences.controllers;
 
+import fr.openent.competences.security.HasExportLSURight;
 import fr.openent.competences.service.ArchiveService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultArchiveBulletinService;
@@ -28,8 +29,8 @@ public class ArchiveBulletinController extends ControllerHelper {
 
     @Get("/archive-bulletin")
     @ApiDoc("Retourne les archives de bulletins d'un établissement donné.")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    @ResourceFilter(SuperAdminFilter.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(HasExportLSURight.class)
     public void getArchivesBulletins(final HttpServerRequest request) {
         if (request.params().contains("idEtablissement")) {
             String idEtablissement = request.params().get("idEtablissement");
