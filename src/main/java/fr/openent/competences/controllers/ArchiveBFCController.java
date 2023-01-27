@@ -1,5 +1,6 @@
 package fr.openent.competences.controllers;
 
+import fr.openent.competences.security.HasExportLSURight;
 import fr.openent.competences.service.ArchiveService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultArchiveBFCService;
@@ -28,8 +29,8 @@ public class ArchiveBFCController extends ControllerHelper {
 
     @Get("/archive-bfc")
     @ApiDoc("Retourne les archives BFC d'un établissement donné.")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    @ResourceFilter(SuperAdminFilter.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(HasExportLSURight.class)
     public void getArchivesBFC(final HttpServerRequest request) {
         if (request.params().contains("idEtablissement")) {
             String idEtablissement = request.params().get("idEtablissement");
