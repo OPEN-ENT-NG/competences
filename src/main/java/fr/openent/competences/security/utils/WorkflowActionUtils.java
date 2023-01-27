@@ -30,8 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static fr.openent.competences.Competences.ID_STRUCTURE_KEY;
-
 /**
  * Created by ledunoiss on 01/06/2017.
  */
@@ -63,7 +61,7 @@ public class WorkflowActionUtils {
 	}
 
 	public static String getParamStructure(HttpServerRequest request){
-		List<String> structureIdFields = Arrays.asList(Field.ID_STRUCTURE, Field.IDETABLISSEMENT, Field.ID_ETABLISSEMENT, Field.IDSTRUCTURE, Field.STRUCTUREID, ID_STRUCTURE_KEY);
+		List<String> structureIdFields = Arrays.asList(Field.ID_STRUCTURE, Field.IDETABLISSEMENT, Field.ID_ETABLISSEMENT, Field.IDSTRUCTURE, Field.STRUCTUREID);
 		return structureIdFields.stream()
 				.map(structureIdField -> request.params().get(structureIdField))
 				.filter(structureIdField ->  structureIdField != null && !structureIdField.isEmpty())

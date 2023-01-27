@@ -17,6 +17,7 @@
 
 package fr.openent.competences.security;
 
+import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
@@ -29,9 +30,15 @@ import io.vertx.core.http.HttpServerRequest;
  * Chefs étab et personnes habilités
  */
 public class AdministratorRight implements ResourcesProvider {
-
     @Override
     public void authorize(HttpServerRequest resourceRequest, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        handler.handle(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString()));
+        String structureId = WorkflowActionUtils.getParamStructure(resourceRequest);
+        boolean allowViesco = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
+        boolean allowCompetences = WorkflowActionUtils.hasRight(user, WorkflowActions.COMPETENCES_ACCESS.toString());
+        if(structureId == null){
+            handler.handle(false);
+        } else {
+            handler.handle( user.getStructures().contains(structureId) && allowViesco && allowCompetences);
+        }
     }
 }

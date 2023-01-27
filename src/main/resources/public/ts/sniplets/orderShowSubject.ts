@@ -121,7 +121,7 @@ export const orderShowSubject = {
         },
         reshuffleRank: async function ({id}: Subject, indexStart: number, indexEnd): Promise<Boolean> {
             try {
-                let urlUpdateSubjectRank = `${URL_COMPETENCE}/subjects/reshuffle-rank`;
+                let urlUpdateSubjectRank = `${URL_COMPETENCE}/subjects/reshuffle-rank?idEtablissement=${orderShowSubject.that.source.id}`;
 
                 const body = {
                     idStructure: orderShowSubject.that.source.id,

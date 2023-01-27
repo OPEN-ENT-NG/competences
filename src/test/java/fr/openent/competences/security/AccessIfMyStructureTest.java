@@ -18,39 +18,28 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.List;
 
-import static fr.openent.competences.Competences.ID_CLASSE_KEY;
-
 @RunWith(VertxUnitRunner.class)
-public class AccessSuiviClasseTest {
-    AccessSuiviClasse access;
+public class AccessIfMyStructureTest {
+    AccessIfMyStructure access;
     HttpServerRequest request;
     Binding binding;
     MultiMap map;
     List<String> structures;
-    List<String> groupsIds;
-    UserInfos user = new UserInfos();
-    List<UserInfos.Action> actions;
-    UserInfos.Action role1;
+    UserInfos user;
 
     @Before
     public void setUp() throws NoSuchFieldException {
-        access = new AccessSuiviClasse();
+        access = new AccessIfMyStructure();
         request = Mockito.mock(HttpServerRequest.class);
         binding = Mockito.mock(Binding.class);
         map = Mockito.spy(new HeadersAdaptor(new DefaultHttpHeaders()));
         structures = new ArrayList<>();
-        groupsIds = new ArrayList<>();
         user = new UserInfos();
-        actions = new ArrayList<>();
-        role1 = new UserInfos.Action();
     }
 
     @Test
     public void testAuthorize(TestContext ctx){
-        role1.setDisplayName(WorkflowActions.ACCESS_SUIVI_CLASSE.toString());
-        actions.add(role1);
-        user.setAuthorizedActions(actions);
-        map.set("structureId", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
+        map.set("id_structure", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         Mockito.doReturn(map).when(request).params();
         structures.add("9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         user.setStructures(structures);
@@ -63,13 +52,10 @@ public class AccessSuiviClasseTest {
     }
 
     @Test
-    public void testAuthorizeBadStructure(TestContext ctx){
-        role1.setDisplayName(WorkflowActions.ACCESS_SUIVI_CLASSE.toString());
-        actions.add(role1);
-        user.setAuthorizedActions(actions);
-        map.set("structureId", "aaa123");
+    public void testAuthorizeBadStrucure(TestContext ctx){
+        map.set("id_structure", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         Mockito.doReturn(map).when(request).params();
-        structures.add("9af51dc6-ead0-4edb-8978-da14a3e9f49a");
+        structures.add("azerty");
         user.setStructures(structures);
         Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
@@ -78,22 +64,4 @@ public class AccessSuiviClasseTest {
         });
         async.awaitSuccess(10000);
     }
-
-    @Test
-    public void testAuthorizeBadRights(TestContext ctx){
-        role1.setDisplayName(WorkflowActions.ACCESS_EXPORT_BULLETIN.toString());
-        actions.add(role1);
-        user.setAuthorizedActions(actions);
-        map.set("structureId", "aaa123");
-        Mockito.doReturn(map).when(request).params();
-        structures.add("9af51dc6-ead0-4edb-8978-da14a3e9f49a");
-        user.setStructures(structures);
-        Async async = ctx.async();
-        access.authorize(request, binding, user, result -> {
-            ctx.assertEquals(false, result);
-            async.complete();
-        });
-        async.awaitSuccess(10000);
-    }
-
 }
