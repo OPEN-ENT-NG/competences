@@ -75,7 +75,7 @@ export const renameSubject = {
             try {
                 renameSubject.that.opened.lightboxCreateModel = false;
                 await safeApply(renameSubject.that);
-                await http.post('/competences/matieres/libelle/model/save', this.toJson());
+                await http.post(`/competences/matieres/libelle/model/save?idEtablissement=${renameSubject.that.id}`, this.toJson());
                 notify.success('evaluations.rename.subject.success.save.model');
                 await this.getSubjects();
             } catch (e) {
@@ -86,7 +86,7 @@ export const renameSubject = {
 
         deleteModel: async function(model) {
           try{
-              await http.delete(`/competences/matieres/model/${model.id}`);
+              await http.delete(`/competences/matieres/model/${model.id}?idEtablissement=${renameSubject.that.id}`);
               notify.success('evaluations.rename.subject.success.delete.model');
               await this.getSubjects();
           } catch (e) {
