@@ -386,7 +386,8 @@ public class BFCController extends ControllerHelper {
 
     @Post("/CreateNiveauEnsCpl")
     @ApiDoc("crée l'enseignement de complement pour un élève")
-    @SecuredAction(value="",type=ActionType.AUTHENTICATED)
+    @SecuredAction(value="",type=ActionType.RESOURCE)
+    @ResourceFilter(CanUpdateNiveauEnsCpl.class)
     public void createNiveauEnsCpl(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, userInfos -> {
             RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NIVEAUENSCPL_CREATE, data -> {
