@@ -18,10 +18,12 @@
 import {IModel, Model} from "entcore";
 import http from "axios";
 import {Mix} from "entcore-toolkit";
+import {evaluations, Structure} from "./teacher";
 export class LangueCultReg extends Model  {
     id : number;
     libelle : string;
     code : string;
+
 
     constructor(){
         super();
@@ -30,10 +32,11 @@ export class LangueCultReg extends Model  {
 
 export class LanguesCultRegs extends Model implements IModel{
     all : LangueCultReg[];
-
+    structure: Structure;
     constructor(){
         super();
         this.all=[];
+        this.structure = evaluations.structure
     }
     get api() {
         return {
@@ -42,7 +45,7 @@ export class LanguesCultRegs extends Model implements IModel{
     }
 
     async sync() {
-        let { data } = await http.get(this.api.get);
+        let { data } = await http.get(this.api.get + `?idEtablissement=${this.structure.id}`);
         this.all = Mix.castArrayAs(LangueCultReg, data);
     }
 }
