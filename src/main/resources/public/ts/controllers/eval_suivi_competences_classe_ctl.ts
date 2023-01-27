@@ -317,7 +317,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 }
                 case 'printRecapEval' : {
                     let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod
-                        + "&usePerso=" + $scope.structure.usePerso;
+                        + "&usePerso=" + $scope.structure.usePerso + "&structureId=" + $scope.structure.id;
                     if (idPeriode) {
                         url += "&idPeriode=" + idPeriode;
                     }
