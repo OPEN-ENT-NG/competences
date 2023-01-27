@@ -21,7 +21,7 @@ public class PostModelExportBulletin implements ResourcesProvider {
             if (structureId == null) {
                 handler.handle(false);
             }
-            handler.handle(new FilterUserUtils(user,null).validateStructure(structureId) && hasRight(user, WorkflowActions.ACCESS_MODEL_BULLETIN.toString()));
+            handler.handle(new FilterUserUtils(user,null).validateStructure(structureId) && hasRight(user, WorkflowActions.ACCESS_EXPORT_BULLETIN.toString()));
         });
     }
 }
