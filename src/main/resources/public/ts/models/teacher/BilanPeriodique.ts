@@ -221,7 +221,7 @@ export class BilanPeriodique extends  Model {
     }
 
     private async getSubjects(subjectsSent:Array<Matiere>):Promise<any | Error>{
-        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent.join(",")}`);
+        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent.join(",")}&idStructure=${this.structure.id}`);
         if(status === 200) return data;
         throw new Error("getAppraisals");
     }
