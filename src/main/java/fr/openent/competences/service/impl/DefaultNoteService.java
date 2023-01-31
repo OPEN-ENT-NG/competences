@@ -2548,44 +2548,29 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // Récupération des éléments du programme
         Future<JsonObject> elementProgrammeFuture =
                 new DefaultElementProgramme().getElementProgramme(idPeriode, idMatiere, idClasse);
-        /*new DefaultElementProgramme().getElementProgramme(idPeriode, idMatiere, idClasse,
-                event -> formate(elementProgrammeFuture, event));*/
         futures.add(elementProgrammeFuture);
 
         // Récupération des élèves de la classe
-        //Future<JsonArray> studentsClassFuture = Future.future();
         Future<JsonArray> studentsClassFuture;
         if (idEleve == null) {
-           // getStudentClassForExportReleve(idClasse, idPeriode, idEleves, typeClasse, elevesMapObject, studentsClassFuture);
             studentsClassFuture = getStudentClassForExportReleve(idClasse, idPeriode, idEleves, typeClasse, elevesMapObject);
         } else {
-            //studentsClassFuture.complete(new JsonArray().add(idEleve));
             studentsClassFuture = Future.succeededFuture(new JsonArray().add(idEleve));
         }
         futures.add(studentsClassFuture);
 
         // Récupération du  nombre de devoirs avec évaluation numérique
-        //Future<JsonObject> nbEvaluatedHomeWork = Future.future();
-        //getNbEvaluatedHomeWork(idClasse, idMatiere, idPeriode, null, event ->
-               // formate(nbEvaluatedHomeWork, event));
         Future<JsonObject> nbEvaluatedHomeWork = getNbEvaluatedHomeWork(idClasse, idMatiere, idPeriode, null);
         futures.add(nbEvaluatedHomeWork);
 
         // Récupération du tableau de conversion
-        //Future<JsonArray> tableauDeConversionFuture = Future.future();
         // On récupère le tableau de conversion des compétences notes pour Lire le positionnement
-        //competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse, tableauEvent ->
-                //formate(tableauDeConversionFuture, tableauEvent));
         Future<JsonArray> tableauDeConversionFuture = competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse);
         futures.add(tableauDeConversionFuture);
 
         // Récupération de l'appréciation de la classe
-        //Future<JsonArray> appreciationClassFuture = Future.future();
         Future<JsonArray> appreciationClassFuture;
         if (idPeriode != null) {
-            /*new DefaultAppreciationService(COMPETENCES_SCHEMA, APPRECIATIONS_TABLE)
-                    .getAppreciationClasse(new String[]{idClasse}, idPeriode.intValue(), new String[]{idMatiere},
-                            appreciationsEither -> formate(appreciationClassFuture, appreciationsEither));*/
             appreciationClassFuture = new DefaultAppreciationService(COMPETENCES_SCHEMA, APPRECIATIONS_TABLE)
                     .getAppreciationClasse(new String[]{idClasse}, idPeriode.intValue(), new String[]{idMatiere});
         } else {
@@ -2594,9 +2579,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         futures.add(appreciationClassFuture);
 
         // Récupération des sousMatieres
-        /*Future<JsonArray> sousMatiereFuture = Future.future();
-        new DefaultMatiereService().getSousMatieres(idMatiere, idEtablissement, event ->
-                formate(sousMatiereFuture, event));*/
         Future<JsonArray> sousMatiereFuture = new DefaultMatiereService().getUnderSubjects(idMatiere, idEtablissement);
         futures.add(sousMatiereFuture);
 

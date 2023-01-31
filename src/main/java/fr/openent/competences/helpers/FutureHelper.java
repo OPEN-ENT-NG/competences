@@ -1,6 +1,7 @@
 package fr.openent.competences.helpers;
 
 
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
@@ -81,11 +82,11 @@ public class FutureHelper {
                                                                                  String logs) {
         return handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray result = body.getJsonArray(RESULTS);
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                JsonArray result = body.getJsonArray(Field.RESULTS);
                 promiseMultiTeachers.complete(result);
             } else {
-                promiseMultiTeachers.fail(logs != null ? logs : "" + body.getString("message"));
+                promiseMultiTeachers.fail(logs != null ? logs : "" + body.getString(Field.MESSAGE));
             }
         });
     }
