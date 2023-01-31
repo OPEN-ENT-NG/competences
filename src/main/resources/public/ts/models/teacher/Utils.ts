@@ -864,7 +864,7 @@ export class Utils {
                 return;
             }
             try {
-                let data = await http.post(url, param,{responseType: 'arraybuffer'});
+                let data = await http.post(url + `?idStructure=${param.idStructure}`, param,{responseType: 'arraybuffer'});
 
                 let blob = new Blob([data.data]);
                 let link = document.createElement('a');
