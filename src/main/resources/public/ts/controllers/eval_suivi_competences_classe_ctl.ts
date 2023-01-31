@@ -587,7 +587,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         const getPdfPositioning = async ():Promise<void> => {
             urlPdf = `/competences/recapEval/print/${$scope.search.classe.id}/export?text=false&usePerso=${$scope.structure.usePerso}`;
             if ($scope.search.periode.id_type) {
-                urlPdf += `&idPeriode=${$scope.search.periode.id_type}`;
+                urlPdf += `&idPeriode=${$scope.search.periode.id_type}&structureId=${$scope.structure.id}`;
             }
             $scope.urlPdfSrc = urlPdf;
             $scope.contentIframe = await utils.getIframeFromPdfDownload(urlPdf, $sce);
