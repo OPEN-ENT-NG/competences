@@ -30,6 +30,7 @@ import io.vertx.core.http.HttpServerRequest;
  * Chefs étab et personnes habilités
  */
 public class AdministratorRight implements ResourcesProvider {
+
     @Override
     public void authorize(HttpServerRequest resourceRequest, Binding binding, UserInfos user, Handler<Boolean> handler) {
         String structureId = WorkflowActionUtils.getParamStructure(resourceRequest);
