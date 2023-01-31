@@ -1,11 +1,13 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.Subject;
 import fr.openent.competences.service.MatiereService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 
@@ -353,6 +355,21 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         JsonArray params = new JsonArray().add(idMatiere).add(idStructure);
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
+
+    public Future<JsonArray> getUnderSubjects(String idMatiere, String idStructure) {
+        Promise<JsonArray> underSubjectPromise = Promise.promise();
+        String query = " SELECT id_type_sousmatiere as id_sousmatiere, id_matiere , libelle " +
+                " FROM " + underSubjectTable + "  INNER JOIN " + typeUnderSubjectTable +
+                " ON id_type_sousmatiere = type_sousmatiere.id " +
+                " WHERE id_matiere = ? AND id_structure = ?";
+
+        JsonArray params = new JsonArray().add(idMatiere).add(idStructure);
+        sql.prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(underSubjectPromise,
+                "[DefaultMatiereService] : getUnderSubjects ")));
+
+        return underSubjectPromise.future();
+    }
+
 
     public void getMatieresEtab(String idEtablissement, Handler<Either<String, JsonArray>> handler) {
         //vu qu on use pas le user peut être appeller un autre fonction de viesco?

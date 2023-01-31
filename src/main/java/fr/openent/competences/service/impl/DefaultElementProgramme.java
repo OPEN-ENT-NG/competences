@@ -18,8 +18,11 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.service.ElementProgramme;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.DeliveryOptions;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -68,6 +71,26 @@ public class DefaultElementProgramme implements ElementProgramme {
         values.add(idMatiere);
 
         sql.prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    public Future<JsonObject> getElementProgramme(Long idPeriode, String idMatiere, String idClasse){
+        Promise<JsonObject> promiseElementProgramme = Promise.promise();
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        query.append("SELECT * ")
+                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".element_programme ")
+                .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_classe = ? ")
+                .append("AND "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_periode = ? ")
+                .append("AND "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_matiere = ? ");
+
+        values.add(idClasse);
+        values.add(idPeriode);
+        values.add(idMatiere);
+        sql.prepared(query.toString(), values,
+                SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promiseElementProgramme, "[DefaultElementProgramme] : getElementProgramme :")));
+
+        return promiseElementProgramme.future();
     }
 
     @Override

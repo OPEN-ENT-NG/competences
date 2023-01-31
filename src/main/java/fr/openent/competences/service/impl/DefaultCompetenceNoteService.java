@@ -19,7 +19,10 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -342,6 +345,31 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         values.add(idEtablissement);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
+
+    public Future<JsonArray> getConversionNoteCompetence(String idEtablissement, String idClasse) {
+
+        Promise<JsonArray> conversionTable = Promise.promise();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        StringBuilder query = new StringBuilder()
+                .append("SELECT valmin, valmax, coalesce(perso.libelle, niv.libelle) as libelle, ordre, niv.couleur, bareme_brevet ")
+                .append("FROM notes.niveau_competences AS niv ")
+                .append("INNER JOIN  ").append(schema).append("echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau ")
+                .append("INNER JOIN  ").append(schema).append("rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle ")
+                .append("AND cc.id_groupe = ? ")
+                .append("AND echelle.id_structure = ? ")
+                .append("LEFT JOIN (SELECT * FROM ").append(schema).append("perso_niveau_competences ")
+                .append("WHERE id_etablissement = ?) AS perso ON (perso.id_niveau = niv.id) ")
+                .append("ORDER BY  ordre DESC");
+        values.add(idClasse);
+        values.add(idEtablissement);
+        values.add(idEtablissement);
+        Sql.getInstance().prepared(query.toString(), values,
+                SqlResult.validResultHandler(FutureHelper.handlerJsonArray(conversionTable,
+                        "[DefaultCompetenceNoteService] : getConversionNoteCompetence")));
+
+        return conversionTable.future();
+    }
+
 
     @Override
     public void getConversionTableByClass(String idEtablissement, List<String> idsClasses, Boolean hasClassList, Handler<Either<String, JsonArray>> handler) {

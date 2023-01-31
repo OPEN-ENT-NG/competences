@@ -2,10 +2,8 @@ package fr.openent.competences.helpers;
 
 
 import fr.wseduc.webutils.Either;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
+import io.vertx.core.*;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.impl.CompositeFutureImpl;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -13,6 +11,9 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.util.List;
+
+import static fr.openent.competences.Competences.*;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class FutureHelper {
 
@@ -54,6 +55,16 @@ public class FutureHelper {
         };
     }
 
+    public static Handler<Either<String, JsonObject>> handlerJsonObject(Promise<JsonObject> promise, String logsInfo) {
+        return event -> {
+            if (event.isRight()) {
+                promise.complete(event.right().getValue());
+            } else {
+                LOGGER.error( String.format("%s %s",logsInfo != null ? logsInfo : "", event.left().getValue()));
+                promise.fail(event.left().getValue());
+            }
+        };
+    }
     public static Handler<Either<String, JsonArray>> handlerJsonArray(Promise<JsonArray> promise, String logs) {
         return event -> {
             if (event.isRight()) {
@@ -64,6 +75,19 @@ public class FutureHelper {
                 promise.fail(event.left().getValue());
             }
         };
+    }
+
+    public static Handler<AsyncResult<Message<JsonObject>>> getMessageJsonArray (Promise<JsonArray> promiseMultiTeachers,
+                                                                                 String logs) {
+        return handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray result = body.getJsonArray(RESULTS);
+                promiseMultiTeachers.complete(result);
+            } else {
+                promiseMultiTeachers.fail(logs != null ? logs : "" + body.getString("message"));
+            }
+        });
     }
 
     public static <T> CompositeFuture all(List<Future<T>> futures) {
