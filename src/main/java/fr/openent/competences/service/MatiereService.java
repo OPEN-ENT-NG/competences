@@ -50,11 +50,11 @@ public interface MatiereService extends CrudService {
 
      /**
       * get underSubject for one struture and one subject
-      * @param idMatiere
-      * @param idStructure
-      * @return future
+      * @param subjectId subject Id
+      * @param structureId  structure id
+      * @return future contains response
       */
-     Future<JsonArray> getUnderSubjects(String idMatiere, String idStructure);
+     Future<JsonArray> getUnderSubjects(String subjectId, String structureId);
 
      /**
       * Récupération des Matières de l'établissement

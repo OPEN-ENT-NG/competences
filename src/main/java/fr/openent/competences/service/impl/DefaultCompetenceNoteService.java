@@ -346,26 +346,13 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
-    public Future<JsonArray> getConversionNoteCompetence(String idEtablissement, String idClasse) {
+    public Future<JsonArray> getConversionNoteCompetence(String structureId, String classId) {
 
         Promise<JsonArray> conversionTable = Promise.promise();
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        StringBuilder query = new StringBuilder()
-                .append("SELECT valmin, valmax, coalesce(perso.libelle, niv.libelle) as libelle, ordre, niv.couleur, bareme_brevet ")
-                .append("FROM notes.niveau_competences AS niv ")
-                .append("INNER JOIN  ").append(schema).append("echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau ")
-                .append("INNER JOIN  ").append(schema).append("rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle ")
-                .append("AND cc.id_groupe = ? ")
-                .append("AND echelle.id_structure = ? ")
-                .append("LEFT JOIN (SELECT * FROM ").append(schema).append("perso_niveau_competences ")
-                .append("WHERE id_etablissement = ?) AS perso ON (perso.id_niveau = niv.id) ")
-                .append("ORDER BY  ordre DESC");
-        values.add(idClasse);
-        values.add(idEtablissement);
-        values.add(idEtablissement);
-        Sql.getInstance().prepared(query.toString(), values,
-                SqlResult.validResultHandler(FutureHelper.handlerJsonArray(conversionTable,
-                        "[DefaultCompetenceNoteService] : getConversionNoteCompetence")));
+        getConversionNoteCompetence(structureId, classId,
+                FutureHelper.handlerJsonArray(conversionTable, String.format (
+                        "[Comptences@%s :: DefaultCompetenceNoteService] : getConversionNoteCompetence : error during resquest %s.",
+                        this.getClass().getSimpleName(), " ")));
 
         return conversionTable.future();
     }

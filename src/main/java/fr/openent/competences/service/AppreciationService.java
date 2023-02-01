@@ -18,6 +18,7 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -71,4 +72,13 @@ public interface AppreciationService extends CrudService {
      * @param handler handler portant le résultat de la requête
      */
     void getAppreciationClasse(String[] id_classes, Integer id_periode, String[] id_matieres, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     *
+     * @param classIds class
+     * @param periodId
+     * @param subjectsIds
+     * @return results on Future
+     */
+    Future<JsonArray> getAppreciationClass(String[] classIds, Integer periodId, String[] subjectsIds);
 }

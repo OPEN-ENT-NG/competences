@@ -73,22 +73,13 @@ public class DefaultElementProgramme implements ElementProgramme {
         sql.prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
     }
 
-    public Future<JsonObject> getElementProgramme(Long idPeriode, String idMatiere, String idClasse){
+    public Future<JsonObject> getElementProgramme(Long periodeId, String subjectId, String classId){
+
         Promise<JsonObject> promiseElementProgramme = Promise.promise();
-        StringBuilder query = new StringBuilder();
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-
-        query.append("SELECT * ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".element_programme ")
-                .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_classe = ? ")
-                .append("AND "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_periode = ? ")
-                .append("AND "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_matiere = ? ");
-
-        values.add(idClasse);
-        values.add(idPeriode);
-        values.add(idMatiere);
-        sql.prepared(query.toString(), values,
-                SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promiseElementProgramme, "[DefaultElementProgramme] : getElementProgramme :")));
+        getElementProgramme(periodeId, subjectId, classId,
+                FutureHelper.handlerJsonObject(promiseElementProgramme,
+                        String.format("[Competences@%s::getElementProgramme] Error during sql request: %s.",
+        this.getClass().getSimpleName(), " ")));
 
         return promiseElementProgramme.future();
     }
