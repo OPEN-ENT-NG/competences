@@ -194,12 +194,9 @@ public class DefaultUtilsService implements UtilsService {
 
     public Future<JsonArray> getAllMultiTeachers(final String structureId, final JsonArray groupIds){
         Promise<JsonArray> promiseMultiTeachers = Promise.promise();
-        JsonObject action = new JsonObject()
-                .put("action", "multiTeaching.getAllMultiteachers")
-                .put("structureId", structureId)
-                .put("groupIds", groupIds);
-        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
-                FutureHelper.getMessageJsonArray(promiseMultiTeachers, "[DefaultUtilsService] : getAllMultiteachers : "));
+        getAllMultiTeachers(structureId, groupIds, FutureHelper.handlerJsonArray(promiseMultiTeachers,
+              String.format("[Competences@%s::getAllMultiTeachers] Error during sql request: ",
+                      this.getClass().getSimpleName())));
         return promiseMultiTeachers.future();
     }
 

@@ -125,35 +125,14 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
         Sql.getInstance().prepared(params ? query.substring(0, query.length() - 5) : query, values, validResultHandler(handler));
     }
 
-    public Future<JsonArray> getAppreciationClasse(String[] id_classes, Integer id_periode, String[] id_matieres) {
+    public Future<JsonArray> getAppreciationClass(String[] classIds, Integer periodId, String[] subjectsIds) {
         Promise<JsonArray> classAppreciationPromise = Promise.promise();
-        Boolean params = (id_classes != null && id_classes.length > 0) || (id_matieres != null && id_matieres.length > 0) || id_periode != null;
 
-        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_classe  ";
-        JsonArray values = new JsonArray();
+        getAppreciationClasse (classIds, periodId, subjectsIds,
+                FutureHelper.handlerJsonArray(classAppreciationPromise,
+                        String.format( "[Competences@%s :: getAppreciationClass] Error during SQL request :  ",
+                                this.getClass().getSimpleName())));
 
-        if(params) {
-            query += "WHERE ";
-
-            if(id_periode != null) {
-                query += "id_periode = ? AND ";
-                values.add(id_periode);
-            }
-
-            if (id_classes != null && id_classes.length > 0) {
-                query += "id_classe IN " + Sql.listPrepared(id_classes) + " AND ";
-                Arrays.stream(id_classes).forEach(values::add);
-            }
-
-            if (id_matieres != null && id_matieres.length > 0) {
-                query += "id_matiere IN " + Sql.listPrepared(id_matieres) + " AND ";
-                Arrays.stream(id_matieres).forEach(values::add);
-            }
-        }
-
-        Sql.getInstance().prepared(params ? query.substring(0, query.length() - 5) : query, values,
-                validResultHandler(FutureHelper.handlerJsonArray(classAppreciationPromise,
-                        "[DefaultAppreciationService] getAppreciationClasse : ")));
         return classAppreciationPromise.future();
     }
 

@@ -356,17 +356,11 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
-    public Future<JsonArray> getUnderSubjects(String idMatiere, String idStructure) {
+    public Future<JsonArray> getUnderSubjects(String subjectId, String strutureId) {
         Promise<JsonArray> underSubjectPromise = Promise.promise();
-        String query = " SELECT id_type_sousmatiere as id_sousmatiere, id_matiere , libelle " +
-                " FROM " + underSubjectTable + "  INNER JOIN " + typeUnderSubjectTable +
-                " ON id_type_sousmatiere = type_sousmatiere.id " +
-                " WHERE id_matiere = ? AND id_structure = ?";
-
-        JsonArray params = new JsonArray().add(idMatiere).add(idStructure);
-        sql.prepared(query, params, SqlResult.validResultHandler(FutureHelper.handlerJsonArray(underSubjectPromise,
-                "[DefaultMatiereService] : getUnderSubjects ")));
-
+        getSousMatieres(subjectId, strutureId, FutureHelper.handlerJsonArray(underSubjectPromise,
+                String.format("[Competences@%s::getUnderSubjects] Error during sql request: ",
+                        this.getClass().getSimpleName())));
         return underSubjectPromise.future();
     }
 

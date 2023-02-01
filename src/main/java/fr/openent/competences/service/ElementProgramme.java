@@ -47,12 +47,13 @@ public interface ElementProgramme {
 
     /**
      * Récupère un élément du programme
-     * @param idPeriode
-     * @param idMatiere
-     * @param idClasse
+     * @param periodeId period id
+     * @param subjectId subject id
+     * @param classId class id
      * @return Future
      */
-    Future<JsonObject> getElementProgramme(Long idPeriode, String idMatiere, String idClasse);
+    Future<JsonObject> getElementProgramme(Long periodeId, String subjectId, String classId);
+
     /**
      * Get element Programme for many class
      * @param idPeriode

@@ -2572,7 +2572,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         Future<JsonArray> appreciationClassFuture;
         if (idPeriode != null) {
             appreciationClassFuture = new DefaultAppreciationService(COMPETENCES_SCHEMA, APPRECIATIONS_TABLE)
-                    .getAppreciationClasse(new String[]{idClasse}, idPeriode.intValue(), new String[]{idMatiere});
+                    .getAppreciationClass(new String[]{idClasse}, idPeriode.intValue(), new String[]{idMatiere});
         } else {
             appreciationClassFuture = Future.succeededFuture(new JsonArray());
         }
@@ -3627,32 +3627,21 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 });
     }
 
-    private Future <JsonArray> getStudentClassForExportReleve(String idClasse, Long idPeriode, JsonArray idEleves, Integer typeClasse,
-                                                Map<String, JsonObject> eleveMapObject){
+    private Future <JsonArray> getStudentClassForExportReleve(String classId, Long periodId, JsonArray studentsIds, Integer typeClass,
+                                                Map<String, JsonObject> studentMapObject){
         Promise<JsonArray> promiseStudents = Promise.promise();
-        new DefaultUtilsService(this.eb).studentAvailableForPeriode(idClasse, idPeriode, typeClasse,
-                message -> {
-                    JsonObject body = message.body();
-                    if ("ok".equals(body.getString("status"))) {
-                        JsonArray eleves = body.getJsonArray("results");
-                        eleves = Utils.sortElevesByDisplayName(eleves);
-                        for (int i = 0; i < eleves.size(); i++) {
-                            JsonObject eleve = eleves.getJsonObject(i);
-                            String idEleve = eleve.getString("id");
-                            idEleves.add(idEleve);
-                            eleve.put(CLASSE_NAME_KEY, eleve.getString("level"));
-                            eleve.put(NAME, eleve.getString(LAST_NAME_KEY));
-                            eleve.put(DISPLAY_NAME_KEY, eleve.getString(LAST_NAME_KEY) + " "
-                                    + eleve.getString(FIRST_NAME_KEY));
-                            eleveMapObject.put(idEleve, eleve);
-                        }
-                        promiseStudents.complete(eleves);
-                    }
-                    else {
-                        promiseStudents.fail("[getStudentClassForExportReleve] " +
-                                ": Error while getting students ");
-                    }
+        Promise<JsonArray> promiseStudentsClass = Promise.promise();
+        getStudentClassForExportReleve(classId, periodId, studentsIds, typeClass,studentMapObject, promiseStudentsClass.future());
+
+        promiseStudentsClass.future()
+                .onSuccess(promiseStudents::complete)
+                .onFailure( error -> {
+                    log.error(String.format("[Competences@%s::getStudentClassForExportReleve] Error during request : %s.",
+                            this.getClass().getSimpleName(), error.getMessage()));
+
+                    promiseStudents.fail(error.getMessage());
                 });
+
         return promiseStudents.future();
     }
 
@@ -4006,39 +3995,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         Sql.getInstance().prepared(query.toString(), values, validUniqueResultHandler(handler));
     }
 
-    private Future<JsonObject> getNbEvaluatedHomeWork(String idClasse, String idMatiere, Long idPeriode, JsonArray idsGroup) {
+    private Future<JsonObject> getNbEvaluatedHomeWork(String classId, String subjectId, Long periodId, JsonArray groupId) {
         Promise<JsonObject> nbDevoisPromise = Promise.promise();
+        getNbEvaluatedHomeWork(classId,subjectId,periodId,groupId, FutureHelper.handlerJsonObject(nbDevoisPromise,
+                String.format("[Competences@%s::getNbEvaluatedHomeWork] Error during sql request: ",
+                        this.getClass().getSimpleName())));
 
-        StringBuilder query = new StringBuilder();
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        //tables
-        String table_devoirs         = COMPETENCES_SCHEMA + "." +Competences.DEVOIR_TABLE;
-        String table_rel_devoir_groupes  = COMPETENCES_SCHEMA + "." +Competences.REL_DEVOIRS_GROUPES;
-
-
-        query.append("SELECT COUNT(*) AS nb  ")
-                .append(" FROM  ")
-                .append(table_devoirs)
-                .append(" INNER JOIN ")
-                .append(table_rel_devoir_groupes).append(" ON id_devoir = id   AND ")
-                .append((null != idsGroup) ? "id_groupe IN " + Sql.listPrepared(idsGroup.getList()) : "id_groupe = ?")
-                .append(" AND id_matiere = ? AND is_evaluated = true ")
-                .append((idPeriode!=null)? " AND id_periode = ? " : " ");
-
-        if(idsGroup != null)
-            for (int i = 0; i < idsGroup.size(); i++) {
-                values.add(idsGroup.getString(i));
-            }
-        else
-            values.add(idClasse);
-        values.add(idMatiere);
-        if( idPeriode != null) {
-            values.add(idPeriode);
-        }
-
-        Sql.getInstance().prepared(query.toString(), values,
-                validUniqueResultHandler(FutureHelper.handlerJsonObject(nbDevoisPromise,
-                        "[DefaultNoteService] getNbEvaluatedHomeWork : " )));
         return nbDevoisPromise.future();
     }
 

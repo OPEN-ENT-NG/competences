@@ -147,11 +147,11 @@ public interface CompetenceNoteService extends CrudService {
 
     /**
      *  Récupère la table de correspendance entre (Moyenne Note - Evaluation competence) d'un cycle et etablissment donné
-     * @param idEtablissement
-     * @param idClasse
+     * @param structureId  structure Id
+     * @param classId class Id
      * @return Future
      */
-    Future<JsonArray> getConversionNoteCompetence(String idEtablissement, String idClasse);
+    Future<JsonArray> getConversionNoteCompetence(String structureId, String classId);
 
     /**
      *  Récupère la table de correspendance entre (Moyenne Note - Evaluation competence) d'un cycle et etablissment donné et d'une liste de classe
