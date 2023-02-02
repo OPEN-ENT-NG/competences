@@ -656,7 +656,8 @@ public class NoteController extends ControllerHelper {
 
     @Get("/releve/export/checkDevoirs")
     @ApiDoc("Vérifie s'il y a des devoirs dans la matière")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void exportCheckDevoirs(final HttpServerRequest request) {
         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
         String idEtablissement = request.params().get("idEtablissement");
@@ -1247,7 +1248,8 @@ public class NoteController extends ControllerHelper {
 
     @Post("/notes/:typeImportService/csv/exercizer/import/classes/:classId/devoirs/:devoirId/:classType/periods/:periodeId")
     @ApiDoc("Set notes of a devoir by importing a CSV.")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessEvaluationFilter.class)
     public void importExercizerCSV(final HttpServerRequest request) {
         // typeImport
         final String idClasse = request.params().get(Field.CLASSID);
