@@ -316,9 +316,15 @@ public class NoteController extends ControllerHelper {
         });
     }
 
+
+    /**
+     * @param request
+     * @queryParam {structureId} mandatory
+     */
     @Post("/releve/exportTotale")
     @ApiDoc("Exporte un relevé périodique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessSuiviClasse.class)
     public void exportTotaleRelevePeriodique(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, param -> {
             JsonArray idPeriodes = param.getJsonArray("idPeriodes");
