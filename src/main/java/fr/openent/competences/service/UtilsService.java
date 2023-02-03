@@ -62,6 +62,14 @@ public interface UtilsService {
 
     void getAllMultiTeachers(String structureId, JsonArray groupIds, Handler<Either<String, JsonArray>> handler);
 
+    /**
+     *
+     * @param structureId String id of Structure
+     * @param groupIds JsonArray Ids of groups/classes
+     * @return Future JsonArray allMultiTeachers
+     */
+    Future <JsonArray> getAllMultiTeachers(final String structureId, final JsonArray groupIds);
+
     void getServices(final String idEtablissement, final JsonArray idClasse, Handler<Either<String, JsonArray>> handler);
 
     void getDefaultServices(final String structureId, final JsonArray groupIds, Handler<Either<String,JsonArray>> handler);

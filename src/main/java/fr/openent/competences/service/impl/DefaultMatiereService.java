@@ -1,11 +1,13 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.Subject;
 import fr.openent.competences.service.MatiereService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 
@@ -353,6 +355,15 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         JsonArray params = new JsonArray().add(idMatiere).add(idStructure);
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
+
+    public Future<JsonArray> getUnderSubjects(String subjectId, String strutureId) {
+        Promise<JsonArray> underSubjectPromise = Promise.promise();
+        getSousMatieres(subjectId, strutureId, FutureHelper.handlerJsonArray(underSubjectPromise,
+                String.format("[Competences@%s::getUnderSubjects] Error during sql request: ",
+                        this.getClass().getSimpleName())));
+        return underSubjectPromise.future();
+    }
+
 
     public void getMatieresEtab(String idEtablissement, Handler<Either<String, JsonArray>> handler) {
         //vu qu on use pas le user peut être appeller un autre fonction de viesco?

@@ -3,6 +3,7 @@ package fr.openent.competences.service;
 import fr.openent.competences.model.Subject;
 import fr.wseduc.webutils.Either;
 
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.service.CrudService;
@@ -46,6 +47,14 @@ public interface MatiereService extends CrudService {
       * @param handler
       */
      void getSousMatieres(String idMatiere, String idStructure, Handler<Either<String, JsonArray>> handler);
+
+     /**
+      * get underSubject for one struture and one subject
+      * @param subjectId subject Id
+      * @param structureId  structure id
+      * @return future contains response
+      */
+     Future<JsonArray> getUnderSubjects(String subjectId, String structureId);
 
      /**
       * Récupération des Matières de l'établissement

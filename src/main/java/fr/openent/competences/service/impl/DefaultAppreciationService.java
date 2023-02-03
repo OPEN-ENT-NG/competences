@@ -18,7 +18,10 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -120,6 +123,17 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
         }
 
         Sql.getInstance().prepared(params ? query.substring(0, query.length() - 5) : query, values, validResultHandler(handler));
+    }
+
+    public Future<JsonArray> getAppreciationClass(String[] classIds, Integer periodId, String[] subjectsIds) {
+        Promise<JsonArray> classAppreciationPromise = Promise.promise();
+
+        getAppreciationClasse (classIds, periodId, subjectsIds,
+                FutureHelper.handlerJsonArray(classAppreciationPromise,
+                        String.format( "[Competences@%s :: getAppreciationClass] Error during SQL request :  ",
+                                this.getClass().getSimpleName())));
+
+        return classAppreciationPromise.future();
     }
 
 }
