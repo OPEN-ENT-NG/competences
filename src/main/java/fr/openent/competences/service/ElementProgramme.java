@@ -18,6 +18,7 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -43,6 +44,15 @@ public interface ElementProgramme {
      * @param handler
      */
     void getElementProgramme(Long idPeriode, String idMatiere, String idClasse, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Récupère un élément du programme
+     * @param periodeId period id
+     * @param subjectId subject id
+     * @param classId class id
+     * @return Future
+     */
+    Future<JsonObject> getElementProgramme(Long periodeId, String subjectId, String classId);
 
     /**
      * Get element Programme for many class

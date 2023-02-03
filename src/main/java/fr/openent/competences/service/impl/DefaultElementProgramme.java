@@ -18,8 +18,11 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.service.ElementProgramme;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.DeliveryOptions;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -68,6 +71,17 @@ public class DefaultElementProgramme implements ElementProgramme {
         values.add(idMatiere);
 
         sql.prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    public Future<JsonObject> getElementProgramme(Long periodeId, String subjectId, String classId){
+
+        Promise<JsonObject> promiseElementProgramme = Promise.promise();
+        getElementProgramme(periodeId, subjectId, classId,
+                FutureHelper.handlerJsonObject(promiseElementProgramme,
+                        String.format("[Competences@%s::getElementProgramme] Error during sql request : ",
+        this.getClass().getSimpleName())));
+
+        return promiseElementProgramme.future();
     }
 
     @Override
