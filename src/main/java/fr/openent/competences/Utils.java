@@ -18,6 +18,7 @@
 package fr.openent.competences;
 
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.MatiereService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultMatiereService;
@@ -25,10 +26,7 @@ import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -106,14 +104,15 @@ public class Utils {
      * retourne une classe avec ses groups (ids)
      *
      * @param eb         eventbus
-     * @param idsClasses array une clase
+     * @param classesIds array une clase
      * @param handler    response l'id de classe avec ses groups s'ils existent sinon retourne que id de la classe
      */
-    public static void getGroupesClasse(EventBus eb, final JsonArray idsClasses,
+    public static void getGroupesClasse(EventBus eb, final JsonArray classesIds,
                                         final Handler<Either<String, JsonArray>> handler) {
+
         JsonObject action = new JsonObject()
-                .put(ACTION, "classe.getGroupesClasse")
-                .put("idClasses", idsClasses);
+                .put(ACTION, "classe.getEvaluableGroupsClasses")
+                .put("id_classes", classesIds);
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
@@ -121,8 +120,11 @@ public class Utils {
                 JsonArray queryResult = body.getJsonArray(RESULTS);
                 handler.handle(new Either.Right<>(queryResult));
             } else {
-                handler.handle(new Either.Left<>(body.getString("message")));
-                log.error("getGroupesClasse : " + body.getString("message"));
+                log.error(String.format("[Competences@%s::getEvaluableGroupsClass] error neo resquest %s",
+                        "Utils",
+                        body.getString(Field.MESSAGE)));
+                handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
+
             }
         }));
     }
