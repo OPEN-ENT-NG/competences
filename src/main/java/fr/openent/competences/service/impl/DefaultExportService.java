@@ -1140,6 +1140,115 @@ public class DefaultExportService implements ExportService {
         return result;
     }
 
+
+    private JsonObject formatJsonObjectExportReleve(Boolean text, Boolean usePerso,
+                                                        String idEleve, Map<String, JsonObject> devoirs,
+                                                        Map<String, JsonObject> maitrises,
+                                                        Map<String, JsonObject> competences,
+                                                        Map<String, JsonObject> matieres,
+                                                        Map<String, Map<String, Long>> competenceNotesByDevoir) {
+
+        JsonObject result = new JsonObject();
+        result.put("text", text);
+        result.put("idEleve", idEleve);
+
+        JsonObject header = new JsonObject();
+        JsonObject body = new JsonObject();
+
+        //Maitrise
+        JsonArray headerMiddle = new fr.wseduc.webutils.collections.JsonArray();
+        for (JsonObject maitrise : maitrises.values()) {
+            JsonObject _maitrise = new JsonObject()
+                    .put("libelle", maitrise.getString("libelle") != null
+                            ? maitrise.getString("libelle") : maitrise.getString("default_lib"))
+                    .put("visu", text ? getMaitrise(maitrise
+                            .getString("lettre"), String.valueOf(maitrise
+                            .getLong(ORDRE))) : maitrise.getString("default"));
+            if(usePerso && !text)
+                _maitrise.put("persoColor", maitrise.getString("couleur"));
+
+            headerMiddle.add(_maitrise);
+        }
+        header.put("right", headerMiddle);
+        result.put("header", header);
+
+        final Map<String, JsonObject> competencesObjByIdComp = new HashMap<>();
+
+        Map<String, Set<String>> competencesByMatiere = new LinkedHashMap<>();
+        for (String idEntity : matieres.keySet()) { //FIXME : changer?
+            competencesByMatiere.put(idEntity, new TreeSet<String>(new Comparator<String>() {
+                @Override
+                public int compare(String o1, String o2) {
+                    String s1 = competencesObjByIdComp.get(o1).getString("nom");
+                    String s2 = competencesObjByIdComp.get(o2).getString("nom");
+                    return s1.compareTo(s2);
+                }
+            }));
+        }
+
+        Map<String, List<String>> devoirByCompetences = new HashMap<>();
+        for (JsonObject competence : competences.values()) {
+            competencesObjByIdComp.put(String.valueOf(competence.getLong("id_competence")), competence);
+
+            if (competence.containsKey("empty")) {
+                continue;
+            }
+            String idDevoir = String.valueOf(competence.getLong("id_devoir"));
+            String idComp = String.valueOf(competence.getLong("id_competence"));
+            if (!devoirByCompetences.containsKey(idComp)) {
+                devoirByCompetences.put(idComp, new ArrayList<String>());
+            }
+            devoirByCompetences.get(idComp).add(idDevoir);
+            if (null != competence.getLong("id_matiere") //FIXME : A vérifier si ça fonctionne avec id_matiere
+                    && null != competencesByMatiere.get(competence.getLong("id_matiere").toString())) {
+                competencesByMatiere.get(competence.getLong("id_matiere").toString()).add(idComp);
+            }
+        }
+
+        JsonObject bodyHeader = new JsonObject();
+        bodyHeader.put("left", "Matieres / items");
+        String right = getLibelle("evaluations.competence.level.and.number");
+        bodyHeader.put("right", right);
+        body.put("header", bodyHeader);
+
+        JsonArray bodyBody = new fr.wseduc.webutils.collections.JsonArray();
+
+        for (Map.Entry<String, Set<String>> competencesInDomain : competencesByMatiere.entrySet()) {
+            JsonObject domainObj = new JsonObject();
+            if (matieres.get(competencesInDomain.getKey()) != null) {
+                domainObj.put("domainHeader", matieres.get(competencesInDomain.getKey())
+                        .getString("nom"));
+            }
+
+            JsonArray competencesInDomainArray = new fr.wseduc.webutils.collections.JsonArray();
+            for (String competence : competencesInDomain.getValue()) {
+                List<Long> valuesByComp = new ArrayList<>();
+                for (String devoir : devoirByCompetences.get(competence)) {
+                    if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
+                            .containsKey(competence)) {
+                        valuesByComp.add(competenceNotesByDevoir.get(devoir).get(competence) + 1);
+                    } else {
+                        valuesByComp.add(0L);
+                    }
+                }
+                JsonObject competenceNote = new JsonObject();
+                competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
+                competenceNote.put("competenceNotes", calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size()));
+                competencesInDomainArray.add(competenceNote);
+            }
+            domainObj.put("domainBody", competencesInDomainArray);
+            bodyBody.add(domainObj);
+        }
+
+
+        body.put("body", bodyBody);
+
+        result.put("body", body);
+        return result;
+    }
+
+
+
     private void getDevoirInfos(JsonObject devoir, final HttpServerRequest request,
                                 final Handler<Either<String, JsonObject>> handler) {
 
@@ -1770,6 +1879,12 @@ public class DefaultExportService implements ExportService {
         defaultMatiereService.getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
         futures.add(subjectF);
 
+        Future<JsonArray> compNotesFuture = Future.future();
+        noteService.getCompetencesNotesReleveEleves(new JsonArray().add(idUser), idEtablissement, null, null, idPeriode,
+                idUser, true, false,
+                compNotesEvent -> formate(compNotesFuture, compNotesEvent));
+        futures.add(compNotesFuture);
+
         CompositeFuture.all(futures).setHandler(event -> {
             if (event.failed()) {
                 Utils.returnFailure("getExportReleveEleve : event failed", event, handler);
@@ -1779,6 +1894,8 @@ public class DefaultExportService implements ExportService {
                 Utils.returnFailure("getExportReleveEleve : No informations about the student", event, handler);
                 return;
             }
+
+            final JsonArray compNotes = compNotesFuture.result();
 
             final JsonObject userJSON;
             boolean isBackup = false;
@@ -1840,6 +1957,12 @@ public class DefaultExportService implements ExportService {
                         idMatieres.add(idMatiere);
                     }
 
+                    for (int i = 0; i < compNotes.size(); i++) {
+                        JsonObject devoir = compNotes.getJsonObject(i);
+                        String idMatiere = devoir.getString(ID_MATIERE);
+                        idMatieres.add(idMatiere);
+                    }
+
                     for (int i = 0; i < moyennesFinales.size(); i++) {
                         JsonObject moyenneFinale = moyennesFinales.getJsonObject(i);
                         String idMatiere = moyenneFinale.getString(ID_MATIERE);
@@ -1888,7 +2011,7 @@ public class DefaultExportService implements ExportService {
                         }
 
                         getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON, periodeJSON, userJSON, etabJSON,
-                                finalBackUp, moyennesFinales, multiTeachers, services,  handler);
+                                finalBackUp, moyennesFinales, multiTeachers, services, compNotes, handler);
 
                     });
                 }
@@ -1912,7 +2035,7 @@ public class DefaultExportService implements ExportService {
     public void getEnseignantsMatieres(final JsonArray matieres, JsonArray idEnseignants, final JsonArray devoirsJson,
                                        final JsonObject periodeJson, final JsonObject userJson,
                                        final JsonObject etabJson, final boolean isBackup, final JsonArray moyennesFinales,
-                                       final JsonArray multiTeachers, final List<Service> services,
+                                       final JsonArray multiTeachers, final List<Service> services, final JsonArray compNotes,
                                        Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getUsers")
