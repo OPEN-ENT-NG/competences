@@ -508,7 +508,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
     }
 
-    private void getCompetencesNotesReleveEleves(JsonArray ids, String etablissementId, String matiereId,
+    public void getCompetencesNotesReleveEleves(JsonArray ids, String etablissementId, String matiereId,
                                                  JsonArray matiereIds,
                                                  Long periodeId,  String eleveId, Boolean withDomaineInfo,
                                                  Boolean isYear, Handler<Either<String, JsonArray>> handler) {

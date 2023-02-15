@@ -428,4 +428,10 @@ public interface NoteService extends CrudService {
      * @Return {@link Future} of result {@link Void}
      */
     Future<Void> insertOrUpdateAnnotation(String idDevoir, String idEleve, String annotation);
+
+
+    void getCompetencesNotesReleveEleves(JsonArray ids, String etablissementId, String matiereId,
+                                                JsonArray matiereIds,
+                                                Long periodeId,  String eleveId, Boolean withDomaineInfo,
+                                                Boolean isYear, Handler<Either<String, JsonArray>> handler);
 }
