@@ -19,8 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
-import fr.openent.competences.security.AccessConseilDeClasse;
-import fr.openent.competences.security.AccessIfMyStructure;
+import fr.openent.competences.security.*;
 import fr.openent.competences.security.modelbulletinrights.AccessExportModelBulletin;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
@@ -68,7 +67,8 @@ public class UtilsController extends ControllerHelper {
      */
     @Get("/types")
     @ApiDoc("Retourne tous les types de devoir par etablissement")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void view(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -91,7 +91,8 @@ public class UtilsController extends ControllerHelper {
      */
     @Get("/mainteachers/:idStructure")
     @ApiDoc("Retourne tous les types de devoir par etablissement")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void viewTittulaires(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -112,7 +113,8 @@ public class UtilsController extends ControllerHelper {
      */
     @Get("/enfants")
     @ApiDoc("Retourne la liste des enfants pour un utilisateur donné")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessStructureIsParent.class)
     public void getEnfants(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
