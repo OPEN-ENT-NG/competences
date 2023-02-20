@@ -93,7 +93,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
             try {
                 let columnCsv = [];
                 let addingAllStudents = false;
-                let data = await httpAxios.post(this.api.EXPORT + '?strucureId=' + this.structure.id, this.toJson());
+                let data = await httpAxios.post(this.api.EXPORT + '?structureId=' + this.structure.id, this.toJson());
                 let response;
                 let responseOtherPeriodes;
                 if(this.periodes.length > 0){
