@@ -1984,19 +1984,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     handler.handle(new Either.Left<>(error));
                 } else {
                     JsonArray idClasseGroups = responseQuerry.right().getValue();
-                    if ((idClasseGroups == null || idClasseGroups.isEmpty()) && typeGroupe == 0) {
-                        handler.handle(new Either.Left<>("idClasseGroups null or empty"));
-                        return;
-                    }
                     JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
                     final String nameClasse, idClass;
 
-                    if(typeGroupe != 0){
+                    if(typeGroupe != 0 || (idClasseGroups == null || idClasseGroups.isEmpty())) {
                         idsGroups.add(idClasse);
                         nameClasse = name;
                         idClass = idClasse;
-                    }
-                    else {
+                    } else {
                         idsGroups.add(idClasseGroups.getJsonObject(0).getString(Field.ID_CLASSE));
                         idsGroups.addAll(idClasseGroups.getJsonObject(0).getJsonArray("id_groupes"));
                         nameClasse = idClasseGroups.getJsonObject(0).getString("name_classe");

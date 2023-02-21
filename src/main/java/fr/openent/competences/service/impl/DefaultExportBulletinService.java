@@ -2753,113 +2753,113 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         if (eleves.size() > 0) {
             JsonObject firstStudent = eleves.getJsonObject(0);
             String idClasse = firstStudent.getString("idClasse");
-            Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), new Handler<Either<String, JsonArray>>() {
-                @Override
-                public void handle(Either<String, JsonArray> event) {
-                    if(event.isRight() ) {
-                        List<String> groupIds = new ArrayList<>(event.right().getValue().getJsonObject(0).getJsonArray("id_groupes").getList());
-                        groupIds.add(idClasse);
-                        Promise<Structure> structurePromise = Promise.promise();
-                        Promise<Periode> periodeLibellePromise = Promise.promise();
-                        Promise<Periode> periodeYearPromise = Promise.promise();
-                        Promise<Object> imgPromise = Promise.promise();
-                        Promise<Object> listStudentsPromise = Promise.promise();
-                        Promise<Object> servicesPromise = Promise.promise();
-                        Promise<Object> multiTeachingPromise = Promise.promise();
-                        Promise<JsonArray> allPeriodesPromises = Promise.promise();
-                        Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
-                        List<Future> promises = new ArrayList<>();
-                        promises.add(structurePromise.future());
-                        promises.add(periodeLibellePromise.future());
-                        promises.add(periodeYearPromise.future());
-                        promises.add(imgPromise.future());
-                        promises.add(listStudentsPromise.future());
-                        promises.add(servicesPromise.future());
-                        promises.add(multiTeachingPromise.future());
-                        promises.add(allPeriodesPromises.future());
-                        promises.add(subTopicCoefPromise.future());
-                        utilsService.getPeriodes(groupIds, firstStudent.getString(IDETABLISSEMENT),
-                                FutureHelper.handlerJsonArray(allPeriodesPromises,"utilsGetPeriodes"));
+            Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), event -> {
+                if(event.isRight() ) {
+                    List<String> groupIds = new ArrayList<>();
+                    if (event.right().getValue() != null && !event.right().getValue().isEmpty()) {
+                        groupIds = event.right().getValue().getJsonObject(0).getJsonArray("id_groupes").getList();
+                    }
+                    groupIds.add(idClasse);
+                    Promise<Structure> structurePromise = Promise.promise();
+                    Promise<Periode> periodeLibellePromise = Promise.promise();
+                    Promise<Periode> periodeYearPromise = Promise.promise();
+                    Promise<Object> imgPromise = Promise.promise();
+                    Promise<Object> listStudentsPromise = Promise.promise();
+                    Promise<Object> servicesPromise = Promise.promise();
+                    Promise<Object> multiTeachingPromise = Promise.promise();
+                    Promise<JsonArray> allPeriodesPromises = Promise.promise();
+                    Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+                    List<Future> promises = new ArrayList<>();
+                    promises.add(structurePromise.future());
+                    promises.add(periodeLibellePromise.future());
+                    promises.add(periodeYearPromise.future());
+                    promises.add(imgPromise.future());
+                    promises.add(listStudentsPromise.future());
+                    promises.add(servicesPromise.future());
+                    promises.add(multiTeachingPromise.future());
+                    promises.add(allPeriodesPromises.future());
+                    promises.add(subTopicCoefPromise.future());
+                    utilsService.getPeriodes(groupIds, firstStudent.getString(IDETABLISSEMENT),
+                            FutureHelper.handlerJsonArray(allPeriodesPromises,"utilsGetPeriodes"));
 
-                        int nbOptions= 0;
-                        if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
-                            Promise<Object> getHeadTeachersPromise = Promise.promise();
-                            promises.add(getHeadTeachersPromise.future());
-                            getHeadTeachers(firstStudent.getString("idClasse"),getHeadTeachersPromise);
-                            nbOptions++;
+                    int nbOptions= 0;
+                    if(!params.getBoolean(HIDE_HEADTEACHER, false)) {
+                        Promise<Object> getHeadTeachersPromise = Promise.promise();
+                        promises.add(getHeadTeachersPromise.future());
+                        getHeadTeachers(firstStudent.getString("idClasse"),getHeadTeachersPromise);
+                        nbOptions++;
+                    }
+
+                    getSubTopicCoeff(firstStudent.getString(IDETABLISSEMENT), new JsonArray(groupIds),
+                            subTopicCoefPromise);
+                    getStructure(firstStudent.getString(IDETABLISSEMENT),structurePromise);
+                    getLibellePeriode(idPeriode,host,acceptLanguage,periodeLibellePromise);
+                    getAnneeScolaire(idClasse,periodeYearPromise);
+                    generateImagesFromPathForBulletin(params,vertx,imgPromise);
+                    Utils.getElevesClasse(eb, idClasse, idPeriode, listStudentsPromise);
+                    utilsService.getServices(firstStudent.getString(IDETABLISSEMENT),
+                            new JsonArray(groupIds),FutureHelper.handlerJsonArray(servicesPromise));
+                    utilsService.getAllMultiTeachers(firstStudent.getString(IDETABLISSEMENT),
+                            new JsonArray(groupIds), FutureHelper.handlerJsonArray(multiTeachingPromise));
+
+                    int finalNbOptions = nbOptions;
+                    CompositeFuture.all(promises).onSuccess(success -> {
+
+                        List<SubTopic> subTopics = subTopicCoefPromise.future().result();
+                        Structure structure = structurePromise.future().result();
+                        Periode periode = periodeLibellePromise.future().result();
+                        periode.setEndDate( periodeYearPromise.future().result().getEndDate());
+                        periode.setStartDate( periodeYearPromise.future().result().getStartDate());
+                        ParamsBulletins paramBulletins = new ParamsBulletins();
+                        paramBulletins.setParams(params);
+                        paramBulletins.setHasImgLoaded(true);
+                        paramBulletins.addParams((JsonObject) imgPromise.future().result() );
+                        JsonArray idEleves = new JsonArray(((JsonArray) listStudentsPromise.future().result()).stream()
+                                .map(e -> ((JsonObject) e).getString(ID_ELEVE_KEY)).collect(Collectors.toList()));
+                        Map<String, Student> students = new HashMap<>();
+
+                        JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
+                        JsonArray multiTeachinJsonArray = (JsonArray) multiTeachingPromise.future().result();
+
+                        for(int i = 1; i <= finalNbOptions; i++) {
+                            paramBulletins.addParams((JsonObject) success.result().list().get(8 + i));
+                        }
+                        List<Service> services = new ArrayList<>();
+                        List<MultiTeaching> multiTeachings = new ArrayList<>();
+
+                        List<Object> periodes = (allPeriodesPromises.future().result().stream().filter(obj ->
+                                ((JsonObject) obj).getLong(Field.ID_TYPE).equals(idPeriode)).collect(Collectors.toList()));
+                        multiTeachinJsonArray = MultiTeachersUtils.filterSubtitute(periodes, multiTeachinJsonArray);
+                        setMultiTeaching(structure, multiTeachinJsonArray, multiTeachings, idClasse);
+                        setServices(structure, servicesJson, services, subTopics);
+
+                        for (int i = 0; i < eleves.size(); i++) {
+                            Promise<JsonObject> promise = Promise.promise();
+                            futures.add(promise.future());
+                            JsonObject eleve = eleves.getJsonObject(i);
+                            String idEleve = eleve.getString(ID_ELEVE_KEY);
+                            Student student = initStudent(structure, periode, paramBulletins, services, multiTeachings,
+                                    eleve, typePeriode, idPeriode, classe, showBilanPerDomaines, images, params);
+                            students.put(idEleve, student);
+                            getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe, host, acceptLanguage, vertx,
+                                    futureGetHandler(promise.future()));
                         }
 
-                        getSubTopicCoeff(firstStudent.getString(IDETABLISSEMENT), new JsonArray(groupIds),
-                                subTopicCoefPromise);
-                        getStructure(firstStudent.getString(IDETABLISSEMENT),structurePromise);
-                        getLibellePeriode(idPeriode,host,acceptLanguage,periodeLibellePromise);
-                        getAnneeScolaire(idClasse,periodeYearPromise);
-                        generateImagesFromPathForBulletin(params,vertx,imgPromise);
-                        Utils.getElevesClasse(eb, idClasse, idPeriode, listStudentsPromise);
-                        utilsService.getServices(firstStudent.getString(IDETABLISSEMENT),
-                                new JsonArray(groupIds),FutureHelper.handlerJsonArray(servicesPromise));
-                        utilsService.getAllMultiTeachers(firstStudent.getString(IDETABLISSEMENT),
-                                new JsonArray(groupIds), FutureHelper.handlerJsonArray(multiTeachingPromise));
-
-                        int finalNbOptions = nbOptions;
-                        CompositeFuture.all(promises).onSuccess(success -> {
-
-                            List<SubTopic> subTopics = subTopicCoefPromise.future().result();
-                            Structure structure = structurePromise.future().result();
-                            Periode periode = periodeLibellePromise.future().result();
-                            periode.setEndDate( periodeYearPromise.future().result().getEndDate());
-                            periode.setStartDate( periodeYearPromise.future().result().getStartDate());
-                            ParamsBulletins paramBulletins = new ParamsBulletins();
-                            paramBulletins.setParams(params);
-                            paramBulletins.setHasImgLoaded(true);
-                            paramBulletins.addParams((JsonObject) imgPromise.future().result() );
-                            JsonArray idEleves = new JsonArray(((JsonArray) listStudentsPromise.future().result()).stream()
-                                    .map(e -> ((JsonObject) e).getString(ID_ELEVE_KEY)).collect(Collectors.toList()));
-                            Map<String, Student> students = new HashMap<>();
-
-                            JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
-                            JsonArray multiTeachinJsonArray = (JsonArray) multiTeachingPromise.future().result();
-
-                            for(int i = 1; i <= finalNbOptions; i++) {
-                                paramBulletins.addParams((JsonObject) success.result().list().get(8 + i));
-                            }
-                            List<Service> services = new ArrayList<>();
-                            List<MultiTeaching> multiTeachings = new ArrayList<>();
-
-                            List<Object> periodes = (allPeriodesPromises.future().result().stream().filter(obj ->
-                                    ((JsonObject) obj).getLong(Field.ID_TYPE).equals(idPeriode)).collect(Collectors.toList()));
-                            multiTeachinJsonArray = MultiTeachersUtils.filterSubtitute(periodes, multiTeachinJsonArray);
-                            setMultiTeaching(structure, multiTeachinJsonArray, multiTeachings, idClasse);
-                            setServices(structure, servicesJson, services, subTopics);
-
-                            for (int i = 0; i < eleves.size(); i++) {
-                                Promise<JsonObject> promise = Promise.promise();
-                                futures.add(promise.future());
-                                JsonObject eleve = eleves.getJsonObject(i);
-                                String idEleve = eleve.getString(ID_ELEVE_KEY);
-                                Student student = initStudent(structure, periode, paramBulletins, services, multiTeachings,
-                                        eleve, typePeriode, idPeriode, classe, showBilanPerDomaines, images, params);
-                                students.put(idEleve, student);
-                                getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe, host, acceptLanguage, vertx,
-                                        futureGetHandler(promise.future()));
-                            }
-
-                            CompositeFuture.all(futures).setHandler(compositeEvent -> {
-                                if (compositeEvent.succeeded()) {
-                                    //ici créer le Json
-                                    eleves.clear();
-                                    eleves.addAll(new JsonArray(compositeEvent.result().list()));
-                                    for(Object eleve : eleves){
-                                        JsonObject ob = (JsonObject) eleve;
-                                        elevesMap.put(ob.getString("idEleve"),ob);
-                                    }
-                                    log.info("[Competences DefaultExportBulletinService ]end students" );
-                                    finalHandler.handle(new Either.Right<>(null));
+                        CompositeFuture.all(futures).setHandler(compositeEvent -> {
+                            if (compositeEvent.succeeded()) {
+                                //ici créer le Json
+                                eleves.clear();
+                                eleves.addAll(new JsonArray(compositeEvent.result().list()));
+                                for(Object eleve : eleves){
+                                    JsonObject ob = (JsonObject) eleve;
+                                    elevesMap.put(ob.getString("idEleve"),ob);
                                 }
-                            });
-
+                                log.info("[Competences DefaultExportBulletinService ]end students" );
+                                finalHandler.handle(new Either.Right<>(null));
+                            }
                         });
-                    }
+
+                    });
                 }
             });
         }
