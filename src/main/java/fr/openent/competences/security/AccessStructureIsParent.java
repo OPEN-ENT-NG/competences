@@ -16,10 +16,6 @@ public class AccessStructureIsParent implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         String structureId = WorkflowActionUtils.getParamStructure(request);
-        if (structureId == null | !user.getType().equals(Field.RELATIVE)) {
-            handler.handle(false);
-        } else {
-            handler.handle(user.getStructures().contains(structureId));
-        }
+        handler.handle(structureId != null && user.getType().equals(Field.RELATIVE) && user.getStructures().contains(structureId));
     }
 }

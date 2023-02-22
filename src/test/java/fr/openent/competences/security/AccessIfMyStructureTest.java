@@ -64,4 +64,18 @@ public class AccessIfMyStructureTest {
         });
         async.awaitSuccess(10000);
     }
+
+    @Test
+    public void testNoStrucure(TestContext ctx){
+        //map.set("id_structure", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
+        Mockito.doReturn(map).when(request).params();
+        structures.add("azerty");
+        user.setStructures(structures);
+        Async async = ctx.async();
+        access.authorize(request, binding, user, result -> {
+            ctx.assertEquals(false, result);
+            async.complete();
+        });
+        async.awaitSuccess(10000);
+    }
 }

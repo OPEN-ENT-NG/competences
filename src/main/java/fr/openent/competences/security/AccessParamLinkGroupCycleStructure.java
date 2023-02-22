@@ -12,10 +12,7 @@ public class AccessParamLinkGroupCycleStructure implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         String structureId = WorkflowActionUtils.getParamStructure(request);
-        if(structureId == null) {
-            handler.handle(false);
-        } else {
-            handler.handle(user.getStructures().contains(structureId) && WorkflowActionUtils.hasRight(user, Competences.PARAM_LINK_GROUP_CYCLE_RIGHT.toString()));
-        }
+        handler.handle(structureId != null && user.getStructures().contains(structureId)
+            && WorkflowActionUtils.hasRight(user, Competences.PARAM_LINK_GROUP_CYCLE_RIGHT));
     }
 }
