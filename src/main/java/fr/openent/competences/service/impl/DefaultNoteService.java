@@ -362,7 +362,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         getNoteElevePeriode(userId, structureId, classIds, subjectId, periodId,
                 FutureHelper.handlerJsonArray(noteStudentPeriodPromise,
                         String.format("[Competences@%s:: getNoteStudentPeriod] : Error during sql resquest : %s.",
-                                this.getClass().getSimpleName(), " ")));
+                                this.getClass().getSimpleName())));
         return noteStudentPeriodPromise.future();
     }
 
@@ -2694,6 +2694,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 // Récupération des Compétences-Notes du Relevé
                 Future<JsonArray> compNotesFuture = getCompetencesNotesReleveStudents(idEleves, idEtablissement, idMatiere,
                         null, idPeriode,null, true, false);
+                //Récupération des Multi-teachers
                 Future<JsonArray> multiTeachingFuture =
                         utilsService.getAllMultiTeachers(idEtablissement,new JsonArray().add(idClasse));
                 //Récupération des Services
@@ -2701,7 +2702,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 utilsService.getServices(idEtablissement,
                         new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
 
-                //Récupération des Multi-teachers
                 Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
 
                 List<Future> listFutures = new ArrayList<>(Arrays.asList(compNotesFuture, notesFuture,
