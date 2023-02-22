@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.security.*;
 import fr.openent.competences.security.modelbulletinrights.AccessExportModelBulletin;
+import fr.openent.competences.security.AccessParamLinkGroupCycleStructure;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.*;
@@ -240,7 +241,9 @@ public class UtilsController extends ControllerHelper {
     }
 
     @Post("/link/check/data/classes")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ApiDoc("Changement d'affectation de cycle sur une classe")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessParamLinkGroupCycleStructure.class)
     public void checkDataOnClasses(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
@@ -263,7 +266,7 @@ public class UtilsController extends ControllerHelper {
     }
 
     @Post("/eleve/evenements")
-    @SecuredAction(value = Competences.CAN_UPDATE_RETARDS_AND_ABSENCES)
+    @SecuredAction(Competences.CAN_UPDATE_RETARDS_AND_ABSENCES)
     public void insertRetardOrAbscence(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
@@ -281,7 +284,7 @@ public class UtilsController extends ControllerHelper {
     }
 
     @Post("/graph/img")
-    @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    @SecuredAction(Competences.CAN_ACCESS_EXPORT_BULLETIN)
     public void postImgForBulletins(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, user -> {
             this.storage.writeUploadFile(request, uploaded -> {
