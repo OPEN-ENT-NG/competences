@@ -356,6 +356,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         Sql.getInstance().prepared(query.toString(), values,Competences.DELIVERY_OPTIONS, validResultHandler(handler));
     }
 
+    public Future<JsonArray> getNoteStudentPeriod(String userId, String structureId, JsonArray classIds, String subjectId,
+                                    Long periodId) {
+        Promise<JsonArray> noteStudentPeriodPromise = Promise.promise();
+        getNoteElevePeriode(userId, structureId, classIds, subjectId, periodId,
+                FutureHelper.handlerJsonArray(noteStudentPeriodPromise,
+                        String.format("[Competences@%s:: getNoteStudentPeriod] : Error during sql resquest : %s.",
+                                this.getClass().getSimpleName())));
+        return noteStudentPeriodPromise.future();
+    }
+
     @Override
     public void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId,
                                Integer typeClasse, Boolean withMoyenneFinale, JsonArray idsGroup,
@@ -370,6 +380,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 handler.handle(new Either.Left<>("Error While getting Available student "));
             }
         });
+
+    }
+
+    public Future<JsonArray> getNotesReleve(String structureId, String classId, String subjectId, Long periodId,
+          Integer typeClass, Boolean withFinaleAverage, JsonArray groupIds) {
+        Promise<JsonArray> promiseStudentAvailable = Promise.promise();
+        getNotesReleve(structureId,classId, subjectId, periodId, typeClass, withFinaleAverage, groupIds,
+                FutureHelper.handlerJsonArray(promiseStudentAvailable,
+                        String.format("[Competences@%s::getNotesReleve] : error sql request %s.",
+                                this.getClass().getSimpleName(), " ")));
+
+        return promiseStudentAvailable.future();
 
     }
 
@@ -448,6 +470,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         Sql.getInstance().prepared(query.toString(), values, Competences.DELIVERY_OPTIONS, validResultHandler(handler));
     }
 
+    private Future<JsonArray> getNotesReleveStudents (JsonArray studentIds, String structureId, String classId,
+                                                    Long periodId, Boolean withFinalAverage, JsonArray idsGroup, JsonArray subjectIds) {
+
+        Promise<JsonArray> notesReleveElevesPromise = Promise.promise();
+        getNotesReleveEleves(studentIds, structureId, classId,periodId, withFinalAverage, idsGroup, subjectIds,
+                FutureHelper.handlerJsonArray(notesReleveElevesPromise,
+                        String.format("[Competences@%s::getNotesReleveEleves] : %s",
+                                this.getClass().getSimpleName(), " ")));
+
+        return notesReleveElevesPromise.future();
+    }
+
     private void setParamGetNotesReleve(List<String> idGroupes, List<String> idEleves, String classeId,
                                         List<String> matiereIds, String etablissementId, Long periodeId,
                                         JsonArray values){
@@ -500,6 +534,20 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
         runGetCompetencesNotesReleve(etablissementId, matiereId, idMatieres, periodeId,
                 eleveId, idEleves, withDomaineInfo, isYear, handler);
+    }
+
+    private Future<JsonArray> getCompetencesNotesReleveStudents(JsonArray ids, String structureId, String subjectId,
+                                                 JsonArray subjectIds,
+                                                 Long periodId,  String studentId, Boolean withDomaineInfo,
+                                                 Boolean isYear) {
+        Promise<JsonArray> promiseCompNotesReleveEleves = Promise.promise();
+
+        getCompetencesNotesReleveEleves(ids, structureId, subjectId, subjectIds,periodId,
+                studentId, withDomaineInfo, isYear,
+                FutureHelper.handlerJsonArray(promiseCompNotesReleveEleves,
+                        String.format("[Competences%s::getCompetencesNotesReleveStudents]: error sql request %s.",
+                                this.getClass().getSimpleName(), " ")));
+        return promiseCompNotesReleveEleves.future();
     }
 
     public void getCompetencesNotesReleve(String etablissementId, String classeId, JsonArray groupIds, String matiereId,
@@ -676,6 +724,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         Sql.getInstance().prepared(query.toString(), values,
                 new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
                 validResultHandler(handler));
+    }
+
+    public Future<JsonArray> getColumnReleve(JsonArray studentsIds, Long periodId, String subjectId, JsonArray classesIds,
+                                 String column) {
+
+        Promise<JsonArray> columnRelevePromise = Promise.promise();
+        getColonneReleve(studentsIds,periodId, subjectId, classesIds, column,
+                FutureHelper.handlerJsonArray(columnRelevePromise,
+                        String.format("[Competences%s::getColumnReleve] : error sql request %s. ",
+                                this.getClass().getSimpleName(), " ")));
+        return columnRelevePromise.future();
     }
 
     public void getColonneReleveTotale(JsonArray idEleves, Long idPeriode, JsonArray idsMatiere, JsonArray idsClasse,
@@ -2529,6 +2588,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     public void getDatasReleve(final JsonObject params, final Handler<Either<String, JsonObject>> handler){
+
         final String idEtablissement = params.getString(ID_ETABLISSEMENT_KEY);
         final String idClasse = params.getString(ID_CLASSE_KEY);
         final String idMatiere = params.getString(ID_MATIERE_KEY);
@@ -2592,65 +2652,50 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 resultHandler.put(APPRECIATION_CLASSE, appClasse);
 
                 // Récupération des moyennes Finales
-                Future<JsonArray> moyennesFinalesFutures = Future.future();
-                getColonneReleve(idEleves, idPeriode, idMatiere, new JsonArray().add(idClasse), MOYENNE,
-                        moyennesFinalesEvent -> formate(moyennesFinalesFutures, moyennesFinalesEvent));
-
-                Future<JsonArray> appreciationsFutures = Future.future();
-                Future<JsonArray> positionnementsFinauxFutures = Future.future();
-
+                Future<JsonArray> moyennesFinalesFutures =  getColumnReleve(idEleves, idPeriode, idMatiere,
+                        new JsonArray().add(idClasse), MOYENNE);
+                Future<JsonArray> appreciationsFutures;
+                Future<JsonArray> positionnementsFinauxFutures;
                 if (idPeriode != null) {
-                    getColonneReleve(idEleves, idPeriode, idMatiere, new JsonArray().add(idClasse), APPRECIATION_MATIERE_PERIODE,
-                            appreciationEvent -> formate(appreciationsFutures, appreciationEvent));
-
-                    getColonneReleve(idEleves, idPeriode, idMatiere, new JsonArray().add(idClasse), POSITIONNEMENT,
-                            positionnementsFinauxEvent -> formate(positionnementsFinauxFutures, positionnementsFinauxEvent));
+                    appreciationsFutures =getColumnReleve(idEleves, idPeriode, idMatiere,
+                            new JsonArray().add(idClasse), APPRECIATION_MATIERE_PERIODE);
+                    positionnementsFinauxFutures =getColumnReleve(idEleves, idPeriode, idMatiere,
+                            new JsonArray().add(idClasse), POSITIONNEMENT);
                 } else {
-                    appreciationsFutures.complete(new JsonArray());
-                    positionnementsFinauxFutures.complete(new JsonArray());
+                    appreciationsFutures = Future.succeededFuture(new JsonArray());
+                    positionnementsFinauxFutures = Future.succeededFuture(new JsonArray());
                 }
 
                 // Récupération des Notes du Relevé
-                Future<JsonArray> notesFuture = Future.future();
+                Future<JsonArray> notesFuture;
                 Boolean hasEvaluatedHomeWork = (nbEvaluatedHomeWork.result().getLong("nb") > 0);
                 if(idEleve == null && hasEvaluatedHomeWork) {
-                    getNotesReleveEleves(idEleves, idEtablissement, idClasse, idPeriode, false,
-                            null, idMatiere != null ? new JsonArray().add(idMatiere) : null,
-                            notesEvent -> formate(notesFuture, notesEvent));
+                    notesFuture = getNotesReleveStudents(idEleves, idEtablissement, idClasse, idPeriode, false,
+                            null, idMatiere != null ? new JsonArray().add(idMatiere) : null);
                 } else {
                     if (!hasEvaluatedHomeWork) {
-                        notesFuture.complete(new JsonArray());
+                        notesFuture = Future.succeededFuture(new JsonArray());
                     } else {
                         if (idPeriode != null) {
-                            getNoteElevePeriode(idEleve, idEtablissement, new JsonArray().add(idClasse),
-                                    idMatiere, idPeriode, notesEvent -> formate(notesFuture, notesEvent));
+                            notesFuture = getNoteStudentPeriod(idEleve, idEtablissement, new JsonArray().add(idClasse),
+                                    idMatiere, idPeriode);
                         } else {
-                            getNotesReleve(idEtablissement, idClasse, idMatiere,null, typeClasse,
-                                    false,null, notesEvent -> formate(notesFuture, notesEvent));
+                            notesFuture = getNotesReleve(idEtablissement, idClasse, idMatiere,null, typeClasse,
+                                    false,null);
                         }
                     }
                 }
 
                 // Récupération des Compétences-Notes du Relevé
-                Future<JsonArray> compNotesFuture = Future.future();
-                Promise<Object> servicesPromise = Promise.promise();
-                //Promise<Object> multiTeachingPromise = Promise.promise();
+                Future<JsonArray> compNotesFuture = getCompetencesNotesReleveStudents(idEleves, idEtablissement, idMatiere,
+                        null, idPeriode,null, true, false);
+                //Récupération des Multi-teachers
                 Future<JsonArray> multiTeachingFuture =
                         utilsService.getAllMultiTeachers(idEtablissement,new JsonArray().add(idClasse));
-                 Promise<Structure> structurePromise = Promise.promise();
-                getCompetencesNotesReleveEleves(idEleves, idEtablissement, idMatiere,
-                        null, idPeriode,null, true, false,
-                        compNotesEvent -> formate(compNotesFuture, compNotesEvent));
-
                 //Récupération des Services
+                Promise<Object> servicesPromise = Promise.promise();
                 utilsService.getServices(idEtablissement,
                         new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise));
-
-                //Récupération des Multi-teachers
-               // utilsService.getMultiTeachers(idEtablissement,
-                      //  new JsonArray().add(idClasse), (idPeriode != null ? idPeriode.intValue() : null), FutureHelper.handlerJsonArray(multiTeachingPromise));
-
-                new DefaultExportBulletinService(eb, null).getStructure(idEtablissement, structurePromise);
 
                 Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
 
@@ -2660,8 +2705,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
                 listFutures.add(isAvgSkillFuture);
-
-                CompositeFuture.all(listFutures).setHandler( event -> {
+                CompositeFuture.all(listFutures).onComplete( event -> {
                     if(event.succeeded()) {
                         // Rajout des moyennes finales
                         FormateColonneFinaleReleve(moyennesFinalesFutures.result(), elevesMapObject,
@@ -2670,7 +2714,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         Structure structure = new Structure();
                         structure.setId(idEtablissement);
                         JsonArray servicesJson = (JsonArray) servicesPromise.future().result();
-                        // JsonArray multiTeachers = (JsonArray) multiTeachingPromise.future().result();
                         JsonArray multiTeachers = multiTeachingFuture.result();
                         List<SubTopic> subTopics = subTopicCoefFuture.result();
 
@@ -2743,8 +2786,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     Map<String, JsonObject> elevesMapObject = new HashMap<>();
 
                     // Récupération des élèves de la classe
-                    Future<JsonArray> studentsClassFuture =  Future.future();
-                    getStudentClassForExportReleve(idClasse, idPeriode, idEleves, typeClasse, elevesMapObject, studentsClassFuture);
+                    Future<JsonArray> studentsClassFuture =
+                    getStudentClassForExportReleve(idClasse, idPeriode, idEleves, typeClasse, elevesMapObject);
 
                     // Récupération du tableau de conversion
                     Future<JsonArray> tableauDeConversionFuture = Future.future();
@@ -3548,44 +3591,44 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             String idEleve = entry.getKey();
             JsonArray compNotesEleve = entry.getValue();
 
-            if(eleveMapObject.containsKey(idEleve)) {
+            if (eleveMapObject.containsKey(idEleve)) {
                 JsonObject eleveObject = eleveMapObject.get(idEleve);
                 if (eleveObject.getJsonArray(COMPETENCES_NOTES_KEY) == null) {
                     eleveObject.put(COMPETENCES_NOTES_KEY, compNotesEleve);
                 }
-                if(!eleveObject.getJsonArray(COMPETENCES_NOTES_KEY).equals(compNotesEleve)){
+                if (!eleveObject.getJsonArray(COMPETENCES_NOTES_KEY).equals(compNotesEleve)) {
                     log.info("calculMoyennesCompetencesNotesForReleve get difference");
-                    log.warn(compNotesEleve.encode() + " _\n "  +
+                    log.warn(compNotesEleve.encode() + " _\n " +
                             eleveObject.getJsonArray(COMPETENCES_NOTES_KEY).encode());
                 }
-                calculPositionnementAutoByEleveByMatiere(compNotesEleve, eleveObject,false, tableauDeconversion,
-                        null , null, isAvgSkill);
+                calculPositionnementAutoByEleveByMatiere(compNotesEleve, eleveObject, false, tableauDeconversion,
+                        null, null, isAvgSkill);
                 JsonObject positionnement = utilsService.getObjectForPeriode(
                         eleveObject.getJsonArray(POSITIONNEMENTS_AUTO), idPeriode, ID_PERIODE);
 
                 JsonObject posiSousMatiere = eleveObject.getJsonObject("_" + POSITIONNEMENTS_AUTO);
 
-                if(isNotNull(posiSousMatiere) && isNotNull(idPeriode)){
-                    JsonObject positionnementSousMatiere =  posiSousMatiere.getJsonObject(idPeriode.toString());
-                    if(isNotNull(positionnementSousMatiere)){
+                if (isNotNull(posiSousMatiere) && isNotNull(idPeriode)) {
+                    JsonObject positionnementSousMatiere = posiSousMatiere.getJsonObject(idPeriode.toString());
+                    if (isNotNull(positionnementSousMatiere)) {
                         Map<String, Object> posiMap = positionnementSousMatiere.getMap();
-                        for (Map.Entry<String, Object> o : posiMap.entrySet()){
-                            JsonObject posi_sous_matiere = ((JsonObject)o.getValue());
-                            Float moyennePositionnement =  posi_sous_matiere.getFloat(MOYENNE);
+                        for (Map.Entry<String, Object> o : posiMap.entrySet()) {
+                            JsonObject posi_sous_matiere = ((JsonObject) o.getValue());
+                            Float moyennePositionnement = posi_sous_matiere.getFloat(MOYENNE);
                             String pos = utilsService.convertPositionnement(moyennePositionnement,
-                                    tableauDeconversion,false);
+                                    tableauDeconversion, false);
                             posi_sous_matiere.put(MOYENNE, pos);
                             posi_sous_matiere.put(POSITIONNEMENT, pos);
                         }
                     }
                 }
 
-                String positionnement_auto  = "";
+                String positionnement_auto = "";
                 if (positionnement != null) {
-                    Float moyennePositionnement =  positionnement.getFloat(MOYENNE);
+                    Float moyennePositionnement = positionnement.getFloat(MOYENNE);
 
                     positionnement_auto = utilsService.convertPositionnement(moyennePositionnement,
-                            tableauDeconversion,false);
+                            tableauDeconversion, false);
                 }
                 eleveObject.put(POSITIONNEMENT, positionnement_auto);
             }
