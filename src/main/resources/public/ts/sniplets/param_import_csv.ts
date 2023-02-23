@@ -151,6 +151,10 @@ export const paramImportCSV = {
         clearHomonymes : function () {
             paramImportCSV.that.hasHomonymes = false;
             utils.safeApply(paramImportCSV.that);
+        },
+
+        changeAbsencesRetardsFromPresences  : async (absencesRetardsFromPresences) => {
+            await structureOptionsService.changeAbsencesRetardsFromPresences (absencesRetardsFromPresences, paramImportCSV.that.structure.id);
         }
     }
 };
