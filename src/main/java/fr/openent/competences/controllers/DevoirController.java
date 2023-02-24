@@ -86,7 +86,8 @@ public class DevoirController extends ControllerHelper {
 
     @Get("/devoirs")
     @ApiDoc("Récupère les devoirs d'un utilisateur")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getDevoirs(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, user -> {
             if(user != null){
