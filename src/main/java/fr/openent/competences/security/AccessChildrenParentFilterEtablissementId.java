@@ -28,9 +28,9 @@ public class AccessChildrenParentFilterEtablissementId implements ResourcesProvi
             );
         } else {
             RequestUtils.bodyToJson(request, params -> {
-                handler.handle(isInStructure && (isAdminTeacherPersonnel
+                handler.handle(isAdminTeacherPersonnel
                         || user.getUserId().equals(params.getString(ID_ELEVE_KEY))
-                        || user.getChildrenIds().contains(params.getString(ID_ELEVE_KEY)))
+                        || user.getChildrenIds().contains(params.getString(ID_ELEVE_KEY))
                 );
             });
         }
