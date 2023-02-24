@@ -560,9 +560,14 @@ public class DevoirController extends ControllerHelper {
         }
     }
 
+    /**
+     * @param request
+     * @queryParam {idEtablissement} mandatory
+     */
     @Put("/devoirs/service")
     @ApiDoc("Mets à jour les devoirs liés à un service")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessViscoParamServiceStructure.class)
     public void updateDevoirsService(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
