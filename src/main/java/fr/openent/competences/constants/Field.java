@@ -61,7 +61,6 @@ public class Field {
     public static final String SUBJECT_ID = "subject_id";
     public static final String CLASS_OR_GROUP_ID = "class_or_group_id";
 
-
     //transaction
     public static final String ACTION = "action";
     public static final String VALUES = "values";
@@ -131,6 +130,8 @@ public class Field {
     public static final String PERIODE = "periode";
     public static final String NAMECLASSE = "nameClasse";
     public static final String NAMECLASS = "nameClass";
+    public static final String ELEMENTPROGRAMME = "elementProgramme";
+    public static final String TABLECONVERSIONS = "tableConversions";
     //
 
     public static final String ISSKILLAVERAGE = "isSkillAverage";
@@ -171,8 +172,8 @@ public class Field {
     public static final String COMPETENCES_DEVOIRS = "competences_devoirs";
     public static final String COMPETENCES_NOTES_TABLE = "competences_notes";
     public static final String CYCLE_TABLE = "cycle";
-    public static final String DEVOIR_TABLE = "devoirs";
 
+    public static final String DEVOIRS_TABLE = "devoirs";
     public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
     public static final String DIGITAL_SKILLS_TABLE = "digital_skills";
     public static final String DOMAINE_DIGITAL_SKILLS_TABLE = "domaines_digital_skills";

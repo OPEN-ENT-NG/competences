@@ -926,14 +926,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void listDevoirsWithAnnotations(String idEleve, Long idPeriode, String idMatiere,
                                            Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put(ACTION, "eleve.getAnnotations")
+                .put(Field.ACTION, "eleve.getAnnotations")
                 .put("idEleve", idEleve)
                 .put("idPeriode", idPeriode)
                 .put("idMatiere", idMatiere);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray result = body.getJsonArray(RESULTS);
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                JsonArray result = body.getJsonArray(Field.RESULTS);
                 handler.handle(new Either.Right<>(result));
             } else {
                 handler.handle(new Either.Left<>(body.getString("message")));
@@ -946,15 +946,15 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void listDevoirsWithCompetences(String idEleve, Long idPeriode, String idMatiere, JsonArray groups,
                                            Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put(ACTION, "eleve.getCompetences")
+                .put(Field.ACTION, "eleve.getCompetences")
                 .put("idEleve", idEleve)
                 .put("idPeriode", idPeriode)
                 .put("idMatiere", idMatiere)
                 .put("idGroups", groups);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray result = body.getJsonArray(RESULTS);
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                JsonArray result = body.getJsonArray(Field.RESULTS);
                 handler.handle(new Either.Right<String, JsonArray>(result));
             } else {
                 handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
@@ -1592,7 +1592,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             JsonObject devoirJson = (JsonObject) devoir;
             String idMatiere = devoirJson.getString("id_matiere");
             String idClass = devoirJson.containsKey("id_groupe") ? devoirJson.getString("id_groupe") : devoirJson.getString("id_classe");
-            String moyenneFinale = devoirJson.containsKey("moyenne")? devoirJson.getString("moyenne") : NN;
+            String moyenneFinale = devoirJson.containsKey("moyenne")? devoirJson.getString("moyenne") : Field.NN;
             Long idPeriodeDevoir = devoirJson.getLong("id_periode");
 
             JsonObject matiere = (JsonObject) matieres.stream()
@@ -1654,7 +1654,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     resultMatiere = result.getJsonObject(idMatiere);
                 }
 
-                if(!NN.equals(moyenneFinale)){
+                if(!Field.NN.equals(moyenneFinale)){
                     JsonObject moyenne = new JsonObject()
                             .put("id_periode", idPeriodeDevoir)
                             .put("moyenne", moyenneFinale);
@@ -2019,27 +2019,29 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             }
 
             if(moyenneFinale != null) {
-                matiereJO.put("moyenne", (moyenneFinale.getString("moyenne") != null)? moyenneFinale.getString("moyenne"): NN);
+                matiereJO.put("moyenne", (moyenneFinale.getString("moyenne") != null)? moyenneFinale.getString("moyenne"): Field.NN);
             } else if (!notes.isEmpty() || subTopicNoteDevoirMap.size() > 0) {
                 if(subTopicNoteDevoirMap.size()> 0){
                     AtomicReference<Double> coefTotal = new AtomicReference<>(0.d);
                     AtomicReference<Double> total = new AtomicReference<>(0.d);
                     subTopicNoteDevoirMap.forEach((subtopic,notesList) ->{
-                        total.updateAndGet(v -> v + utilsService.calculMoyenne(notesList, false, 20, false).getDouble("moyenne") * subtopic.getCoefficient());
+                        total.updateAndGet(v -> v + utilsService.calculMoyenne(notesList, false, 20,
+                                false).getDouble("moyenne") * subtopic.getCoefficient());
                         coefTotal.updateAndGet(v -> v + subtopic.getCoefficient());
                     });
                     if(coefTotal.get() == 0){
-                        matiereJO.put("moyenne", NN);
+                        matiereJO.put("moyenne", Field.NN);
                     }else{
                         matiereJO.put("moyenne", decimalFormat.format(total.get() / coefTotal.get()));
                     }
                 }else {
 
-                    Double moy = utilsService.calculMoyenne(notes, false, 20, false).getDouble("moyenne");
+                    Double moy = utilsService.calculMoyenne(notes, false, 20, false)
+                            .getDouble("moyenne");
                     matiereJO.put("moyenne", decimalFormat.format(moy));
                 }
             } else {
-                matiereJO.put("moyenne", NN);
+                matiereJO.put("moyenne", Field.NN);
             }
             matiereJO.remove("moyennes");
         }

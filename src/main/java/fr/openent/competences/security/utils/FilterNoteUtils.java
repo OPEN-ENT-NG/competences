@@ -34,12 +34,12 @@ public class FilterNoteUtils {
 
     public void validateNoteOwner (Long idNote, String owner, final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
-                .append("SELECT count(" + Field.DEVOIR_TABLE + ".*) " +
-                        "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE +
+                .append("SELECT count(" + Field.DEVOIRS_TABLE + ".*) " +
+                        "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIRS_TABLE +
                         " INNER JOIN" + Competences.COMPETENCES_SCHEMA + "." + Field.NOTES_TABLE +
-                        " ON (" + Field.NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIR_TABLE + "." + Field.ID + ") " +
+                        " ON (" + Field.NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIRS_TABLE + "." + Field.ID + ") " +
                         "WHERE " + Field.NOTES_TABLE + "." + Field.ID + " = ? " +
-                        "AND " + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ?;");
+                        "AND " + Field.DEVOIRS_TABLE + "." + Field.OWNER + " = ?;");
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idNote).add(owner);
 
@@ -58,14 +58,14 @@ public class FilterNoteUtils {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder()
-                .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE)
+                .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIRS_TABLE)
                 .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.NOTES_TABLE +
-                        " ON (" + Field.NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIR_TABLE + "." + Field.ID + ") ")
+                        " ON (" + Field.NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIRS_TABLE + "." + Field.ID + ") ")
                 .append("WHERE " + Field.NOTES_TABLE + "." + Field.ID + " = ? ")
-                .append("AND (" + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ? OR ")
+                .append("AND (" + Field.DEVOIRS_TABLE + "." + Field.OWNER + " = ? OR ")
                 .append("? IN (SELECT member_id ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE)
-                .append(" WHERE resource_id = " + Field.DEVOIR_TABLE + "." + Field.ID)
+                .append(" WHERE resource_id = " + Field.DEVOIRS_TABLE + "." + Field.ID)
                 .append(" AND action = '" + Competences.DEVOIR_ACTION_UPDATE+"')")
                 .append(")");
 
