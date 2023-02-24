@@ -421,8 +421,14 @@ public class DevoirController extends ControllerHelper {
         });
     }
 
+
+    /**
+     * @param request
+     * @queryParam {idEtablissement} mandatory
+     */
     @Get("/devoirs/done")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     @ApiDoc("Calcul le pourcentage réalisé pour un devoir")
     public void getPercentDone(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {

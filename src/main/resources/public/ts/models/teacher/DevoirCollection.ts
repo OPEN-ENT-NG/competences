@@ -28,7 +28,7 @@ export class DevoirsCollection {
         return {
             get : '/competences/devoirs?idEtablissement=' + this.idEtablissement,
             areEvaluatedDevoirs : '/competences/devoirs/evaluations/informations?',
-            done : '/competences/devoirs/done'
+            done : '/competences/devoirs/done?idEtablissement=' + this.idEtablissement
         }
     }
 
@@ -104,7 +104,7 @@ export class DevoirsCollection {
                     await devoir.eleves.sync();
                 }
 
-                let url = this.api.done + "?idDevoir=" + devoir.id + "&nbStudents=" + devoir.eleves.length();
+                let url = this.api.done + "&idDevoir=" + devoir.id + "&nbStudents=" + devoir.eleves.length();
                 http().getJson(url).done((res) => {
                     let _devoir = _.findWhere(this.all, {id : res.id});
                     if (_devoir !== undefined) {
