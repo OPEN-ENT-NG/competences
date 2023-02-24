@@ -15,7 +15,7 @@ import static fr.openent.competences.Competences.ID_ELEVE_KEY;
 public class AccessChildrenParentFilterEtablissementId implements ResourcesProvider {
     @Override
     public void authorize(final HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        final String idStructure = request.params().get(Field.IDETABLISSEMENT);
+        final String idStructure = WorkflowActionUtils.getParamStructure(request);
         final boolean isInStructure = user.getStructures().contains(idStructure);
 
         boolean isAdminTeacherPersonnel = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())

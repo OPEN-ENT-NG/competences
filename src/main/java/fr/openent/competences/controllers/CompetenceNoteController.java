@@ -264,8 +264,9 @@ public class CompetenceNoteController extends ControllerHelper {
     }
 
     @Get("/competence/notes/bilan/conversion")
-    @ApiDoc("Retourne les valeurs de converssion entre (Moyenne Note - Evaluation competence) d'un cycle et etablissment donné")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ApiDoc("Retourne les valeurs de conversion entre (Moyenne Note - Evaluation competence) d'un cycle et etablissment donné")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessChildrenParentFilterEtablissementId.class)
     public void getCompetenceNoteConverssion(final HttpServerRequest request) {
         if (request.params().contains("idEtab") && request.params().contains("idClasse")) {
             String idEtab = request.params().get("idEtab");
