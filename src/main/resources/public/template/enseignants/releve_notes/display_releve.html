@@ -75,6 +75,13 @@
                         </span>
             </label>
         </div>
+        <div class="twelve cell twelve-mobile">
+
+            <label class="checkbox">
+                <input type="checkbox" ng-model="releveNote.exportOptions.withNotes" ng-change = "releveNote.setTypeExport();"/><span>
+            <i18n>evaluations.releve.with.notes</i18n></span>
+            </label>
+        </div>
     </fieldset>
     <br/>
 
@@ -83,7 +90,8 @@
 
         <div class="checkbox-grid twelve">
             <label>
-                <input type="radio"  ng-model="releveNote.exportOptions.fileType" value="pdf">
+                <input type="radio"  ng-model="releveNote.exportOptions.fileType" value="pdf"
+                       ng-disabled = "releveNote.IsSpecificOptionsCsv();">
                 <span>
                     <i18n>evaluations.pdf</i18n>
              </span>
