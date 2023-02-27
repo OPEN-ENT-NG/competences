@@ -437,7 +437,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 case 'csvRecapEval': {
                     $scope.disabledExportFile = true;
                     utils.safeApply($scope);
-                    if(await positioningCsvData(idPeriode, $scope.search.classe.id)){
+                    if(await positioningCsvData(idPeriode, $scope.search.classe.id, $scope.structure.id)){
                         await cvsLaunch('csv');
                         $scope.opened.recapEval = false
                     } else {
@@ -585,9 +585,9 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
         let urlPdf:string = undefined;
         const getPdfPositioning = async ():Promise<void> => {
-            urlPdf = `/competences/recapEval/print/${$scope.search.classe.id}/export?text=false&usePerso=${$scope.structure.usePerso}`;
+            urlPdf = `/competences/recapEval/print/${$scope.search.classe.id}/export?text=false&usePerso=${$scope.structure.usePerso}&structureId=${$scope.structure.id}`;
             if ($scope.search.periode.id_type) {
-                urlPdf += `&idPeriode=${$scope.search.periode.id_type}&structureId=${$scope.structure.id}`;
+                urlPdf += `&idPeriode=${$scope.search.periode.id_type}`;
             }
             $scope.urlPdfSrc = urlPdf;
             $scope.contentIframe = await utils.getIframeFromPdfDownload(urlPdf, $sce);
@@ -685,16 +685,16 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             $scope.loadingTab = false;
             await utils.safeApply($scope);
             if($scope.displayFollowCompetencesClass == 'positioning')
-                await positioningCsvData($scope.search.periode.id_type, $scope.search.classe.id);
+                await positioningCsvData($scope.search.periode.id_type, $scope.search.classe.id, $scope.structure.id);
             else if ($scope.displayFollowCompetencesClass == 'teacherAppraisals')
                 dataBodyCsv = prepareBodyAppraisalsForCsv($scope.dataHeaderAppraisals, $scope.teacherNotesAndAppraisals);
         };
 
-        const positioningCsvData = async (idPeriod:number, idClass:string):Promise<boolean> => {
+        const positioningCsvData = async (idPeriod:number, idClass:string, idStructure: string):Promise<boolean> => {
             try {
                 isManualCsvFromAngular = true;
                 fileDownloadName.csv = `positioning${infoNameFileEnd}`;
-                const resultRecapEval = await bilanPeriodic.getExportRecapEval(idClass, idPeriod);
+                const resultRecapEval = await bilanPeriodic.getExportRecapEval(idClass, idPeriod, idStructure);
                 dataBodyCsv = prepareBodyPositioningForCsv(resultRecapEval);
                 return true
             } catch (e) {

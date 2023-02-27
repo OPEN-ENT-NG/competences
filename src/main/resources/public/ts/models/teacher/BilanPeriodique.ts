@@ -226,8 +226,8 @@ export class BilanPeriodique extends  Model {
         throw new Error("getAppraisals");
     }
 
-    public async getExportRecapEval(idClass:string, idPeriod:number):Promise<void>{
-        let url:string =`${BilanPeriodique.api.GET_EXPORT_RECAP_EVAL}${idClass}/export?text=false&usePerso=false`;
+    public async getExportRecapEval(idClass:string, idPeriod:number, idStructure: string):Promise<void>{
+        let url:string =`${BilanPeriodique.api.GET_EXPORT_RECAP_EVAL}${idClass}/export?text=false&usePerso=false&idStructure=${idStructure}`;
         if(idPeriod)
             url += `&idPeriode=${idPeriod}`;
         url += "&json=true";
