@@ -204,7 +204,7 @@ export class BilanPeriodique extends  Model {
     }
 
     private async getSynthesis(parameter: any, isAnnual: Boolean): Promise<any | Error> {
-        const {data, status}: AxiosResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}`, parameter);
+        const {data, status}: AxiosResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}?&idStructure=${this.structure.id}`, parameter);
         if (status === 200) {
             if (isAnnual) return data.annual;
             return data;
