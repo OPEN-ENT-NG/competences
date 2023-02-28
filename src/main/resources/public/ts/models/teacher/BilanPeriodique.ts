@@ -204,7 +204,7 @@ export class BilanPeriodique extends  Model {
     }
 
     private async getSynthesis(parameter: any, isAnnual: Boolean): Promise<any | Error> {
-        const {data, status}: AxiosResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}`, parameter);
+        const {data, status}: AxiosResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}?&idStructure=${this.structure.id}`, parameter);
         if (status === 200) {
             if (isAnnual) return data.annual;
             return data;
@@ -226,8 +226,8 @@ export class BilanPeriodique extends  Model {
         throw new Error("getAppraisals");
     }
 
-    public async getExportRecapEval(idClass:string, idPeriod:number):Promise<void>{
-        let url:string =`${BilanPeriodique.api.GET_EXPORT_RECAP_EVAL}${idClass}/export?text=false&usePerso=false`;
+    public async getExportRecapEval(idClass:string, idPeriod:number, idStructure: string):Promise<void>{
+        let url:string =`${BilanPeriodique.api.GET_EXPORT_RECAP_EVAL}${idClass}/export?text=false&usePerso=false&idStructure=${idStructure}`;
         if(idPeriod)
             url += `&idPeriode=${idPeriod}`;
         url += "&json=true";
