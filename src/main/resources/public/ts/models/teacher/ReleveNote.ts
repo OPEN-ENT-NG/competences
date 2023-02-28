@@ -567,7 +567,7 @@ export class ReleveNote extends  Model implements IModel {
         return line[key]
     }
 
-    private setNoteOnDevoir (line : any, notes : Array<Evaluation>) {
+    private setNotesDevoirs (line : any, notes : Array<Evaluation>) : void {
         _.each(this.devoirs.all, (d) => {
             let noteDevoir = _.findWhere(notes, {id_devoir : d.id, id_eleve: line['id'] });
                 if (noteDevoir) {
@@ -621,7 +621,7 @@ export class ReleveNote extends  Model implements IModel {
                             if(!this.exportOptions.averageFinal)  this.addColumnForExportCsv(line, 'moyenneFinale');
                             // actualAverage = (averageFinal != null) ? averageFinal : moyenne => averageFinal
                             line['actualAverage'] = line['moyenneFinale'];
-                            this.setNoteOnDevoir(line, response.notes);
+                            this.setNotesDevoirs(line, response.notes);
                         }
                         _.forEach(line.sousMatieres.moyennes, (sousMatiere) => {
                             if(sousMatiere.print){
@@ -720,7 +720,7 @@ export class ReleveNote extends  Model implements IModel {
         return this.exportOptions.withNotes;
     }
 
-    setTypeExport ()  {
+    setTypeExport () : void {
         if (this.IsSpecificOptionsCsv) this.exportOptions.fileType = 'csv';
     }
 
@@ -729,7 +729,7 @@ export class ReleveNote extends  Model implements IModel {
         let column = ['displayName'];
         if(this.exportOptions.withNotes) {
             _.each(this.devoirs.all, (d) => {
-                let title = d.name;
+                let title : string = d.name;
                 header += `; ${title}`;
                 column.push('D'+ d.id);
             });
@@ -744,7 +744,7 @@ export class ReleveNote extends  Model implements IModel {
         }
         if(this.exportOptions.withNotes) {
             header +=`; ${lang.translate('average')}`;
-            column.push('actualAverage')
+            column.push('actualAverage');
         }
         _.mapObject(this.exportOptions.sousMatieres.moyennes, (printSousMatiere, id) => {
             if(printSousMatiere){
