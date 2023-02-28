@@ -1014,10 +1014,13 @@ public class ExportPDFController extends ControllerHelper {
                 Map<String, JsonObject> libMatieres = allData.result().resultAt(4);
                 Map<JsonObject, JsonObject> moyObject = allData.result().resultAt(5);
 
+
                 JsonArray data = new JsonArray(
                         moyObject.entrySet().stream().map(entry -> {
                             JsonObject newMoy = new JsonObject();
-
+                            if (libMatieres.get(entry.getKey().getString(Field.ID_MATIERE)) == null) {
+                                return newMoy;
+                            }
                             String prof = libTeachers.get(teachers.get(entry.getKey()));
                             newMoy.put("mat", libMatieres.get(entry.getKey().getString("id_matiere")).getString("name"));
                             newMoy.put("rank", libMatieres.get(entry.getKey().getString("id_matiere")).getInteger("rank"));
