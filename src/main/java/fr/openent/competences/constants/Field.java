@@ -26,6 +26,7 @@ public class Field {
     public static final String ID_GROUPS = "id_groups";
     public static final String ID_GROUPE = "id_groupe";
     public static final String ID_GROUPES = "id_groupes";
+    public static final String IDGROUPS = "idGroups";
     public static final String ID_TYPESOUSMATIERE = "id_type_sousmatiere";
     public static final String ID_PERIODE = "id_periode";
     public static final String IDPERIODE = "idPeriode";
@@ -61,7 +62,6 @@ public class Field {
     public static final String SUBJECT_ID = "subject_id";
     public static final String CLASS_OR_GROUP_ID = "class_or_group_id";
 
-
     //transaction
     public static final String ACTION = "action";
     public static final String VALUES = "values";
@@ -95,6 +95,12 @@ public class Field {
     public static final String GROUPS = "groups";
     public static final String TEACHERS = "teachers";
     public static final String MOYENNE = "moyenne";
+    public static final String MOYENNES ="moyennes";
+    public static final String MOYENNE_GENERALE = "moyenne_generale";
+    public static final String MAX = "max";
+    public static final String MAXIMUM = "maximum";
+    public static final String MIN = "min";
+    public static final String MINIMUM = "minimum";
     public static final String HASNOTE = "hasNote";
     public static final String VALEUR = "valeur";
     public static final String IS_EVALUATED = "is_evaluated";
@@ -129,8 +135,12 @@ public class Field {
     public static final String MATIERES = "matieres";
     public static final String RANK = "rank";
     public static final String PERIODE = "periode";
+    public static final String POSITIONNEMENT = "positionnement";
+    public static final String STATISTIQUES = "statistiques";
     public static final String NAMECLASSE = "nameClasse";
     public static final String NAMECLASS = "nameClass";
+    public static final String ELEMENTPROGRAMME = "elementProgramme";
+    public static final String TABLECONVERSIONS = "tableConversions";
     //
 
     public static final String ISSKILLAVERAGE = "isSkillAverage";
@@ -171,8 +181,8 @@ public class Field {
     public static final String COMPETENCES_DEVOIRS = "competences_devoirs";
     public static final String COMPETENCES_NOTES_TABLE = "competences_notes";
     public static final String CYCLE_TABLE = "cycle";
-    public static final String DEVOIR_TABLE = "devoirs";
 
+    public static final String DEVOIRS_TABLE = "devoirs";
     public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
     public static final String DIGITAL_SKILLS_TABLE = "digital_skills";
     public static final String DOMAINE_DIGITAL_SKILLS_TABLE = "domaines_digital_skills";

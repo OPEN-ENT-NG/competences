@@ -87,14 +87,14 @@ public class FilterCompetenceNoteUtils {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder()
-                .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE)
+                .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIRS_TABLE)
                 .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Field.COMPETENCES_NOTES_TABLE +
-                        " ON (" + Field.COMPETENCES_NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIR_TABLE + "." + Field.ID + ") ")
+                        " ON (" + Field.COMPETENCES_NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIRS_TABLE + "." + Field.ID + ") ")
                 .append("WHERE " + Field.COMPETENCES_NOTES_TABLE + "." + Field.ID + " IN " + Sql.listPrepared(idNotes.toArray()) + " ")
-                .append("AND (" + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ? OR ")
+                .append("AND (" + Field.DEVOIRS_TABLE + "." + Field.OWNER + " = ? OR ")
                 .append("? IN (SELECT member_id ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE)
-                .append(" WHERE resource_id = " + Field.DEVOIR_TABLE + "." + Field.ID)
+                .append(" WHERE resource_id = " + Field.DEVOIRS_TABLE + "." + Field.ID)
                 .append(" AND action = '" + Competences.DEVOIR_ACTION_UPDATE + "')")
                 .append(")");
 

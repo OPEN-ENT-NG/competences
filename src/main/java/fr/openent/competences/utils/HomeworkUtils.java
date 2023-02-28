@@ -2,7 +2,6 @@ package fr.openent.competences.utils;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.constants.Field;
-import fr.openent.competences.service.impl.DefaultDevoirService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
@@ -13,7 +12,6 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,26 +24,26 @@ public class HomeworkUtils {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT count(" + Field.NOTES_TABLE + ".id) as nb_notes , " + Field.DEVOIR_TABLE + "." + Field.ID + ", " + Field.REL_DEVOIRS_GROUPES_TABLE + "." + Field.ID_GROUPE)
+        query.append("SELECT count(" + Field.NOTES_TABLE + ".id) as nb_notes , " + Field.DEVOIRS_TABLE + "." + Field.ID + ", " + Field.REL_DEVOIRS_GROUPES_TABLE + "." + Field.ID_GROUPE)
                 .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.NOTES_TABLE)
                 .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_TABLE)
                 .append(", ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.REL_DEVOIRS_GROUPES)
-                .append(" WHERE " + Field.NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIR_TABLE + "." + Field.ID)
-                .append(" AND " + Field.REL_DEVOIRS_GROUPES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIR_TABLE + "." + Field.ID)
-                .append(" AND " + Field.DEVOIR_TABLE + "." + Field.ID + " = ?");
+                .append(" WHERE " + Field.NOTES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIRS_TABLE + "." + Field.ID)
+                .append(" AND " + Field.REL_DEVOIRS_GROUPES_TABLE + "." + Field.ID_DEVOIR + " = " + Field.DEVOIRS_TABLE + "." + Field.ID)
+                .append(" AND " + Field.DEVOIRS_TABLE + "." + Field.ID + " = ?");
 
         values.add(idDevoir);
 
         if (!isChefEtab) {
-            query.append(" AND (" + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ? OR") // devoirs dont on est le propriétaire
+            query.append(" AND (" + Field.DEVOIRS_TABLE + "." + Field.OWNER + " = ? OR") // devoirs dont on est le propriétaire
                     .append(" ? IN (SELECT member_id") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
                     .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".").append(Competences.DEVOIR_SHARE_TABLE)
-                    .append(" WHERE resource_id = " + Field.DEVOIR_TABLE + "." + Field.ID)
+                    .append(" WHERE resource_id = " + Field.DEVOIRS_TABLE + "." + Field.ID)
                     .append(" AND action = '").append(Competences.DEVOIR_ACTION_UPDATE).append("')")
                     .append(" )");
             values.add(user.getUserId()).add(user.getUserId());
         }
-        query.append(" GROUP by " + Field.DEVOIR_TABLE + "." + Field.ID + ", " + Field.REL_DEVOIRS_GROUPES_TABLE + "." + Field.ID_GROUPE);
+        query.append(" GROUP by " + Field.DEVOIRS_TABLE + "." + Field.ID + ", " + Field.REL_DEVOIRS_GROUPES_TABLE + "." + Field.ID_GROUPE);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
