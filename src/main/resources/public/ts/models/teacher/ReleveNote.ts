@@ -111,7 +111,8 @@ export class ReleveNote extends  Model implements IModel {
             positionnementFinal: true,
             appreciationClasse: true,
             moyenneClasse: true,
-            withNotes: false
+            withNotes: false,
+            previousAverage: false
         };
         _.forEach(this.matiere.sousMatieres.all, (sousMatiere) => {
             this.exportOptions.sousMatieres.moyennes[sousMatiere.id_type_sousmatiere] = true;
@@ -717,7 +718,7 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
     IsSpecificOptionsCsv () : boolean {
-        return this.exportOptions.withNotes;
+        return this.exportOptions.withNotes || this.exportOptions.previousAverage;
     }
 
     setTypeExport () : void {

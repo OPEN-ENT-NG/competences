@@ -23,6 +23,7 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
+import fr.openent.competences.helpers.NoteControllerHelper;
 import fr.openent.competences.importservice.ExercizerImportNote;
 import fr.openent.competences.model.*;
 import fr.openent.competences.model.importservice.ExercizerStudent;
@@ -311,7 +312,39 @@ public class NoteController extends ControllerHelper {
                 notesService.exportPDFRelevePeriodique(param,  request, vertx, config);
             }
             else {
-                notesService.getDatasReleve(param, notEmptyResponseHandler(request));
+                boolean previousAverage = param.getBoolean(Field.PREVIOUSAVERAGE);
+
+                if(previousAverage) {
+                    JsonObject paramYear = param.copy();
+                    if(paramYear.containsKey(Field.IDPERIODE)) paramYear.remove(Field.IDPERIODE);
+                    List<Future> datasFuture = new ArrayList<>();
+
+                    Future<JsonObject> responseFutureYear = notesService.getDatasReleve(paramYear);
+                    Future<JsonObject> responseFuturePeriode = notesService.getDatasReleve(param);
+                    datasFuture.add(responseFutureYear);
+                    datasFuture.add(responseFuturePeriode);
+
+                    CompositeFuture.all(datasFuture)
+                            .onFailure(error -> {
+                                badRequest(request, error.getMessage());
+                                log.error(String.format("[Competences@%s::exportRelevePeriodique] " +
+                                        "error to get exportRelevePeriodique : %s",
+                                        this.getClass().getSimpleName(), error.getMessage()));
+                            })
+                            .onSuccess( resp -> {
+                                JsonObject respAnnualData = responseFutureYear.result();
+                                JsonObject respPeriodicData = responseFuturePeriode.result();
+                                JsonObject result = NoteControllerHelper.setResponseExportReleve(respAnnualData,respPeriodicData);
+
+                                Renders.renderJson(request, result);
+
+                            });
+
+
+                } else {
+                    notesService.getDatasReleve(param, notEmptyResponseHandler(request));
+                }
+
             }
         });
     }
