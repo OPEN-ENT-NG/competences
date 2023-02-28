@@ -18,6 +18,7 @@
 import {_, Collection, http, idiom as lang, IModel, Model, model, moment, notify} from 'entcore';
 import httpAxios from 'axios';
 import {
+    Annotation,
     AppreciationClasse, BaremeBrevetEleve,
     Classe, CompetenceNote,
     Devoir,
@@ -429,7 +430,7 @@ export class ReleveNote extends  Model implements IModel {
     }
 
     private getAnnotation(idAnnotation : number) : string {
-        var lib = evaluations.structure.annotations.findWhere(
+        let lib : Annotation = evaluations.structure.annotations.findWhere(
             {id: idAnnotation});
         return (lib != null ? lib.libelle_court : "ERR");
     }
@@ -566,7 +567,7 @@ export class ReleveNote extends  Model implements IModel {
         return line[key]
     }
 
-    private setNoteOnDevoir (line : any, notes : any) {
+    private setNoteOnDevoir (line : any, notes : Array<Evaluation>) {
         _.each(this.devoirs.all, (d) => {
             let noteDevoir = _.findWhere(notes, {id_devoir : d.id, id_eleve: line['id'] });
                 if (noteDevoir) {

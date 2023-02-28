@@ -927,9 +927,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                            Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put(Field.ACTION, "eleve.getAnnotations")
-                .put("idEleve", idEleve)
-                .put("idPeriode", idPeriode)
-                .put("idMatiere", idMatiere);
+                .put(Field.IDELEVE, idEleve)
+                .put(Field.IDPERIODE, idPeriode)
+                .put(Field.IDMATIERE, idMatiere);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (Field.OK.equals(body.getString(Field.STATUS))) {
@@ -947,10 +947,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                            Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put(Field.ACTION, "eleve.getCompetences")
-                .put("idEleve", idEleve)
-                .put("idPeriode", idPeriode)
-                .put("idMatiere", idMatiere)
-                .put("idGroups", groups);
+                .put(Field.IDELEVE, idEleve)
+                .put(Field.IDPERIODE, idPeriode)
+                .put(Field.IDMATIERE, idMatiere)
+                .put(Field.IDGROUPS, groups);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (Field.OK.equals(body.getString(Field.STATUS))) {
@@ -1590,10 +1590,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         devoirs.addAll(moyennesFinales);
         devoirs.forEach(devoir -> {
             JsonObject devoirJson = (JsonObject) devoir;
-            String idMatiere = devoirJson.getString("id_matiere");
-            String idClass = devoirJson.containsKey("id_groupe") ? devoirJson.getString("id_groupe") : devoirJson.getString("id_classe");
-            String moyenneFinale = devoirJson.containsKey("moyenne")? devoirJson.getString("moyenne") : Field.NN;
-            Long idPeriodeDevoir = devoirJson.getLong("id_periode");
+            String idMatiere = devoirJson.getString(Field.ID_MATIERE);
+            String idClass = devoirJson.containsKey(Field.ID_GROUPE) ? devoirJson.getString(Field.ID_GROUPE) :
+                    devoirJson.getString(Field.ID_CLASSE);
+            String moyenneFinale = devoirJson.containsKey(Field.MOYENNE)? devoirJson.getString(Field.MOYENNE) : Field.NN;
+            Long idPeriodeDevoir = devoirJson.getLong(Field.ID_PERIODE);
 
             JsonObject matiere = (JsonObject) matieres.stream()
                     .filter(el -> idMatiere.equals(((JsonObject) el).getString("id")))
@@ -1656,12 +1657,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
                 if(!Field.NN.equals(moyenneFinale)){
                     JsonObject moyenne = new JsonObject()
-                            .put("id_periode", idPeriodeDevoir)
-                            .put("moyenne", moyenneFinale);
-                    if(resultMatiere.containsKey("moyennes")) {
-                        resultMatiere.getJsonArray("moyennes").add(moyenne);
+                            .put(Field.ID_PERIODE, idPeriodeDevoir)
+                            .put(Field.MOYENNE, moyenneFinale);
+                    if(resultMatiere.containsKey(Field.MOYENNES)) {
+                        resultMatiere.getJsonArray(Field.MOYENNES).add(moyenne);
                     } else {
-                        resultMatiere.put("moyennes", new JsonArray().add(moyenne));
+                        resultMatiere.put(Field.MOYENNES, new JsonArray().add(moyenne));
                     }
                 } else {
                     if(resultMatiere.containsKey("devoirs")) {
@@ -2019,31 +2020,32 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             }
 
             if(moyenneFinale != null) {
-                matiereJO.put("moyenne", (moyenneFinale.getString("moyenne") != null)? moyenneFinale.getString("moyenne"): Field.NN);
+                matiereJO.put(Field.MOYENNE, (moyenneFinale.getString(Field.MOYENNE) != null)?
+                        moyenneFinale.getString(Field.MOYENNE): Field.NN);
             } else if (!notes.isEmpty() || subTopicNoteDevoirMap.size() > 0) {
                 if(subTopicNoteDevoirMap.size()> 0){
                     AtomicReference<Double> coefTotal = new AtomicReference<>(0.d);
                     AtomicReference<Double> total = new AtomicReference<>(0.d);
                     subTopicNoteDevoirMap.forEach((subtopic,notesList) ->{
                         total.updateAndGet(v -> v + utilsService.calculMoyenne(notesList, false, 20,
-                                false).getDouble("moyenne") * subtopic.getCoefficient());
+                                false).getDouble(Field.MOYENNE) * subtopic.getCoefficient());
                         coefTotal.updateAndGet(v -> v + subtopic.getCoefficient());
                     });
                     if(coefTotal.get() == 0){
-                        matiereJO.put("moyenne", Field.NN);
+                        matiereJO.put(Field.MOYENNE, Field.NN);
                     }else{
-                        matiereJO.put("moyenne", decimalFormat.format(total.get() / coefTotal.get()));
+                        matiereJO.put(Field.MOYENNE, decimalFormat.format(total.get() / coefTotal.get()));
                     }
                 }else {
 
                     Double moy = utilsService.calculMoyenne(notes, false, 20, false)
-                            .getDouble("moyenne");
-                    matiereJO.put("moyenne", decimalFormat.format(moy));
+                            .getDouble(Field.MOYENNE);
+                    matiereJO.put(Field.MOYENNE, decimalFormat.format(moy));
                 }
             } else {
-                matiereJO.put("moyenne", Field.NN);
+                matiereJO.put(Field.MOYENNE, Field.NN);
             }
-            matiereJO.remove("moyennes");
+            matiereJO.remove(Field.MOYENNES);
         }
     }
 }

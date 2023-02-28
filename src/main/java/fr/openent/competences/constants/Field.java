@@ -26,6 +26,7 @@ public class Field {
     public static final String ID_GROUPS = "id_groups";
     public static final String ID_GROUPE = "id_groupe";
     public static final String ID_GROUPES = "id_groupes";
+    public static final String IDGROUPS = "idGroups";
     public static final String ID_TYPESOUSMATIERE = "id_type_sousmatiere";
     public static final String ID_PERIODE = "id_periode";
     public static final String IDPERIODE = "idPeriode";
@@ -94,6 +95,12 @@ public class Field {
     public static final String GROUPS = "groups";
     public static final String TEACHERS = "teachers";
     public static final String MOYENNE = "moyenne";
+    public static final String MOYENNES ="moyennes";
+    public static final String MOYENNE_GENERALE = "moyenne_generale";
+    public static final String MAX = "max";
+    public static final String MAXIMUM = "maximum";
+    public static final String MIN = "min";
+    public static final String MINIMUM = "minimum";
     public static final String HASNOTE = "hasNote";
     public static final String VALEUR = "valeur";
     public static final String IS_EVALUATED = "is_evaluated";
@@ -128,6 +135,8 @@ public class Field {
     public static final String MATIERES = "matieres";
     public static final String RANK = "rank";
     public static final String PERIODE = "periode";
+    public static final String POSITIONNEMENT = "positionnement";
+    public static final String STATISTIQUES = "statistiques";
     public static final String NAMECLASSE = "nameClasse";
     public static final String NAMECLASS = "nameClass";
     public static final String ELEMENTPROGRAMME = "elementProgramme";
