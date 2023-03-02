@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessElementBilanPeriodiqueFilter;
+import fr.openent.competences.security.AccessIfMyStructure;
 import fr.openent.competences.security.AccessStructureAdminTeacherFilter;
 import fr.openent.competences.security.CreateElementBilanPeriodique;
 import fr.openent.competences.security.utils.AccessThematiqueBilanPeriodique;
@@ -316,7 +317,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsBilanPeriodique")
     @ApiDoc("Retourne les élèments du bilan périodique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     //@ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getElementBilanPeriodique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request,  user -> {
@@ -344,7 +346,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsBilanPeriodique/enseignants")
     @ApiDoc("Retourne les thématiques correspondant au type passé en paramètre")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     //@ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getEnseignantsElements(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
