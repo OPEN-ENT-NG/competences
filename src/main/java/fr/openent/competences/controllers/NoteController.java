@@ -335,12 +335,8 @@ public class NoteController extends ControllerHelper {
                                 JsonObject respAnnualData = responseFutureYear.result();
                                 JsonObject respPeriodicData = responseFuturePeriode.result();
                                 JsonObject result = NoteControllerHelper.setResponseExportReleve(respAnnualData,respPeriodicData);
-
                                 Renders.renderJson(request, result);
-
                             });
-
-
                 } else {
                     notesService.getDatasReleve(param, notEmptyResponseHandler(request));
                 }
