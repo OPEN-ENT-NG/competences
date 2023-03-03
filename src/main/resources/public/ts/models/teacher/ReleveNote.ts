@@ -590,12 +590,10 @@ export class ReleveNote extends  Model implements IModel {
     private setPreviousAverages (line : any) : void {
         this.getPreviousPeriod().forEach( (p : Periode) => {
 
-            let moyenne : number | string = (line['finalAverages'].find( (a) =>a.id_periode == p.id_type))?
-                line['finalAverages'].find( (a) =>a.id_periode == p.id_type).moyenne : null;
+            let moyenne : number | string = {...(line['finalAverages'].find( (a) => a .id_periode == p.id_type))}.moyenne;
 
-            if (moyenne === null) {
-                moyenne = (line['averages'].find((a) =>  a.id_periode == p.id_type))?
-                    line['averages'].find((a) =>  a.id_periode == p.id_type).moyenne : '';
+            if (moyenne === undefined || moyenne === null) {
+                moyenne = {...(line['averages'].find((a) =>  a.id_periode == p.id_type))}.moyenne;
             }
             let label : string = lang.translate("viescolaire.periode." + p.type).charAt(0);
             line['Moyenne '+ label + p.ordre] = moyenne;
