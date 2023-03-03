@@ -87,6 +87,8 @@ public class Field {
     public static final String PRESENCES = "presences";
 
     //variables
+    public static final String AVERAGES = "averages";
+    public static final String FINALAVERAGES = "finalAverages";
     public static final String NN = "NN";
     public static final String SAVE_BFC = "saveBFC";
     public static final String SUBCOEF = "subCoef";
@@ -97,6 +99,7 @@ public class Field {
     public static final String MOYENNE = "moyenne";
     public static final String MOYENNES ="moyennes";
     public static final String MOYENNE_GENERALE = "moyenne_generale";
+    public static final String MOYENNESFINALES = "moyennesFinales";
     public static final String MAX = "max";
     public static final String MAXIMUM = "maximum";
     public static final String MIN = "min";
@@ -136,6 +139,7 @@ public class Field {
     public static final String RANK = "rank";
     public static final String PERIODE = "periode";
     public static final String POSITIONNEMENT = "positionnement";
+    public static final String PREVIOUSAVERAGE  = "previousAverage";
     public static final String STATISTIQUES = "statistiques";
     public static final String NAMECLASSE = "nameClasse";
     public static final String NAMECLASS = "nameClass";

@@ -111,7 +111,8 @@ export class ReleveNote extends  Model implements IModel {
             positionnementFinal: true,
             appreciationClasse: true,
             moyenneClasse: true,
-            withNotes: false
+            withNotes: false,
+            previousAverage: false
         };
         _.forEach(this.matiere.sousMatieres.all, (sousMatiere) => {
             this.exportOptions.sousMatieres.moyennes[sousMatiere.id_type_sousmatiere] = true;
@@ -578,6 +579,27 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
+    private getPreviousPeriod () : Periode[] {
+        let previousPeriods : Periode[] ;
+        previousPeriods = this.classe.periodes.all.filter( (p : Periode ) =>
+             p.id != null && p.id_type < this.idPeriode
+        );
+        return previousPeriods;
+    }
+
+    private setPreviousAverages (line : any) : void {
+        this.getPreviousPeriod().forEach( (p : Periode) => {
+
+            let moyenne : number | string = {...(line['finalAverages'].find( (a) => a .id_periode == p.id_type))}.moyenne;
+
+            if (moyenne === undefined || moyenne === null) {
+                moyenne = {...(line['averages'].find((a) =>  a.id_periode == p.id_type))}.moyenne;
+            }
+            let label : string = lang.translate("viescolaire.periode." + p.type).charAt(0);
+            line['Moyenne '+ label + p.ordre] = moyenne;
+        });
+    }
+
     async export  () {
         return new Promise(async (resolve, reject) => {
             let parameter = this.toJson();
@@ -617,9 +639,9 @@ export class ReleveNote extends  Model implements IModel {
                             this.addColumnForExportCsv(line, 'moyenneFinale');
                         }
                         if(this.exportOptions.withNotes) {
-                            //averageFinal = (averageFinal != null) ? averageFinal : moyenne (= moyenne_auto)
+                            //in back averageFinal = (averageFinal != null) ? averageFinal : moyenne (= moyenne_auto)
                             if(!this.exportOptions.averageFinal)  this.addColumnForExportCsv(line, 'moyenneFinale');
-                            // actualAverage = (averageFinal != null) ? averageFinal : moyenne => averageFinal
+                            //So actualAverage = (averageFinal != null) ? averageFinal : moyenne => averageFinal
                             line['actualAverage'] = line['moyenneFinale'];
                             this.setNotesDevoirs(line, response.notes);
                         }
@@ -643,52 +665,16 @@ export class ReleveNote extends  Model implements IModel {
                         if(this.exportOptions.appreciation) {
                             this.addColumnForExportCsv(line, 'appreciation_matiere_periode');
                         }
-
+                        if(this.exportOptions.previousAverage) {
+                            this.setPreviousAverages (line);
+                        }
                         columnCsv.push(_.pick(line, format.column));
                     });
 
-                    let csvData = Utils.ConvertToCSV(columnCsv, format.header);
+                    let csvData : string = Utils.ConvertToCSV(columnCsv, format.header);
 
-                    let classe = response._moyenne_classe;
                     if(this.exportOptions.moyenneClasse){
-                        if(classe) {
-                            let moyAuto = classe['null'];
-                            let moyFinal = classe['nullFinal'];
-                            if (Utils.isNotNull(moyAuto)) {
-                                moyAuto = moyAuto.moyenne;
-                            }
-                            if (Utils.isNotNull(moyFinal)) {
-                                moyFinal = moyFinal.moyenne;
-                            }
-                            moyAuto = Utils.isNull(moyAuto) ? '' : moyAuto;
-                            moyFinal = Utils.isNull(moyFinal) ? '' : moyFinal;
-
-                            csvData += (`${lang.translate('average.class')}`);
-                            if (this.exportOptions.averageAuto) {
-                                csvData += (`;${moyAuto}`);
-                            }
-                            if (this.exportOptions.averageFinal) {
-                                csvData += (`;${moyFinal}`);
-                            }
-                        }else{
-                            csvData += (`${lang.translate('average.class')}`);
-                            if (this.exportOptions.averageAuto) {
-                                csvData += (`; `);
-                            }
-                            if (this.exportOptions.averageFinal) {
-                                csvData += (`; `);
-                            }
-                        }
-                        let classeSousMat = response.moyenneClasseSousMat;
-                        if (Utils.isNotNull(classeSousMat)) {
-                            _.forEach(classeSousMat, sousMat => {
-                                if (sousMat.print) {
-                                    csvData += (`;${sousMat._moyenne}`);
-                                }
-                            })
-                        }
-
-                        csvData += '\r\n';
+                        this.setAverageClasse (response, csvData);
                     }
                     if(this.exportOptions.appreciationClasse ){
                         csvData += (`${lang.translate('evaluations.releve.appreciation.classe')};${
@@ -716,8 +702,50 @@ export class ReleveNote extends  Model implements IModel {
             };
         });
     }
+
+    private setAverageClasse (response : any, csvData : string) {
+        let classe : any = response._moyenne_classe;
+        if(classe) {
+            let moyAuto = classe['null'];
+            let moyFinal = classe['nullFinal'];
+            if (Utils.isNotNull(moyAuto)) {
+                moyAuto = moyAuto.moyenne;
+            }
+            if (Utils.isNotNull(moyFinal)) {
+                moyFinal = moyFinal.moyenne;
+            }
+            moyAuto = Utils.isNull(moyAuto) ? '' : moyAuto;
+            moyFinal = Utils.isNull(moyFinal) ? '' : moyFinal;
+
+            csvData += (`${lang.translate('average.class')}`);
+            if (this.exportOptions.averageAuto) {
+                csvData += (`;${moyAuto}`);
+            }
+            if (this.exportOptions.averageFinal) {
+                csvData += (`;${moyFinal}`);
+            }
+        }else{
+            csvData += (`${lang.translate('average.class')}`);
+            if (this.exportOptions.averageAuto) {
+                csvData += (`; `);
+            }
+            if (this.exportOptions.averageFinal) {
+                csvData += (`; `);
+            }
+        }
+        let classeSousMat = response.moyenneClasseSousMat;
+        if (Utils.isNotNull(classeSousMat)) {
+            classeSousMat.forEach( sousMat => {
+                if (sousMat.print) {
+                    csvData += (`;${sousMat._moyenne}`);
+                }
+            });
+        }
+        csvData += '\r\n';
+    }
+
     IsSpecificOptionsCsv () : boolean {
-        return this.exportOptions.withNotes;
+        return this.exportOptions.withNotes || this.exportOptions.previousAverage;
     }
 
     setTypeExport () : void {
@@ -773,6 +801,14 @@ export class ReleveNote extends  Model implements IModel {
             column.push('appreciation_matiere_periode');
         }
 
+        if (this.exportOptions.previousAverage ) {
+            this.getPreviousPeriod().forEach( (p: Periode) => {
+                let label : string = lang.translate('average') +
+                    lang.translate("viescolaire.periode." + p.type).charAt(0) + p.ordre
+                header += `; ${label}`;
+                column.push(label);
+            });
+        }
         return  {header: header, column: column};
     }
 }

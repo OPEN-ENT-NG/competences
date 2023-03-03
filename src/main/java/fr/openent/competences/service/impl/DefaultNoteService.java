@@ -2755,6 +2755,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         });
     }
 
+    public Future<JsonObject> getDatasReleve (final JsonObject param) {
+        Promise<JsonObject> promiseDataReleve = Promise.promise();
+        getDatasReleve(param, FutureHelper.handlerJsonObject(promiseDataReleve,
+                String.format ("[Competences@%s::getDatasReleve] error to get data for periodic transcript", this.getClass().getSimpleName())));
+        return promiseDataReleve.future();
+    }
+
     public void getTotaleDatasReleve(final JsonObject params, final Long idPeriode, final boolean annual,
                                      final Handler<Either<String, JsonObject>> handler){
         try{
