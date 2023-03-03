@@ -326,7 +326,7 @@ public class NoteController extends ControllerHelper {
 
                     CompositeFuture.all(datasFuture)
                             .onFailure(error -> {
-                                badRequest(request, error.getMessage());
+                                badRequest(request);
                                 log.error(String.format("[Competences@%s::exportRelevePeriodique] " +
                                         "error to get exportRelevePeriodique : %s",
                                         this.getClass().getSimpleName(), error.getMessage()));
