@@ -6,27 +6,38 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class NoteControllerHelper {
 
-    protected static final Logger log = LoggerFactory.getLogger(DevoirControllerHelper.class);
+    protected static final Logger log = LoggerFactory.getLogger(NoteControllerHelper.class);
 
-    public static JsonObject setResponseExportReleve(JsonObject responseAnnual, JsonObject responsePeriodic) {
-
-        JsonArray annualStudents = responseAnnual.getJsonArray(Field.ELEVES);
-        JsonArray periodicStudents = responsePeriodic.getJsonArray(Field.ELEVES);
-
-        for(int i = 0; i < periodicStudents.size(); i++){
-            JsonObject studentPeriodicJO = periodicStudents.getJsonObject(i);
-            for (int j = 0; j < annualStudents.size(); j++) {
-                JsonObject studentAnnualJO = annualStudents.getJsonObject(j);
-                if (studentPeriodicJO.getString(Field.ID).equals(studentAnnualJO.getString(Field.ID))) {
-                    studentPeriodicJO.put(Field.AVERAGES, studentAnnualJO.getJsonArray(Field.MOYENNES, new JsonArray()));
-                    studentPeriodicJO.put(Field.FINALAVERAGES, studentAnnualJO.getJsonArray(Field.MOYENNESFINALES, new JsonArray()));
-                }
-            }
-        }
-        return responsePeriodic;
+    private NoteControllerHelper() {
+        throw new IllegalStateException("NoteControllerHelper class");
     }
 
+    @SuppressWarnings("unchecked")
+    public static void setResponseExportReleve(JsonObject responseAnnual, JsonObject responsePeriodic) {
+
+        List<JsonObject> annualStudents = responseAnnual.getJsonArray(Field.ELEVES).getList();
+        List<JsonObject> periodicStudents = responsePeriodic.getJsonArray(Field.ELEVES).getList();
+        responsePeriodic .put(Field.ELEVES, periodicStudents.stream()
+                .map( periocStudent -> {
+                            JsonObject annualStudentFind = annualStudents
+                                    .stream()
+                                    .filter( annualStudent ->
+                                            periocStudent.getString(Field.ID).equals(annualStudent.getString(Field.ID))).
+                                    findFirst().orElse(new JsonObject());
+
+                            periocStudent.put(Field.AVERAGES,
+                                    annualStudentFind.getJsonArray(Field.MOYENNES, new JsonArray()));
+                            periocStudent.put(Field.FINALAVERAGES, annualStudentFind.getJsonArray(Field.MOYENNESFINALES, new JsonArray()));
+                            return periocStudent;
+                        }
+
+                ).collect(Collectors.toList())
+        );
+    }
 
 }

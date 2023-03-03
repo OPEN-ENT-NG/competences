@@ -579,23 +579,23 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
-    private getPreviousPeriod () : Array<Periode> {
-        let previousPeriods : Periode[] = [];
-        previousPeriods = _.filter(this.classe.periodes.all, (p)=> {
-            return p.id != null && p.id_type < this.idPeriode;
-        });
+    private getPreviousPeriod () : Periode[] {
+        let previousPeriods : Periode[] ;
+        previousPeriods = this.classe.periodes.all.filter( (p : Periode ) =>
+             p.id != null && p.id_type < this.idPeriode
+        );
         return previousPeriods;
     }
 
     private setPreviousAverages (line : any) : void {
-        _.each(this.getPreviousPeriod(), (p) => {
+        this.getPreviousPeriod().forEach( (p : Periode) => {
 
-            let moyenne : number | string = (_.findWhere(line['finalAverages'],{ id_periode : p.id_type}))?
-                _.findWhere(line['finalAverages'],{ id_periode : p.id_type}).moyenne : null;
+            let moyenne : number | string = (line['finalAverages'].find( (a) =>a.id_periode == p.id_type))?
+                line['finalAverages'].find( (a) =>a.id_periode == p.id_type).moyenne : null;
 
             if (moyenne === null) {
-                moyenne = (_.findWhere(line['averages'],{ id_periode : p.id_type}))?
-                    _.findWhere(line['averages'],{ id_periode : p.id_type}).moyenne : '';
+                moyenne = (line['averages'].find((a) =>  a.id_periode == p.id_type))?
+                    line['averages'].find((a) =>  a.id_periode == p.id_type).moyenne : '';
             }
             let label : string = lang.translate("viescolaire.periode." + p.type).charAt(0);
             line['Moyenne '+ label + p.ordre] = moyenne;
@@ -673,7 +673,7 @@ export class ReleveNote extends  Model implements IModel {
                         columnCsv.push(_.pick(line, format.column));
                     });
 
-                    let csvData = Utils.ConvertToCSV(columnCsv, format.header);
+                    let csvData : string = Utils.ConvertToCSV(columnCsv, format.header);
 
                     if(this.exportOptions.moyenneClasse){
                         this.setAverageClasse (response, csvData);
@@ -705,8 +705,8 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
-    private setAverageClasse (response : any, csvData : any) {
-        let classe = response._moyenne_classe;
+    private setAverageClasse (response : any, csvData : string) {
+        let classe : any = response._moyenne_classe;
         if(classe) {
             let moyAuto = classe['null'];
             let moyFinal = classe['nullFinal'];
@@ -737,11 +737,11 @@ export class ReleveNote extends  Model implements IModel {
         }
         let classeSousMat = response.moyenneClasseSousMat;
         if (Utils.isNotNull(classeSousMat)) {
-            _.forEach(classeSousMat, sousMat => {
+            classeSousMat.forEach( sousMat => {
                 if (sousMat.print) {
                     csvData += (`;${sousMat._moyenne}`);
                 }
-            })
+            });
         }
         csvData += '\r\n';
     }
@@ -804,10 +804,11 @@ export class ReleveNote extends  Model implements IModel {
         }
 
         if (this.exportOptions.previousAverage ) {
-            _.each(this.getPreviousPeriod(), (p) => {
-                let label = lang.translate('average') + lang.translate("viescolaire.periode." + p.type).charAt(0) + p.ordre
+            this.getPreviousPeriod().forEach( (p: Periode) => {
+                let label : string = lang.translate('average') +
+                    lang.translate("viescolaire.periode." + p.type).charAt(0) + p.ordre
                 header += `; ${label}`;
-               column.push(label);
+                column.push(label);
             });
         }
         return  {header: header, column: column};
