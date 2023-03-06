@@ -61,7 +61,7 @@
                 <td data-label="[[translate('average')]]" colspan="2"
                     ng-if="matiere.sousMatieres === undefined || matiere.sousMatieres.all.length === 0">
                     <div class="noteMoyenne alignCenterVertically">
-                        <span class="bold fontXLarge">[[matiere.moyenne]]</span>
+                        <span class="bold fontXLarge">[[matiere.getAverage()]]</span>
                     </div>
                 </td>
             </tr>
@@ -133,7 +133,7 @@
                 <td data-label="[[translate('average')]]" ng-class="{one: hasDevoirWithUnderSubject}" ng-if="$first"
                     rowspan="[[matiere.sousMatieres.all.length]]">
                     <div class="noteMoyenne alignCenterVertically">
-                        <span class="bold fontXLarge">[[matiere.moyenne]]</span>
+                        <span class="bold fontXLarge">[[matiere.getAverage()]]</span>
                     </div>
                 </td>
             </tr>

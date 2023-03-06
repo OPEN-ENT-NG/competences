@@ -15,25 +15,26 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {_, Collection, workspace} from 'entcore';
+import {_, Collection} from 'entcore';
 import http from "axios";
-import service = workspace.v2.service;
-import {SubtopicserviceService, SubTopicsServices} from "../../models/sniplets";
-import {Matiere} from "../../models/parent_eleve/Matiere";
-import {Classe, Devoir, Devoirs} from "../../models/teacher";
+import {SubtopicserviceService} from "../../models/sniplets";
+import {IOverrideAverageResponse, Matiere} from "../../models/parent_eleve/Matiere";
+import {Classe, Devoir} from "../../models/teacher";
+import {Service} from "../../models/common/ServiceSnipplet";
+import {MultiTeaching} from "../../models/common/MultiTeaching";
 
 /**
  * @param arr liste de nombres
  * @returns la moyenne si la liste n'est pas vide
  */
-export function average (arr) {
-    return _.reduce(arr, function(memo, num) {
+export function average(arr): number {
+    return _.reduce(arr, function (memo, num) {
         return memo + num;
     }, 0) / (arr.length === 0 ? 1 : arr.length);
 }
 
-function getMoyenne (devoirs) {
-    if(devoirs.length == 0){
+function getMoyenne(devoirs): number | string {
+    if (devoirs.length == 0) {
         return "NN";
     } else {
         let diviseurM = 20;
@@ -51,7 +52,7 @@ function getMoyenne (devoirs) {
 
         let coefficientTotalHomework = 0;
         devoirs.forEach(devoir => {
-            if(devoir.note && devoir.coefficient && devoir.diviseur) {
+            if (devoir.note && devoir.coefficient && devoir.diviseur) {
                 hasNote = true;
                 let currNote = parseFloat(devoir.note);
                 let currCoefficient = parseFloat(devoir.coefficient);
@@ -67,42 +68,42 @@ function getMoyenne (devoirs) {
                 coefficientTotalHomework += currCoefficient;
             }
         });
-        if(hasNote && coefficientTotalHomework !== 0) {
+        if (hasNote && coefficientTotalHomework !== 0) {
             let moyenne = ((sumNIMCIParD + sumCJDJ) / (sumCI + sumCJDJParM));
 
             if (null == moyenne) moyenne = 0.0;
 
             return +(moyenne).toFixed(1);
-        }else{
+        } else {
             return "NN";
         }
     }
 }
 
-function getSumAndCoeff (devoirs:any[]) {
-    if(devoirs.length == 0){
+function getSumAndCoeff(devoirs: Devoir[]): [number, number] {
+    if (devoirs.length == 0) {
         return [null, null];
     } else {
-        let diviseurM:number = 20;
+        let diviseurM: number = 20;
 
         // (SUM ( ni *m *ci /di)  + SUM ( nj *cj)  ) / (S ( ci)  + SUM ( cj  *dj /m)  )
         // avec d : diviseurs, n : note, c : coefficient, m = 20 : si ramené sur
         // avec i les notes ramenées sur m, et j les notes non ramenées sur m
 
-        let sumCI:number = 0;
-        let sumCJDJParM:number = 0;
-        let sumCJDJ:number = 0;
-        let sumNIMCIParD:number = 0;
+        let sumCI: number = 0;
+        let sumCJDJParM: number = 0;
+        let sumCJDJ: number = 0;
+        let sumNIMCIParD: number = 0;
 
-        let hasNote:boolean = false;
+        let hasNote: boolean = false;
 
-        let coefficientTotalHomework:number = 0;
-        devoirs.forEach(devoir => {
-            if(devoir.note && devoir.coefficient && devoir.diviseur) {
+        let coefficientTotalHomework: number = 0;
+        devoirs.forEach((devoir: Devoir) => {
+            if (devoir.note && devoir.coefficient && devoir.diviseur) {
                 hasNote = true;
-                let currNote:number = parseFloat(devoir.note);
-                let currCoefficient:number = parseFloat(devoir.coefficient);
-                let currDiviseur:number = devoir.diviseur;
+                let currNote: number = parseFloat(devoir.note);
+                let currCoefficient: number = parseFloat(devoir.coefficient.toString());
+                let currDiviseur: number = devoir.diviseur;
 
                 if (!devoir.ramener_sur) {
                     sumCJDJParM += (currCoefficient * currDiviseur / diviseurM);
@@ -114,104 +115,86 @@ function getSumAndCoeff (devoirs:any[]) {
                 coefficientTotalHomework += currCoefficient;
             }
         });
-        if(hasNote && coefficientTotalHomework !== 0) {
-            let sum:number = sumNIMCIParD + sumCJDJ;
-            let coeff:number = sumCI + sumCJDJParM;
+        if (hasNote && coefficientTotalHomework !== 0) {
+            let sum: number = sumNIMCIParD + sumCJDJ;
+            let coeff: number = sumCI + sumCJDJParM;
 
             return [sum, coeff];
-        }else{
+        } else {
             return [null, null];
         }
     }
 }
 
-function addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales) {
-    for(let moyenneFinale of moyennesFinales) {
-        if(!_.contains(_.pluck(matieresReleve, 'id'), moyenneFinale.id_matiere)) {
-            let matiere = _.findWhere(matieres.all, {id : moyenneFinale.id_matiere});
-            if (moyenneFinale.moyenne == null) {
-                matiere.moyenne = "NN";
-            } else {
-                matiere.moyenne = moyenneFinale.moyenne;
+function setOverrideAverage(matieresReleve: Matiere[], matieres: Collection<Matiere>, moyennesFinales: IOverrideAverageResponse[]): void {
+    for (let moyenneFinale of moyennesFinales) {
+        let subject: Matiere = matieresReleve.find((matiereReleve: Matiere) => matiereReleve.id == moyenneFinale.id_matiere);
+        if (!subject) {
+            subject = matieres.all.find((matiere: Matiere) => matiere.id == moyenneFinale.id_matiere);
+            if (!!subject) {
+                subject = new Matiere(subject);
+                matieresReleve.push(subject);
             }
-            matieresReleve.push(matiere);
         }
+        if (!!subject) subject.overrideAverage = !!moyenneFinale.moyenne ? moyenneFinale.moyenne : "NN";
     }
 }
 
-function getMoyenneSubTopic(matiere: any, devoirsMatieres: Devoir[], subTopicsServices: SubtopicserviceService[], moyennesFinales: any[], classe: Classe) {
-    let coefficientTemp:number;
-    let sumMoyenneTemp:number;
-    let sumMoyenne:number = 0;
-    let coefficientMoyenne:number = 0;
+function setSubSubjectAndSubjectAverages(matiere: any, devoirsMatieres: Devoir[], subTopicsServices: SubtopicserviceService[],
+                                         moyennesFinales: IOverrideAverageResponse[], classe: Classe): void {
+    let coefficientTemp: number;
+    let sumMoyenneTemp: number;
+    let sumMoyenne: number = 0;
+    let coefficientMoyenne: number = 0;
     for (let sousMat of matiere.sousMatieres.all) {
-        let coefficientSubTopic:number = 0;
-        let sumMoyenneSubTopic:number = 0;
-        let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
-        let mapTeacherDevoirs = new Map();
-
+        let coefficientSubTopic: number = 0;
+        let sumMoyenneSubTopic: number = 0;
+        let devoirsSousMat: Devoir[] = devoirsMatieres.filter((evaluationSubject: Devoir) =>
+            evaluationSubject.id_sousmatiere == sousMat.id_type_sousmatiere);
+        let mapTeacherDevoirs: Map<string, Devoir[]> = new Map();
         devoirsSousMat.forEach(devoir => {
-            if (mapTeacherDevoirs.get(devoir.owner) === undefined) {
-                let devoirArray = []
-                devoirArray.push(devoir);
-                mapTeacherDevoirs.set(devoir.owner, devoirArray)
-            } else {
-                let devoirArray = mapTeacherDevoirs.get(devoir.owner)
-                devoirArray.push(devoir);
-                mapTeacherDevoirs.set(devoir.owner, devoirArray)
-            }
-        })
+            let devoirArray: Devoir[] = mapTeacherDevoirs.get(devoir.owner);
+            devoirArray = !!devoirArray ? devoirArray : []
+            devoirArray.push(devoir);
+            mapTeacherDevoirs.set(devoir.owner, devoirArray);
+        });
+
         if (devoirsSousMat.length > 0) {
-            let coefficient:number = 1;
-            mapTeacherDevoirs.forEach((devoirArray, key) => {
-                let subTopicsService = subTopicsServices.find(subTopic => subTopic.id_subtopic === sousMat.id_type_sousmatiere
-                    && subTopic.id_topic === matiere.id && subTopic.id_teacher === key)
+            let coefficient: number = 1;
+            mapTeacherDevoirs.forEach((devoirArray: Devoir[], ownerId: string) => {
+                let subTopicsService: SubtopicserviceService = subTopicsServices.find((subTopic: SubtopicserviceService) => {
+                    return subTopic.id_subtopic === sousMat.id_type_sousmatiere && subTopic.id_topic === matiere.id &&
+                        (subTopic.id_teacher === ownerId ||
 
-                if(subTopicsService == null){
-                    //On regarde les multiTeacher
-                    classe.services.filter(service => service.coTeachers.length > 0).forEach(multiTeaching => {
-                        multiTeaching.coTeachers.forEach(serviceMultiTeaching => {
-                            if(serviceMultiTeaching.main_teacher_id === key
-                                && serviceMultiTeaching.group_id === classe.id
-                                && serviceMultiTeaching.subject_id == matiere.id){
-                                subTopicsService = subTopicsServices.find(subTopic => subTopic.id_subtopic === sousMat.id_type_sousmatiere
-                                    && subTopic.id_topic === matiere.id && subTopic.id_teacher === serviceMultiTeaching.second_teacher_id)
-                            }
+                            !!classe.services.find((service: Service) =>
+                                (!!service.coTeachers && !!service.coTeachers.find((coTeacher: MultiTeaching) =>
+                                    coTeacher.group_id === classe.id &&
+                                    coTeacher.subject_id == matiere.id &&
+                                    coTeacher.second_teacher_id === ownerId &&
+                                    coTeacher.main_teacher_id === subTopic.id_teacher
+                                )) ||
 
-                            if(serviceMultiTeaching.second_teacher_id === key
-                                && serviceMultiTeaching.group_id === classe.id
-                                && serviceMultiTeaching.subject_id == matiere.id){
+                                (!!service.substituteTeachers && !!service.substituteTeachers
+                                    .find((substituteTeacher: MultiTeaching) =>
+                                        substituteTeacher.group_id === classe.id &&
+                                        substituteTeacher.subject_id == matiere.id &&
+                                        substituteTeacher.second_teacher_id === ownerId &&
+                                        substituteTeacher.main_teacher_id === subTopic.id_teacher
+                                    ))
+                            ))
+                });
 
-                                subTopicsService = subTopicsServices.find(subTopic => subTopic.id_subtopic === sousMat.id_type_sousmatiere
-                                    && subTopic.id_topic === matiere.id && subTopic.id_teacher === serviceMultiTeaching.main_teacher_id)
-                            }
-                        })
-                    })
+                if (subTopicsService) coefficient = subTopicsService.coefficient;
+
+                let [sumMoyenneTemp, coefficientTemp]: [number, number] = getSumAndCoeff(devoirArray);
+                if (sumMoyenneTemp != null && coefficientTemp != null) {
+                    sumMoyenneSubTopic += sumMoyenneTemp;
+                    coefficientSubTopic += coefficientTemp;
                 }
-
-                if (subTopicsService)
-                    coefficient = subTopicsService.coefficient;
-                let moyenneFinale = _.findWhere(moyennesFinales, {id_matiere: sousMat.id_type_sousmatiere});
-                if (moyenneFinale) {
-                    if (moyenneFinale.moyenne == null) {
-                        matiere.moyenne = "NN";
-                    } else {
-                        matiere.moyenne = moyenneFinale.moyenne;
-                        sumMoyenneSubTopic += matiere.moyenne * coefficient;
-                        coefficientSubTopic += coefficient;
-                    }
-                } else {
-                    [sumMoyenneTemp, coefficientTemp] = getSumAndCoeff(devoirArray);
-                    if (sumMoyenneTemp != null && coefficientTemp != null) {
-                        sumMoyenneSubTopic += sumMoyenneTemp;
-                        coefficientSubTopic += coefficientTemp;
-                    }
-                }
-            })
+            });
             if (coefficientSubTopic == 0) {
                 sousMat.moyenne = "NN";
-            }
-            else {
+            } else {
                 sousMat.moyenne = (sumMoyenneSubTopic / coefficientSubTopic).toFixed(1);
                 sumMoyenne += sousMat.moyenne * coefficient;
                 coefficientMoyenne += coefficient;
@@ -221,40 +204,31 @@ function getMoyenneSubTopic(matiere: any, devoirsMatieres: Devoir[], subTopicsSe
         }
     }
 
-    if (coefficientMoyenne != 0)
-        matiere.moyenne = (sumMoyenne / coefficientMoyenne).toFixed(1);
-    else
-        matiere.moyenne = "";
+    if (!matiere.overrideAverage) {
+        if (coefficientMoyenne != 0)
+            matiere.moyenne = (sumMoyenne / coefficientMoyenne).toFixed(1);
+        else
+            matiere.moyenne = "";
+    }
 }
 
-export async function calculMoyennesWithSubTopic(periode_idType: number, id_eleve: string, matieresReleve: Matiere[], matieres: Matiere[], dataReleveDevoirs: Collection<Devoir>, subTopicsServices: SubtopicserviceService[], classe: Classe) {
+export async function calculMoyennesWithSubTopic(periode_idType: number, id_eleve: string, matieresReleve: Matiere[],
+                                                 matieres: Collection<Matiere>, dataReleveDevoirs: Collection<Devoir>,
+                                                 subTopicsServices: SubtopicserviceService[], classe: Classe): Promise<{}> {
     return new Promise(async (resolve, reject) => {
         try {
             let url = '/competences/eleve/' + id_eleve + "/moyenneFinale?";
             if (periode_idType)
                 url += "idPeriode=" + periode_idType.toString();
             http.get(url).then(res => {
-                let moyennesFinales = res.data;
-                addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales);
+                let moyennesFinales: IOverrideAverageResponse[] = res.data;
+                setOverrideAverage(matieresReleve, matieres, moyennesFinales);
                 for (let matiere of matieresReleve) {
                     let devoirsMatieres = dataReleveDevoirs.where({id_matiere: matiere.id});
-                    if (devoirsMatieres !== undefined) {
-                        let moyenneFinale = _.findWhere(moyennesFinales, {id_matiere: matiere.id});
-                        if (moyenneFinale) {
-                            if (moyenneFinale.moyenne == null) {
-                                matiere.moyenne = "NN";
-                            } else {
-                                matiere.moyenne = moyenneFinale.moyenne;
-                            }
-                        } else {
-                            if(!(matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0))
-                                matiere.moyenne = getMoyenne(devoirsMatieres);
-
-                        }
-                        if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
-                             getMoyenneSubTopic(matiere, devoirsMatieres, subTopicsServices, moyennesFinales, classe);
-                        }
-                    }
+                    if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0)
+                        setSubSubjectAndSubjectAverages(matiere, devoirsMatieres, subTopicsServices, moyennesFinales, classe);
+                    else if (devoirsMatieres !== undefined && !matiere.overrideAverage)
+                        matiere.moyenne = getMoyenne(devoirsMatieres);
                 }
                 resolve();
             });
@@ -266,7 +240,7 @@ export async function calculMoyennesWithSubTopic(periode_idType: number, id_elev
 }
 
 //DELTE AFTER and replace with previous
-export async function calculMoyennes(periode_idType, id_eleve, matieresReleve, matieres, dataReleveDevoirs) {
+export async function calculMoyennes(periode_idType, id_eleve, matieresReleve, matieres, dataReleveDevoirs): Promise<{}> {
     return new Promise(async (resolve, reject) => {
         try {
             let url = '/competences/eleve/' + id_eleve + "/moyenneFinale?";
@@ -274,7 +248,7 @@ export async function calculMoyennes(periode_idType, id_eleve, matieresReleve, m
                 url += "idPeriode=" + periode_idType.toString();
             http.get(url).then(res => {
                 let moyennesFinales = res.data;
-                addMatieresWithoutDevoirs(matieresReleve, matieres, moyennesFinales);
+                setOverrideAverage(matieresReleve, matieres, moyennesFinales);
                 for (let matiere of matieresReleve) {
                     let devoirsMatieres = dataReleveDevoirs.where({id_matiere: matiere.id});
                     if (devoirsMatieres !== undefined) {

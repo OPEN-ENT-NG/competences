@@ -15,10 +15,18 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {http, Model, _, Collection} from 'entcore';
+import {Collection} from 'entcore';
 import {DefaultMatiere} from "../common/DefaultMatiere";
 import {Competence} from "./Competence";
 import {SousMatiere} from "./TypeSousMatiere";
+
+export interface IOverrideAverageResponse {
+    id_classe: string;
+    id_eleve: string;
+    id_matiere: string;
+    id_periode: number;
+    moyenne: string;
+}
 
 export class Matiere extends DefaultMatiere {
     id: string;
@@ -26,13 +34,20 @@ export class Matiere extends DefaultMatiere {
     externalId: string;
     ens: any = [];
     ens_is_visible: boolean;
-    moyenne: number|string;
-    hasDevoirWithNote : boolean;
+    moyenne: number | string;
+    overrideAverage: number | string;
+    hasDevoirWithNote: boolean;
     sousMatieres: Collection<SousMatiere>;
-    constructor () {
-        super()
+
+    constructor(data?: any) {
+        super(data);
         this.collection(Competence);
         this.collection(SousMatiere);
+    }
+
+    getAverage(): string {
+        let res: number | string = !!this.overrideAverage ? this.overrideAverage.toString() : this.moyenne
+        return !!res || (typeof res == 'string' && res.trim() == "") ? res.toString() : "NN";
     }
 
 }
