@@ -1756,6 +1756,7 @@ public class DefaultExportService implements ExportService {
         // Récupération des moyennes finales
         Future<JsonArray> moyenneFinaleFuture = Future.future();
         noteService.getColonneReleve(new JsonArray().add(idUser), idPeriode, null, null, "moyenne",
+                Boolean.FALSE,
                 moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
         futures.add(moyenneFinaleFuture);
 

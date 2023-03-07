@@ -467,7 +467,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
             // Récupération de la moyenne finale de la classe
             Future<JsonArray> moyenneFinaleFuture = Future.future();
-            noteService.getColonneReleve(null, null, idMatiere, idClasseGroups, "moyenne",
+            noteService.getColonneReleve(null, null, idMatiere, idClasseGroups, "moyenne", Boolean.FALSE,
                     moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
 
             // Récupération du tableau de conversion des compétences notes

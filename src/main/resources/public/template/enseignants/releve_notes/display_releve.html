@@ -84,8 +84,14 @@
         </div>
         <div class="twelve cell twelve-mobile">
             <label class="checkbox">
-                <input type="checkbox" ng-model="releveNote.exportOptions.previousAverage" ng-change = "releveNote.setTypeExport();"/><span>
+                <input type="checkbox" ng-model="releveNote.exportOptions.previousAverages" ng-change = "releveNote.setTypeExport();"/><span>
             <i18n>evaluations.releve.previous.averages</i18n></span>
+            </label>
+        </div>
+        <div class="twelve cell twelve-mobile">
+            <label class="checkbox">
+                <input type="checkbox" ng-model="releveNote.exportOptions.previousAppreciations" ng-change = "releveNote.setTypeExport();"/><span>
+            <i18n>evaluations.releve.previous.appreciations</i18n></span>
             </label>
         </div>
     </fieldset>
