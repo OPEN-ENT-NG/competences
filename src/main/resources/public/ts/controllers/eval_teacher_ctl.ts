@@ -22,7 +22,7 @@ import {
     evaluations,
     ReleveNote,
     ReleveNoteTotale,
-    Classe
+    Classe, IClassReport
 } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
@@ -41,6 +41,7 @@ import { LengthLimit} from "../constants/ConstantCommonLength"
 import {isValidClasse} from "../utils/functions/isValidClasse";
 import {isValidDevoir} from "../utils/filters/isValidDevoir";
 import {AppreciationSubjectPeriodStudent} from "../models/teacher/AppreciationSubjectPeriodStudent";
+import {CLASS_REPORT_URI_OPTIONS, PRINT_OPTIONS} from "../core/enum/print.enum";
 
 declare let $: any;
 declare let document: any;
@@ -485,6 +486,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
                     template.close('suivi-competence-content');
+                    $scope.PRINT_OPTIONS = PRINT_OPTIONS;
+                    $scope.CLASS_REPORT_URI_OPTIONS = CLASS_REPORT_URI_OPTIONS;
                     let display = async function(){
                         $scope.selected.matieres = [];
                         $scope.allUnselect = true;
@@ -493,7 +496,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.exportRecapEvalObj = {
                             errExport: false
                         };
-                        $scope.suiviClasse = {
+                        $scope.suiviClasse = <IClassReport>{
                             textMod: true,
                             exportByEnseignement: 'false',
                             withMoyGeneraleByEleve: true,
@@ -501,7 +504,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             withAppreciations: true,
                             withAvisConseil: true,
                             withAvisOrientation: true,
-                            print: 'printRecapEval'
+                            print: 'printRecapEval',
+                            classReportUriOption: CLASS_REPORT_URI_OPTIONS.SCORES,
                         };
                         $scope.disabledExportSuiviClasse = _.findIndex($scope.allMatieresSorted, {select: true}) === -1;
                         $scope.sortType = 'title'; // set the default sort type

@@ -19,6 +19,19 @@ import {Collection, Model} from 'entcore';
 import {Classe, CompetenceNote, Domaine, Matiere, Periode, Structure, SuiviCompetence, Utils} from './index';
 import {Enseignement} from "../parent_eleve/Enseignement";
 import http from "axios";
+import {CLASS_REPORT_URI_OPTIONS} from "../../core/enum/print.enum";
+export interface IClassReport {
+
+    textMod: boolean,
+    exportByEnseignement: string,
+    withMoyGeneraleByEleve: boolean,
+    withMoyMinMaxByMat: boolean,
+    withAppreciations: boolean,
+    withAvisConseil: boolean,
+    withAvisOrientation: boolean,
+    print: string,
+    classReportUriOption: CLASS_REPORT_URI_OPTIONS,
+}
 
 export class SuiviCompetenceClasse extends Model {
     domaines : Collection<Domaine>;
