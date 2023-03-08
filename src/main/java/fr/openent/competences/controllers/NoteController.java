@@ -319,9 +319,9 @@ public class NoteController extends ControllerHelper {
                     if(paramYear.containsKey(Field.IDPERIODE)) paramYear.remove(Field.IDPERIODE);
 
                     Future<JsonObject> responseFutureYear = notesService.getDatasReleve(paramYear);
-                    Future<JsonObject> responseFuturePeriode = notesService.getDatasReleve(param);
+                    Future<JsonObject> responseFuturePeriod = notesService.getDatasReleve(param);
 
-                    CompositeFuture.all(responseFutureYear, responseFuturePeriode)
+                    CompositeFuture.all(responseFutureYear, responseFuturePeriod)
                             .onFailure(error -> {
                                 badRequest(request);
                                 log.error(String.format("[Competences@%s::exportRelevePeriodique] " +
@@ -330,7 +330,7 @@ public class NoteController extends ControllerHelper {
                             })
                             .onSuccess( resp -> {
                                 JsonObject respAnnualData = responseFutureYear.result();
-                                JsonObject respPeriodicData = responseFuturePeriode.result();
+                                JsonObject respPeriodicData = responseFuturePeriod.result();
                                 NoteControllerHelper.setResponseExportReleve(respAnnualData,respPeriodicData);
                                 Renders.renderJson(request, respPeriodicData);
                             });

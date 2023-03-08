@@ -2656,13 +2656,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 Future<JsonArray> appreciationsFutures;
                 Future<JsonArray> positionnementsFinauxFutures;
                 if (idPeriode != null) {
-                    if(withPreviousAppreciations) {
-                        appreciationsFutures =getColumnReleve(idEleves, idPeriode , idMatiere,
-                                new JsonArray().add(idClasse), APPRECIATION_MATIERE_PERIODE, withPreviousAppreciations);
-                    } else {
-                        appreciationsFutures =getColumnReleve(idEleves, idPeriode, idMatiere,
-                                new JsonArray().add(idClasse), APPRECIATION_MATIERE_PERIODE, withPreviousAppreciations);
-                    }
+
+                    appreciationsFutures =getColumnReleve(idEleves, idPeriode , idMatiere,
+                            new JsonArray().add(idClasse), APPRECIATION_MATIERE_PERIODE, withPreviousAppreciations);
+
                     positionnementsFinauxFutures =getColumnReleve(idEleves, idPeriode, idMatiere,
                             new JsonArray().add(idClasse), Field.POSITIONNEMENT, withPreviousAppreciations);
                 } else {
@@ -4780,24 +4777,24 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // Récupération des moyennes finales de tous les élèves de la classe
         Future<JsonArray> moyFinalesElevesF = Future.future();
         getColonneReleve(null, null, idMatiere,
-                new JsonArray().add(idClasse), "moyenne", Boolean.FALSE, event -> formate(moyFinalesElevesF, event));
+                new JsonArray().add(idClasse), Field.MOYENNE, Boolean.FALSE, event -> formate(moyFinalesElevesF, event));
         detailsFuture.add(moyFinalesElevesF);
 
         // Récupération des appréciations matières, des moyennesFinales et  positionnements finaux
         // de l'élève sur toutes les périodes de la classe
         Future<JsonArray> appreciationMatierePeriode = Future.future();
         getColonneReleve(new JsonArray().add(idEleve), null, idMatiere, new JsonArray().add(idClasse),
-                "appreciation_matiere_periode", Boolean.FALSE, event -> formate(appreciationMatierePeriode, event));
+                APPRECIATION_MATIERE_PERIODE, Boolean.FALSE, event -> formate(appreciationMatierePeriode, event));
         detailsFuture.add(appreciationMatierePeriode);
 
         Future<JsonArray> moyenneFinalesF = Future.future();
         getColonneReleve(new JsonArray().add(idEleve), null, idMatiere, new JsonArray().add(idClasse),
-                "moyenne", Boolean.FALSE, event -> formate(moyenneFinalesF, event));
+                Field.MOYENNE, Boolean.FALSE, event -> formate(moyenneFinalesF, event));
         detailsFuture.add(moyenneFinalesF);
 
         Future<JsonArray> positionnementF = Future.future();
         getColonneReleve(new JsonArray().add(idEleve), null, idMatiere, new JsonArray().add(idClasse),
-                "positionnement", Boolean.FALSE, event -> formate(positionnementF, event));
+                Field.POSITIONNEMENT, Boolean.FALSE, event -> formate(positionnementF, event));
         detailsFuture.add(positionnementF);
 
         // Récupération du tableau de conversion
