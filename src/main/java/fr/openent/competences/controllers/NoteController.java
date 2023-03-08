@@ -1246,14 +1246,14 @@ public class NoteController extends ControllerHelper {
                 isNull(idPeriodeString),arrayResponseHandler(request));
     }
 
-    @Post("/notes/:typeImportService/csv/exercizer/import/classes/:classId/devoirs/:devoirId/:classType/periods/:periodeId")
+    @Post("/notes/:typeImportService/csv/exercizer/import/classes/:classId/devoirs/:idDevoir/:classType/periods/:periodeId")
     @ApiDoc("Set notes of a devoir by importing a CSV.")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessEvaluationFilter.class)
     public void importExercizerCSV(final HttpServerRequest request) {
         // typeImport
         final String idClasse = request.params().get(Field.CLASSID);
-        final String idDevoir = request.params().get(Field.DEVOIRID);
+        final String idDevoir = request.params().get(Field.IDDEVOIR);
         final String typeClasse = request.params().get(Field.CLASSTYPE);
         final Long idPeriode = Long.valueOf(request.params().get(Field.PERIODEID));
         ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage, idClasse, typeClasse,
