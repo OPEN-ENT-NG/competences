@@ -627,6 +627,7 @@
   "evaluations.export.bulletin.viescolaireLibelle": "Vie scolaire (assiduité, ponctualité; respect du règlement intérieur; participation à la vie de l'établissement) : ",
   "evaluations.choose.classe": "Veuillez sélectionner au moins une classe et une période",
   "evaluations.classes.are.not.initialized": "Désolé, les classes sélectionnée non pas de périodes paramétrées",
+  "evaluations.class.report.scores.and.skills": "Notes et compétences",
   "evaluations.graph.formative" : "* (F) : Evaluation de type Formative",
   "evaluations.graph.go.list" : "Accéder à la vue Liste",
   "evaluations.tab.delete" : "Supprimer une évaluation libre",
