@@ -32,7 +32,10 @@ public class NoteControllerHelper {
 
                             periocStudent.put(Field.AVERAGES,
                                     annualStudentFind.getJsonArray(Field.MOYENNES, new JsonArray()));
-                            periocStudent.put(Field.FINALAVERAGES, annualStudentFind.getJsonArray(Field.MOYENNESFINALES, new JsonArray()));
+                            Object annualStudent = annualStudentFind.getValue(Field.MOYENNESFINALES);
+                            periocStudent.put(Field.FINALAVERAGES,
+                                    (annualStudent instanceof JsonArray) ?
+                                            annualStudentFind.getJsonArray(Field.MOYENNESFINALES, new JsonArray()) : new JsonArray());
                             return periocStudent;
                         }
 
