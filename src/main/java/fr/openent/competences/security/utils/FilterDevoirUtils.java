@@ -21,19 +21,14 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.controller.ControllerHelper;
-import org.entcore.common.http.BaseServer;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-
-import static fr.wseduc.webutils.Server.getEventBus;
 
 
 /**
@@ -43,10 +38,10 @@ public class FilterDevoirUtils  extends ControllerHelper {
 
     public void validateOwnerDevoir(Integer idDevoir, String owner, final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
-                .append("SELECT count(" + Field.DEVOIR_TABLE + ".*) " +
-                        "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE +
-                        "WHERE " + Field.DEVOIR_TABLE + "." + Field.ID + " = ? " +
-                        "AND " + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ?;");
+                .append("SELECT count(" + Field.DEVOIRS_TABLE + ".*) " +
+                        "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIRS_TABLE +
+                        "WHERE " + Field.DEVOIRS_TABLE + "." + Field.ID + " = ? " +
+                        "AND " + Field.DEVOIRS_TABLE + "." + Field.OWNER + " = ?;");
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idDevoir).add(owner);
 
@@ -61,10 +56,10 @@ public class FilterDevoirUtils  extends ControllerHelper {
 
     public void validateDevoirFinSaisie(Long idDevoir, UserInfos user, final Handler<Boolean> handler) {
         StringBuilder query = new StringBuilder()
-                .append("SELECT count(" + Field.DEVOIR_TABLE + "." + Field.ID + ") " +
+                .append("SELECT count(" + Field.DEVOIRS_TABLE + "." + Field.ID + ") " +
                         "FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.NOTES_TABLE + ", " + Competences.VSCO_SCHEMA + ".periode "+
-                        "WHERE " + Field.DEVOIR_TABLE + "." + Field.ID + " = ? " +
-                        "AND " + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ?  " +
+                        "WHERE " + Field.DEVOIRS_TABLE + "." + Field.ID + " = ? " +
+                        "AND " + Field.DEVOIRS_TABLE + "." + Field.OWNER + " = ?  " +
                         "AND now() < " + Field.VIESCO_PERIODE_TABLE + ".date_fin_saisie;" );
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idDevoir).add(user.getUserId());
@@ -83,9 +78,9 @@ public class FilterDevoirUtils  extends ControllerHelper {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder()
-                .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_TABLE);
-        query.append(" WHERE " + Field.DEVOIR_TABLE + "." + Field.ID + " = ? ")
-                .append("AND (" + Field.DEVOIR_TABLE + "." + Field.OWNER + " = ? OR ")
+                .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIRS_TABLE);
+        query.append(" WHERE " + Field.DEVOIRS_TABLE + "." + Field.ID + " = ? ")
+                .append("AND (" + Field.DEVOIRS_TABLE + "." + Field.OWNER + " = ? OR ")
                 .append("? IN (SELECT member_id ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + "." + Field.DEVOIR_SHARE_TABLE)
                 .append(" WHERE resource_id = ? ")

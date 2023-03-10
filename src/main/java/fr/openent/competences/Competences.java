@@ -17,6 +17,7 @@
 
 package fr.openent.competences;
 
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.controllers.*;
 import fr.openent.competences.service.impl.BulletinWorker;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
@@ -37,6 +38,8 @@ import org.entcore.common.share.impl.SqlShareService;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 
+import static fr.openent.competences.constants.Field.DB_SCHEMA;
+import static fr.openent.competences.constants.Field.DB_VIESCO_SCHEMA;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class Competences extends BaseServer {
@@ -216,7 +219,6 @@ public class Competences extends BaseServer {
     public static final String ID_ELEVES_KEY = "idEleves";
     public static final String ID_CLASSE_KEY = "idClasse";
     public static final String ID_CLASSES_KEY = "idClasses";
-    public static final String ID_STRUCTURES_KEY = "idStructures";
     public static final String TYPE_CLASSE_KEY = "typeClasse";
     public static final String ID_PERIODE_KEY = "idPeriode";
     public static final String ID_MATIERE_KEY = "idMatiere";
@@ -274,8 +276,8 @@ public class Competences extends BaseServer {
     public void start() throws Exception {
         super.start();
 
-        COMPETENCES_SCHEMA = config.getString("db-schema");
-        VSCO_SCHEMA = config.getString("vsco-schema");
+        COMPETENCES_SCHEMA = config.getString(DB_SCHEMA);
+        VSCO_SCHEMA = config.getString(DB_VIESCO_SCHEMA);
         LSUN_CONFIG = config.getJsonObject("lsun");
         TRANSITION_CONFIG = config.getJsonObject("transition");
         DELIVERY_OPTIONS = new DeliveryOptions()

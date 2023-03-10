@@ -23,6 +23,7 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
+import fr.openent.competences.helpers.NoteControllerHelper;
 import fr.openent.competences.importservice.ExercizerImportNote;
 import fr.openent.competences.model.*;
 import fr.openent.competences.model.importservice.ExercizerStudent;
@@ -311,7 +312,32 @@ public class NoteController extends ControllerHelper {
                 notesService.exportPDFRelevePeriodique(param,  request, vertx, config);
             }
             else {
-                notesService.getDatasReleve(param, notEmptyResponseHandler(request));
+                boolean previousAverage = param.getBoolean(Field.PREVIOUSAVERAGES);
+
+                if(previousAverage) {
+                    JsonObject paramYear = param.copy();
+                    if(paramYear.containsKey(Field.IDPERIODE)) paramYear.remove(Field.IDPERIODE);
+
+                    Future<JsonObject> responseFutureYear = notesService.getDatasReleve(paramYear);
+                    Future<JsonObject> responseFuturePeriod = notesService.getDatasReleve(param);
+
+                    CompositeFuture.all(responseFutureYear, responseFuturePeriod)
+                            .onFailure(error -> {
+                                badRequest(request);
+                                log.error(String.format("[Competences@%s::exportRelevePeriodique] " +
+                                        "error to get exportRelevePeriodique : %s",
+                                        this.getClass().getSimpleName(), error.getMessage()));
+                            })
+                            .onSuccess( resp -> {
+                                JsonObject respAnnualData = responseFutureYear.result();
+                                JsonObject respPeriodicData = responseFuturePeriod.result();
+                                NoteControllerHelper.setResponseExportReleve(respAnnualData,respPeriodicData);
+                                Renders.renderJson(request, respPeriodicData);
+                            });
+                } else {
+                    notesService.getDatasReleve(param, notEmptyResponseHandler(request));
+                }
+
             }
         });
     }
@@ -724,6 +750,7 @@ public class NoteController extends ControllerHelper {
                     // Récupération des moyennes finales
                     Future<JsonArray> moyenneFinaleFuture = Future.future();
                     notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, idMatiere, null, Field.MOYENNE,
+                            Boolean.FALSE,
                             moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
 
                     // Récupération des notes des devoirs
@@ -894,7 +921,7 @@ public class NoteController extends ControllerHelper {
                         idPeriode = Long.valueOf(request.params().get("idPeriode"));
 
                     notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, null, null,
-                            "moyenne", arrayResponseHandler(request));
+                            "moyenne", Boolean.FALSE, arrayResponseHandler(request));
                 } else{
                     unauthorized(request);
                 }
@@ -1112,6 +1139,7 @@ public class NoteController extends ControllerHelper {
                                                                 idMatiere,
                                                                 new JsonArray().add(idClasse),
                                                                 "moyenne",
+                                                                Boolean.FALSE,
                                                                 new Handler<Either<String, JsonArray>>() {
                                                                     @Override
                                                                     public void handle(Either<String, JsonArray> event) {

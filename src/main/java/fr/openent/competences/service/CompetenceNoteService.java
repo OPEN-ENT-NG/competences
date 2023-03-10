@@ -18,6 +18,7 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import org.entcore.common.service.CrudService;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
@@ -143,6 +144,14 @@ public interface CompetenceNoteService extends CrudService {
      * @param handler handler
      **/
     void getConversionNoteCompetence(String idEtablissement, String idclasse, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     *  Récupère la table de correspendance entre (Moyenne Note - Evaluation competence) d'un cycle et etablissment donné
+     * @param structureId  structure Id
+     * @param classId class Id
+     * @return Future
+     */
+    Future<JsonArray> getConversionNoteCompetence(String structureId, String classId);
 
     /**
      *  Récupère la table de correspendance entre (Moyenne Note - Evaluation competence) d'un cycle et etablissment donné et d'une liste de classe

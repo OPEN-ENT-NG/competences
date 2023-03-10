@@ -27,6 +27,8 @@ export class DefaultPeriode extends Model {
     timestamp_fn: Date;
     date_fin_saisie: Date;
     id_type: number;
+    type: number;
+    ordre: number;
 
     toString = function () {
         return String(this.id_type);

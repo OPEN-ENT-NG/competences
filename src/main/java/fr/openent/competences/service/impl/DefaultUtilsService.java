@@ -192,6 +192,14 @@ public class DefaultUtilsService implements UtilsService {
         }));
     }
 
+    public Future<JsonArray> getAllMultiTeachers(final String structureId, final JsonArray groupIds){
+        Promise<JsonArray> promiseMultiTeachers = Promise.promise();
+        getAllMultiTeachers(structureId, groupIds, FutureHelper.handlerJsonArray(promiseMultiTeachers,
+              String.format("[Competences@%s::getAllMultiTeachers] Error during sql request: ",
+                      this.getClass().getSimpleName())));
+        return promiseMultiTeachers.future();
+    }
+
     public static void setServices(Structure structure, JsonArray servicesJson, List<Service> services, List<SubTopic> subTopics) {
         for (int i = 0 ; i < servicesJson.size();i++){
             JsonObject serviceJo = servicesJson.getJsonObject(i);

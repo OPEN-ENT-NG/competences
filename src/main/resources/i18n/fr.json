@@ -34,7 +34,7 @@
   "level.items": "Niveaux items",
   "level.legend": "Légende niveaux",
   "hours":" heure(s)",
-  "appreciation":"Appréciations",
+  "appreciation":"Appréciations ",
   "matieres": "Matières",
   "of.student": "de l'élève",
   "headTeacher": "Professeur principal",
@@ -65,6 +65,7 @@
   "competences.acquired": "Acquis scolaires",
   "competences.on.periode": "Sur la période",
   "competences.code": "Code",
+  "competences.appreciation": "Appreciation ",
 
   "custom": "Personnalisé",
 
@@ -209,7 +210,10 @@
   "evaluations.releve.appreciation.classe.save.error":"Une erreur est survenue lors de l'enregistrement de l'appréciation",
   "evaluations.releve.elementProgramme.classe.save.error":"Une erreur est survenue lors de l'enregistrement des éléments du programme travaillés",
   "evaluations.releve.appreciations.student":"Appréciation élèves",
-  "evaluations.releve.sync.error" : "Désolé, une erreur est survenue lors de la construction du relevé de note.",
+  "evaluations.releve.sync.error":"Désolé, une erreur est survenue lors de la construction du relevé de note.",
+  "evaluations.releve.with.notes":"Notes de la période (CSV uniquement)",
+  "evaluations.releve.previous.averages":"Moyennes des périodes précédentes (CSV uniquement)",
+  "evaluations.releve.previous.appreciations": "Appréciations des périodes précédentes (CSV uniquement)",
   "evaluations.eleve.cycle.get.error":"Une erreur est survenue lors de la récupération des cycles de l'élève",
   "evaluations.theme.get.error":"Une erreur est survenue lors de la récupération des thèmes",
   "evaluations.classe.get.error":"Une erreur est survenue lors de la récupération des classes",

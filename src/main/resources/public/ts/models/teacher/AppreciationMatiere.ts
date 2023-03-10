@@ -19,6 +19,9 @@ export class AppreciationMatiere {
 
     idClasse : string;
     appreciation : string;
+    id_periode ?: number;
+    appreciation_matiere_periode ? : string;
+
 
     constructor (idClasse? : string){
         if(idClasse && idClasse !== undefined ){

@@ -19,8 +19,10 @@ package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.model.Service;
+import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.service.CrudService;
@@ -106,6 +108,18 @@ public interface NoteService extends CrudService {
     void getNoteElevePeriode(String userId, String etablissementId, JsonArray classeId, String matiereId, Long periodeId,
                              Handler<Either<String, JsonArray>> handler);
 
+    /***
+     * get all students notes by devoir by period and subject
+     * @param userId user id
+     * @param structureId structure id
+     * @param classIds class ids
+     * @param subjectId subject ids
+     * @param periodId id_type periode
+     * @return response on future
+     */
+    Future<JsonArray> getNoteStudentPeriod(String userId, String structureId, JsonArray classIds, String subjectId,
+                                           Long periodId);
+
     /**
      * Récupération des toutes les notes de tous les élèves pour un relevé de notes
      * @param etablissementId identifiant de l'établissement
@@ -118,6 +132,21 @@ public interface NoteService extends CrudService {
     void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId, Integer typeClasse,
                         Boolean withMoyenneFinale,JsonArray idsGroup,Handler<Either<String, JsonArray>> handler);
 
+    /**
+     *
+     * @param subjectId subject Id
+     * @param periodId period Id
+     * @param structureId structure Id
+     * @param classId class Id
+     * @param subjectId subject Id
+     * @param periodId period Id
+     * @param typeClass typeClass
+     * @param withFinaleAverage boolean manual average
+     * @param groupIds group Ids
+     * @return result in future
+     */
+    Future<JsonArray> getNotesReleve(String structureId, String classId, String subjectId, Long periodId,
+                                     Integer typeClass, Boolean withFinaleAverage, JsonArray groupIds);
 
     /**
      * Récupération des toutes les Competences-notes de tous les élèves pour un relevé de notes
@@ -145,8 +174,20 @@ public interface NoteService extends CrudService {
     void deleteColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse,
                              String colonne,   Handler<Either<String, JsonArray>> handler);
 
-    void  getColonneReleve(JsonArray idEleves, Long idPeriode, String idMatiere, JsonArray idsClasse,
-                           String colonne, Handler<Either<String, JsonArray>> handler);
+    void  getColonneReleve (JsonArray idEleves, Long idPeriode, String idMatiere, JsonArray idsClasse,
+                           String colonne, Boolean withPreviousAppreciation,Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * get appreciation or final average or position by idPeriode, idMatiere and studentIds
+     * @param idEleves
+     * @param idPeriode
+     * @param idMatiere
+     * @param idsClasse
+     * @param colonne
+     * @return Future
+     */
+    Future<JsonArray> getColumnReleve (JsonArray idEleves, Long idPeriode, String idMatiere, JsonArray idsClasse,
+                                      String colonne, Boolean withPreviousAppreciation);
     /**
      * Met à jour la moyennes finale d'un élève pour une période, une matiere et une classe
      * @param idEleve idEleve
@@ -295,6 +336,13 @@ public interface NoteService extends CrudService {
      * @param handler handler portant le résultat de la requête
      */
     void getDatasReleve(final JsonObject param, final Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Réalise l'export d'un relevé
+     * @param param objet contenant les informations relative au releve
+     * @return Future
+     */
+    Future<JsonObject> getDatasReleve (final JsonObject param);
 
     /**
      * Réalise l'export totale (dans toutes les matières passé en paramètres) d'un relevé

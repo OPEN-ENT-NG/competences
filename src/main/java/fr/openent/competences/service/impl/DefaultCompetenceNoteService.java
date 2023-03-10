@@ -19,7 +19,10 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -342,6 +345,18 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         values.add(idEtablissement);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
+
+    public Future<JsonArray> getConversionNoteCompetence(String structureId, String classId) {
+
+        Promise<JsonArray> conversionTable = Promise.promise();
+        getConversionNoteCompetence(structureId, classId,
+                FutureHelper.handlerJsonArray(conversionTable, String.format (
+                        "[Comptences@%s :: getConversionNoteCompetence]  error during resquest : ",
+                        this.getClass().getSimpleName())));
+
+        return conversionTable.future();
+    }
+
 
     @Override
     public void getConversionTableByClass(String idEtablissement, List<String> idsClasses, Boolean hasClassList, Handler<Either<String, JsonArray>> handler) {

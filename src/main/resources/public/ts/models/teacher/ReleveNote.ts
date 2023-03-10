@@ -18,7 +18,8 @@
 import {_, Collection, http, idiom as lang, IModel, Model, model, moment, notify} from 'entcore';
 import httpAxios from 'axios';
 import {
-    AppreciationClasse, BaremeBrevetEleve,
+    Annotation,
+    AppreciationClasse, AppreciationMatiere, BaremeBrevetEleve,
     Classe, CompetenceNote,
     Devoir,
     Domaine,
@@ -109,7 +110,10 @@ export class ReleveNote extends  Model implements IModel {
             averageAuto: true,
             positionnementFinal: true,
             appreciationClasse: true,
-            moyenneClasse: true
+            moyenneClasse: true,
+            withNotes: false,
+            previousAverages: false,
+            previousAppreciations : false
         };
         _.forEach(this.matiere.sousMatieres.all, (sousMatiere) => {
             this.exportOptions.sousMatieres.moyennes[sousMatiere.id_type_sousmatiere] = true;
@@ -349,9 +353,7 @@ export class ReleveNote extends  Model implements IModel {
                                 if (_eval.annotation !== undefined && _eval.annotation !== null
                                     && _eval.annotation > 0) {
                                     _eval.oldAnnotation = _eval.annotation;
-                                    var lib = evaluations.structure.annotations.findWhere(
-                                        {id: _eval.annotation});
-                                    _eval.annotation_libelle_court = (lib != null ? lib.libelle_court : "ERR");
+                                    _eval.annotation_libelle_court = this.getAnnotation(_eval.annotation);
                                     _eval.is_annotation = true;
                                 }
                                 _eval.endSaisie = endSaisie;
@@ -429,6 +431,12 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
+    private getAnnotation(idAnnotation : number) : string {
+        let lib : Annotation = evaluations.structure.annotations.findWhere(
+            {id: idAnnotation});
+        return (lib != null ? lib.libelle_court : "ERR");
+    }
+
     saveMoyenneFinaleEleve(eleve): any {
         return new Promise((resolve, reject) => {
             let _data = _.extend(this.toJson(), {
@@ -488,28 +496,6 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
-    // todo if no bugs clean it
-    // saveAppreciationMatierePeriodeEleve(eleve): any {
-    //     return new Promise((resolve, reject) => {
-    //         const isDeleted:Boolean = eleve.delete
-    //             ? eleve.delete && eleve.appreciation_matiere_periode.length === 0
-    //             : false;
-    //         let _data = _.extend(this.toJson(), {
-    //             idEleve: eleve.id,
-    //             appreciation_matiere_periode: eleve.appreciation_matiere_periode,
-    //             colonne: 'appreciation_matiere_periode',
-    //             delete: isDeleted,
-    //         });
-    //
-    //         http().postJson("/competences/appreciation-subject-period", _data)
-    //             .done((res) => {
-    //                 resolve(res);
-    //             })
-    //             .error((err) => {
-    //                 reject(err);
-    //             });
-    //     });
-    // }
 
     getConversionTable(data?): Promise<any> {
         this.collection(TableConversion, {
@@ -583,6 +569,59 @@ export class ReleveNote extends  Model implements IModel {
         return line[key]
     }
 
+    private setNotesDevoirs (line : any, notes : Array<Evaluation>) : void {
+        _.each(this.devoirs.all, (d) => {
+            let noteDevoir = _.findWhere(notes, {id_devoir : d.id, id_eleve: line['id'] });
+                if (noteDevoir) {
+                    line ['D'+d.id] = (noteDevoir.valeur != null)? noteDevoir.valeur : this.getAnnotation(noteDevoir.annotation);
+                } else {
+                    line['D'+d.id] = '';
+                }
+        });
+    }
+
+    private getPreviousPeriod () : Periode[] {
+        let previousPeriods : Periode[] ;
+        previousPeriods = this.classe.periodes.all.filter( (p : Periode ) =>
+             p.id != null && p.id_type < this.idPeriode
+        );
+        return previousPeriods;
+    }
+
+    private setPreviousAveragesOrPreviousAppreciations (line : any, previousAverages : boolean,
+                                                        previousAppreciations : boolean ) : void {
+        this.getPreviousPeriod().forEach( (period : Periode) => {
+            let label : string = lang.translate("viescolaire.periode." + period.type).charAt(0);
+            if (previousAverages) {
+                this.setPreviousAverages (line,label, period)
+            }
+            if (previousAppreciations) {
+                this.setPreviousAppreciations (line, label, period);
+            }
+        });
+    }
+
+    private setPreviousAppreciations (line : any, label: string, period : Periode) : void {
+        let previousAppreciation : AppreciationMatiere[] =
+            (!!line['previousAppreciations'] || line['previousAppreciations']) ? line['previousAppreciations'] : []
+        let app : string = {...(previousAppreciation
+                .find((appreciation) => appreciation.id_periode == period.id_type))}.appreciation_matiere_periode;
+        if (app === undefined || app === null) {
+            app = '';
+        }
+        line['Appreciation '+ label + period.ordre] = app;
+    }
+
+    private setPreviousAverages (line : any, label: string, period : Periode) : void {
+        let moyenne : number | string = {...(line['finalAverages']
+                .find( (average) => average.id_periode == period.id_type))}.moyenne;
+        if(moyenne === null) moyenne = "NN";
+        if (moyenne === undefined) {
+            moyenne = {...(line['averages'].find((a) =>  a.id_periode == period.id_type))}.moyenne;
+        }
+        line['Moyenne '+ label + period.ordre] = (moyenne || moyenne != null) ? moyenne : '';
+    }
+
     async export  () {
         return new Promise(async (resolve, reject) => {
             let parameter = this.toJson();
@@ -607,7 +646,6 @@ export class ReleveNote extends  Model implements IModel {
             try {
                 let data = await httpAxios.post(this.api.EXPORT, parameter,
                     {responseType: this.exportOptions.fileType === 'pdf'? 'arraybuffer' : 'json'});
-                console.dir(data);
                 let blob;
                 let link = document.createElement('a');
                 let response = data.data;
@@ -615,12 +653,19 @@ export class ReleveNote extends  Model implements IModel {
                     let columnCsv = [];
                     let format = this.formateHeaderAndColumn();
                     _.forEach(response.eleves , (line) => {
-                        this.addColumnForExportCsv(line,'displayName');
+                        this.addColumnForExportCsv(line,'displayName'); //corrige la line
                         if(this.exportOptions.averageAuto) {
                             this.addColumnForExportCsv(line, 'moyenne');
                         }
                         if(this.exportOptions.averageFinal) {
                             this.addColumnForExportCsv(line, 'moyenneFinale');
+                        }
+                        if(this.exportOptions.withNotes) {
+                            //in back averageFinal = (averageFinal != null) ? averageFinal : moyenne (= moyenne_auto)
+                            if(!this.exportOptions.averageFinal)  this.addColumnForExportCsv(line, 'moyenneFinale');
+                            //So actualAverage = (averageFinal != null) ? averageFinal : moyenne => averageFinal
+                            line['actualAverage'] = line['moyenneFinale'];
+                            this.setNotesDevoirs(line, response.notes);
                         }
                         _.forEach(line.sousMatieres.moyennes, (sousMatiere) => {
                             if(sousMatiere.print){
@@ -642,54 +687,21 @@ export class ReleveNote extends  Model implements IModel {
                         if(this.exportOptions.appreciation) {
                             this.addColumnForExportCsv(line, 'appreciation_matiere_periode');
                         }
-
+                        if(this.exportOptions.previousAverages || this.exportOptions.previousAppreciations) {
+                            this.setPreviousAveragesOrPreviousAppreciations (line,
+                                this.exportOptions.previousAverages, this.exportOptions.previousAppreciations);
+                        }
                         columnCsv.push(_.pick(line, format.column));
                     });
 
-                    let csvData = Utils.ConvertToCSV(columnCsv, format.header);
+                    let csvData : string = Utils.ConvertToCSV(columnCsv, format.header);
+
+                    if(this.exportOptions.moyenneClasse){
+                        this.setAverageClasse (response, csvData);
+                    }
                     if(this.exportOptions.appreciationClasse ){
                         csvData += (`${lang.translate('evaluations.releve.appreciation.classe')};${
                             response.appreciation_classe.appreciation}\r\n`);
-                    }
-                    let classe = response._moyenne_classe;
-                    if(this.exportOptions.moyenneClasse){
-                        if(classe) {
-                            let moyAuto = classe['null'];
-                            let moyFinal = classe['nullFinal'];
-                            if (Utils.isNotNull(moyAuto)) {
-                                moyAuto = moyAuto.moyenne;
-                            }
-                            if (Utils.isNotNull(moyFinal)) {
-                                moyFinal = moyFinal.moyenne;
-                            }
-                            moyAuto = Utils.isNull(moyAuto) ? '' : moyAuto;
-                            moyFinal = Utils.isNull(moyFinal) ? '' : moyFinal;
-
-                            csvData += (`${lang.translate('average.class')}`);
-                            if (this.exportOptions.averageAuto) {
-                                csvData += (`;${moyAuto}`);
-                            }
-                            if (this.exportOptions.averageFinal) {
-                                csvData += (`;${moyFinal}`);
-                            }
-                        }else{
-                            csvData += (`${lang.translate('average.class')}`);
-                            if (this.exportOptions.averageAuto) {
-                                csvData += (`; `);
-                            }
-                            if (this.exportOptions.averageFinal) {
-                                csvData += (`; `);
-                            }
-                        }
-                        let classeSousMat = response.moyenneClasseSousMat;
-                        if (Utils.isNotNull(classeSousMat)) {
-                            _.forEach(classeSousMat, sousMat => {
-                                if (sousMat.print) {
-                                    csvData += (`;${sousMat._moyenne}`);
-                                }
-                            })
-                        }
-                        csvData += '\r\n';
                     }
 
                     csvData = "\ufeff"+csvData;
@@ -714,10 +726,65 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
+    private setAverageClasse (response : any, csvData : string) {
+        let classe : any = response._moyenne_classe;
+        if(classe) {
+            let moyAuto = classe['null'];
+            let moyFinal = classe['nullFinal'];
+            if (Utils.isNotNull(moyAuto)) {
+                moyAuto = moyAuto.moyenne;
+            }
+            if (Utils.isNotNull(moyFinal)) {
+                moyFinal = moyFinal.moyenne;
+            }
+            moyAuto = Utils.isNull(moyAuto) ? '' : moyAuto;
+            moyFinal = Utils.isNull(moyFinal) ? '' : moyFinal;
+
+            csvData += (`${lang.translate('average.class')}`);
+            if (this.exportOptions.averageAuto) {
+                csvData += (`;${moyAuto}`);
+            }
+            if (this.exportOptions.averageFinal) {
+                csvData += (`;${moyFinal}`);
+            }
+        }else{
+            csvData += (`${lang.translate('average.class')}`);
+            if (this.exportOptions.averageAuto) {
+                csvData += (`; `);
+            }
+            if (this.exportOptions.averageFinal) {
+                csvData += (`; `);
+            }
+        }
+        let classeSousMat = response.moyenneClasseSousMat;
+        if (Utils.isNotNull(classeSousMat)) {
+            classeSousMat.forEach( sousMat => {
+                if (sousMat.print) {
+                    csvData += (`;${sousMat._moyenne}`);
+                }
+            });
+        }
+        csvData += '\r\n';
+    }
+
+    IsSpecificOptionsCsv () : boolean {
+        return this.exportOptions.withNotes || this.exportOptions.previousAverages || this.exportOptions.previousAppreciations;
+    }
+
+    setTypeExport () : void {
+        if (this.IsSpecificOptionsCsv) this.exportOptions.fileType = 'csv';
+    }
+
     formateHeaderAndColumn () : any {
         let header = `${lang.translate('students')}`;
         let column = ['displayName'];
-
+        if(this.exportOptions.withNotes) {
+            _.each(this.devoirs.all, (d) => {
+                let title : string = d.name;
+                header += `; ${title}`;
+                column.push('D'+ d.id);
+            });
+        }
         if(this.exportOptions.averageAuto) {
             header += `; ${lang.translate('average.auto')}`;
             column.push('moyenne');
@@ -725,6 +792,10 @@ export class ReleveNote extends  Model implements IModel {
         if(this.exportOptions.averageFinal) {
             header +=`; ${lang.translate('average.final')}`;
             column.push('moyenneFinale');
+        }
+        if(this.exportOptions.withNotes) {
+            header +=`; ${lang.translate('average')}`;
+            column.push('actualAverage');
         }
         _.mapObject(this.exportOptions.sousMatieres.moyennes, (printSousMatiere, id) => {
             if(printSousMatiere){
@@ -753,6 +824,23 @@ export class ReleveNote extends  Model implements IModel {
             column.push('appreciation_matiere_periode');
         }
 
+        if (this.exportOptions.previousAverages || this.exportOptions.previousAppreciations) {
+            this.getPreviousPeriod().forEach( (p: Periode) => {
+
+                if (this.exportOptions.previousAverages) {
+                    let label : string = lang.translate('average') +
+                    lang.translate("viescolaire.periode." + p.type).charAt(0) + p.ordre
+                    header += `; ${label}`;
+                    column.push(label);
+                }
+               if (this.exportOptions.previousAppreciations) {
+                   let label : string = lang.translate('competences.appreciation') +
+                       lang.translate("viescolaire.periode." + p.type).charAt(0) + p.ordre
+                   header += `; ${label}`;
+                   column.push(label);
+               }
+            });
+        }
         return  {header: header, column: column};
     }
 }
