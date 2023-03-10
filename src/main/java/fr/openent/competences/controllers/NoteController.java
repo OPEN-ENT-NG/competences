@@ -312,19 +312,16 @@ public class NoteController extends ControllerHelper {
                 notesService.exportPDFRelevePeriodique(param,  request, vertx, config);
             }
             else {
-                boolean previousAverage = param.getBoolean(Field.PREVIOUSAVERAGE);
+                boolean previousAverage = param.getBoolean(Field.PREVIOUSAVERAGES);
 
                 if(previousAverage) {
                     JsonObject paramYear = param.copy();
                     if(paramYear.containsKey(Field.IDPERIODE)) paramYear.remove(Field.IDPERIODE);
-                    List<Future> datasFuture = new ArrayList<>();
 
                     Future<JsonObject> responseFutureYear = notesService.getDatasReleve(paramYear);
-                    Future<JsonObject> responseFuturePeriode = notesService.getDatasReleve(param);
-                    datasFuture.add(responseFutureYear);
-                    datasFuture.add(responseFuturePeriode);
+                    Future<JsonObject> responseFuturePeriod = notesService.getDatasReleve(param);
 
-                    CompositeFuture.all(datasFuture)
+                    CompositeFuture.all(responseFutureYear, responseFuturePeriod)
                             .onFailure(error -> {
                                 badRequest(request);
                                 log.error(String.format("[Competences@%s::exportRelevePeriodique] " +
@@ -333,7 +330,7 @@ public class NoteController extends ControllerHelper {
                             })
                             .onSuccess( resp -> {
                                 JsonObject respAnnualData = responseFutureYear.result();
-                                JsonObject respPeriodicData = responseFuturePeriode.result();
+                                JsonObject respPeriodicData = responseFuturePeriod.result();
                                 NoteControllerHelper.setResponseExportReleve(respAnnualData,respPeriodicData);
                                 Renders.renderJson(request, respPeriodicData);
                             });
@@ -753,6 +750,7 @@ public class NoteController extends ControllerHelper {
                     // Récupération des moyennes finales
                     Future<JsonArray> moyenneFinaleFuture = Future.future();
                     notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, idMatiere, null, Field.MOYENNE,
+                            Boolean.FALSE,
                             moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
 
                     // Récupération des notes des devoirs
@@ -923,7 +921,7 @@ public class NoteController extends ControllerHelper {
                         idPeriode = Long.valueOf(request.params().get("idPeriode"));
 
                     notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, null, null,
-                            "moyenne", arrayResponseHandler(request));
+                            "moyenne", Boolean.FALSE, arrayResponseHandler(request));
                 } else{
                     unauthorized(request);
                 }
@@ -1141,6 +1139,7 @@ public class NoteController extends ControllerHelper {
                                                                 idMatiere,
                                                                 new JsonArray().add(idClasse),
                                                                 "moyenne",
+                                                                Boolean.FALSE,
                                                                 new Handler<Either<String, JsonArray>>() {
                                                                     @Override
                                                                     public void handle(Either<String, JsonArray> event) {

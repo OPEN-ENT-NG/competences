@@ -1514,7 +1514,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         Future<JsonArray> moyenneFinaleFuture = Future.future();
         noteService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, null, null,
-                "moyenne", moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
+                "moyenne", Boolean.FALSE, moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
         futures.add(moyenneFinaleFuture);
 
         Future<JsonArray> matieresFuture = Future.future();

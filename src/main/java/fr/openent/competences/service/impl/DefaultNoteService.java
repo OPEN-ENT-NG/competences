@@ -73,7 +73,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public final String IS_EVALUATED = "is_evaluated";
     public final String ID_DEVOIR = "id_devoir";
     public final String ID_SOUS_MATIERE = "id_sousmatiere";
-    public final String APPRECIATION_MATIERE_PERIODE = "appreciation_matiere_periode";
     public final String SYNTHESE_BILAN_PERIODIQUE = "synthese_bilan_periodique";
     public final String AVIS_CONSEIL_DE_CLASSE = "avis_conseil_de_classe";
     public final String AVIS_CONSEIL_ORIENTATION = "avis_conseil_orientation";
@@ -667,7 +666,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     @Override
     public void getColonneReleve(JsonArray idEleves, Long idPeriode, String idMatiere, JsonArray idsClasse,
-                                 String colonne, Handler<Either<String, JsonArray>> handler){
+                                 String colonne, Boolean withPreviousAppreciations, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -713,7 +712,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
         }
         if (null != idPeriode) {
-            query.append(" id_periode = ? ");
+            query.append(" id_periode ")
+                    .append((Boolean.TRUE.equals(withPreviousAppreciations)) ?  "<= ? " : "= ? ");
             values.add(idPeriode);
         }
         if(query.toString().substring(query.length() - 3, query.length()).equals("AND")){
@@ -725,10 +725,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     public Future<JsonArray> getColumnReleve(JsonArray studentsIds, Long periodId, String subjectId, JsonArray classesIds,
-                                 String column) {
+                                 String column, Boolean withPreviousAppreciation) {
 
         Promise<JsonArray> columnRelevePromise = Promise.promise();
-        getColonneReleve(studentsIds,periodId, subjectId, classesIds, column,
+        getColonneReleve(studentsIds,periodId, subjectId, classesIds, column, withPreviousAppreciation,
                 FutureHelper.handlerJsonArray(columnRelevePromise,
                         String.format("[Competences%s::getColumnReleve] : error sql request ",
                                 this.getClass().getSimpleName())));
@@ -2595,6 +2595,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         final Integer typeClasse = params.getInteger(TYPE_CLASSE_KEY);
         final JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
         final JsonObject resultHandler = new JsonObject();
+        final Boolean withPreviousAppreciations = (params.containsKey(PREVIOUSAPPRECIATIONS)) ?
+                params.getBoolean(PREVIOUSAPPRECIATIONS) : Boolean.FALSE;
         Map<String, JsonObject> elevesMapObject = new HashMap<>();
         Boolean isExport = (params.getString("fileType") != null);
         List<Future> futures = new ArrayList<>();
@@ -2650,14 +2652,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 // Récupération des moyennes Finales
                 Future<JsonArray> moyennesFinalesFutures =  getColumnReleve(idEleves, idPeriode, idMatiere,
-                        new JsonArray().add(idClasse), Field.MOYENNE);
+                        new JsonArray().add(idClasse), Field.MOYENNE, withPreviousAppreciations);
                 Future<JsonArray> appreciationsFutures;
                 Future<JsonArray> positionnementsFinauxFutures;
                 if (idPeriode != null) {
-                    appreciationsFutures =getColumnReleve(idEleves, idPeriode, idMatiere,
-                            new JsonArray().add(idClasse), APPRECIATION_MATIERE_PERIODE);
+
+                    appreciationsFutures =getColumnReleve(idEleves, idPeriode , idMatiere,
+                            new JsonArray().add(idClasse), APPRECIATION_MATIERE_PERIODE, withPreviousAppreciations);
+
                     positionnementsFinauxFutures =getColumnReleve(idEleves, idPeriode, idMatiere,
-                            new JsonArray().add(idClasse), Field.POSITIONNEMENT);
+                            new JsonArray().add(idClasse), Field.POSITIONNEMENT, withPreviousAppreciations);
                 } else {
                     appreciationsFutures = Future.succeededFuture(new JsonArray());
                     positionnementsFinauxFutures = Future.succeededFuture(new JsonArray());
@@ -2706,7 +2710,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     if(event.succeeded()) {
                         // Rajout des moyennes finales
                         FormateColonneFinaleReleve(moyennesFinalesFutures.result(), elevesMapObject,
-                                Field.MOYENNE, idPeriode, hasEvaluatedHomeWork);
+                                Field.MOYENNE, idPeriode, hasEvaluatedHomeWork, withPreviousAppreciations);
 
                         Structure structure = new Structure();
                         structure.setId(idEtablissement);
@@ -2737,11 +2741,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                             // Rajout des positionnements finaux
                             FormateColonneFinaleReleve(positionnementsFinauxFutures.result(), elevesMapObject,
-                                    Field.POSITIONNEMENT, idPeriode, hasEvaluatedHomeWork);
+                                    Field.POSITIONNEMENT, idPeriode, hasEvaluatedHomeWork, withPreviousAppreciations);
 
-                            resultHandler.put(APPRECIATIONS, appreciationsFutures.result());
+                           if (withPreviousAppreciations) {
+                               JsonArray appreciationsSelectedPeriod =
+                                       getAppreciationSelectedPeriod(appreciationsFutures.result(),idPeriode);
+                               resultHandler.put(APPRECIATIONS, appreciationsSelectedPeriod);
+                           } else {
+                               resultHandler.put(APPRECIATIONS, appreciationsFutures.result());
+                           }
                             FormateColonneFinaleReleve(appreciationsFutures.result(), elevesMapObject,
-                                    APPRECIATION_MATIERE_PERIODE, idPeriode, hasEvaluatedHomeWork);
+                                    APPRECIATION_MATIERE_PERIODE, idPeriode, hasEvaluatedHomeWork, withPreviousAppreciations);
+
                         }
                         handler.handle(new Either.Right<>(resultHandler.put(Field.ELEVES,
                                 new DefaultExportBulletinService(eb, null).sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
@@ -2753,6 +2764,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 handler.handle(new Either.Left<>(idElevesEvent.cause().getMessage()));
             }
         });
+    }
+
+    private JsonArray getAppreciationSelectedPeriod (JsonArray appreciations, Long idPeriod) {
+        List<JsonObject> fileredAppreciations = new ArrayList<>();
+        if (appreciations != null) {
+            List<JsonObject> appreciationsList = appreciations.getList();
+            fileredAppreciations = appreciationsList.stream().filter( app ->
+                  idPeriod.equals(app.getLong(Field.ID_PERIODE))
+            ).collect(Collectors.toList());
+        }
+        return new JsonArray(fileredAppreciations);
     }
 
     public Future<JsonObject> getDatasReleve (final JsonObject param) {
@@ -3690,7 +3712,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
 
     private void FormateColonneFinaleReleve(JsonArray datas, Map<String, JsonObject> eleveMapObject,
-                                            String colonne, Long idPeriode, Boolean hasEvaluatedHommeWork) {
+                                            String colonne, Long idPeriode, Boolean hasEvaluatedHommeWork,
+                                            Boolean withPreviousAppreciation) {
         String resultLabel = colonne;
         if (Field.MOYENNE.equals(colonne)) {
             resultLabel += (idPeriode!=null)? "Finale" : "sFinales";
@@ -3702,10 +3725,22 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
             if(eleve != null) {
                 if(idPeriode != null) {
-                    if(eleve.containsKey(resultLabel)){
-                        eleve.remove(resultLabel);
+                    if (withPreviousAppreciation) {
+                        if( !eleve.containsKey(PREVIOUSAPPRECIATIONS)) {
+                            eleve.put(PREVIOUSAPPRECIATIONS, new JsonArray());
+                        }
+                        if (idPeriode.equals(data.getLong(Field.ID_PERIODE))) {
+                            eleve.put(resultLabel, data.getValue(colonne));
+                        }
+                        if (data.getLong(Field.ID_PERIODE) < idPeriode && APPRECIATION_MATIERE_PERIODE.equals(resultLabel)) {
+                            eleve.getJsonArray(PREVIOUSAPPRECIATIONS).add(data);
+                        }
+                    } else {
+                        if(eleve.containsKey(resultLabel)){
+                            eleve.remove(resultLabel);
+                        }
+                        eleve.put(resultLabel, data.getValue(colonne));
                     }
-                    eleve.put(resultLabel, data.getValue(colonne));
                 }
                 else {
                     if(!eleve.containsKey(resultLabel)){
@@ -3723,6 +3758,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 if (!student.getValue().containsKey(resultLabel)){
                     student.getValue().put(resultLabel, Field.NN);
                 }
+
             }
         }
 
@@ -4741,24 +4777,24 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // Récupération des moyennes finales de tous les élèves de la classe
         Future<JsonArray> moyFinalesElevesF = Future.future();
         getColonneReleve(null, null, idMatiere,
-                new JsonArray().add(idClasse), "moyenne", event -> formate(moyFinalesElevesF, event));
+                new JsonArray().add(idClasse), Field.MOYENNE, Boolean.FALSE, event -> formate(moyFinalesElevesF, event));
         detailsFuture.add(moyFinalesElevesF);
 
         // Récupération des appréciations matières, des moyennesFinales et  positionnements finaux
         // de l'élève sur toutes les périodes de la classe
         Future<JsonArray> appreciationMatierePeriode = Future.future();
         getColonneReleve(new JsonArray().add(idEleve), null, idMatiere, new JsonArray().add(idClasse),
-                "appreciation_matiere_periode", event -> formate(appreciationMatierePeriode, event));
+                APPRECIATION_MATIERE_PERIODE, Boolean.FALSE, event -> formate(appreciationMatierePeriode, event));
         detailsFuture.add(appreciationMatierePeriode);
 
         Future<JsonArray> moyenneFinalesF = Future.future();
         getColonneReleve(new JsonArray().add(idEleve), null, idMatiere, new JsonArray().add(idClasse),
-                "moyenne", event -> formate(moyenneFinalesF, event));
+                Field.MOYENNE, Boolean.FALSE, event -> formate(moyenneFinalesF, event));
         detailsFuture.add(moyenneFinalesF);
 
         Future<JsonArray> positionnementF = Future.future();
         getColonneReleve(new JsonArray().add(idEleve), null, idMatiere, new JsonArray().add(idClasse),
-                "positionnement", event -> formate(positionnementF, event));
+                Field.POSITIONNEMENT, Boolean.FALSE, event -> formate(positionnementF, event));
         detailsFuture.add(positionnementF);
 
         // Récupération du tableau de conversion

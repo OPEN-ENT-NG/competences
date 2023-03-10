@@ -175,7 +175,7 @@ public interface NoteService extends CrudService {
                              String colonne,   Handler<Either<String, JsonArray>> handler);
 
     void  getColonneReleve (JsonArray idEleves, Long idPeriode, String idMatiere, JsonArray idsClasse,
-                           String colonne, Handler<Either<String, JsonArray>> handler);
+                           String colonne, Boolean withPreviousAppreciation,Handler<Either<String, JsonArray>> handler);
 
     /**
      * get appreciation or final average or position by idPeriode, idMatiere and studentIds
@@ -187,7 +187,7 @@ public interface NoteService extends CrudService {
      * @return Future
      */
     Future<JsonArray> getColumnReleve (JsonArray idEleves, Long idPeriode, String idMatiere, JsonArray idsClasse,
-                                      String colonne);
+                                      String colonne, Boolean withPreviousAppreciation);
     /**
      * Met à jour la moyennes finale d'un élève pour une période, une matiere et une classe
      * @param idEleve idEleve

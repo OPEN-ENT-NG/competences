@@ -88,6 +88,8 @@ public class Field {
 
     //variables
     public static final String AVERAGES = "averages";
+    public static final String APPRECIATION_MATIERE_PERIODE = "appreciation_matiere_periode";
+    public static final String PREVIOUSAPPRECIATIONS = "previousAppreciations";
     public static final String FINALAVERAGES = "finalAverages";
     public static final String NN = "NN";
     public static final String SAVE_BFC = "saveBFC";
@@ -139,7 +141,7 @@ public class Field {
     public static final String RANK = "rank";
     public static final String PERIODE = "periode";
     public static final String POSITIONNEMENT = "positionnement";
-    public static final String PREVIOUSAVERAGE  = "previousAverage";
+    public static final String PREVIOUSAVERAGES  = "previousAverages";
     public static final String STATISTIQUES = "statistiques";
     public static final String NAMECLASSE = "nameClasse";
     public static final String NAMECLASS = "nameClass";
