@@ -858,7 +858,8 @@ export class Utils {
                 idTypePeriode: idTypePeriode,
                 ordre: ordrePeriode,
                 idStructure: idStructure,
-                classeName: classeName
+                classeName: classeName,
+
             };
             if(Utils.isNull(idStructure) || Utils.isNull(idClasse)){
                 console.error(`[getClasseReleve] : required idStructure: ${idStructure} and idClasse: ${idClasse}`);

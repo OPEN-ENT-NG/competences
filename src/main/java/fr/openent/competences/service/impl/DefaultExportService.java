@@ -1990,18 +1990,12 @@ public class DefaultExportService implements ExportService {
                                 }
                             }
                             Promise<JsonArray> maitrisePromise = Promise.promise();
-                            niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, cycle.getLong("id_cycle"),
+                            niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, cycle.getLong(Field.ID_CYCLE),
                                     FutureHelper.handlerJsonArray(maitrisePromise.future()));
 
                             Promise<JsonArray> competencesPromise = Promise.promise();
-                            competencesService.getDevoirCompetences(idDevoirsCompetences, idEtablissement, cycle.getLong("id_cycle"),
+                            competencesService.getDevoirCompetences(idDevoirsCompetences, idEtablissement, cycle.getLong(Field.ID_CYCLE),
                                     FutureHelper.handlerJsonArray(competencesPromise.future()));
-
-                            String[] idGroupClasseTab = UtilsConvert.jsonArrayToStringArr(idGroupClasse);
-
-                            Promise<JsonArray> devoirsCompetencesPromise = Promise.promise();
-                            devoirService.listDevoirs(idUser, idGroupClasseTab, null, new Long[]{idPeriode}, new String[]{idEtablissement}, null, null, false,
-                                    FutureHelper.handlerJsonArray(devoirsCompetencesPromise.future()));
 
                             final JsonObject etabJSON = structureFuture.result().getJsonObject("s").getJsonObject(Field.DATA);
                             final JsonObject periodeJSON = new JsonObject();
@@ -2016,25 +2010,16 @@ public class DefaultExportService implements ExportService {
                                 periodeJSON.put(Field.LIBELLE, Field.ANNEE);
                             }
 
-                            CompositeFuture.all(multiTeachingPromise.future(), servicesFuture , subTopicCoefFuture, maitrisePromise.future(), competencesPromise.future(), devoirsCompetencesPromise.future()).setHandler(futuresEvent -> {
+                            CompositeFuture.all(multiTeachingPromise.future(), servicesFuture , subTopicCoefFuture, maitrisePromise.future(), competencesPromise.future()).setHandler(futuresEvent -> {
                                 final JsonArray multiTeachers = multiTeachingPromise.future().result();
                                 final JsonArray servicesJson = servicesFuture.result();
                                 final List<SubTopic> subTopics =  subTopicCoefFuture.result();
                                 final JsonArray maitrisesJson = maitrisePromise.future().result();
                                 final JsonArray competencesJson = competencesPromise.future().result();
-                                final JsonArray devoirsCompetencesJSON = devoirsCompetencesPromise.future().result();
                                 final JsonArray idEnseignants = new JsonArray();
                                 List<Service> services = new ArrayList<>();
                                 Structure structure = new Structure();
                                 structure.setId(idEtablissement);
-
-                                /*for (int i = 0; i < devoirsCompetencesJSON.size(); i++) {
-                                    JsonObject devoir = devoirsCompetencesJSON.getJsonObject(i);
-                                    String idMatiere = devoir.getString(ID_MATIERE);
-                                    Long idDevoir = devoir.getLong(ID_KEY);
-                                    idMatieres.add(idMatiere);
-                                    idDevoirsCompetences.add(idDevoir);
-                                }*/
 
                                 for (int i = 0; i < servicesJson.size(); i++) {
                                     JsonObject service = servicesJson.getJsonObject(i);
@@ -2048,9 +2033,7 @@ public class DefaultExportService implements ExportService {
                                 }
 
                                 Map<String, Map<String, Long>> competenceNotesMap = new HashMap<>();
-
-                                List<String> devoirsList = new ArrayList<>(extractData(devoirsJSON, ID_KEY).keySet());
-                                Map<String, JsonObject> devoirsMap = extractData(compNotes, Field.ID_DEVOIR); //FIXME : Test si c correct
+                                Map<String, JsonObject> devoirsMap = extractData(compNotes, Field.ID_DEVOIR);
                                 Map<String, JsonObject> maitrisesMap = extractData(
                                         orderBy(addMaitriseNE(maitrisesJson), ORDRE, true), ORDRE);
                                 Map<String, JsonObject> competencesMap = extractData(competencesJson, ID_KEY);
@@ -2060,13 +2043,13 @@ public class DefaultExportService implements ExportService {
                                 for (int i = 0; i < compNotes.size(); i++) {
                                     if (compNotes.getJsonObject(i) instanceof JsonObject) {
                                         JsonObject row = compNotes.getJsonObject(i);
-                                        if (row.containsKey("empty")) {
+                                        if (row.containsKey(Field.EMPTY)) {
                                             continue;
                                         }
-                                        String compKey = String.valueOf(row.getLong("id_competence"));
-                                        String devoirKey = String.valueOf(row.getLong("id_devoir"));
-                                        Long eval = row.getLong("evaluation");
-                                        Long niv_final = row.getLong("niveau_final");
+                                        String compKey = String.valueOf(row.getLong(Field.ID_COMPETENCE));
+                                        String devoirKey = String.valueOf(row.getLong(Field.ID_DEVOIR));
+                                        Long eval = row.getLong(Field.EVALUATION);
+                                        Long niv_final = row.getLong(Field.NIVEAU_FINAL);
                                         if (!competenceNotesMap.containsKey(devoirKey)) {
                                             competenceNotesMap.put(devoirKey, new HashMap<>());
                                         }
@@ -2078,21 +2061,23 @@ public class DefaultExportService implements ExportService {
                                         }
                                     }
                                 }
+                                if (null != params.get(Field.SKILLS) && Boolean.parseBoolean(params.get(Field.SKILLS))){
+                                    JsonObject compNotesByMatiere = formatJsonObjectExportReleve(false, true, idUser, devoirsMap,
+                                            maitrisesMap, competencesMap, matieresMap, competenceNotesMap);
 
-                                JsonObject compNotesByMatiere = formatJsonObjectExportReleve(false, true, idUser, devoirsMap,
-                                        maitrisesMap, competencesMap, matieresMap, competenceNotesMap);
 
-                                matieres.stream().forEach(matiere -> { //FIXME : Faire la condition de notes/compétences/les deux ici?
-                                    JsonObject m = (JsonObject) matiere;
-                                    compNotesByMatiere.getJsonObject("body").getJsonArray("body").stream().forEach(compMatiere -> {
-                                        JsonObject c = (JsonObject) compMatiere;
-                                        if(c.getString("header").equals(m.getString("id")))
-                                            m.put("competencesNotes", c.getJsonArray("competenceNotes"));
+                                    matieres.stream().forEach(matiere -> {
+                                        JsonObject m = (JsonObject) matiere;
+                                        compNotesByMatiere.getJsonObject(Field.BODY).getJsonArray(Field.BODY).stream().forEach(compMatiere -> {
+                                            JsonObject c = (JsonObject) compMatiere;
+                                            if(c.getString(Field.HEADER).equals(m.getString(Field.ID)))
+                                                m.put(Field.COMPETENCESNOTES, c.getJsonArray(Field.COMPETENCENOTES));
+                                        });
                                     });
-                                });
-
+                                }
                                 getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON, periodeJSON, userJSON, etabJSON,
-                                        finalBackUp, moyennesFinales, multiTeachers, services, compNotesByMatiere, handler);
+                                        finalBackUp, moyennesFinales, multiTeachers, services, handler);
+
 
                             });
                     })
@@ -2109,8 +2094,7 @@ public class DefaultExportService implements ExportService {
      * Récupère le nom des enseignants de chacune des matières puis positionne
      * les devoirs de l'élève sur les bonnes matières et enfin génère le PDF associé
      * formant le relevé de notes de l'élève.
-     *
-     * @param matieres    la liste des matières de l'élève.
+     *  @param matieres    la liste des matières de l'élève.
      * @param idEnseignants
      * @param devoirsJson la liste des devoirs et notes de l'élève.
      * @param periodeJson la periode
@@ -2121,7 +2105,7 @@ public class DefaultExportService implements ExportService {
     public void getEnseignantsMatieres(final JsonArray matieres, JsonArray idEnseignants, final JsonArray devoirsJson,
                                        final JsonObject periodeJson, final JsonObject userJson,
                                        final JsonObject etabJson, final boolean isBackup, final JsonArray moyennesFinales,
-                                       final JsonArray multiTeachers, final List<Service> services, final JsonObject compNotesByMatiere,
+                                       final JsonArray multiTeachers, final List<Service> services,
                                        Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getUsers")
@@ -2452,7 +2436,7 @@ public class DefaultExportService implements ExportService {
     }
 
     public void getDataForExportReleveClasse(String idClasse, String idEtablissement, Long idPeriode,
-                                             Long idTypePeriode, final Long ordre,
+                                             Long idTypePeriode, final Long ordre, Boolean scores, Boolean skills,
                                              Handler<Either<String, JsonObject>> handler) {
         Utils.getElevesClasse(eb, idClasse, idPeriode, elevesEvent -> {
             if (elevesEvent.isLeft()) {
@@ -2472,7 +2456,8 @@ public class DefaultExportService implements ExportService {
             List<Future> classeFuture = new ArrayList<>();
             MultiMap params = MultiMap.caseInsensitiveMultiMap();
             params.add("idTypePeriode", isNotNull(idTypePeriode) ? idTypePeriode.toString() : null)
-                    .add("ordrePeriode", isNotNull(ordre) ? ordre.toString() : null);
+                    .add("ordrePeriode", isNotNull(ordre) ? ordre.toString() : null).add("scores", String.valueOf(scores))
+                    .add("skills", String.valueOf(skills));
             getDataForClasse(elevesClasse, idEtablissement, idPeriode, params, exportResultClasse, classeFuture);
 
             CompositeFuture.all(classeFuture).setHandler(event -> {

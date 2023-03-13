@@ -3,10 +3,6 @@ package fr.openent.competences.constants;
 public class Field {
 
 
-    public static final String ID_COMPETENCE = "id_competence";
-    public static final String COMPETENCES = "competences";
-    public static final String CLASSES = "classes";
-    public static final String ID_ETABLISSEMENT = "id_etablissement";
 
     private Field() {
         throw new IllegalStateException("Utility class");
@@ -60,6 +56,9 @@ public class Field {
     public static final String GROUPID = "groupId";
     public static final String USERID = "userId";
     public static final String IDTYPEPERIODE = "idTypePeriode";
+    public static final String ID_COMPETENCE = "id_competence";
+    public static final String ID_CYCLE = "id_cycle";
+    public static final String ID_ETABLISSEMENT = "id_etablissement";
 
 
     public static final String MAIN_TEACHER_ID = "main_teacher_id";
@@ -151,7 +150,17 @@ public class Field {
     public static final String NAMECLASSE = "nameClasse";
     public static final String NAMECLASS = "nameClass";
     public static final String ELEMENTPROGRAMME = "elementProgramme";
-    public static final String TABLECONVERSIONS = "tableConversions";
+    public static final String TABLECONVERSIONS = "tableConversions";    
+    public static final String SKILLS = "skills";
+    public static final String SCORES = "scores";
+    public static final String EMPTY = "empty";
+    public static final String NIVEAU_FINAL = "niveau_final";
+    public static final String BODY = "body";
+    public static final String HEADER = "header";
+    public static final String COMPETENCESNOTES = "competencesNotes";
+    public static final String COMPETENCENOTES = "competenceNotes";
+    public static final String COMPETENCES = "competences";
+    public static final String CLASSES = "classes";
     //
 
     public static final String ISSKILLAVERAGE = "isSkillAverage";
