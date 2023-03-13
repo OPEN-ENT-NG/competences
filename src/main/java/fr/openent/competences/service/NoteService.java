@@ -429,7 +429,17 @@ public interface NoteService extends CrudService {
      */
     Future<Void> insertOrUpdateAnnotation(String idDevoir, String idEleve, String annotation);
 
-
+    /**
+     * Récupère les compétences notes d'élèves selon divers critères
+     * @param ids ids d'élèves
+     * @param etablissementId etablissementId
+     * @param matiereId matiereId
+     * @param matiereIds matiereIds
+     * @param periodeId periodeId
+     * @param eleveId eleveId
+     * @param withDomaineInfo récupère ou non les infos de domaine
+     * @param isYear récupère ou non les infos à l'année
+     */
     void getCompetencesNotesReleveEleves(JsonArray ids, String etablissementId, String matiereId,
                                                 JsonArray matiereIds,
                                                 Long periodeId,  String eleveId, Boolean withDomaineInfo,

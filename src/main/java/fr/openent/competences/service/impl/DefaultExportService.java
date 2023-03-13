@@ -1150,40 +1150,39 @@ public class DefaultExportService implements ExportService {
                                                         Map<String, Map<String, Long>> competenceNotesByDevoir) {
 
         JsonObject result = new JsonObject();
-        result.put("text", text);
-        result.put("idEleve", idEleve);
+        result.put(Field.TEXT, text);
+        result.put(Field.IDELEVE, idEleve);
 
         JsonObject header = new JsonObject();
         JsonObject body = new JsonObject();
-        JsonObject bodyT = new JsonObject();
-        JsonArray bodyTT = new JsonArray();
+        JsonArray competencesArray = new JsonArray();
 
         //Maitrise
         JsonArray headerMiddle = new fr.wseduc.webutils.collections.JsonArray();
         for (JsonObject maitrise : maitrises.values()) {
             JsonObject _maitrise = new JsonObject()
-                    .put("libelle", maitrise.getString("libelle") != null
-                            ? maitrise.getString("libelle") : maitrise.getString("default_lib"))
-                    .put("visu", text ? getMaitrise(maitrise
-                            .getString("lettre"), String.valueOf(maitrise
-                            .getLong(ORDRE))) : maitrise.getString("default"));
+                    .put(Field.LIBELLE, maitrise.getString(Field.LIBELLE) != null
+                            ? maitrise.getString(Field.LIBELLE) : maitrise.getString(Field.DEFAULT_LIB))
+                    .put(Field.VISU, text ? getMaitrise(maitrise
+                            .getString(Field.LETTRE), String.valueOf(maitrise
+                            .getLong(ORDRE))) : maitrise.getString(Field.DEFAULT));
             if(usePerso && !text)
-                _maitrise.put("persoColor", maitrise.getString("couleur"));
+                _maitrise.put(Field.PERSOCOLOR, maitrise.getString(Field.COULEUR));
 
             headerMiddle.add(_maitrise);
         }
-        header.put("right", headerMiddle);
-        result.put("header", header);
+        header.put(Field.RIGHT, headerMiddle);
+        result.put(Field.HEADER, header);
 
         final Map<String, JsonObject> competencesObjByIdComp = new HashMap<>();
 
         Map<String, Set<String>> competencesByMatiere = new LinkedHashMap<>();
-        for (String idEntity : matieres.keySet()) { //FIXME : changer?
+        for (String idEntity : matieres.keySet()) {
             competencesByMatiere.put(idEntity, new TreeSet<String>(new Comparator<String>() {
                 @Override
                 public int compare(String o1, String o2) {
-                    String s1 = competencesObjByIdComp.get(o1).getString("nom");
-                    String s2 = competencesObjByIdComp.get(o2).getString("nom");
+                    String s1 = competencesObjByIdComp.get(o1).getString(Field.NOM);
+                    String s2 = competencesObjByIdComp.get(o2).getString(Field.NOM);
                     return s1.compareTo(s2);
                 }
             }));
@@ -1191,37 +1190,34 @@ public class DefaultExportService implements ExportService {
 
         Map<String, List<String>> devoirByCompetences = new HashMap<>();
         for (JsonObject competence : competences.values()) {
-            competencesObjByIdComp.put(String.valueOf(competence.getLong("id_competence")), competence);
+            competencesObjByIdComp.put(String.valueOf(competence.getLong(Field.ID_COMPETENCE)), competence);
 
-            if (competence.containsKey("empty")) {
+            if (competence.containsKey(Field.EMPTY)) {
                 continue;
             }
-            String idDevoir = String.valueOf(competence.getLong("id_devoir"));
-            String idComp = String.valueOf(competence.getLong("id_competence"));
+            String idDevoir = String.valueOf(competence.getLong(Field.ID_DEVOIR));
+            String idComp = String.valueOf(competence.getLong(Field.ID_COMPETENCE));
             if (!devoirByCompetences.containsKey(idComp)) {
                 devoirByCompetences.put(idComp, new ArrayList<String>());
             }
             devoirByCompetences.get(idComp).add(idDevoir);
-            if (null != competence.getString("id_matiere")
-                    && null != competencesByMatiere.get(competence.getString("id_matiere").toString())) {
-                competencesByMatiere.get(competence.getString("id_matiere").toString()).add(idComp);
+            if (null != competence.getString(Field.ID_MATIERE)
+                    && null != competencesByMatiere.get(competence.getString(Field.ID_MATIERE).toString())) {
+                competencesByMatiere.get(competence.getString(Field.ID_MATIERE).toString()).add(idComp);
             }
         }
 
         JsonObject bodyHeader = new JsonObject();
-        bodyHeader.put("left", "Matieres / items");
+        bodyHeader.put(Field.LEFT, "Matieres / items");
         String right = getLibelle("evaluations.competence.level.and.number");
-        bodyHeader.put("right", right);
-        body.put("header", bodyHeader);
-        bodyT.put("header", bodyHeader);
-
-        JsonArray bodyBody = new fr.wseduc.webutils.collections.JsonArray();
+        bodyHeader.put(Field.RIGHT, right);
+        body.put(Field.HEADER, bodyHeader);
 
         for (Map.Entry<String, Set<String>> competencesInDomain : competencesByMatiere.entrySet()) {
             JsonObject domainObj = new JsonObject();
             if (matieres.get(competencesInDomain.getKey()) != null) {
-                domainObj.put("domainHeader", matieres.get(competencesInDomain.getKey())
-                        .getString("name"));
+                domainObj.put(Field.DOMAINHEADER, matieres.get(competencesInDomain.getKey())
+                        .getString(Field.NAME));
             }
 
             JsonArray competencesInDomainArray = new fr.wseduc.webutils.collections.JsonArray();
@@ -1237,20 +1233,15 @@ public class DefaultExportService implements ExportService {
                 }
             }
             JsonObject competenceNote = new JsonObject();
-            competenceNote.put("header", competencesInDomain.getKey());
-            competenceNote.put("competenceNotes", calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size()));
+            competenceNote.put(Field.HEADER, competencesInDomain.getKey());
+            competenceNote.put(Field.COMPETENCENOTES, calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size()));
             competencesInDomainArray.add(competenceNote);
-            bodyTT.add(competenceNote);
-
-            domainObj.put("domainBody", competencesInDomainArray);
-            bodyBody.add(domainObj);
+            competencesArray.add(competenceNote);
         }
 
+        body.put(Field.BODY, competencesArray);
 
-        bodyT.put("body", bodyTT);
-        body.put("body", bodyBody);
-
-        result.put("body", bodyT);
+        result.put(Field.BODY, body);
         return result;
     }
 
@@ -2070,8 +2061,12 @@ public class DefaultExportService implements ExportService {
                                         JsonObject m = (JsonObject) matiere;
                                         compNotesByMatiere.getJsonObject(Field.BODY).getJsonArray(Field.BODY).stream().forEach(compMatiere -> {
                                             JsonObject c = (JsonObject) compMatiere;
-                                            if(c.getString(Field.HEADER).equals(m.getString(Field.ID)))
-                                                m.put(Field.COMPETENCESNOTES, c.getJsonArray(Field.COMPETENCENOTES));
+                                            if(c.getString(Field.HEADER).equals(m.getString(Field.ID))){
+                                                JsonArray competenceNotes = c.getJsonArray(Field.COMPETENCENOTES);
+                                                m.put(Field.COMPETENCESNOTES, competenceNotes);
+                                                m.put(Field.HASCOMPETENCESNOTES, !competenceNotes.isEmpty());
+                                            }
+
                                         });
                                     });
                                 }
@@ -2455,9 +2450,9 @@ public class DefaultExportService implements ExportService {
             JsonArray exportResultClasse = new JsonArray();
             List<Future> classeFuture = new ArrayList<>();
             MultiMap params = MultiMap.caseInsensitiveMultiMap();
-            params.add("idTypePeriode", isNotNull(idTypePeriode) ? idTypePeriode.toString() : null)
-                    .add("ordrePeriode", isNotNull(ordre) ? ordre.toString() : null).add("scores", String.valueOf(scores))
-                    .add("skills", String.valueOf(skills));
+            params.add(Field.IDTYPEPERIODE, isNotNull(idTypePeriode) ? idTypePeriode.toString() : null)
+                    .add(Field.ORDREPERIODE, isNotNull(ordre) ? ordre.toString() : null).add(Field.SCORES, String.valueOf(scores))
+                    .add(Field.SKILLS, String.valueOf(skills));
             getDataForClasse(elevesClasse, idEtablissement, idPeriode, params, exportResultClasse, classeFuture);
 
             CompositeFuture.all(classeFuture).setHandler(event -> {

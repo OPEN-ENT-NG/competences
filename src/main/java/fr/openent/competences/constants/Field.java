@@ -3,6 +3,18 @@ package fr.openent.competences.constants;
 public class Field {
 
 
+    public static final String DEFAULT_LIB = "default_lib";
+    public static final String VISU = "visu";
+    public static final String LETTRE = "lettre";
+    public static final String DEFAULT = "default";
+    public static final String PERSOCOLOR = "persoColor";
+    public static final String COULEUR = "couleur";
+    public static final String RIGHT = "right";
+    public static final String NOM = "nom";
+    public static final String LEFT = "left";
+    public static final String DOMAINHEADER = "domainHeader";
+    public static final String DOMAINBODY = "domainBody";
+    public static final String HASCOMPETENCESNOTES = "hasCompetencesNotes";
     public static final String ID_COMPETENCE = "id_competence";
     public static final String COMPETENCES = "competences";
     public static final String CLASSES = "classes";
