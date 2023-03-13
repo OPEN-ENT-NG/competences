@@ -14,24 +14,8 @@ public class AccessStructureAndAdminOrTeacherCourseFilter implements ResourcesPr
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         boolean isAdmin = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
-        boolean isInStructure = false;
-        boolean isTeacherWhomClassBelong = false;
-        FilterUserUtils filterUserUtils = new FilterUserUtils(user,null);
-
-        //Check if the user is in the structure
-        if(request.params().contains(Field.IDETABLISSEMENT)){
-            isInStructure = filterUserUtils.validateStructure(request.params().get(Field.IDETABLISSEMENT));
-        }
-
-        //Check if the user is a teacher, if yes check if the class belongs to this teacher
-        if (request.params().contains(Field.IDCLASSE)
-                && user.getType().equals(Field.TEACHER)) {
-            String idClass = request.params().get(Field.IDCLASSE);
-            isTeacherWhomClassBelong = filterUserUtils.validateClasse(idClass);
-        }
-
-        handler.handle(isInStructure &&
-                (isAdmin
-                || isTeacherWhomClassBelong));
+        String idStructure = WorkflowActionUtils.getParamStructure(request);
+        boolean isTeacher = user.getType().equals(Field.TEACHER);
+        handler.handle(idStructure != null  && user.getStructures().contains(idStructure) && (isAdmin || isTeacher));
     }
 }

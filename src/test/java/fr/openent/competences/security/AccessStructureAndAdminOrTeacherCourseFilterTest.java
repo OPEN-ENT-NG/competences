@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.impl.HeadersAdaptor;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.entcore.common.user.UserInfos;
@@ -28,7 +29,7 @@ public class AccessStructureAndAdminOrTeacherCourseFilterTest {
     UserInfos.Action role1;
     List<String> groupsId;
     MultiMap params;
-    List structures;
+    ArrayList<String> structures;
 
     @Before
     public void setUp(){
@@ -44,76 +45,117 @@ public class AccessStructureAndAdminOrTeacherCourseFilterTest {
     }
 
     @Test
-    public void testAuthorizeWrongStructure(TestContext ctx){
+    public void testAuthorize(TestContext ctx) {
+        user.setType(Field.TEACHER);
         role1.setDisplayName(WorkflowActions.ADMIN_RIGHT.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
-        params.set(Field.IDETABLISSEMENT,"111111");
-        Mockito.doReturn(params).when(request).params();
-        structures.add("0000000");
+        String structureId = "11111";
+        structures.add(structureId);
         user.setStructures(structures);
-        access.authorize(request,binding,user,result -> {
-            ctx.assertEquals(false,result);
+        params.set("structureId", "11111");
+        Mockito.doReturn(params).when(request).params();
+        Async async = ctx.async();
+        access.authorize(request, binding, user, result -> {
+            ctx.assertEquals(true, result);
+            async.complete();
         });
+        async.awaitSuccess(10000);
+    }
+
+
+    @Test
+    public void testBadRightButTeacher(TestContext ctx) {
+        user.setType(Field.TEACHER);
+        role1.setDisplayName(WorkflowActions.COMPETENCES_ACCESS.toString());
+        actions.add(role1);
+        user.setAuthorizedActions(actions);
+        String structureId = "11111";
+        structures.add(structureId);
+        user.setStructures(structures);
+        params.set("structureId", "11111");
+        Mockito.doReturn(params).when(request).params();
+        Async async = ctx.async();
+        access.authorize(request, binding, user, result -> {
+            ctx.assertEquals(true, result);
+            async.complete();
+        });
+        async.awaitSuccess(10000);
     }
 
     @Test
-    public void testAuthorizeStructureAdmin(TestContext ctx){
+    public void testBadTypeButAdmin(TestContext ctx) {
+        user.setType("random");
         role1.setDisplayName(WorkflowActions.ADMIN_RIGHT.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
-        params.set(Field.IDETABLISSEMENT,"111111");
-        Mockito.doReturn(params).when(request).params();
-        structures.add("111111");
+        String structureId = "11111";
+        structures.add(structureId);
         user.setStructures(structures);
-        access.authorize(request,binding,user,result -> {
-            ctx.assertEquals(true,result);
+        params.set("structureId", "11111");
+        Mockito.doReturn(params).when(request).params();
+        Async async = ctx.async();
+        access.authorize(request, binding, user, result -> {
+            ctx.assertEquals(true, result);
+            async.complete();
         });
+        async.awaitSuccess(10000);
     }
 
     @Test
-    public void testAuthorizeStructureTeacherWithClass(TestContext ctx){
+    public void testBadTypeBadRight(TestContext ctx) {
+        user.setType("random");
+        role1.setDisplayName(WorkflowActions.COMPETENCES_ACCESS.toString());
+        actions.add(role1);
         user.setAuthorizedActions(actions);
-
-        user.setType(Field.TEACHER);
-        //Set structure
-        params.set(Field.IDETABLISSEMENT,"111111");
-        structures.add("111111");
+        String structureId = "11111";
+        structures.add(structureId);
         user.setStructures(structures);
-        //Set teacher class
-        List<String> classes = new ArrayList<>();
-        classes.add("000");
-        user.setClasses(classes);
-        params.set(Field.IDCLASSE,"000");
-
-
+        params.set("structureId", "11111");
         Mockito.doReturn(params).when(request).params();
-
-        access.authorize(request,binding,user,result -> {
-            ctx.assertEquals(true,result);
+        Async async = ctx.async();
+        access.authorize(request, binding, user, result -> {
+            ctx.assertEquals(false, result);
+            async.complete();
         });
+        async.awaitSuccess(10000);
     }
+
     @Test
-    public void testAuthorizeStructureTeacherWrongClass(TestContext ctx){
+    public void testBadStructureBadType(TestContext ctx) {
+        user.setType("random");
+        role1.setDisplayName(WorkflowActions.ADMIN_RIGHT.toString());
+        actions.add(role1);
         user.setAuthorizedActions(actions);
-
-        user.setType(Field.TEACHER);
-        //Set structure
-        params.set(Field.IDETABLISSEMENT,"111111");
-        structures.add("111111");
+        String structureId = "aaaaa";
+        structures.add(structureId);
         user.setStructures(structures);
-        //Set teacher class
-        List<String> classes = new ArrayList<>();
-        classes.add("000");
-        user.setClasses(classes);
-        params.set(Field.IDCLASSE,"222");
-        //Set teacher Groups
-        user.setGroupsIds(groupsId);
-
+        params.set("structureId", "11111");
         Mockito.doReturn(params).when(request).params();
-
-        access.authorize(request,binding,user,result -> {
-            ctx.assertEquals(false,result);
+        Async async = ctx.async();
+        access.authorize(request, binding, user, result -> {
+            ctx.assertEquals(false, result);
+            async.complete();
         });
+        async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void testBadStructureBadRight(TestContext ctx) {
+        user.setType(Field.TEACHER);
+        role1.setDisplayName(WorkflowActions.COMPETENCES_ACCESS.toString());
+        actions.add(role1);
+        user.setAuthorizedActions(actions);
+        String structureId = "aaaaa";
+        structures.add(structureId);
+        user.setStructures(structures);
+        params.set("structureId", "11111");
+        Mockito.doReturn(params).when(request).params();
+        Async async = ctx.async();
+        access.authorize(request, binding, user, result -> {
+            ctx.assertEquals(false, result);
+            async.complete();
+        });
+        async.awaitSuccess(10000);
     }
 }
