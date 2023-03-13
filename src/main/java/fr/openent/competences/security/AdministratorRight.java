@@ -36,10 +36,6 @@ public class AdministratorRight implements ResourcesProvider {
         String structureId = WorkflowActionUtils.getParamStructure(resourceRequest);
         boolean allowViesco = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
         boolean allowCompetences = WorkflowActionUtils.hasRight(user, WorkflowActions.COMPETENCES_ACCESS.toString());
-        if(structureId == null){
-            handler.handle(false);
-        } else {
-            handler.handle( user.getStructures().contains(structureId) && allowViesco && allowCompetences);
-        }
+        handler.handle(  structureId != null && user.getStructures().contains(structureId) && allowViesco && allowCompetences);
     }
 }
