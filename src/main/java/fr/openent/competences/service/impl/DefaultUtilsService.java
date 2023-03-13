@@ -710,21 +710,6 @@ public class DefaultUtilsService implements UtilsService {
         return cyclePromise.future();
     }
 
-    /*@Override
-    public Future<JsonObject> getCycle(String idClasse) {
-        Promise<JsonObject> promise = Promise.promise();
-        this.getCycle(idClasse, result -> {
-            if (result.isRight()) {
-                promise.complete(result.right().getValue());
-            }
-            else {
-                promise.fail(result.left().getValue());
-            }
-        });
-        return promise.future();
-    }*/
-
-
     private Handler<Message<JsonObject>> nameHandler(String[] name, String field,
                                                      Handler<Either<String, JsonArray>> handler){
         return event -> {

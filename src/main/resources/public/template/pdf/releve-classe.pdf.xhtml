@@ -260,20 +260,22 @@
                 {{/hasDiviseurMatiere}}{{/moyenne_non_note}}
             </td>
         </tr>
-        {{# competencesNotes }}
+        {{#hasCompetencesNotes}}
         <tr>
-            <td rowspan="{{rowspan}}" colspan="5" class="align-left competence">
+            <td rowspan="{{rowspan}}" colspan="3" class="align-left competence">
                 <span class="align-left">Bilan des items</span>
                 <table>
                     <tr>
+                        {{# competencesNotes }}
                         <td>
                             <div style="background-color: {{ persoColor }} !important">{{ number }}</div>
                         </td>
+                        {{/ competencesNotes }}
                     </tr>
                 </table>
             </td>
         </tr>
-        {{/ competencesNotes }}
+        {{/hasCompetencesNotes}}
         {{/matieres}}
         {{/printSousMatiere}}
 
@@ -388,20 +390,22 @@
             {{/isLast}}
         </tr>
         {{/sous_matieres_tail}}
-        {{# competencesNotes }}
+        {{#hasCompetencesNotes}}
         <tr>
             <td rowspan="{{rowspan}}" colspan="5" class="align-left competence">
                 <span class="align-left">Bilan des items</span>
                 <table>
                     <tr>
+                        {{# competencesNotes }}
                         <td>
                             <div style="background-color: {{ persoColor }} !important">{{ number }}</div>
                         </td>
+                        {{/ competencesNotes }}
                     </tr>
                 </table>
             </td>
         </tr>
-        {{/ competencesNotes }}
+        {{/hasCompetencesNotes}}
         {{/matieres}}
         {{/printSousMatiere}}
     </table>
