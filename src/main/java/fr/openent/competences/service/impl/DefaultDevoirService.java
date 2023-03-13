@@ -921,6 +921,15 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
+    public Future<JsonArray> listDevoirs(String idEleve, String[] idGroupes, Long[] idDevoirs, Long[] idPeriodes,
+                String[] idEtablissements, String[] idMatieres, Boolean hasCompetences, Boolean historise) {
+        Promise<JsonArray> promise = Promise.promise();
+        listDevoirs(idEleve, idGroupes, idDevoirs, idPeriodes, idEtablissements, idMatieres, hasCompetences, historise,
+                FutureHelper.handlerJsonArray(promise.future()));
+        return promise.future();
+    }
+
+    @Override
     public void listDevoirsWithAnnotations(String idEleve, Long idPeriode, String idMatiere,
                                            Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()

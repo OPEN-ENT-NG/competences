@@ -18,6 +18,7 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
@@ -120,6 +121,9 @@ public interface DevoirService extends CrudService {
     void listDevoirs(String idEleve, String[] idGroupes, Long[] idDevoirs, Long[] idPeriodes,
                      String[] idEtablissement, String[] idMatieres, Boolean hasCompetences,
                      Boolean historise, Handler<Either<String, JsonArray>> handler);
+
+    Future<JsonArray> listDevoirs(String idEleve, String[] idGroupes, Long[] idDevoirs, Long[] idPeriodes,
+                                  String[] idEtablissements, String[] idMatieres, Boolean hasCompetences, Boolean historise);
 
     void listDevoirsWithAnnotations(String idEleve, Long idPeriode, String idMatiere,
                                     Handler<Either<String, JsonArray>> handler);

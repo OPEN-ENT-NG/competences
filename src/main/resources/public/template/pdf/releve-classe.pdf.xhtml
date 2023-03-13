@@ -114,6 +114,13 @@
             border-bottom: solid 1px #000 !important;
         }
 
+        .competence {
+            border: none !important;
+            border-left: solid 1px #000 !important;
+            border-bottom: solid 1px #000 !important;
+            border-right: solid 1px #000 !important;
+        }
+
         .professeur {
             border: none !important;
             font-size: 10px;
@@ -172,6 +179,10 @@
 
         .div-note {
             width: 30px;
+        }
+        .barEvaluation td {
+            margin: auto;
+            padding: 0px;
         }
     </style>
     <meta charset="UTF-8" />
@@ -249,6 +260,20 @@
                 {{/hasDiviseurMatiere}}{{/moyenne_non_note}}
             </td>
         </tr>
+        {{# competencesNotes }}
+        <tr>
+            <td rowspan="{{rowspan}}" colspan="5" class="align-left competence">
+                <span class="align-left">Bilan des items</span>
+                <table>
+                    <tr>
+                        <td>
+                            <div style="background-color: {{ persoColor }} !important">{{ number }}</div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        {{/ competencesNotes }}
         {{/matieres}}
         {{/printSousMatiere}}
 
@@ -363,6 +388,20 @@
             {{/isLast}}
         </tr>
         {{/sous_matieres_tail}}
+        {{# competencesNotes }}
+        <tr>
+            <td rowspan="{{rowspan}}" colspan="5" class="align-left competence">
+                <span class="align-left">Bilan des items</span>
+                <table>
+                    <tr>
+                        <td>
+                            <div style="background-color: {{ persoColor }} !important">{{ number }}</div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        {{/ competencesNotes }}
         {{/matieres}}
         {{/printSousMatiere}}
     </table>
