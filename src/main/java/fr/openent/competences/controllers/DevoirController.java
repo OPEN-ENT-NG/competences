@@ -26,8 +26,10 @@ import fr.openent.competences.security.*;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.CompetencesService;
+import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
 import fr.openent.competences.service.impl.DefaultDevoirService;
+import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -71,11 +73,13 @@ public class DevoirController extends ControllerHelper {
      */
     private final DefaultDevoirService devoirsService;
     private final CompetencesService competencesService;
+    private final UtilsService utilsService;
     private EventStore eventStore;
 
     public DevoirController(EventBus eb, EventStore eventStore) {
         this.eb = eb;
         this.eventStore = eventStore;
+        this.utilsService = new DefaultUtilsService(eb);
         devoirsService = new DefaultDevoirService(eb);
         competencesService = new DefaultCompetencesService(eb);
     }
@@ -525,63 +529,14 @@ public class DevoirController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessEvaluationFilter.class)
     @ApiDoc("Duplique un devoir pour une liste de classes donnée")
-    public void duplicateDevoir (final HttpServerRequest request) {
+    public void duplicateDevoir(final HttpServerRequest request) {
         if (!request.params().contains("idDevoir")) {
             badRequest(request);
         } else {
-            UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-                @Override
-                public void handle(final UserInfos user) {
-                    RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
-                        @Override
-                        public void handle(final JsonObject body) {
-                            try {
-                                final long idDevoir = Long.parseLong(request.params().get("idDevoir"));
-                                devoirsService.retrieve(Long.toString(idDevoir), new Handler<Either<String, JsonObject>>() {
-                                    @Override
-                                    public void handle(Either<String, JsonObject> result) {
-                                        if (result.isRight()) {
-                                            final JsonObject devoir = result.right().getValue();
-                                            competencesService.getDevoirCompetences(idDevoir, null, new Handler<Either<String, JsonArray>>() {
-                                                @Override
-                                                public void handle(Either<String, JsonArray> result) {
-                                                    if (result.isRight()) {
-                                                        JsonArray competences = result.right().getValue();
-                                                        if (competences.size() > 0) {
-                                                            JsonArray idCompetences = new fr.wseduc.webutils.collections.JsonArray();
-                                                            JsonObject o;
-                                                            for (int i = 0; i < competences.size(); i++) {
-                                                                o = competences.getJsonObject(i);
-                                                                if (o.containsKey("id")) {
-                                                                    idCompetences.add(o.getLong("id_competence"));
-                                                                }
-                                                            }
-                                                            devoir.put("competences", idCompetences);
-                                                        }
-                                                        devoirsService.duplicateDevoir(devoir,
-                                                                body.getJsonArray("classes"), user, shareService, request, eb);
-                                                        eventStore.createAndStoreEvent(EventStoresCompetences.CREATE_HOMEWORK.name(), request);
-                                                    } else {
-                                                        log.error("An error occured when collecting competences for devoir id " + idDevoir);
-                                                        renderError(request);
-                                                    }
-                                                }
-                                            });
-                                        } else {
-                                            log.error("An error occured when collecting devoir data for id " + idDevoir);
-                                            renderError(request);
-                                        }
-                                    }
-                                });
-                            } catch (ClassCastException e) {
-                                log.error("idDevoir parameter must be a long object.");
-                                log.error(e);
-                                renderError(request);
-                            }
-                        }
-                    });
-                }
-            });
+            UserUtils.getUserInfos(eb, request, user -> RequestUtils.bodyToJson(request, body -> {
+                devoirsService.duplicateDevoirs(request, user, body, competencesService, shareService);
+                eventStore.createAndStoreEvent(EventStoresCompetences.CREATE_HOMEWORK.name(), request);
+            }));
         }
     }
 

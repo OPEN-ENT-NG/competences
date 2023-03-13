@@ -74,7 +74,7 @@ public class DevoirControllerHelper {
     }
 
     public static Handler<Either<String, JsonArray>>
-    getDuplicationDevoirHandler(UserInfos user, DevoirService devoirService, HttpServerRequest request, EventBus eb) {
+    getDuplicationDevoirHandler(UserInfos user, DevoirService devoirService, Promise<Void> finaPromise, EventBus eb) {
         return event -> {
             if (event.right().getValue().size() > 2) {
 
@@ -101,10 +101,10 @@ public class DevoirControllerHelper {
                     eb.request(Competences.VIESCO_BUS_ADDRESS, action, getReplyHandler(devoirJO, devoirService, user, promise));
                 }
                 FutureHelper.all(futures)
-                        .onSuccess(success -> request.response().setStatusCode(200).end())
-                        .onFailure(failure -> badRequest(request, failure.getMessage()));
+                        .onSuccess(success -> finaPromise.complete())
+                        .onFailure(failure ->finaPromise.fail(failure.getMessage()));
             }else{
-                badRequest(request,"[Competences@getDuplicationDevoirHandller] error where duplicate devoirs");
+                finaPromise.fail("[Competences@getDuplicationDevoirHandller] error where duplicate devoirs");
             }
         };
     }

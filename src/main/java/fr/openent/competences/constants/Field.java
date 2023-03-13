@@ -3,12 +3,17 @@ package fr.openent.competences.constants;
 public class Field {
 
 
+    public static final String ID_COMPETENCE = "id_competence";
+    public static final String COMPETENCES = "competences";
+    public static final String CLASSES = "classes";
+    public static final String ID_ETABLISSEMENT = "id_etablissement";
 
     private Field() {
         throw new IllegalStateException("Utility class");
     }
 
     //id
+    public static final String TEACHER = "Teacher";
     public static final String ID = "id";
     public static final String _ID = "_id";
     public static final String IDDOMAINE = "idDomaine";
