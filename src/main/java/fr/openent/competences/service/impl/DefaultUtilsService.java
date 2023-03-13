@@ -703,6 +703,27 @@ public class DefaultUtilsService implements UtilsService {
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(handler));
     }
 
+    @Override
+    public Future<JsonObject> getCycle(String idClasse) {
+        Promise<JsonObject> cyclePromise = Promise.promise();
+        getCycle(idClasse, FutureHelper.handlerJsonObject(cyclePromise));
+        return cyclePromise.future();
+    }
+
+    /*@Override
+    public Future<JsonObject> getCycle(String idClasse) {
+        Promise<JsonObject> promise = Promise.promise();
+        this.getCycle(idClasse, result -> {
+            if (result.isRight()) {
+                promise.complete(result.right().getValue());
+            }
+            else {
+                promise.fail(result.left().getValue());
+            }
+        });
+        return promise.future();
+    }*/
+
 
     private Handler<Message<JsonObject>> nameHandler(String[] name, String field,
                                                      Handler<Either<String, JsonArray>> handler){
