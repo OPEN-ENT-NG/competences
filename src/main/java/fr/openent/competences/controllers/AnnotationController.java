@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessAnnotationFilter;
+import fr.openent.competences.security.AccessIfMyStructure;
 import fr.openent.competences.security.CreateAnnotationWorkflow;
 import fr.openent.competences.service.AnnotationService;
 import fr.openent.competences.service.impl.DefaultAnnotationService;
@@ -61,7 +62,8 @@ public class AnnotationController extends ControllerHelper {
      */
     @Get("/annotations")
     @ApiDoc("Récupère les annotations de l'établissement")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getAnnotations(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
             @Override
