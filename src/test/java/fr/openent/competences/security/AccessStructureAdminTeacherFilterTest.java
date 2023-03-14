@@ -20,8 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RunWith(VertxUnitRunner.class)
-public class AccessStructureAndAdminOrTeacherCourseFilterTest {
-    AccessStructureAndAdminOrTeacherCourseFilter access;
+public class AccessStructureAdminTeacherFilterTest {
+    AccessStructureAdminTeacherFilter access;
     HttpServerRequest request;
     Binding binding;
     UserInfos user;
@@ -33,7 +33,7 @@ public class AccessStructureAndAdminOrTeacherCourseFilterTest {
 
     @Before
     public void setUp(){
-        access = new AccessStructureAndAdminOrTeacherCourseFilter();
+        access = new AccessStructureAdminTeacherFilter();
         request = Mockito.mock(HttpServerRequest.class);
         binding = Mockito.mock(Binding.class);
         user = new UserInfos();
