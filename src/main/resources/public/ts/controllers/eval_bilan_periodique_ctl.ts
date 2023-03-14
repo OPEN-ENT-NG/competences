@@ -206,7 +206,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.search.eleve.evenement = _.findWhere($scope.search.eleve.evenements,
                     {id_periode: $scope.search.periode.id_type});
                 $scope.elementBilanPeriodique.appreciationCPE = new AppreciationCPE($scope.informations.eleve.id,
-                    $scope.search.periode.id_type);
+                    $scope.search.periode.id_type, $scope.structure.id);
                 await $scope.elementBilanPeriodique.appreciationCPE.syncAppreciationCPE();
                 await utils.safeApply($scope);
                 template.open('vie-scolaire', 'enseignants/bilan_periodique/display_vie_scolaire');
@@ -294,7 +294,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.setHistoriqueEvenement($scope, $scope.search.eleve, classePeriodes);
 
             $scope.elementBilanPeriodique.appreciationCPE = new AppreciationCPE($scope.informations.eleve.id,
-                $scope.search.periode.id_type);
+                $scope.search.periode.id_type, $scope.informations.idEtablissement);
             await $scope.elementBilanPeriodique.appreciationCPE.syncAppreciationCPE();
             await utils.safeApply($scope);
             template.open('vie-scolaire', 'enseignants/bilan_periodique/display_vie_scolaire');
@@ -687,7 +687,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
                     if ($scope.bilanPeriodique.elements !== undefined && $scope.bilanPeriodique.elements.length > 0) {
                         await $scope.bilanPeriodique.syncAppreciations($scope.bilanPeriodique.elements,
-                            $scope.search.periode, $scope.search.classe);
+                            $scope.search.periode, $scope.search.classe, $scope.structure);
                         await utils.safeApply($scope);
                     } else {
                         delete $scope.bilanPeriodique;

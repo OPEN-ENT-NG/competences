@@ -18,12 +18,16 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import org.entcore.common.user.UserInfos;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -54,5 +58,14 @@ public class WorkflowActionUtils {
 		else if (idsRessource != null) {
 			FilterUserUtils.validateHeadTeacherWithRessources(user, idsRessource, table, handler);
 		}
+	}
+
+	public static String getParamStructure(HttpServerRequest request){
+		List<String> structureIdFields = Arrays.asList(Field.ID_STRUCTURE, Field.IDETABLISSEMENT, Field.ID_ETABLISSEMENT, Field.IDSTRUCTURE, Field.STRUCTUREID);
+		return structureIdFields.stream()
+				.map(structureIdField -> request.params().get(structureIdField))
+				.filter(structureIdField ->  structureIdField != null && !structureIdField.isEmpty())
+				.findFirst()
+				.orElse(null);
 	}
 }

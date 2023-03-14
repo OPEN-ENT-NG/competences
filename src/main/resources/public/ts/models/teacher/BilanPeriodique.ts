@@ -104,9 +104,10 @@ export class BilanPeriodique extends  Model {
         }
     }
 
-    async syncAppreciations (elements, periode, classe) {
+    async syncAppreciations (elements, periode, classe, structure:Structure) {
         try {
-            let url = BilanPeriodique.api.GET_APPRECIATIONS + '?idPeriode=' + periode.id + '&idClasse=' + classe.id;;
+            let url:string = BilanPeriodique.api.GET_APPRECIATIONS + '?idPeriode=' + periode.id + '&idClasse=' + classe.id +
+                "&idEtablissement=" + structure.id;
 
             for (let i = 0; i < elements.length; i++) {
                 url += "&idElement=" + elements[i].id;
@@ -203,7 +204,7 @@ export class BilanPeriodique extends  Model {
     }
 
     private async getSynthesis(parameter: any, isAnnual: Boolean): Promise<any | Error> {
-        const {data, status}: AxiosResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}`, parameter);
+        const {data, status}: AxiosResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}?&idStructure=${this.structure.id}`, parameter);
         if (status === 200) {
             if (isAnnual) return data.annual;
             return data;
@@ -220,13 +221,13 @@ export class BilanPeriodique extends  Model {
     }
 
     private async getSubjects(subjectsSent:Array<Matiere>):Promise<any | Error>{
-        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent.join(",")}`);
+        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent.join(",")}&idStructure=${this.structure.id}`);
         if(status === 200) return data;
         throw new Error("getAppraisals");
     }
 
-    public async getExportRecapEval(idClass:string, idPeriod:number):Promise<void>{
-        let url:string =`${BilanPeriodique.api.GET_EXPORT_RECAP_EVAL}${idClass}/export?text=false&usePerso=false`;
+    public async getExportRecapEval(idClass:string, idPeriod:number, idStructure: string):Promise<void>{
+        let url:string =`${BilanPeriodique.api.GET_EXPORT_RECAP_EVAL}${idClass}/export?text=false&usePerso=false&idStructure=${idStructure}`;
         if(idPeriod)
             url += `&idPeriode=${idPeriod}`;
         url += "&json=true";

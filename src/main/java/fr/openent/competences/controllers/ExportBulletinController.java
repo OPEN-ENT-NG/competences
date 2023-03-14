@@ -3,6 +3,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.model.Student;
 import fr.openent.competences.security.AccessExportBulletinFilter;
+import fr.openent.competences.security.HasExportLSURight;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.openent.competences.utils.ArchiveUtils;
@@ -131,7 +132,7 @@ public class ExportBulletinController extends ControllerHelper {
     }
 
     @Get("/archive/bulletin/:idEleve/:idPeriode/:idClasse")
-    @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value ="", type = ActionType.RESOURCE)
     @ResourceFilter(SuperAdminFilter.class)
     public void getArchive(final HttpServerRequest request){
         String idEleve = request.params().get(ID_ELEVE_KEY);
@@ -142,7 +143,7 @@ public class ExportBulletinController extends ControllerHelper {
     }
 
     @Get("/delete/archive/bulletin")
-    @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value ="", type = ActionType.RESOURCE)
     @ResourceFilter(SuperAdminFilter.class)
     public void deleteArchive(final HttpServerRequest request){
         ArchiveUtils.deleteAll(ARCHIVE_BULLETIN_TABLE, storage, response -> Renders.renderJson(request, response));
@@ -150,7 +151,7 @@ public class ExportBulletinController extends ControllerHelper {
 
     @Get("/archive/bulletins")
     @ApiDoc("Télécharge l'archive d'un établissement")
-    @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "",type = ActionType.RESOURCE)
     @ResourceFilter(SuperAdminFilter.class)
     public void getArchiveBulletin(final HttpServerRequest request){
         String idStructure = request.params().get("idStructure");
@@ -165,7 +166,8 @@ public class ExportBulletinController extends ControllerHelper {
 
     @Get("/archive/years")
     @ApiDoc("Récupère les années pour les archives et les périodes de l'année en cours")
-    @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "",type = ActionType.RESOURCE)
+    @ResourceFilter(HasExportLSURight.class)
     public void getYearsAndPeriodes(final  HttpServerRequest request){
         String idStructure = request.params().get(ID_STRUCTURE_KEY);
         String type = request.params().get("type");

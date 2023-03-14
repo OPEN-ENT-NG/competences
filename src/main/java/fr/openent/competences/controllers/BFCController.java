@@ -19,10 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
-import fr.openent.competences.security.AccessBFCFilter;
-import fr.openent.competences.security.AccessChildrenParentFilter;
-import fr.openent.competences.security.AccessControleByClassFilter;
-import fr.openent.competences.security.CanUpdateBFCSyntheseRight;
+import fr.openent.competences.security.*;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.openent.competences.utils.ArchiveUtils;
@@ -39,6 +36,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -335,7 +333,8 @@ public class BFCController extends ControllerHelper {
 
     @Get("/ListEnseignementComplement")
     @ApiDoc("Récupère la liste des enseignements ")
-    @SecuredAction(value="",type = ActionType.AUTHENTICATED)
+    @SecuredAction(value="",type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getEnseignementsDeComplement(final  HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -352,7 +351,8 @@ public class BFCController extends ControllerHelper {
 
     @Get("/langues/culture/regionale/list")
     @ApiDoc("Récupère la liste des enseignements ")
-    @SecuredAction(value="",type = ActionType.AUTHENTICATED)
+    @SecuredAction(value="",type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getLanguesCultureRegionale(final  HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -369,7 +369,8 @@ public class BFCController extends ControllerHelper {
 
     @Get("/niveaux/enseignement/complement/list")
     @ApiDoc("Récupère la liste des enseignements ")
-    @SecuredAction(value="",type = ActionType.AUTHENTICATED)
+    @SecuredAction(value="",type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getNiveauxEnsComplement(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -385,7 +386,8 @@ public class BFCController extends ControllerHelper {
 
     @Post("/CreateNiveauEnsCpl")
     @ApiDoc("crée l'enseignement de complement pour un élève")
-    @SecuredAction(value="",type=ActionType.AUTHENTICATED)
+    @SecuredAction(value="",type=ActionType.RESOURCE)
+    @ResourceFilter(CanUpdateNiveauEnsCpl.class)
     public void createNiveauEnsCpl(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, userInfos -> {
             RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NIVEAUENSCPL_CREATE, data -> {
@@ -495,7 +497,8 @@ public class BFCController extends ControllerHelper {
 
     @Get("/bfc/visibility/structures/:structureId/:idVisibility")
     @ApiDoc("Recupere la visibilité un établissement donné de la moyenne calculée sur le BFC")
-    @SecuredAction(value="", type=ActionType.AUTHENTICATED)
+    @SecuredAction(value="", type=ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getVisibility(final HttpServerRequest request) {
         // visibility values
         // 0 : caché pour tout le monde
@@ -561,7 +564,8 @@ public class BFCController extends ControllerHelper {
     }
 
     @Get("/archive/bfc/:idEleve/:idCycle/:idClasse")
-    @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SuperAdminFilter.class)
     public void getArchive(final HttpServerRequest request){
         String idEleve = request.params().get(ID_ELEVE_KEY);
         String idClasse = request.params().get(ID_CLASSE_KEY);
@@ -570,15 +574,10 @@ public class BFCController extends ControllerHelper {
         ArchiveUtils.getArchive(idEleve, idClasse, idCycle, storage, ARCHIVE_BFC_TABLE, isCycle, request);
     }
 
-    @Get("/delete/archive/bfc")
-    @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
-    public void deleteArchive(final HttpServerRequest request){
-        ArchiveUtils.deleteAll(ARCHIVE_BFC_TABLE, storage, response -> Renders.renderJson(request, response));
-    }
-
     @Get("/archive/bfc")
     @ApiDoc("télécharge l archive d'un étab")
-    @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "",type = ActionType.RESOURCE)
+    @ResourceFilter(HasExportLSURight.class)
     public void getArchiveBfc(final  HttpServerRequest request){
         String idStructure = request.params().get("idStructure");
         String idYear = request.params().get("idYear");

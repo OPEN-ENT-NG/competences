@@ -23,8 +23,9 @@ import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
-import fr.openent.competences.security.AccessAdminHeadTeacherFilter;
 import fr.openent.competences.security.AccessChildrenParentFilter;
+import fr.openent.competences.security.AccessEvaluationFilter;
+import fr.openent.competences.security.AccessSuiviClasse;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
@@ -149,7 +150,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Post("/releve/classe/pdf")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessSuiviClasse.class)
     public void getReleve(final HttpServerRequest request){
         RequestUtils.bodyToJson(request, params -> {
             final String idClasse = params.getString(ID_CLASSE_KEY);
@@ -298,7 +300,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/devoirs/print/:idDevoir/formsaisie")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessEvaluationFilter.class)
     public void getFormsaisi(final HttpServerRequest request) {
         MultiMap params = request.params();
         final Long idDevoir;
@@ -330,7 +333,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/devoirs/print/:idDevoir/cartouche")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessEvaluationFilter.class)
     public void getCartouche(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (user != null) {
@@ -358,7 +362,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/devoirs/print/:idDevoir/export")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessEvaluationFilter.class)
     public void getExportDevoir(final HttpServerRequest request) {
         Long idDevoir = 0L;
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
@@ -559,7 +564,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/recapAppreciations/print/:idClasse/export")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessSuiviClasse.class)
     public void getExportRecapAppreciations(final HttpServerRequest request) {
         final String idClasse = request.params().get("idClasse");
         final String idEtablissement = request.params().get("idStructure");
@@ -1008,10 +1014,13 @@ public class ExportPDFController extends ControllerHelper {
                 Map<String, JsonObject> libMatieres = allData.result().resultAt(4);
                 Map<JsonObject, JsonObject> moyObject = allData.result().resultAt(5);
 
+
                 JsonArray data = new JsonArray(
                         moyObject.entrySet().stream().map(entry -> {
                             JsonObject newMoy = new JsonObject();
-
+                            if (libMatieres.get(entry.getKey().getString(Field.ID_MATIERE)) == null) {
+                                return newMoy;
+                            }
                             String prof = libTeachers.get(teachers.get(entry.getKey()));
                             newMoy.put("mat", libMatieres.get(entry.getKey().getString("id_matiere")).getString("name"));
                             newMoy.put("rank", libMatieres.get(entry.getKey().getString("id_matiere")).getInteger("rank"));
@@ -1063,7 +1072,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/recapEval/print/:idClasse/export")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessSuiviClasse.class)
     public void getExportRecapEval(final HttpServerRequest request) {
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));

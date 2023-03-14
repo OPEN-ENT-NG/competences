@@ -6,7 +6,6 @@ public class Field {
     public static final String ID_COMPETENCE = "id_competence";
     public static final String COMPETENCES = "competences";
     public static final String CLASSES = "classes";
-    public static final String ID_ETABLISSEMENT = "id_etablissement";
 
     private Field() {
         throw new IllegalStateException("Utility class");
@@ -20,6 +19,7 @@ public class Field {
     public static final String IDSTRUCTURE = "idStructure";
     public static final String STRUCTUREID = "structureId";
     public static final String IDETABLISSEMENT = "idEtablissement";
+    public static final String ID_ETABLISSEMENT = "id_etablissement";
     public static final String IDCLASSE = "idClasse";
     public static final String ID_STRUCTURE = "id_structure";
     public static final String ID_MATIERE = "id_matiere";
@@ -42,6 +42,7 @@ public class Field {
     public static final String ID_SOUSMATIERE = "id_sousmatiere";
     public static final String ID_MATIERE_MOYF = "id_matiere_moyf";
     public static final String ID_ENSEIGNANT = "id_enseignant";
+    public static final String IDENSEIGNANT = "idEnseignant";
     public static final String CLASSID = "classId";
     public static final String DEVOIRID = "devoirId";
     public static final String IDDEVOIR = "idDevoir";
@@ -66,6 +67,11 @@ public class Field {
     public static final String SECOND_TEACHER_ID = "second_teacher_id";
     public static final String SUBJECT_ID = "subject_id";
     public static final String CLASS_OR_GROUP_ID = "class_or_group_id";
+
+
+    //fonction
+    public static final String PERSONNEL = "Personnel";
+
 
     //transaction
     public static final String ACTION = "action";

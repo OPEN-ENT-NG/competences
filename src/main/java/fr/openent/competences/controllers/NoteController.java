@@ -342,9 +342,15 @@ public class NoteController extends ControllerHelper {
         });
     }
 
+
+    /**
+     * @param request
+     * @queryParam {structureId} mandatory
+     */
     @Post("/releve/exportTotale")
     @ApiDoc("Exporte un relevé périodique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessSuiviClasse.class)
     public void exportTotaleRelevePeriodique(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, param -> {
             JsonArray idPeriodes = param.getJsonArray("idPeriodes");
@@ -676,7 +682,8 @@ public class NoteController extends ControllerHelper {
 
     @Get("/releve/export/checkDevoirs")
     @ApiDoc("Vérifie s'il y a des devoirs dans la matière")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void exportCheckDevoirs(final HttpServerRequest request) {
         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
         String idEtablissement = request.params().get("idEtablissement");
@@ -1267,13 +1274,14 @@ public class NoteController extends ControllerHelper {
                 isNull(idPeriodeString),arrayResponseHandler(request));
     }
 
-    @Post("/notes/:typeImportService/csv/exercizer/import/classes/:classId/devoirs/:devoirId/:classType/periods/:periodeId")
+    @Post("/notes/:typeImportService/csv/exercizer/import/classes/:classId/devoirs/:idDevoir/:classType/periods/:periodeId")
     @ApiDoc("Set notes of a devoir by importing a CSV.")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessEvaluationFilter.class)
     public void importExercizerCSV(final HttpServerRequest request) {
         // typeImport
         final String idClasse = request.params().get(Field.CLASSID);
-        final String idDevoir = request.params().get(Field.DEVOIRID);
+        final String idDevoir = request.params().get(Field.IDDEVOIR);
         final String typeClasse = request.params().get(Field.CLASSTYPE);
         final Long idPeriode = Long.valueOf(request.params().get(Field.PERIODEID));
         ExercizerImportNote exercizerImportNote = new ExercizerImportNote(request, this.storage, idClasse, typeClasse,

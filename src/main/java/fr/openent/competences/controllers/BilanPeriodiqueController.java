@@ -6,9 +6,7 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.Service;
 import fr.openent.competences.model.Structure;
 import fr.openent.competences.model.SubTopic;
-import fr.openent.competences.security.AccessChildrenParentFilter;
-import fr.openent.competences.security.CreateSyntheseBilanPeriodiqueFilter;
-import fr.openent.competences.security.SetAvisConseilFilter;
+import fr.openent.competences.security.*;
 import fr.openent.competences.service.BilanPeriodiqueService;
 import fr.openent.competences.service.impl.*;
 import fr.openent.competences.utils.MultiTeachersUtils;
@@ -20,7 +18,6 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -124,7 +121,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Get("/eleve/evenements/:idEleve")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessChildrenParentFilter.class)
+    @ResourceFilter(AccessChildrenParentFilterEtablissementId.class)
     public void getAbsencesAndRetards(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
         final String idStructure = request.params().get("idEtablissement");
@@ -139,7 +136,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
      */
     @Get("/syntheseBilanPeriodique")
     @ApiDoc("Récupère la synthèse d'un élève pour une période donnée")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessConseilDeClasseStructureId.class)
     public void getSyntheseBilanPeriodique(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
             @Override
@@ -165,7 +163,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @Get("/bilan/periodique/datas/avis/synthses")
     @ApiDoc("Récupère les synthèses et avis de l'élève sur l'année")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessChildrenParentFilter.class)
+    @ResourceFilter(AccessConseilDeClasseStructureId.class)
     public void getSynthesesAvisBilanPeriodique(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
             @Override
@@ -274,7 +272,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
      */
     @Post("/appreciation/CPE/bilan/periodique")
     @ApiDoc("Créer ou mettre à jour une appreciation CPE du bilan périodique d'un élève pour une période donnée")
-    @SecuredAction(value="create.appreciation.CPE.bilan.periodique", type=ActionType.WORKFLOW)
+    @SecuredAction(value = "create.appreciation.CPE.bilan.periodique", type=ActionType.WORKFLOW)
     public void createOrUpdateAppreciationCPE(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -309,7 +307,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
      */
     @Get("/appreciation/CPE/bilan/periodique")
     @ApiDoc("Récupère l'appreciation CPE du bilan périodique d'un élève pour une période donnée")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessCompetencesAdminTeacherPersonnel.class)
     public void getAppreciationCPE(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -330,8 +329,9 @@ public class BilanPeriodiqueController extends ControllerHelper{
      */
     @Get("/avis/bilan/periodique")
     @ApiDoc("Retourne la liste des avis prédéfinis du conseil de classe du bilan périodique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getLibelleAvis(final HttpServerRequest request){
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessConseilDeClasseStructureId.class)
+    public void getLibelleAvis(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(UserInfos user) {
@@ -355,7 +355,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Post("/avis/bilan/periodique")
     @ApiDoc("Créer un avis de conseil de classe")
-    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type=ActionType.WORKFLOW)
     public void createOpinion(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -386,7 +386,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Delete("/avis/bilan/periodique")
     @ApiDoc("Supprime un avis de conseil de classe")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type=ActionType.RESOURCE)
+    @ResourceFilter(CreateAvisConseilBilanPeriodique.class)
     public void deleteOpinion(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -404,7 +405,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Put("/avis/bilan/periodique")
     @ApiDoc("Mets à jour un avis de conseil de classe")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateAvisConseilBilanPeriodique.class)
     public void updateOpinion(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -430,28 +432,6 @@ public class BilanPeriodiqueController extends ControllerHelper{
         badRequest(request);
     }
 
-    /**
-     * Récupère les avis de conseil de classe de l'élève
-     *
-     * @param request
-     */
-    @Get("/avis/conseil")
-    @ApiDoc("Récupère l'avis de conseil d'un élève pour une période donnée")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getAvisConseil(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                if (user != null) {
-                    avisConseilService.getAvisConseil(request.params().get("id_eleve"),
-                            Long.parseLong(request.params().get("id_periode")), request.params().get("id_structure"),
-                            arrayResponseHandler(request));
-                } else {
-                    badRequest(request);
-                }
-            }
-        });
-    }
 
     /**
      * Ajoute un avis du conseil de classe avec les données passées en POST
@@ -502,7 +482,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
      */
     @Get("/avis/orientation")
     @ApiDoc("Récupère l'avis d'orientation d'un élève pour une période donnée")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessConseilDeClasseStructureId.class)
     public void getAvisOrientation(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
