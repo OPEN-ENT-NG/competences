@@ -32,7 +32,7 @@ export const structureOptionsService: IStructureOptionsService = {
     },
 
     saveStrustureOptionsIsAverageSkills: async(options: StructureOptions): Promise<AxiosResponse> =>{
-        return http.post(`competences/structure/options/isSkillAverage`, options);
+        return http.post(`competences/structure/options/isSkillAverage?structureId=${options.structureId}`, options);
     },
 
     /**

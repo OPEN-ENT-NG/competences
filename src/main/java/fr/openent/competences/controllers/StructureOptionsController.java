@@ -51,8 +51,8 @@ public class StructureOptionsController extends ControllerHelper {
 
     @Post("/structure/options/isSkillAverage")
     @ApiDoc(" create and update structure_options isSkillAverage")
-    @ResourceFilter(AdministratorRight.class)
     @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
     public void createOrUpdateIsAverageSkills (final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, user -> {
             if( user != null) {
