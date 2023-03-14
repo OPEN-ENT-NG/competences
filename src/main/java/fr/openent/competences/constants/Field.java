@@ -261,7 +261,4 @@ public class Field {
     public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
     public static final int DIVISEUR_NOTE = 20;
 
-
-    //UserType
-    public static final String TEACHER = "Teacher";
 }
