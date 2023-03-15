@@ -209,6 +209,10 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     }
     public void getDevoirCompetences(JsonArray devoirIds, String idEtablissement, Long idCycle,
                                      final Handler<Either<String, JsonArray>> handler) {
+        if (null == devoirIds || devoirIds.isEmpty()){
+            handler.handle(new Either.Right<>(new JsonArray()));
+            return;
+        }
 
         String query = "SELECT string_agg(domaines.codification, ', ') as code_domaine," +
                 " string_agg( cast (domaines.id as text), ',') as ids_domaine, comp.id as id_competence," +

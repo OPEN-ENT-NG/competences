@@ -97,6 +97,7 @@ public class DefaultExportService implements ExportService {
     private EnseignementService enseignementService;
     private NiveauDeMaitriseService niveauDeMaitriseService;
     private AnnotationService annotationsService;
+    private StructureOptionsService structureOptionsService;
     private EventBus eb;
     private final Storage storage;
 
@@ -112,6 +113,7 @@ public class DefaultExportService implements ExportService {
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
         annotationsService = new DefaultAnnotationService(Competences.COMPETENCES_SCHEMA, Competences.REL_ANNOTATIONS_DEVOIRS_TABLE);
         defaultMatiereService = new DefaultMatiereService(eb);
+        structureOptionsService = new DefaultStructureOptions();
         this.storage = storage;
     }
 
@@ -1924,16 +1926,22 @@ public class DefaultExportService implements ExportService {
 
                     utilsService.getCycle(idClass)
                         .onSuccess(cycle -> {
+
+                            List<Future> futuresList = new ArrayList<>();
+
                             Promise<JsonArray> multiTeachingPromise = Promise.promise();
                             utilsService.getAllMultiTeachers(idEtablissement,
                                     idGroupClasse, FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+                            futuresList.add(multiTeachingPromise.future());
 
                             Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idGroupClasse);
+                            futuresList.add(subTopicCoefFuture);
 
                             Future<JsonArray> servicesFuture = Future.future();
                             utilsService.getServices(idEtablissement, idGroupClasse, servicesEvent -> {
                                 formate(servicesFuture, servicesEvent);
                             });
+                            futuresList.add(servicesFuture);
 
                             // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
                             final JsonArray devoirsJSON = devoirsFuture.result();
@@ -1951,6 +1959,7 @@ public class DefaultExportService implements ExportService {
 
                             final JsonArray idMatieres = new JsonArray();
                             final JsonArray idDevoirsCompetences = new JsonArray();
+                            Map<String, JsonArray> competencesNotesBySubject = new HashMap<>();
 
                             for (int i = 0; i < devoirsJSON.size(); i++) {
                                 JsonObject devoir = devoirsJSON.getJsonObject(i);
@@ -1964,6 +1973,10 @@ public class DefaultExportService implements ExportService {
                                 Long idDevoir = devoir.getLong(Field.ID_DEVOIR);
                                 idMatieres.add(idMatiere);
                                 idDevoirsCompetences.add(idDevoir);
+                                if (!competencesNotesBySubject.containsKey(idMatiere)) {
+                                    competencesNotesBySubject.put(idMatiere, new JsonArray());
+                                }
+                                competencesNotesBySubject.get(idMatiere).add(devoir);
                             }
 
                             for (int i = 0; i < moyennesFinales.size(); i++) {
@@ -1983,10 +1996,20 @@ public class DefaultExportService implements ExportService {
                             Promise<JsonArray> maitrisePromise = Promise.promise();
                             niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, cycle.getLong(Field.ID_CYCLE),
                                     FutureHelper.handlerJsonArray(maitrisePromise.future()));
+                            futuresList.add(maitrisePromise.future());
 
                             Promise<JsonArray> competencesPromise = Promise.promise();
                             competencesService.getDevoirCompetences(idDevoirsCompetences, idEtablissement, cycle.getLong(Field.ID_CYCLE),
                                     FutureHelper.handlerJsonArray(competencesPromise.future()));
+                            futuresList.add(competencesPromise.future());
+
+                            Future<JsonArray> tableauDeConversionFuture = Future.future();
+                            competenceNoteService.getConversionNoteCompetence(idEtablissement, idClass, tableauEvent ->
+                                    formate(tableauDeConversionFuture, tableauEvent));
+                            futuresList.add(tableauDeConversionFuture);
+
+                            Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
+                            futuresList.add(isAvgSkillFuture);
 
                             final JsonObject etabJSON = structureFuture.result().getJsonObject("s").getJsonObject(Field.DATA);
                             final JsonObject periodeJSON = new JsonObject();
@@ -2001,7 +2024,7 @@ public class DefaultExportService implements ExportService {
                                 periodeJSON.put(Field.LIBELLE, Field.ANNEE);
                             }
 
-                            CompositeFuture.all(multiTeachingPromise.future(), servicesFuture , subTopicCoefFuture, maitrisePromise.future(), competencesPromise.future()).setHandler(futuresEvent -> {
+                            CompositeFuture.all(futuresList).setHandler(futuresEvent -> {
                                 final JsonArray multiTeachers = multiTeachingPromise.future().result();
                                 final JsonArray servicesJson = servicesFuture.result();
                                 final List<SubTopic> subTopics =  subTopicCoefFuture.result();
@@ -2056,7 +2079,6 @@ public class DefaultExportService implements ExportService {
                                     JsonObject compNotesByMatiere = formatJsonObjectExportReleve(false, true, idUser, devoirsMap,
                                             maitrisesMap, competencesMap, matieresMap, competenceNotesMap);
 
-
                                     matieres.stream().forEach(matiere -> {
                                         JsonObject m = (JsonObject) matiere;
                                         compNotesByMatiere.getJsonObject(Field.BODY).getJsonArray(Field.BODY).stream().forEach(compMatiere -> {
@@ -2065,8 +2087,17 @@ public class DefaultExportService implements ExportService {
                                                 JsonArray competenceNotes = c.getJsonArray(Field.COMPETENCENOTES);
                                                 m.put(Field.COMPETENCESNOTES, competenceNotes);
                                                 m.put(Field.HASCOMPETENCESNOTES, !competenceNotes.isEmpty());
+                                                if(!competenceNotes.isEmpty()){
+                                                    JsonObject result = new JsonObject();
+                                                    noteService.calculPositionnementAutoByEleveByMatiere(competencesNotesBySubject.get(m.getString(Field.ID)), result, false, tableauDeConversionFuture.result(),
+                                                            null, null, isAvgSkillFuture.result());
+                                                    JsonObject positionnement = (JsonObject) result.getJsonArray("positionnements_auto").stream()
+                                                            .filter(pos -> idPeriode.equals(((JsonObject) pos).getLong("id_periode")))
+                                                            .findFirst().orElse(null);
+                                                    if (null != positionnement)
+                                                        m.put(Field.POSITIONNEMENT, positionnement.getLong(Field.MOYENNE));
+                                                }
                                             }
-
                                         });
                                     });
                                 }
