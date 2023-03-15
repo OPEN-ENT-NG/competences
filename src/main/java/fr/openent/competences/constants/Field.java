@@ -175,6 +175,8 @@ public class Field {
     public static final String TABLECONVERSIONS = "tableConversions";
     public static final String SKILLS = "skills";
     public static final String SCORES = "scores";
+    public static final String SHOWSKILLS = "showSkills";
+    public static final String SHOWSCORES = "showScores";
     public static final String EMPTY = "empty";
     public static final String NIVEAU_FINAL = "niveau_final";
     public static final String BODY = "body";
