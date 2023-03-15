@@ -15,5 +15,6 @@ public class AccessIfMyStructure implements ResourcesProvider {
 
             String structureId = WorkflowActionUtils.getParamStructure(httpServerRequest);
             handler.handle(structureId != null && userInfos.getStructures().contains(structureId));
+
     }
 }
