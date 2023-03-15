@@ -13,8 +13,7 @@ public class AccessIfMyStructure implements ResourcesProvider {
     @Override
     public void authorize (HttpServerRequest httpServerRequest, Binding binding, UserInfos userInfos, Handler<Boolean> handler) {
 
-            String structureId = WorkflowActionUtils.getParamStructure(httpServerRequest);
-            handler.handle(structureId != null && userInfos.getStructures().contains(structureId));
-
+        String structureId = WorkflowActionUtils.getParamStructure(httpServerRequest);
+        handler.handle(structureId != null && userInfos.getStructures().contains(structureId));
     }
 }
