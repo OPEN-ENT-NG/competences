@@ -28,6 +28,8 @@ public class Field {
     public static final String IDSTRUCTURE = "idStructure";
     public static final String STRUCTUREID = "structureId";
     public static final String IDETABLISSEMENT = "idEtablissement";
+    public static final String IDETAB = "idEtab";
+    public static final String ID_ETABLISSEMENT = "id_etablissement";
     public static final String IDCLASSE = "idClasse";
     public static final String ID_STRUCTURE = "id_structure";
     public static final String ID_MATIERE = "id_matiere";
@@ -71,7 +73,7 @@ public class Field {
     public static final String IDTYPEPERIODE = "idTypePeriode";
     public static final String ID_COMPETENCE = "id_competence";
     public static final String ID_CYCLE = "id_cycle";
-    public static final String ID_ETABLISSEMENT = "id_etablissement";
+
 
 
     public static final String MAIN_TEACHER_ID = "main_teacher_id";
