@@ -19,6 +19,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessEvaluationFilter;
+import fr.openent.competences.security.CreateEvaluationWorkflow;
 import fr.openent.competences.security.ParamCompetenceRight;
 import fr.openent.competences.service.CompetencesService;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
@@ -171,7 +172,8 @@ public class CompetenceController extends ControllerHelper {
      */
     @Get("/competences/last/devoir/")
     @ApiDoc("Recupère les dernière compétences utilisée lors de la création d'un devoir")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateEvaluationWorkflow.class)
     public void getLastCompetencesDevoir(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
