@@ -364,7 +364,7 @@ export class Devoir extends Model implements IModel {
             try {
                 let allPromise = [];
                 if (moyenne)
-                    allPromise.push(axioshttp.get(`${this.api.getMoyenneDevoir}?idEtablissement=${this.id_etablissement}`));
+                    allPromise.push(axioshttp.get(`${this.api.getMoyenneDevoir}?structureId=${this.id_etablissement}`));
                 if (percent)
                     allPromise.push(evaluations.devoirs.getPercentDone(that));
 

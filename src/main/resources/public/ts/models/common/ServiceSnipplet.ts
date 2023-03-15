@@ -216,7 +216,7 @@ export class Service {
 
     updateDevoirsService(devoirs, matiere) {
         try {
-            return http.put("/competences/devoirs/service?idEtablissement=" + this.id_etablissement, {
+            return http.put("/competences/devoirs/service?structureId=" + this.id_etablissement, {
                 id_devoirs: devoirs,
                 id_matiere: matiere
             });
