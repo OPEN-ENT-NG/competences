@@ -43,7 +43,7 @@ export class MultiTeaching {
 
     updateMultiTeaching(){
         try {
-            return http.put('/viescolaire/multiteaching/update_visibility', this.toJson());
+            return http.put(`/viescolaire/multiteaching/update_visibility?structureId=${this.structure_id}`, this.toJson());
         } catch (e) {
             notify.error('evaluation.service.error.update');
         }
