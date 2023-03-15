@@ -160,15 +160,17 @@ public class ExportPDFController extends ControllerHelper {
             final Long idTypePeriode = params.getLong("idTypePeriode");
             final Long ordre = params.getLong(ORDRE);
             final String classeName = params.getString(CLASSE_NAME_KEY);
-            final Boolean skills = request.params().contains(Field.SKILLS) && Boolean.parseBoolean(request.params().get(Field.SKILLS));
-            final Boolean scores = request.params().contains(Field.SCORES) && Boolean.parseBoolean(request.params().get(Field.SCORES));
+            final boolean skills = request.params().contains(Field.SKILLS) && Boolean.parseBoolean(request.params().get(Field.SKILLS));
+            final boolean scores = request.params().contains(Field.SCORES) && Boolean.parseBoolean(request.params().get(Field.SCORES));
             exportService.getDataForExportReleveClasse(idClasse, idEtablissement, idPeriode, idTypePeriode, ordre, scores,
                     skills, event -> {
                 if(event.isLeft()){
                     leftToResponse(request, event.left());
                     return;
                 }
-                JsonObject templateProps = event.right().getValue();
+                JsonObject templateProps = event.right().getValue()
+                        .put(Field.SHOWSKILLS, skills)
+                        .put(Field.SHOWSCORES, scores);
                 String templateName = "releve-classe.pdf.xhtml";
                 String prefixPdfName = "releve-classe_" +  classeName;
                 exportService.genererPdf(request, templateProps, templateName, prefixPdfName, vertx, config);
