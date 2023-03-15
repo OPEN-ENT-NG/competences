@@ -91,6 +91,10 @@
             width: 40%;
         }
 
+        .width-100 {
+            width: 100%;
+        }
+
         .greyscale {
             background-color: #f0f0f0;
         }
@@ -109,7 +113,6 @@
         }
 
         .matiere {
-            border: none !important;
             border-left: solid 1px #000 !important;
             border-bottom: solid 1px #000 !important;
         }
@@ -180,9 +183,10 @@
         .div-note {
             width: 30px;
         }
-        .barEvaluation td {
-            margin: auto;
-            padding: 0px;
+        .bars-skills-evaluation {
+            display: flex;
+            padding: 10px;
+            text-align: center;
         }
     </style>
     <meta charset="UTF-8" />
@@ -226,9 +230,14 @@
         {{/printSousMatiere}}
         {{^printSousMatiere}}
         <tr class="greyscale entete-1">
+            {{^showScores}}
+            <td class="border-left border-right width-100"><strong>Matière</strong></td>
+            {{/showScores}}
+            {{#showScores}}
             <td class="border-left width-40"><strong>Matière</strong></td>
             <td class="border-left-right-bottom width-40"><strong>Notes</strong></td>
             <td class="border-right-bottom width-20"><strong>Moyenne</strong></td>
+            {{/showScores}}
         </tr>
         {{/printSousMatiere}}
 
@@ -236,7 +245,7 @@
         {{^printSousMatiere}}
         {{#matieres}}
         <tr>
-            <td class="upper align-left matiere">
+            <td class="upper align-left matiere border-right">
                 <span class="align-left">{{name}}</span>
                 <span class="align-left professeur">
                 {{#displayNameEnseignant}}
@@ -244,7 +253,8 @@
                 {{/displayNameEnseignant}}
             </span>
             </td>
-            <td class="border-left-right-bottom">
+            {{#showScores}}
+            <td class="border-right-bottom">
                 {{#devoirs}}
                 <span class="div-note">
             <span class="note">{{note}}</span>
@@ -259,23 +269,22 @@
                 <span class="diviseur">/20</span>
                 {{/hasDiviseurMatiere}}{{/moyenne_non_note}}
             </td>
+            {{/showScores}}
         </tr>
+        {{#showSkills}}
         {{#hasCompetencesNotes}}
         <tr>
-            <td rowspan="{{rowspan}}" colspan="3" class="align-left competence">
+            <td class="align-left competence width-100">
                 <span class="align-left">Bilan des items</span>
-                <table>
-                    <tr>
-                        {{# competencesNotes }}
-                        <td>
-                            <div style="background-color: {{ persoColor }} !important">{{ number }}</div>
-                        </td>
-                        {{/ competencesNotes }}
-                    </tr>
-                </table>
+                <div class="bars-skills-evaluation width-100">
+                    {{# competencesNotes }}
+                    <div style="flex: 1; background-color: {{ persoColor }} !important">{{ number }}</div>
+                    {{/ competencesNotes }}
+                </div>
             </td>
         </tr>
         {{/hasCompetencesNotes}}
+        {{/showSkills}}
         {{/matieres}}
         {{/printSousMatiere}}
 
@@ -390,22 +399,20 @@
             {{/isLast}}
         </tr>
         {{/sous_matieres_tail}}
+        {{#showSkills}}
         {{#hasCompetencesNotes}}
         <tr>
-            <td rowspan="{{rowspan}}" colspan="5" class="align-left competence">
+            <td class="align-left competence" colspan="5">
                 <span class="align-left">Bilan des items</span>
-                <table>
-                    <tr>
-                        {{# competencesNotes }}
-                        <td>
-                            <div style="background-color: {{ persoColor }} !important">{{ number }}</div>
-                        </td>
-                        {{/ competencesNotes }}
-                    </tr>
-                </table>
+                <div class="bars-skills-evaluation width-100">
+                    {{# competencesNotes }}
+                    <div style="flex: 1; background-color: {{ persoColor }} !important">{{ number }}</div>
+                    {{/ competencesNotes }}
+                </div>
             </td>
         </tr>
         {{/hasCompetencesNotes}}
+        {{/showSkills}}
         {{/matieres}}
         {{/printSousMatiere}}
     </table>

@@ -2052,7 +2052,8 @@ public class DefaultExportService implements ExportService {
                                         }
                                     }
                                 }
-                                if (null != params.get(Field.SKILLS) && Boolean.parseBoolean(params.get(Field.SKILLS))){
+                                boolean showSkills = null != params.get(Field.SKILLS) && Boolean.parseBoolean(params.get(Field.SKILLS));
+                                if (showSkills){
                                     JsonObject compNotesByMatiere = formatJsonObjectExportReleve(false, true, idUser, devoirsMap,
                                             maitrisesMap, competencesMap, matieresMap, competenceNotesMap);
 
@@ -2070,15 +2071,15 @@ public class DefaultExportService implements ExportService {
                                         });
                                     });
                                 }
+                                boolean showScores = null != params.get(Field.SCORES) && Boolean.parseBoolean(params.get(Field.SCORES));
                                 getEnseignantsMatieres(matieres, idEnseignants, devoirsJSON, periodeJSON, userJSON, etabJSON,
-                                        finalBackUp, moyennesFinales, multiTeachers, services, handler);
+                                        finalBackUp, moyennesFinales, multiTeachers, services, showScores, showSkills, handler);
 
 
                             });
                     })
                     .onFailure(error -> {
                         Utils.returnFailure("getExportReleveEleve : No informations about the student", event, handler);
-                        return;
                     });
                 }
             });
@@ -2095,13 +2096,15 @@ public class DefaultExportService implements ExportService {
      * @param periodeJson la periode
      * @param userJson    l'élève
      * @param etabJson    l'établissement
+     * @param showScores  if we want to show scores area.
+     * @param showSkills  if we want to show skills area.
      * @param handler
      */
     public void getEnseignantsMatieres(final JsonArray matieres, JsonArray idEnseignants, final JsonArray devoirsJson,
                                        final JsonObject periodeJson, final JsonObject userJson,
                                        final JsonObject etabJson, final boolean isBackup, final JsonArray moyennesFinales,
-                                       final JsonArray multiTeachers, final List<Service> services,
-                                       Handler<Either<String, JsonObject>> handler) {
+                                       final JsonArray multiTeachers, final List<Service> services, boolean showScores,
+                                       boolean showSkills, Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getUsers")
                 .put("idUsers", idEnseignants);
@@ -2116,9 +2119,12 @@ public class DefaultExportService implements ExportService {
                     JsonObject matiere = matieres.getJsonObject(k);
                     String idMatiere = matiere.getString("id");
 
+                    matiere.put(Field.SHOWSCORES, showScores)
+                            .put(Field.SHOWSKILLS, showSkills);
+
                     int rowspan = matiere.getJsonArray("sous_matieres").size();
                     matiere.put("rowspan", rowspan);
-                    if(rowspan > 0 && !printSousMatiere) {
+                    if(rowspan > 0 && !printSousMatiere && showScores) {
                         printSousMatiere = true;
                     }
 
