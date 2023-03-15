@@ -184,7 +184,7 @@ public class Competences extends BaseServer {
     // droits
     public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
     public static final String PARAM_COMPETENCE_RIGHT = "competences.paramCompetences";
-    public static final String PARAM_SERVICES_RIGHT = "viesco.paramServices";
+    public static final String PARAM_SERVICES_RIGHT = "viescolaire.paramServices";
     public static final String PARAM_LINK_GROUP_CYCLE_RIGHT = "competences.paramLinkGroupCycle";
     public static final String CAN_UPDATE_RETARDS_AND_ABSENCES = "competences.canUpdateRetardsAndAbsences";
     public static final String CAN_ACCESS_EXPORT_BULLETIN = "export.bulletins.periodique";
