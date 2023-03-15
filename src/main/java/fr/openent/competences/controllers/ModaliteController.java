@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.security.AccessViscoParamServiceStructure;
 import fr.openent.competences.service.ModaliteService;
 import fr.openent.competences.service.impl.DefaultModaliteService;
 import fr.wseduc.rs.ApiDoc;
@@ -26,6 +27,7 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 
@@ -37,9 +39,14 @@ public class ModaliteController extends ControllerHelper {
         this.modaliteService = new DefaultModaliteService(Competences.COMPETENCES_SCHEMA, Competences.MODALITES_TABLE);
     }
 
+    /**
+     * @param request
+     * @queryParam {idEtablissement} mandatory
+     */
     @Get("/modalites")
     @ApiDoc("Récupère les modalités")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessViscoParamServiceStructure.class)
     public void getDefaultServices(final HttpServerRequest request) {
         this.modaliteService.getModalites(arrayResponseHandler(request));
     }
