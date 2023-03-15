@@ -118,7 +118,6 @@
             border: none !important;
             border-left: solid 1px #000 !important;
             border-bottom: solid 1px #000 !important;
-            border-right: solid 1px #000 !important;
         }
 
         .professeur {
@@ -274,6 +273,10 @@
                     </tr>
                 </table>
             </td>
+            <td class="align-left border-right-bottom">
+                <span>Pos</span>
+                <div>{{ positionnement }}</div>
+            </td>
         </tr>
         {{/hasCompetencesNotes}}
         {{/matieres}}
@@ -392,7 +395,7 @@
         {{/sous_matieres_tail}}
         {{#hasCompetencesNotes}}
         <tr>
-            <td rowspan="{{rowspan}}" colspan="5" class="align-left competence">
+            <td rowspan="{{rowspan}}" colspan="4" class="align-left competence">
                 <span class="align-left">Bilan des items</span>
                 <table>
                     <tr>
@@ -403,6 +406,10 @@
                         {{/ competencesNotes }}
                     </tr>
                 </table>
+            </td>
+            <td class="align-left border-right-bottom">
+                <span>Pos</span>
+                <div>{{ positionnement }}</div>
             </td>
         </tr>
         {{/hasCompetencesNotes}}
