@@ -1236,7 +1236,7 @@ public class DefaultExportService implements ExportService {
             }
             JsonObject competenceNote = new JsonObject();
             competenceNote.put(Field.HEADER, competencesInDomain.getKey());
-            competenceNote.put(Field.COMPETENCENOTES, calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size()));
+            competenceNote.put(Field.COMPETENCENOTES, calcWidthNote(text, usePerso, maitrises, valuesByComp, valuesByComp.size()));
             competencesInDomainArray.add(competenceNote);
             competencesArray.add(competenceNote);
         }
@@ -1386,7 +1386,7 @@ public class DefaultExportService implements ExportService {
             if(usePerso && !text)
                 competenceNotesObj.put("persoColor", maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("couleur"));
 
-            competenceNotesObj.put("width", "1");
+            competenceNotesObj.put("width", (notesMaitrises.getValue() * 100 / nbDevoir));
 
             resultList.add(competenceNotesObj);
         }

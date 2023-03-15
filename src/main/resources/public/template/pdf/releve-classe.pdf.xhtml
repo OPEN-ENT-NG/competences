@@ -91,8 +91,8 @@
             width: 40%;
         }
 
-        .width-80 {
-            width: 80%;
+        .width-90 {
+            width: 90%;
         }
 
         .width-100 {
@@ -187,8 +187,8 @@
             width: 30px;
         }
         .bars-skills-evaluation {
-            display: flex;
             padding: 10px;
+            display: inline-block;
             text-align: center;
         }
     </style>
@@ -277,11 +277,11 @@
         {{#showSkills}}
         {{#hasCompetencesNotes}}
         <tr>
-            <td class="align-left competence width-80">
+            <td class="align-left competence" colspan="2">
                 <span class="align-left">Bilan des items</span>
-                <div class="bars-skills-evaluation width-100">
+                <div class="bars-skills-evaluation width-90">
                     {{# competencesNotes }}
-                    <div style="flex: 1; background-color: {{ persoColor }} !important">{{ number }}</div>
+                    <div style="float: left; display: inline-block; width: {{width}}%; background-color: {{ persoColor }} !important">{{ number }}</div>
                     {{/ competencesNotes }}
                 </div>
             </td>
@@ -411,9 +411,9 @@
         <tr>
             <td class="align-left competence" colspan="4">
                 <span class="align-left">Bilan des items</span>
-                <div class="bars-skills-evaluation width-100">
+                <div class="bars-skills-evaluation width-90">
                     {{# competencesNotes }}
-                    <div style="flex: 1; background-color: {{ persoColor }} !important">{{ number }}</div>
+                    <div style="float: left; display: inline-block; width: {{width}}%; background-color: {{ persoColor }} !important">{{ number }}</div>
                     {{/ competencesNotes }}
                 </div>
             </td>
