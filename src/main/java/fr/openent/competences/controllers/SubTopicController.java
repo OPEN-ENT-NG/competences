@@ -2,6 +2,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.constants.Field;
+import fr.openent.competences.security.AccessIfMyStructure;
 import fr.openent.competences.service.SubTopicService;
 import fr.openent.competences.service.impl.DefaultSubTopicService;
 import fr.wseduc.rs.ApiDoc;
@@ -12,6 +13,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
 
 import static fr.openent.competences.constants.Field.IDSTRUCTURE;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -33,7 +35,8 @@ public class SubTopicController extends ControllerHelper {
 
     @Get("/subtopics/services/:idStructure")
     @ApiDoc("get SubtopicsServices")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getDefaultSubtopicsServices(final HttpServerRequest request) {
         String idStructure = request.params().get(IDSTRUCTURE);
         subTopicService.getSubtopicServices(idStructure)
