@@ -41,7 +41,8 @@ public enum WorkflowActions {
 	CREATE_AVIS_CONSEIL_BILAN_PERIODIQUE("create.avis.conseil.bilan.periodique"),
 	CAN_UPDATE_NIVEAU_ENS_CPL("can.update.niveau.ens.cpl"),
 	ACCESS_EXPORT_BULLETIN("export.bulletins.periodique"),
-	ACCESS_SUIVI_CLASSE("access.suivi.classe");
+	ACCESS_SUIVI_CLASSE("access.suivi.classe"),
+	PARAM_SERVICES_RIGHT("viescolaire.paramServices");
 
 	private final String actionName;
 

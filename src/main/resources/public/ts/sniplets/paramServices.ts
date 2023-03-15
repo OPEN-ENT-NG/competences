@@ -513,7 +513,7 @@ export const paramServices = {
 
         getModalite: function() {
             try {
-                return http.get("/competences/modalites")
+                return http.get(`/competences/modalites?idEtablissement=${paramServices.that.idStructure}`)
             } catch (e) {
                 toasts.warning('evaluations.service.error.classe');
             }
