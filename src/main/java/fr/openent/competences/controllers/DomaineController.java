@@ -20,6 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.security.AccessChildrenParentFilter;
+import fr.openent.competences.security.AccessIfMyStructure;
 import fr.openent.competences.security.CreateDispenseDomaineEleveFilter;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
@@ -84,7 +85,8 @@ public class DomaineController extends ControllerHelper {
      */
     @Get("/domaines")
     @ApiDoc("Recupère l'arbre des domaines pour un cycle donné.")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getArbreDomaines(final HttpServerRequest request){
         final JsonArray oArbreDomainesArray = new fr.wseduc.webutils.collections.JsonArray();
         final String idClasse = request.params().get("idClasse");
