@@ -19,6 +19,7 @@ public class Field {
     public static final String IDSTRUCTURE = "idStructure";
     public static final String STRUCTUREID = "structureId";
     public static final String IDETABLISSEMENT = "idEtablissement";
+    public static final String IDETAB = "idEtab";
     public static final String ID_ETABLISSEMENT = "id_etablissement";
     public static final String IDCLASSE = "idClasse";
     public static final String ID_STRUCTURE = "id_structure";
