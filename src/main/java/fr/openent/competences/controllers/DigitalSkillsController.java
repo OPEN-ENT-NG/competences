@@ -2,6 +2,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessConseilDeClasse;
+import fr.openent.competences.security.AccessIfMyStructure;
 import fr.openent.competences.security.DigitalSkillsFilter;
 import fr.openent.competences.service.digitalSkills.ClassAppreciationDigitalSkillsService;
 import fr.openent.competences.service.digitalSkills.DigitalSkillsService;
@@ -66,7 +67,8 @@ public class DigitalSkillsController extends ControllerHelper {
 
     @Get("/digitalSkills")
     @ApiDoc("get digital skills with their domains")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getAllDigitalSkillsByDomaine(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, userInfo -> {
             if (userInfo != null) {

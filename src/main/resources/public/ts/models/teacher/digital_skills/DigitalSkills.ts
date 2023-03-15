@@ -62,7 +62,7 @@ export class DigitalSkills extends Model {
 
     async syncAllDigitalSkills(){
         try{
-            let data = await http.get(`competences/digitalSkills`);
+            let data = await http.get(`competences/digitalSkills?idStructure=${this.id_structure}`);
             if(data.status === 200) {
                 _.forEach(data.data, (line) => {
                     let domaineDigitalSkill = _.find(this.digitalSkillsByDomaine, {id: line.id_domaine});
