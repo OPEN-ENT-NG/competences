@@ -16,7 +16,8 @@
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <title>Relevé de notes</title>
@@ -68,13 +69,13 @@
         }
 
         .head tr td:first-child {
-            min-width : 60%;
+            min-width: 60%;
             width: 60%;
             max-width: 60%;
         }
 
         .head tr td:last-child {
-            min-width : 40%;
+            min-width: 40%;
             width: 40%;
             max-width: 40%;
         }
@@ -122,7 +123,6 @@
         }
 
         .competence {
-            border: none !important;
             border-left: solid 1px #000 !important;
             border-bottom: solid 1px #000 !important;
         }
@@ -174,25 +174,45 @@
             font-size: 70%;
         }
 
-        .note{
+        .note {
             font-weight: bold;
             font-size: 90%;
         }
 
-        .coeff{
+        .coeff {
             font-size: 70%;
         }
 
         .div-note {
             width: 30px;
         }
+
+        .table {
+            display: table;
+        }
+
         .bars-skills-evaluation {
             padding: 10px;
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .bar-skill-piece {
             display: inline-block;
+            margin-right: -4px;
+        }
+
+        .positioning {
+            display: table-cell;
+            vertical-align: middle;
             text-align: center;
         }
+
     </style>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
 </head>
 <body>
 
@@ -221,9 +241,9 @@
     <table class="display-bulletin">
         {{#printSousMatiere}}
         <colgroup>
-            <col span="2" class="width-20" />
-            <col class="width-40" />
-            <col span="2" class="width-10" />
+            <col span="2" class="width-20"/>
+            <col class="width-40"/>
+            <col span="2" class="width-10"/>
         </colgroup>
         <tr class="greyscale entete-1">
             <td class="border-left" colspan="2"><strong>Matière</strong></td>
@@ -277,17 +297,23 @@
         {{#showSkills}}
         {{#hasCompetencesNotes}}
         <tr>
-            <td class="align-left competence" colspan="2">
-                <span class="align-left">Bilan des items</span>
-                <div class="bars-skills-evaluation width-90">
-                    {{# competencesNotes }}
-                    <div style="float: left; display: inline-block; width: {{width}}%; background-color: {{ persoColor }} !important">{{ number }}</div>
-                    {{/ competencesNotes }}
+            <td class="competence align-left border-right width-100">
+                <div>Bilan des items</div>
+                <div class="table width-100">
+                    <div class="bars-skills-evaluation width-90">
+                        {{# competencesNotes }}
+                        <div class="bar-skill-piece"
+                             style="width: {{width}}%; background-color: {{ persoColor }} !important">{{ number }}
+                        </div>
+                        {{/ competencesNotes }}
+                    </div>
+                    <div class="positioning">
+                        <span class="align-left width-100">Position</span>
+                        <span class="width-100">
+                        {{ positionnement }}
+                    </span>
+                    </div>
                 </div>
-            </td>
-            <td class="align-left border-right-bottom">
-                <span>Pos</span>
-                <div>{{ positionnement }}</div>
             </td>
         </tr>
         {{/hasCompetencesNotes}}
@@ -310,7 +336,7 @@
             {{#first_sous_matieres}}
             {{#isLast}}
             <td class="sousMat border-bottom">
-                <div  style="width: 40px">
+                <div style="width: 40px">
                     <span class="pretty center">{{libelle}}
                         <sup class="coeff">{{coeff}}</sup>
                     </span>
@@ -331,7 +357,7 @@
             {{/isLast}}
             {{^isLast}}
             <td class="sousMat">
-                <div  style="width: 40px">
+                <div style="width: 40px">
                     <span class="pretty center">{{libelle}}   <sup class="coeff">{{coeff}}</sup></span></div>
             </td>
             <td class="border-left border-right">
@@ -378,7 +404,7 @@
         <tr>
             {{^isLast}}
             <td class="sousMat">
-                <div  style="width: 40px">
+                <div style="width: 40px">
                     <span class="pretty center">{{libelle}}   <sup class="coeff">{{coeff}}</sup></span></div>
             </td>
             <td class="border-left border-right">
@@ -392,7 +418,7 @@
             {{/isLast}}
             {{#isLast}}
             <td class="sousMat border-bottom">
-                <div  style="width: 40px">
+                <div style="width: 40px">
                     <span class="pretty center">{{libelle}}   <sup class="coeff">{{coeff}}</sup></span></div>
             </td>
             <td class="border-left-right-bottom">
@@ -409,17 +435,23 @@
         {{#showSkills}}
         {{#hasCompetencesNotes}}
         <tr>
-            <td class="align-left competence" colspan="4">
-                <span class="align-left">Bilan des items</span>
-                <div class="bars-skills-evaluation width-90">
-                    {{# competencesNotes }}
-                    <div style="float: left; display: inline-block; width: {{width}}%; background-color: {{ persoColor }} !important">{{ number }}</div>
-                    {{/ competencesNotes }}
+            <td class="competence align-left border-right" colspan="5">
+                <span>Bilan des items</span>
+                <div class="table width-100">
+                    <div class="bars-skills-evaluation width-90">
+                        {{# competencesNotes }}
+                        <div class="bar-skill-piece"
+                             style="width: {{width}}%; background-color: {{ persoColor }} !important">{{ number }}
+                        </div>
+                        {{/ competencesNotes }}
+                    </div>
+                    <div class="positioning">
+                        <span class="align-left width-100">Position</span>
+                        <span class="width-100">
+                        {{ positionnement }}
+                    </span>
+                    </div>
                 </div>
-            </td>
-            <td class="align-left border-right-bottom">
-                <span>Pos</span>
-                <div>{{ positionnement }}</div>
             </td>
         </tr>
         {{/hasCompetencesNotes}}
