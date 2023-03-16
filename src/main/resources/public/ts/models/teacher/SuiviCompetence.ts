@@ -146,14 +146,14 @@ export class SuiviCompetence extends Model {
                 return new Promise( async (resolve) => {
                     let response: any = await Promise.all([
 
-                        Enseignement.getAll(classe.id, (cycle.id_cycle !== undefined && cycle.id_cycle !== null ) ?
+                        Enseignement.getAll(classe.id, structure.id, (cycle.id_cycle !== undefined && cycle.id_cycle !== null ) ?
                             cycle.id_cycle: classe.id_cycle , this.enseignements),
                         this.getCompetencesNotes(eleve, periode)
                     ]);
                     this.enseignements.load(response[0].data);
                     let competences = response[1].data;
                     if(structure.matieres.all !== undefined)this.matieres.load(structure.matieres.all);
-                    await Enseignement.loadCompetences(classe.id, competences, classe.id_cycle, this.enseignements);
+                    await Enseignement.loadCompetences(classe.id, structure.id, competences, classe.id_cycle, this.enseignements);
                     resolve();
                 });
             }

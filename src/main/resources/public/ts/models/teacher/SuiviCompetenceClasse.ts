@@ -95,7 +95,7 @@ export class SuiviCompetenceClasse extends Model {
                 return new Promise(async (resolve ) => {
                     let uriGetConversionTable = SuiviCompetence.api.getCompetenceNoteConverssion + '?idEtab=' + structure.id + '&idClasse=' + classe.id;
                     let response = await Promise.all([
-                        Enseignement.getAll(classe.id, classe.id_cycle, this.enseignements),
+                        Enseignement.getAll(classe.id, structure.id, classe.id_cycle, this.enseignements),
                         this.getCompetencesNotesClasse(classe, periode),
                         http.get(uriGetConversionTable)
                     ]);
@@ -104,7 +104,7 @@ export class SuiviCompetenceClasse extends Model {
                     if (this.structure.options.isSkillAverage && !!response[1].data) Utils.setSkillScoreStudentWithConversion(this.tableauConversion, response[1].data)
                     let competences = response[1].data;
                     if(structure.matieres.all !== undefined)this.matieres.load(structure.matieres.all);
-                    await Enseignement.loadCompetences(classe.id, competences, classe.id_cycle, this.enseignements);
+                    await Enseignement.loadCompetences(classe.id, structure.id, competences, classe.id_cycle, this.enseignements);
                     resolve();
                 });
             }
