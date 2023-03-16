@@ -11,9 +11,9 @@ import org.entcore.common.user.UserInfos;
 public class AccessIfMyStructure implements ResourcesProvider {
 
     @Override
-    public void authorize (HttpServerRequest request, Binding binding, UserInfos userInfos, Handler<Boolean> handler) {
+    public void authorize (HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
 
         String structureId = WorkflowActionUtils.getParamStructure(request);
-        handler.handle(structureId != null && userInfos.getStructures().contains(structureId));
+        handler.handle(structureId != null && user.getStructures().contains(structureId));
     }
 }
