@@ -9,7 +9,7 @@ import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 
-public class AccessViscoParamServiceStructure implements ResourcesProvider {
+public class AccessViescoParamServiceStructure implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos userInfos, Handler<Boolean> handler) {
         String structureId = WorkflowActionUtils.getParamStructure(request);
