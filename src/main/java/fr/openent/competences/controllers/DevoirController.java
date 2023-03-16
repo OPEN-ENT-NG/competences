@@ -86,7 +86,8 @@ public class DevoirController extends ControllerHelper {
 
     @Get("/devoirs")
     @ApiDoc("Récupère les devoirs d'un utilisateur")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getDevoirs(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, user -> {
             if(user != null){
@@ -421,8 +422,14 @@ public class DevoirController extends ControllerHelper {
         });
     }
 
+
+    /**
+     * @param request
+     * @queryParam {idEtablissement} mandatory
+     */
     @Get("/devoirs/done")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     @ApiDoc("Calcul le pourcentage réalisé pour un devoir")
     public void getPercentDone(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
@@ -507,8 +514,9 @@ public class DevoirController extends ControllerHelper {
     }
 
     @Get("/devoir/:idDevoir/moyenne")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     @ApiDoc("Retourne la moyenne du devoir dont l'id est passé en paramètre")
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @ResourceFilter(AccessViescoParamServiceStructure.class)
     public void getMoyenneDevoir(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if(user != null) {
@@ -542,7 +550,8 @@ public class DevoirController extends ControllerHelper {
 
     @Get("/devoirs/service")
     @ApiDoc("Récupère la liste des devoirs liés à un service")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessViescoParamServiceStructure.class)
     public void getDevoirsService(HttpServerRequest request) {
         if(request.params().contains("id_groups") && request.params().contains("id_matiere")
                 && request.params().contains("id_enseignant")) {
@@ -553,9 +562,14 @@ public class DevoirController extends ControllerHelper {
         }
     }
 
+    /**
+     * @param request
+     * @queryParam {idEtablissement} mandatory
+     */
     @Put("/devoirs/service")
     @ApiDoc("Mets à jour les devoirs liés à un service")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessViescoParamServiceStructure.class)
     public void updateDevoirsService(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override

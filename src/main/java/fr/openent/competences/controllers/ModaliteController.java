@@ -18,7 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
-import fr.openent.competences.security.AccessViscoParamServiceStructure;
+import fr.openent.competences.security.AccessViescoParamServiceStructure;
 import fr.openent.competences.service.ModaliteService;
 import fr.openent.competences.service.impl.DefaultModaliteService;
 import fr.wseduc.rs.ApiDoc;
@@ -46,7 +46,7 @@ public class ModaliteController extends ControllerHelper {
     @Get("/modalites")
     @ApiDoc("Récupère les modalités")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessViscoParamServiceStructure.class)
+    @ResourceFilter(AccessViescoParamServiceStructure.class)
     public void getDefaultServices(final HttpServerRequest request) {
         this.modaliteService.getModalites(arrayResponseHandler(request));
     }
