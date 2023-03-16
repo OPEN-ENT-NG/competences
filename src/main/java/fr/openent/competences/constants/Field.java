@@ -15,9 +15,6 @@ public class Field {
     public static final String DOMAINHEADER = "domainHeader";
     public static final String DOMAINBODY = "domainBody";
     public static final String HASCOMPETENCESNOTES = "hasCompetencesNotes";
-    public static final String ID_COMPETENCE = "id_competence";
-    public static final String COMPETENCES = "competences";
-    public static final String CLASSES = "classes";
 
     private Field() {
         throw new IllegalStateException("Utility class");
@@ -31,7 +28,6 @@ public class Field {
     public static final String IDSTRUCTURE = "idStructure";
     public static final String STRUCTUREID = "structureId";
     public static final String IDETABLISSEMENT = "idEtablissement";
-    public static final String ID_ETABLISSEMENT = "id_etablissement";
     public static final String IDCLASSE = "idClasse";
     public static final String ID_STRUCTURE = "id_structure";
     public static final String ID_MATIERE = "id_matiere";
