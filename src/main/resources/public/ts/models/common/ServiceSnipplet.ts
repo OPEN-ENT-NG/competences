@@ -197,6 +197,7 @@ export class Service {
     async getDevoirsService(){
         try {
             let url = "/competences/devoirs/service";
+            url += `?idEtablissement=` + this.id_etablissement;
             if(this.hasCompetencesParams()) {
                 url += `?id_matiere=${this.id_matiere}` +
                     `&id_enseignant=${this.id_enseignant}` +
@@ -215,7 +216,7 @@ export class Service {
 
     updateDevoirsService(devoirs, matiere) {
         try {
-            return http.put("/competences/devoirs/service", {
+            return http.put("/competences/devoirs/service?structureId=" + this.id_etablissement, {
                 id_devoirs: devoirs,
                 id_matiere: matiere
             });
