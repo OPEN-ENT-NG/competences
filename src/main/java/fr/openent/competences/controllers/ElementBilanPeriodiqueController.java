@@ -319,7 +319,6 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     @ApiDoc("Retourne les élèments du bilan périodique")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessIfMyStructure.class)
-    //@ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getElementBilanPeriodique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request,  user -> {
             if(user != null){
@@ -348,7 +347,6 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     @ApiDoc("Retourne les thématiques correspondant au type passé en paramètre")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessIfMyStructure.class)
-    //@ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getEnseignantsElements(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
