@@ -62,7 +62,7 @@ export const structureOptionsService: IStructureOptionsService = {
      */
     changeAbsencesRetardsFromPresences(checked:boolean, id_structure: string): Promise<any[]> {
         return new Promise((resolve, reject) => {
-            HTTP().postJson('/competences/sync/presences', {state: checked, structureId: id_structure})
+            HTTP().postJson('/competences/sync/presences?structureId=' + id_structure, {state: checked, structureId: id_structure})
                 .done((res) => {
                     resolve(res);
                 })
