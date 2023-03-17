@@ -85,7 +85,7 @@ export class BilanPeriodique extends  Model {
 
             if(data.data.length > 0) {
 
-                let url = BilanPeriodique.api.GET_ENSEIGNANTS + "?idClasse=" + this.classe.id;
+                let url = BilanPeriodique.api.GET_ENSEIGNANTS + "?idClasse=" + this.classe.id + "&idEtablissement" + this.structure.id;
                 for (let i = 0; i < data.data.length; i++) {
                     url += "&idElement=" + this.elements[i].id;
                 }
