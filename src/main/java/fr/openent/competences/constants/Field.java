@@ -21,7 +21,6 @@ public class Field {
     }
 
     //id
-    public static final String TEACHER = "Teacher";
     public static final String ID = "id";
     public static final String _ID = "_id";
     public static final String IDDOMAINE = "idDomaine";
@@ -286,4 +285,8 @@ public class Field {
     public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
     public static final int DIVISEUR_NOTE = 20;
 
+
+    //UserType
+    public static final String TEACHER = "Teacher";
+    public static final String RELATIVE  = "Relative";
 }
