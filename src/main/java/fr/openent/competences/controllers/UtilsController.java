@@ -19,9 +19,10 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
-import fr.openent.competences.security.AccessConseilDeClasse;
-import fr.openent.competences.security.AccessIfMyStructure;
+import fr.openent.competences.security.*;
 import fr.openent.competences.security.modelbulletinrights.AccessExportModelBulletin;
+import fr.openent.competences.security.AccessParamLinkGroupCycleStructure;
+import fr.openent.competences.security.modelbulletinrights.AccessExportModelBulletinStructureId;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.*;
@@ -68,7 +69,8 @@ public class UtilsController extends ControllerHelper {
      */
     @Get("/types")
     @ApiDoc("Retourne tous les types de devoir par etablissement")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void view(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -90,8 +92,9 @@ public class UtilsController extends ControllerHelper {
      * @param request
      */
     @Get("/mainteachers/:idStructure")
-    @ApiDoc("Retourne tous les types de devoir par etablissement")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ApiDoc("Récupère la liste des professeurs titulaires d'un remplaçant sur un établissement donné")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void viewTittulaires(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -112,7 +115,8 @@ public class UtilsController extends ControllerHelper {
      */
     @Get("/enfants")
     @ApiDoc("Retourne la liste des enfants pour un utilisateur donné")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessStructureIsParent.class)
     public void getEnfants(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -238,7 +242,9 @@ public class UtilsController extends ControllerHelper {
     }
 
     @Post("/link/check/data/classes")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ApiDoc("Changement d'affectation de cycle sur une classe")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessParamLinkGroupCycleStructure.class)
     public void checkDataOnClasses(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
@@ -261,7 +267,7 @@ public class UtilsController extends ControllerHelper {
     }
 
     @Post("/eleve/evenements")
-    @SecuredAction(value = Competences.CAN_UPDATE_RETARDS_AND_ABSENCES)
+    @SecuredAction(Competences.CAN_UPDATE_RETARDS_AND_ABSENCES)
     public void insertRetardOrAbscence(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
@@ -279,7 +285,8 @@ public class UtilsController extends ControllerHelper {
     }
 
     @Post("/graph/img")
-    @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessExportModelBulletin.class)
     public void postImgForBulletins(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, user -> {
             this.storage.writeUploadFile(request, uploaded -> {

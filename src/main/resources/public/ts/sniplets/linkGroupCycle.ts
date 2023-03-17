@@ -73,7 +73,7 @@ export const linkGroupCycle = {
                 id_cycle: parseInt(linkGroupCycle.that.selectedRadio.id_cycle),
             };
             if (jsonToSave.idClasses.length > 0 && !isNaN(jsonToSave.id_cycle)) {
-                http().postJson(`competences/link/check/data/classes`, jsonToSave).done((res) => {
+                http().postJson(`competences/link/check/data/classes?idEtablissement=${this.idStructure}`, jsonToSave).done((res) => {
                     if (res.length > 0) {
                         _.forEach(res, function (devoir) {
                             devoir.classe = _.findWhere(linkGroupCycle.that.classesGroupes.all,
