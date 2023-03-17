@@ -1,6 +1,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.constants.Field;
+import fr.openent.competences.security.AccessIfMyStructure;
 import fr.openent.competences.security.AdministratorRight;
 import fr.openent.competences.service.StructureOptionsService;
 import fr.openent.competences.service.impl.DefaultStructureOptions;
@@ -43,7 +44,8 @@ public class StructureOptionsController extends ControllerHelper {
 
     @Get("/structure/:structureId/options/isSkillAverage")
     @ApiDoc(" create and update structure_ options isAverableSkills")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getStructureOptionIsAverage (HttpServerRequest request) {
         String structureId = request.getParam(Field.STRUCTUREID);
         structureOptionService.getIsAverageSkills(structureId, defaultResponseHandler(request));
@@ -76,10 +78,12 @@ public class StructureOptionsController extends ControllerHelper {
     /**
      * Active ou désactive la récupération des absences/retards de presences sur compétences pour une structure donnée
      * @param request
+     * @queryParam {structureId} mandatory
      */
     @Post("/sync/presences")
     @ApiDoc("Active la récupération des absences/retards de presences sur compétences pour une structure donnée")
-    @SecuredAction(value="", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value="", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
     public void activateStructureRecuperationAbsencesRetardsFromPresences(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, user ->
             RequestUtils.bodyToJson(request, body -> {
@@ -100,7 +104,8 @@ public class StructureOptionsController extends ControllerHelper {
      */
     @Get("/init/sync/presences")
     @ApiDoc("Retourne la liste des identifiants des structures de l'utilisateur la récupération des absences/retards du module presences est activée")
-    @SecuredAction(value="", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value="", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void initRecuperationAbsencesRetardsFromPresences(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
