@@ -1,6 +1,5 @@
 package fr.openent.competences.security;
 
-import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.vertx.core.MultiMap;
@@ -19,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RunWith(VertxUnitRunner.class)
-public class AccessIfMyStructureTest {
-    AccessIfMyStructure access;
+public class AccessStructureIsParentTest {
+    AccessStructureIsParent access;
     HttpServerRequest request;
     Binding binding;
     MultiMap map;
@@ -29,7 +28,7 @@ public class AccessIfMyStructureTest {
 
     @Before
     public void setUp() throws NoSuchFieldException {
-        access = new AccessIfMyStructure();
+        access = new AccessStructureIsParent();
         request = Mockito.mock(HttpServerRequest.class);
         binding = Mockito.mock(Binding.class);
         map = Mockito.spy(new HeadersAdaptor(new DefaultHttpHeaders()));
@@ -43,6 +42,7 @@ public class AccessIfMyStructureTest {
         Mockito.doReturn(map).when(request).params();
         structures.add("9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         user.setStructures(structures);
+        user.setType("Relative");
         Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(true, result);
@@ -52,11 +52,12 @@ public class AccessIfMyStructureTest {
     }
 
     @Test
-    public void testAuthorizeBadStrucure(TestContext ctx){
+    public void testBadUserType(TestContext ctx){
         map.set("id_structure", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         Mockito.doReturn(map).when(request).params();
-        structures.add("azerty");
+        structures.add("9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         user.setStructures(structures);
+        user.setType("Teacher");
         Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
@@ -66,11 +67,28 @@ public class AccessIfMyStructureTest {
     }
 
     @Test
-    public void testNoStrucure(TestContext ctx){
-        //map.set("id_structure", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
+    public void testBadStructure(TestContext ctx){
+        map.set("id_structure", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         Mockito.doReturn(map).when(request).params();
-        structures.add("azerty");
+        structures.add("aaaaaa");
         user.setStructures(structures);
+        user.setType("Relative");
+        Async async = ctx.async();
+        access.authorize(request, binding, user, result -> {
+            ctx.assertEquals(false, result);
+            async.complete();
+        });
+        async.awaitSuccess(10000);
+    }
+
+
+    @Test
+    public void testBadStructureBadType(TestContext ctx){
+        map.set("id_structure", "9af51dc6-ead0-4edb-8978-da14a3e9f49a");
+        Mockito.doReturn(map).when(request).params();
+        structures.add("aaaaaa");
+        user.setStructures(structures);
+        user.setType("Teacher");
         Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
