@@ -122,8 +122,8 @@ public interface DevoirService extends CrudService {
                      String[] idEtablissement, String[] idMatieres, Boolean hasCompetences,
                      Boolean historise, Handler<Either<String, JsonArray>> handler);
 
-    Future<JsonArray> listDevoirs(String idEleve, String[] idGroupes, Long[] idDevoirs, Long[] idPeriodes,
-                                  String[] idEtablissements, String[] idMatieres, Boolean hasCompetences, Boolean historise);
+    Future<JsonArray> listDevoirs(String studentId, String[] groupIds, Long[] homeworkIds, Long[] periodIds,
+                                  String[] structureIds, String[] subjectIds, Boolean hasSkills, Boolean historized);
 
     void listDevoirsWithAnnotations(String idEleve, Long idPeriode, String idMatiere,
                                     Handler<Either<String, JsonArray>> handler);

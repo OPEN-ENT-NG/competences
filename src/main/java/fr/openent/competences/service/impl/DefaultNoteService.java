@@ -508,29 +508,29 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
     }
 
-    public void getCompetencesNotesReleveEleves(JsonArray ids, String etablissementId, String matiereId,
-                                                 JsonArray matiereIds,
-                                                 Long periodeId,  String eleveId, Boolean withDomaineInfo,
-                                                 Boolean isYear, Handler<Either<String, JsonArray>> handler) {
+    public void getCompetencesNotesReleveEleves(JsonArray studentIds, String structureIds, String subjectId,
+                                                JsonArray subjectIds,
+                                                Long periodId, String studentId, Boolean withDomainInfo,
+                                                Boolean isYear, Handler<Either<String, JsonArray>> handler) {
         List<String> idEleves = new ArrayList<String>();
 
-        if (ids != null) {
-            for (int i = 0; i < ids.size(); i++) {
-                idEleves.add(ids.getString(i));
+        if (studentIds != null) {
+            for (int i = 0; i < studentIds.size(); i++) {
+                idEleves.add(studentIds.getString(i));
             }
         }
 
         List<String> idMatieres = new ArrayList<String>();
 
-        if (matiereIds != null) {
-            for (int i = 0; i < matiereIds.size(); i++) {
-                idMatieres.add(matiereIds.getString(i));
+        if (subjectIds != null) {
+            for (int i = 0; i < subjectIds.size(); i++) {
+                idMatieres.add(subjectIds.getString(i));
             }
         } else{
             idMatieres = null;
         }
-        runGetCompetencesNotesReleve(etablissementId, matiereId, idMatieres, periodeId,
-                eleveId, idEleves, withDomaineInfo, isYear, handler);
+        runGetCompetencesNotesReleve(structureIds, subjectId, idMatieres, periodId,
+                studentId, idEleves, withDomainInfo, isYear, handler);
     }
 
     private Future<JsonArray> getCompetencesNotesReleveStudents(JsonArray ids, String structureId, String subjectId,
