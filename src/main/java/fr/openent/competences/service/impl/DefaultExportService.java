@@ -1207,17 +1207,11 @@ public class DefaultExportService implements ExportService {
         return result;
     }
 
-    private void setCompetenceNoteItem(Boolean text, Boolean usePerso, Map<String, JsonObject> maitrises, Map<String, JsonObject> matieres, Map<String, Map<String, Long>> competenceNotesByDevoir, JsonArray competencesArray, Map<String, Set<String>> competencesByMatiere, Map<String, List<String>> devoirByCompetences) {
-        for (Map.Entry<String, Set<String>> competencesInDomain : competencesByMatiere.entrySet()) {
-            JsonObject domainObj = new JsonObject();
-            if (matieres.get(competencesInDomain.getKey()) != null) {
-                domainObj.put(Field.DOMAINHEADER, matieres.get(competencesInDomain.getKey())
-                        .getString(Field.NAME));
-            }
-
-            JsonArray competencesInDomainArray = new JsonArray();
+    private void setCompetenceNoteItem(Boolean text, Boolean usePerso, Map<String, JsonObject> maitrises, Map<String, JsonObject> matieres, Map<String, Map<String, Long>> competenceNotesByDevoir, JsonArray competencesArray, Map<String, Set<String>> competencesBySubject, Map<String, List<String>> devoirByCompetences) {
+        for (Map.Entry<String, Set<String>> competencesInSubject : competencesBySubject.entrySet()) {
+            JsonArray competencesInSubjectArray = new JsonArray();
             List<Long> valuesByComp = new ArrayList<>();
-            for (String competenceId : competencesInDomain.getValue()) {
+            for (String competenceId : competencesInSubject.getValue()) {
                 for (String devoir : devoirByCompetences.get(competenceId)) {
                     if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
                             .containsKey(competenceId)) {
@@ -1228,9 +1222,9 @@ public class DefaultExportService implements ExportService {
                 }
             }
             JsonObject competenceNote = new JsonObject();
-            competenceNote.put(Field.HEADER, competencesInDomain.getKey());
+            competenceNote.put(Field.HEADER, competencesInSubject.getKey());
             competenceNote.put(Field.COMPETENCENOTES, calcWidthNote(text, usePerso, maitrises, valuesByComp, valuesByComp.size()));
-            competencesInDomainArray.add(competenceNote);
+            competencesInSubjectArray.add(competenceNote);
             competencesArray.add(competenceNote);
         }
     }
@@ -2098,8 +2092,8 @@ public class DefaultExportService implements ExportService {
                         JsonObject result = new JsonObject();
                         noteService.calculPositionnementAutoByEleveByMatiere(competencesNotesBySubject.get(m.getString(Field.ID)), result, false, tableauDeConversionFuture.result(),
                                 null, null, isAvgSkillFuture.result());
-                        JsonObject positionnement = (JsonObject) result.getJsonArray("positionnements_auto").stream()
-                                .filter(pos -> periodId.equals(((JsonObject) pos).getLong("id_periode")))
+                        JsonObject positionnement = (JsonObject) result.getJsonArray(Field.POSITIONNEMENTS_AUTO).stream()
+                                .filter(pos -> periodId.equals(((JsonObject) pos).getLong(Field.ID_PERIODE)))
                                 .findFirst().orElse(null);
                         if (null != positionnement)
                             m.put(Field.POSITIONNEMENT, positionnement.getLong(Field.MOYENNE));
