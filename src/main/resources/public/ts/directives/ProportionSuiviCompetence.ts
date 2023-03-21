@@ -103,15 +103,22 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                     });
                 }
 
-                let unique = [];
-                let distinct = [];
-                $scope.competencesEvaluations.forEach((comp) => {
-                    if (!unique[(comp.id_competences_notes) ? comp.id_competences_notes : comp.id]) {
-                        distinct.push(comp);
-                        unique[comp.id_competences_notes] = 1;
-                    }
-                });
-                $scope.competencesEvaluations = distinct;
+                $scope.competencesEvaluations = $scope.competencesEvaluations.filter(
+                    (competencesEvaluation, index, competencesEvaluations) => {
+                        if(!!competencesEvaluation.id_competences_notes || !!competencesEvaluation.id)
+                            return competencesEvaluations.findIndex(currentcompetencesEvaluation =>
+                                currentcompetencesEvaluation.id_competences_notes === competencesEvaluation.id_competences_notes ||
+                                currentcompetencesEvaluation.id === competencesEvaluation.id);
+
+                        if(!!competencesEvaluation.evaluation && !!competencesEvaluation.id_competence
+                            && !!competencesEvaluation.id_eleve)
+                            return competencesEvaluations.findIndex(currentcompetencesEvaluation =>
+                                currentcompetencesEvaluation.evaluation === competencesEvaluation.evaluation &&
+                                currentcompetencesEvaluation.id_competence === competencesEvaluation.id_competence &&
+                                currentcompetencesEvaluation.id_eleve === competencesEvaluation.id_eleve) === index;
+
+                        return true;
+                    });
                 if (Utils.isNotNull($scope.competencesEvaluations) && $scope.competencesEvaluations.length > 0) {
                     var nbEleves = 0;
                     if ($scope.isClasse == true) {

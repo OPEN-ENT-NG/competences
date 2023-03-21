@@ -68,6 +68,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
                 $rootScope.$broadcast('change-params', updatedUrl);
                 if ($scope.searchBilan.parDomaine === 'true') {
+                    $scope.suiviCompetence.domaines.all = [];
                     await $scope.suiviCompetence.domaines.sync();
                 }
                 if ($scope.searchBilan.parDomaine === 'false') {
