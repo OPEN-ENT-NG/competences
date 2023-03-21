@@ -2092,7 +2092,7 @@ public class DefaultExportService implements ExportService {
                         JsonObject result = new JsonObject();
                         noteService.calculPositionnementAutoByEleveByMatiere(competencesNotesBySubject.get(m.getString(Field.ID)), result, false, tableauDeConversionFuture.result(),
                                 null, null, isAvgSkillFuture.result());
-                        JsonObject positionnement = (JsonObject) result.getJsonArray(Field.POSITIONNEMENTS_AUTO).stream()
+                        JsonObject positionnement = (JsonObject) result.getJsonArray(POSITIONNEMENTS_AUTO).stream()
                                 .filter(pos -> periodId.equals(((JsonObject) pos).getLong(Field.ID_PERIODE)))
                                 .findFirst().orElse(null);
                         if (null != positionnement)
