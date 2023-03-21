@@ -2155,9 +2155,19 @@ public class DefaultExportService implements ExportService {
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray users = body.getJsonArray(RESULTS);
                 boolean printSousMatiere = false;
+                JsonArray subjects;
 
-                for (int k = 0; k < matieres.size(); k++) {
-                    JsonObject matiere = matieres.getJsonObject(k);
+                if(null != matieres && !matieres.isEmpty() && showSkills && !showScores) {
+                    subjects = new JsonArray(matieres.stream()
+                            .filter(matiere -> ((JsonObject)matiere).getBoolean(Field.HASCOMPETENCESNOTES))
+                            .collect(Collectors.toList()));
+                }
+                else {
+                    subjects = matieres;
+                }
+
+                for (int k = 0; k < subjects.size(); k++) {
+                    JsonObject matiere = subjects.getJsonObject(k);
                     String idMatiere = matiere.getString("id");
 
                     matiere.put(Field.SHOWSCORES, showScores)
@@ -2226,7 +2236,7 @@ public class DefaultExportService implements ExportService {
 
                 final JsonObject templateProps = new JsonObject();
 
-                templateProps.put("matieres", matieres);
+                templateProps.put("matieres", subjects);
                 templateProps.put("periode", periodeJson);
                 String prefixPdfName = "releve-eleve";
                 if(isBackup) {
