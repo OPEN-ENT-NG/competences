@@ -19,10 +19,8 @@ package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.model.Service;
-import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.service.CrudService;
@@ -428,4 +426,20 @@ public interface NoteService extends CrudService {
      * @Return {@link Future} of result {@link Void}
      */
     Future<Void> insertOrUpdateAnnotation(String idDevoir, String idEleve, String annotation);
+
+    /**
+     * Récupère les compétences notes d'élèves selon divers critères
+     * @param studentIds ids d'élèves
+     * @param structureIds etablissementId
+     * @param subjectId matiereId
+     * @param subjectIds matiereIds
+     * @param periodId periodeId
+     * @param studentId eleveId
+     * @param withDomainInfo récupère ou non les infos de domaine
+     * @param isYear récupère ou non les infos à l'année
+     */
+    void getCompetencesNotesReleveEleves(JsonArray studentIds, String structureIds, String subjectId,
+                                                JsonArray subjectIds,
+                                                Long periodId,  String studentId, Boolean withDomainInfo,
+                                                Boolean isYear, Handler<Either<String, JsonArray>> handler);
 }

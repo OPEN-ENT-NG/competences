@@ -22,7 +22,7 @@
 
 import {$, http, idiom as lang, model, ng, notify, template} from 'entcore';
 import httpAxios from "axios";
-import {evaluations, Matiere, SuiviCompetenceClasse} from '../models/teacher';
+import {evaluations, IClassReport, Matiere, SuiviCompetenceClasse} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/";
@@ -292,7 +292,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         let infoNameFileEnd;
         $scope.disabledExportFile = false;
         $scope.exportRecapEval = async (textMod, printSuiviClasse, idPeriode, exportByEnseignement,
-                                        withMoyGeneraleByEleve, withMoyMinMaxByMat) => {
+                                        withMoyGeneraleByEleve, withMoyMinMaxByMat, classReport?: IClassReport) => {
             infoNameFileEnd = `_${$scope.search.classe.name}`;
             $scope.errorWhenExportPdf = false;
             switch (printSuiviClasse) {
@@ -420,17 +420,12 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     $scope.exportRecapEvalObj.errExport = false;
                     await Utils.runMessageLoader($scope);
                     try {
-                        if (type_periode !== undefined) {
-                            await Utils.getClasseReleve(idPeriode, idClasse, type_periode.type, type_periode.ordre,
-                                idStructure, classeName);
-                        }
-                        else {
-                            await Utils.getClasseReleve(undefined, $scope.search.classe.id, undefined, undefined,
-                                idStructure, classeName);
-                        }
+                        await Utils.getClasseReleve(type_periode !== undefined ? idPeriode : undefined,
+                            idClasse, type_periode.type, type_periode.ordre,
+                            idStructure, classeName, classReport ? classReport.classReportUriOption : null);
+
                         await Utils.stopMessageLoader($scope);
-                    }
-                    catch (e) {
+                    } catch (e) {
                         await Utils.stopMessageLoader($scope);
                     }
                     break;

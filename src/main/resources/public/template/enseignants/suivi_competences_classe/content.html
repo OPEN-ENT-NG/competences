@@ -46,9 +46,21 @@
             <input type="radio" ng-change="changePrintSuiviClasse('printRecapAppreciations')"  ng-model="suiviClasse.print" value="printRecapAppreciations">
             <span><i18n>evaluations.recapAppreciations.classe</i18n></span>
         </label>
-        <label>
-            <input type="radio" ng-change="changePrintSuiviClasse('printClasseReleve')" ng-model="suiviClasse.print" value="printClasseReleve">
-            <span><i18n>evaluation.releve.classe</i18n></span>
+        <label class="flex-row gap-24">
+            <div>
+                <input type="radio" ng-change="changePrintSuiviClasse('printClasseReleve')" ng-model="suiviClasse.print" value="printClasseReleve">
+                <span><i18n>evaluation.releve.classe</i18n></span>
+            </div>
+            <select ng-show="suiviClasse.print === PRINT_OPTIONS.PRINT_CLASS_REPORT"
+                    ng-model="suiviClasse.classReportUriOption">
+                <option ng-value="CLASS_REPORT_URI_OPTIONS.SCORES">
+                    [[translate('evaluation.bilan.periodique.graphiques.notes')]]
+                </option>
+                <option ng-value="CLASS_REPORT_URI_OPTIONS.SKILLS">[[translate('competences.title')]]</option>
+                <option ng-value="CLASS_REPORT_URI_OPTIONS.SCORES_AND_SKILLS">
+                    [[translate('evaluations.class.report.scores.and.skills')]]
+                </option>
+            </select>
         </label>
         <div class="checkbox-grid"
              ng-if="isChefEtabOrHeadTeacher(informations.classe) || isPersEducNat()">
@@ -234,7 +246,7 @@
         <button class="right-magnet"
                 ng-disabled = "disabledExportSuiviClasseButton() || positioningCsvData"
                 ng-click="exportRecapEval(suiviClasse.textMod, suiviClasse.print, suiviClasse.periode.id_type,
-                suiviClasse.exportByEnseignement, suiviClasse.withMoyGeneraleByEleve, suiviClasse.withMoyMinMaxByMat)">
+                suiviClasse.exportByEnseignement, suiviClasse.withMoyGeneraleByEleve, suiviClasse.withMoyMinMaxByMat, suiviClasse)">
             <i18n>evaluations.export</i18n>
         </button>
     </div>

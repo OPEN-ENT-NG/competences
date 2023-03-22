@@ -156,6 +156,12 @@ public interface UtilsService {
     void getCycle(String idClasse, Handler<Either<String, JsonObject>> handler);
 
     /**
+     * Récupère le cycle de la classe dans la relation classe_cycle
+     * @param idClasse Identifiant de la classe.
+     */
+    Future<JsonObject> getCycle(String idClasse);
+
+    /**
      * Récupère la liste des utilisateurs selon les paramètres précisés
      *
      *
