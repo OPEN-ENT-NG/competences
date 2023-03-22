@@ -849,22 +849,24 @@ export class Utils {
     static isNotDefault =  function (object) {
         return (object !== undefined) && (object !== null) && (object !== '*') && (object !== '');
     };
-    static getClasseReleve = async function(idPeriode, idClasse, idTypePeriode, ordrePeriode, idStructure, classeName){
-            let url = `/competences/releve/classe/pdf`;
+    static getClasseReleve = async function(idPeriode, idClasse, idTypePeriode, ordrePeriode, idStructure, classeName,
+                                            uriParams?: string){
+            let url = `/competences/releve/classe/pdf?${uriParams || ''}`;
             let param = {
                 idPeriode: idPeriode,
                 idClasse: idClasse,
                 idTypePeriode: idTypePeriode,
                 ordre: ordrePeriode,
                 idStructure: idStructure,
-                classeName: classeName
+                classeName: classeName,
+
             };
             if(Utils.isNull(idStructure) || Utils.isNull(idClasse)){
                 console.error(`[getClasseReleve] : required idStructure: ${idStructure} and idClasse: ${idClasse}`);
                 return;
             }
             try {
-                let data = await http.post(url + `?idStructure=${param.idStructure}`, param,{responseType: 'arraybuffer'});
+                let data = await http.post(url + `&idStructure=${param.idStructure}`, param,{responseType: 'arraybuffer'});
 
                 let blob = new Blob([data.data]);
                 let link = document.createElement('a');
