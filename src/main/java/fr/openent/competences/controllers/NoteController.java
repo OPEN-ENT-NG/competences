@@ -30,10 +30,7 @@ import fr.openent.competences.model.importservice.ExercizerStudent;
 import fr.openent.competences.security.*;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
-import fr.openent.competences.service.DevoirService;
-import fr.openent.competences.service.ElementProgramme;
-import fr.openent.competences.service.NoteService;
-import fr.openent.competences.service.UtilsService;
+import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -86,14 +83,17 @@ public class NoteController extends ControllerHelper {
     private final ElementProgramme elementProgramme;
 
     private final Storage storage;
+    private final ServiceFactory serviceFactory;
 
-    public NoteController(EventBus eb, Storage storage) {
-        this.eb = eb;
-        this.storage = storage;
+    public NoteController(ServiceFactory serviceFactory) {
+        this.eb = serviceFactory.eventBus();
+        this.storage = serviceFactory.storage();
+        this.serviceFactory = serviceFactory;
         notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         devoirsService = new DefaultDevoirService(this.eb);
         utilsService = new DefaultUtilsService(this.eb);
         elementProgramme = new DefaultElementProgramme();
+
     }
 
     /**
@@ -1232,7 +1232,7 @@ public class NoteController extends ControllerHelper {
         final String idClasse = request.params().get("idClasse");
         final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
         final String idPeriodeString = request.params().get("idPeriode");
-        new DefaultBilanPerioqueService(eb).getBilanPeriodiqueDomaineForGraph(idEleve, idEtablissement, idClasse,
+        serviceFactory.bilanPeriodiqueService().getBilanPeriodiqueDomaineForGraph(idEleve, idEtablissement, idClasse,
                 typeClasse, idPeriodeString, arrayResponseHandler(request));
     }
 

@@ -36,6 +36,11 @@
                     <input type="checkbox" ng-model="showColumns.pos" ng-change="saveColumnsPreferences()">
                     <span><i18n>evaluations.releve.positionnement</i18n></span>
                 </label>
+                <label class="columns-popup-items">
+                    <input type="checkbox" ng-model="showColumns.skillsValidatedPercentage"
+                           ng-change="saveColumnsPreferences()">
+                    <span><i18n>evaluations.validated.skills</i18n>&nbsp;&#40;&#37;&#41;</span>
+                </label>
             </div>
         </div>
         <div class="margin-zero">
@@ -50,6 +55,7 @@
                     <th class="one center" ng-if="showColumns.moyEleve"><i18n>average.min.eleve</i18n></th>
                     <th class="one center" ng-if="showColumns.moyClasse"><i18n>average.min.classe</i18n></th>
                     <th class="one center" ng-if="showColumns.pos"><i18n>evaluations.releve.positionnement</i18n></th>
+                    <th class="one center" ng-if="showColumns.skillsValidatedPercentage"><i18n>evaluations.validated.skills</i18n>&nbsp;&#40;&#37;&#41;</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -198,6 +204,11 @@
                                     <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
                                 </li>
                             </ul>
+                        </div>
+                    </td>
+                    <td class="center" data-label="[[translate('evaluations.validated.skills')]]" ng-if="showColumns.skillsValidatedPercentage">
+                        <div>
+                            [[suiviDesAcquis.displaySkillsValidatedPercentage()]]
                         </div>
                     </td>
                 </tr>

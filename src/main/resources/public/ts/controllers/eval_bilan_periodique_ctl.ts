@@ -56,7 +56,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         if(PreferencesUtils.isNotEmpty(conseilGraphiques)){
             $scope.graph = PreferencesUtils.getPreferences(conseilGraphiques);
         }
-        $scope.showColumns = {moyEleve : true, moyClasse : true, pos : true};
+        $scope.showColumns = {moyEleve: true, moyClasse: true, pos: true, skillsValidatedPercentage: true};
+
         if(PreferencesUtils.isNotEmpty(conseilColumns)){
             $scope.showColumns = PreferencesUtils.getPreferences(conseilColumns);
         }
@@ -173,8 +174,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             /* Dans le cas où la période change automatiquement avec un changement d'onglet */
             $scope.elementBilanPeriodique.idPeriode = $scope.search.periode.id_type;
             $scope.elementBilanPeriodique.suivisAcquis.idPeriode = $scope.search.periode.id_type;
-
-            await $scope.elementBilanPeriodique.suivisAcquis.getSuivisDesAcquis();
+            let group: Classe = !!$scope.search && !!$scope.search.classe &&
+            $scope.search.classe.type_groupe === Classe.type.GROUPE ? $scope.search.classe : null;
+            await $scope.elementBilanPeriodique.suivisAcquis.getSuivisDesAcquis(group);
 
             await utils.safeApply($scope);
             template.open('suivi-acquis', 'enseignants/bilan_periodique/display_suivi_acquis');

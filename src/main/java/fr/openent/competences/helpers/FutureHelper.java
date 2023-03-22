@@ -1,10 +1,11 @@
 package fr.openent.competences.helpers;
 
 
-import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.*;
-import io.vertx.core.eventbus.Message;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.impl.CompositeFutureImpl;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -13,9 +14,6 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.util.List;
 
-import static fr.openent.competences.Competences.*;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-
 public class FutureHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FutureHelper.class);
@@ -23,6 +21,7 @@ public class FutureHelper {
     private FutureHelper() {
     }
 
+    @Deprecated
     public static Handler<Either<String, JsonArray>> handlerJsonArray(Promise<Object> promise) {
         return event -> {
             if (event.isRight()) {
@@ -34,6 +33,7 @@ public class FutureHelper {
         };
     }
 
+    @Deprecated
     public static Handler<Either<String, JsonArray>> handlerJsonArray(Future<JsonArray> future) {
         return event -> {
             if (event.isRight()) {
@@ -45,27 +45,23 @@ public class FutureHelper {
         };
     }
 
+    @Deprecated
     public static Handler<Either<String, JsonObject>> handlerJsonObject(Promise<JsonObject> promise) {
-        return event -> {
-            if (event.isRight()) {
-                promise.complete(event.right().getValue());
-            } else {
-                LOGGER.error(event.left().getValue());
-                promise.fail(event.left().getValue());
-            }
-        };
+        return handlerJsonObject(promise, null);
     }
 
+    @Deprecated
     public static Handler<Either<String, JsonObject>> handlerJsonObject(Promise<JsonObject> promise, String logsInfo) {
         return event -> {
             if (event.isRight()) {
                 promise.complete(event.right().getValue());
             } else {
-                LOGGER.error( String.format("%s %s",logsInfo != null ? logsInfo : "", event.left().getValue()));
+                LOGGER.error(String.format("%s %s", logsInfo != null ? logsInfo : "", event.left().getValue()));
                 promise.fail(event.left().getValue());
             }
         };
     }
+
     public static Handler<Either<String, JsonArray>> handlerJsonArray(Promise<JsonArray> promise, String logs) {
         return event -> {
             if (event.isRight()) {
@@ -78,17 +74,19 @@ public class FutureHelper {
         };
     }
 
-    public static Handler<AsyncResult<Message<JsonObject>>> getMessageJsonArray (Promise<JsonArray> promiseMultiTeachers,
-                                                                                 String logs) {
-        return handlerToAsyncHandler(message -> {
-            JsonObject body = message.body();
-            if (Field.OK.equals(body.getString(Field.STATUS))) {
-                JsonArray result = body.getJsonArray(Field.RESULTS);
-                promiseMultiTeachers.complete(result);
-            } else {
-                promiseMultiTeachers.fail(logs != null ? logs : "" + body.getString(Field.MESSAGE));
+    public static <R> Handler<Either<String, R>> handler(Promise<R> promise) {
+        return handler(promise, null);
+    }
+
+    public static <R> Handler<Either<String, R>> handler(Promise<R> promise, String errorMessage) {
+        return event -> {
+            if (event.isRight()) {
+                promise.complete(event.right().getValue());
+                return;
             }
-        });
+            LOGGER.error(String.format("%s %s", (errorMessage != null ? errorMessage : ""), event.left().getValue()));
+            promise.fail(errorMessage != null ? errorMessage : event.left().getValue());
+        };
     }
 
     public static <T> CompositeFuture all(List<Future<T>> futures) {

@@ -198,7 +198,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     public DefaultExportBulletinService(EventBus eb, Storage storage) {
         this.eb = eb;
-        bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
+        bilanPeriodiqueService = new DefaultBilanPerioqueService(Sql.getInstance(), eb);
         elementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService(eb);
         appreciationCPEService = new DefaultAppreciationCPEService();
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
@@ -220,7 +220,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     public DefaultExportBulletinService(EventBus eb, Storage storage, Vertx vertx) {
         this.eb = eb;
-        bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
+        bilanPeriodiqueService = new DefaultBilanPerioqueService(Sql.getInstance(), eb);
         elementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService(eb);
         appreciationCPEService = new DefaultAppreciationCPEService();
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
