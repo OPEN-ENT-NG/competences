@@ -8,6 +8,7 @@ import fr.openent.competences.model.Structure;
 import fr.openent.competences.model.SubTopic;
 import fr.openent.competences.security.*;
 import fr.openent.competences.service.BilanPeriodiqueService;
+import fr.openent.competences.service.ServiceFactory;
 import fr.openent.competences.service.impl.*;
 import fr.openent.competences.utils.MultiTeachersUtils;
 import fr.wseduc.rs.*;
@@ -48,9 +49,9 @@ public class BilanPeriodiqueController extends ControllerHelper{
     private final DefaultAvisOrientationService avisOrientationService;
     private final DefaultUtilsService utilsService;
 
-    public BilanPeriodiqueController (EventBus eb){
-        this.eb = eb;
-        bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
+    public BilanPeriodiqueController (ServiceFactory serviceFactory){
+        this.eb = serviceFactory.eventBus();
+        bilanPeriodiqueService = serviceFactory.bilanPeriodiqueService();
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
         appreciationCPEService = new DefaultAppreciationCPEService();
         avisConseilService = new DefaultAvisConseilService();
@@ -539,6 +540,23 @@ public class BilanPeriodiqueController extends ControllerHelper{
                 badRequest(request);
             }
         });
+    }
+
+
+    @Get("/structures/:structureId/student/:studentId/subjectsSkillsValidatedPercentage")
+    @ApiDoc("Get skills validated percentage by subject for a student")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessConseilDeClasseStructureId.class)
+    public void getSubjectSkillsValidatedPercentage(final HttpServerRequest request) {
+        String structureId = request.params().get(Field.STRUCTUREID);
+        String studentId = request.params().get(Field.STUDENTID);
+        String stringPeriodId = request.params().get(Field.PERIODID);
+        Long periodId = stringPeriodId != null ? Long.parseLong(stringPeriodId) : null;
+        String groupId = request.params().get(Field.GROUPID);
+
+        bilanPeriodiqueService.getSubjectSkillsValidatedPercentage(structureId, studentId, periodId, groupId)
+                .onSuccess(achievements -> renderJson(request, achievements.toJson()))
+                .onFailure(err -> renderError(request, new JsonObject().put(Field.MESSAGE, err.getMessage())));
     }
 }
 

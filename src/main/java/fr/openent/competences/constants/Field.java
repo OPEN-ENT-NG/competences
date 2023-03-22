@@ -26,6 +26,9 @@ public class Field {
     public static final String IDDOMAINE = "idDomaine";
     public static final String IDSTRUCTURE = "idStructure";
     public static final String STRUCTUREID = "structureId";
+    public static final String STRUCTURE_ID = "structure_id";
+    public static final String STUDENTID = "studentId";
+    public static final String STUDENT_ID = "student_id";
     public static final String IDETABLISSEMENT = "idEtablissement";
     public static final String IDETAB = "idEtab";
     public static final String ID_ETABLISSEMENT = "id_etablissement";
@@ -44,6 +47,7 @@ public class Field {
     public static final String ID_TYPESOUSMATIERE = "id_type_sousmatiere";
     public static final String ID_PERIODE = "id_periode";
     public static final String IDPERIODE = "idPeriode";
+    public static final String PERIODID = "periodId";
     public static final String ID_ELEVE = "id_eleve";
     public static final String IDELEVE = "idEleve";
     public static final String ID_CLASSE = "id_classe";
@@ -281,6 +285,12 @@ public class Field {
     public final static String VIESCO_SOUS_MATIERE_TABLE = "sousmatiere";
     public final static String VIESCO_TYPE_SOUS_MATIERE_TABLE = "type_sousmatiere";
     public final static String VIESCO_SERVICES_TABLE = "services";
+    public static final String TYPE_TABLE = "type";
+    // Achievements
+    public static final String SKILLS_VALIDATED_PERCENTAGE = "skills_validated_percentage";
+    public static final String SKILLSVALIDATEDPERCENTAGE = "skillsValidatedPercentage";
+    public static final String ACHIEVEMENTSSUBJECTS = "achievementsSubjects";
+
 
     //numbers
     public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.

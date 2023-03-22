@@ -17,8 +17,8 @@
 
 package fr.openent.competences;
 
-import fr.openent.competences.constants.Field;
 import fr.openent.competences.controllers.*;
+import fr.openent.competences.service.ServiceFactory;
 import fr.openent.competences.service.impl.BulletinWorker;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
 import fr.openent.competences.service.impl.CompetencesTransitionWorker;
@@ -35,6 +35,7 @@ import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.share.impl.SqlShareService;
+import org.entcore.common.sql.Sql;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 
@@ -295,6 +296,8 @@ public class Competences extends BaseServer {
 
         AccessEventBus.getInstance().init(eb);
 
+        ServiceFactory serviceFactory = new ServiceFactory(vertx, storage, Sql.getInstance());
+
         // Controller
         addController(new CompetencesController(eventStore));
         addController(new AnnotationController());
@@ -309,12 +312,12 @@ public class Competences extends BaseServer {
         addController(new DomaineController(eb));
         addController(new EnseignementController(eb));
         addController(new ExportPDFController(eb, notification, storage));
-        addController(new LSUController(eb));
+        addController(new LSUController(serviceFactory));
         addController(new NiveauDeMaitriseController());
-        addController(new NoteController(eb, storage));
+        addController(new NoteController(serviceFactory));
         addController(new ElementProgrammeController());
         addController(new UtilsController(storage,eb));
-        addController(new BilanPeriodiqueController(eb));
+        addController(new BilanPeriodiqueController(serviceFactory));
         addController(new MatiereController(eb));
         addController(new ElementBilanPeriodiqueController(eb));
         addController(new ReportModelPrintExportController());
