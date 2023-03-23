@@ -107,8 +107,10 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                     (competencesEvaluation, index, competencesEvaluations) => {
                         if(!!competencesEvaluation.id_competences_notes || !!competencesEvaluation.id)
                             return competencesEvaluations.findIndex(currentcompetencesEvaluation =>
-                                currentcompetencesEvaluation.id_competences_notes === competencesEvaluation.id_competences_notes ||
-                                currentcompetencesEvaluation.id === competencesEvaluation.id);
+                                (!!currentcompetencesEvaluation.id_competences_notes &&
+                                    currentcompetencesEvaluation.id_competences_notes === competencesEvaluation.id_competences_notes) ||
+                                (!!currentcompetencesEvaluation.id &&
+                                    currentcompetencesEvaluation.id === competencesEvaluation.id)) === index;
 
                         if(!!competencesEvaluation.evaluation && !!competencesEvaluation.id_competence
                             && !!competencesEvaluation.id_eleve)
