@@ -583,7 +583,7 @@ export class ReleveNote extends  Model implements IModel {
     private getPreviousPeriod () : Periode[] {
         let previousPeriods : Periode[] ;
         previousPeriods = this.classe.periodes.all.filter( (p : Periode ) =>
-             p.id != null && p.id_type < this.idPeriode
+             !!p.id_type && p.id_type < this.idPeriode
         );
         return previousPeriods;
     }
@@ -609,7 +609,7 @@ export class ReleveNote extends  Model implements IModel {
         if (app === undefined || app === null) {
             app = '';
         }
-        line['Appreciation '+ label + period.ordre] = app;
+        line['Appréciations '+ label + period.ordre] = app;
     }
 
     private setPreviousAverages (line : any, label: string, period : Periode) : void {
@@ -834,7 +834,7 @@ export class ReleveNote extends  Model implements IModel {
                     column.push(label);
                 }
                if (this.exportOptions.previousAppreciations) {
-                   let label : string = lang.translate('competences.appreciation') +
+                   let label : string = lang.translate('viescolaire.utils.appreciations') + " " +
                        lang.translate("viescolaire.periode." + p.type).charAt(0) + p.ordre
                    header += `; ${label}`;
                    column.push(label);
