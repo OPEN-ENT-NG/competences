@@ -85,8 +85,7 @@ public class DomaineController extends ControllerHelper {
      */
     @Get("/domaines")
     @ApiDoc("Recupère l'arbre des domaines pour un cycle donné.")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessIfMyStructure.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getArbreDomaines(final HttpServerRequest request){
         final JsonArray oArbreDomainesArray = new fr.wseduc.webutils.collections.JsonArray();
         final String idClasse = request.params().get("idClasse");
