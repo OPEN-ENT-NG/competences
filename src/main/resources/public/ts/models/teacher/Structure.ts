@@ -89,7 +89,7 @@ export class Structure extends Model {
                 synchronization: '/competences/types?idEtablissement=' + this.id
             },
             ENSEIGNEMENT: {
-                synchronization: '/competences/enseignements'
+                synchronization: '/competences/enseignements?idStructure=' + this.id
             },
             MATIERE: {
                 synchronization: '/viescolaire/matieres/services-filter?idEtablissement=' + this.id,
@@ -262,7 +262,7 @@ export class Structure extends Model {
                 return new Promise((resolve, reject) => {
                     let uri = that.api.ENSEIGNEMENT.synchronization;
                     if (idClasse !== undefined) {
-                        uri += '?idClasse=' + idClasse;
+                        uri += '&idClasse=' + idClasse;
                         http().getJson(uri).done(function (res) {
                             this.load(res);
                             this.each(function (enseignement) {

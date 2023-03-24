@@ -63,7 +63,7 @@ export class Evaluations extends Model {
             GET_COMPETENCES : '/viescolaire/competences/eleve',
             GET_ANNOTATION : '/viescolaire/annotations/eleve',
             GET_ARBRE_DOMAINE : '/competences/domaines?idClasse=',
-            GET_ENSEIGNEMENT: '/competences/enseignements',
+            GET_ENSEIGNEMENT: '/competences/enseignements?idEtablissement=',
             GET_SERVICES: '/viescolaire/services?idEtablissement=',
             calculMoyenne: '/competences/eleve/'
         };
