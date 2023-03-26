@@ -1,0 +1,13 @@
+<div class="sidebarItem">
+    <a href="[[vm.routerLink.link]]"
+       class="sidebarItem-item"
+       ng-class="{'active': vm.routerLink.isActive}">
+        <i class="[[vm.routerLink.icon]]"></i>
+        <span class="sidebarItem-item-label">
+            [[vm.translate(vm.routerLink.name)]]
+        </span>
+    </a>
+
+    <!-- sub menu dropdown -->
+    <subsidebar children="vm.routerLink.children"></subsidebar>
+</div>

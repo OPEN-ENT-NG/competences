@@ -19,3 +19,4 @@ build.sh
 docker-compose.yml
 /coverage/
 package-lock.json
+/src/main/resources/public/font/

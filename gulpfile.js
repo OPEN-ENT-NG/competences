@@ -17,7 +17,7 @@ gulp.task('copy-mdi-font', ['drop-cache'], function () {            // Dépend d
 });
 
 
-gulp.task('webpack', ['copy-mdi-font'], () => { 
+gulp.task('webpack', ['copy-mdi-font'], () => {
     return gulp.src('./src/main/resources/public')
         .pipe(webpack(require('./webpack.config.js')))
         .on('error', function handleError() {

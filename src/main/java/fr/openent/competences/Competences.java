@@ -296,7 +296,7 @@ public class Competences extends BaseServer {
         AccessEventBus.getInstance().init(eb);
 
         // Controller
-        addController(new CompetencesController(eventStore));
+        addController(new CompetencesController(eventStore, config));
         addController(new AnnotationController());
         addController(new AppreciationController());
         addController(new BFCController(eb, storage));

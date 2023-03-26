@@ -47,7 +47,7 @@
 
   "orientation.avis.LastTrimester": "Avis d'orientation / Proposition du conseil de classe",
   "orientation.avis.FirstSecondTrimester": "Avis provisoire d'orientation",
-
+  "orientations": "Conseils",
   "conseil.avis.mention": "Mention du conseil de classe",
 
   "competences.title": "Compétences",
@@ -814,7 +814,7 @@
   "competences.parameter.log.error.export": "Message d'erreur",
   "no.errors.while.archive.mongo": "Aucune erreur lors de l'archivage",
   "parameter.archive.date" : "Date de l'export",
-
+  "follow.area": "Suivi",
   "competence.createCompetence.item" : "Créer une compétence",
   "competence.createCompetence.enseignement" : "Enseignement",
   "competence.createCompetence.elementSignifiant" : "Elément signifiant",

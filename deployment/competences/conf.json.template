@@ -17,6 +17,7 @@
         "db-schema": "notes",
         "vsco-schema": "viesco",
         "sql": true,
+        "enableCompetencesv2": true,
         "lsun": {
             "xsd_path": "./public/lsun/import-complet-strict.xsd",
             "civilite_regex" : "^[Mm][^mM]*[Mm][^mM]*\$",

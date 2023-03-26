@@ -7,7 +7,8 @@ module.exports = {
         parents: './ts/parents.ts',
         teachers: './ts/teachers.ts',
         behaviours: './ts/behaviours.ts',
-        parameter: './ts/parameter.ts'
+        parameter: './ts/parameter.ts',
+        'competences2/application': './ts/competences2/app.ts'
     },
     output: {
         filename: './[name].js'

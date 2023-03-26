@@ -1,0 +1,17 @@
+<div class="subsidebar py-8"
+     ng-if="vm.hasChildren()">
+    <h2 class="subsidebar-title horizontal-margin vertical-spacing-twice">
+        [[vm.translate(vm.children.name)]]
+    </h2>
+    <div class="subsidebar-items">
+        <a ng-repeat="subrouter in vm.children.routerLinks"
+           href="[[subrouter.link]]"
+           class="subsidebar-items-item mini-block-container"
+           ng-class="{'active': subrouter.isActive}">
+            <i class="[[subrouter.icon]]"></i>
+            <span class="sidebarItem-dropdownContent-items-item-label">
+                [[vm.translate(subrouter.name)]]
+            </span>
+        </a>
+    </div>
+</div>
