@@ -516,7 +516,7 @@ public class DevoirController extends ControllerHelper {
     @Get("/devoir/:idDevoir/moyenne")
     @ApiDoc("Retourne la moyenne du devoir dont l'id est passé en paramètre")
     @SecuredAction(value = "", type= ActionType.RESOURCE)
-    @ResourceFilter(AccessViescoParamServiceStructure.class)
+    @ResourceFilter(AccessIfMyStructure.class)
     public void getMoyenneDevoir(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if(user != null) {

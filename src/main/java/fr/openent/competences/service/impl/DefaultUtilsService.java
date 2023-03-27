@@ -110,31 +110,6 @@ public class DefaultUtilsService implements UtilsService {
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
-    @Override
-    /**
-     * Récupère la liste des professeurs titulaires d'un remplaçant sur un établissement donné
-     * (si lien titulaire/remplaçant toujours actif à l'instant T)
-     *
-     * @param psIdRemplacant identifiant neo4j du remplaçant
-     * @param psIdEtablissement identifiant de l'établissement
-     * @param handler handler portant le resultat de la requête : la liste des identifiants neo4j des titulaires
-     */
-    public void getTitulaires(String psIdRemplacant, String psIdEtablissement, Handler<Either<String, JsonArray>> handler) {
-        StringBuilder query = new StringBuilder();
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-
-        query.append("SELECT DISTINCT main_teacher_id ")
-                .append("FROM " + Competences.VSCO_SCHEMA + ".multi_teaching ")
-                .append("WHERE second_teacher_id = ? ")
-                .append("AND structure_id = ? ")
-                .append("AND start_date <= current_date ")
-                .append("AND current_date <= end_date ");
-
-        values.add(psIdRemplacant);
-        values.add(psIdEtablissement);
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
-    }
-
     public void getMultiTeachersByClass(final String idEtablissement, final String idClasse, final Integer idPeriode,
                                         Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()

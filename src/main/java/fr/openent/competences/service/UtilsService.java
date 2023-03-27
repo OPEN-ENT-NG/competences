@@ -45,16 +45,6 @@ public interface UtilsService {
      */
     void getRemplacants(String psIdTitulaire, String psIdEtablissement, Handler<Either<String, JsonArray>> handler);
 
-
-    /**
-     * Récupère la liste des professeurs titulaires d'un remplaçant sur un établissement donné
-     * (si lien titulaire/remplaçant toujours actif à l'instant T)
-     * @param psIdRemplacant identifiant neo4j du remplaçant
-     * @param psIdEtablissement identifiant de l'établissement
-     * @param handler handler portant le resultat de la requête : la liste des identifiants neo4j des titulaires
-     */
-    void getTitulaires(String psIdRemplacant, String psIdEtablissement, Handler<Either<String, JsonArray>> handler);
-
     void getMultiTeachersByClass( final String idEtablissement, final String idClasse, final Integer idPeriode,
                                    Handler<Either<String, JsonArray>> handler);
     void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
