@@ -582,8 +582,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
                 await $scope.syncAllAvisSyntheses();
 
-                await utils.safeApply($scope);
             }
+            utils.safeApply($scope);
         };
 
         $scope.syncAllAvisSyntheses = async function() {
@@ -983,8 +983,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.showNewOpinion = false;
         };
 
-        $scope.switchEtablissementSuivi = () => {
-            $scope.changeEtablissement();
+        $scope.switchEtablissementSuivi = async (): Promise<void> => {
+            await $scope.changeEtablissement();
+            await $scope.displayBilanPeriodique();
         };
 
         $scope.translateAvis = (avis) => {

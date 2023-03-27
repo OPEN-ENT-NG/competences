@@ -42,7 +42,7 @@ export class Utils {
     }
 
     static userHasService (classe, id_matiere?) {
-        let evaluables = _.filter(classe.services, service => {
+        let evaluables = (!!classe && !!classe.services) ? _.filter(classe.services, service => {
             let substituteTeacher = _.findWhere(service.substituteTeachers, {second_teacher_id : model.me.userId});
             let correctDateSubstituteTeacher = substituteTeacher &&
                 moment(new Date()).isBetween(moment(substituteTeacher.start_date),
@@ -57,7 +57,7 @@ export class Utils {
                 mainTeacher = mainTeacher && service.id_matiere == id_matiere;
             }
             return service.evaluable && (coTeachers || correctDateSubstituteTeacher || mainTeacher);
-        });
+        }) : [];
         return evaluables.length > 0;
     }
 
