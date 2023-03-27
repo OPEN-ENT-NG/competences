@@ -26,13 +26,13 @@
             <label class="select">
                 <select ng-model="evaluations.structure"
                         ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"
-                        ng-change="switchEtablissementSuivi();"></select>
+                        ng-change="switchStructurePeriodReport();"></select>
             </label>
         </section>
         <section>
             <label class="select">
                 <select ng-model="search.classe"
-                        ng-change="syncPeriodesBilanPeriodique(); displayBilanPeriodique(); deleteStudent();"
+                        ng-change="switchClassePeriodReport();"
                         ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in filteredClassesGroups | orderBy:['type_groupe_libelle','name']">
                     <option class="header-opt" disabled value="">[[translate('viescolaire.utils.class.groupe')]]</option>
                 </select>
@@ -42,7 +42,7 @@
             <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
                 <select ng-model="search.periode"
                         ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
-                        ng-change="displayBilanPeriodique(); changeContent();"
+                        ng-change="switchPeriodPeriodReport();"
                         ng-options="getI18nPeriode(periode) for periode in filteredPeriode">
                     <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
                 </select>
@@ -52,7 +52,7 @@
             <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == '', 'deletedStudent': search.eleve.deleteDate !== null}">
                 <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
                         ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in filteredEleves.all track by eleve.id"
-                        ng-change="displayBilanPeriodique(); changeContent();">
+                        ng-change="switchStudentPeriodReport();">
                     <option disabled value="" class="header-opt">[[translate('viescolaire.utils.student')]]</option>
                 </select>
             </label>

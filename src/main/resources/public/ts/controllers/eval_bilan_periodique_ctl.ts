@@ -1,8 +1,8 @@
-import {notify, idiom as lang, ng, template, model, Behaviours, angular} from 'entcore';
+import {notify, idiom as lang, ng, template, model, Behaviours, angular, toasts} from 'entcore';
 import * as utils from '../utils/teacher';
 import {ElementBilanPeriodique} from "../models/teacher/ElementBilanPeriodique";
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
-import {evaluations, Utils} from "../models/teacher";
+import {Classe, evaluations, Utils} from "../models/teacher";
 import {SyntheseBilanPeriodique} from "../models/teacher/SyntheseBilanPeriodique";
 import {AppreciationCPE} from "../models/teacher/AppreciationCPE";
 import {AvisConseil} from "../models/teacher/AvisConseil";
@@ -13,6 +13,8 @@ import {conseilGraphiques, conseilColumns, PreferencesUtils} from "../utils/pref
 import {AppreciationSubjectPeriodStudent} from "../models/teacher/AppreciationSubjectPeriodStudent";
 import {LengthLimit,Common} from "../constants";
 import {DigitalSkills} from "../models/teacher/digital_skills/DigitalSkills";
+import {isValidClasse} from "../utils/teacher";
+import {ClassesService} from "../services/classes.service";
 
 
 declare let _: any;
@@ -122,6 +124,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             let isClassAndCycle3 = isNotEmptyClasse ? $scope.search.classe.type_groupe === Common.TYPE_GROUP &&
                 $scope.search.classe.id_cycle === Common.CYCLE_3 : false;
             $scope.showDigitalSkills = !$scope.critereIsEmpty && isClassAndCycle3;
+            utils.safeApply($scope);
         };
 
         if (model.me.type === 'PERSRELELEVE') {
@@ -536,7 +539,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                         {id_type: $scope.search.periode.id_type}).publication_bulletin;
                 }
 
-                let periode = _.findWhere($scope.search.classe.periodes.all, {id_type: $scope.search.periode.id_type});
+                let periode = !!$scope.search.classe && !!$scope.search.classe.periodes ?
+                    _.findWhere($scope.search.classe.periodes.all, {id_type: $scope.search.periode.id_type}) : [];
                 if (Utils.isNotDefault($scope.search.eleve)) {
                     if(!$scope.search.eleve.isEvaluable(periode)){
                         notify.info('evaluations.student.is.no.more.evaluable');
@@ -582,8 +586,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
                 await $scope.syncAllAvisSyntheses();
 
-                await utils.safeApply($scope);
             }
+            utils.safeApply($scope);
         };
 
         $scope.syncAllAvisSyntheses = async function() {
@@ -799,7 +803,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
 
         $scope.syncPeriodesBilanPeriodique = async function () {
-            if ($scope.search.classe.periodes.all.length === 0) {
+            if (!!$scope.search.classe && $scope.search.classe.periodes &&
+                $scope.search.classe.periodes.all.length === 0) {
                 await $scope.search.classe.periodes.sync();
             }
             $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
@@ -983,8 +988,78 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.showNewOpinion = false;
         };
 
-        $scope.switchEtablissementSuivi = () => {
-            $scope.changeEtablissement();
+        async function changeStructurePeriodReport() {
+            evaluations.structure = $scope.evaluations.structures.all.find(s => s.id ===  evaluations.structure.id);
+            $scope.structure = evaluations.structure;
+            $scope.opened.displayStructureLoader = true;
+            try {
+                await evaluations.structure.sync();
+                $scope.classes = evaluations.structure.classes;
+                if (Utils.isTeacher()) {
+                    await evaluations.structure.syncAllClasses();
+                    $scope.allClasses = evaluations.structure.allClasses;
+                } else $scope.allClasses = evaluations.structure.classes.all;
+                await initValidClasseGroups();
+                delete $scope.informations.eleve;
+            } catch (e) {
+                toasts.warning('evaluations.export.etab.not.found.err');
+                console.log(e);
+            }
+        }
+
+        async function initValidClasseGroups(): Promise<void> {
+            try {
+                let audiences: any[] = [...await ClassesService.getClassesAndGroup($scope.structure.id)];
+                audiences.forEach((audience: any) => {
+                    let classe: Classe = $scope.allClasses.find((classe: Classe) => classe.id === audience.id_classe)
+                    if (!!classe) classe.idGroups = audience.id_groupes;
+                });
+                $scope.filteredClassesGroups = $scope.allClasses
+                    .filter((classe: Classe) => filterValidClasseGroups(classe))
+            } catch (e) {
+                toasts.warning('evaluations.classe.get.error');
+                console.log(e);
+            }
+            $scope.opened.displayStructureLoader = false;
+            utils.safeApply($scope);
+        }
+
+        function filterValidClasseGroups(item: Classe): boolean {
+            return isValidClasse(item.id, item.id_matiere, $scope.allClasses) ||
+                (item.type_groupe === Classe.type.CLASSE && item.idGroups &&
+                    !!item.idGroups.find((groupId: string) => isValidClasse(groupId, item.id_matiere, $scope.allClasses)));
+        }
+
+        $scope.switchStructurePeriodReport = async (): Promise<void> => {
+            $scope.critereIsEmpty = true;
+            $scope.filteredClassesGroups = [];
+            $scope.filteredPeriode = [];
+            $scope.filteredEleves.all = [];
+            $scope.search = {
+                periode: null,
+                classe: null
+            };
+            await changeStructurePeriodReport();
+            utils.safeApply($scope);
+        };
+
+        $scope.switchClassePeriodReport = async (): Promise<void> => {
+            await $scope.syncPeriodesBilanPeriodique();
+            $scope.displayBilanPeriodique();
+            await $scope.deleteStudent();
+            utils.safeApply($scope);
+        };
+
+        $scope.switchPeriodPeriodReport = async (): Promise<void> => {
+            $scope.displayBilanPeriodique();
+            await $scope.changeContent();
+            utils.safeApply($scope);
+        };
+
+        $scope.switchStudentPeriodReport = async (): Promise<void> => {
+            $scope.displayBilanPeriodique();
+            await $scope.changeContent();
+            utils.safeApply($scope);
         };
 
         $scope.translateAvis = (avis) => {
