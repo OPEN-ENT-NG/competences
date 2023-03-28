@@ -104,6 +104,25 @@
             background-color: #f0f0f0;
         }
 
+        .white {
+            background-color: #FFFFFF;
+        }
+        .grey {
+            background-color: #555555;
+        }
+        .red {
+            background-color: #E13A3A;
+        }
+        .orange {
+            background-color: #FD8401;
+        }
+        .yellow {
+            background-color: #ECBE30;
+        }
+        .green {
+            background-color: #46BFAF;
+        }
+
         .upper {
             text-transform: uppercase;
         }
@@ -297,12 +316,12 @@
         {{#showSkills}}
         {{#hasCompetencesNotes}}
         <tr>
-            <td class="competence align-left border-right width-100">
+            <td class="competence align-left border-right width-100" colspan="3">
                 <div>Bilan des items</div>
                 <div class="table width-100">
                     <div class="bars-skills-evaluation width-90">
                         {{# competencesNotes }}
-                        <div class="bar-skill-piece"
+                        <div class="bar-skill-piece {{ color }}"
                              style="width: {{width}}%; background-color: {{ persoColor }} !important">{{ number }}
                         </div>
                         {{/ competencesNotes }}
@@ -440,7 +459,7 @@
                 <div class="table width-100">
                     <div class="bars-skills-evaluation width-90">
                         {{# competencesNotes }}
-                        <div class="bar-skill-piece"
+                        <div class="bar-skill-piece {{ color }}"
                              style="width: {{width}}%; background-color: {{ persoColor }} !important">{{ number }}
                         </div>
                         {{/ competencesNotes }}
