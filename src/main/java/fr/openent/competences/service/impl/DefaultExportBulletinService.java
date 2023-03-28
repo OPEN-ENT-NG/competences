@@ -537,16 +537,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         finalHandler.handle(new Either.Right<>(null));
     }
 
-    protected Handler<Either<String, JsonObject>> futureGetHandler(Future<JsonObject> future) {
-        return event -> {
-            if (event.isRight()) {
-                future.complete(event.right().getValue());
-            } else {
-                future.fail(event.left().getValue());
-            }
-        };
-    }
-
     @Override
     public void getExportBulletin(final AtomicBoolean answered, String idEleve,
                                   Map<String, JsonObject> elevesMap, Student student, JsonArray idEleves, Long idPeriode, JsonObject params,
@@ -2842,7 +2832,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     eleve, typePeriode, idPeriode, classe, showBilanPerDomaines, images, params);
                             students.put(idEleve, student);
                             getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe, host, acceptLanguage, vertx,
-                                    futureGetHandler(promise.future()));
+                                    FutureHelper.handlerJsonObject(promise));
                         }
 
                         CompositeFuture.all(futures).setHandler(compositeEvent -> {
