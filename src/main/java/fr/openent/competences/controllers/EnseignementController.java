@@ -66,8 +66,7 @@ public class EnseignementController extends ControllerHelper {
      */
     @Get("/enseignements")
     @ApiDoc("Recupère la liste des enseignements")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessIfMyStructure.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getEnseignements(final HttpServerRequest request){
         final JsonObject _datas = new JsonObject();
         enseignementService.getEnseignements(new Handler<Either<String, JsonArray>>() {

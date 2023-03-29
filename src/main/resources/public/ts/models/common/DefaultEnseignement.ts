@@ -25,7 +25,7 @@ export class DefaultEnseignement extends Model {
     id;
     competences : Collection<Competence>;
 
-    public static async loadCompetences (idClasse: string, idStructure: string, competences, idCycle: string, model: any,
+    public static async loadCompetences (idClasse: string, competences, idCycle: string, model: any,
                                          withLoad? : boolean) {
         return new Promise(async (resolve, reject) => {
             if (idClasse === undefined) {
@@ -35,7 +35,7 @@ export class DefaultEnseignement extends Model {
             else {
                 try {
                     if(_.isEmpty(model.all)) {
-                        let enseignements : any = await this.getAll(idClasse, idStructure, idCycle, model);
+                        let enseignements : any = await this.getAll(idClasse, idCycle, model);
                         if(withLoad === true) {
                             model.load(enseignements.data);
                         }
@@ -113,11 +113,10 @@ export class DefaultEnseignement extends Model {
         });
     }
 
-    public static async getAll(idClasse: string, idStructure: string, idCycle: string, model: any){
+    public static async getAll(idClasse: string, idCycle: string, model: any){
         return new Promise(async (resolve,reject) => {
             let uri = Evaluations.api.GET_ENSEIGNEMENT;
             uri += '?idClasse=' + idClasse;
-            uri += '&idStructure=' + idStructure;
             if (idCycle !== undefined) {
                 uri += '&idCycle=' + idCycle;
             }
