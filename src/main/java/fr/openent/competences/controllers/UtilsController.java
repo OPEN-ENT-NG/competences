@@ -85,30 +85,6 @@ public class UtilsController extends ControllerHelper {
         });
     }
 
-
-
-    /**
-     * Retourne tous les types de devoir par etablissement
-     * @param request
-     */
-    @Get("/mainteachers/:idStructure")
-    @ApiDoc("Récupère la liste des professeurs titulaires d'un remplaçant sur un établissement donné")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessIfMyStructure.class)
-    public void viewTittulaires(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                utilsService.getTitulaires(user.getUserId(), request.getParam("idStructure"), new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        log.info(event.right().getValue());
-                    }
-                });
-            }
-        });
-    }
-
     /**
      * Retourne la liste des enfants pour un utilisateur donné
      * @param request
