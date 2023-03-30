@@ -339,9 +339,9 @@ export class Evaluations extends Model {
                 }
             });
             this.collection(Enseignement, {
-                sync: async (idClasse: string, idStructure: string, competences, idCycle: string) => {
+                sync: async (idClasse: string, competences, idCycle: string) => {
                     this.enseignements.all = [];
-                    await Enseignement.loadCompetences(idClasse, idStructure, competences, idCycle, this.enseignements,
+                    await Enseignement.loadCompetences(idClasse, competences, idCycle, this.enseignements,
                         true);
                 }
             });

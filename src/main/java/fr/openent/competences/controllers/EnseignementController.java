@@ -18,7 +18,6 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
-import fr.openent.competences.security.AccessIfMyStructure;
 import fr.openent.competences.service.CompetencesService;
 import fr.openent.competences.service.EnseignementService;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
@@ -35,7 +34,6 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.entcore.common.http.filter.ResourceFilter;
 
 import java.text.Collator;
 import java.util.*;
@@ -66,8 +64,7 @@ public class EnseignementController extends ControllerHelper {
      */
     @Get("/enseignements")
     @ApiDoc("Recupère la liste des enseignements")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessIfMyStructure.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getEnseignements(final HttpServerRequest request){
         final JsonObject _datas = new JsonObject();
         enseignementService.getEnseignements(new Handler<Either<String, JsonArray>>() {
