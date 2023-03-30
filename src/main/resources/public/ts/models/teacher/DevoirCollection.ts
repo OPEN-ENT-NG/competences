@@ -26,7 +26,7 @@ export class DevoirsCollection {
 
     get api () {
         return {
-            get : '/competences/devoirs?structureId=' + this.idEtablissement,
+            get : '/competences/devoirs?idEtablissement=' + this.idEtablissement,
             areEvaluatedDevoirs : '/competences/devoirs/evaluations/informations?',
             done : '/competences/devoirs/done?structureId=' + this.idEtablissement
         }
