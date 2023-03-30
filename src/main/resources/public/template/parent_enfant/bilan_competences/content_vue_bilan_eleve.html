@@ -62,8 +62,12 @@
                     class="margin-top-1em twelve cell " ng-click="enseignement.OpenDom = !enseignement.OpenDom"
                     ng-init="enseignement.OpenDom = false">[[enseignement.nom]]</h4>
                 <div ng-class="{'openedSectionDom' : enseignement.OpenDom}" class="twelve cell" style='height: auto;'>
-                    <teachings-skills ng-if="enseignement.matieres.all.length === 0" data ="enseignement"
-                                      suivi-filter="suiviFilter" list-teacher="[me]" map-lettres="mapLettres" map-couleurs="mapCouleurs"
+                    <teachings-skills ng-if="enseignement.matieres.all.length === 0"
+                                      data ="enseignement"
+                                      suivi-filter="suiviFilter" list-teacher="[me]"
+                                      map-lettres="mapLettres"
+                                      map-couleurs="mapCouleurs"
+                                      is-classe="false"
                                       function-filter-not-evaluated="FilterNotEvaluated"
                                       function-open-detail-competence="openDetailCompetence">
                     </teachings-skills>
@@ -71,7 +75,10 @@
                         <h2 class="changedAverage" ng-class="{'openedDom' : matiere.OpenMat}" ng-click =" matiere.OpenMat = !matiere.OpenMat" ng-init= "matiere.OpenMat = false">[[matiere.name]]</h2>
                         <div ng-class="{'openedSectionDom' : matiere.OpenMat}" style='height: auto;'>
                             <teachings-skills data="matiere"
-                                              suivi-filter="suiviFilter" list-teacher="[me]"  map-lettres="mapLettres" map-couleurs="mapCouleurs"
+                                              suivi-filter="suiviFilter"
+                                              list-teacher="[me]"
+                                              map-lettres="mapLettres" map-couleurs="mapCouleurs"
+                                              is-classe="false"
                                               function-open-detail-competence="openDetailCompetence"
                                               function-filter-not-evaluated="FilterNotEvaluated">
                             </teachings-skills>

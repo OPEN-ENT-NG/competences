@@ -46,7 +46,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
         },
         templateUrl : "/"+appPrefix+"/public/template/directives/cProportionSuiviCompetence.html",
         controller : ['$scope', function ($scope) {
-            $scope.isClasse = $scope.isClasse !== undefined ? $scope.isClasse : false;
+            $scope.isClasse = $scope.isClasse; //isClasse true suivi classe false suivi eleve
 
             /**
              * Listener sur la variable filter. Si modification de la variable, recalcule des proportions
@@ -128,6 +128,9 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
 
                         for (var i = 0; i < $scope.competencesEvaluations.length; ++i) {
                             var competencesEval = $scope.competencesEvaluations[i];
+                            //if domaine competencesEval.niveauFinaltoShowAllEvaluations else enseignement  competencesEval.evaluation
+                            competencesEval.niveauFinaltoShowAllEvaluations =
+                                (!!competencesEval.niveauFinaltoShowAllEvaluations) ? competencesEval.niveauFinaltoShowAllEvaluations : competencesEval.evaluation;
                             if (!elevesMap.hasOwnProperty(competencesEval.id_eleve)) {
                                 elevesMap[competencesEval.id_eleve] = competencesEval;
                                 $scope.proportion[(competencesEval.niveauFinaltoShowAllEvaluations) + 1].nb++;
@@ -212,7 +215,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
 
             $scope.calculPeriodesTrimestres = function () {
                 $scope.trimesters = _.filter($scope.trimesters, trimester => {
-                    return trimester.id
+                    return trimester.id_type
                 });
                 $scope.periodes = [];
                 let trimesterOrSemester = ($scope.trimesters.length == 2) ? "Semestre " : "Trimestre ";
