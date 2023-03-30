@@ -49,7 +49,7 @@
 <script type="text/ng-template" id="tree_item_renderer.html">
     <h4 workflow="competences.saveCompetenceNiveauFinal" class="two align-center inline-block marginNiveau"
         ng-if="isMyEvaluations(suiviFilter) && domaine.niveau === 1 && $first
-        && (search.periode.id !== null || (!search.periode.id && !search.periode.libelle))">
+        && (search.periode.id !== null || (!search.periode.libelle && !search.periode.id_type))">
         <i18n>evaluation.suivi.niveau</i18n>
     </h4>
     <h4 ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }"
@@ -57,7 +57,7 @@
         ng-init="domaine.OpenDom = false">[[domaine.codification]] - [[domaine.libelle]]</h4>
     <div workflow="competences.saveCompetenceNiveauFinal"
          ng-if="isMyEvaluations(suiviFilter)&& domaine.niveau === 1 && $first
-         && (search.periode.id !== null || (!search.periode.id && !search.periode.libelle))">
+         && (search.periode.id !== null || (!search.periode.libelle && !search.periode.id_type))">
         <h4 class="margin-top-1em one align-center inline-block " >
             <i18n>evaluation.suivi.niveau.atteint</i18n>
         </h4>
@@ -71,7 +71,7 @@
             ng-init="domaine.OpenSousDom = false">[[domaine.codification]] - [[domaine.libelle]]</h3>
         <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;'>
             <div class="competence-line" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated">
-                <div ng-class="{whiteSpaceNormal: competence.hovering || displayCycle || (!search.periode.id && !search.periode.libelle)}"
+                <div ng-class="{whiteSpaceNormal: competence.hovering || displayCycle || (!search.periode.libelle && !search.periode.id_type)}"
                      ng-mouseenter="showIt(competence)"
                      ng-click="openDetailCompetence(competence)" ng-mouseleave="hideIt(competence)"
                      class="six inline-block ellipsis competence">
@@ -90,7 +90,7 @@
                 </div>
                 <div ng-if="isMyEvaluations(suiviFilter) " class="two inline-block align-top">
                     <div  ng-class="{twelve : (!search.periode.id && search.periode.libelle) || !canSaveCompetenceNiveauFinal(),
-                    six : search.periode.id !== null || (!search.periode.id && !search.periode.libelle)}"
+                    six : search.periode.id !== null || (!search.periode.libelle && !search.periode.id_type)}"
                           class=" inline-block align-center "
                           ng-click="openDetailCompetence(competence)">
                         <span ng-if="competence.niveauAtteintToShowMyEvaluations !== undefined && !displayCycle">
@@ -110,7 +110,7 @@
                         </span>
                     </div>
                     <div workflow="competences.saveCompetenceNiveauFinal"
-                         ng-if="search.periode.id !== null || (!search.periode.id && !search.periode.libelle)"
+                         ng-if="search.periode.id !== null || (!search.periode.libelle && !search.periode.id_type)"
                          class="six inline-block align-center" >
                         <span ng-if="competence.niveauFinalToShowMyEvaluations !== undefined"
                               ng-disabled = "isEndSaisieNivFinal">
@@ -123,7 +123,7 @@
                     </div>
                 </div>
                 <div class="three inline-block align-center align-top" ng-click="openDetailCompetence(competence)"
-                     ng-class="{'space-for-classe': displayCycle || (!search.periode.id && !search.periode.libelle)}">
+                     ng-class="{'space-for-classe': displayCycle || (!search.periode.libelle && !search.periode.id_type)}">
                     <proportion-suivi-competence evaluations="competence.competencesEvaluations"
                                                  filter="suiviFilter" list-teacher="listTeacher"
                                                  is-classe="false"
@@ -132,7 +132,7 @@
                                                  is-cycle="displayCycle"
                                                  level="(search.eleve.level) ? search.eleve.level : search.classe.name"
                                                  trimesters="filteredPeriode"
-                                                 is-year="!search.periode.id && !search.periode.libelle">
+                                                 is-year="!search.periode.libelle && !search.periode.id_type">
                     </proportion-suivi-competence>
                 </div>
             </div>
@@ -157,7 +157,8 @@
                               is-cycle="displayCycle"
                               level="(search.eleve.level)? search.eleve.level : search.classe.name"
                               trimesters="filteredPeriode"
-                              is-year="!search.periode.id && !search.periode.libelle">
+                              is-classe="false"
+                              is-year="!search.periode.libelle && !search.periode.id_type">
             </teachings-skills>
             <div  ng-if="enseignement.matieres.all.length > 0" ng-repeat=" matiere in enseignement.matieres.all | orderBy:['name']">
                 <h2 class="changedAverage" ng-class="{'openedDom' : matiere.OpenMat}" ng-click =" matiere.OpenMat = !matiere.OpenMat"
@@ -170,7 +171,8 @@
                                       is-cycle="displayCycle"
                                       level="(search.eleve.level)? search.eleve.level : search.classe.name"
                                       trimesters="filteredPeriode"
-                                      is-year="!search.periode.id && !search.periode.libelle">
+                                      is-classe="false"
+                                      is-year="!search.periode.libelle && !search.periode.id_type">
                     </teachings-skills>
                 </div>
             </div>

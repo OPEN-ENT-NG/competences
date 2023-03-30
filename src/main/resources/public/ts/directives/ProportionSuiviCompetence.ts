@@ -46,8 +46,6 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
         },
         templateUrl : "/"+appPrefix+"/public/template/directives/cProportionSuiviCompetence.html",
         controller : ['$scope', function ($scope) {
-            $scope.isClasse = $scope.isClasse !== undefined ? $scope.isClasse : false;
-
             /**
              * Listener sur la variable filter. Si modification de la variable, recalcule des proportions
              */
@@ -123,19 +121,20 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                     });
                 if (Utils.isNotNull($scope.competencesEvaluations) && $scope.competencesEvaluations.length > 0) {
                     var nbEleves = 0;
-                    if ($scope.isClasse == true) {
+                    if ($scope.isClasse == true) {// pour le suiviClasse
                         var elevesMap = {};
 
                         for (var i = 0; i < $scope.competencesEvaluations.length; ++i) {
                             var competencesEval = $scope.competencesEvaluations[i];
                             if (!elevesMap.hasOwnProperty(competencesEval.id_eleve)) {
                                 elevesMap[competencesEval.id_eleve] = competencesEval;
-                                $scope.proportion[(competencesEval.niveauFinaltoShowAllEvaluations) + 1].nb++;
+                                $scope.proportion[(competencesEval.evaluation) + 1].nb++;
                                 nbEleves++;
-                            } else if (parseInt(elevesMap[competencesEval.id_eleve].niveauFinaltoShowAllEvaluations) < parseInt(competencesEval.niveauFinaltoShowAllEvaluations)) {
-                                $scope.proportion[(elevesMap[competencesEval.id_eleve].niveauFinaltoShowAllEvaluations) + 1].nb--;
+                            } else if (parseInt(elevesMap[competencesEval.id_eleve].evaluation) < parseInt(competencesEval.evaluation)) {
+                                //cas vue suivi classe enseignement si la compétence a été évaluée par plusieurs matières
+                                $scope.proportion[(elevesMap[competencesEval.id_eleve].evaluation) + 1].nb--;
                                 elevesMap[competencesEval.id_eleve] = competencesEval;
-                                $scope.proportion[parseInt(competencesEval.niveauFinaltoShowAllEvaluations) + 1].nb++;
+                                $scope.proportion[parseInt(competencesEval.evaluation) + 1].nb++;
                             }
                         }
                     }
@@ -212,7 +211,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
 
             $scope.calculPeriodesTrimestres = function () {
                 $scope.trimesters = _.filter($scope.trimesters, trimester => {
-                    return trimester.id
+                    return trimester.id_type
                 });
                 $scope.periodes = [];
                 let trimesterOrSemester = ($scope.trimesters.length == 2) ? "Semestre " : "Trimestre ";
