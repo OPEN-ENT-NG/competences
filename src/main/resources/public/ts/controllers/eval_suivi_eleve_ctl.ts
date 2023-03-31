@@ -314,7 +314,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 }
                 await competenceNiveauFinal.saveNiveaufinal();
                 Utils.setMaxOrAverageCompetenceShow(competence, $scope.suiviCompetence.tableConversions, isYear,
-                    false, $scope.listTeacher);
+                    $scope.listTeacher);
                 utils.safeApply($scope);
             }
         };

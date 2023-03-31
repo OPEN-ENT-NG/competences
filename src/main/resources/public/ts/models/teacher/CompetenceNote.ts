@@ -29,6 +29,7 @@ export interface CompetenceNote {
     niveau_final: number;
     id_classe: string;
     nom?: string;
+    niveauFinaltoShowAllEvaluations: number;
 }
 
 export class CompetenceNote extends Model implements IModel {

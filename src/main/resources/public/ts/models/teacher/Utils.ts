@@ -333,49 +333,47 @@ export class Utils {
      * @param listTeacher
      */
 
-    static setMaxOrAverageCompetenceShow(competence, tableConversion, isYear, forClass, listTeacher) {
+    static setMaxOrAverageCompetenceShow(competence, tableConversion, isYear, listTeacher) {
         //all evaluations
         let i;
         // récupèrer toutes les évaluations de type non "formative"
         let allEvaluations = competence;
         if (competence.competencesEvaluations)
             allEvaluations = competence.competencesEvaluations;
-        if (!forClass) {
             allEvaluations = _.filter(competence.competencesEvaluations, (evaluation : any) => {
                 return !evaluation.formative;
                 // la competence doit être reliée à un devoir ayant un type non "formative"
             });
-        }
-        if (allEvaluations !== undefined && allEvaluations.length > 0) {
-            let notHistorizedEvals : Array<object>= allEvaluations;
-            if (!forClass) {
-                notHistorizedEvals = _.filter(allEvaluations, (evaluation: any) => {
-                    return evaluation.eval_lib_historise === false;
-                });
-            }
-            //allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
-            let niveauFinaltoShowAllEvaluations: number;
-            if (notHistorizedEvals.length > 0) { // si il y a des notes sur la compétence sur l'année en cours, on prend la note max obtenue
-                allEvaluations = notHistorizedEvals;
-                niveauFinaltoShowAllEvaluations = (evaluations.structure.options.isSkillAverage) ?
-                    Utils.getNiveauMoyOfListEval(allEvaluations, tableConversion, false, isYear) :
-                    Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion, false, isYear);
-            } else { //sinon on prend la note obtenue la dernière année
-                let lastEvaluation = _.max(allEvaluations, (evaluation) => {
-                    return Date.parse(evaluation.created);
-                });
-                niveauFinaltoShowAllEvaluations = utils.getMoyenneForBFC(lastEvaluation.evaluation + 1, tableConversion.all) - 1;
-            }
+            if (allEvaluations !== undefined && allEvaluations.length > 0) {
+                let notHistorizedEvals : Array<object>= allEvaluations;
 
-            if (competence.competencesEvaluations) {
-                competence.niveauFinaltoShowAllEvaluations = niveauFinaltoShowAllEvaluations;
-            } else {
-                for (i = 0; i < allEvaluations.length; i++) {
-                    competence[i].niveauFinaltoShowAllEvaluations = niveauFinaltoShowAllEvaluations;
+                    notHistorizedEvals = _.filter(allEvaluations, (evaluation: any) => {
+                        return evaluation.eval_lib_historise === false;
+                    });
+                //allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
+                let niveauFinaltoShowAllEvaluations: number;
+                if (notHistorizedEvals.length > 0) { // si il y a des notes sur la compétence sur l'année en cours, on prend la note max obtenue
+                    allEvaluations = notHistorizedEvals;
+                    niveauFinaltoShowAllEvaluations = (evaluations.structure.options.isSkillAverage) ?
+                        Utils.getNiveauMoyOfListEval(allEvaluations, tableConversion, false, isYear) :
+                        Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion, false, isYear);
+                } else { //sinon on prend la note obtenue la dernière année
+
+                    let lastEvaluation = _.max(allEvaluations, (evaluation) => {
+                        return Date.parse(evaluation.created);
+                    });
+                    niveauFinaltoShowAllEvaluations = utils.getMoyenneForBFC(lastEvaluation.evaluation + 1, tableConversion.all) - 1;
+                }
+
+                if (competence.competencesEvaluations) {
+                    competence.niveauFinaltoShowAllEvaluations = niveauFinaltoShowAllEvaluations;
+                } else {
+                    for (i = 0; i < allEvaluations.length; i++) {
+                        competence[i].niveauFinaltoShowAllEvaluations = niveauFinaltoShowAllEvaluations;
+                    }
                 }
             }
 
-        }
 
         // my evaluations
         let myEvaluations = _.filter(allEvaluations, function (evaluation) {
@@ -410,7 +408,7 @@ export class Utils {
     }
 
     /**
-     *
+     * niveauMax by subject
      * @param listEval
      * @param tableConversion
      * @param onlyNote
@@ -484,9 +482,16 @@ export class Utils {
         }
     }
 
+    static setSkillScoreStudentWithConversion(tableConversion : Collection<TableConversion>, SkillsScoresStudent : Collection<CompetenceNote>){
+        SkillsScoresStudent.forEach((skillScoreOfStudent) => {
+            skillScoreOfStudent.niveauFinaltoShowAllEvaluations =
+                utils.getMoyenneForBFC(skillScoreOfStudent.evaluation + 1, tableConversion.all) - 1;
+        });
+    }
     static setCompetenceNotes(poDomaine : Domaine, poCompetencesNotes, tableConversion,
                               object?, classe?, tabDomaine?, isCycle?, periode?, listTeacher?) {
-        let isYear = isCycle || (periode && !periode.id);
+        let isYear = isCycle || (periode && !periode.id_type);
+        let forClass = !!classe;
         if(!listTeacher && classe)
             listTeacher = getTitulairesForRemplacantsCoEnseignant(model.me.userId, classe);
         if (object === undefined && classe === undefined) {
@@ -496,7 +501,7 @@ export class Utils {
                         id_competence: competence.id,
                         id_domaine: competence.id_domaine
                     });
-                     Utils.setMaxOrAverageCompetenceShow(competence, tableConversion,false,false, listTeacher);
+                     Utils.setMaxOrAverageCompetenceShow(competence, tableConversion,false, listTeacher);
                 });
                 if (tabDomaine !== undefined) {
                     tabDomaine.push(poDomaine);
@@ -510,19 +515,24 @@ export class Utils {
                     id_domaine: competence.id_domaine
                 });
 
-                Utils.setMaxOrAverageCompetenceShow(competence, tableConversion,isYear,false, listTeacher);
-
-                if (object.composer.constructor.name === 'SuiviCompetenceClasse') {
+                if (forClass) {
                     let mineCompetencesEvaluations = _.filter(competence.competencesEvaluations, competenceEvaluations =>{
                         return _.findWhere(listTeacher,{id_enseignant : competenceEvaluations.owner, id_matiere : competenceEvaluations.id_matiere});
                     });
 
                     // Récupère les moyennes des maxs dans chaque matières sur mes évaluations de la compétence pour tous les élèves
-                    competence.mineCompetencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, mineCompetencesEvaluations,tableConversion,isYear);
+                   // competence.mineCompetencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, mineCompetencesEvaluations,tableConversion,isYear);
 
                     // Récupère les moyennes des maxs dans chaque matières de la compétence pour tous les élèves
-                    competence.competencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, competence.competencesEvaluations,tableConversion,isYear);
-
+                   // competence.competencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, competence.competencesEvaluations,tableConversion,isYear);
+                    if(evaluations.structure.options.isSkillAverage) {
+                        if( mineCompetencesEvaluations.length > 0) {
+                            Utils.setSkillScoreStudentWithConversion(tableConversion, mineCompetencesEvaluations );
+                            competence.mineCompetencesEvaluations = mineCompetencesEvaluations;
+                        }
+                        if (competence.competencesEvaluations.length > 0 )
+                        Utils.setSkillScoreStudentWithConversion(tableConversion, competence.competencesEvaluations );
+                    }
                     for (let i = 0; i < classe.eleves.all.length; i++) {
                         let mine = _.findWhere(competence.mineCompetencesEvaluations, competenceMine =>{
                             return competenceMine.id_eleve == classe.eleves.all[i].id &&
@@ -561,6 +571,8 @@ export class Utils {
                             }));
                         }
                     }
+                } else {
+                    Utils.setMaxOrAverageCompetenceShow(competence, tableConversion,isYear, listTeacher);
                 }
             });
         }
@@ -588,7 +600,7 @@ export class Utils {
             let currentIdEleve = classe.eleves.all[i].id;
             let commpetenceEvaluationsEleve = _.where(competencesEvaluations, {id_eleve: currentIdEleve});
             if (commpetenceEvaluationsEleve !== undefined && commpetenceEvaluationsEleve.length > 0) {
-                Utils.setMaxOrAverageCompetenceShow(commpetenceEvaluationsEleve, tableConversion,isYear, true, listTeacher);
+                Utils.setMaxOrAverageCompetenceShow(commpetenceEvaluationsEleve, tableConversion,isYear, listTeacher);
             }
         }
         return competencesEvaluations;

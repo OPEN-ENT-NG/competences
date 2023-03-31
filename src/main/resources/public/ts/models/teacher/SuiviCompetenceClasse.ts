@@ -100,8 +100,9 @@ export class SuiviCompetenceClasse extends Model {
                         http.get(uriGetConversionTable)
                     ]);
                     this.enseignements.load(response[0].data);
-                    let competences = response[1].data;
                     this.tableauConversion = {all: response[2].data};
+                    if (this.structure.options.isSkillAverage && !!response[1].data) Utils.setSkillScoreStudentWithConversion(this.tableauConversion, response[1].data)
+                    let competences = response[1].data;
                     if(structure.matieres.all !== undefined)this.matieres.load(structure.matieres.all);
                     await Enseignement.loadCompetences(classe.id, competences, classe.id_cycle, this.enseignements);
                     resolve();

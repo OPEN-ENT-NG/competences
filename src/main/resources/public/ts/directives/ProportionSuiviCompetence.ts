@@ -128,9 +128,6 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
 
                         for (var i = 0; i < $scope.competencesEvaluations.length; ++i) {
                             var competencesEval = $scope.competencesEvaluations[i];
-                            //if domaine competencesEval.niveauFinaltoShowAllEvaluations else enseignement  competencesEval.evaluation
-                            competencesEval.niveauFinaltoShowAllEvaluations =
-                                (!!competencesEval.niveauFinaltoShowAllEvaluations) ? competencesEval.niveauFinaltoShowAllEvaluations : competencesEval.evaluation;
                             if (!elevesMap.hasOwnProperty(competencesEval.id_eleve)) {
                                 elevesMap[competencesEval.id_eleve] = competencesEval;
                                 $scope.proportion[(competencesEval.niveauFinaltoShowAllEvaluations) + 1].nb++;
