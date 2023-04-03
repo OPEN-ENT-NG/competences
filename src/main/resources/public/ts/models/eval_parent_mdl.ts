@@ -99,9 +99,9 @@ export class Evaluations extends Model {
                 }
             });
             this.collection(Service, {
-                sync: async () => {
+                sync: async (structureId?: string) => {
                     return new Promise((resolve) => {
-                        let uri = Evaluations.api.GET_SERVICES + model.me.structures[0];
+                        let uri = `${Evaluations.api.GET_SERVICES}${!!structureId ? structureId : model.me.structures[0]}`;
                         HTTP().get(uri).done((services) => {
                             this.services.all = services;
                             resolve();
@@ -111,9 +111,9 @@ export class Evaluations extends Model {
             });
 
             this.collection(Matiere, {
-                sync: async () => {
+                sync: async (structureId?: string) => {
                     return new Promise((resolve) => {
-                        let uri = Evaluations.api.GET_MATIERES + model.me.structures[0];
+                        let uri = `${Evaluations.api.GET_MATIERES}${!!structureId ? structureId : model.me.structures[0]}`;
                         HTTP().get(uri).done((matieres) => {
                             this.matieres.load(matieres);
                             this.matieres.all.forEach((matiere) => {
@@ -256,12 +256,12 @@ export class Evaluations extends Model {
                                     let groupesDevoirs = _.pluck(devoirsWithNote, 'id_groupe');
                                     let homeworksOwner = _.pluck(devoirs, 'owner');
                                     this.enseignants.sync(structureId).then(() => {
-                                        this.matieres.sync().then(() => {
+                                        this.matieres.sync(structureId).then(() => {
                                             if(this.eleve != undefined && this.eleve.classe != undefined && classe == undefined) {
                                                 classe = this.eleve.classe;
                                             }
 
-                                            this.services.sync().then(() => {
+                                            this.services.sync(structureId).then(() => {
                                                 let filteredServices = this.services.filter((service) => {
                                                     return _.contains(groupesDevoirs, service.id_groupe) && service.evaluable;
                                                 });
