@@ -174,9 +174,9 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 });
                 return (evaluations.structure.options.isSkillAverage) ?
                     Utils.getNiveauMoyOfListEval(evals,$scope.suiviCompetence.tableauConversion, false,
-                        $scope.search.periode.id === null) :
+                        (!$scope.search.periode.id_type ) ) :
                     Utils.getNiveauMaxOfListEval(evals,$scope.suiviCompetence.tableauConversion, false,
-                    $scope.search.periode.id === null);
+                    !$scope.search.periode.id_type);
             }
         };
         /**

@@ -23,7 +23,6 @@ export let teachingsSkills = ng.directive ('teachingsSkills', function(){
         templateUrl : " /"+appPrefix+"/public/template/directives/teachingsSkills.html ",
 
         controller : ['$scope','$timeout', function($scope,$timeout) {
-
             $scope.FilterNotEvaluatedConnaissance = function (maConnaissance) {
                 return FilterNotEvaluatedConnaissance(maConnaissance);
             };
