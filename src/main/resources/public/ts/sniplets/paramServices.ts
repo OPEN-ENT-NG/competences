@@ -68,7 +68,7 @@ export const paramServices = {
                             classe = new Classe(classe);
                             return classe;
                         });
-                    paramServices.that.columns.enseignant.data = _.map(aTeachers.data, teacher => teacher.u.data);
+                    paramServices.that.columns.enseignant.data = aTeachers.data;
                     paramServices.that.columns.matiere.data = aMatieres.data;
                     paramServices.that.columns.modalite.data = _.pluck(aModalite.data, "id");
                     paramServices.that.columns.modalite.data.unshift(lang.translate('multiples'));

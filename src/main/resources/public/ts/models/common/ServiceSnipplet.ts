@@ -197,13 +197,13 @@ export class Service {
     async getDevoirsService(){
         try {
             let url = "/competences/devoirs/service";
-            url += `?idEtablissement=` + this.id_etablissement;
+            url += `?idEtablissement=${this.id_etablissement}`;
             if(this.hasCompetencesParams()) {
-                url += `?id_matiere=${this.id_matiere}` +
+                url += `&id_matiere=${this.id_matiere}` +
                     `&id_enseignant=${this.id_enseignant}` +
                     `&id_groups=${this.id_groups.join(",")}`;
             }else{
-                url += `?id_matiere=${this.id_matiere}` +
+                url += `&id_matiere=${this.id_matiere}` +
                     `&id_enseignant=${this.id_enseignant}` +
                     `&id_groups=${this.id_groupe}`;
             }
