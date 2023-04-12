@@ -410,7 +410,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             },
 
-            displayBilanPeriodique: function () {
+            displayBilanPeriodique: async (): Promise<void> => {
                 $scope.myCharts = {};
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
@@ -423,6 +423,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 $scope.filteredClassesGroups = _.filter($scope.allClasses, classe => {
                                     return $scope.filterValidClasseGroups(classe);
                                 });
+                                utils.safeApply($scope);
                             });
                         });
                     } else {
@@ -431,11 +432,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             $scope.filteredClassesGroups = _.filter($scope.allClasses, classe => {
                                 return $scope.filterValidClasseGroups(classe);
                             });
+                            utils.safeApply($scope);
                         });
                     }
 
                     delete $scope.informations.eleve;
-                    utils.safeApply($scope);
                     template.open('main', 'enseignants/bilan_periodique/display_bilan_periodique');
                 }
             },
@@ -856,9 +857,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             // Angular 1.7.9 <select> now change the reference of our $scope evaluations.structures
             // We reassign the $scope with the ng-option element structures.all selected in order to keep the same reference
             evaluations.structure = $scope.evaluations.structures.all.find(s => s.id ===  evaluations.structure.id);
-
-            let init = () => {
-                $scope.initReferences();
+            let init = async (): Promise<void> => {
+                await $scope.initReferences();
                 $scope.search = $scope.initSearch();
 
                 utils.safeApply($scope);
@@ -913,6 +913,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await init();
                 await initFieldOfDevoir();
             }
+            utils.safeApply($scope);
         };
 
         $scope.updateFilter = function () {
@@ -3711,7 +3712,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
 
-        $scope.initReferences = () => {
+        $scope.initReferences = async (): Promise<void> => {
             evaluations.enseignements = evaluations.structure.enseignements;
             evaluations.releveNotes = evaluations.structure.releveNotes;
             evaluations.matieres = evaluations.structure.matieres;
@@ -3745,6 +3746,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.usePerso = evaluations.structure.usePerso;
             $scope.useDefaut = !$scope.usePerso;
             $scope.structure = evaluations.structure;
+
             utils.safeApply($scope);
         };
 

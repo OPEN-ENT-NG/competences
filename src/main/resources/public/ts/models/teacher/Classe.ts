@@ -31,6 +31,7 @@ export class Classe extends Model {
     suiviCompetenceClasse : Collection<SuiviCompetenceClasse>;
     mapEleves : any;
     id_cycle: any;
+    id_matiere: string;
     selected : boolean;
     baremeBrevetEleves : BaremeBrevetEleves;
     synchronized : {

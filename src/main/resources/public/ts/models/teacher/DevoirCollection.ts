@@ -51,10 +51,10 @@ export class DevoirsCollection {
                         });
                     }
                     if (evaluations.synchronized.types) {
-                        evaluations.devoirs.synchronizedDevoirType();
+                        DevoirsCollection.synchronizedDevoirType();
                     } else {
                         evaluations.types.on('sync', function () {
-                            evaluations.devoirs.synchronizedDevoirType();
+                            DevoirsCollection.synchronizedDevoirType();
                         });
                     }
                     evaluations.devoirs.trigger('sync');
