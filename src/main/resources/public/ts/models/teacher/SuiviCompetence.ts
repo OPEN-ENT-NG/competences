@@ -219,8 +219,8 @@ export class SuiviCompetence extends Model {
         location.replace(uri);
     }
 
-    async getClasseReleve(idPeriode, idClasse, idTypePeriode, ordrePeriode, idStructure, classeName) {
-        await Utils.getClasseReleve(idPeriode, idClasse, idTypePeriode, ordrePeriode, idStructure, classeName);
+    async getClasseReleve(idPeriode, idClasse, idTypePeriode, ordrePeriode, idStructure, classeName, uriParams: string) {
+        await Utils.getClasseReleve(idPeriode, idClasse, idTypePeriode, ordrePeriode, idStructure, classeName, uriParams);
     }
 
     async getCompetencesNotes (eleve: Eleve, periode : any): Promise<any> {
