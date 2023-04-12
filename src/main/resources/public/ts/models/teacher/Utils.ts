@@ -845,7 +845,7 @@ export class Utils {
         return (object !== undefined) && (object !== null) && (object !== '*') && (object !== '');
     };
     static getClasseReleve = async function(idPeriode, idClasse, idTypePeriode, ordrePeriode, idStructure, classeName,
-                                            uriParams?: string){
+                                            uriParams: string){
             let url = `/competences/releve/classe/pdf?${uriParams || ''}`;
             let param = {
                 idPeriode: idPeriode,

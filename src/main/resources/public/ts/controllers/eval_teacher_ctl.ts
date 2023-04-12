@@ -505,7 +505,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             withAvisConseil: true,
                             withAvisOrientation: true,
                             print: 'printRecapEval',
-                            classReportUriOption: CLASS_REPORT_URI_OPTIONS.SCORES,
+                            classReportUriOption: CLASS_REPORT_URI_OPTIONS.SCORES
                         };
                         $scope.disabledExportSuiviClasse = _.findIndex($scope.allMatieresSorted, {select: true}) === -1;
                         $scope.sortType = 'title'; // set the default sort type

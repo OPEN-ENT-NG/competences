@@ -43,6 +43,7 @@ import {getTitulairesForRemplacantsCoEnseignant} from "../utils/teacher";
 import {SubTopicsServices} from "../models/sniplets";
 import {SubTopicsServiceService} from "../services/SubTopicServiceService";
 import {ClassesService} from "../services/classes.service";
+import {CLASS_REPORT_URI_OPTIONS} from "../core/enum/print.enum";
 declare let _: any;
 declare let Chart: any;
 declare let location: any;
@@ -1244,15 +1245,16 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             let idStructure = $scope.structure.id;
             let idClasse = $scope.search.classe.id;
             let className = $scope.search.classe.name;
+            let scores = CLASS_REPORT_URI_OPTIONS.SCORES;
             await Utils.runMessageLoader($scope);
             try {
                 if (type_periode !== undefined) {
                     await $scope.suiviCompetence.getClasseReleve(idPeriode, idClasse, type_periode.type, type_periode.ordre,
-                        idStructure, className);
+                        idStructure, className, scores);
                 }
                 else {
                     await $scope.suiviCompetence.getClasseReleve(undefined, $scope.search.classe.id,
-                        undefined, undefined, idStructure, className);
+                        undefined, undefined, idStructure, className, scores);
                 }
                 await Utils.stopMessageLoader($scope);
             }
