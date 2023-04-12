@@ -35,8 +35,7 @@ export class AppreciationCPE extends Model {
         return {
             appreciation: this.appreciation,
             id_eleve: this.id_eleve,
-            id_periode: this.id_periode,
-            id_etablissement: this.id_etablissement,
+            id_periode: this.id_periode
         }
     }
 
