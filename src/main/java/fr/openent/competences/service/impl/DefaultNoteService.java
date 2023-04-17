@@ -4423,9 +4423,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         JsonArray result = new JsonArray();
         for (int i=0; i < datas.size(); i++) {
             JsonObject data = datas.getJsonObject(i);
-            if (!checkFormative || (data != null && data.getBoolean("formative") != null &&
-                    !data.getBoolean("formative")) || (data != null && data.getLong("id_devoir") == null)) {
-                String idMatiere = (data.getString("id_matiere") != null) ? data.getString("id_matiere") : data.getString("id_matiere_moyf");
+            Double coefficient;
+            try {
+                coefficient = (data.getString(Field.COEFFICIENT) != null ) ?
+                        Double.parseDouble(data.getString(Field.COEFFICIENT)) : 0.0;
+            } catch (NumberFormatException nfe) {
+               continue;
+            }
+
+            if (!checkFormative || (data != null && data.getBoolean(Field.FORMATIVE) != null &&
+                    !data.getBoolean(Field.FORMATIVE)) || (data != null && data.getLong(Field.ID_DEVOIR) == null) ||
+                    (data != null && data.getLong(ID_COMPETENCE) == null &&  coefficient != 0.0)) {
+                String idMatiere = (data.getString(Field.ID_MATIERE) != null) ? data.getString(Field.ID_MATIERE) : data.getString(ID_MATIERE_MOYF);
                 idMatiere = (idMatiere != null) ? idMatiere : "no_id_matiere";
                 if (!mapDataClasse.containsKey(idMatiere)) {
                     mapDataClasse.put(idMatiere, new JsonArray());
