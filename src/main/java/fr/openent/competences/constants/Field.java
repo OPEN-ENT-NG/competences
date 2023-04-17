@@ -114,6 +114,7 @@ public class Field {
     public static final String APPRECIATION_MATIERE_PERIODE = "appreciation_matiere_periode";
     public static final String PREVIOUSAPPRECIATIONS = "previousAppreciations";
     public static final String FINALAVERAGES = "finalAverages";
+    public static final String FORMATIVE = "formative";
     public static final String NN = "NN";
     public static final String SAVE_BFC = "saveBFC";
     public static final String SUBCOEF = "subCoef";

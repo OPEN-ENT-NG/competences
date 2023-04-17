@@ -95,12 +95,23 @@ public class StatMat {
             if( note.getString(Field.ID_MATIERE) != null && this.mapIdMatStatclass.containsKey(note.getString(Field.ID_MATIERE))){
                 StatClass statClass = this.mapIdMatStatclass.get(note.getString(Field.ID_MATIERE));
 
-                if(note.getString(Field.ID_ELEVE_MOYENNE_FINALE) != null && note.getValue(Field.MOYENNE) != null && !note.getValue(Field.MOYENNE).equals("-100")) {
+                if(note.getString(Field.ID_ELEVE_MOYENNE_FINALE) != null && note.getValue(Field.MOYENNE) != null
+                        && !note.getValue(Field.MOYENNE).equals("-100")) {
 
                     statClass.putMapEleveStat(note.getString(Field.ID_ELEVE_MOYENNE_FINALE),
                             Double.valueOf(note.getString(Field.MOYENNE)),null);
                 }
-                if (note.getString(Field.ID_ELEVE) != null && note.getString(Field.VALEUR) != null && !(note.getValue(Field.MOYENNE) != null && note.getValue(Field.MOYENNE).equals("-100"))) {
+                Double coefficient;
+                try {
+                    coefficient = (note.getString(Field.COEFFICIENT) != null ) ?
+                            Double.parseDouble(note.getString(Field.COEFFICIENT)) : 0.0;
+                } catch (NumberFormatException nfe) {
+                  continue;
+                }
+
+                if (note.getString(Field.ID_ELEVE) != null && note.getString(Field.VALEUR) != null &&
+                        coefficient != 0.0 &&
+                        !(note.getValue(Field.MOYENNE) != null && note.getValue(Field.MOYENNE).equals("-100"))) {
                     Matiere matiere = new Matiere(note.getString(Field.ID_MATIERE));
                     Teacher teacher = new Teacher(note.getString(Field.OWNER));
                     Group group = new Group(idClasse);
