@@ -13,5 +13,6 @@
 	"competences.memento.notes.init.failed": "An error occurred while loading the notes widget",
 	"competences.report-model.api.error.remove": "An error occurred when deleting a model",
 	"evaluations.class.report.scores.and.skills": "Scores and skills",
-	"evaluations.validated.skills" : "skills validated"
+	"evaluations.validated.skills" : "skills validated",
+	"evaluations.export.bulletin.show.skillsValidatedPercentage": "Display skills validated percentage"
 }

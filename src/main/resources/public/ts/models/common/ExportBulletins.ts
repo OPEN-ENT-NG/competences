@@ -57,7 +57,8 @@ export class ExportBulletins {
             hideHeadTeacher: options.hideHeadTeacher,
             addOtherTeacher: options.addOtherTeacher,
             functionOtherTeacher: options.functionOtherTeacher,
-            otherTeacherName: options.otherTeacherName
+            otherTeacherName: options.otherTeacherName,
+            showSkillsValidatedPercentage: !!options.showSkillsValidatedPercentage
         };
         if (Utils.isNotNull(options.idPeriode)){
             _.extend(o, {idPeriode: options.idPeriode});

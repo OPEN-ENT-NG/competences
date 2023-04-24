@@ -1,7 +1,9 @@
 package fr.openent.competences.service;
 
 import fr.openent.competences.model.Service;
+import fr.openent.competences.model.achievements.AchievementsProgress;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 

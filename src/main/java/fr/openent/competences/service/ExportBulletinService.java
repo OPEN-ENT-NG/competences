@@ -4,6 +4,7 @@ import fr.openent.competences.model.MultiTeaching;
 import fr.openent.competences.model.Structure;
 import fr.openent.competences.model.Student;
 import fr.openent.competences.model.StudentEvenement;
+import fr.openent.competences.model.achievements.AchievementsProgress;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -35,6 +36,7 @@ public interface ExportBulletinService {
   * @param idPeriode idPeriode
   * @param params paramètres de la requête
   * @param classe Object contenant les information sur la classe
+  * @param skillsValidatedPercentage skills validated percentage by subject for each achievement's student (one Achievements for one student_id)
   * @param host de la request
   * @param acceptLanguage de la request
   * @param vertx
@@ -42,7 +44,7 @@ public interface ExportBulletinService {
   */
  void getExportBulletin(final AtomicBoolean answered, String idEleve,
                         Map<String, JsonObject> elevesMap, Student student, JsonArray idEleves, Long idPeriode, JsonObject params,
-                        final JsonObject classe, String host, String acceptLanguage,
+                        final JsonObject classe, List<AchievementsProgress> skillsValidatedPercentage, String host, String acceptLanguage,
                         Vertx vertx, Handler<Either<String, JsonObject>> finalHandler);
 
 
@@ -71,7 +73,7 @@ public interface ExportBulletinService {
   * @param promise promise called at the end of the function
   */
  void getSuiviAcquis(Student student, JsonArray idEleves, JsonObject classe,
-                     JsonObject params, Promise<JsonObject> promise);
+                     List<AchievementsProgress> skillsValidatedPercentage, JsonObject params, Promise<JsonObject> promise);
 
  /**
   *  - Ordonne les élèves par classe et  par nom

@@ -16,6 +16,9 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static fr.openent.competences.Competences.*;
 import static org.mockito.Mockito.mock;
 
@@ -23,7 +26,7 @@ import static org.mockito.Mockito.mock;
 public class DefaultCompetenceNoteServiceTest {
 
     private static final String STRUCTURE_ID = "111";
-    private static final String STUDENT_ID = "222";
+    private static final List<String> STUDENT_IDS = Arrays.asList("222", "333");
     private static final long PERIOD_ID = 3;
     private static final String GROUP_ID = "444";
     private final Sql sql = mock(Sql.class);
@@ -49,7 +52,7 @@ public class DefaultCompetenceNoteServiceTest {
                 String.format(" INNER JOIN %s.%s t on d.id_type = t.id ", COMPETENCES_SCHEMA, Field.TYPE_TABLE) +
                 String.format(" LEFT JOIN %s.%s cnf ", COMPETENCES_SCHEMA, Field.COMPETENCE_NIVEAU_FINAL) +
                 " on d.id_matiere = cnf.id_matiere AND cn.id_eleve = cnf.id_eleve AND cn.id_competence = cnf.id_competence " +
-                " WHERE d.id_etablissement = ? AND cn.id_eleve = ? " +
+                " WHERE d.id_etablissement = ? AND cn.id_eleve IN " + Sql.listPrepared(STUDENT_IDS) +
                 " AND d.eval_lib_historise IS FALSE " +
                 " AND d.id_matiere IS NOT NULL " +
                 " AND t.formative IS FALSE " +
@@ -61,7 +64,7 @@ public class DefaultCompetenceNoteServiceTest {
 
         JsonArray expectedParams = new JsonArray()
                 .add(STRUCTURE_ID)
-                .add(STUDENT_ID)
+                .addAll(new JsonArray(STUDENT_IDS))
                 .add(PERIOD_ID)
                 .add(GROUP_ID);
 
@@ -75,7 +78,7 @@ public class DefaultCompetenceNoteServiceTest {
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(JsonArray.class), Mockito.any(Handler.class));
 
         Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsValidatedPercentageRequest",
-                STRUCTURE_ID, STUDENT_ID, PERIOD_ID, GROUP_ID, true);
+                STRUCTURE_ID, STUDENT_IDS, PERIOD_ID, GROUP_ID, true);
     }
 
     @Test
@@ -88,7 +91,7 @@ public class DefaultCompetenceNoteServiceTest {
                 String.format(" INNER JOIN %s.%s t on d.id_type = t.id ", COMPETENCES_SCHEMA, Field.TYPE_TABLE) +
                 String.format(" LEFT JOIN %s.%s cnf ", COMPETENCES_SCHEMA, Field.COMPETENCE_NIVEAU_FINAL) +
                 " on d.id_matiere = cnf.id_matiere AND cn.id_eleve = cnf.id_eleve AND cn.id_competence = cnf.id_competence " +
-                " WHERE d.id_etablissement = ? AND cn.id_eleve = ? " +
+                " WHERE d.id_etablissement = ? AND cn.id_eleve IN " + Sql.listPrepared(STUDENT_IDS) +
                 " AND d.eval_lib_historise IS FALSE " +
                 " AND d.id_matiere IS NOT NULL" +
                 " AND t.formative IS FALSE " +
@@ -98,13 +101,13 @@ public class DefaultCompetenceNoteServiceTest {
 
         JsonArray expectedParams = new JsonArray()
                 .add(STRUCTURE_ID)
-                .add(STUDENT_ID)
+                .addAll(new JsonArray(STUDENT_IDS))
                 .add(PERIOD_ID)
                 .add(GROUP_ID);
 
         JsonArray params = new JsonArray();
         String queryResult = Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsIsValidatedQuery",
-                STRUCTURE_ID, STUDENT_ID, PERIOD_ID, GROUP_ID, false, params);
+                STRUCTURE_ID, STUDENT_IDS, PERIOD_ID, GROUP_ID, false, params);
 
         ctx.assertEquals(queryResult.trim().replaceAll("\\s+", " "),
                 expectedQuery.trim().replaceAll("\\s+", " "));
@@ -113,18 +116,18 @@ public class DefaultCompetenceNoteServiceTest {
 
     @Test
     public void getSubjectSkillsIsValidatedQueryFilters_with_minimum_filters(TestContext ctx) throws Exception {
-        String expectedQuery = " WHERE d.id_etablissement = ? AND cn.id_eleve = ? " +
+        String expectedQuery = " WHERE d.id_etablissement = ? AND cn.id_eleve IN " + Sql.listPrepared(STUDENT_IDS) +
                 " AND d.eval_lib_historise IS FALSE " +
                 " AND d.id_matiere IS NOT NULL " +
                 " AND t.formative IS FALSE ";
 
         JsonArray expectedParams = new JsonArray()
                 .add(STRUCTURE_ID)
-                .add(STUDENT_ID);
+                .addAll(new JsonArray(STUDENT_IDS));
 
         JsonArray params = new JsonArray();
         String queryResult = Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsIsValidatedQueryFilters",
-                STRUCTURE_ID, STUDENT_ID, null, null, params);
+                STRUCTURE_ID, STUDENT_IDS, null, null, params);
 
         ctx.assertEquals(queryResult.trim().replaceAll("\\s+", " "),
                 expectedQuery.trim().replaceAll("\\s+", " "));
@@ -133,7 +136,7 @@ public class DefaultCompetenceNoteServiceTest {
 
     @Test
     public void getSubjectSkillsIsValidatedQueryFilters_with_period(TestContext ctx) throws Exception {
-        String expectedQuery = " WHERE d.id_etablissement = ? AND cn.id_eleve = ? " +
+        String expectedQuery = " WHERE d.id_etablissement = ? AND cn.id_eleve IN " + Sql.listPrepared(STUDENT_IDS) +
                 " AND d.eval_lib_historise IS FALSE " +
                 " AND d.id_matiere IS NOT NULL " +
                 " AND t.formative IS FALSE " +
@@ -141,12 +144,12 @@ public class DefaultCompetenceNoteServiceTest {
 
         JsonArray expectedParams = new JsonArray()
                 .add(STRUCTURE_ID)
-                .add(STUDENT_ID)
+                .addAll(new JsonArray(STUDENT_IDS))
                 .add(PERIOD_ID);
 
         JsonArray params = new JsonArray();
         String queryResult = Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsIsValidatedQueryFilters",
-                STRUCTURE_ID, STUDENT_ID, PERIOD_ID, null, params);
+                STRUCTURE_ID, STUDENT_IDS, PERIOD_ID, null, params);
 
         ctx.assertEquals(queryResult.trim().replaceAll("\\s+", " "),
                 expectedQuery.trim().replaceAll("\\s+", " "));
@@ -155,7 +158,7 @@ public class DefaultCompetenceNoteServiceTest {
 
     @Test
     public void getSubjectSkillsIsValidatedQueryFilters_with_group(TestContext ctx) throws Exception {
-        String expectedQuery = " WHERE d.id_etablissement = ? AND cn.id_eleve = ? " +
+        String expectedQuery = " WHERE d.id_etablissement = ? AND cn.id_eleve IN " + Sql.listPrepared(STUDENT_IDS) +
                 " AND d.eval_lib_historise IS FALSE " +
                 " AND d.id_matiere IS NOT NULL " +
                 " AND t.formative IS FALSE " +
@@ -163,12 +166,12 @@ public class DefaultCompetenceNoteServiceTest {
 
         JsonArray expectedParams = new JsonArray()
                 .add(STRUCTURE_ID)
-                .add(STUDENT_ID)
+                .addAll(new JsonArray(STUDENT_IDS))
                 .add(GROUP_ID);
 
         JsonArray params = new JsonArray();
         String queryResult = Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsIsValidatedQueryFilters",
-                STRUCTURE_ID, STUDENT_ID, null, GROUP_ID, params);
+                STRUCTURE_ID, STUDENT_IDS, null, GROUP_ID, params);
 
         ctx.assertEquals(queryResult.trim().replaceAll("\\s+", " "),
                 expectedQuery.trim().replaceAll("\\s+", " "));
@@ -177,7 +180,7 @@ public class DefaultCompetenceNoteServiceTest {
 
     @Test
     public void getSubjectSkillsIsValidatedQueryFilters_with_all_filters(TestContext ctx) throws Exception {
-        String expectedQuery = " WHERE d.id_etablissement = ? AND cn.id_eleve = ? " +
+        String expectedQuery = " WHERE d.id_etablissement = ? AND cn.id_eleve IN " + Sql.listPrepared(STUDENT_IDS) +
                 " AND d.eval_lib_historise IS FALSE " +
                 " AND d.id_matiere IS NOT NULL " +
                 " AND t.formative IS FALSE " +
@@ -186,13 +189,13 @@ public class DefaultCompetenceNoteServiceTest {
 
         JsonArray expectedParams = new JsonArray()
                 .add(STRUCTURE_ID)
-                .add(STUDENT_ID)
+                .addAll(new JsonArray(STUDENT_IDS))
                 .add(PERIOD_ID)
                 .add(GROUP_ID);
 
         JsonArray params = new JsonArray();
         String queryResult = Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsIsValidatedQueryFilters",
-                STRUCTURE_ID, STUDENT_ID, PERIOD_ID, GROUP_ID, params);
+                STRUCTURE_ID, STUDENT_IDS, PERIOD_ID, GROUP_ID, params);
 
         ctx.assertEquals(queryResult.trim().replaceAll("\\s+", " "),
                 expectedQuery.trim().replaceAll("\\s+", " "));

@@ -517,6 +517,9 @@
             {{#getPositionnement}}
             <td>{{positionementLibelle}}</td>
             {{/getPositionnement}}
+            {{#showSkillsValidatedPercentage}}
+            <td>{{skillsValidatedPercentageLibelle}}</td>
+            {{/showSkillsValidatedPercentage}}
         </tr>
         {{#suiviAcquis}}
         {{#printMatiere}}
@@ -679,6 +682,14 @@
             </td>
             {{/getPositionnement}}
             {{/printSousMatieres}}
+
+            {{#showSkillsValidatedPercentage}}
+            <td style="font-size: x-small; text-align: center; background-color: {{{backgroundColor}}}"
+                rowspan="{{rowSpan}}"
+                class="onePadding">
+                {{skillsValidatedPercentage}}
+            </td>
+            {{/showSkillsValidatedPercentage}}
         </tr>
         {{#printSousMatieres}}
 
@@ -816,6 +827,9 @@
             {{#getPositionnement}}
             <td></td>
             {{/getPositionnement}}
+            {{#showSkillsValidatedPercentage}}
+            <td></td>
+            {{/showSkillsValidatedPercentage}}
         </tr>
         {{/printMoyenneGenerale}}
     </table>
