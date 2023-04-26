@@ -5,8 +5,10 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.EventType;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.model.Service;
+import fr.openent.competences.model.achievements.AchievementsProgress;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
@@ -16,6 +18,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,11 +34,9 @@ import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
-import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
-public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
+public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
     private static final Logger log = LoggerFactory.getLogger(DefaultBilanPerioqueService.class);
     private final NoteService noteService;
     private final UtilsService utilsService;
@@ -47,20 +48,20 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private final StructureOptionsService structureOptionsService;
 
 
-    public DefaultBilanPerioqueService (EventBus eb){
+    public DefaultBilanPerioqueService(Sql sql, EventBus eb) {
         this.eb = eb;
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
         utilsService = new DefaultUtilsService(eb);
         devoirService = new DefaultDevoirService(eb);
-        elementProgramme = new DefaultElementProgramme() ;
+        elementProgramme = new DefaultElementProgramme();
         defautlMatiereService = new DefaultMatiereService(eb);
         structureOptionsService = new DefaultStructureOptions(eb);
-        sql = Sql.getInstance();
+        this.sql = sql;
     }
 
     @Override
     public void getRetardsAndAbsences(String structureId, List<String> idEleves, List<String> idClasses,
-                                      Handler<Either<String, JsonArray>> eitherHandler){
+                                      Handler<Either<String, JsonArray>> eitherHandler) {
         // Récupération de l'état d'activation du module présences de l'établissement
         Future<JsonObject> activationFuture = Future.future();
         structureOptionsService.getActiveStatePresences(structureId, event -> formate(activationFuture, event));
@@ -70,15 +71,15 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         structureOptionsService.getSyncStatePresences(structureId, event -> formate(syncFuture, event));
 
         CompositeFuture.all(syncFuture, activationFuture).setHandler(event -> {
-            if(event.failed()){
+            if (event.failed()) {
                 String error = event.cause().getMessage();
                 log.error("[initRecuperationAbsencesRetardsFromPresences] : " + error);
                 eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-config] Failed"));
             } else {
                 JsonObject activationState = activationFuture.result();
                 JsonObject syncState = syncFuture.result();
-                if(activationState.getBoolean("installed") && activationState.getBoolean("activate") &&
-                        syncState.containsKey("presences_sync") && syncState.getBoolean("presences_sync")){
+                if (activationState.getBoolean("installed") && activationState.getBoolean("activate") &&
+                        syncState.containsKey("presences_sync") && syncState.getBoolean("presences_sync")) {
                     getRetardsAndAbsencesFromPresences(structureId, idEleves, idClasses, eitherHandler);
                 } else {
                     getRetardsAndAbsencesFromCompetences(idEleves, eitherHandler);
@@ -88,7 +89,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void getRetardsAndAbsencesFromCompetences(List<String> idEleves,
-                                                      Handler<Either<String, JsonArray>> eitherHandler){
+                                                      Handler<Either<String, JsonArray>> eitherHandler) {
         String query = "SELECT id_periode, id_eleve, coalesce(abs_just, 0) as abs_just, coalesce(abs_just_heure, 0) as abs_just_heure, " +
                 "coalesce(abs_non_just, 0) as abs_non_just, coalesce(abs_non_just_heure, 0) as abs_non_just_heure, " +
                 "coalesce(abs_totale, 0) as abs_totale, coalesce(abs_totale_heure, 0) as abs_totale_heure, " +
@@ -96,7 +97,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 "FROM " + VSCO_SCHEMA + ".absences_et_retards WHERE id_eleve IN " + Sql.listPrepared(idEleves);
 
         JsonArray params = new JsonArray();
-        for(String idEleve : idEleves) {
+        for (String idEleve : idEleves) {
             params.add(idEleve);
         }
 
@@ -153,7 +154,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                         JsonArray absencesNotRegularizedArray = absencesUnregularizedFuture.result();
                         JsonArray retardsArray = retardsFuture.result();
 
-                        for(String idEleve : idEleves) {
+                        for (String idEleve : idEleves) {
                             for (Object periode : periodes) {
                                 JsonObject periodeJson = (JsonObject) periode;
 
@@ -245,15 +246,15 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 .put("recoveryMethod", recoveryMethod)
                 .put("action", "get-events-by-student");
 
-        if(regularized != null){
+        if (regularized != null) {
             action.put("regularized", regularized);
         }
 
-        if(reasonsId != null){
+        if (reasonsId != null) {
             action.put("reasonsId", reasonsId);
         }
 
-        if(compliance != null){
+        if (compliance != null) {
             action.put("compliance", compliance);
         }
 
@@ -262,7 +263,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     //TODO A APPELER QU UNE FOIS -> Voir comment précharger
     public void getSubjectLibelleForSuivi(final String idEtablissement,
-                                          Future<Map<String,JsonObject>> libelleMatiereFuture){
+                                          Future<Map<String, JsonObject>> libelleMatiereFuture) {
         // Récupération des matières de l'établissement
         Future<JsonArray> subjectF = Future.future();
         defautlMatiereService.getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
@@ -273,10 +274,10 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 event -> formate(libelleCourtsFuture, event));
 
         CompositeFuture.all(subjectF, libelleCourtsFuture).setHandler(event -> {
-            if(event.failed()){
+            if (event.failed()) {
                 String error = event.cause().getMessage();
                 log.error("[getSubjectLibelleForSuivi] : " + error);
-                if(error.contains(TIME)){
+                if (error.contains(TIME)) {
                     getSubjectLibelleForSuivi(idEtablissement, libelleMatiereFuture);
                 } else {
                     libelleMatiereFuture.fail(error);
@@ -285,7 +286,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             }
             Map<String, String> mapCodeLibelleCourt = libelleCourtsFuture.result();
             JsonArray subjects = subjectF.result();
-            Map<String,JsonObject> mapSubjects = new HashMap<>();
+            Map<String, JsonObject> mapSubjects = new HashMap<>();
 
             Utils.buildMapSubject(subjects, mapSubjects, mapCodeLibelleCourt);
             libelleMatiereFuture.complete(mapSubjects);
@@ -358,18 +359,18 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                         Map<String, JsonObject> idsMatieresIdsTeachers,
                                         JsonArray idClasseGroups, JsonArray groupsStudent, List<Future> futures, JsonArray multiTeachers, List<Service> services) {
         return event -> {
-            if(event.succeeded()) {
+            if (event.succeeded()) {
                 Map<String, JsonObject> idsMatLibelle = (Map<String, JsonObject>) futures.get(0).result();
                 Map<String, JsonObject> teachersInfos = (Map<String, JsonObject>) futures.get(1).result();
                 setSubjectLibelleAndTeachers(idEleve, idClasseGroups, idEtablissement, groupsStudent,
-                        idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode,multiTeachers, services, handler);
+                        idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, multiTeachers, services, handler);
             } else {
                 handler.handle(new Either.Right<>(new JsonArray()));
             }
         };
     }
 
-    private void setSubjectLibelle(String idMatiere, JsonObject result, Map<String, JsonObject> idsMatLibelle){
+    private void setSubjectLibelle(String idMatiere, JsonObject result, Map<String, JsonObject> idsMatLibelle) {
         if (idsMatLibelle != null && !idsMatLibelle.isEmpty() && idsMatLibelle.containsKey(idMatiere)) {
             result.put("id_matiere", idMatiere)
                     .put("libelleMatiere", idsMatLibelle.get(idMatiere).getString(NAME))
@@ -383,7 +384,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         }
     }
 
-    private void setTeacherInfo(JsonObject result, JsonArray idsTeachers, Map<String, JsonObject> teachersInfos){
+    private void setTeacherInfo(JsonObject result, JsonArray idsTeachers, Map<String, JsonObject> teachersInfos) {
         if (idsTeachers != null) {
             JsonArray teachers = new fr.wseduc.webutils.collections.JsonArray();
             for (Object idTeacher : idsTeachers) {
@@ -400,12 +401,12 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void setSubjectByCoeficient(String idMatiere, JsonObject result, JsonObject coefObject,
-                                        Map<String, JsonObject> idsMatLibelle, Map<String, JsonObject> teachersInfos){
-        if(isNotNull(coefObject)) {
-            for(Map.Entry<String, Object> coefEntry : coefObject.getMap().entrySet()) {
+                                        Map<String, JsonObject> idsMatLibelle, Map<String, JsonObject> teachersInfos) {
+        if (isNotNull(coefObject)) {
+            for (Map.Entry<String, Object> coefEntry : coefObject.getMap().entrySet()) {
                 JsonArray coefIdTeachers = (JsonArray) coefEntry.getValue();
                 String coefKey = coefEntry.getKey();
-                if(!result.getJsonObject(COEFFICIENT).containsKey(coefKey)){
+                if (!result.getJsonObject(COEFFICIENT).containsKey(coefKey)) {
                     result.getJsonObject(COEFFICIENT).put(coefKey, new JsonObject());
                 }
                 JsonObject resultCoef = result.getJsonObject(COEFFICIENT).getJsonObject(coefKey);
@@ -431,7 +432,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             JsonObject teachersObject = idMatTeachersGroups.getValue();
             JsonArray idsTeachers = teachersObject.getJsonArray("teachers");
             final JsonObject result = new JsonObject().put(COEFFICIENT, new JsonObject());
-            JsonObject coefObject = teachersObject.getJsonObject("_" +  COEFFICIENT);
+            JsonObject coefObject = teachersObject.getJsonObject("_" + COEFFICIENT);
             String idGroupe = teachersObject.getString("id_groupe");
 
             //Ajout des libellés des matières
@@ -459,7 +460,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     notesEvent -> formate(notesFuture, notesEvent));
 
             // Récupération des compétences-notes
-            Future<JsonArray> compNotesFuture =  Future.future();
+            Future<JsonArray> compNotesFuture = Future.future();
             //USAGE DU IN NORMALEMENT
             noteService.getCompetencesNotesReleve(idEtablissement, null, null, idMatiere,
                     null, idEleve, null, false, false,
@@ -484,12 +485,12 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             isAvgSkillFuture
                     .onSuccess(isAvgSkillResult -> CompositeFuture.all(elementsProgFuture, appreciationMoyFinalePosFuture, notesFuture, compNotesFuture,
                             moyenneFinaleFuture, tableauDeConversionFuture).setHandler(event -> {
-                        if(event.succeeded()){
+                        if (event.succeeded()) {
                             List<String> idsClassWithNoteAppCompNoteStudent = new ArrayList<>();
                             setAppreciationMoyFinalePositionnementEleve(result, appreciationMoyFinalePosFuture.result(),
                                     idsClassWithNoteAppCompNoteStudent);
                             setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(), moyenneFinaleFuture.result(),
-                                    result, idEleve, idPeriod, tableauDeConversionFuture.result(), idsClassWithNoteAppCompNoteStudent, isAvgSkillResult, services , multiTeachers);
+                                    result, idEleve, idPeriod, tableauDeConversionFuture.result(), idsClassWithNoteAppCompNoteStudent, isAvgSkillResult, services, multiTeachers);
                             setElementProgramme(result, elementsProgFuture.result(), idsClassWithNoteAppCompNoteStudent);
                             results.add(result);
                             subjectFuture.complete();
@@ -498,7 +499,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                             log.error("[DefaultBilanPeriodique] : setSubjectLibelleAndTeachers subjectFuture " + event.cause().getMessage());
                         }
                     }))
-                    .onFailure(err ->{
+                    .onFailure(err -> {
                         handler.handle(new Either.Left<>(err.getMessage()));
                         log.error("[DefaultBilanPeriodique] : setSubjectLibelleAndTeachers isAvgSkillFuture " + err.getMessage());
                     });
@@ -515,7 +516,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         });
     }
 
-    private void buildSubjectForSuivi(Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray idsTeachers,
+    private void buildSubjectForSuivi(Map<String, JsonObject> idsMatieresIdsTeachers, JsonArray idsTeachers,
                                       JsonArray subjects, final Long idPeriode,
                                       JsonArray multiTeachers, List<Service> services, JsonArray groupsStudent) {
         List<String> subjectsMissingTeachers = new ArrayList<>();
@@ -560,7 +561,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
     private void checkVisibilityAndAddTeachers(List<Service> services, JsonObject matiere, final String idMatiere,
                                                JsonObject subject, JsonArray multiTeachers, JsonArray idsTeachers,
-                                               List<String> subjectsMissingTeachers, JsonArray groupsStudent){
+                                               List<String> subjectsMissingTeachers, JsonArray groupsStudent) {
         JsonArray teachers = matiere.getJsonArray("teachers");
         Long coefficient = isNull(subject.getLong(COEFFICIENT)) ? 1L : subject.getLong(COEFFICIENT);
         String id_groupe = subject.getString("id_groupe");
@@ -575,7 +576,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
             if (isNotNull(owner)) {
                 if (serviceIdMatiere.equals(idMatiere) && serviceIdTeacher.equals(owner)
-                        && serviceIdGroup.equals(id_groupe) ) {
+                        && serviceIdGroup.equals(id_groupe)) {
                     isVisible = service.isVisible();
                     coefficient = service.getCoefficient();
                     break;
@@ -592,18 +593,18 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
         addMultiTeachers(multiTeachers, idMatiere, teachers, idsTeachers, groupsStudent);
 
-        if(isVisible && !teachers.contains(owner)) {
+        if (isVisible && !teachers.contains(owner)) {
             addTeachers(teachers, idsTeachers, owner, matiere, coefficient);
         }
 
-        if(teachers.isEmpty() && !subjectsMissingTeachers.contains(idMatiere))
+        if (teachers.isEmpty() && !subjectsMissingTeachers.contains(idMatiere))
             subjectsMissingTeachers.add(idMatiere);
-        else if(!teachers.isEmpty())
+        else if (!teachers.isEmpty())
             subjectsMissingTeachers.remove(idMatiere);
     }
 
     private void getMissingTeachers(JsonArray idsTeachers, List<String> subjectsMissingTeachers,
-                                    Map<String,JsonObject> idsMatieresIdsTeachers, List<Service> services) {
+                                    Map<String, JsonObject> idsMatieresIdsTeachers, List<Service> services) {
         subjectsMissingTeachers.forEach(idSubject -> {
             services.stream().forEach(service -> {
                 String idServiceSubject = service.getMatiere().getId();
@@ -615,7 +616,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     JsonObject matiere = idsMatieresIdsTeachers.get(idSubject);
                     JsonArray teachers = matiere.getJsonArray("teachers");
 
-                    if(!teachers.contains(owner) && teachers.isEmpty()) {
+                    if (!teachers.contains(owner) && teachers.isEmpty()) {
                         addTeachers(teachers, idsTeachers, owner, matiere, coefficient);
                     }
                 }
@@ -624,7 +625,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void addMultiTeachers(JsonArray multiTeachers, String idMatiere, JsonArray teachers, JsonArray idsTeachers,
-                                  JsonArray groupsStudent){
+                                  JsonArray groupsStudent) {
         multiTeachers.forEach(item -> {
             JsonObject multiTeacher = (JsonObject) item;
 
@@ -634,7 +635,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
             if (subjectId.equals(idMatiere) && multiTeacher.getBoolean(Field.IS_VISIBLE) &&
                     groupsStudent.contains(class_or_group_id) && (multiTeacher.getString("deleted_date") == null)) {
-                if (isNotNull(coTeacherId) && !teachers.contains(coTeacherId) ) {
+                if (isNotNull(coTeacherId) && !teachers.contains(coTeacherId)) {
                     teachers.add(coTeacherId);
                 }
                 if (isNotNull(coTeacherId) && !idsTeachers.contains(coTeacherId))
@@ -647,15 +648,15 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                              JsonObject matiere, Long coefficient) {
         teachers.add(owner);
 
-        if(!idsTeachers.contains(owner)) {
+        if (!idsTeachers.contains(owner)) {
             idsTeachers.add(owner);
         }
 
         JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
-        if(!coeffObject.containsKey(coefficient.toString())) {
+        if (!coeffObject.containsKey(coefficient.toString())) {
             coeffObject.put(coefficient.toString(), new JsonArray());
         }
-        if(!coeffObject.getJsonArray(coefficient.toString()).contains(owner)) {
+        if (!coeffObject.getJsonArray(coefficient.toString()).contains(owner)) {
             coeffObject.getJsonArray(coefficient.toString()).add(owner);
         }
     }
@@ -671,13 +672,13 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     .put("texte", ""));
         });
 
-        if(isNotNull(eltsProg) && eltsProg.size() > 0) {
+        if (isNotNull(eltsProg) && eltsProg.size() > 0) {
             for (int i = 0; i < eltsProg.size(); i++) {
                 JsonObject element = eltsProg.getJsonObject(i);
-                String texte = element.getString("texte","");
+                String texte = element.getString("texte", "");
                 String idClasse = element.getString("id_classe");
 
-                if(idClasse != null && IdsClassWithNoteAppCompNoteStudent.contains(idClasse)) {
+                if (idClasse != null && IdsClassWithNoteAppCompNoteStudent.contains(idClasse)) {
                     if (elementsProg.isEmpty()) {
                         elementsProg = texte;
                     } else {
@@ -687,7 +688,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     JsonObject elementFounded = (JsonObject) elementsProgByClasse.stream()
                             .filter(e -> ((JsonObject) e).getString("id_classe").equals(idClasse))
                             .findFirst().orElse(null);
-                    if(elementFounded != null){
+                    if (elementFounded != null) {
                         elementFounded.put("texte", texte);
                     }
                 }
@@ -699,21 +700,21 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void setAppreciationMoyFinalePositionnementEleve(final JsonObject result, final JsonArray allAppMoyPosi,
-                                                             List<String> idsClassWithNoteAppCompNoteStudent){
+                                                             List<String> idsClassWithNoteAppCompNoteStudent) {
         JsonArray appreciations = new fr.wseduc.webutils.collections.JsonArray();
         JsonArray moyennesFinales = new fr.wseduc.webutils.collections.JsonArray();
         JsonArray positionnements = new fr.wseduc.webutils.collections.JsonArray();
 
-        if(allAppMoyPosi != null){
+        if (allAppMoyPosi != null) {
             Map<Integer, JsonArray> mapIdPeriodeAppreciations = new HashMap<>();
-            for(int i = 0; i < allAppMoyPosi.size(); i++){
+            for (int i = 0; i < allAppMoyPosi.size(); i++) {
                 JsonObject appMoyPosi = allAppMoyPosi.getJsonObject(i);
                 String appMatPer = appMoyPosi.getString("appreciation_matiere_periode");
                 Integer idPerApp = appMoyPosi.getInteger("id_periode_appreciation");
                 String idClasseApp = appMoyPosi.getString("id_classe_appreciation");
 
-                if(appMatPer != null) {
-                    if(!mapIdPeriodeAppreciations.containsKey(idPerApp)){
+                if (appMatPer != null) {
+                    if (!mapIdPeriodeAppreciations.containsKey(idPerApp)) {
                         mapIdPeriodeAppreciations.put(idPerApp, new JsonArray().add(new JsonObject()
                                 .put("idClasse", idClasseApp)
                                 .put("appreciation", appMatPer)));
@@ -723,46 +724,46 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                 .put("idClasse", idClasseApp)
                                 .put("appreciation", appMatPer);
 
-                        if(!appreciationsByIdPeriode.contains(appResponse)){
+                        if (!appreciationsByIdPeriode.contains(appResponse)) {
                             mapIdPeriodeAppreciations.put(idPerApp, appreciationsByIdPeriode.add(appResponse));
                         }
                     }
 
-                    if(!idsClassWithNoteAppCompNoteStudent.contains(idClasseApp))
+                    if (!idsClassWithNoteAppCompNoteStudent.contains(idClasseApp))
                         idsClassWithNoteAppCompNoteStudent.add(idClasseApp);
                 }
 
                 //on récupère la moyenne finale de l'élève pour sa classe principale = idClasse passé en paramètre
                 // dans le contexte d'un matiere on est sensé n'avoir qu'une moyenne finale qui est soit sur un groupe soit sur une classe
                 JsonObject moyenne_finale = new JsonObject();
-                if(isNotNull(appMoyPosi.getValue("moyenne_finale")) && isNotNull(appMoyPosi.getValue("id_periode_moyenne_finale"))) {
+                if (isNotNull(appMoyPosi.getValue("moyenne_finale")) && isNotNull(appMoyPosi.getValue("id_periode_moyenne_finale"))) {
                     moyenne_finale.put("id_periode", appMoyPosi.getInteger("id_periode_moyenne_finale"))
                             .put("moyenneFinale", Double.valueOf(appMoyPosi.getString("moyenne_finale")));
-                    if(!idsClassWithNoteAppCompNoteStudent.contains(appMoyPosi.getString("id_classe_moyfinale")))
+                    if (!idsClassWithNoteAppCompNoteStudent.contains(appMoyPosi.getString("id_classe_moyfinale")))
                         idsClassWithNoteAppCompNoteStudent.add(appMoyPosi.getString("id_classe_moyfinale"));
-                } else if(isNotNull(appMoyPosi.getValue("id_periode_moyenne_finale"))){
+                } else if (isNotNull(appMoyPosi.getValue("id_periode_moyenne_finale"))) {
                     moyenne_finale.put("id_periode", appMoyPosi.getInteger("id_periode_moyenne_finale"))
                             .put("moyenneFinale", "NN");
                 }
 
-                if(!moyennesFinales.contains(moyenne_finale)){
+                if (!moyennesFinales.contains(moyenne_finale)) {
                     moyennesFinales.add(moyenne_finale);
                 }
 
                 //Pour le positionnement on ne peut en avoir qu'un par matière
                 //le positionnement n'est pas enregistré par classe
-                if(appMoyPosi.getInteger("positionnement_final") != null){
+                if (appMoyPosi.getInteger("positionnement_final") != null) {
                     JsonObject positionnement = new JsonObject()
                             .put("id_periode", appMoyPosi.getInteger("id_periode_positionnement"))
                             .put("positionnementFinal", appMoyPosi.getInteger("positionnement_final"));
 
-                    if(!positionnements.contains(positionnement)){
+                    if (!positionnements.contains(positionnement)) {
                         positionnements.add(positionnement);
                     }
                 }
             }
 
-            if(!mapIdPeriodeAppreciations.isEmpty()) {
+            if (!mapIdPeriodeAppreciations.isEmpty()) {
                 for (Map.Entry<Integer, JsonArray> idPeriodeApp : mapIdPeriodeAppreciations.entrySet()) {
                     appreciations.add(new JsonObject()
                             .put("id_periode", idPeriodeApp.getKey())
@@ -783,20 +784,20 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
                 noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves,
-                        idsClassWithNoteAppCompNoteStudent, idPeriodAsked, services,multiTeachers);
-        noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves,services, multiTeachers);
+                        idsClassWithNoteAppCompNoteStudent, idPeriodAsked, services, multiTeachers);
+        noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves, services, multiTeachers);
 
-        noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false, tableauConversion,
+        noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result, false, tableauConversion,
                 idsClassWithNoteAppCompNoteStudent, idPeriodAsked, isAvgSkill);
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
         noteService.setRankAndMinMaxInClasseByPeriode(idPeriodAsked, idEleve, notesByDevoirByPeriodeClasse,
                 moyFinalesEleves, result);
     }
 
-    public void getBilanPeriodiqueDomaineForGraph(final String idEleve,String idEtablissement,
-                                                  final String idClasse,final Integer typeClasse, final String idPeriodeString,
-                                                  final Handler<Either<String, JsonArray>> handler){
-        Utils.getGroupsEleve(eb, idEleve, idEtablissement,  responseQuerry -> {
+    public void getBilanPeriodiqueDomaineForGraph(final String idEleve, String idEtablissement,
+                                                  final String idClasse, final Integer typeClasse, final String idPeriodeString,
+                                                  final Handler<Either<String, JsonArray>> handler) {
+        Utils.getGroupsEleve(eb, idEleve, idEtablissement, responseQuerry -> {
             if (!responseQuerry.isRight()) {
                 String error = responseQuerry.left().getValue();
                 log.error(error);
@@ -804,10 +805,91 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             } else {
                 JsonArray idGroups = responseQuerry.right().getValue();
                 //idGroups null si l'eleve n'est pas dans un groupe
-                new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb)
+                new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb)
                         .getDataGraphDomaine(idEleve, idGroups, idEtablissement, idClasse,
                                 typeClasse, idPeriodeString, isNull(idPeriodeString), handler);
             }
         });
     }
+
+    @Override
+    public Future<AchievementsProgress> getSubjectSkillsValidatedPercentage(String structureId, String studentId,
+                                                                            Long periodId, String groupId) {
+        Promise<AchievementsProgress> promise = Promise.promise();
+
+        AchievementsProgress achievementsProgress = new AchievementsProgress(structureId, studentId);
+
+        structureOptionsService.isAverageSkills(structureId)
+                .compose(isAverageSkills ->
+                        getSubjectSkillsValidatedPercentageRequest(structureId, studentId, periodId, groupId,
+                                isAverageSkills))
+                .onSuccess(subjectSkillsValidatedPercentage -> {
+                    achievementsProgress.setAchievementsSubjects(subjectSkillsValidatedPercentage);
+                    promise.complete(achievementsProgress);
+                })
+                .onFailure(promise::fail);
+
+        return promise.future();
+    }
+
+    private Future<JsonArray> getSubjectSkillsValidatedPercentageRequest(String structureId, String studentId,
+                                                                         Long periodId, String groupId,
+                                                                         Boolean isAverageSkills) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonArray params = new JsonArray();
+
+        String request = " SELECT id_eleve as student_id, id_matiere as subject_id, " +
+                " (SUM(is_validated::int) * 100) / COUNT(id_competence) as skills_validated_percentage " +
+                " FROM ( " +
+                getSubjectSkillsIsValidatedQuery(structureId, studentId, periodId, groupId, isAverageSkills, params) +
+                " )  as is_validated_skills_by_subjects " +
+                " GROUP BY id_eleve, id_matiere";
+
+        sql.prepared(request, params,
+                SqlResult.validResultHandler(FutureHelper.handler(promise,
+                        String.format("[Competences@%s::getSubjectSkillsValidatedPercentageRequest] " +
+                                "Fail to retrieve SubjectSkillsValidatedPercentage types assigners", this.getClass().getSimpleName()))));
+
+        return promise.future();
+    }
+
+    private String getSubjectSkillsIsValidatedQuery(String structureId, String studentId,
+                                                    Long periodId, String groupId, Boolean isAverageSkills,
+                                                    JsonArray params) {
+        return " SELECT cn.id_eleve, d.id_matiere, cn.id_competence, " +
+                String.format(" %s(COALESCE(cnf.niveau_final, cn.evaluation)) > 1 as is_validated ",
+                        Boolean.TRUE.equals(isAverageSkills) ? "AVG" : "MAX") +
+                String.format(" FROM %s.%s cn ", COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE) +
+                String.format(" INNER JOIN %s.%s d on d.id = cn.id_devoir ", COMPETENCES_SCHEMA, DEVOIR_TABLE) +
+                String.format(" INNER JOIN %s.%s rdg on d.id = rdg.id_devoir ", COMPETENCES_SCHEMA, REL_DEVOIRS_GROUPES) +
+                String.format(" INNER JOIN %s.%s t on d.id_type = t.id ", COMPETENCES_SCHEMA, Field.TYPE_TABLE) +
+                String.format(" LEFT JOIN %s.%s cnf ", COMPETENCES_SCHEMA, Field.COMPETENCE_NIVEAU_FINAL) +
+                " on d.id_matiere = cnf.id_matiere AND cn.id_eleve = cnf.id_eleve AND cn.id_competence = cnf.id_competence " +
+                getSubjectSkillsIsValidatedQueryFilters(structureId, studentId, periodId, groupId, params) +
+                " GROUP BY cn.id_eleve, d.id_matiere, cn.id_competence";
+    }
+
+    private String getSubjectSkillsIsValidatedQueryFilters(String structureId, String studentId,
+                                                           Long periodId, String groupId, JsonArray params) {
+        String queryFilter = " WHERE d.id_etablissement = ? AND cn.id_eleve = ? " +
+                " AND d.eval_lib_historise IS FALSE " +
+                " AND d.id_matiere IS NOT NULL " +
+                " AND t.formative IS FALSE ";
+
+        params.add(structureId)
+                .add(studentId);
+
+        if (periodId != null) {
+            queryFilter += " AND d.id_periode = ? ";
+            params.add(periodId);
+        }
+
+        if (groupId != null) {
+            queryFilter += " AND rdg.type_groupe = 1 AND rdg.id_groupe = ? ";
+            params.add(groupId);
+        }
+
+        return queryFilter;
+    }
+
 }

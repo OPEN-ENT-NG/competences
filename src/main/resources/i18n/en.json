@@ -12,5 +12,6 @@
 	"competences.memento.widget.subject.detail.no.notes": "There are no ratings for the selected filters",
 	"competences.memento.notes.init.failed": "An error occurred while loading the notes widget",
 	"competences.report-model.api.error.remove": "An error occurred when deleting a model",
-	"evaluations.class.report.scores.and.skills": "Scores and skills"
+	"evaluations.class.report.scores.and.skills": "Scores and skills",
+	"evaluations.validated.skills" : "skills validated"
 }
