@@ -321,12 +321,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, devoirs.owner, ")
                 .append(" devoirs.ramener_sur, devoirs.is_evaluated, devoirs.id_periode, devoirs.id_sousmatiere,")
                 .append(" devoirs.id_matiere, devoirs.id_etablissement, rel_devoirs_groupes.id_groupe, notes.valeur, ")
-                .append(" notes.id, notes.id_eleve, services.coefficient as coef ")
-                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".devoirs ").append(" LEFT JOIN ")
-                .append(COMPETENCES_SCHEMA).append(".notes ")
+                .append(" notes.id, notes.id_eleve, services.coefficient as coef , type.formative")
+                .append(" FROM ").append(this.schema).append(Field.DEVOIRS_TABLE)
+                .append(" INNER JOIN ").append(this.schema).append(Field.TYPE)
+                .append(" ON ").append(Field.TYPE).append(".id = ").append(DEVOIRS_TABLE).append(".id_type")
+                .append(" LEFT JOIN ")
+                .append(this.schema).append(Field.NOTES_TABLE)
                 .append(" ON devoirs.id = notes.id_devoir ")
                 .append((null != userId) ? " AND notes.id_eleve = ? " : "").append(" INNER JOIN ")
-                .append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ")
+                .append(this.schema).append(REL_DEVOIRS_GROUPES_TABLE)
                 .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe IN ")
                 .append(Sql.listPrepared(idsClass.getList())).append(" LEFT JOIN ")
                 .append(Competences.VSCO_SCHEMA).append(".services ")
@@ -412,12 +415,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.owner,")
                 .append(" devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, devoirs.id_periode , notes.id_eleve,")
-                .append(" devoirs.is_evaluated, null as annotation, devoirs.id_matiere, devoirs.id_sousmatiere, rel_devoirs_groupes.id_groupe as id_groupe ")
-                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".devoirs")
-                .append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".notes")
-                .append(" ON ( devoirs.id = notes.id_devoir ")
-                .append((null != idGroupes) ? ")" : ("AND notes.id_eleve IN " + Sql.listPrepared(idEleves) + ")"))
-                .append(" INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON ")
+                .append(" devoirs.is_evaluated, null as annotation, devoirs.id_matiere, devoirs.id_sousmatiere, ")
+                .append(" rel_devoirs_groupes.id_groupe as id_groupe, type.formative")
+                .append(" FROM ").append(this.schema).append(Field.DEVOIRS_TABLE)
+                .append(" INNER JOIN ").append(this.schema).append(Field.TYPE)
+                .append(" ON ").append(Field.TYPE).append(".id = ").append(DEVOIRS_TABLE).append(".id_type")
+                .append(" LEFT JOIN ").append(this.schema).append(Field.NOTES_TABLE)
+                .append(" ON ( ").append(Field.DEVOIRS_TABLE).append(".id = ").append(Field.NOTES_TABLE).append(".id_devoir ")
+                .append((null != idGroupes) ? ")" : ("AND " + Field.NOTES_TABLE + ".id_eleve IN " + Sql.listPrepared(idEleves) + ")"))
+                .append(" INNER JOIN ").append(this.schema).append(REL_DEVOIRS_GROUPES_TABLE + " ON ")
                 .append("(rel_devoirs_groupes.id_devoir = devoirs.id AND ")
                 .append((null != idGroupes) ? ("rel_devoirs_groupes.id_groupe IN " +
                         Sql.listPrepared(idGroupes) + ")") : "rel_devoirs_groupes.id_groupe = ?)")
@@ -430,13 +436,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         query.append(" UNION ")
                 .append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.owner,")
                 .append(" devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id, devoirs.id_periode, ")
-                .append(" rel_annotations_devoirs.id_eleve, devoirs.is_evaluated,")
-                .append(" rel_annotations_devoirs.id_annotation as annotation, devoirs.id_matiere, devoirs.id_sousmatiere, rel_devoirs_groupes.id_groupe as id_groupe ")
-                .append(" FROM ").append(COMPETENCES_SCHEMA).append(".devoirs")
-                .append(" LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".rel_annotations_devoirs")
+                .append("rel_annotations_devoirs.id_eleve, devoirs.is_evaluated,")
+                .append(" rel_annotations_devoirs.id_annotation as annotation, devoirs.id_matiere, devoirs.id_sousmatiere,")
+                .append(" rel_devoirs_groupes.id_groupe as id_groupe, type.formative")
+                .append(" FROM ").append(this.schema).append(DEVOIRS_TABLE)
+                .append(" INNER JOIN ").append(this.schema).append(Field.TYPE)
+                .append(" ON ").append(Field.TYPE).append(".id = ").append(DEVOIRS_TABLE).append(".id_type")
+                .append(" LEFT JOIN ").append(this.schema).append(Field.REL_ANNOTATIONS_DEVOIRS_TABLE)
                 .append(" ON (devoirs.id = rel_annotations_devoirs.id_devoir ")
                 .append((null != idGroupes) ? ")" : (" AND rel_annotations_devoirs.id_eleve IN " + Sql.listPrepared(idEleves) + ")"))
-                .append(" INNER JOIN " + COMPETENCES_SCHEMA + ".rel_devoirs_groupes")
+                .append(" INNER JOIN ").append(this.schema).append(REL_DEVOIRS_GROUPES_TABLE)
                 .append(" ON (rel_devoirs_groupes.id_devoir = devoirs.id ")
                 .append((null != idGroupes) ? ("AND rel_devoirs_groupes.id_groupe IN " +
                         Sql.listPrepared(idGroupes) + ")") : "AND rel_devoirs_groupes.id_groupe = ?) ")
@@ -1083,52 +1092,54 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                           List<Service> services, JsonArray multiTeachers) {
         for (int i = 0; i < listNotes.size(); i++) {
             JsonObject note = listNotes.getJsonObject(i);
+            if((note.getBoolean("formative") != null && note.getBoolean("formative")) ||
+            note.getString(Field.VALEUR) == null || !note.getBoolean(Field.IS_EVALUATED)
+                    || note.getString(Field.COEFFICIENT) == null || "0".equals(note.getString(Field.COEFFICIENT))) {
+                continue;
+            }
+            Long id_periode = note.getLong(Field.ID_PERIODE);
+            String id_eleve = note.getString(Field.ID_ELEVE);
+            Long id_sousMatiere = note.getLong(ID_SOUS_MATIERE);
+            String id_groupe = note.getString(Field.ID_GROUPE);
+            NoteDevoir noteDevoir = setNoteDevoir(services, multiTeachers, note, id_periode, id_sousMatiere);
+            if(isNotNull(noteDevoir)) {
+                if(idsClassWithNoteAppCompNoteStudent != null && idPeriodeAsked != null){
+                    if(idEleve.equals(id_eleve) && idPeriodeAsked.equals(id_periode) && id_groupe != null &&
+                            !idsClassWithNoteAppCompNoteStudent.contains(id_groupe))
+                        idsClassWithNoteAppCompNoteStudent.add(id_groupe);
+                }
 
-            if (note.getString(Field.VALEUR) != null && note.getBoolean(Field.IS_EVALUATED)
-                    && note.getString(Field.COEFFICIENT) != null && !"0".equals(note.getString(Field.COEFFICIENT))) {
-                Long id_periode = note.getLong(Field.ID_PERIODE);
-                String id_eleve = note.getString(Field.ID_ELEVE);
-                Long id_sousMatiere = note.getLong(ID_SOUS_MATIERE);
-                String id_groupe = note.getString(Field.ID_GROUPE);
-                NoteDevoir noteDevoir = setNoteDevoir(services, multiTeachers, note, id_periode, id_sousMatiere);
-                if(isNotNull(noteDevoir)) {
-                    if(idsClassWithNoteAppCompNoteStudent != null && idPeriodeAsked != null){
-                        if(idEleve.equals(id_eleve) && idPeriodeAsked.equals(id_periode) && id_groupe != null &&
-                                !idsClassWithNoteAppCompNoteStudent.contains(id_groupe))
-                            idsClassWithNoteAppCompNoteStudent.add(id_groupe);
-                    }
+                if (!notesByDevoirByPeriode.containsKey(id_periode)) {
+                    notesByDevoirByPeriode.put(id_periode, new HashMap<>());
+                    notesByDevoirByPeriodeClasse.put(id_periode, new HashMap<>());
+                    notesByDevoirByPeriodeBySousMat.put(id_periode.toString(), new HashMap<>());
+                    notesClasseBySousMat.put(id_periode, new HashMap<>());
+                }
 
-                    if (!notesByDevoirByPeriode.containsKey(id_periode)) {
-                        notesByDevoirByPeriode.put(id_periode, new HashMap<>());
-                        notesByDevoirByPeriodeClasse.put(id_periode, new HashMap<>());
-                        notesByDevoirByPeriodeBySousMat.put(id_periode.toString(), new HashMap<>());
-                        notesClasseBySousMat.put(id_periode, new HashMap<>());
-                    }
-
-                    if (!idEleves.contains(id_eleve)) {
-                        idEleves.add(id_eleve);
-                    }
+                if (!idEleves.contains(id_eleve)) {
+                    idEleves.add(id_eleve);
+                }
 
 
 
-                    //ajouter la note à la période correspondante et à l'année pour l'élève
-                    if (note.getString(Field.ID_ELEVE).equals(idEleve)) {
-                        utilsService.addToMap(id_periode, notesByDevoirByPeriode.get(id_periode), noteDevoir);
-                        utilsService.addToMap(null, notesByDevoirByPeriode.get(null), noteDevoir);
-                        if (id_sousMatiere != null)
-                            utilsService.addToMap(id_periode.toString(), id_sousMatiere, notesByDevoirByPeriodeBySousMat,
-                                    noteDevoir);
-                    }
+                //ajouter la note à la période correspondante et à l'année pour l'élève
+                if (note.getString(Field.ID_ELEVE).equals(idEleve)) {
+                    utilsService.addToMap(id_periode, notesByDevoirByPeriode.get(id_periode), noteDevoir);
+                    utilsService.addToMap(null, notesByDevoirByPeriode.get(null), noteDevoir);
+                    if (id_sousMatiere != null)
+                        utilsService.addToMap(id_periode.toString(), id_sousMatiere, notesByDevoirByPeriodeBySousMat,
+                                noteDevoir);
+                }
 
-                    //ajouter la note à la période correspondante et à l'année pour toute la classe
-                    utilsService.addToMap(id_periode, notesByDevoirByPeriodeClasse.get(id_periode), noteDevoir);
-                    utilsService.addToMap(null, notesByDevoirByPeriodeClasse.get(null), noteDevoir);
-                    if (isNotNull(id_sousMatiere)) {
-                        utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(id_periode), noteDevoir);
-                        utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(null), noteDevoir);
-                    }
+                //ajouter la note à la période correspondante et à l'année pour toute la classe
+                utilsService.addToMap(id_periode, notesByDevoirByPeriodeClasse.get(id_periode), noteDevoir);
+                utilsService.addToMap(null, notesByDevoirByPeriodeClasse.get(null), noteDevoir);
+                if (isNotNull(id_sousMatiere)) {
+                    utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(id_periode), noteDevoir);
+                    utilsService.addToMap(id_sousMatiere, notesClasseBySousMat.get(null), noteDevoir);
                 }
             }
+
         }
     }
 
@@ -3120,7 +3131,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             for (int i = 0; i < listNotes.size(); i++) {
                 JsonObject note = listNotes.getJsonObject(i);
                 if (note.getString(VALEUR) == null || note.getString(COEFFICIENT) == null ||
-                        !note.getBoolean(IS_EVALUATED) || "0".equals(note.getString(COEFFICIENT))) {
+                        !note.getBoolean(IS_EVALUATED) || "0".equals(note.getString(COEFFICIENT)) ||
+                        (note.getBoolean(Field.FORMATIVE) != null && note.getBoolean(Field.FORMATIVE))) {
                     continue;
                     //Si la note fait partie d'un devoir qui n'est pas évalué,
                     // elle n'est pas prise en compte dans le calcul de la moyenne

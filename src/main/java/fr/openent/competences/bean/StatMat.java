@@ -91,7 +91,15 @@ public class StatMat {
     public void setMapIdMatStatclass(JsonArray listNotes, List<Service> services, JsonArray multiTeachers, final String idClasse) {
         for(int i = 0; i < listNotes.size(); i++){
             JsonObject note = listNotes.getJsonObject(i);
+            Double coefficient;
+            try {
+                coefficient = (note.getString(Field.COEFFICIENT) != null ) ?
+                        Double.parseDouble(note.getString(Field.COEFFICIENT)) : 0.0;
+            } catch (NumberFormatException nfe) {
+                continue;
+            }
 
+            Boolean isEvaluation = note.getBoolean(Field.FORMATIVE) != null ? !note.getBoolean(Field.FORMATIVE) : Boolean.TRUE;
             if( note.getString(Field.ID_MATIERE) != null && this.mapIdMatStatclass.containsKey(note.getString(Field.ID_MATIERE))){
                 StatClass statClass = this.mapIdMatStatclass.get(note.getString(Field.ID_MATIERE));
 
@@ -101,16 +109,9 @@ public class StatMat {
                     statClass.putMapEleveStat(note.getString(Field.ID_ELEVE_MOYENNE_FINALE),
                             Double.valueOf(note.getString(Field.MOYENNE)),null);
                 }
-                Double coefficient;
-                try {
-                    coefficient = (note.getString(Field.COEFFICIENT) != null ) ?
-                            Double.parseDouble(note.getString(Field.COEFFICIENT)) : 0.0;
-                } catch (NumberFormatException nfe) {
-                  continue;
-                }
 
                 if (note.getString(Field.ID_ELEVE) != null && note.getString(Field.VALEUR) != null &&
-                        coefficient != 0.0 &&
+                        coefficient != 0.0 && isEvaluation &&
                         !(note.getValue(Field.MOYENNE) != null && note.getValue(Field.MOYENNE).equals("-100"))) {
                     Matiere matiere = new Matiere(note.getString(Field.ID_MATIERE));
                     Teacher teacher = new Teacher(note.getString(Field.OWNER));
@@ -163,15 +164,18 @@ public class StatMat {
                     }
                 }
 
-            }else {
+            } else {
                 StatClass statClass = new StatClass();
 
-                if (note.getString(Field.ID_ELEVE_MOYENNE_FINALE) != null && note.getValue(Field.MOYENNE) != null && !note.getValue(Field.MOYENNE).equals("-100")) {
+                if (note.getString(Field.ID_ELEVE_MOYENNE_FINALE) != null && note.getValue(Field.MOYENNE) != null &&
+                        !note.getValue(Field.MOYENNE).equals("-100")) {
                     statClass.putMapEleveStat(note.getString(Field.ID_ELEVE_MOYENNE_FINALE),
                             Double.valueOf(note.getString(Field.MOYENNE)), null);
                 }
-                if (note.getString(Field.ID_ELEVE) != null && note.getString(Field.COEFFICIENT) != null
-                        && note.getString(Field.VALEUR) != null && !(note.getValue(Field.MOYENNE) != null && note.getValue(Field.MOYENNE).equals("-100"))) {
+                if (note.getString(Field.ID_ELEVE) != null && note.getString(Field.COEFFICIENT) != null &&
+                        coefficient != 0.0 && isEvaluation
+                        && note.getString(Field.VALEUR) != null && !(note.getValue(Field.MOYENNE) != null &&
+                        note.getValue(Field.MOYENNE).equals("-100"))) {
                     Matiere matiere = new Matiere(note.getString(Field.ID_MATIERE));
                     Teacher teacher = new Teacher(note.getString(Field.OWNER));
                     Group group = new Group(idClasse);
