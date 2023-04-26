@@ -124,20 +124,20 @@ public class LSUController extends ControllerHelper {
 
 
 
-    public LSUController(EventBus eb) {
-        bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
-        elementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService(eb);
-        utilsService = new DefaultUtilsService(eb);
-        bfcService = new DefaultBFCService(eb);
+    public LSUController(ServiceFactory serviceFactory) {
+        bilanPeriodiqueService = serviceFactory.bilanPeriodiqueService();
+        elementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService(serviceFactory.eventBus());
+        utilsService = new DefaultUtilsService(serviceFactory.eventBus());
+        bfcService = new DefaultBFCService(serviceFactory.eventBus());
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
-        bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
+        bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, serviceFactory.eventBus());
         eleveEnsCpl = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA,
                 Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,
                 Competences.DISPENSE_DOMAINE_ELEVE);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,
                 Competences.COMPETENCES_NOTES_TABLE);
-        lsuService = new DefaultLSUService(eb);
+        lsuService = new DefaultLSUService(serviceFactory.eventBus());
         stsFileService = new DefaultSTSFileService(Competences.STSFILE_TABLE);
         digitalSkillsService = new DefaultDigitalSkillsService();
         classAppreciationDigitalSkillsService = new DefaultClassAppreciationDigitalSkills(COMPETENCES_SCHEMA,

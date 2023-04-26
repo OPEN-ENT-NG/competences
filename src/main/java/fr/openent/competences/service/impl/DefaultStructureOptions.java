@@ -1,8 +1,9 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
-import fr.openent.competences.constants.Field;
 import fr.openent.competences.Utils;
+import fr.openent.competences.constants.Field;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.service.StructureOptionsService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -24,19 +25,20 @@ import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 public class DefaultStructureOptions extends SqlCrudService implements StructureOptionsService {
 
-    private EventBus eb;
     protected static final Logger log = LoggerFactory.getLogger(Utils.class);
-    public DefaultStructureOptions () {
+    private EventBus eb;
+
+    public DefaultStructureOptions() {
         super(Competences.EVAL_SCHEMA, Field.STRUTUCTURE_OPTIONS);
     }
 
-    public DefaultStructureOptions (EventBus eb) {
+    public DefaultStructureOptions(EventBus eb) {
         super(Competences.EVAL_SCHEMA, Field.STRUTUCTURE_OPTIONS);
         this.eb = eb;
     }
 
     @Override
-    public void createOrUpdateIsAverageSkills (JsonObject body, Handler<Either<String, JsonObject>> handler) {
+    public void createOrUpdateIsAverageSkills(JsonObject body, Handler<Either<String, JsonObject>> handler) {
         final String structureId = body.getString(Field.STRUCTUREID);
         final boolean isAverageSkills = body.getBoolean(Field.ISSKILLAVERAGE);
         StringBuilder query = new StringBuilder();
@@ -51,7 +53,7 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
     }
 
     @Override
-    public void getIsAverageSkills (String structureId, Handler<Either<String, JsonObject>> handler) {
+    public void getIsAverageSkills(String structureId, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
         query.append("SELECT EXISTS (SELECT is_average_skills FROM ").append(this.resourceTable)
                 .append(" WHERE id_structure = ? AND is_average_skills = TRUE) AS is_average_skills ");
@@ -66,21 +68,25 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
      * @return response
      */
     @Override
-    public Future<Boolean> isAverageSkills (String structureId) {
+    public Future<Boolean> isAverageSkills(String structureId) {
 
         Promise<Boolean> promise = Promise.promise();
-        getIsAverageSkills(structureId, event -> {
-            if(event.isRight())
-                promise.complete(event.right().getValue().getBoolean(Field.IS_AVERAGE_SKILLS)); // pour "is_average_skills"
-            else
-                promise.fail(event.left().getValue());
-        });
+
+        Promise<JsonObject> promiseResult = Promise.promise();
+        getIsAverageSkills(structureId, FutureHelper.handler(promiseResult,
+                String.format("[Competences@%s::isAverageSkills] Fail to retrieve if it's average skills (or not)",
+                        this.getClass().getSimpleName())));
+
+        promiseResult.future()
+                .onSuccess(result -> promise.complete(result.getBoolean(Field.IS_AVERAGE_SKILLS)))
+                .onFailure(promise::fail);
+
         return promise.future();
     }
 
 
     @Override
-    public void activeDeactiveSyncStatePresences(String idStructure, Boolean state, Handler<Either<String, JsonObject>> eitherHandler){
+    public void activeDeactiveSyncStatePresences(String idStructure, Boolean state, Handler<Either<String, JsonObject>> eitherHandler) {
         StringBuilder query = new StringBuilder().append("INSERT INTO ")
                 .append(Competences.COMPETENCES_SCHEMA + ".structure_options (id_structure, presences_sync) ")
                 .append(" VALUES ")
@@ -92,7 +98,7 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
 
 
     @Override
-    public void getSyncStatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler){
+    public void getSyncStatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler) {
         JsonArray params = new JsonArray().add(idStructure);
 
         String query = "SELECT presences_sync " +
@@ -102,22 +108,22 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
 
     }
 
-    public void getActiveStatePresences ( final String idStructure, Handler<Either<String,JsonObject>> handler){
+    public void getActiveStatePresences(final String idStructure, Handler<Either<String, JsonObject>> handler) {
         // Récupération de la config vie scolaire
         Promise<JsonObject> configFuture = Promise.promise();
         JsonObject action = new JsonObject()
                 .put("action", "config.generale");
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler( message -> {
-                JsonObject body = message.body();
-                if (OK.equals(body.getString(STATUS))) {
-                    JsonObject queryResult = body.getJsonObject(RESULT);
-                    configFuture.complete(queryResult);
-                } else {
-                    log.error("getRetardsAndAbsences-getconfigVieScolaire failed : " + body.getString(Field.MESSAGE));
-                    configFuture.fail(body.getString(Field.MESSAGE));
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+                    JsonObject body = message.body();
+                    if (OK.equals(body.getString(STATUS))) {
+                        JsonObject queryResult = body.getJsonObject(RESULT);
+                        configFuture.complete(queryResult);
+                    } else {
+                        log.error("getRetardsAndAbsences-getconfigVieScolaire failed : " + body.getString(Field.MESSAGE));
+                        configFuture.fail(body.getString(Field.MESSAGE));
 
+                    }
                 }
-            }
         ));
 
         // Récupération de l'activation du module présences de l'établissement
@@ -128,22 +134,23 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
                     JsonObject result = new JsonObject();
                     boolean configInstalled = Boolean.TRUE.equals(configEvent.getBoolean(Field.PRESENCES));
                     result.put(Field.INSTALLED, configInstalled);
-                    if (configInstalled){
+                    if (configInstalled) {
                         Future<JsonObject> activationFuture = Future.future();
-                        isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
+                        isStructureActivatePresences(idStructure, event -> formate(activationFuture, event));
                         activationFuture.onSuccess(event -> {
-                            result.put(Field.ACTIVATE,!event.isEmpty() && event.getBoolean(Field.ACTIF));
+                            result.put(Field.ACTIVATE, !event.isEmpty() && event.getBoolean(Field.ACTIF));
                             handler.handle(new Either.Right<>(result));
-                        }).onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] "+event.getMessage())));
-                    }else{
+                        }).onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] " + event.getMessage())));
+                    } else {
                         result.put(Field.ACTIVATE, false);
                         handler.handle(new Either.Right<>(result));
                     }
                 })
-                .onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] "+event.getMessage())));;
+                .onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] " + event.getMessage())));
+        ;
     }
 
-    private void isStructureActivatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler){
+    private void isStructureActivatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler) {
         JsonArray params = new JsonArray().add(idStructure);
 
         String query = " SELECT * " +

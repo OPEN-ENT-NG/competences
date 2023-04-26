@@ -1,44 +1,47 @@
-import  http  from "axios";
-import {Enseignant, ElementProgramme, TableConversion, Utils, TypePeriode, AppreciationMatiere} from "./index";
+import http, {AxiosResponse} from "axios";
+import {AppreciationMatiere, Classe, ElementProgramme, Enseignant, TableConversion, TypePeriode, Utils} from "./index";
 import * as utils from '../../utils/teacher';
-import { Mix } from "entcore-toolkit";
-import {notify, _, Collection, Model, http as httpEntcore} from "entcore";
+import {Mix} from "entcore-toolkit";
+import {_, Collection, Model, notify} from "entcore";
 import {Historique} from "../common/Historique";
 import {getNN} from "../../utils/functions/utilsNN";
+import {achievementsProgressService} from "../../services/achievementsProgressService";
+import {AchievementsProgress, IAchievementsProgressPayload, AchievementsSubject} from "../achievements.model";
 
-export class SuiviDesAcquis  {
-    id_matiere : string;
-    libelleMatiere : string;
-    teachers : Enseignant[];
-    elementsProgramme : string;
+export class SuiviDesAcquis {
+    id_matiere: string;
+    libelleMatiere: string;
+    teachers: Enseignant[];
+    elementsProgramme: string;
     elementsProgrammeByClasse: ElementProgramme[];
-    appreciationByClasse : AppreciationMatiere;
-    moyenne_finale : number ;
-    positionnement_final : any ;
-    moyenneEleve : any;
-    moyenneClasse : any;
-    positionnement_auto : number;
+    appreciationByClasse: AppreciationMatiere;
+    moyenne_finale: number;
+    positionnement_final: any;
+    moyenneEleve: any;
+    moyenneClasse: any;
+    positionnement_auto: number;
     //tous positionnements de l'élève pour chaque période pour une matière
     //le calculé
-    positionnements_auto : any[];
+    positionnements_auto: any[];
     //moyennes de l'élève pour une matière pour les 3 périodes de l'année en cours
-    moyennesEleve : any[];
+    moyennesEleve: any[];
     //moyennes de la classe pour une matière pour les 3 périodes de l'année en cours
-    moyennesClasse : any[];
+    moyennesClasse: any[];
 
-    _positionnements_auto : any[];
-    _moyenne : any[];
+    _positionnements_auto: any[];
+    _moyenne: any[];
     idEleve: string;
     idClasse: string;
     idEtablissement: string;
-    idPeriode : number;
-    previousAppreciationMatiere : string;
+    idPeriode: number;
+    previousAppreciationMatiere: string;
+    skillsValidatedPercentage: number;
 
-    constructor(o?:any ) {
+    constructor(o?: any) {
     }
 
-    get api(){
-        return{
+    get api() {
+        return {
             POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`,
             POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`,
         }
@@ -53,11 +56,11 @@ export class SuiviDesAcquis  {
         };
     }
 
-    setPreviousAppreciationMatiere () {
+    setPreviousAppreciationMatiere() {
         this.previousAppreciationMatiere = this.appreciationByClasse.appreciation;
     };
 
-    goBackAppreciation () {
+    goBackAppreciation() {
         this.appreciationByClasse.appreciation = this.previousAppreciationMatiere;
     }
 
@@ -67,9 +70,9 @@ export class SuiviDesAcquis  {
             texte: texte != undefined ? texte : this.elementsProgramme
         });
 
-        try{
+        try {
             return await http.post(this.api.POST_DATA_ELEMENT_PROGRAMME, _data);
-        }catch (e){
+        } catch (e) {
             notify.error('evaluations.releve.elementProgramme.classe.save.error');
             console.log(e);
         }
@@ -79,7 +82,7 @@ export class SuiviDesAcquis  {
         let elementsProgramme = ""
 
         this.elementsProgrammeByClasse.forEach(element => {
-            if(elementsProgramme.length === 0) {
+            if (elementsProgramme.length === 0) {
                 elementsProgramme = element.texte;
             } else {
                 elementsProgramme += " " + element.texte;
@@ -89,7 +92,7 @@ export class SuiviDesAcquis  {
         this.elementsProgramme = elementsProgramme;
     }
 
-    async saveElementProgrammeByClasse(elementProgrammeByClasse){
+    async saveElementProgrammeByClasse(elementProgrammeByClasse) {
         this.saveElementsProgramme(elementProgrammeByClasse.id_classe, elementProgrammeByClasse.texte);
     }
 
@@ -106,41 +109,45 @@ export class SuiviDesAcquis  {
                 await http.post(this.api.POST_DATA_RELEVE_PERIODIQUE, _data);
                 this.positionnement_final = positionnement;
             }
-        }catch(e){
+        } catch (e) {
             notify.error('bilan.periodique.suivis.des.acquis.error.save.positionnement');
             console.error(e);
         }
     }
 
-    getPositionnementDefinitif(): any{
-        if(this.positionnement_final !== this.positionnement_auto){
+    getPositionnementDefinitif(): any {
+        if (this.positionnement_final !== this.positionnement_auto) {
             return this.positionnement_final;
-        }else{
+        } else {
             return this.positionnement_auto;
         }
     }
 
-    initPositionnement() : any {
+    initPositionnement(): any {
         this.positionnement_final = this.getPositionnementDefinitif();
+    }
+
+    displaySkillsValidatedPercentage = (): string => {
+        return !isNaN(this.skillsValidatedPercentage) ? `${this.skillsValidatedPercentage}%` : '';
     }
 }
 
-export class SuivisDesAcquis extends Model{
+export class SuivisDesAcquis extends Model {
     all: SuiviDesAcquis[];
     tableConversions: Collection<TableConversion>;
     moyenneGeneraleClasse: string;
     idEleve: string;
     idClasse: string;
     idEtablissement: string;
-    idPeriode : number;
+    idPeriode: number;
     historiques: Historique[];
-    hasCoefficientConflict : boolean;
+    hasCoefficientConflict: boolean;
 
-    constructor (idEleve: string, idClasse: string, idEtablissement: string, idPeriode : number, typesPeriode : TypePeriode[]) {
+    constructor(idEleve: string, idClasse: string, idEtablissement: string, idPeriode: number, typesPeriode: TypePeriode[]) {
         super();
         this.all = [];
         this.idEleve = idEleve;
-        this.idClasse =  idClasse;
+        this.idClasse = idClasse;
         this.idEtablissement = idEtablissement;
         this.idPeriode = idPeriode;
         this.historiques = [];
@@ -154,7 +161,7 @@ export class SuivisDesAcquis extends Model{
     async getConversionTable(): Promise<any> {
         this.collection(TableConversion, {
             sync: async (): Promise<any> => {
-                let{data} = await http.get( `/competences/competence/notes/bilan/conversion?idEtab=${this.idEtablissement}&idClasse=${this.idClasse}`);
+                let {data} = await http.get(`/competences/competence/notes/bilan/conversion?idEtab=${this.idEtablissement}&idClasse=${this.idClasse}`);
                 this.tableConversions.load(data);
             }
         });
@@ -165,12 +172,12 @@ export class SuivisDesAcquis extends Model{
         this.hasCoefficientConflict = false;
         _.forEach(this.all, (subject) => {
             subject.coefficients = [];
-            if(Utils.isNotNull(subject) && _.keys(subject.coefficient).length > 1){
+            if (Utils.isNotNull(subject) && _.keys(subject.coefficient).length > 1) {
                 this.hasCoefficientConflict = true;
                 subject.hasConflict = true;
                 this.hasCoefficientConflict = true;
                 _.mapObject(subject.coefficient, (val, key) => {
-                    subject.coefficients.push(_.extend(val, {coefficient : key}));
+                    subject.coefficients.push(_.extend(val, {coefficient: key}));
                 });
             } else {
                 subject.hasConflict = false;
@@ -178,14 +185,41 @@ export class SuivisDesAcquis extends Model{
         })
     }
 
-    async getSuivisDesAcquis(){
-        try{
-            await this.getConversionTable();
-            let {data} = await http.get(`/competences/bilan/periodique/eleve/${this.idEleve}` +
-                `?idEtablissement=${this.idEtablissement}&idClasse=${this.idClasse}&idPeriode=${this.idPeriode}`);
+    getAchievements = async (group?: Classe): Promise<SuiviDesAcquis[]> => {
+        let payload: IAchievementsProgressPayload = {
+            periodId: this.idPeriode,
+            groupId: !!group ? group.id : null,
+        };
 
-            if(data.length > 0) {
-                this.all = Mix.castArrayAs(SuiviDesAcquis, data);
+        return Promise.all([
+            http.get(`/competences/bilan/periodique/eleve/${this.idEleve}` +
+                `?idEtablissement=${this.idEtablissement}&idClasse=${this.idClasse}&idPeriode=${this.idPeriode}`),
+            achievementsProgressService.getSubjectsSkillsValidatedPercentage(this.idEtablissement, this.idEleve, payload)
+        ]).then((values: [AxiosResponse, AchievementsProgress]) => {
+            if (values[0].data.length > 0) {
+                let achievementsList: SuiviDesAcquis[] = Mix.castArrayAs(SuiviDesAcquis, values[0].data);
+                values[1].achievementsSubjects.forEach((achievementsSubject: AchievementsSubject) => {
+                    let achievements: SuiviDesAcquis = achievementsList.find((achievements: SuiviDesAcquis) =>
+                        achievements.id_matiere === achievementsSubject.subjectId
+                    );
+
+                    if (!!achievements)
+                        achievements.skillsValidatedPercentage = achievementsSubject.skillsValidatedPercentage;
+                });
+
+                return achievementsList;
+            }
+
+            return [];
+        });
+    }
+
+    async getSuivisDesAcquis(group?: Classe) {
+        try {
+            await this.getConversionTable();
+            let achievementsList: SuiviDesAcquis[] = await this.getAchievements(group);
+            if (achievementsList.length > 0) {
+                this.all = achievementsList;
 
                 let suiviDesAcquisToRemove = [];
 
@@ -195,24 +229,24 @@ export class SuivisDesAcquis extends Model{
                     suiviDesAcquis.idEtablissement = this.idEtablissement;
                     suiviDesAcquis.idPeriode = this.idPeriode;
 
-                    if(suiviDesAcquis.appreciations !== null && suiviDesAcquis.appreciations !== undefined){
-                        let appreciationsPeriode = _.find(suiviDesAcquis.appreciations, {id_periode : suiviDesAcquis.idPeriode});
-                        if(appreciationsPeriode !== undefined) {
+                    if (suiviDesAcquis.appreciations !== null && suiviDesAcquis.appreciations !== undefined) {
+                        let appreciationsPeriode = _.find(suiviDesAcquis.appreciations, {id_periode: suiviDesAcquis.idPeriode});
+                        if (appreciationsPeriode !== undefined) {
                             suiviDesAcquis.appreciationByClasse = appreciationsPeriode.appreciationByClasse[0];
                         }
                     }
-                    if(suiviDesAcquis.appreciationByClasse === undefined) {
+                    if (suiviDesAcquis.appreciationByClasse === undefined) {
                         suiviDesAcquis.appreciationByClasse = new AppreciationMatiere(suiviDesAcquis.idClasse);
                     }
 
                     // la moyenneEleve pour chaque période et chaque matiere
                     let finalAverage = (suiviDesAcquis.moyennesFinales !== null && suiviDesAcquis.moyennesFinales !== undefined) ?
                         _.find(suiviDesAcquis.moyennesFinales, {id_periode: suiviDesAcquis.idPeriode}) : undefined;
-                    if(finalAverage !== undefined){
-                        suiviDesAcquis.moyenneEleve = _.find(suiviDesAcquis.moyennesFinales,{id_periode : suiviDesAcquis.idPeriode}).moyenneFinale;
+                    if (finalAverage !== undefined) {
+                        suiviDesAcquis.moyenneEleve = _.find(suiviDesAcquis.moyennesFinales, {id_periode: suiviDesAcquis.idPeriode}).moyenneFinale;
                     } else if (suiviDesAcquis.moyennes !== null && suiviDesAcquis.moyennes !== undefined &&
                         _.find(suiviDesAcquis.moyennes, {id: suiviDesAcquis.idPeriode}) !== undefined) {
-                        suiviDesAcquis.moyenneEleve = _.find(suiviDesAcquis.moyennes, {id : suiviDesAcquis.idPeriode}).moyenne;
+                        suiviDesAcquis.moyenneEleve = _.find(suiviDesAcquis.moyennes, {id: suiviDesAcquis.idPeriode}).moyenne;
                     } else {
                         suiviDesAcquis.moyenneEleve = utils.getNN();
                     }
@@ -227,7 +261,7 @@ export class SuivisDesAcquis extends Model{
 
                     //le positionnement auto
                     suiviDesAcquis.positionnement_auto = 0;
-                    if(suiviDesAcquis.positionnements_auto !== null && suiviDesAcquis.positionnements_auto !== undefined
+                    if (suiviDesAcquis.positionnements_auto !== null && suiviDesAcquis.positionnements_auto !== undefined
                         && _.find(suiviDesAcquis.positionnements_auto, {id_periode: suiviDesAcquis.idPeriode}) !== undefined) {
                         let positionnementCalcule = _.find(suiviDesAcquis.positionnements_auto, {id_periode: suiviDesAcquis.idPeriode}).moyenne;
                         let positionnementConverti = utils.getMoyenneForBFC(positionnementCalcule, this.tableConversions.all);
@@ -235,8 +269,8 @@ export class SuivisDesAcquis extends Model{
                     }
 
                     if (suiviDesAcquis.positionnementsFinaux !== null && suiviDesAcquis.positionnementsFinaux !== undefined && suiviDesAcquis.positionnementsFinaux.length > 0) {
-                        if(_.find( suiviDesAcquis.positionnementsFinaux, {id_periode : suiviDesAcquis.idPeriode}) !== undefined){
-                            suiviDesAcquis.positionnement_final = _.find(suiviDesAcquis.positionnementsFinaux, {id_periode : suiviDesAcquis.idPeriode}).positionnementFinal;
+                        if (_.find(suiviDesAcquis.positionnementsFinaux, {id_periode: suiviDesAcquis.idPeriode}) !== undefined) {
+                            suiviDesAcquis.positionnement_final = _.find(suiviDesAcquis.positionnementsFinaux, {id_periode: suiviDesAcquis.idPeriode}).positionnementFinal;
                         } else {
                             suiviDesAcquis.positionnement_final = suiviDesAcquis.positionnement_auto;
                         }
@@ -254,12 +288,12 @@ export class SuivisDesAcquis extends Model{
                     // ajout des moyennes par matiere sur les periodes
                     _.each(this.historiques, (histo) => {
                         //ajout de la moyennefinale si elle existe sinon ajout de la moyenne de l'eleve si elle existe pour la periode en cours
-                        if(_.find(suiviDesAcquis.moyennesFinales, {id : histo.id_type}) !== undefined){
-                            histo.moyEleveAllMatieres.push(_.find(suiviDesAcquis.moyennesFinales, {id : histo.id_type}).moyenne);
-                        } else if (_.find(suiviDesAcquis.moyennes, {id: histo.id_type})!== undefined){
-                            histo.moyEleveAllMatieres.push(_.find(suiviDesAcquis.moyennes, {id : histo.id_type}).moyenne);
+                        if (_.find(suiviDesAcquis.moyennesFinales, {id: histo.id_type}) !== undefined) {
+                            histo.moyEleveAllMatieres.push(_.find(suiviDesAcquis.moyennesFinales, {id: histo.id_type}).moyenne);
+                        } else if (_.find(suiviDesAcquis.moyennes, {id: histo.id_type}) !== undefined) {
+                            histo.moyEleveAllMatieres.push(_.find(suiviDesAcquis.moyennes, {id: histo.id_type}).moyenne);
                         }
-                        if(_.find(suiviDesAcquis.moyennesClasse,{id: histo.id_type}) !== undefined){
+                        if (_.find(suiviDesAcquis.moyennesClasse, {id: histo.id_type}) !== undefined) {
                             histo.moyClasseAllMatieres.push(_.find(suiviDesAcquis.moyennesClasse, {id: histo.id_type}).moyenne);
                         }
                     });
@@ -286,27 +320,27 @@ export class SuivisDesAcquis extends Model{
                     histo.moyGeneraleClasse = (histo.moyClasseAllMatieres.length === 0) ? utils.getNN() : utils.average(histo.moyClasseAllMatieres).toFixed(2);
                 });
             }
-        }catch(e){
+        } catch (e) {
             notify.error('bilan.periodique.suivis.des.acquis.error.get');
             console.error(e)
         }
     }
 
-    getHistoriqueByPeriode (id_periode): Historique {
-        return _.find( this.historiques, {id_type: id_periode});
+    getHistoriqueByPeriode(id_periode): Historique {
+        return _.find(this.historiques, {id_type: id_periode});
     }
 
     getPositionnement(suivi, sousMat) {
         let res = 0;
         let moy = suivi._positionnements_auto;
-        if(moy !== undefined) {
+        if (moy !== undefined) {
             moy = suivi._positionnements_auto[this.idPeriode];
-            if(moy !== undefined) {
+            if (moy !== undefined) {
                 moy = moy[sousMat.id_type_sousmatiere];
             }
         }
 
-        if(Utils.isNotNull(moy) && moy.hasNote > 0) {
+        if (Utils.isNotNull(moy) && moy.hasNote > 0) {
             let positionnementConverti = utils.getMoyenneForBFC(moy.moyenne, this.tableConversions.all);
             res = (positionnementConverti !== -1) ? positionnementConverti : 0;
         }
@@ -316,9 +350,9 @@ export class SuivisDesAcquis extends Model{
 
     getMoyenne(suivi, sousMat) {
         let moy = suivi._moyenne;
-        if(moy !== undefined) {
+        if (moy !== undefined) {
             moy = suivi._moyenne[this.idPeriode];
-            if(moy !== undefined) {
+            if (moy !== undefined) {
                 moy = moy [sousMat.id_type_sousmatiere];
             }
         }
@@ -327,13 +361,13 @@ export class SuivisDesAcquis extends Model{
 
     getMoyenneClasse(suivi, sousMat) {
         let moy = suivi._moyennesClasse;
-        if(moy !== undefined) {
+        if (moy !== undefined) {
             moy = suivi._moyennesClasse[this.idPeriode];
-            if(moy !== undefined) {
+            if (moy !== undefined) {
                 moy = moy [sousMat.id_type_sousmatiere];
             }
         }
-        return (moy === undefined)? getNN() : moy;
+        return (moy === undefined) ? getNN() : moy;
     }
 }
 
