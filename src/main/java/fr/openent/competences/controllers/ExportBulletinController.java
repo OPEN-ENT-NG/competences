@@ -152,7 +152,7 @@ public class ExportBulletinController extends ControllerHelper {
     @Get("/archive/bulletins")
     @ApiDoc("Télécharge l'archive d'un établissement")
     @SecuredAction(value = "",type = ActionType.RESOURCE)
-    @ResourceFilter(SuperAdminFilter.class)
+    @ResourceFilter(HasExportLSURight.class)
     public void getArchiveBulletin(final HttpServerRequest request){
         String idStructure = request.params().get("idStructure");
         String idYear = request.params().get("idYear");
