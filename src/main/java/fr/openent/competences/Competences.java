@@ -168,7 +168,6 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_DEVOIRS_UPDATE = "eval_updateDevoir";
     public static final String SCHEMA_DEVOIRS_CREATE = "eval_createDevoir";
     public static final String SCHEMA_MAITRISE_CREATE = "eval_createMaitrise";
-    public static final String SCHEMA_REL_PROFESSEURS_REMPLACANTS_CREATE = "eval_createRel_professeurs_remplacants";
     public static final String SCHEMA_NOTES_CREATE = "eval_createNote";
     public static final String SCHEMA_NOTES_UPDATE = "eval_updateNote";
     public static final String SCHEMA_USE_PERSO_NIVEAU_COMPETENCE = "eval_usePersoNiveauCompetence";
@@ -217,7 +216,6 @@ public class Competences extends BaseServer {
     // Clefs usuelles
     public static final String ID_ETABLISSEMENT_KEY = "idEtablissement";
     public static final String ID_ELEVE_KEY = "idEleve";
-    public static final String ID_ELEVES_KEY = "idEleves";
     public static final String ID_CLASSE_KEY = "idClasse";
     public static final String ID_CLASSES_KEY = "idClasses";
     public static final String TYPE_CLASSE_KEY = "typeClasse";
@@ -227,8 +225,6 @@ public class Competences extends BaseServer {
     public static final String LAST_NAME_KEY = "lastName";
     public static final String FIRST_NAME_KEY = "firstName";
     public static final String DISPLAY_NAME_KEY = "displayName";
-    public static final String COMPETENCES_NOTES_KEY = "competencesNotes";
-    public static final String ELEMENT_PROGRAMME_KEY = "elementProgramme";
     public static final String LEVEL = "level";
 
     public static final String NAME = "name";
@@ -248,7 +244,6 @@ public class Competences extends BaseServer {
     public static final String ELEVES = "eleves";
     public static final String APPRECIATION_CLASSE = "appreciation_classe";
     public static final String APPRECIATIONS = "appreciations";
-    public static final String APPRECIATIONS_ELEVE = "appreciations_eleve";
     public static final String NOTES = "notes";
     public static final String HAS_NOTE = "hasNote";
     public static final String NN = "NN";
