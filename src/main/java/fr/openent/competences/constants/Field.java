@@ -270,6 +270,7 @@ public class Field {
 
     public static final String THEMATIQUE_BILAN_PERIODIQUE_TABLE = "thematique_bilan_periodique";
     public static final String TRANSITION_TABLE = "transition";
+    public static final String TYPE = "type";
     public static final String USERS_TABLE = "users";
     public static final String USE_PERSO_NIVEAU_COMPETENCES_TABLE = "use_perso";
     public static final String VIESCO_ABSENCES_ET_RETARDS_TABLE = "absences_et_retards";
