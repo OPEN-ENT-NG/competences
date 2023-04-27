@@ -21,10 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.security.*;
-import fr.openent.competences.service.BfcSyntheseService;
-import fr.openent.competences.service.CompetenceNiveauFinalService;
-import fr.openent.competences.service.CompetenceNoteService;
-import fr.openent.competences.service.StructureOptionsService;
+import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.rs.*;
@@ -61,13 +58,13 @@ public class CompetenceNoteController extends ControllerHelper {
     private EventBus eb;
 
 
-    public CompetenceNoteController(EventBus eb) {
-        this.eb = eb;
-        competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
+    public CompetenceNoteController(ServiceFactory serviceFactory) {
+        this.eb = serviceFactory.eventBus();
+        competencesNotesService = serviceFactory.competenceNoteService();
         syntheseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         competenceNiveauFinalService = new DefaultCompetenceNiveauFinalService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCE_NIVEAU_FINAL);
-        structureOptionsService = new DefaultStructureOptions();
-        devoirsService = new DefaultDevoirService(eb);
+        structureOptionsService = serviceFactory.structureOptionsService();
+        devoirsService = new DefaultDevoirService(serviceFactory.eventBus());
     }
 
 
@@ -477,5 +474,21 @@ public class CompetenceNoteController extends ControllerHelper {
                 }
             }
         });
+    }
+
+    @Get("/structures/:structureId/student/:studentId/subjectsSkillsValidatedPercentage")
+    @ApiDoc("Get skills validated percentage by subject for a student")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessConseilDeClasseStructureId.class)
+    public void getSubjectSkillsValidatedPercentage(final HttpServerRequest request) {
+        String structureId = request.params().get(Field.STRUCTUREID);
+        String studentId = request.params().get(Field.STUDENTID);
+        String stringPeriodId = request.params().get(Field.PERIODID);
+        Long periodId = stringPeriodId != null ? Long.parseLong(stringPeriodId) : null;
+        String groupId = request.params().get(Field.GROUPID);
+
+        competencesNotesService.getSubjectSkillsValidatedPercentage(structureId, studentId, periodId, groupId)
+                .onSuccess(achievements -> renderJson(request, achievements.toJson()))
+                .onFailure(err -> renderError(request, new JsonObject().put(Field.MESSAGE, err.getMessage())));
     }
 }

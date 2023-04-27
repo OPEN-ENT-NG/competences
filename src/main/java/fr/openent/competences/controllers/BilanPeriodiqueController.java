@@ -541,22 +541,5 @@ public class BilanPeriodiqueController extends ControllerHelper{
             }
         });
     }
-
-
-    @Get("/structures/:structureId/student/:studentId/subjectsSkillsValidatedPercentage")
-    @ApiDoc("Get skills validated percentage by subject for a student")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessConseilDeClasseStructureId.class)
-    public void getSubjectSkillsValidatedPercentage(final HttpServerRequest request) {
-        String structureId = request.params().get(Field.STRUCTUREID);
-        String studentId = request.params().get(Field.STUDENTID);
-        String stringPeriodId = request.params().get(Field.PERIODID);
-        Long periodId = stringPeriodId != null ? Long.parseLong(stringPeriodId) : null;
-        String groupId = request.params().get(Field.GROUPID);
-
-        bilanPeriodiqueService.getSubjectSkillsValidatedPercentage(structureId, studentId, periodId, groupId)
-                .onSuccess(achievements -> renderJson(request, achievements.toJson()))
-                .onFailure(err -> renderError(request, new JsonObject().put(Field.MESSAGE, err.getMessage())));
-    }
 }
 

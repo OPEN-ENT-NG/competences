@@ -1,7 +1,8 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.constants.Field;
-import fr.openent.competences.service.BilanPeriodiqueService;
+import fr.openent.competences.service.CompetenceNoteService;
+import fr.openent.competences.service.ServiceFactory;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
@@ -19,19 +20,20 @@ import static fr.openent.competences.Competences.*;
 import static org.mockito.Mockito.mock;
 
 @RunWith(VertxUnitRunner.class)
-public class DefaultBilanPerioqueServiceTest {
+public class DefaultCompetenceNoteServiceTest {
 
     private static final String STRUCTURE_ID = "111";
     private static final String STUDENT_ID = "222";
     private static final long PERIOD_ID = 3;
     private static final String GROUP_ID = "444";
     private final Sql sql = mock(Sql.class);
-    private BilanPeriodiqueService bilanPeriodiqueService;
+    private CompetenceNoteService competenceNoteService;
 
     @Before
     public void setUp() throws NoSuchFieldException {
         Sql.getInstance().init(Vertx.vertx().eventBus(), "");
-        this.bilanPeriodiqueService = new DefaultBilanPerioqueService(sql, Vertx.vertx().eventBus());
+        ServiceFactory serviceFactory = new ServiceFactory(Vertx.vertx(), null, Sql.getInstance());
+        this.competenceNoteService = serviceFactory.competenceNoteService();
     }
 
     @Test
@@ -72,7 +74,7 @@ public class DefaultBilanPerioqueServiceTest {
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(JsonArray.class), Mockito.any(Handler.class));
 
-        Whitebox.invokeMethod(bilanPeriodiqueService, "getSubjectSkillsValidatedPercentageRequest",
+        Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsValidatedPercentageRequest",
                 STRUCTURE_ID, STUDENT_ID, PERIOD_ID, GROUP_ID, true);
     }
 
@@ -101,7 +103,7 @@ public class DefaultBilanPerioqueServiceTest {
                 .add(GROUP_ID);
 
         JsonArray params = new JsonArray();
-        String queryResult = Whitebox.invokeMethod(bilanPeriodiqueService, "getSubjectSkillsIsValidatedQuery",
+        String queryResult = Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsIsValidatedQuery",
                 STRUCTURE_ID, STUDENT_ID, PERIOD_ID, GROUP_ID, false, params);
 
         ctx.assertEquals(queryResult.trim().replaceAll("\\s+", " "),
@@ -121,7 +123,7 @@ public class DefaultBilanPerioqueServiceTest {
                 .add(STUDENT_ID);
 
         JsonArray params = new JsonArray();
-        String queryResult = Whitebox.invokeMethod(bilanPeriodiqueService, "getSubjectSkillsIsValidatedQueryFilters",
+        String queryResult = Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsIsValidatedQueryFilters",
                 STRUCTURE_ID, STUDENT_ID, null, null, params);
 
         ctx.assertEquals(queryResult.trim().replaceAll("\\s+", " "),
@@ -143,7 +145,7 @@ public class DefaultBilanPerioqueServiceTest {
                 .add(PERIOD_ID);
 
         JsonArray params = new JsonArray();
-        String queryResult = Whitebox.invokeMethod(bilanPeriodiqueService, "getSubjectSkillsIsValidatedQueryFilters",
+        String queryResult = Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsIsValidatedQueryFilters",
                 STRUCTURE_ID, STUDENT_ID, PERIOD_ID, null, params);
 
         ctx.assertEquals(queryResult.trim().replaceAll("\\s+", " "),
@@ -165,13 +167,14 @@ public class DefaultBilanPerioqueServiceTest {
                 .add(GROUP_ID);
 
         JsonArray params = new JsonArray();
-        String queryResult = Whitebox.invokeMethod(bilanPeriodiqueService, "getSubjectSkillsIsValidatedQueryFilters",
+        String queryResult = Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsIsValidatedQueryFilters",
                 STRUCTURE_ID, STUDENT_ID, null, GROUP_ID, params);
 
         ctx.assertEquals(queryResult.trim().replaceAll("\\s+", " "),
                 expectedQuery.trim().replaceAll("\\s+", " "));
         ctx.assertEquals(params, expectedParams);
     }
+
     @Test
     public void getSubjectSkillsIsValidatedQueryFilters_with_all_filters(TestContext ctx) throws Exception {
         String expectedQuery = " WHERE d.id_etablissement = ? AND cn.id_eleve = ? " +
@@ -188,7 +191,7 @@ public class DefaultBilanPerioqueServiceTest {
                 .add(GROUP_ID);
 
         JsonArray params = new JsonArray();
-        String queryResult = Whitebox.invokeMethod(bilanPeriodiqueService, "getSubjectSkillsIsValidatedQueryFilters",
+        String queryResult = Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsIsValidatedQueryFilters",
                 STRUCTURE_ID, STUDENT_ID, PERIOD_ID, GROUP_ID, params);
 
         ctx.assertEquals(queryResult.trim().replaceAll("\\s+", " "),
