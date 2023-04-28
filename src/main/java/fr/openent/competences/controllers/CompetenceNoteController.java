@@ -487,7 +487,7 @@ public class CompetenceNoteController extends ControllerHelper {
         Long periodId = stringPeriodId != null ? Long.parseLong(stringPeriodId) : null;
         String groupId = request.params().get(Field.GROUPID);
 
-        competencesNotesService.getSubjectSkillsValidatedPercentage(structureId, studentId, periodId, groupId)
+        competencesNotesService.getStudentSubjectsSkillsValidatedPercentage(structureId, studentId, periodId, groupId)
                 .onSuccess(achievements -> renderJson(request, achievements.toJson()))
                 .onFailure(err -> renderError(request, new JsonObject().put(Field.MESSAGE, err.getMessage())));
     }

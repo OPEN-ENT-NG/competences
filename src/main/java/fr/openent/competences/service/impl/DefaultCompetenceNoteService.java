@@ -37,6 +37,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 
@@ -634,26 +635,62 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     }
 
     @Override
-    public Future<AchievementsProgress> getSubjectSkillsValidatedPercentage(String structureId, String studentId,
-                                                                            Long periodId, String groupId) {
+    public Future<AchievementsProgress> getStudentSubjectsSkillsValidatedPercentage(String structureId, String studentId,
+                                                                                    Long periodId, String groupId) {
         Promise<AchievementsProgress> promise = Promise.promise();
-
-        AchievementsProgress achievementsProgress = new AchievementsProgress(structureId, studentId);
-
-        structureOptionsService.isAverageSkills(structureId)
-                .compose(isAverageSkills ->
-                        getSubjectSkillsValidatedPercentageRequest(structureId, studentId, periodId, groupId,
-                                isAverageSkills))
-                .onSuccess(subjectSkillsValidatedPercentage -> {
-                    achievementsProgress.setAchievementsSubjects(subjectSkillsValidatedPercentage);
-                    promise.complete(achievementsProgress);
-                })
-                .onFailure(promise::fail);
-
+        this.getStudentsSubjectsSkillsValidatedPercentage(structureId, Collections.singletonList(studentId), periodId, groupId)
+                .onFailure(promise::fail)
+                .onSuccess(achievements -> {
+                    if (achievements.isEmpty()) {
+                        promise.complete(new AchievementsProgress(structureId, studentId));
+                        return;
+                    }
+                    // when we filter on one studentId, we can only have one Achievements
+                    promise.complete(achievements.get(0));
+                });
         return promise.future();
     }
 
-    private Future<JsonArray> getSubjectSkillsValidatedPercentageRequest(String structureId, String studentId,
+    @Override
+    @SuppressWarnings("unchecked")
+    public Future<List<AchievementsProgress>> getStudentsSubjectsSkillsValidatedPercentage(String structureId, List<String> studentIds,
+                                                                                           Long periodId, String groupId) {
+        Promise<List<AchievementsProgress>> promise = Promise.promise();
+        structureOptionsService.isAverageSkills(structureId)
+                .compose(isAverageSkills ->
+                        getSubjectSkillsValidatedPercentageRequest(structureId, studentIds, periodId, groupId,
+                                isAverageSkills))
+                .onFailure(promise::fail)
+                .onSuccess(subjectsSkillsValidatedPercentage ->
+                        promise.complete(formatSubjectSkillsValidatedPercentage(structureId,
+                                subjectsSkillsValidatedPercentage.getList())));
+        return promise.future();
+    }
+
+    private List<AchievementsProgress> formatSubjectSkillsValidatedPercentage(String structureId,
+                                                                              List<JsonObject> subjectsSkillsValidatedPercentage) {
+        return new ArrayList<>(subjectsSkillsValidatedPercentage.stream()
+                .collect(Collectors.toMap(
+                        // We regroup each achievements per student_id
+                        subjectSkillsValidatedPercentage -> subjectSkillsValidatedPercentage.getString(Field.STUDENT_ID),
+                        subjectSkillsValidatedPercentage -> initAchievements(structureId, subjectSkillsValidatedPercentage),
+                        this::mergeSubjectsAchievements
+                )).values());
+    }
+
+    private AchievementsProgress initAchievements(String structureId, JsonObject subjectSkillsValidatedPercentage) {
+        return new AchievementsProgress(subjectSkillsValidatedPercentage)
+                .structureId(structureId)
+                .addAchievementsSubject(subjectSkillsValidatedPercentage);
+    }
+
+    private AchievementsProgress mergeSubjectsAchievements(AchievementsProgress subjectSkillsValidatedPercentage1,
+                                                           AchievementsProgress subjectSkillsValidatedPercentage2) {
+        return subjectSkillsValidatedPercentage1.addAchievementsSubjects(subjectSkillsValidatedPercentage2.achievementsSubjects());
+    }
+
+
+    private Future<JsonArray> getSubjectSkillsValidatedPercentageRequest(String structureId, List<String> studentIds,
                                                                          Long periodId, String groupId,
                                                                          Boolean isAverageSkills) {
         Promise<JsonArray> promise = Promise.promise();
@@ -662,7 +699,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         String request = " SELECT id_eleve as student_id, id_matiere as subject_id, " +
                 " (SUM(is_validated::int) * 100) / COUNT(id_competence) as skills_validated_percentage " +
                 " FROM ( " +
-                getSubjectSkillsIsValidatedQuery(structureId, studentId, periodId, groupId, isAverageSkills, params) +
+                getSubjectSkillsIsValidatedQuery(structureId, studentIds, periodId, groupId, isAverageSkills, params) +
                 " )  as is_validated_skills_by_subjects " +
                 " GROUP BY id_eleve, id_matiere";
 
@@ -674,7 +711,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         return promise.future();
     }
 
-    private String getSubjectSkillsIsValidatedQuery(String structureId, String studentId,
+    private String getSubjectSkillsIsValidatedQuery(String structureId, List<String> studentIds,
                                                     Long periodId, String groupId, Boolean isAverageSkills,
                                                     JsonArray params) {
         return " SELECT cn.id_eleve, d.id_matiere, cn.id_competence, " +
@@ -686,19 +723,19 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 String.format(" INNER JOIN %s.%s t on d.id_type = t.id ", Field.NOTES_TABLE, Field.TYPE_TABLE) +
                 String.format(" LEFT JOIN %s.%s cnf ", Field.NOTES_TABLE, Field.COMPETENCE_NIVEAU_FINAL) +
                 " on d.id_matiere = cnf.id_matiere AND cn.id_eleve = cnf.id_eleve AND cn.id_competence = cnf.id_competence " +
-                getSubjectSkillsIsValidatedQueryFilters(structureId, studentId, periodId, groupId, params) +
+                getSubjectSkillsIsValidatedQueryFilters(structureId, studentIds, periodId, groupId, params) +
                 " GROUP BY cn.id_eleve, d.id_matiere, cn.id_competence";
     }
 
-    private String getSubjectSkillsIsValidatedQueryFilters(String structureId, String studentId,
+    private String getSubjectSkillsIsValidatedQueryFilters(String structureId, List<String> studentIds,
                                                            Long periodId, String groupId, JsonArray params) {
-        String queryFilter = " WHERE d.id_etablissement = ? AND cn.id_eleve = ? " +
+        String queryFilter = String.format(" WHERE d.id_etablissement = ? AND cn.id_eleve IN %s ", Sql.listPrepared(studentIds)) +
                 " AND d.eval_lib_historise IS FALSE " +
                 " AND d.id_matiere IS NOT NULL " +
                 " AND t.formative IS FALSE ";
 
         params.add(structureId)
-                .add(studentId);
+                .addAll(new JsonArray(studentIds));
 
         if (periodId != null) {
             queryFilter += " AND d.id_periode = ? ";

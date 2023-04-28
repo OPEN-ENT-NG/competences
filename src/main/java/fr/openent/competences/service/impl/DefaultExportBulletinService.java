@@ -8,6 +8,7 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
+import fr.openent.competences.model.achievements.AchievementsProgress;
 import fr.openent.competences.service.*;
 import fr.openent.competences.utils.BulletinUtils;
 import fr.openent.competences.utils.MultiTeachersUtils;
@@ -540,8 +541,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     @Override
     public void getExportBulletin(final AtomicBoolean answered, String idEleve,
                                   Map<String, JsonObject> elevesMap, Student student, JsonArray idEleves, Long idPeriode, JsonObject params,
-                                  final JsonObject classe, String host, String acceptLanguage,
-                                  Vertx vertx, Handler<Either<String, JsonObject>> finalHandler){
+                                  final JsonObject classe, List<AchievementsProgress> studentsSkillsValidatedPercentage,
+                                  String host, String acceptLanguage, Vertx vertx, Handler<Either<String, JsonObject>> finalHandler){
         try {
             if (!answered.get()) {
                 Boolean isBulletinLycee = (isNotNull(params.getValue("simple"))) ? params.getBoolean("simple") : false ;
@@ -614,7 +615,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 getAvisConseil(student ,getAvisConseilPromise, beforeAvisConseil);
                 getAvisOrientation(student,
                         getAvisOrientationPromise, beforeAvisOrientation);
-                getSuiviAcquis(student,idEleves, classe, params, getSuiviAcquisPromise);
+                getSuiviAcquis(student,idEleves, classe, studentsSkillsValidatedPercentage, params, getSuiviAcquisPromise);
 
                 int finalNbOptions = nbOptions;
                 CompositeFuture.all(futures).setHandler(event -> {
@@ -1993,7 +1994,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     @Override
     public void getSuiviAcquis(Student student, JsonArray idEleves, JsonObject classe,
-                               JsonObject params, Promise<JsonObject> promise) {
+                               List<AchievementsProgress> studentsSkillsValidatedPercentage, JsonObject params,
+                               Promise<JsonObject> promise) {
         boolean getProgrammeElement = params.getBoolean(GET_PROGRAM_ELEMENT);
         String idEleve = student.getId();
         Long idPeriode = student.getClasse().getPeriode().getIdPeriode();
@@ -2026,18 +2028,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
                             idGroupClasse, services, multiTeachers,
                             getSuiviAcquisHandler(student, params, promise,classe,idEleves,
-                                    getProgrammeElement,  idGroupClasse, services, multiTeachers));
+                                    getProgrammeElement, idGroupClasse, services, multiTeachers, studentsSkillsValidatedPercentage));
                 }
             });
         }
     }
 
     //passer en param la map de students + fonction vieille
-    private Handler<Either<String, JsonArray>>
-    getSuiviAcquisHandler(Student student, JsonObject params,
+    private Handler<Either<String, JsonArray>> getSuiviAcquisHandler(Student student, JsonObject params,
                           Promise<JsonObject> promise, JsonObject classe, JsonArray idEleves, boolean getProgrammeElement,
                           JsonArray idGroupClasse,
-                          List<Service> services, JsonArray multiTeachers) {
+                          List<Service> services, JsonArray multiTeachers, List<AchievementsProgress> studentsSkillsValidatedPercentage) {
         return new Handler<Either<String, JsonArray>>() {
             private int count = 1;
             private AtomicBoolean answer = new AtomicBoolean(false);
@@ -2063,6 +2064,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonObject result = new JsonObject();
 
                     if(suiviAcquis != null){
+                        AchievementsProgress achievements = studentsSkillsValidatedPercentage.stream()
+                                .filter(studentSkillsValidatedPercentage ->
+                                        studentSkillsValidatedPercentage.studentId() != null &&
+                                                studentSkillsValidatedPercentage.studentId().equals(idEleve))
+                                .findFirst().orElse(new AchievementsProgress());
+
                         // On considèrera qu'on a un suivi des acquis si on affiche au moins une matière
                         for (int i = 0; i < suiviAcquis.size() ; i++) {
                             final JsonObject matiereJO = suiviAcquis.getJsonObject(i);
@@ -2078,7 +2085,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             }
                             // Une matière sera affichée si on a au moins un élement sur la période
 
-                            buildMatiereForSuiviAcquis(matiereJO,matiere, idPeriode, classe, params,services);
+                            buildMatiereForSuiviAcquis(matiereJO, matiere, idPeriode, classe, achievements, params, services);
                             checkCoefficientConflict(result, matiereJO.getJsonObject(COEFFICIENT), params);
                             if(Boolean.TRUE.equals(matiereJO.getBoolean(PRINT_MATIERE_KEY))) {
                                 res.add(matiereJO);
@@ -2311,7 +2318,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
      * @param services
      */
     private void buildMatiereForSuiviAcquis(final JsonObject matiereJO, Matiere matiere, Long idPeriode, final JsonObject classe,
-                                            JsonObject params, List<Service> services) {
+                                            AchievementsProgress achievements, JsonObject params, List<Service> services) {
         boolean printMatiere = false;
 
         JsonArray models = classe.getJsonArray("models");
@@ -2353,6 +2360,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 matiereJO.put(MOYENNE_ELEVE, NN);
             }
         }
+
+        setSubjectSkillsValidatedPercentage(matiereJO, achievements);
 
         JsonArray tableauDeconversion = classe.getJsonArray("tableauDeConversion");
         if (positionnementFinal != null) {
@@ -2421,6 +2430,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 }
             }
         }
+    }
+
+    private void setSubjectSkillsValidatedPercentage(JsonObject matiereJO, AchievementsProgress achievements) {
+        achievements.achievementsSubjects().stream()
+                .filter(achievementsSubject -> achievementsSubject.subjectId() != null &&
+                        achievementsSubject.subjectId().equals(matiereJO.getString(ID_MATIERE)))
+                .findFirst()
+                .ifPresent(achievementsSubject ->
+                        matiereJO.put(Field.SKILLSVALIDATEDPERCENTAGE,
+                                String.format("%s%%", achievementsSubject.skillsValidatedPercentage())));
     }
 
     @Override
@@ -2732,6 +2751,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void buildDataForStudent(final AtomicBoolean answered, JsonArray eleves,
                                     Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
                                     final JsonObject classe, Boolean showBilanPerDomaines, String host,
@@ -2743,6 +2763,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         if (eleves.size() > 0) {
             JsonObject firstStudent = eleves.getJsonObject(0);
             String idClasse = firstStudent.getString("idClasse");
+            List<String> studentIds = ((List<JsonObject>) eleves.getList()).stream()
+                    .map(eleve -> eleve.getString(Field.IDELEVE)).collect(Collectors.toList());
+            String structureId = firstStudent.getString(IDETABLISSEMENT);
             Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), event -> {
                 if(event.isRight() ) {
                     List<String> groupIds = new ArrayList<>();
@@ -2759,6 +2782,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     Promise<Object> multiTeachingPromise = Promise.promise();
                     Promise<JsonArray> allPeriodesPromises = Promise.promise();
                     Promise<List<SubTopic>> subTopicCoefPromise = Promise.promise();
+                    Future<List<AchievementsProgress>> studentsSkillsValidatedPercentageFuture =
+                            !Boolean.TRUE.equals(params.getValue(Field.SIMPLE, false)) &&
+                                    Boolean.TRUE.equals(params.getBoolean(Field.SHOWSKILLSVALIDATEDPERCENTAGE, false)) ?
+                                    competenceNoteService
+                                            .getStudentsSubjectsSkillsValidatedPercentage(structureId, studentIds, idPeriode, null) :
+                                    Future.succeededFuture(Collections.emptyList());
+
                     List<Future> promises = new ArrayList<>();
                     promises.add(structurePromise.future());
                     promises.add(periodeLibellePromise.future());
@@ -2769,7 +2799,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     promises.add(multiTeachingPromise.future());
                     promises.add(allPeriodesPromises.future());
                     promises.add(subTopicCoefPromise.future());
-                    utilsService.getPeriodes(groupIds, firstStudent.getString(IDETABLISSEMENT),
+                    promises.add(studentsSkillsValidatedPercentageFuture);
+                    utilsService.getPeriodes(groupIds, structureId,
                             FutureHelper.handlerJsonArray(allPeriodesPromises,"utilsGetPeriodes"));
 
                     int nbOptions= 0;
@@ -2780,16 +2811,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         nbOptions++;
                     }
 
-                    getSubTopicCoeff(firstStudent.getString(IDETABLISSEMENT), new JsonArray(groupIds),
+                    getSubTopicCoeff(structureId, new JsonArray(groupIds),
                             subTopicCoefPromise);
-                    getStructure(firstStudent.getString(IDETABLISSEMENT),structurePromise);
+                    getStructure(structureId,structurePromise);
                     getLibellePeriode(idPeriode,host,acceptLanguage,periodeLibellePromise);
                     getAnneeScolaire(idClasse,periodeYearPromise);
                     generateImagesFromPathForBulletin(params,vertx,imgPromise);
                     Utils.getElevesClasse(eb, idClasse, idPeriode, listStudentsPromise);
-                    utilsService.getServices(firstStudent.getString(IDETABLISSEMENT),
+                    utilsService.getServices(structureId,
                             new JsonArray(groupIds),FutureHelper.handlerJsonArray(servicesPromise));
-                    utilsService.getAllMultiTeachers(firstStudent.getString(IDETABLISSEMENT),
+                    utilsService.getAllMultiTeachers(structureId,
                             new JsonArray(groupIds), FutureHelper.handlerJsonArray(multiTeachingPromise));
 
                     int finalNbOptions = nbOptions;
@@ -2812,7 +2843,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         JsonArray multiTeachinJsonArray = (JsonArray) multiTeachingPromise.future().result();
 
                         for(int i = 1; i <= finalNbOptions; i++) {
-                            paramBulletins.addParams((JsonObject) success.result().list().get(8 + i));
+                            paramBulletins.addParams((JsonObject) success.result().list().get(9 + i));
                         }
                         List<Service> services = new ArrayList<>();
                         List<MultiTeaching> multiTeachings = new ArrayList<>();
@@ -2831,7 +2862,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             Student student = initStudent(structure, periode, paramBulletins, services, multiTeachings,
                                     eleve, typePeriode, idPeriode, classe, showBilanPerDomaines, images, params);
                             students.put(idEleve, student);
-                            getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe, host, acceptLanguage, vertx,
+                            getExportBulletin(answered, idEleve, elevesMap, student, idEleves,idPeriode, params, classe,
+                                    studentsSkillsValidatedPercentageFuture.result(), host, acceptLanguage, vertx,
                                     FutureHelper.handlerJsonObject(promise));
                         }
 

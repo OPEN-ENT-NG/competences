@@ -44,6 +44,7 @@ export enum ReportsModelsPrintExportPreferencesCheckboxConst {
     HIDE_HEAD_TEACHER = "hideHeadTeacher",
     SIMPLE = "simple",
     NEUTRAL = "neutre",
+    SHOW_SKILLS_VALIDATED_PERCENTAGE = 'showSkillsValidatedPercentage'
 }
 
 export enum ReportsModelsPrintExportPreferencesTextConst {

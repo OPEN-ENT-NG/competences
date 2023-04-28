@@ -1,5 +1,6 @@
 package fr.openent.competences.model;
 
+import fr.openent.competences.constants.Field;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -119,6 +120,7 @@ public class ParamsBulletins {
                 .put(MOYENNE_ANUELLE_LIBELLE, getLibelle("average.annual"))
                 .put(MOYENNE_GENERALE_LIBELLE, getLibelle("average.general"))
                 .put(SUBTOPIC_LIBELLE, getLibelle("subtopic.libelle"))
+                .put(Field.SKILLSVALIDATEDPERCENTAGELIBELLE, getLibelle("evaluations.validated.skills"))
         ;
     }
 
@@ -146,7 +148,8 @@ public class ParamsBulletins {
                 .put(ADD_OTHER_TEACHER, otherParams.getBoolean(ADD_OTHER_TEACHER,false))
                 .put(FUNCTION_OTHER_TEACHER, otherParams.getString(FUNCTION_OTHER_TEACHER,""))
                 .put(OTHER_TEACHER_NAME, otherParams.getString(OTHER_TEACHER_NAME,""))
-                .put(AGRICULTURE_LOGO, otherParams.getBoolean(AGRICULTURE_LOGO,false));
+                .put(AGRICULTURE_LOGO, otherParams.getBoolean(AGRICULTURE_LOGO,false))
+                .put(Field.SHOWSKILLSVALIDATEDPERCENTAGE, otherParams.getBoolean(Field.SHOWSKILLSVALIDATEDPERCENTAGE,false));
         JsonArray niveauCompetences;
         try {
             niveauCompetences = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
