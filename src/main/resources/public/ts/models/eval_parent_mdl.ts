@@ -56,7 +56,7 @@ export class Evaluations extends Model {
 
     static get api() {
         return {
-            EVAL_ENFANTS: `/competences/enfants?userId=${model.me.userId}&idEtablissement=${model.me.structures[0]}`,
+            EVAL_ENFANTS: `/competences/enfants`,
             GET_EVALUATIONS : '/competences/devoirs?idEtablissement=',
             GET_MATIERES : '/viescolaire/matieres/services-filter?idEtablissement=',
             GET_ENSEIGNANTS : '/competences/user/list?profile=Teacher&structureId=',
