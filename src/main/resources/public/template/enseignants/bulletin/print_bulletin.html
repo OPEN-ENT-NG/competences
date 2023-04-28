@@ -279,7 +279,7 @@
                                     <span><i18n>evaluations.export.bulletin.hide.headTeacher</i18n></span>
                                 </label>
                             </div>
-                            <div class="three cell twelve-mobile">
+                            <div class="four cell twelve-mobile">
                                 <label class="checkbox">
                                     <input type="checkbox" ng-model="print.addOtherTeacher"/>
                                     <span>
@@ -296,6 +296,12 @@
                                         </select>
                                     </label>
                                 </section>
+                            </div>
+                            <div class="four cell twelve-mobile" ng-show="print.simple !== true">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.showSkillsValidatedPercentage"/>
+                                    <span><i18n>evaluations.export.bulletin.show.skillsValidatedPercentage</i18n></span>
+                                </label>
                             </div>
                         </div>
                     </fieldset>

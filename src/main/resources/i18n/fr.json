@@ -647,6 +647,7 @@
   "evaluations.export.bulletin.legendMaxWidthStructure": "Largeur max conseillée: 230px",
   "evaluations.export.bulletin.legendMaxHeightStructure": "Hauteur max conseillée: 90px",
   "evaluations.export.bulletin.hide.headTeacher": "Masquer le professeur principal",
+  "evaluations.export.bulletin.show.skillsValidatedPercentage": "Afficher le pourcentage de compétences validées",
   "evaluations.export.bulletin.add.function": "Ajouter une fonction : ",
 
   "evaluation.eleve.header.followItems": "SUIVI DES ITEMS",

@@ -22,6 +22,15 @@ public class AchievementsSubject implements SkillModel<AchievementsSubject> {
         return this;
     }
 
+    public String subjectId() {
+        return subjectId;
+    }
+
+    public Integer skillsValidatedPercentage() {
+        return skillsValidatedPercentage;
+    }
+
+
     @Override
     public JsonObject toJson() {
         return new JsonObject()

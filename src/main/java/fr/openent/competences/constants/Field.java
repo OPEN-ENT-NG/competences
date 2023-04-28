@@ -152,6 +152,7 @@ public class Field {
     public static final String dateFormateYYYYMMDDTHHMMSS  = "yyyy-MM-dd'T'HH:mm:ss";
     public static final String IS_ANNOTATION = "is_annotation";
     public static final String NOTE = "note";
+    public static final String SIMPLE = "SIMPLE";
     public static final String LIBELLE_COURT = "libelle_court";
     public static final String HASDIVISEUR = "hasDiviseur";
     public static final String DATA = "data";
@@ -288,8 +289,10 @@ public class Field {
     public final static String VIESCO_SERVICES_TABLE = "services";
     public static final String TYPE_TABLE = "type";
     // Achievements
+    public static final String SHOWSKILLSVALIDATEDPERCENTAGE = "showSkillsValidatedPercentage";
     public static final String SKILLS_VALIDATED_PERCENTAGE = "skills_validated_percentage";
     public static final String SKILLSVALIDATEDPERCENTAGE = "skillsValidatedPercentage";
+    public static final String SKILLSVALIDATEDPERCENTAGELIBELLE = "skillsValidatedPercentageLibelle";
     public static final String ACHIEVEMENTSSUBJECTS = "achievementsSubjects";
 
 

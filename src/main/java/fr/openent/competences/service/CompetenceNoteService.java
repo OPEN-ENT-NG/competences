@@ -191,14 +191,26 @@ public interface CompetenceNoteService extends CrudService {
                                           Handler<Either<String,Map<Integer, Map<Integer,Integer>>>> handler);
 
     /**
-     * Get skills validated percentage by subject for a student
+     * Get skills validated percentage by subject for each achievement's student (one Achievements for one student_id)
+     *
+     * @param structureId structure identifier filter on
+     * @param studentIds  students identifier to filter on
+     * @param periodId    period identifier to filter on
+     * @param groupId     group identifier to filter on
+     * @return return Future containing students (Achievements) SubjectsSkillsValidatedPercentage
+     */
+    Future<List<AchievementsProgress>> getStudentsSubjectsSkillsValidatedPercentage(String structureId, List<String> studentIds,
+                                                                                    Long periodId, String groupId);
+
+    /**
+     * same that getStudentsSubjectsSkillsValidatedPercentage, but only for one student
      *
      * @param structureId structure identifier filter on
      * @param studentId   student identifier to filter on
      * @param periodId    period identifier to filter on
      * @param groupId     group identifier to filter on
-     * @return return Future containing student SubjectSkillsValidatedPercentage inside his Achievements
+     * @return same that getStudentsSubjectsSkillsValidatedPercentage, but only for one student
      */
-    Future<AchievementsProgress> getSubjectSkillsValidatedPercentage(String structureId, String studentId,
-                                                                     Long periodId, String groupId);
+    Future<AchievementsProgress> getStudentSubjectsSkillsValidatedPercentage(String structureId, String studentId,
+                                                                             Long periodId, String groupId);
 }
