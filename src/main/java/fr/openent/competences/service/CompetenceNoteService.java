@@ -17,6 +17,7 @@
 
 package fr.openent.competences.service;
 
+import fr.openent.competences.model.achievements.AchievementsProgress;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import org.entcore.common.service.CrudService;
@@ -188,4 +189,16 @@ public interface CompetenceNoteService extends CrudService {
      */
     void getMaxBaremeMapOrderBaremeBrevet(String idEtablissement, String idClasse,
                                           Handler<Either<String,Map<Integer, Map<Integer,Integer>>>> handler);
+
+    /**
+     * Get skills validated percentage by subject for a student
+     *
+     * @param structureId structure identifier filter on
+     * @param studentId   student identifier to filter on
+     * @param periodId    period identifier to filter on
+     * @param groupId     group identifier to filter on
+     * @return return Future containing student SubjectSkillsValidatedPercentage inside his Achievements
+     */
+    Future<AchievementsProgress> getSubjectSkillsValidatedPercentage(String structureId, String studentId,
+                                                                     Long periodId, String groupId);
 }
