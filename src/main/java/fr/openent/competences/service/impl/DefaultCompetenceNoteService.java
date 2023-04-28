@@ -19,7 +19,10 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
+import fr.openent.competences.model.achievements.AchievementsProgress;
+import fr.openent.competences.service.StructureOptionsService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -43,9 +46,20 @@ import static fr.openent.competences.Competences.*;
 public class DefaultCompetenceNoteService extends SqlCrudService implements fr.openent.competences.service.CompetenceNoteService {
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultCompetenceNoteService.class);
+    private final StructureOptionsService structureOptionsService;
+    private final Sql sql;
 
+    @Deprecated
     public DefaultCompetenceNoteService(String schema, String table) {
         super(schema, table);
+        this.structureOptionsService = new DefaultStructureOptions();
+        this.sql = Sql.getInstance();
+    }
+
+    public DefaultCompetenceNoteService(Sql sql, StructureOptionsService structureOptionsService) {
+        super(Field.NOTES_TABLE, Field.COMPETENCES_NOTES_TABLE);
+        this.structureOptionsService = structureOptionsService;
+        this.sql = sql;
     }
 
     @Override
@@ -617,5 +631,85 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("GROUP BY cycle.id; ");
         values.add(idEleve);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public Future<AchievementsProgress> getSubjectSkillsValidatedPercentage(String structureId, String studentId,
+                                                                            Long periodId, String groupId) {
+        Promise<AchievementsProgress> promise = Promise.promise();
+
+        AchievementsProgress achievementsProgress = new AchievementsProgress(structureId, studentId);
+
+        structureOptionsService.isAverageSkills(structureId)
+                .compose(isAverageSkills ->
+                        getSubjectSkillsValidatedPercentageRequest(structureId, studentId, periodId, groupId,
+                                isAverageSkills))
+                .onSuccess(subjectSkillsValidatedPercentage -> {
+                    achievementsProgress.setAchievementsSubjects(subjectSkillsValidatedPercentage);
+                    promise.complete(achievementsProgress);
+                })
+                .onFailure(promise::fail);
+
+        return promise.future();
+    }
+
+    private Future<JsonArray> getSubjectSkillsValidatedPercentageRequest(String structureId, String studentId,
+                                                                         Long periodId, String groupId,
+                                                                         Boolean isAverageSkills) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonArray params = new JsonArray();
+
+        String request = " SELECT id_eleve as student_id, id_matiere as subject_id, " +
+                " (SUM(is_validated::int) * 100) / COUNT(id_competence) as skills_validated_percentage " +
+                " FROM ( " +
+                getSubjectSkillsIsValidatedQuery(structureId, studentId, periodId, groupId, isAverageSkills, params) +
+                " )  as is_validated_skills_by_subjects " +
+                " GROUP BY id_eleve, id_matiere";
+
+        sql.prepared(request, params,
+                SqlResult.validResultHandler(FutureHelper.handler(promise,
+                        String.format("[Competences@%s::getSubjectSkillsValidatedPercentageRequest] " +
+                                "Fail to retrieve SubjectSkillsValidatedPercentage types assigners", this.getClass().getSimpleName()))));
+
+        return promise.future();
+    }
+
+    private String getSubjectSkillsIsValidatedQuery(String structureId, String studentId,
+                                                    Long periodId, String groupId, Boolean isAverageSkills,
+                                                    JsonArray params) {
+        return " SELECT cn.id_eleve, d.id_matiere, cn.id_competence, " +
+                String.format(" %s(COALESCE(cnf.niveau_final, cn.evaluation)) > 1 as is_validated ",
+                        Boolean.TRUE.equals(isAverageSkills) ? "AVG" : "MAX") +
+                String.format(" FROM %s.%s cn ", Field.NOTES_TABLE, Field.COMPETENCES_NOTES_TABLE) +
+                String.format(" INNER JOIN %s.%s d on d.id = cn.id_devoir ", Field.NOTES_TABLE, Field.DEVOIRS_TABLE) +
+                String.format(" INNER JOIN %s.%s rdg on d.id = rdg.id_devoir ", Field.NOTES_TABLE, Field.REL_DEVOIRS_GROUPES_TABLE) +
+                String.format(" INNER JOIN %s.%s t on d.id_type = t.id ", Field.NOTES_TABLE, Field.TYPE_TABLE) +
+                String.format(" LEFT JOIN %s.%s cnf ", Field.NOTES_TABLE, Field.COMPETENCE_NIVEAU_FINAL) +
+                " on d.id_matiere = cnf.id_matiere AND cn.id_eleve = cnf.id_eleve AND cn.id_competence = cnf.id_competence " +
+                getSubjectSkillsIsValidatedQueryFilters(structureId, studentId, periodId, groupId, params) +
+                " GROUP BY cn.id_eleve, d.id_matiere, cn.id_competence";
+    }
+
+    private String getSubjectSkillsIsValidatedQueryFilters(String structureId, String studentId,
+                                                           Long periodId, String groupId, JsonArray params) {
+        String queryFilter = " WHERE d.id_etablissement = ? AND cn.id_eleve = ? " +
+                " AND d.eval_lib_historise IS FALSE " +
+                " AND d.id_matiere IS NOT NULL " +
+                " AND t.formative IS FALSE ";
+
+        params.add(structureId)
+                .add(studentId);
+
+        if (periodId != null) {
+            queryFilter += " AND d.id_periode = ? ";
+            params.add(periodId);
+        }
+
+        if (groupId != null) {
+            queryFilter += " AND rdg.type_groupe = 1 AND rdg.id_groupe = ? ";
+            params.add(groupId);
+        }
+
+        return queryFilter;
     }
 }

@@ -1,6 +1,8 @@
 package fr.openent.competences.service;
 
 import fr.openent.competences.service.impl.DefaultBilanPerioqueService;
+import fr.openent.competences.service.impl.DefaultCompetenceNoteService;
+import fr.openent.competences.service.impl.DefaultStructureOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.sql.Sql;
@@ -18,7 +20,15 @@ public class ServiceFactory {
     }
 
     public BilanPeriodiqueService bilanPeriodiqueService() {
-        return new DefaultBilanPerioqueService(sql, this.eventBus());
+        return new DefaultBilanPerioqueService(this.sql, this.eventBus());
+    }
+
+    public CompetenceNoteService competenceNoteService() {
+        return new DefaultCompetenceNoteService(this.sql, this.structureOptionsService());
+    }
+
+    public StructureOptionsService structureOptionsService() {
+        return new DefaultStructureOptions(this.eventBus());
     }
 
     // Helpers

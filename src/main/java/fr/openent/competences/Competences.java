@@ -301,7 +301,7 @@ public class Competences extends BaseServer {
         addController(new ArchiveBFCController(eb));
         addController(new ArchiveBulletinController(eb));
         addController(new CompetenceController(eb));
-        addController(new CompetenceNoteController(eb));
+        addController(new CompetenceNoteController(serviceFactory));
         addController(new ModaliteController());
         addController(new ExportBulletinController(eb,storage,eventStore));
         addController(new DomaineController(eb));
