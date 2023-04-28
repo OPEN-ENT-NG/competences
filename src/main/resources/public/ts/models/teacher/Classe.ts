@@ -146,11 +146,8 @@ export class Classe extends Model {
     filterEvaluableEleve (periode) {
         let res = _.omit(this, 'eleves');
 
-        if (periode && periode.id) {
+        if (periode) {
             let classePeriode = periode;
-            if(periode instanceof TypePeriode){
-                classePeriode = _.findWhere(this.periodes.all, {id_type: periode.id});
-            }
             if(classePeriode === undefined) {
                 return res;
             }
