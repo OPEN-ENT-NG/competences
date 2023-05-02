@@ -22,7 +22,6 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.security.*;
 import fr.openent.competences.security.modelbulletinrights.AccessExportModelBulletin;
 import fr.openent.competences.security.AccessParamLinkGroupCycleStructure;
-import fr.openent.competences.security.modelbulletinrights.AccessExportModelBulletinStructureId;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.*;
@@ -31,8 +30,6 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -92,14 +89,14 @@ public class UtilsController extends ControllerHelper {
     @Get("/enfants")
     @ApiDoc("Retourne la liste des enfants pour un utilisateur donné")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessStructureIsParent.class)
+    @ResourceFilter(IsRelative.class)
     public void getEnfants(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(UserInfos user) {
                 if (user != null) {
                     Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
-                    utilsService.getEnfants(request.params().get("userId"), new Handler<Either<String, JsonArray>>() {
+                    utilsService.getEnfants(user.getUserId(), new Handler<Either<String, JsonArray>>() {
                         @Override
                         public void handle(Either<String, JsonArray> event) {
                             if (event.isRight()) {
