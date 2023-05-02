@@ -125,7 +125,7 @@ export class Eleve extends DefaultEleve  {
         else if(periode === undefined) {
             return true;
         }
-        else if (periode.id === null || periode.id === undefined) {
+        else if (periode.id === null) {
             return true;
         }
         else {
