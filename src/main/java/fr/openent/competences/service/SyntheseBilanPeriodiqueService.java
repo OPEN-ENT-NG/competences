@@ -20,9 +20,12 @@
 package fr.openent.competences.service;
 
 import  fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
+import java.util.List;
 
 public interface SyntheseBilanPeriodiqueService {
 
@@ -34,19 +37,27 @@ public interface SyntheseBilanPeriodiqueService {
      * @param idStructure id de l'établissement où la synthèse a été saisie
      * @param handler handler portant le résultat de la requête
      */
-    public void createOrUpdateSyntheseBilanPeriodique(String idEleve, Long idTypePeriode, String synthese, String idStructure,
-                                                      Handler<Either<String, JsonObject>> handler);
+    void createOrUpdateSyntheseBilanPeriodique(Long idTypePeriode, String idEleve, String idStructure,
+                                                      String synthese, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Récupérer une synthèse d'un élève pour une période donnée
-     * @param idEleve id élève
-     * @param idTypePeriode id_type période
-     * @param synthese synthese rédigé par le professeur
-     * @param idStructure id de l'établissement où la synthèse a été saisie
+     * @param idEleve student identifier
+     * @param idTypePeriode period type identifier
+     * @param idStructure structure identifier
      * @param handler handler portant le résultat de la requête
      */
-    public void getSyntheseBilanPeriodique(String idEleve, Long idTypePeriode, String synthese, String idStructure,
+    void getSyntheseBilanPeriodique(Long idTypePeriode, String idEleve, String idStructure,
                                            Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Récupérer une synthèse d'un élève pour une période donnée
+     * @param studentIds student identifiers
+     * @param periodTypeId period type identifier
+     * @param structureId structure identifier
+     * @return
+     */
+    Future<JsonArray> getPeriodicReportSummaries(Long periodTypeId, List<String> studentIds, String structureId);
 
 
 }

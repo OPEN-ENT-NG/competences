@@ -161,7 +161,7 @@
   "evaluations.recapEval" : "Tableau récapitulatif des niveaux acquis par domaine des élèves",
   "evaluations.releveComp.classe" : "Listes récapitulatives des compétences évaluées par domaine ou enseignement des élèves",
   "evaluations.recapAppreciations.classe" : "Appréciations des professeurs de la classe",
-  "evaluations.synthese.conseil.classe" : "Synthèse du conseil de classe",
+  "evaluations.synthese.conseil.classe" : "Avec la synthèse du conseil de classe",
   "evaluations.tab.moys": "Tableau des moyennes des élèves de la classe",
   "evaluations.tab.moysPos": "Tableau des synthèses du conseil de classe, des moyennes et positionnements par matières des élèves de la classe",
   "evaluations.moy.generale.by.eleve": "Avec les moyennes générales de chaque élève",
