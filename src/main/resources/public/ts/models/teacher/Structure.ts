@@ -383,6 +383,7 @@ export class Structure extends Model {
                     this.synchronized.annotations &&
                     this.synchronized.niveauCompetences &&
                     this.synchronized.typePeriodes &&
+                    this.synchronized.devoirs &&
                     this.synchronized.detailsUser;
                 if (Utils.isChefEtabOrHeadTeacher()) {
                     b = b && this.synchronized.enseignants;
