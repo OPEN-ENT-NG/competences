@@ -1666,14 +1666,15 @@ public class ExportPDFController extends ControllerHelper {
                             log.error(event.left());
                         } else {
                             resultElevesTab[0] = event.right().getValue();
-                            noteService.getMatEvaluatedAndStat(mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMatEvaluatedAndStatHandler);
+                            noteService.getMatEvaluatedAndStat(mapAllidMatAndidTeachers, mapIdMatListMoyByEleve,
+                                    getMatEvaluatedAndStatHandler);
                         }
                     };
 
                     if(idPeriode != null){
                         //in this case, in mapIdMatListMoyByEleve, this average is the average of the periode
                         noteService.getMoysEleveByMatByPeriode(idClasse, idPeriode, idEtablissement, typeGroup,
-                                name, mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
+                                name, mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, false, getMoysEleveByMatHandler );
                     } else {
                         List<String> listIdClasse = new ArrayList<>();
                         listIdClasse.add(idClasse);

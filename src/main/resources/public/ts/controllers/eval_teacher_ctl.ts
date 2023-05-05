@@ -4016,6 +4016,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 case "{\"error\":\"one or more students are in several classes\"}" :
                     $scope.studentInSeveralClasses = true;
                     break;
+                case "{\"error\":\"no score\"}" :
+                    $scope.noScore = true;
+                    break;
+                case "{\"error\":\"error to get scores\"}" :
+                    $scope.errorGetScores = true;
                 default :
                     $scope.exportRecapEvalObj.errExport = true;
             }
@@ -4087,6 +4092,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.exportDevoirObj.emptyLevel = false;
             $scope.exportDevoirObj.emptyResult = false;
             $scope.exportDevoirObj.emptyStudent = false;
+            $scope.noScore = false;
+            $scope.errorGetScores = false;
         };
 
         $scope.openedLigthbox = function (classe) {
