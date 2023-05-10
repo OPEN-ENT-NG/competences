@@ -442,4 +442,13 @@ public interface NoteService extends CrudService {
                                                 JsonArray subjectIds,
                                                 Long periodId,  String studentId, Boolean withDomainInfo,
                                                 Boolean isYear, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * get scores of assessment-type
+     * @param studentIds student ids
+     * @param groupIds group ids (class and groups)
+     * @param periodId period id
+     *
+     */
+    Future<JsonArray> getAssessmentScores(List<String> studentIds, List<String> groupIds, Integer periodId);
 }
