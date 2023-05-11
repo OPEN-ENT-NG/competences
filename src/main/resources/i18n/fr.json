@@ -460,6 +460,8 @@
   "evaluation.suivi.export.button.eleve.releve" : "Exporter le relevé de notes de l'élève au format PDF",
   "evaluation.suivi.export.button.classe.releve" : "Exporter le relevé de notes de la classe au format PDF",
   "evaluation.suivi.export.button.classe" : "Exporter le relevé de compétences de la classe au format PDF",
+  "competence.class.followup.export.average.error.noScore": "Aucune note pour la période demandée",
+  "competence.class.followup.export.average.error.getScore": "Une erreur est survenue lors de la récupération des notes",
   "evaluation.releve.classe": "Le relevé de notes des élèves de la classe",
   "evaluation.search.by.enseignements" : "Vue par enseignements",
   "evaluation.search.by.domaines" : "Vue par domaines",

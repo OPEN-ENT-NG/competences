@@ -234,6 +234,14 @@
              ng-if="cycleNotFound">
             <i18n>evaluations.export.cycle.not.found.err</i18n>
         </div>
+        <div class="warning"
+             ng-if="noScore">
+            <i18n>competence.class.followup.export.average.error.noScore</i18n>
+        </div>
+        <div class="warning"
+             ng-if="errorGetScore">
+            <i18n>competence.class.followup.export.average.error.getScore</i18n>
+        </div>
         <div ng-if="suiviClasse.print === 'printReleveComp' || suiviClasse.print === 'printRecapEval'" class="twelve cell twelve-mobile">
             <div class="three cell horizontal-spacing vertical-spacing expandable-content">
                 <label class="checkbox">
@@ -295,8 +303,12 @@
         <i class="download"></i>
     </button>
     <div class="warning half-width"
-         ng-if="errorWhenExportPdf">
-        <i18n>competance.information.noExport</i18n>
+         ng-if="errorGetScores">
+        <i18n>competence.class.followup.export.average.error.getScore</i18n>
+    </div>
+    <div class="warning half-width"
+         ng-if="noScore">
+        <i18n>competence.class.followup.export.average.error.noScore</i18n>
     </div>
     <div ng-if="loadingTab"
          class="loaderGraph loaderPage">

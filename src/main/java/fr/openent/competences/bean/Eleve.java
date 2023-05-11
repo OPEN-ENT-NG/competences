@@ -385,30 +385,32 @@ public class Eleve implements Comparable<Eleve>{
 
 
     public void setIdMatListNote(JsonArray idsMatMoy, String field1, String field2) {
+        if(idsMatMoy != null) {
+            for( int i = 0; i < idsMatMoy.size(); i++){
 
-        for( int i = 0; i < idsMatMoy.size(); i++){
+                JsonObject idMatMoyObjet = idsMatMoy.getJsonObject(i);
+                if(this.mapIdMatListNote.containsKey(idMatMoyObjet.getString(field1))){
 
-            JsonObject idMatMoyObjet = idsMatMoy.getJsonObject(i);
-            if(this.mapIdMatListNote.containsKey(idMatMoyObjet.getString(field1))){
+                    List<NoteDevoir> listNoteByMat = this.mapIdMatListNote.get(idMatMoyObjet.getString(field1));
+                    if(idMatMoyObjet.getValue(field2) != null &&
+                            !"".equals(idMatMoyObjet.getValue(field2))&& !"NN".equals(idMatMoyObjet.getValue(field2))){
+                        listNoteByMat.add(new NoteDevoir((Double)idMatMoyObjet.getValue(field2),
+                                new Double(20) , false, 1.0) );
 
-                List<NoteDevoir> listNoteByMat = this.mapIdMatListNote.get(idMatMoyObjet.getString(field1));
-                if(idMatMoyObjet.getValue(field2) != null &&
-                       !"".equals(idMatMoyObjet.getValue(field2))&& !"NN".equals(idMatMoyObjet.getValue(field2))){
-                    listNoteByMat.add(new NoteDevoir((Double)idMatMoyObjet.getValue(field2),
-                            new Double(20) , false, 1.0) );
-
+                    }
+                }else{
+                    List<NoteDevoir> listNoteByMat = new ArrayList<>();
+                    if(idMatMoyObjet.getValue(field2) != null && !"".equals(idMatMoyObjet.getValue(field2))
+                            && !"NN".equals(idMatMoyObjet.getValue(field2))){
+                        listNoteByMat.add(new NoteDevoir((Double) idMatMoyObjet.getValue(field2),
+                                new Double(20) , false, 1.0) );
+                    }
+                    this.mapIdMatListNote.put(idMatMoyObjet.getString(field1),listNoteByMat);
                 }
-            }else{
-                List<NoteDevoir> listNoteByMat = new ArrayList<>();
-                if(idMatMoyObjet.getValue(field2) != null && !"".equals(idMatMoyObjet.getValue(field2))
-                        && !"NN".equals(idMatMoyObjet.getValue(field2))){
-                    listNoteByMat.add(new NoteDevoir((Double) idMatMoyObjet.getValue(field2),
-                            new Double(20) , false, 1.0) );
-                }
-                this.mapIdMatListNote.put(idMatMoyObjet.getString(field1),listNoteByMat);
+
             }
-
         }
+
     }
 
     public Map<String, List<NoteDevoir>> getMapIdMatListNote() {

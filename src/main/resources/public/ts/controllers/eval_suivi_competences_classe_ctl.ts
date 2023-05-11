@@ -21,7 +21,7 @@
  */
 
 import {$, http, idiom as lang, model, ng, notify, template} from 'entcore';
-import httpAxios from "axios";
+import httpAxios, {AxiosResponse} from "axios";
 import {evaluations, IClassReport, Matiere, SuiviCompetenceClasse} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
@@ -108,6 +108,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         $scope.displayFollowCompetencesClass = 'followItems';
         $scope.selectSuivi = async function (classeHasChange) {
             await Utils.runMessageLoader($scope);
+            $scope.closeWarningMessages();
             if (classeHasChange === true) {
                 await $scope.syncPeriode($scope.search.classe.id);
                 $scope.listTeacher = getTitulairesForRemplacantsCoEnseignant($scope.me.userId, $scope.search.classe);
@@ -393,16 +394,19 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     if (idPeriode) {
                         url += "&idPeriode=" + idPeriode;
                     }
-                    try{
-                       let data = await httpAxios.get(url, {responseType: 'arraybuffer'});
-                        delete $scope.recapEval;
-                        $scope.opened.recapEval = false;
-                        Utils.downloadFile(data, document);
-                    }catch(e){
-                        $scope.errorWhenExportPdf = true;
-                        $scope.errorResult(e.error());
-                        utils.safeApply($scope);
-                    }
+
+                   await httpAxios.get(url, {responseType: 'arraybuffer'}).then ((data : AxiosResponse) => {
+                       delete $scope.recapEval;
+                       $scope.opened.recapEval = false;
+                       Utils.downloadFile(data, document);
+                   }).catch((error) => {
+                       if (error.response.status === 400) {
+                           error.responseText = String.fromCharCode.apply(null, new Uint8Array(error.response.data));
+                           $scope.errorResult(error);
+                           utils.safeApply($scope);
+                           throw error;
+                        }
+                    });
                     break;
                 }
                 case 'printTabMoyPosAppr': {
@@ -593,9 +597,12 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         const defaultFinallyDownload = (isExportFinish:boolean | undefined):void => {
             $scope.loadingTab = false;
             if(isExportFinish !== undefined){
-                isExportFinish?
-                    notify.success('evaluations.export.bulletin.success'):
+                if(isExportFinish) {
+                    notify.success('evaluations.export.bulletin.success')
+                } else {
+                   ($scope.noScore) ? notify.error ('competence.class.followup.export.average.error.noScore') :
                     notify.error('competance.information.noExport');
+                }
             }
             utils.safeApply($scope);
         };
@@ -745,6 +752,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     true,
                     true
                 );
+                isExportFinish = true;
             } catch (error) {
                 isExportFinish = false;
             } finally {
