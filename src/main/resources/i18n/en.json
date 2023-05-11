@@ -14,5 +14,8 @@
 	"competences.report-model.api.error.remove": "An error occurred when deleting a model",
 	"evaluations.class.report.scores.and.skills": "Scores and skills",
 	"evaluations.validated.skills" : "skills validated",
-	"evaluations.export.bulletin.show.skillsValidatedPercentage": "Display skills validated percentage"
+	"evaluations.export.bulletin.show.skillsValidatedPercentage": "Display skills validated percentage",
+	"competence.class.followup.export.average.error.getScore": "An error occured while getting scores",
+	"competence.class.followup.export.average.error.noScore" : "No score for the requested period"
+
 }

@@ -302,7 +302,7 @@ public interface NoteService extends CrudService {
      */
     void getMoysEleveByMatByPeriode(String idClasse, Integer idPeriode, String idEtablissement, Integer typeGroupe,
                            String name, SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
-                           Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
+                           Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve, boolean isYear,
                            Handler<Either<String,JsonObject>> handler);
 
     /**

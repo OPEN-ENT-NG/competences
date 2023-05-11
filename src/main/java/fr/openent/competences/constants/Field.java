@@ -24,6 +24,7 @@ public class Field {
     public static final String ID = "id";
     public static final String _ID = "_id";
     public static final String IDDOMAINE = "idDomaine";
+    public static final String ID_ELEVE_NOTES = "id_eleve_notes";
     public static final String IDSTRUCTURE = "idStructure";
     public static final String STRUCTUREID = "structureId";
     public static final String STRUCTURE_ID = "structure_id";
@@ -32,6 +33,7 @@ public class Field {
     public static final String IDETABLISSEMENT = "idEtablissement";
     public static final String IDETAB = "idEtab";
     public static final String ID_ETABLISSEMENT = "id_etablissement";
+    public static final String ID_CLASS = "id_class";
     public static final String IDCLASSE = "idClasse";
     public static final String ID_STRUCTURE = "id_structure";
     public static final String ID_MATIERE = "id_matiere";
@@ -117,6 +119,7 @@ public class Field {
     public static final String AVERAGES = "averages";
     public static final String APPRECIATION_MATIERE_PERIODE = "appreciation_matiere_periode";
     public static final String PREVIOUSAPPRECIATIONS = "previousAppreciations";
+    public static final String FIRSTNAME = "firstName";
     public static final String FINALAVERAGES = "finalAverages";
     public static final String FORMATIVE = "formative";
     public static final String NN = "NN";
@@ -126,10 +129,14 @@ public class Field {
     public static final String COEFFICIENT = "coefficient";
     public static final String GROUPS = "groups";
     public static final String TEACHERS = "teachers";
+    public static final String LASTNAME = "lastName";
     public static final String MOYENNE = "moyenne";
     public static final String MOYENNES ="moyennes";
+    public static final String MOYGENERALEELEVE = "moyGeneraleEleve";
     public static final String MOYENNE_GENERALE = "moyenne_generale";
+    public static final String MOYENNE_FINALE = "moyenne_finale";
     public static final String MOYENNESFINALES = "moyennesFinales";
+    public static final String MOYENNEBYMAT = "moyenneByMat";
     public static final String MAX = "max";
     public static final String MAXIMUM = "maximum";
     public static final String MIN = "min";
