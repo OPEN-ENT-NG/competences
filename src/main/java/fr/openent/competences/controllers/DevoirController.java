@@ -20,6 +20,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.constants.Field;
+import fr.openent.competences.enums.Common;
 import fr.openent.competences.enums.EventStoresCompetences;
 import fr.openent.competences.helpers.DevoirControllerHelper;
 import fr.openent.competences.security.*;
@@ -91,48 +92,46 @@ public class DevoirController extends ControllerHelper {
     public void getDevoirs(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, user -> {
             if(user != null){
-                String forStudentReleveString = request.params().get("forStudentReleve");
+                String forStudentReleveString = request.params().get(Field.FORSTUDENTRELEVE);
                 boolean forStudentReleve = false;
                 if(forStudentReleveString != null)
-                    forStudentReleve = forStudentReleveString.equals("true");
+                    forStudentReleve = forStudentReleveString.equals(Field.TRUE);
 
-                String idEtablissement = request.params().get("idEtablissement");
+                String idEtablissement = request.params().get(Field.IDETABLISSEMENT);
 
-                String limit = request.params().get("limit");
+                String limit = request.params().get(Field.LIMIT);
                 Integer iLimit = limit == null ? null : Integer.valueOf(limit);
 
                 // si l'utilisateur a la fonction d'admin
                 if(WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString()) && !forStudentReleve) {
                     devoirsService.listDevoirsChefEtab(user, idEtablissement, iLimit, getDevoirHandler(request));
                 } else {
-                    String idClasse = request.params().get("idClasse");
-                    String idMatiere = request.params().get("idMatiere");
+                    String idClasse = request.params().get(Field.IDCLASSE);
+                    String idMatiere = request.params().get(Field.IDMATIERE);
 
-                    final String _STUDENT = "Student";
-                    final String _RELATIVE = "Relative";
-                    if (idClasse == null && !_STUDENT.equals(user.getType())
-                            && !_RELATIVE.equals(user.getType()) && !forStudentReleve) {
+                    if (idClasse == null && !Field.STUDENT.equals(user.getType())
+                            && !Field.RELATIVE.equals(user.getType()) && !forStudentReleve) {
                         devoirsService.listDevoirs(user, idEtablissement, iLimit, getDevoirHandler(request));
                     } else {
                         boolean historise = false;
-                        if (request.params().get("historise") != null) {
-                            historise = Boolean.parseBoolean(request.params().get("historise"));
+                        if (request.params().get(Field.HISTORISE) != null) {
+                            historise = Boolean.parseBoolean(request.params().get(Field.HISTORISE));
                         }
                         Long idPeriode = null;
-                        if (request.params().get("idPeriode") != null) {
-                            idPeriode = testLongFormatParameter("idPeriode", request);
+                        if (request.params().get(Field.IDPERIODE) != null) {
+                            idPeriode = testLongFormatParameter(Field.IDPERIODE, request);
                         }
 
-                        if(_STUDENT.equals(user.getType()) || _RELATIVE.equals(user.getType()) || forStudentReleve){
-                            String idEleve = request.params().get("idEleve");
+                        if(Field.STUDENT.equals(user.getType()) || Field.RELATIVE.equals(user.getType()) || forStudentReleve){
+                            String idEleve = request.params().get(Field.IDELEVE);
                             devoirsService.listDevoirs(idEleve, idEtablissement, idClasse, null,
                                     idPeriode, historise, getDevoirHandler(request));
-                        } else if (!idEtablissement.equals("undefined") && !idClasse.equals("undefined")
-                                && !idMatiere.equals("undefined") && !request.params().get("idPeriode").equals("undefined")) {
+                        } else if (!idEtablissement.equals(Field.UNDEFINED) && !idClasse.equals(Field.UNDEFINED)
+                                && !idMatiere.equals(Field.UNDEFINED) && !request.params().get(Field.IDPERIODE).equals(Field.UNDEFINED)) {
                             devoirsService.listDevoirs(null, idEtablissement, idClasse, idMatiere,
                                     idPeriode, historise, getDevoirHandler(request));
                         } else {
-                            Renders.badRequest(request, "Invalid parameters");
+                            Renders.badRequest(request, Common.INVALID_PARAMETERS.getString());
                         }
                     }
                 }
