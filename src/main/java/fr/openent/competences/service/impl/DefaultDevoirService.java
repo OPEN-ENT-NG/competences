@@ -49,6 +49,8 @@ import org.entcore.common.user.UserInfos;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
+import java.io.File;
+import java.io.FileDescriptor;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -83,7 +85,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     protected static final Logger log = LoggerFactory.getLogger(DefaultDevoirService.class);
 
     public DefaultDevoirService(EventBus eb) {
-        super(Competences.COMPETENCES_SCHEMA, Competences.DEVOIR_TABLE);
+        super(Field.SCHEMA_COMPETENCES, Field.DEVOIRS_TABLE);
         utilsService = new DefaultUtilsService(eb);
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
         matiereService = new DefaultMatiereService(eb);
@@ -621,36 +623,54 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
         JsonArray values = new JsonArray();
 
-        query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, rel_devoirs_groupes.type_groupe, devoirs.is_evaluated, ")
-                .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
-                .append("devoirs.id_etat, devoirs.date_publication, devoirs.id_matiere, devoirs.coefficient, devoirs.ramener_sur, devoirs.percent, ")
-                .append("type_sousmatiere.libelle as _sousmatiere_libelle, devoirs.date, devoirs.apprec_visible, ")
-                .append("type.nom as _type_libelle, COUNT(competences_devoirs.id) as nbcompetences, users.username as teacher ")
-                .append("FROM ").append(COMPETENCES_SCHEMA).append(".devoirs ")
-                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".type ON devoirs.id_type = type.id ")
-                .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".competences_devoirs ON devoirs.id = competences_devoirs.id_devoir ")
-                .append("LEFT JOIN ").append(VSCO_SCHEMA).append(".sousmatiere ON devoirs.id_sousmatiere = sousmatiere.id ")
-                .append("LEFT JOIN ").append(VSCO_SCHEMA).append(".type_sousmatiere ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
-                .append("LEFT JOIN ").append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ")
-                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".users ON users.id = devoirs.owner ")
-                .append("WHERE rel_devoirs_groupes.id_devoir = devoirs.id AND devoirs.id_etablissement = ? ")
-                .append("AND devoirs.eval_lib_historise = false AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
-                .append("devoirs.owner IN (SELECT DISTINCT main_teacher_id ") // ou dont l'un de mes titulaires le sont (de l'établissement passé en paramètre)
-                .append("FROM ").append(VSCO_SCHEMA).append(".multi_teaching ")
-                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".devoirs ON devoirs.id_matiere = multi_teaching.subject_id ")
-                .append("INNER JOIN ").append(COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON devoirs.id = rel_devoirs_groupes.id_devoir ")
-                .append("AND multi_teaching.class_or_group_id = rel_devoirs_groupes.id_groupe ")
-                .append("WHERE second_teacher_id = ? AND multi_teaching.structure_id = ? ")
+        query.append("SELECT " + Field.DEVOIRS_TABLE + ".id, " + Field.DEVOIRS_TABLE + ".name, " + Field.DEVOIRS_TABLE + ".owner, ")
+                .append(Field.DEVOIRS_TABLE + ".created, " + Field.DEVOIRS_TABLE + ".libelle, " )
+                .append(Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".type_groupe, ")
+                .append(Field.DEVOIRS_TABLE + ".is_evaluated, " + Field.DEVOIRS_TABLE + ".id_sousmatiere,")
+                .append(Field.DEVOIRS_TABLE + ".id_periode, " + Field.DEVOIRS_TABLE + ".id_type, " + Field.DEVOIRS_TABLE + ".id_etablissement, ")
+                .append(Field.DEVOIRS_TABLE + ".diviseur, " + Field.DEVOIRS_TABLE + ".id_etat," + Field.DEVOIRS_TABLE + ".date_publication, ")
+                .append(Field.DEVOIRS_TABLE + ".id_matiere, " + Field.DEVOIRS_TABLE  + ".coefficient, ")
+                .append(Field.DEVOIRS_TABLE + ".ramener_sur, " + Field.DEVOIRS_TABLE + ".percent, ")
+                .append(Field.VIESCO_TYPE_SOUS_MATIERE_TABLE + ".libelle as _sousmatiere_libelle, " + Field.DEVOIRS_TABLE + ".date, ")
+                .append(Field.DEVOIRS_TABLE + ".apprec_visible, " + Field.TYPE_TABLE + ".nom as _type_libelle, ")
+                .append(Field.TYPE_TABLE + ".formative, COUNT(" + Field.COMPETENCES_DEVOIRS + ".id) as nbcompetences, " + Field.USERS_TABLE + ".username as teacher ")
+                .append("FROM ").append(this.schema).append(Field.DEVOIRS_TABLE)
+                .append(" INNER JOIN ").append(this.schema).append(Field.TYPE_TABLE)
+                .append(" ON " + Field.DEVOIRS_TABLE + ".id_type = " + Field.TYPE_TABLE + ".id ")
+                .append("LEFT JOIN ").append(this.schema).append(Field.COMPETENCES_DEVOIRS)
+                .append(" ON " + Field.DEVOIRS_TABLE + ".id = " + Field.COMPETENCES_DEVOIRS + ".id_devoir ")
+                .append("LEFT JOIN ").append(Field.SCHEMA_VIESCO).append(Field.VIESCO_SOUS_MATIERE_TABLE)
+                .append(" ON " + Field.DEVOIRS_TABLE + ".id_sousmatiere = " + Field.VIESCO_SOUS_MATIERE_TABLE + ".id ")
+                .append("LEFT JOIN ").append(Field.SCHEMA_VIESCO).append(Field.VIESCO_TYPE_SOUS_MATIERE_TABLE)
+                .append(" ON " + Field.VIESCO_SOUS_MATIERE_TABLE + ".id_type_sousmatiere = " + Field.VIESCO_TYPE_SOUS_MATIERE_TABLE + ".id ")
+                .append("LEFT JOIN ").append(this.schema).append(Field.REL_DEVOIRS_GROUPES_TABLE )
+                .append(" ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = " + Field.DEVOIRS_TABLE + ".id ")
+                .append("INNER JOIN ").append(this.schema).append(Field.USERS_TABLE)
+                .append(" ON " + Field.USERS_TABLE + ".id = " + Field.DEVOIRS_TABLE + ".owner ")
+                .append("WHERE " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = " + Field.DEVOIRS_TABLE + ".id AND ")
+                .append(Field.DEVOIRS_TABLE + ".id_etablissement = ? AND " + Field.DEVOIRS_TABLE + ".eval_lib_historise = false AND ")
+                .append("(" + Field.DEVOIRS_TABLE + ".owner = ? OR " + Field.DEVOIRS_TABLE + ".owner IN (SELECT DISTINCT main_teacher_id ") // devoirs dont on est le propriétaire
+                .append("FROM ").append(Field.SCHEMA_VIESCO).append(Field.VIESCO_MULTI_TEACHING_TABLE ) // ou dont l'un de mes titulaires le sont (de l'établissement passé en paramètre)
+                .append(" INNER JOIN ").append(this.schema).append(Field.DEVOIRS_TABLE)
+                .append(" ON " +Field.DEVOIRS_TABLE + ".id_matiere = " + Field.VIESCO_MULTI_TEACHING_TABLE + ".subject_id ")
+                .append("INNER JOIN ").append(this.schema).append(Field.REL_DEVOIRS_GROUPES_TABLE)
+                .append(" ON " + Field.DEVOIRS_TABLE + ".id = " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir ")
+                .append("AND " + Field.VIESCO_MULTI_TEACHING_TABLE + ".class_or_group_id = " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe ")
+                .append("WHERE second_teacher_id = ? AND " + Field.VIESCO_MULTI_TEACHING_TABLE + ".structure_id = ? ")
                 .append("AND ((start_date <= current_date AND current_date <= entered_end_date AND NOT is_coteaching) OR is_coteaching)) ")
                 .append("OR ? IN (SELECT member_id ") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
-                .append("FROM ").append(COMPETENCES_SCHEMA).append(".devoirs_shares ")
-                .append("WHERE resource_id = devoirs.id ")
+                .append("FROM ").append(this.schema).append(Field.DEVOIR_SHARE_TABLE)
+                .append(" WHERE resource_id = " + Field.DEVOIRS_TABLE + ".id ")
                 .append("AND action = '").append(DEVOIR_ACTION_UPDATE).append("')) ")
-                .append("GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, devoirs.is_evaluated, users.username, ")
-                .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
-                .append("devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, rel_devoirs_groupes.type_groupe, ")
-                .append("devoirs.coefficient, devoirs.ramener_sur, type_sousmatiere.libelle, type.nom ")
-                .append("ORDER BY devoirs.date DESC ");
+                .append("GROUP BY " + Field.DEVOIRS_TABLE + ".id, " + Field.DEVOIRS_TABLE + ".name, " + Field.DEVOIRS_TABLE + ".created, ")
+                .append(Field.DEVOIRS_TABLE + ".libelle, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe, " + Field.DEVOIRS_TABLE + ".is_evaluated, ")
+                .append(Field.USERS_TABLE + ".username, " + Field.DEVOIRS_TABLE + ".id_sousmatiere, " + Field.DEVOIRS_TABLE + ".id_periode, ")
+                .append(Field.DEVOIRS_TABLE + ".id_type, " + Field.DEVOIRS_TABLE + ".id_etablissement, " )
+                .append(Field.DEVOIRS_TABLE + ".diviseur, " + Field.DEVOIRS_TABLE + ".id_etat," + Field.DEVOIRS_TABLE + ".date_publication, ")
+                .append(Field.DEVOIRS_TABLE + ".date, " + Field.DEVOIRS_TABLE + ".id_matiere, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".type_groupe, ")
+                .append(Field.DEVOIRS_TABLE + ".coefficient, " + Field.DEVOIRS_TABLE + ".ramener_sur, ")
+                .append(Field.VIESCO_TYPE_SOUS_MATIERE_TABLE + ".libelle, " + Field.TYPE_TABLE + ".nom, " + Field.TYPE_TABLE + ".formative ")
+                .append("ORDER BY " + Field.DEVOIRS_TABLE + ".date DESC ");
 
         // Ajout des params pour les devoirs dont on est le propriétaire sur l'établissement
         values.add(idEtablissement);
@@ -677,25 +697,42 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
         JsonArray values = new JsonArray();
 
-        query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, rel_devoirs_groupes.type_groupe, devoirs.is_evaluated, ")
-                .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
-                .append("devoirs.id_etat, devoirs.date_publication, devoirs.id_matiere, devoirs.coefficient, devoirs.ramener_sur, devoirs.percent, ")
-                .append("type_sousmatiere.libelle as _sousmatiere_libelle, devoirs.date, devoirs.apprec_visible,")
-                .append("type.nom as _type_libelle, COUNT(competences_devoirs.id) as nbcompetences, users.username as teacher ")
-                .append("FROM notes.devoirs ")
-                .append("INNER JOIN notes.type on devoirs.id_type = type.id ")
-                .append("LEFT JOIN notes.competences_devoirs on devoirs.id = competences_devoirs.id_devoir ")
-                .append("LEFT JOIN viesco.sousmatiere  on devoirs.id_sousmatiere = sousmatiere.id ")
-                .append("LEFT JOIN viesco.type_sousmatiere on sousmatiere.id_type_sousmatiere = type_sousmatiere.id  ")
-                .append("LEFT JOIN notes.rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ")
-                .append("INNER JOIN notes.users on users.id = devoirs.owner ")
-                .append("WHERE devoirs.id_etablissement = ? ")
-                .append("AND devoirs.eval_lib_historise = false AND id_groupe IS NOT NULL ")
-                .append("GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, devoirs.is_evaluated, users.username, ")
-                .append("devoirs.id_sousmatiere, devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
-                .append("devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, rel_devoirs_groupes.type_groupe, ")
-                .append("devoirs.coefficient, devoirs.ramener_sur, type_sousmatiere.libelle, type.nom ")
-                .append("ORDER BY devoirs.date DESC ");
+        query.append("SELECT " + Field.DEVOIRS_TABLE + ".id, " + Field.DEVOIRS_TABLE + ".name, " + Field.DEVOIRS_TABLE + ".owner, " )
+                .append(Field.DEVOIRS_TABLE + ".created, " + Field.DEVOIRS_TABLE + ".libelle, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe, ")
+                .append(Field.REL_DEVOIRS_GROUPES_TABLE + ".type_groupe, " + Field.DEVOIRS_TABLE + ".is_evaluated, ")
+                .append(Field.DEVOIRS_TABLE + ".id_sousmatiere, " + Field.DEVOIRS_TABLE + ".id_periode, ")
+                .append(Field.DEVOIRS_TABLE + ".id_type, " + Field.DEVOIRS_TABLE + ".id_etablissement, ")
+                .append(Field.DEVOIRS_TABLE + ".diviseur, " + Field.DEVOIRS_TABLE + ".id_etat, " + Field.DEVOIRS_TABLE + ".date_publication, ")
+                .append(Field.DEVOIRS_TABLE + ".id_matiere, " +Field.DEVOIRS_TABLE + ".coefficient, ")
+                .append(Field.DEVOIRS_TABLE + ".ramener_sur, " + Field.DEVOIRS_TABLE + ".percent, ")
+                .append(Field.VIESCO_TYPE_SOUS_MATIERE_TABLE + ".libelle as _sousmatiere_libelle, " + Field.DEVOIRS_TABLE + ".date, ")
+                .append(Field.DEVOIRS_TABLE + ".apprec_visible," + Field.TYPE_TABLE + ".nom as _type_libelle, ")
+                .append(Field.TYPE_TABLE + ".formative, COUNT(" + Field.COMPETENCES_DEVOIRS + ".id) as nbcompetences, " + Field.USERS_TABLE + ".username as teacher ")
+                .append("FROM ").append(this.schema).append(Field.DEVOIRS_TABLE)
+                .append(" INNER JOIN ").append(this.schema).append(Field.TYPE_TABLE)
+                .append(" ON " + Field.DEVOIRS_TABLE + ".id_type = " + Field.TYPE_TABLE + ".id ")
+                .append("LEFT JOIN ").append(this.schema).append(Field.COMPETENCES_DEVOIRS)
+                .append(" ON " + Field.DEVOIRS_TABLE + ".id = " + Field.COMPETENCES_DEVOIRS + ".id_devoir ")
+                .append("LEFT JOIN ").append(Field.SCHEMA_VIESCO).append(Field.VIESCO_SOUS_MATIERE_TABLE)
+                .append(" ON " + Field.DEVOIRS_TABLE + ".id_sousmatiere = " + Field.VIESCO_SOUS_MATIERE_TABLE + ".id ")
+                .append("LEFT JOIN ").append(Field.SCHEMA_VIESCO).append(Field.VIESCO_TYPE_SOUS_MATIERE_TABLE)
+                .append(" on " + Field.VIESCO_SOUS_MATIERE_TABLE + ".id_type_sousmatiere = " + Field.VIESCO_TYPE_SOUS_MATIERE_TABLE + ".id ")
+                .append("LEFT JOIN ").append(this.schema).append(Field.REL_DEVOIRS_GROUPES_TABLE)
+                .append(" ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = " + Field.DEVOIRS + ".id ")
+                .append("INNER JOIN ").append(this.schema).append(Field.USERS_TABLE)
+                .append(" ON " + Field.USERS_TABLE + ".id = " + Field.DEVOIRS_TABLE + ".owner ")
+                .append("WHERE " + Field.DEVOIRS_TABLE + ".id_etablissement = ? ")
+                .append("AND " + Field.DEVOIRS_TABLE + " .eval_lib_historise = false AND id_groupe IS NOT NULL ")
+                .append("GROUP BY " + Field.DEVOIRS_TABLE + ".id, " + Field.DEVOIRS_TABLE + ".name, " + Field.DEVOIRS_TABLE + ".created, ")
+                .append(Field.DEVOIRS_TABLE + ".libelle, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe, ")
+                .append(Field.DEVOIRS_TABLE + ".is_evaluated, " + Field.USERS_TABLE + ".username, " + Field.DEVOIRS_TABLE + ".id_sousmatiere, ")
+                .append(Field.DEVOIRS_TABLE + ".id_periode, " + Field.DEVOIRS_TABLE + ".id_sousmatiere, ")
+                .append(Field.DEVOIRS_TABLE + ".id_type, " +  Field.DEVOIRS_TABLE + ".id_etablissement, ")
+                .append(Field.DEVOIRS_TABLE + ".diviseur, " + Field.DEVOIRS_TABLE + ".id_etat, " + Field.DEVOIRS_TABLE + ".date_publication, ")
+                .append(Field.DEVOIRS_TABLE + ".date, " + Field.DEVOIRS_TABLE + ".id_matiere, " + Field.REL_DEVOIRS_GROUPES_TABLE + ".type_groupe, ")
+                .append(Field.DEVOIRS_TABLE + ".coefficient, " + Field.DEVOIRS_TABLE + ".ramener_sur, " )
+                .append(Field.VIESCO_TYPE_SOUS_MATIERE_TABLE + ".libelle, " + Field.TYPE_TABLE + ".nom, " + Field.TYPE_TABLE + ".formative ")
+                .append("ORDER BY " + Field.DEVOIRS_TABLE + ".date DESC ");
 
         values.add(idEtablissement);
 
@@ -714,63 +751,76 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT devoirs.*, type.nom as _type_libelle, rel_type_periode.type as _periode_type, ")
-                .append("rel_type_periode.ordre as _periode_ordre, users.username as teacher, id_groupe ");
+        query.append("SELECT " + Field.DEVOIRS_TABLE + ".*, " + Field.TYPE_TABLE + ".nom as _type_libelle, ")
+                .append(Field.TYPE_TABLE + ".formative, " + Field.VIESCO_REL_TYPE_PERIODE + ".type as _periode_type, ")
+                .append(Field.VIESCO_REL_TYPE_PERIODE + ".ordre as _periode_ordre, ")
+                .append(Field.USERS_TABLE + ".username as teacher, id_groupe ");
 
         if (idEleve != null) {
-            query.append(", notes.valeur as note, COUNT(competences_devoirs.id) as nbcompetences, sum.sum_notes, sum.nbr_eleves ");
+            query.append(", " + Field.NOTES_TABLE + ".valeur as note, COUNT(" + Field.COMPETENCES_DEVOIRS + ".id) ")
+                    .append("as nbcompetences, sum.sum_notes, sum.nbr_eleves ");
         }
 
-        query.append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ")
-                .append("LEFT JOIN ").append(Competences.VSCO_SCHEMA).append(".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type on devoirs.id_type = type.id ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".users on users.id = devoirs.owner ")
-                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ");
+        query.append("FROM ").append(this.schema).append(Field.DEVOIRS_TABLE)
+                .append(" LEFT JOIN ").append(Field.SCHEMA_VIESCO).append(Field.VIESCO_REL_TYPE_PERIODE)
+                .append(" ON " + Field.DEVOIRS_TABLE + ".id_periode = " + Field.VIESCO_REL_TYPE_PERIODE + ".id ")
+                .append("INNER JOIN ").append(this.schema).append(Field.TYPE_TABLE)
+                .append(" ON " + Field.DEVOIRS_TABLE + ".id_type = " + Field.TYPE_TABLE + ".id ")
+                .append("INNER JOIN ").append(this.schema).append(Field.USERS_TABLE)
+                .append(" ON "+ Field.USERS_TABLE + ".id = " + Field.DEVOIRS_TABLE + ".owner ")
+                .append("INNER JOIN ").append(this.schema).append(Field.REL_DEVOIRS_GROUPES_TABLE)
+                .append(" ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = " + Field.DEVOIRS_TABLE + ".id ");
 
         if (idClasse != null) {
-            query.append("AND rel_devoirs_groupes.id_groupe = ? ");
+            query.append("AND " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe = ? ");
             values.add(idClasse);
         }
 
         if (idEleve != null) {
-            query.append(" LEFT JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences_devoirs ")
-                    .append(" ON devoirs.id = competences_devoirs.id_devoir ")
-                    .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".notes ON devoirs.id = notes.id_devoir ")
-                    .append("INNER JOIN ( SELECT devoirs.id, SUM(notes.valeur) as sum_notes, COUNT(notes.valeur) as nbr_eleves ")
-                    .append("FROM notes.devoirs INNER JOIN notes.notes on devoirs.id = notes.id_devoir ")
-                    .append("WHERE devoirs.id_etablissement = ? AND date_publication <= Now() ");
+            query.append(" LEFT JOIN ").append(this.schema).append(Field.COMPETENCES_DEVOIRS)
+                    .append(" ON " + Field.DEVOIRS_TABLE + ".id = " + Field.COMPETENCES_DEVOIRS + ".id_devoir ")
+                    .append("INNER JOIN ").append(this.schema).append(Field.NOTES_TABLE)
+                    .append(" ON " + Field.DEVOIRS_TABLE + ".id = " + Field.NOTES_TABLE + ".id_devoir ")
+                    .append("INNER JOIN ( SELECT " + Field.DEVOIRS_TABLE + ".id, SUM(" + Field.NOTES_TABLE + ".valeur) ")
+                    .append("as sum_notes, COUNT(" + Field.NOTES_TABLE + ".valeur) as nbr_eleves ")
+                    .append("FROM ").append(this.schema).append(Field.DEVOIRS_TABLE)
+                    .append(" INNER JOIN ").append(this.schema).append(Field.NOTES_TABLE)
+                    .append(" ON " + Field.DEVOIRS_TABLE + ".id = " + Field.NOTES_TABLE + ".id_devoir ")
+                    .append("WHERE " + Field.DEVOIRS_TABLE + ".id_etablissement = ? AND date_publication <= Now() ");
             values.add(idEtablissement);
             if (idPeriode != null) {
-                query.append("AND devoirs.id_periode = ? ");
+                query.append("AND " + Field.DEVOIRS_TABLE + ".id_periode = ? ");
                 values.add(idPeriode);
             }
-            query.append("GROUP BY devoirs.id) sum ON sum.id = devoirs.id ");
+            query.append("GROUP BY " + Field.DEVOIRS_TABLE + ".id) sum ON sum.id = " + Field.DEVOIRS_TABLE + ".id ");
         }
 
-        query.append("WHERE devoirs.id_etablissement = ? AND devoirs.eval_lib_historise = ? ");
+        query.append("WHERE " + Field.DEVOIRS_TABLE + ".id_etablissement = ? AND " + Field.DEVOIRS_TABLE + ".eval_lib_historise = ? ");
         values.add(idEtablissement);
         values.add(historise);
 
         if (idMatiere != null) {
-            query.append("AND devoirs.id_matiere = ? ");
+            query.append("AND " + Field.DEVOIRS_TABLE + ".id_matiere = ? ");
             values.add(idMatiere);
         }
 
         if (idEleve != null) {
-            query.append(" AND notes.id_eleve = ? AND date_publication <= Now() ");
+            query.append(" AND " + Field.NOTES_TABLE + ".id_eleve = ? AND date_publication <= Now() ");
             values.add(idEleve);
         }
 
         if (idPeriode != null) {
-            query.append("AND devoirs.id_periode = ? ");
+            query.append("AND " + Field.DEVOIRS_TABLE + ".id_periode = ? ");
             values.add(idPeriode);
         }
 
         if (idEleve != null) {
-            query.append(" GROUP BY devoirs.id, rel_type_periode.type , rel_type_periode.ordre, type.nom, notes.valeur, sum_notes, nbr_eleves, users.username, id_groupe ")
-                    .append(" ORDER BY devoirs.date ASC, devoirs.id ASC");
+            query.append(" GROUP BY " +Field.DEVOIRS_TABLE + ".id, " + Field.VIESCO_REL_TYPE_PERIODE + ".type , ")
+                    .append( Field.VIESCO_REL_TYPE_PERIODE + ".ordre, " + Field.TYPE_TABLE + ".nom, " + Field.TYPE_TABLE + ".formative, ")
+                    .append(Field.NOTES_TABLE + ".valeur, sum_notes, nbr_eleves, "+ Field.USERS_TABLE + ".username, id_groupe ")
+                    .append(" ORDER BY " + Field.DEVOIRS_TABLE + ".date ASC, " + Field.DEVOIRS_TABLE + ".id ASC");
         } else {
-            query.append("ORDER BY devoirs.date ASC, devoirs.id ASC");
+            query.append(" ORDER BY " + Field.DEVOIRS_TABLE + ".date ASC, " + Field.DEVOIRS_TABLE + ".id ASC");
         }
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
