@@ -17,7 +17,7 @@
 
 import {Model, Collection, _, notify, http as httpCore, moment, skin} from 'entcore';
 import http  from 'axios';
-import { Evaluation, SuiviCompetence } from './index';
+import {Devoirs, Evaluation, SuiviCompetence} from './index';
 import {ElementBilanPeriodique} from "./ElementBilanPeriodique";
 import {ExportBulletins} from "../common/ExportBulletins";
 import {DefaultEleve} from "../common/DefaultEleve";
@@ -64,7 +64,8 @@ export class Eleve extends DefaultEleve  {
         return new Promise((resolve, reject) => {
             if (devoirs) {
                 let idDevoirsURL:string = "";
-                _.each(_.pluck(devoirs,'id'), (id) => {
+                let filteredEvaluations : Devoirs = devoirs.filter ( (devoir) => { return !devoir.formative});
+                _.each(_.pluck(filteredEvaluations,'id'), (id) => {
                     idDevoirsURL += "devoirs=" + id + "&";
                 });
                 idDevoirsURL = idDevoirsURL.slice(0, idDevoirsURL.length - 1);
