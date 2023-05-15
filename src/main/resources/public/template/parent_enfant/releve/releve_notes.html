@@ -41,6 +41,9 @@
                                             && devoirReleveNotes.coefficient != 1' class="bold fontLarge">
                                     [[+devoirReleveNotes.coefficient]]
                                 </sup>
+                                <span ng-if ="devoirReleveNotes.formative">
+                                    (F)
+                                </span>
                                 <div class="releve-coef" ng-if="devoirReleveNotes.sum_notes !== undefined &&
                                     devoirReleveNotes.nbr_eleves !== undefined">
                                     <span>([[getMoyenneClasse(devoirReleveNotes)]]</span>
@@ -104,6 +107,9 @@
 						            && devoirReleveNotes.coefficient != 1' class="bold fontLarge">
                                     [[+devoirReleveNotes.coefficient]]
                                 </sup>
+                                <span ng-if ="devoirReleveNotes.formative">
+                                    (F)
+                                </span>
                                 <div class="releve-coef" ng-if="devoirReleveNotes.sum_notes !== undefined &&
                                     devoirReleveNotes.nbr_eleves !== undefined">
                                     <span>([[getMoyenneClasse(devoirReleveNotes)]]</span>

@@ -52,7 +52,7 @@ function getMoyenne(devoirs): number | string {
 
         let coefficientTotalHomework = 0;
         devoirs.forEach(devoir => {
-            if (devoir.note && devoir.coefficient && devoir.diviseur) {
+            if (devoir.note && devoir.coefficient && devoir.diviseur && !devoir.formative) {
                 hasNote = true;
                 let currNote = parseFloat(devoir.note);
                 let currCoefficient = parseFloat(devoir.coefficient);
@@ -224,7 +224,7 @@ export async function calculMoyennesWithSubTopic(periode_idType: number, id_elev
                 let moyennesFinales: IOverrideAverageResponse[] = res.data;
                 setOverrideAverage(matieresReleve, matieres, moyennesFinales);
                 for (let matiere of matieresReleve) {
-                    let devoirsMatieres = dataReleveDevoirs.where({id_matiere: matiere.id});
+                    let devoirsMatieres = dataReleveDevoirs.where({id_matiere: matiere.id, formative: false});
                     if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0)
                         setSubSubjectAndSubjectAverages(matiere, devoirsMatieres, subTopicsServices, moyennesFinales, classe);
                     else if (devoirsMatieres !== undefined && !matiere.overrideAverage)

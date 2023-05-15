@@ -237,6 +237,7 @@ export class Evaluations extends Model {
                                                 id_etat : annotation.id_etat,
                                                 id_periode : annotation.id_periode,
                                                 id_type : annotation.id_type,
+                                                formative : annotation.formative,
                                                 is_evaluated : annotation.is_evaluated,
                                                 libelle : annotation.lib,
                                                 name : annotation.name,
