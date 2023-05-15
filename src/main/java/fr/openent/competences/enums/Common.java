@@ -2,7 +2,8 @@ package fr.openent.competences.enums;
 
 public enum Common {
     ERROR("Error"),
-    INFO("Info");
+    INFO("Info"),
+    INVALID_PARAMETERS ("Invalid parameters") ;
 
     private String word ;
 

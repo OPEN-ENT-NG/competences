@@ -61,6 +61,7 @@ export interface Devoir {
     diviseur: number;
     date: any;
     is_evaluated: boolean;
+    formative: boolean;
     apprec_visible: boolean;
     that: any;
     competencesAdd: any;
@@ -101,6 +102,7 @@ export class Devoir extends Model implements IModel {
     diviseur: number;
     date: any;
     is_evaluated: boolean;
+    formative: boolean;
     apprec_visible: boolean;
     that: any;
     competencesAdd: any;

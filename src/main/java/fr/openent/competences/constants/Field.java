@@ -122,6 +122,8 @@ public class Field {
     public static final String FIRSTNAME = "firstName";
     public static final String FINALAVERAGES = "finalAverages";
     public static final String FORMATIVE = "formative";
+    public static final String FORSTUDENTRELEVE = "forStudentReleve";
+    public static final String HISTORISE = " historise";
     public static final String NN = "NN";
     public static final String SAVE_BFC = "saveBFC";
     public static final String SUBCOEF = "subCoef";
@@ -130,6 +132,7 @@ public class Field {
     public static final String GROUPS = "groups";
     public static final String TEACHERS = "teachers";
     public static final String LASTNAME = "lastName";
+    public static final String LIMIT = "limit";
     public static final String MOYENNE = "moyenne";
     public static final String MOYENNES ="moyennes";
     public static final String MOYGENERALEELEVE = "moyGeneraleEleve";
@@ -195,6 +198,8 @@ public class Field {
     public static final String COMPETENCENOTES = "competenceNotes";
     public static final String COMPETENCES = "competences";
     public static final String CLASSES = "classes";
+    public static final String TRUE = "true";
+    public static final String UNDEFINED = "undefined";
     //
 
     public static final String ISSKILLAVERAGE = "isSkillAverage";
@@ -213,6 +218,8 @@ public class Field {
     //schemas
     public static final String DB_SCHEMA = "db-schema";
     public static final String DB_VIESCO_SCHEMA = "vsco-schema";
+    public static final String SCHEMA_VIESCO = "viesco.";
+    public static final String SCHEMA_COMPETENCES = "notes";
 
     // TABLE
     public static final String APPRECIATION_CLASSE_TABLE = "appreciation_classe";
@@ -287,6 +294,7 @@ public class Field {
     public static final String USE_PERSO_NIVEAU_COMPETENCES_TABLE = "use_perso";
     public static final String VIESCO_ABSENCES_ET_RETARDS_TABLE = "absences_et_retards";
     public static final String VIESCO_PERIODE_TABLE = "periode";
+    public static final String VIESCO_REL_TYPE_PERIODE = "rel_type_periode";
     public final static String VIESCO_MATIERE_LIBELLE_TABLE = "subject_libelle";
     public final static String VIESCO_MODEL_MATIERE_LIBELLE_TABLE = "model_subject_libelle";
     public static final String VIESCO_MULTI_TEACHING_TABLE = "multi_teaching";
@@ -311,4 +319,5 @@ public class Field {
     //UserType
     public static final String TEACHER = "Teacher";
     public static final String RELATIVE  = "Relative";
+    public static final String STUDENT = "Strudent";
 }
