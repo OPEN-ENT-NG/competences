@@ -123,6 +123,11 @@ public class Field {
     public static final String FINALAVERAGES = "finalAverages";
     public static final String FORMATIVE = "formative";
     public static final String FORSTUDENTRELEVE = "forStudentReleve";
+    public static final String HASCOEFF = "hasCoeff";
+    public static final String HASDEVOIRS = "hasDevoirs";
+    public static final String HASDIVISEURCLASSE = "hasDiviseurClasse";
+    public static final String HASDIVISEURMATIERE ="hasDiviseurMatiere";
+    public static final String HASMOYENNECLASSE = "hasMoyenneClasse";
     public static final String HISTORISE = " historise";
     public static final String NN = "NN";
     public static final String SAVE_BFC = "saveBFC";
@@ -140,10 +145,12 @@ public class Field {
     public static final String MOYENNE_FINALE = "moyenne_finale";
     public static final String MOYENNESFINALES = "moyennesFinales";
     public static final String MOYENNEBYMAT = "moyenneByMat";
+    public static final String MOYENNECLASSE = "moyenneClasse";
     public static final String MAX = "max";
     public static final String MAXIMUM = "maximum";
     public static final String MIN = "min";
     public static final String MINIMUM = "minimum";
+    public static final String NBR_ELEVES = "nbr_eleves";
     public static final String HASNOTE = "hasNote";
     public static final String VALEUR = "valeur";
     public static final String IS_EVALUATED = "is_evaluated";
@@ -152,6 +159,7 @@ public class Field {
     public static final String RAMENER_SUR = "ramener_sur";
     public static final String DEVOIRS = "devoirs";
     public static final String SOUS_MATIERES = "sous_matieres";
+    public static final String SUM_NOTES = "sum_notes";
     public static final String _TAIL = "_tail";
     public static final String HASSOUSMATIERE = "hasSousMatiere";
     public static final String COEFF = "coeff";

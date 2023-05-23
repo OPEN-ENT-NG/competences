@@ -302,7 +302,7 @@
             <span class="note">{{note}}</span>
                 {{#hasDiviseur}}<span class="diviseur">/{{diviseur}}</span>{{/hasDiviseur}}
             {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
-          </span>
+          </span> {{#formative}}<span>(F)</span>{{/formative}}
                 {{/devoirs}}
             </td>
             <td class="border-right-bottom">
@@ -369,7 +369,7 @@
                     {{#hasCoeff}}
                     <sup class="coeff">({{coefficient}})</sup>
                     {{/hasCoeff}}
-                </span>
+                </span> {{#formative}}<span>(F)</span>{{/formative}}
                 {{/devoirs}}
             </td>
             <td class="border-bottom"><span class="diviseur">{{moyenne}}</span></td>
@@ -384,7 +384,7 @@
                 <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
             {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
-          </span>
+          </span> {{#formative}}<span>(F)</span>{{/formative}}
                 {{/devoirs}}
             </td>
             <td class="border-none"><span class="diviseur">{{moyenne}}</span></td>
@@ -411,6 +411,7 @@
                 <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
             {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}</span>
+                {{#formative}}<span>(F)</span>{{/formative}}
                 {{/devoirs}}
             </td>
             <td class="border-right-bottom" colspan="2">
@@ -431,6 +432,7 @@
                 <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
             {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}</span>
+                {{#formative}}<span>(F)</span>{{/formative}}
                 {{/devoirs}}
             </td>
             <td class="border-none"><span class="diviseur">{{moyenne}}</span></td>
@@ -445,6 +447,7 @@
                 <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
             {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}</span>
+                {{#formative}}<span>(F)</span>{{/formative}}
                 {{/devoirs}}
             </td>
             <td class="border-bottom"><span class="diviseur">{{moyenne}}</span></td>
