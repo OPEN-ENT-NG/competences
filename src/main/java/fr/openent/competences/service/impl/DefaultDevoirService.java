@@ -751,7 +751,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT " + Field.DEVOIRS_TABLE + ".*, " + Field.TYPE_TABLE + ".nom as _type_libelle, ")
+        query.append("SELECT " + this.table + ".*, " + Field.TYPE_TABLE + ".nom as _type_libelle, ")
                 .append(Field.TYPE_TABLE + ".formative, " + Field.VIESCO_REL_TYPE_PERIODE + ".type as _periode_type, ")
                 .append(Field.VIESCO_REL_TYPE_PERIODE + ".ordre as _periode_ordre, ")
                 .append(Field.USERS_TABLE + ".username as teacher, id_groupe ");
@@ -761,15 +761,15 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     .append("as nbcompetences, sum.sum_notes, sum.nbr_eleves ");
         }
 
-        query.append("FROM ").append(this.schema).append(Field.DEVOIRS_TABLE)
+        query.append("FROM ").append(this.resourceTable)
                 .append(" LEFT JOIN ").append(Field.SCHEMA_VIESCO).append(Field.VIESCO_REL_TYPE_PERIODE)
-                .append(" ON " + Field.DEVOIRS_TABLE + ".id_periode = " + Field.VIESCO_REL_TYPE_PERIODE + ".id ")
+                .append(" ON " + this.table + ".id_periode = " + Field.VIESCO_REL_TYPE_PERIODE + ".id ")
                 .append("INNER JOIN ").append(this.schema).append(Field.TYPE_TABLE)
-                .append(" ON " + Field.DEVOIRS_TABLE + ".id_type = " + Field.TYPE_TABLE + ".id ")
+                .append(" ON " + this.table + ".id_type = " + Field.TYPE_TABLE + ".id ")
                 .append("INNER JOIN ").append(this.schema).append(Field.USERS_TABLE)
-                .append(" ON "+ Field.USERS_TABLE + ".id = " + Field.DEVOIRS_TABLE + ".owner ")
+                .append(" ON "+ Field.USERS_TABLE + ".id = " + this.table + ".owner ")
                 .append("INNER JOIN ").append(this.schema).append(Field.REL_DEVOIRS_GROUPES_TABLE)
-                .append(" ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = " + Field.DEVOIRS_TABLE + ".id ");
+                .append(" ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = " + this.table + ".id ");
 
         if (idClasse != null) {
             query.append("AND " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe = ? ");
@@ -778,29 +778,29 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         if (idEleve != null) {
             query.append(" LEFT JOIN ").append(this.schema).append(Field.COMPETENCES_DEVOIRS)
-                    .append(" ON " + Field.DEVOIRS_TABLE + ".id = " + Field.COMPETENCES_DEVOIRS + ".id_devoir ")
+                    .append(" ON " + this.table + ".id = " + Field.COMPETENCES_DEVOIRS + ".id_devoir ")
                     .append("INNER JOIN ").append(this.schema).append(Field.NOTES_TABLE)
-                    .append(" ON " + Field.DEVOIRS_TABLE + ".id = " + Field.NOTES_TABLE + ".id_devoir ")
-                    .append("INNER JOIN ( SELECT " + Field.DEVOIRS_TABLE + ".id, SUM(" + Field.NOTES_TABLE + ".valeur) ")
+                    .append(" ON " + this.table + ".id = " + Field.NOTES_TABLE + ".id_devoir ")
+                    .append("INNER JOIN ( SELECT " + this.table + ".id, SUM(" + Field.NOTES_TABLE + ".valeur) ")
                     .append("as sum_notes, COUNT(" + Field.NOTES_TABLE + ".valeur) as nbr_eleves ")
-                    .append("FROM ").append(this.schema).append(Field.DEVOIRS_TABLE)
+                    .append("FROM ").append(this.resourceTable)
                     .append(" INNER JOIN ").append(this.schema).append(Field.NOTES_TABLE)
-                    .append(" ON " + Field.DEVOIRS_TABLE + ".id = " + Field.NOTES_TABLE + ".id_devoir ")
-                    .append("WHERE " + Field.DEVOIRS_TABLE + ".id_etablissement = ? AND date_publication <= Now() ");
+                    .append(" ON " + this.table + ".id = " + Field.NOTES_TABLE + ".id_devoir ")
+                    .append("WHERE " + this.table + ".id_etablissement = ? AND date_publication <= Now() ");
             values.add(idEtablissement);
             if (idPeriode != null) {
-                query.append("AND " + Field.DEVOIRS_TABLE + ".id_periode = ? ");
+                query.append("AND " + this.table + ".id_periode = ? ");
                 values.add(idPeriode);
             }
-            query.append("GROUP BY " + Field.DEVOIRS_TABLE + ".id) sum ON sum.id = " + Field.DEVOIRS_TABLE + ".id ");
+            query.append("GROUP BY " + this.table + ".id) sum ON sum.id = " + this.table + ".id ");
         }
 
-        query.append("WHERE " + Field.DEVOIRS_TABLE + ".id_etablissement = ? AND " + Field.DEVOIRS_TABLE + ".eval_lib_historise = ? ");
+        query.append("WHERE " + this.table + ".id_etablissement = ? AND " + this.table + ".eval_lib_historise = ? ");
         values.add(idEtablissement);
         values.add(historise);
 
         if (idMatiere != null) {
-            query.append("AND " + Field.DEVOIRS_TABLE + ".id_matiere = ? ");
+            query.append("AND " + this.table + ".id_matiere = ? ");
             values.add(idMatiere);
         }
 
@@ -810,17 +810,17 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
 
         if (idPeriode != null) {
-            query.append("AND " + Field.DEVOIRS_TABLE + ".id_periode = ? ");
+            query.append("AND " + this.table + ".id_periode = ? ");
             values.add(idPeriode);
         }
 
         if (idEleve != null) {
-            query.append(" GROUP BY " +Field.DEVOIRS_TABLE + ".id, " + Field.VIESCO_REL_TYPE_PERIODE + ".type , ")
+            query.append(" GROUP BY " + this.table + ".id, " + Field.VIESCO_REL_TYPE_PERIODE + ".type , ")
                     .append( Field.VIESCO_REL_TYPE_PERIODE + ".ordre, " + Field.TYPE_TABLE + ".nom, " + Field.TYPE_TABLE + ".formative, ")
                     .append(Field.NOTES_TABLE + ".valeur, sum_notes, nbr_eleves, "+ Field.USERS_TABLE + ".username, id_groupe ")
-                    .append(" ORDER BY " + Field.DEVOIRS_TABLE + ".date ASC, " + Field.DEVOIRS_TABLE + ".id ASC");
+                    .append(" ORDER BY " + this.table + ".date ASC, " + this.table + ".id ASC");
         } else {
-            query.append(" ORDER BY " + Field.DEVOIRS_TABLE + ".date ASC, " + Field.DEVOIRS_TABLE + ".id ASC");
+            query.append(" ORDER BY " + this .table + ".date ASC, " + this.table + ".id ASC");
         }
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
