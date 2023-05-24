@@ -306,7 +306,7 @@ public class Competences extends BaseServer {
         addController(new ExportBulletinController(eb,storage,eventStore));
         addController(new DomaineController(eb));
         addController(new EnseignementController(eb));
-        addController(new ExportPDFController(eb, notification, storage));
+        addController(new ExportPDFController(serviceFactory));
         addController(new LSUController(serviceFactory));
         addController(new NiveauDeMaitriseController());
         addController(new NoteController(serviceFactory));

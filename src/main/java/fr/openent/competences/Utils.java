@@ -19,6 +19,7 @@ package fr.openent.competences;
 
 import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.constants.Field;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.service.MatiereService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultMatiereService;
@@ -842,32 +843,43 @@ public class Utils {
         }));
     }
 
+    /**
+     * @deprecated Use {@link #getPeriodLibelle(EventBus, String, String, Integer)}
+     */
+    @Deprecated
     public static void getLibellePeriode(EventBus eb, HttpServerRequest request, Integer idPeriode,
                                          Handler<Either<String, String>> handler) {
+        getPeriodLibelle(eb, request.headers().get(Field.ACCEPT_LANGUAGE), getHost(request), idPeriode)
+                .onSuccess(res -> handler.handle(new Either.Right<>(res)))
+                .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())));
+    }
 
+    public static Future<String> getPeriodLibelle(EventBus eb, String language, String host, Integer periodId) {
+        Promise<String> promise = Promise.promise();
 
         JsonObject jsonRequest = new JsonObject()
-                .put("headers", new JsonObject()
-                        .put("Accept-Language", request.headers().get("Accept-Language")))
-                .put("Host", getHost(request));
+                .put(Field.HEADERS, new JsonObject()
+                        .put(Field.ACCEPT_LANGUAGE, language))
+                .put(Field.HOST, host);
 
         JsonObject action = new JsonObject()
-                .put(ACTION, "periode.getLibellePeriode")
-                .put("idType", idPeriode)
-                .put("request", jsonRequest);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
+                .put(Field.ACTION, "periode.getLibellePeriode")
+                .put(Field.IDTYPE, periodId)
+                .put(Field.REQUEST, jsonRequest);
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
 
-                if (!OK.equals(body.getString(STATUS))) {
-                    handler.handle(new Either.Left<>("periode not found " + idPeriode));
-                    log.error("getLibellePeriode : periode not found: " + idPeriode);
-                } else {
-                    handler.handle(new Either.Right<>(body.getString("result")));
-                }
+            if (!OK.equals(body.getString(STATUS))) {
+                String error = String.format("[Competences@%s::getEvaluableGroupsClass] periode not found",
+                        Utils.class.getSimpleName());
+                promise.fail(String.format("%s: %s. %s", error, periodId,
+                        body.getString(Field.MESSAGE)));
+                log.error(error);
+            } else {
+                promise.complete(body.getString(Field.RESULT));
             }
         }));
+        return promise.future();
     }
 
     public static String getLibelle(String key) {

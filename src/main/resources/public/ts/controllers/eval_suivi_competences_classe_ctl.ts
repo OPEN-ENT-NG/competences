@@ -387,6 +387,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 case 'printTabMoys': {
                     let url = "/competences/suiviClasse/tableau/moyenne/" + $scope.search.classe.id;
                     url += "/export?withMoyGeneraleByEleve=" + withMoyGeneraleByEleve;
+                    url += `&withAppreciations=${!!$scope.suiviClasse.withAppreciations}`;
                     url += "&withMoyMinMaxByMat=" + withMoyMinMaxByMat + "&text=" + !textMod;
                     url += "&idEtablissement=" + $scope.structure.id;
                     url += "&typeGroupe=" + $scope.search.classe.type_groupe;
