@@ -38,11 +38,9 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
-import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -56,32 +54,29 @@ import org.entcore.common.user.UserUtils;
 
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.text.DecimalFormat;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
+import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
 import static fr.openent.competences.utils.UtilsConvert.strIdGroupesToJsonArray;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
-import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
-import static org.entcore.common.http.response.DefaultResponseHandler.*;
-
-import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
+import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 /**
  * Created by ledunoiss on 05/08/2016.
  */
 public class ExportPDFController extends ControllerHelper {
+    protected static final Logger log = LoggerFactory.getLogger(ExportPDFController.class);
     private final String assetsPath = "../..";
     private final Map<String, String> skins = new HashMap<String, String>();
-    protected static final Logger log = LoggerFactory.getLogger(ExportPDFController.class);
-
     /**
-     *
      * Déclaration des services
      */
     private final DevoirService devoirService;
@@ -92,20 +87,22 @@ public class ExportPDFController extends ControllerHelper {
     private final ExportService exportService;
     private final AppreciationService appreciationService;
     private final ExportBulletinService exportBulletinService;
+    private final AverageService averageService;
     private final MongoExportService mongoExportService;
     private final Storage storage;
 
-    public ExportPDFController(EventBus eb, EmailSender notification, Storage storage) {
-        devoirService = new DefaultDevoirService(eb);
-        utilsService = new DefaultUtilsService(eb);
-        bfcService = new DefaultBFCService(eb, storage);
-        domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
-        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
-        exportService = new DefaultExportService(eb, storage);
-        exportBulletinService = new DefaultExportBulletinService(eb, storage);
-        appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE);
-        this.mongoExportService = new DefaultMongoExportService();
-        this.storage = storage;
+    public ExportPDFController(ServiceFactory serviceFactory) {
+        devoirService = serviceFactory.devoirService();
+        utilsService = serviceFactory.utilsService();
+        bfcService = serviceFactory.BFCService();
+        domaineService = serviceFactory.domainService();
+        noteService = serviceFactory.noteService();
+        exportService = serviceFactory.exportService();
+        exportBulletinService = serviceFactory.exportBulletinService();
+        appreciationService = serviceFactory.appreciationService();
+        averageService = serviceFactory.averageService();
+        this.mongoExportService = serviceFactory.mongoExportService();
+        this.storage = serviceFactory.storage();
     }
 
     /**
@@ -137,7 +134,7 @@ public class ExportPDFController extends ControllerHelper {
             final String idEtablissement = request.params().get("idEtablissement");
             final String idEleve = request.params().get("idEleve");
             exportService.getDataForExportReleveEleve(idEleve, idEtablissement, idPeriode, request.params(), event -> {
-                if(event.isLeft()){
+                if (event.isLeft()) {
                     leftToResponse(request, event.left());
                     return;
                 }
@@ -152,7 +149,7 @@ public class ExportPDFController extends ControllerHelper {
     @Post("/releve/classe/pdf")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessSuiviClasse.class)
-    public void getReleve(final HttpServerRequest request){
+    public void getReleve(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, params -> {
             final String idClasse = params.getString(ID_CLASSE_KEY);
             final Long idPeriode = params.getLong(ID_PERIODE_KEY);
@@ -164,17 +161,17 @@ public class ExportPDFController extends ControllerHelper {
             final boolean showScores = request.params().contains(Field.SCORES) && Boolean.parseBoolean(request.params().get(Field.SCORES));
             exportService.getDataForExportReleveClasse(idClasse, idEtablissement, idPeriode, idTypePeriode, ordre, showScores,
                     showSkills, event -> {
-                if(event.isLeft()){
-                    leftToResponse(request, event.left());
-                    return;
-                }
-                JsonObject templateProps = event.right().getValue()
-                        .put(Field.SHOWSKILLS, showSkills)
-                        .put(Field.SHOWSCORES, showScores);
-                String templateName = "releve-classe.pdf.xhtml";
-                String prefixPdfName = "releve-classe_" +  classeName;
-                exportService.genererPdf(request, templateProps, templateName, prefixPdfName, vertx, config);
-            } );
+                        if (event.isLeft()) {
+                            leftToResponse(request, event.left());
+                            return;
+                        }
+                        JsonObject templateProps = event.right().getValue()
+                                .put(Field.SHOWSKILLS, showSkills)
+                                .put(Field.SHOWSCORES, showScores);
+                        String templateName = "releve-classe.pdf.xhtml";
+                        String prefixPdfName = "releve-classe_" + classeName;
+                        exportService.genererPdf(request, templateProps, templateName, prefixPdfName, vertx, config);
+                    });
         });
     }
 
@@ -183,6 +180,7 @@ public class ExportPDFController extends ControllerHelper {
      * Ces entites peuvent etre au choix un etablissement, un ou plusieurs classes, un ou plusieurs eleves.
      * Afin de prefixer le fichier PDF cree, appelle {@link DefaultUtilsService#/getNameEntity(String[], Handler)} afin
      * de recuperer le nom de l'entite fournie.
+     *
      * @param request
      */
     @Get("/BFC/pdf")
@@ -207,7 +205,7 @@ public class ExportPDFController extends ControllerHelper {
                     idCycle, getHost(request), I18n.acceptLanguage(request), vertx, config, exportResult,
                     periodeNameFuture);
             CompositeFuture.all(exportResult, periodeNameFuture).setHandler(event -> {
-                if(event.failed()){
+                if (event.failed()) {
                     leftToResponse(request, new Either.Left<>(event.cause().getMessage()));
                     return;
                 }
@@ -225,7 +223,7 @@ public class ExportPDFController extends ControllerHelper {
                         .put("Host", getHost(request));
 
                 List<String> idClassesCheckCurrentCycle = new ArrayList<>();
-                if(!idClasses.isEmpty()) {
+                if (!idClasses.isEmpty()) {
                     idClassesCheckCurrentCycle = idClasses;
                 } else {
                     idClassesCheckCurrentCycle.add(result.getJsonArray("classes").getJsonObject(0)
@@ -239,14 +237,14 @@ public class ExportPDFController extends ControllerHelper {
                         for (int i = 0; i < queryResult.size(); i++) {
                             JsonObject cycle = queryResult.getJsonObject(i);
                             Long cycleId = cycle.getLong("id_cycle");
-                            if(currentIdCycle == null) {
+                            if (currentIdCycle == null) {
                                 currentIdCycle = cycleId;
                             } else if (!currentIdCycle.equals(cycleId)) {
                                 log.error("getBFCEleve : cycles are not sames");
                             }
                         }
 
-                        if(idCycle != null && idCycle.equals(currentIdCycle)){
+                        if (idCycle != null && idCycle.equals(currentIdCycle)) {
                             saveBfcWorker(idClasses, idCycle, result, prefixPdfName, templateName, jsonRequest);
                         }
                     } else {
@@ -262,27 +260,25 @@ public class ExportPDFController extends ControllerHelper {
     }
 
 
-
-
     private void saveBfcWorker(List<String> idClasses, Long idCycle, JsonObject result, String prefixPdfName,
                                String templateName, JsonObject jsonRequest) {
-        if(idCycle != null){
+        if (idCycle != null) {
             result.put("idCycle", idCycle);
-            if(idClasses.size() > 0) {
+            if (idClasses.size() > 0) {
                 JsonObject actionClass = new JsonObject()
                         .put(ACTION, "classe.getClasseInfo")
                         .put(ID_CLASSE_KEY, idClasses.get(0));
 
                 eb.send(Competences.VIESCO_BUS_ADDRESS, actionClass, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
-                    if(body.getJsonObject("result").getJsonObject("c").
-                            getJsonObject("metadata").getJsonArray("labels").contains("Class")){
-                        result.put("idClasse" , idClasses.get(0));
+                    if (body.getJsonObject("result").getJsonObject("c").
+                            getJsonObject("metadata").getJsonArray("labels").contains("Class")) {
+                        result.put("idClasse", idClasses.get(0));
 
                         setFuturesToInsertMongo(result, prefixPdfName, templateName, jsonRequest);
                     }
                 }));
-            }else{
+            } else {
                 setFuturesToInsertMongo(result, prefixPdfName, templateName, jsonRequest);
             }
 
@@ -299,8 +295,8 @@ public class ExportPDFController extends ControllerHelper {
             }).onFailure(error -> {
                 log.info(String.format("[Competences@%s::setFuturesToInsertMongo] an error has occurred during insert data in mongo: %s.", this.getClass().getSimpleName(), error.getMessage()));
             });
-        }catch (Exception e){
-            log.error(String.format("[Competnces@%s::setFuturesToInsertMongo] %s ",this.getClass().getSimpleName() , e.getMessage()));
+        } catch (Exception e) {
+            log.error(String.format("[Competnces@%s::setFuturesToInsertMongo] %s ", this.getClass().getSimpleName(), e.getMessage()));
         }
     }
 
@@ -323,12 +319,12 @@ public class ExportPDFController extends ControllerHelper {
             String host = getHost(request);
 
             devoirService.getFormSaisieDevoir(idDevoir, acceptLanguage, host, event -> {
-                if(event.isLeft()){
+                if (event.isLeft()) {
                     badRequest(request, event.left().getValue());
                     return;
                 }
 
-                exportService.genererPdf(request, event.right().getValue() ,"Devoir.saisie.xhtml",
+                exportService.genererPdf(request, event.right().getValue(), "Devoir.saisie.xhtml",
                         "Formulaire_saisie", vertx, config);
             });
         } else {
@@ -346,17 +342,17 @@ public class ExportPDFController extends ControllerHelper {
                 MultiMap params = request.params();
                 final boolean json = Boolean.parseBoolean(request.params().get("json"));
 
-                exportService.getExportCartouche(params,  event-> {
-                    if(event.isRight()){
+                exportService.getExportCartouche(params, event -> {
+                    if (event.isRight()) {
                         JsonObject result = event.right().getValue();
 
                         if (json) {
                             Renders.renderJson(request, result);
                         } else {
-                            exportService.genererPdf(request, result,"cartouche.pdf.xhtml",
+                            exportService.genererPdf(request, result, "cartouche.pdf.xhtml",
                                     "Cartouche", vertx, config);
                         }
-                    }else{
+                    } else {
                         leftToResponse(request, event.left());
                     }
                 });
@@ -390,7 +386,7 @@ public class ExportPDFController extends ControllerHelper {
                 String idEtablissement = devoir.getString("id_etablissement");
 
                 exportService.getExportEval(text, usePerso, only_evaluation, devoir, idGroupe, idEtablissement,
-                        request,  event -> {
+                        request, event -> {
                             if (event.isRight()) {
                                 try {
                                     JsonObject result = event.right().getValue();
@@ -433,8 +429,7 @@ public class ExportPDFController extends ControllerHelper {
         final Long idCycle;
         if (request.params().contains("idCycle")) {
             idCycle = Long.parseLong(request.params().get("idCycle"));
-        }
-        else {
+        } else {
             idCycle = null;
         }
         final List<String> listIdMatieres = request.params().getAll("idMatiere");
@@ -523,7 +518,7 @@ public class ExportPDFController extends ControllerHelper {
                         _iGroupesdArr, idEtablissementEl, listIdMatieres, finalIdPeriode, isCycle, idCycle, finalHandler);
             } else {
                 JsonArray eleves = (JsonArray) elevesFuture.result();
-                if(eleves.size() != elevesMap.size()) {
+                if (eleves.size() != elevesMap.size()) {
                     leftToResponse(request, new Either.Left<>("one or more students are in several classes"));
                 } else {
                     final AtomicBoolean answered = new AtomicBoolean();
@@ -558,10 +553,9 @@ public class ExportPDFController extends ControllerHelper {
     private int getEleveLevel(JsonObject eleve) {
         int eleveLevel = -1;
         String eleveLevelString = eleve.getString("level");
-        if(eleveLevelString != null) {
+        if (eleveLevelString != null) {
             eleveLevel = Integer.parseInt(eleveLevelString.split(" ")[0].replaceAll("[^\\d.]", ""));
-        }
-        else {
+        } else {
             eleveLevelString = eleve.getString("classeName");
             eleveLevel = Integer.parseInt(eleveLevelString.substring(0, 1));
         }
@@ -642,7 +636,7 @@ public class ExportPDFController extends ControllerHelper {
 
         CompositeFuture.all(idElevesFuture, idGroupesFuture, multiTeachersFuture, multiTeachingPromise.future(),
                 servicesPromise.future(), subTopicCoefFuture).setHandler(event -> {
-            if(event.succeeded()) {
+            if (event.succeeded()) {
 
                 Structure structure = new Structure();
                 structure.setId(idEtablissement);
@@ -699,12 +693,12 @@ public class ExportPDFController extends ControllerHelper {
 
                                     Boolean isVisible = true;
                                     JsonArray servicesJSON = (JsonArray) servicesPromise.future().result();
-                                    for(int i = 0; i < servicesJSON.size(); i++){
+                                    for (int i = 0; i < servicesJSON.size(); i++) {
                                         JsonObject service = servicesJSON.getJsonObject(i);
 
                                         String serviceIdMatiere = service.getString(Field.ID_MATIERE);
                                         String lineIdMatiere = lineObject.getString(Field.ID_MATIERE);
-                                        if(serviceIdMatiere.equals(lineIdMatiere)) {
+                                        if (serviceIdMatiere.equals(lineIdMatiere)) {
                                             isVisible = service.getBoolean(Field.IS_VISIBLE);
                                             break;
                                         }
@@ -723,14 +717,14 @@ public class ExportPDFController extends ControllerHelper {
                                                     && group.getId().equals(el.getGroup().getId()))
                                             .findFirst().orElse(null);
 
-                                    if (service == null){
+                                    if (service == null) {
                                         //On regarde les multiTeacher
-                                        for(Object mutliTeachO: multiTeachers){
+                                        for (Object mutliTeachO : multiTeachers) {
                                             //multiTeaching.getString("second_teacher_id").equals(teacher.getId()
-                                            JsonObject multiTeaching  =(JsonObject) mutliTeachO;
-                                            if(multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                                            JsonObject multiTeaching = (JsonObject) mutliTeachO;
+                                            if (multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
                                                     && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
-                                                    && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
+                                                    && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
                                                 service = services.stream()
                                                         .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
                                                                 && matiere.getId().equals(el.getMatiere().getId())
@@ -738,9 +732,9 @@ public class ExportPDFController extends ControllerHelper {
                                                         .findFirst().orElse(null);
                                             }
 
-                                            if(multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                                            if (multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
                                                     && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
-                                                    && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())){
+                                                    && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
 
                                                 service = services.stream()
                                                         .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
@@ -774,8 +768,7 @@ public class ExportPDFController extends ControllerHelper {
                                         }
 
                                         notesBySousMatiere.get(key).get(lineObject.getString(Field.ID_ELEVE)).get(sousMatiereId).add(note);
-                                    }
-                                    else {
+                                    } else {
                                         if (!notes.containsKey(key)) {
                                             notes.put(key, new HashMap<>());
                                         }
@@ -812,7 +805,7 @@ public class ExportPDFController extends ControllerHelper {
                             if (!moyFinal.containsKey(key)) {
                                 moyFinal.put(key, new HashMap<>());
                             }
-                            if(lineObject.getValue(MOYENNE) != null)
+                            if (lineObject.getValue(MOYENNE) != null)
                                 moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(Double.parseDouble(lineObject.getString(MOYENNE)), false, new Double(1)));
                             else
                                 moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(null, false, new Double(1)));
@@ -829,14 +822,14 @@ public class ExportPDFController extends ControllerHelper {
 
                     String key = multiTeacher.getString("subject_id");
 
-                    if(!coTeachers.containsKey(key)){
+                    if (!coTeachers.containsKey(key)) {
                         ArrayList _coTeachers = new ArrayList();
                         _coTeachers.add(multiTeacher.getString("second_teacher_id"));
                         coTeachers.put(key, _coTeachers);
                     } else {
                         ArrayList _coTeachers = coTeachers.get(key);
                         String second_teacher_id = multiTeacher.getString("second_teacher_id");
-                        if(!_coTeachers.contains(second_teacher_id)){
+                        if (!_coTeachers.contains(second_teacher_id)) {
                             _coTeachers.add(second_teacher_id);
                             coTeachers.put(key, _coTeachers);
                         }
@@ -866,8 +859,7 @@ public class ExportPDFController extends ControllerHelper {
                     idElevesFuture.result().stream().forEach(idEleve -> {
                         if (moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() != null) {
                             matGrpNotes.add(moyennesFinales.get(matGrp).get(idEleve));
-                        }
-                        else {
+                        } else {
                             if (notesBySousMatiere.containsKey(matGrp) && notesBySousMatiere.get(matGrp).containsKey(idEleve)) {
                                 if (!(moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() == null)) {
                                     double total = 0;
@@ -896,16 +888,14 @@ public class ExportPDFController extends ControllerHelper {
                                     if (totalCoeff == 0) {
                                         log.error("Found a 0 or negative coefficient in getExportRecapAppreciations, please check your subtopics " +
                                                 "coefficients (value of totalCoeff : " + totalCoeff + ")");
-                                    }
-                                    else {
+                                    } else {
                                         Double moy = Math.round((total / totalCoeff) * Field.ROUNDER) / Field.ROUNDER;
                                         matGrpNotes.add(new NoteDevoir(moy, false, 1.0));
                                     }
                                 }
-                            }
-                            else {
+                            } else {
                                 if (notes.containsKey(matGrp) && notes.get(matGrp).containsKey(idEleve) && !(moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() == null)) {
-                                    if(!"NN".equals(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null,false).getValue(MOYENNE))) {
+                                    if (!"NN" .equals(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null, false).getValue(MOYENNE))) {
                                         matGrpNotes.add(new NoteDevoir(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null, false).getDouble(MOYENNE), false, new Double(1)));
                                     }
                                 }
@@ -913,12 +903,12 @@ public class ExportPDFController extends ControllerHelper {
                         }
                     });
 
-                    JsonObject resultCalc = utilsService.calculMoyenne(matGrpNotes, true, null,false);
-                    if(!resultCalc.getBoolean(HAS_NOTE)){
+                    JsonObject resultCalc = utilsService.calculMoyenne(matGrpNotes, true, null, false);
+                    if (!resultCalc.getBoolean(HAS_NOTE)) {
                         moyObject.put("min", "");
                         moyObject.put("max", "");
                         moyObject.put("moy", "NN");
-                    } else if (resultCalc.getDouble("noteMin") > resultCalc.getDouble(MOYENNE)){
+                    } else if (resultCalc.getDouble("noteMin") > resultCalc.getDouble(MOYENNE)) {
 
                         moyObject.put("min", "");
                         moyObject.put("max", "");
@@ -989,7 +979,7 @@ public class ExportPDFController extends ControllerHelper {
         });
 
         Future<String> libellePeriodeFuture = Future.future();
-        if(finalIdPeriode == null) {
+        if (finalIdPeriode == null) {
             libellePeriodeFuture.complete("Année");
         } else {
             Utils.getLibellePeriode(eb, request, finalIdPeriode, stringStringEither -> {
@@ -1032,13 +1022,13 @@ public class ExportPDFController extends ControllerHelper {
                             newMoy.put("prof", prof);
                             newMoy.put("grp", libGrp.get(entry.getKey().getString("id_groupe")));
 
-                            if(coTeachers.size() > 0 && coTeachers.get(entry.getKey().getString("id_matiere")) != null){
+                            if (coTeachers.size() > 0 && coTeachers.get(entry.getKey().getString("id_matiere")) != null) {
                                 ArrayList _coTeachers = new ArrayList();
                                 coTeachers.get(entry.getKey().getString("id_matiere")).forEach(coTeacher -> {
                                     String coTeacherName = libTeachers.get(coTeacher);
-                                    if(!_coTeachers.contains(coTeacherName)){
-                                        if(prof != null) {
-                                            if(!prof.equals(coTeacherName)){
+                                    if (!_coTeachers.contains(coTeacherName)) {
+                                        if (prof != null) {
+                                            if (!prof.equals(coTeacherName)) {
                                                 _coTeachers.add(coTeacherName);
                                             }
                                         } else {
@@ -1058,7 +1048,7 @@ public class ExportPDFController extends ControllerHelper {
                 result.put("periode", libellePeriode);
                 result.put("classe", libelleClasse);
 
-                if(json) {
+                if (json) {
                     Renders.renderJson(request, result);
                 } else {
                     String fileName = result.getString("classe") + "_export_synthese";
@@ -1112,24 +1102,24 @@ public class ExportPDFController extends ControllerHelper {
 
                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
-                    if ("ok".equals(body.getString("status"))) {
+                    if ("ok" .equals(body.getString("status"))) {
                         final String idEtablissement = body.getJsonArray("results")
                                 .getJsonObject(0).getString("idStructure");
                         UserUtils.getUserInfos(eb, request, user -> {
                             final boolean isChefEtab;
-                            if(user != null) {
+                            if (user != null) {
                                 isChefEtab = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
                             } else {
                                 isChefEtab = false;
                             }
                             WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse),
-                                    null, null,null, null, null, event -> {
+                                    null, null, null, null, null, event -> {
                                         Boolean isHeadTeacher = false;
-                                        if(event.isRight()) {
+                                        if (event.isRight()) {
                                             isHeadTeacher = event.right().getValue();
                                         }
                                         getExportRecapUtils(user, idEtablissement, idCycle, text, json, usePerso,
-                                                idClasse, finalIdPeriode, request,isChefEtab || isHeadTeacher,
+                                                idClasse, finalIdPeriode, request, isChefEtab || isHeadTeacher,
                                                 finalYear);
                                     });
                         });
@@ -1148,7 +1138,7 @@ public class ExportPDFController extends ControllerHelper {
                                      final String idClasse, final Long idPeriode, final HttpServerRequest request,
                                      final Boolean isChefEtab, final Boolean isYear) {
         if (user != null || isChefEtab) {
-            bfcService.getVisibility(idEtablissement,1, user, visibilityEither -> {
+            bfcService.getVisibility(idEtablissement, 1, user, visibilityEither -> {
                 if (visibilityEither.isRight() || isChefEtab) {
                     boolean moy = false;
                     if (visibilityEither.isRight()) {
@@ -1182,7 +1172,7 @@ public class ExportPDFController extends ControllerHelper {
                                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                                     JsonObject body = message.body();
 
-                                    if ("ok".equals(body.getString("status"))) {
+                                    if ("ok" .equals(body.getString("status"))) {
                                         JsonArray results = body.getJsonArray("results");
                                         results = Utils.sortElevesByDisplayName(results);
 
@@ -1283,7 +1273,7 @@ public class ExportPDFController extends ControllerHelper {
                             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                                 JsonObject body = message.body();
 
-                                if ("ok".equals(body.getString("status"))) {
+                                if ("ok" .equals(body.getString("status"))) {
                                     final String classeName = body.getJsonObject("result").getJsonObject("c")
                                             .getJsonObject("data").getString("name");
                                     result.put("classe", classeName);
@@ -1320,7 +1310,7 @@ public class ExportPDFController extends ControllerHelper {
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
-            if ("ok".equals(body.getString("status"))) {
+            if ("ok" .equals(body.getString("status"))) {
                 String libellePeriode = body.getString("result")
                         .replace("é", "e")
                         .replace("è", "e");
@@ -1331,7 +1321,7 @@ public class ExportPDFController extends ControllerHelper {
                     Renders.renderJson(request, result);
                 } else {
                     String fileName = classeName.replace(' ', '_') + "_export_recapitulatif";
-                    exportService.genererPdf(request, result,"recapitulatif-evaluations.pdf.xhtml",
+                    exportService.genererPdf(request, result, "recapitulatif-evaluations.pdf.xhtml",
                             fileName, vertx, config);
                 }
             } else {
@@ -1358,7 +1348,7 @@ public class ExportPDFController extends ControllerHelper {
                     if (stringJsonArrayEither.isRight()) {
                         try {
                             JsonObject res = stringJsonArrayEither.right().getValue();
-                            Boolean noDevoir =  res.getBoolean("noDevoir");
+                            Boolean noDevoir = res.getBoolean("noDevoir");
                             if (!noDevoir) {
                                 final JsonObject headerEleve = new JsonObject();
                                 final JsonObject _headerEleve = stringJsonArrayEither.right().getValue();
@@ -1384,12 +1374,11 @@ public class ExportPDFController extends ControllerHelper {
                                 answered.set(true);
                                 JsonObject resultFinal = new JsonObject();
                                 resultFinal.put("eleves", sortJsonArrayByName(result));
-                                if ( 0 == result.size()){
+                                if (0 == result.size()) {
                                     leftToResponse(request,
                                             new Either.Left<>("getExportReleveComp : No exams " +
                                                     "on given period and/or material."));
-                                }
-                                else if (json) {
+                                } else if (json) {
                                     Renders.renderJson(request, result);
                                 } else {
                                     final String idEleve = stringJsonArrayEither.right().getValue()
@@ -1486,7 +1475,7 @@ public class ExportPDFController extends ControllerHelper {
         JsonArray newDomaines = new fr.wseduc.webutils.collections.JsonArray();
         for (int k = 0; k < domaines.size(); k++) {
             JsonObject domaine = domaines.getJsonObject(k);
-            if ("0".equals(domaine.getInteger("id_parent").toString()) || k == 0) {
+            if ("0" .equals(domaine.getInteger("id_parent").toString()) || k == 0) {
                 domaine.put("isDomaineParent", true);
 //                if(!"0".equals(domaine.getNumber("id_parent").toString()))
 //                    domaine.put("nomDomaine", "Domaine D" + domaine.getNumber("id_parent").toString());
@@ -1526,14 +1515,14 @@ public class ExportPDFController extends ControllerHelper {
             String idParent = params.getString(ID_PARENT_KEY);
 
             UserUtils.getUserInfos(eb, request, user -> {
-                if(user != null && user.getType().equals("Student") || user.getType().equals("Relative")){
+                if (user != null && user.getType().equals("Student") || user.getType().equals("Relative")) {
                     utilsService.getPeriodesClasses(idEtablissement, new JsonArray().add(idClasse), idPeriode, eventvisibility -> {
-                        if(eventvisibility.isRight()){
+                        if (eventvisibility.isRight()) {
                             Boolean visibility = eventvisibility.right().getValue().getJsonObject(0).getBoolean("publication_bulletin");
-                            if(visibility) {
+                            if (visibility) {
                                 utilsService.getYearsAndPeriodes(idEtablissement, true, event -> {
                                     if (event.isRight()) {
-                                        String idYear = event.right().getValue().getString("start_date").substring(0,4);
+                                        String idYear = event.right().getValue().getString("start_date").substring(0, 4);
                                         BulletinUtils.getBulletin(idEleve, idClasse, idPeriode, idEtablissement, idParent,
                                                 idYear, storage, request);
                                     } else {
@@ -1542,7 +1531,7 @@ public class ExportPDFController extends ControllerHelper {
                                     }
                                 });
                             } else {
-                                log.info("[ExportPDFController] :  No rights for visibility " );
+                                log.info("[ExportPDFController] :  No rights for visibility ");
                                 forbidden(request, "No rights for visibility");
                             }
                         } else {
@@ -1550,10 +1539,10 @@ public class ExportPDFController extends ControllerHelper {
                             badRequest(request);
                         }
                     });
-                } else if( user != null && user.getType().equals("Teacher") || user.getType().equals("Personnel")) {
+                } else if (user != null && user.getType().equals("Teacher") || user.getType().equals("Personnel")) {
                     utilsService.getYearsAndPeriodes(idEtablissement, true, event -> {
                         if (event.isRight()) {
-                            String idYear = event.right().getValue().getString("start_date").substring(0,4);
+                            String idYear = event.right().getValue().getString("start_date").substring(0, 4);
                             BulletinUtils.getBulletin(idEleve, idClasse, idPeriode, idEtablissement, idParent,
                                     idYear, storage, request);
                         } else {
@@ -1570,136 +1559,68 @@ public class ExportPDFController extends ControllerHelper {
 
     @Get("/suiviClasse/tableau/moyenne/:idClasse/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void exportBulletinMoyennneOnly(HttpServerRequest request){
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(UserInfos eventUser) {
-                if (eventUser == null) {
-                    unauthorized(request);
-                } else {
-                    String idClasse = request.params().get(Field.IDCLASSE);
-                    String idEtablissement = request.params().get(Field.IDETABLISSEMENT);
-                    String name = request.params().get(Field.NAME);
-
-                    Boolean withMoyGeneraleByEleve = Boolean.valueOf(request.params().get(Field.WITHMOYGENERALEBYELEVE));
-                    Boolean withMoyMinMaxByMat = Boolean.valueOf(request.params().get(Field.WITHMOYMINMAXBYMAT));
-                    Boolean text = Boolean.parseBoolean(request.params().get(Field.TEXT));
-
-                    Integer typeGroup, idPeriode = null;
-                    try {
-                        typeGroup = Integer.parseInt(request.params().get(Field.TYPEGROUPE));
-                        if (request.params().contains(Field.IDPERIODE) && request.params().get(Field.IDPERIODE) != null) {
-                            idPeriode = Integer.parseInt(request.params().get(Field.IDPERIODE));
-                        }
-                    } catch (NumberFormatException err) {
-                        badRequest(request, err.getMessage());
-                        log.error(err);
-                        return;
-                    }
-                    final Integer idPeriodeFinal = idPeriode;
-
-                    SortedMap<String, Set<String>> mapAllidMatAndidTeachers = new TreeMap<>();
-                    Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve = new LinkedHashMap<>();
-                    final JsonObject[] resultElevesTab = new JsonObject[1];
-
-                    Handler<Either<String, JsonObject>> getMatEvaluatedAndStatHandler = event -> {
-                        if(!event.isRight()) {
-                            leftToResponse(request, event.left());
-                        } else {
-                            JsonObject resultMatieres = event.right().getValue();
-                            JsonObject resultEleves = resultElevesTab[0];
-                            resultEleves.getMap().putAll(resultMatieres.getMap());
-
-                            JsonObject result = new JsonObject(resultEleves.getMap());
-
-                            // Re order moy by rank
-                            for(Object eleve : result.getJsonArray(Field.ELEVES)){
-                                JsonObject jsonEleve = (JsonObject) eleve;
-                                JsonArray orderedEleveMoy = new JsonArray();
-                                for(Object eleveMoy : jsonEleve.getJsonArray(Field.ELEVEMOYBYMAT)){
-                                    JsonObject jsonEleveMoy = (JsonObject) eleveMoy;
-                                    int rank = 0;
-                                    for(Object matiere : resultMatieres.getJsonArray(Field.MATIERES)){
-                                        JsonObject jsonMatiere = (JsonObject) matiere;
-                                        if(jsonEleveMoy.getString(Field.ID_MATIERE).equals(jsonMatiere.getString(Field.ID))){
-                                            rank = jsonMatiere.getInteger(Field.RANK);
-                                            break;
-                                        }
-                                    }
-                                    jsonEleveMoy.put(Field.RANK, rank);
-                                    orderedEleveMoy.add(jsonEleveMoy);
-                                }
-                                jsonEleve.put(Field.ELEVEMOYBYMAT, Utils.sortJsonArrayIntValue(Field.RANK, orderedEleveMoy));
-                            }
-                            if(idPeriodeFinal != null) {
-                                Utils.getLibellePeriode(eb, request, idPeriodeFinal, new Handler<Either<String, String>>() {
-                                    @Override
-                                    public void handle(Either<String, String> event) {
-                                        if (!event.isRight()) {
-                                            leftToResponse(request, event.left());
-                                        } else {
-                                            String libellePeriode = event.right().getValue();
-                                            result.put(Field.PERIODE, libellePeriode);
-                                            String prefix = result.getJsonArray(Field.ELEVES).getJsonObject(0).getString(Field.NAMECLASSE);
-                                            result.put(Field.NAMECLASS, prefix);
-                                            prefix += "_" + libellePeriode;
-                                            prefix = prefix.replaceAll(" ", "_");
-                                            setParamsExportMoys(result, withMoyGeneraleByEleve, withMoyMinMaxByMat,
-                                                    text, request, prefix);
-                                        }
-                                    }
-                                });
-                            } else {
-                                result.put(Field.PERIODE, Field.ANNEE);
-                                String prefix = result.getJsonArray(Field.ELEVES).getJsonObject(0).getString(Field.NAMECLASSE);
-                                result.put(Field.NAMECLASS, prefix);
-                                prefix = prefix.replaceAll(" ", "_") + "_" + Field.ANNEE;
-                                setParamsExportMoys(result, withMoyGeneraleByEleve, withMoyMinMaxByMat,
-                                        text, request, prefix);
-                            }
-                        }
-                    };
-
-                    Handler<Either<String, JsonObject>> getMoysEleveByMatHandler = event -> {
-                        if(!event.isRight()) {
-                            leftToResponse(request, event.left());
-                            log.error(event.left());
-                        } else {
-                            resultElevesTab[0] = event.right().getValue();
-                            noteService.getMatEvaluatedAndStat(mapAllidMatAndidTeachers, mapIdMatListMoyByEleve,
-                                    getMatEvaluatedAndStatHandler);
-                        }
-                    };
-
-                    if(idPeriode != null){
-                        //in this case, in mapIdMatListMoyByEleve, this average is the average of the periode
-                        noteService.getMoysEleveByMatByPeriode(idClasse, idPeriode, idEtablissement, typeGroup,
-                                name, mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, false, getMoysEleveByMatHandler );
-                    } else {
-                        List<String> listIdClasse = new ArrayList<>();
-                        listIdClasse.add(idClasse);
-                        utilsService.getPeriodes(listIdClasse, null, new Handler<Either<String, JsonArray>>() {
-                            @Override
-                            public void handle(Either<String, JsonArray> event) {
-                                if(event.isLeft()){
-                                    leftToResponse(request, event.left());
-                                    log.error(event.left().getValue());
-                                } else{
-                                    JsonArray periodes = event.right().getValue();
-                                    //in this case, in mapIdMatListMoyByEleve, this average is the average of the year
-                                    noteService.getMoysEleveByMatByYear(idEtablissement, periodes, typeGroup,
-                                            name, mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
-                                }
-                            }
-                        });
-                    }
-                }
+    public void exportBulletinMoyennneOnly(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, eventUser -> {
+            if (eventUser == null) {
+                unauthorized(request);
+                return;
             }
+            String idClasse = request.params().get(Field.IDCLASSE);
+            String idEtablissement = request.params().get(Field.IDETABLISSEMENT);
+            String name = request.params().get(Field.NAME);
+
+            Boolean withMoyGeneraleByEleve = Boolean.valueOf(request.params().get(Field.WITHMOYGENERALEBYELEVE));
+            Boolean withMoyMinMaxByMat = Boolean.valueOf(request.params().get(Field.WITHMOYMINMAXBYMAT));
+            boolean isWithSummaries = Boolean.parseBoolean(request.params().get(Field.WITHAPPRECIATIONS));
+            Boolean text = Boolean.parseBoolean(request.params().get(Field.TEXT));
+
+            int typeGroup;
+            Integer idPeriode = null;
+            try {
+                typeGroup = Integer.parseInt(request.params().get(Field.TYPEGROUPE));
+                if (request.params().contains(Field.IDPERIODE) && request.params().get(Field.IDPERIODE) != null) {
+                    idPeriode = Integer.parseInt(request.params().get(Field.IDPERIODE));
+                }
+            } catch (NumberFormatException err) {
+                badRequest(request, err.getMessage());
+                log.error(err);
+                return;
+            }
+
+            Future<String> futureLabelPeriode = getLabelPeriod(request, idPeriode);
+            Future<JsonObject> futureStudentsAverages = averageService.getStudentsAverageForExportPdf(idEtablissement,
+                    idPeriode, idClasse, typeGroup, name, isWithSummaries, withMoyGeneraleByEleve,
+                    getHost(request), request.headers().get(Field.ACCEPT_LANGUAGE));
+
+            CompositeFuture.all(futureLabelPeriode, futureStudentsAverages)
+                    .onFailure(err -> leftToResponse(request, new Either.Left<>(err.getMessage())))
+                    .onSuccess(result -> {
+                        JsonObject studentsAverages = futureStudentsAverages.result();
+                        exportStudentsAverages(studentsAverages, withMoyGeneraleByEleve, withMoyMinMaxByMat,
+                                text, request, setPrefixExportMoysOnResult(studentsAverages, futureLabelPeriode.result()));
+                    });
         });
     }
 
-    void setParamsExportMoys (JsonObject result, Boolean withMoyGeneraleByEleve, Boolean withMoyMinMaxByMat,
-                              Boolean text, HttpServerRequest request, String prefix){
+    private Future<String> getLabelPeriod(HttpServerRequest request, Integer idPeriod) {
+        Promise<String> promise = Promise.promise();
+        if (idPeriod != null) Utils.getPeriodLibelle(eb, request.headers().get(Field.ACCEPT_LANGUAGE), getHost(request), idPeriod)
+                .onSuccess(promise::complete)
+                .onFailure(promise::fail);
+        else promise.complete(Field.ANNEE);
+
+        return promise.future();
+    }
+
+    private String setPrefixExportMoysOnResult(JsonObject result, String periodLabel) {
+        result.put(Field.PERIODE, periodLabel);
+        String prefix = result.getJsonArray(Field.ELEVES).getJsonObject(0).getString(Field.NAMECLASSE);
+        result.put(Field.NAMECLASS, prefix);
+        return String.format("%s_%s", prefix, periodLabel).replace(" ", "_");
+    }
+
+    void exportStudentsAverages(JsonObject result, Boolean withMoyGeneraleByEleve, Boolean withMoyMinMaxByMat,
+                                Boolean text, HttpServerRequest request, String prefix) {
         result.put("withMoyGeneraleByEleve", withMoyGeneraleByEleve);
         result.put("withMoyMinMaxByMat", withMoyMinMaxByMat);
         result.put("text", text);

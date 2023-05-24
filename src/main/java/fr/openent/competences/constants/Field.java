@@ -69,6 +69,7 @@ public class Field {
     public static final String TIMESTAMP_DT = "timestamp_dt";
     public static final String TIMESTAMP_FN = "timestamp_fn";
     public static final String ID_TYPE = "id_type";
+    public static final String IDTYPE = "idType";
     public static final String PERIODEID = "periodeId";
     public static final String TEACHER_ID = "teacher_id";
     public static final String IDREPORTMODEL = "idReportModel";
@@ -93,6 +94,10 @@ public class Field {
 
     //transaction
     public static final String ACTION = "action";
+    public static final String REQUEST = "request";
+    public static final String HEADERS = "headers";
+    public static final String HOST = "Host";
+    public static final String ACCEPT_LANGUAGE = "Accept-Language";
     public static final String VALUES = "values";
     public static final String STATEMENT = "statement";
     public static final String PREPARED = "prepared";
@@ -114,6 +119,15 @@ public class Field {
     public static final String GETIDMULTITEACHERS = "getIdMultiTeachers";
     //Modules
     public static final String PRESENCES = "presences";
+
+    // PERIODIC REPORT
+    public static final String PERIODICREPORTSUMMARIES = "periodicReportSummaries";
+    public static final String SUMMARY = "summary";
+    public static final String SYNTHESE = "synthese";
+
+    // SUBJECT
+    public static final String SUBJECTS = "subjects";
+
 
     //variables
     public static final String AVERAGES = "averages";
@@ -181,6 +195,7 @@ public class Field {
     public static final String NAME = "name";
     public static final String WITHMOYGENERALEBYELEVE = "withMoyGeneraleByEleve";
     public static final String WITHMOYMINMAXBYMAT = "withMoyMinMaxByMat";
+    public static final String WITHAPPRECIATIONS = "withAppreciations";
     public static final String TEXT = "text";
     public static final String ELEVES = "eleves";
     public static final String ELEVEMOYBYMAT = "eleveMoyByMat";
@@ -208,6 +223,10 @@ public class Field {
     public static final String CLASSES = "classes";
     public static final String TRUE = "true";
     public static final String UNDEFINED = "undefined";
+
+    // PDF
+    public static final String TOTALCOLUMN = "totalColumn";
+
     //
 
     public static final String ISSKILLAVERAGE = "isSkillAverage";
