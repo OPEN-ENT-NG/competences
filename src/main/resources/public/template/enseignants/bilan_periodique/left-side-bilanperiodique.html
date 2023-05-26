@@ -94,7 +94,7 @@
         </section>
     </div>
 
-    <div ng-if="selected.bfc && !critereIsEmpty" ng-controller="EvalSuiviEleveCtl"
+    <div ng-if="selected.bfc && !critereIsEmpty && search.classe.id_cycle === 1" ng-controller="EvalSuiviEleveCtl"
          ng-init="openTableConversionAndEnsCplt()">
         <div class="criteres card criterion" ng-class="{openedAvis : opened.legend === true}">
             <span class="plus-input" ng-click="openLeftMenu('opened.legend', opened.legend);"></span>
