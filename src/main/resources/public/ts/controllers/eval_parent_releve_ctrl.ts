@@ -24,6 +24,9 @@ import {evaluations as evaluationsParentFormat, evaluations} from '../models/eva
 import * as utils from '../utils/parent';
 import {Utils} from "../models/teacher";
 import http from "axios";
+import {SubTopicsServiceService} from "../services/SubTopicServiceService";
+import {ClassesService} from "../services/classes.service";
+import {SubTopicsServices} from "../models/sniplets";
 
 declare let _: any;
 
@@ -38,14 +41,18 @@ export let releveController = ng.controller('ReleveController', [
             if ($scope.dataReleve === undefined) {
                 return;
             }
+            let subTopicsServiceService = new SubTopicsServiceService();
+            let {data} =  await subTopicsServiceService.get($scope.eleve.idStructure)
+            let classAndGroups = await ClassesService.getClassesAndGroup($scope.eleve.idStructure);
+            let subTopicsServicesStruct = new SubTopicsServices([],data);
+            let classe = _.findWhere(classAndGroups, {id_classe : $scope.eleve.classe.id});
+            let subTopicsServices = subTopicsServicesStruct.filter(subTopic =>
+                subTopic.id_group === $scope.eleve.classe.id || (classe != undefined && _.contains(classe.id_groupes, subTopic.id_group))
+            );
 
-            if (model.me.type === 'PERSRELELEVE') { // TODO $scope.matieres null
-                await utils.calculMoyennes($scope.searchReleve.periode.id_type, $scope.searchReleve.eleve.id,
-                    $scope.matieresReleve, $scope.matieres, $scope.dataReleve.devoirs);
-            } else {
-                await utils.calculMoyennes($scope.searchReleve.periode.id_type, $scope.eleve.id, $scope.matieresReleve,
-                    $scope.matieres, $scope.dataReleve.devoirs);
-            }
+            await utils.calculMoyennesWithSubTopic($scope.searchReleve.periode.id_type, $scope.eleve.id, $scope.matieresReleve,
+                $scope.matieres, $scope.dataReleve.devoirs, subTopicsServices, $scope.eleve.classe);
+
             await utils.safeApply($scope);
         };
         /**
