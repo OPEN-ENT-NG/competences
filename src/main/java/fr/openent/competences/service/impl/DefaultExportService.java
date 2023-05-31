@@ -1199,7 +1199,8 @@ public class DefaultExportService implements ExportService {
         bodyHeader.put(Field.RIGHT, right);
         body.put(Field.HEADER, bodyHeader);
 
-        setCompetenceNoteItem(text, usePerso, maitrises, matieres, competenceNotesByDevoir, competencesArray, competencesByMatiere, devoirByCompetences);
+        setCompetenceNoteItem(text, usePerso, maitrises, matieres, competenceNotesByDevoir, competencesArray, devoirs,
+                competencesByMatiere, devoirByCompetences);
 
         body.put(Field.BODY, competencesArray);
 
@@ -1207,15 +1208,24 @@ public class DefaultExportService implements ExportService {
         return result;
     }
 
-    private void setCompetenceNoteItem(Boolean text, Boolean usePerso, Map<String, JsonObject> maitrises, Map<String, JsonObject> matieres, Map<String, Map<String, Long>> competenceNotesByDevoir, JsonArray competencesArray, Map<String, Set<String>> competencesBySubject, Map<String, List<String>> devoirByCompetences) {
+    private void setCompetenceNoteItem(Boolean text, Boolean usePerso, Map<String, JsonObject> maitrises,
+                                       Map<String, JsonObject> matieres, Map<String, Map<String, Long>> competenceNotesByDevoir,
+                                       JsonArray competencesArray, Map<String, JsonObject> devoirs,
+                                       Map<String, Set<String>> competencesBySubject,
+                                       Map<String, List<String>> devoirByCompetences) {
         for (Map.Entry<String, Set<String>> competencesInSubject : competencesBySubject.entrySet()) {
             JsonArray competencesInSubjectArray = new JsonArray();
             List<Long> valuesByComp = new ArrayList<>();
+            List<Long> valuesByCompFormative = new ArrayList<>();
             for (String competenceId : competencesInSubject.getValue()) {
-                for (String devoir : devoirByCompetences.get(competenceId)) {
-                    if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
+                for (String devoirId : devoirByCompetences.get(competenceId)) {
+                    if (competenceNotesByDevoir.containsKey(devoirId) && competenceNotesByDevoir.get(devoirId)
                             .containsKey(competenceId)) {
-                        valuesByComp.add(competenceNotesByDevoir.get(devoir).get(competenceId) + 1);
+                        if(devoirs.containsKey(devoirId) && devoirs.get(devoirId).getBoolean(Field.FORMATIVE)) {
+                            valuesByCompFormative.add(competenceNotesByDevoir.get(devoirId).get(competenceId) + 1);
+                        } else {
+                            valuesByComp.add(competenceNotesByDevoir.get(devoirId).get(competenceId) + 1);
+                        }
                     } else {
                         valuesByComp.add(0L);
                     }
@@ -1223,7 +1233,8 @@ public class DefaultExportService implements ExportService {
             }
             JsonObject competenceNote = new JsonObject();
             competenceNote.put(Field.HEADER, competencesInSubject.getKey());
-            competenceNote.put(Field.COMPETENCENOTES, calcWidthNote(text, usePerso, maitrises, valuesByComp, valuesByComp.size()));
+            competenceNote.put(Field.COMPETENCENOTES, calcWidthNote(text, usePerso, maitrises, valuesByComp,
+                    valuesByCompFormative, valuesByComp.size() + valuesByCompFormative.size()));
             competencesInSubjectArray.add(competenceNote);
             competencesArray.add(competenceNote);
         }
@@ -1367,30 +1378,45 @@ public class DefaultExportService implements ExportService {
 
     private JsonArray calcWidthNote(Boolean text, Boolean usePerso, Map<String, JsonObject> maitrises,
                                     List<Long> competenceNotes, Integer nbDevoir) {
+        return calcWidthNote(text, usePerso, maitrises, competenceNotes, new ArrayList<>(), nbDevoir);
+    }
 
-        Map<Long, Integer> occNote = new HashMap<>();
-        for (Long competenceNote : competenceNotes) {
-            if (!occNote.containsKey(competenceNote)) {
-                occNote.put(competenceNote, 0);
-            }
-            occNote.put(competenceNote, occNote.get(competenceNote) + 1);
-        }
+    private Map<String, Integer> setMapValueNumberCompetencesNotes ( List<Long> listValueCompetenceNotes){
+        Map<String, Integer> occNote = listValueCompetenceNotes.stream()
+                .collect(Collectors.groupingBy(Object::toString, Collectors.summingInt( e -> 1)));
+        return occNote;
+    }
+
+    private JsonArray calcWidthNote(Boolean text, Boolean usePerso, Map<String, JsonObject> maitrises,
+                                    List<Long> competenceNotes, List<Long> competenceNotesFormative, Integer nbDevoir) {
+
+        Map<String, Integer> occNote = setMapValueNumberCompetencesNotes(competenceNotes);
+        Map<String, Integer> occNoteFormative = setMapValueNumberCompetencesNotes(competenceNotesFormative);
 
         JsonArray resultList = new fr.wseduc.webutils.collections.JsonArray();
-        for (Map.Entry<Long, Integer> notesMaitrises : occNote.entrySet()) {
-            JsonObject competenceNotesObj = new JsonObject();
-            String number = String.valueOf(notesMaitrises.getValue()) + " " + getMaitrise(maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("lettre"), String.valueOf(notesMaitrises.getKey()));
-            competenceNotesObj.put("number", number);
-            String color = text ? "white" : maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("default");
-            competenceNotesObj.put("color", color);
+        for (Map.Entry<String, JsonObject> niveauMaitrise : maitrises.entrySet()) {
 
-            if(usePerso && !text)
-                competenceNotesObj.put("persoColor", maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("couleur"));
-
-            double notesMaitrisesValue = notesMaitrises.getValue() != null ? notesMaitrises.getValue() : 0;
-            competenceNotesObj.put("width", Math.floor(notesMaitrisesValue * 100 / nbDevoir));
-
-            resultList.add(competenceNotesObj);
+           if (occNote.containsKey(niveauMaitrise.getKey()) || occNoteFormative.containsKey(niveauMaitrise.getKey())) {
+               JsonObject competenceNotesObj = new JsonObject();
+               String number = new String();
+               double notesMaitrisesValue = 0 ;
+               if (occNoteFormative.containsKey(niveauMaitrise.getKey()) && occNoteFormative.get(niveauMaitrise.getKey()) != null) {
+                   number += occNoteFormative.get(niveauMaitrise.getKey()) + "(F) ";
+                   notesMaitrisesValue += occNoteFormative.get(niveauMaitrise.getKey());
+               }
+               if (occNote.containsKey(niveauMaitrise.getKey()) && occNote.get(niveauMaitrise.getKey()) != null) {
+                   number += occNote.get(niveauMaitrise.getKey()) + " ";
+                   notesMaitrisesValue += occNote.get(niveauMaitrise.getKey());
+               }
+                  number += getMaitrise(niveauMaitrise.getValue().getString(Field.LETTRE), niveauMaitrise.getKey());
+               competenceNotesObj.put(Field.NUMBER, number);
+               competenceNotesObj.put(Field.WIDTH, Math.floor(notesMaitrisesValue * 100 / nbDevoir));
+               String color = text ? Field.WHITE : niveauMaitrise.getValue().getString(Field.DEFAULT);
+               competenceNotesObj.put(Field.COLOR, color);
+               if(usePerso && !text)
+                   competenceNotesObj.put(Field.PERSOCOLOR, niveauMaitrise.getValue().getString(Field.COULEUR));
+               resultList.add(competenceNotesObj);
+           }
         }
         return resultList;
     }
