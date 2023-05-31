@@ -2,6 +2,9 @@ package fr.openent.competences.constants;
 
 public class Field {
 
+    private Field() {
+        throw new IllegalStateException("Utility class");
+    }
 
     public static final String DEFAULT_LIB = "default_lib";
     public static final String VISU = "visu";
@@ -15,10 +18,6 @@ public class Field {
     public static final String DOMAINHEADER = "domainHeader";
     public static final String DOMAINBODY = "domainBody";
     public static final String HASCOMPETENCESNOTES = "hasCompetencesNotes";
-
-    private Field() {
-        throw new IllegalStateException("Utility class");
-    }
 
     //id
     public static final String ID = "id";
@@ -132,6 +131,7 @@ public class Field {
     //variables
     public static final String AVERAGES = "averages";
     public static final String APPRECIATION_MATIERE_PERIODE = "appreciation_matiere_periode";
+    public static final String COLOR = "color";
     public static final String PREVIOUSAPPRECIATIONS = "previousAppreciations";
     public static final String FIRSTNAME = "firstName";
     public static final String FINALAVERAGES = "finalAverages";
@@ -164,6 +164,7 @@ public class Field {
     public static final String MAXIMUM = "maximum";
     public static final String MIN = "min";
     public static final String MINIMUM = "minimum";
+    public static final String NUMBER = "number";
     public static final String NBR_ELEVES = "nbr_eleves";
     public static final String HASNOTE = "hasNote";
     public static final String VALEUR = "valeur";
@@ -223,6 +224,8 @@ public class Field {
     public static final String CLASSES = "classes";
     public static final String TRUE = "true";
     public static final String UNDEFINED = "undefined";
+    public static final String WHITE = "white";
+    public static final String WIDTH ="width";
 
     // PDF
     public static final String TOTALCOLUMN = "totalColumn";
