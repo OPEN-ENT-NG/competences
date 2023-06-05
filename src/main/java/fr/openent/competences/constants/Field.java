@@ -340,6 +340,10 @@ public class Field {
     public static final String SKILLSVALIDATEDPERCENTAGELIBELLE = "skillsValidatedPercentageLibelle";
     public static final String ACHIEVEMENTSSUBJECTS = "achievementsSubjects";
 
+    //CONFIG
+    public static final String TRANSITION = "transition";
+    public static final String SQL_VERSION = "sql-version";
+
 
     //numbers
     public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.

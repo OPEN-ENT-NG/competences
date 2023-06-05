@@ -291,7 +291,7 @@ public class Competences extends BaseServer {
 
         AccessEventBus.getInstance().init(eb);
 
-        ServiceFactory serviceFactory = new ServiceFactory(vertx, storage, Sql.getInstance());
+        ServiceFactory serviceFactory = new ServiceFactory(vertx, storage, Sql.getInstance(), config);
 
         // Controller
         addController(new CompetencesController(eventStore));
@@ -316,7 +316,7 @@ public class Competences extends BaseServer {
         addController(new MatiereController(eb));
         addController(new ElementBilanPeriodiqueController(eb));
         addController(new ReportModelPrintExportController());
-        addController(new YearTransitionController());
+        addController(new YearTransitionController(serviceFactory));
         addController(new AppreciationSubjectPeriodController(eb));
         addController(new DigitalSkillsController());
         addController(new SuperAdminController());

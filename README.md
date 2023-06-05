@@ -68,6 +68,19 @@ Cette API va procéder :
 * Mis à jour de table `match_class_id_transition` avec les infos sur la `table rel_groupe_cycle` et les informations sur les groupes stockées dans l'annuaire (Neo4j)
 
 ### Après l'appel de la transition
+En config:
+
+<pre>
+...
+"transition" : {
+    "timeout-transaction" : 1000,
+    "sql-version": "v2"
+},
+...
+</pre>
+- sql-version: 
+  - v1: lors de la duplication des schema -> function_clone_schema_with_sequences (renommé de clone_schema_with_sequences) -> 014-clone_schema_with_sequences.sql
+  - v2: lors de la duplication des schema -> function_clone_schema_with_sequences_v2
 
 Cette requête vous permet de savoir quel établissement a été archivé :
 ```postgresql
