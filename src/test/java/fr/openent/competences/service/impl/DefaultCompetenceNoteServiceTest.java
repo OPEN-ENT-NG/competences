@@ -34,7 +34,7 @@ public class DefaultCompetenceNoteServiceTest {
     @Before
     public void setUp() throws NoSuchFieldException {
         Sql.getInstance().init(Vertx.vertx().eventBus(), "");
-        ServiceFactory serviceFactory = new ServiceFactory(Vertx.vertx(), null, Sql.getInstance());
+        ServiceFactory serviceFactory = new ServiceFactory(Vertx.vertx(), null, Sql.getInstance(), null);
         this.competenceNoteService = serviceFactory.competenceNoteService();
     }
 

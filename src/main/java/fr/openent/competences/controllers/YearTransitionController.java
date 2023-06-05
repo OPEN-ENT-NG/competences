@@ -2,6 +2,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.enums.Common;
 import fr.openent.competences.helper.ManageError;
+import fr.openent.competences.service.ServiceFactory;
 import fr.openent.competences.service.TransitionService;
 import fr.openent.competences.service.impl.DefaultTransitionService;
 import fr.wseduc.rs.ApiDoc;
@@ -30,8 +31,10 @@ import static fr.openent.competences.Utils.isNull;
 public class YearTransitionController extends ControllerHelper {
     protected static final Logger log = LoggerFactory.getLogger(YearTransitionController.class);
     private final TransitionService transitionService;
+    private final ServiceFactory serviceFactory;
 
-    public YearTransitionController() {
+    public YearTransitionController(ServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
         transitionService = new DefaultTransitionService();
     }
 
@@ -44,7 +47,8 @@ public class YearTransitionController extends ControllerHelper {
         String year = request.params().get("year");
         if (isNull(year) || year.isEmpty()) year = "backup";
         final String currentYear = year;
-        transitionService.cloneSchemas(currentYear, getHandlerCloneSchema(request, currentYear));
+        transitionService.cloneSchemas(currentYear, serviceFactory.config().transitionSqlVersion(),
+                getHandlerCloneSchema(request, currentYear));
     }
 
     @Post("/transition/after")
