@@ -44,14 +44,7 @@ public interface TransitionService  extends CrudService {
      * @param currentYear année utilisé pour renommer le schéma avant le clonage
      * @param handler
      */
-    void cloneSchemas(final String currentYear, final Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Créer les statements pour le clonage
-     * @param currentYear
-     * @return
-     */
-    JsonArray createStatements(final String currentYear);
+    void cloneSchemas(final String currentYear, final String sqlVersion, final Handler<Either<String, JsonObject>> handler);
 
     /**
      * Effectue la purge des tables durant l'étape de post-transition

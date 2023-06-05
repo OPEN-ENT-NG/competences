@@ -19,6 +19,7 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.constants.Field;
+import fr.openent.competences.constants.SqlVersion;
 import fr.openent.competences.service.StructureOptionsService;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
@@ -41,10 +42,12 @@ import java.util.stream.Collectors;
 import static fr.openent.competences.Competences.*;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
-public class DefaultTransitionService extends SqlCrudService implements TransitionService{
+public class DefaultTransitionService extends SqlCrudService implements TransitionService {
     protected static final Logger log = LoggerFactory.getLogger(DefaultTransitionService.class);
+    private static final String _id_user_transition_annee = "id-user-transition-annee";
     private final Neo4j neo4j = Neo4j.getInstance();
     private StructureOptionsService structureOptionsService;
+
     public DefaultTransitionService() {
         super(Competences.COMPETENCES_SCHEMA, Competences.TRANSITION_TABLE);
         structureOptionsService = new DefaultStructureOptions();
@@ -53,7 +56,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     @Override
     public void transitionAnneeStructure(final JsonObject structure,
                                          final Handler<Either<String, JsonArray>> finalHandler) {
-        String idStructureATraiter =  structure.getString("id");
+        String idStructureATraiter = structure.getString("id");
         log.info("DEBUT : transition année : isStructure : " + idStructureATraiter);
 
         checkIfEtabActif(idStructureATraiter, handlerBusGetStrucuresActives(structure, finalHandler, idStructureATraiter));
@@ -62,7 +65,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     private void checkIfEtabActif(String idStructureATraiter, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT EXISTS(SELECT id_etablissement FROM "+ Competences.COMPETENCES_SCHEMA + ".etablissements_actifs " +
+        String query = "SELECT EXISTS(SELECT id_etablissement FROM " + Competences.COMPETENCES_SCHEMA + ".etablissements_actifs " +
                 "WHERE actif = TRUE AND id_etablissement = ? ) as etab_actif";
 
         values.add(idStructureATraiter);
@@ -76,7 +79,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         return event -> {
             if (event.isRight()) {
                 Boolean etab_actif = event.right().getValue().getBoolean("etab_actif");
-                if(etab_actif){
+                if (etab_actif) {
                     conditionsToDoTransition(idStructureATraiter, handlerCheckTransitionCondition(finalHandler,
                             idStructureATraiter, structure));
                 } else {
@@ -101,7 +104,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         String queryTransition = "SELECT id_etablissement FROM " + Competences.COMPETENCES_SCHEMA + ".transition WHERE id_etablissement = ? ";
 
-        String query = " SELECT EXISTS(" + queryDevoir + ") as has_devoir, "+
+        String query = " SELECT EXISTS(" + queryDevoir + ") as has_devoir, " +
                 "EXISTS(" + queryPeriode + ") as has_periode, " +
                 "EXISTS(" + queryTransition + ") as has_transition";
 
@@ -114,13 +117,13 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     private Handler<Either<String, JsonObject>> handlerCheckTransitionCondition(Handler<Either<String, JsonArray>> finalHandler,
                                                                                 String idStructureATraiter, JsonObject structure) {
         return event -> {
-            if(event.isLeft()){
+            if (event.isLeft()) {
                 log.error("transition année : l'établissement a une erreur dans la récupération des valeurs des conditions: "
                         + event.left().getValue());
                 finalHandler.handle(new Either.Left<>(
                         "transition année : l'établissement a une erreur dans la récupération des valeurs des conditions : "
                                 + idStructureATraiter));
-            }else {
+            } else {
                 log.info(event.right().getValue());
                 Boolean hasDevoir = event.right().getValue().getBoolean("has_devoir");
                 Boolean hasPeriode = event.right().getValue().getBoolean("has_periode");
@@ -166,9 +169,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     }
 
     private void classesWithPeriode(String id_etablissement, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT id_classe FROM "+ Competences.VSCO_SCHEMA +".periode WHERE id_etablissement = ?";
+        String query = "SELECT DISTINCT id_classe FROM " + Competences.VSCO_SCHEMA + ".periode WHERE id_etablissement = ?";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(id_etablissement);
-        Sql.getInstance().prepared(query, values,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
+        Sql.getInstance().prepared(query, values, new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
                 getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
     }
 
@@ -179,7 +182,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                                                       JsonObject structure, String idStructureATraiter,
                                                                       Handler<Either<String, JsonArray>> finalHandler) {
         return event -> {
-            if(event.isRight()) {
+            if (event.isRight()) {
                 JsonArray idClassWithPeriodeja = event.right().getValue();
                 for (int i = 0; i < idClassWithPeriodeja.size(); i++) {
                     listIdClassWithPeriode.add(idClassWithPeriodeja
@@ -212,7 +215,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 vListIdsGroupesATraiter.sort(Comparator.naturalOrder());
                 executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter, vMapGroupesATraiter,
                         idStructureATraiter, finalHandler);
-            }else{
+            } else {
                 log.warn("transition année :  erreur lors de la récupération des classes dans la table " + Competences.VSCO_SCHEMA + ".periode :" +
                         " id Etablissement : " + idStructureATraiter);
                 finalHandler.handle(new Either.Left<>(
@@ -231,17 +234,17 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         sql.raw(queryNextVal, SqlResult.validResultHandler(result -> {
             if (result.isRight()) {
                 // On ajoute l'id du cours aux cours à créer.
-                Map<String,Long> vMapGroupesIdsDevoirATraiter = new HashMap<>();
+                Map<String, Long> vMapGroupesIdsDevoirATraiter = new HashMap<>();
                 JsonArray listIds = result.right().getValue();
                 for (int i = 0; i < nbrDevoirsToCreate; i++) {
                     vMapGroupesIdsDevoirATraiter.put(pListIdsGroupesATraiter.get(i), listIds.getJsonObject(i).getLong("id"));
                 }
-                transitionAnneeStructure(classeIdsEleves,pListIdsGroupesATraiter,vMapGroupesATraiter,vMapGroupesIdsDevoirATraiter,
+                transitionAnneeStructure(classeIdsEleves, pListIdsGroupesATraiter, vMapGroupesATraiter, vMapGroupesIdsDevoirATraiter,
                         idStructureATraiter, event -> {
                             if (event.isRight()) {
                                 log.info("FIN : transition année id Etablissement : " + idStructureATraiter);
                                 finalHandler.handle(new Either.Right<>(new JsonArray().add(idStructureATraiter)));
-                            } else if (event.isLeft()){
+                            } else if (event.isLeft()) {
                                 log.error("FIN : transition année id Etablissement ERREUR : " + idStructureATraiter +
                                         " Erreur  : " + event.left().getValue());
                                 finalHandler.handle(new Either.Left<>(
@@ -252,19 +255,18 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         }));
     }
 
-    private static final String _id_user_transition_annee = "id-user-transition-annee";
-
     /**
      * * Effectue la transistion d'année de l'établissement actif passé en paramètre
-     * @param classeIdsEleves : Map <idClasse,List<IdsEleves>>
-     * @param vListIdsGroupesATraiter : List idsClasses
-     * @param vMapGroupesATraiter : Map <idClasse,Nom Classe>
+     *
+     * @param classeIdsEleves              : Map <idClasse,List<IdsEleves>>
+     * @param vListIdsGroupesATraiter      : List idsClasses
+     * @param vMapGroupesATraiter          : Map <idClasse,Nom Classe>
      * @param vMapGroupesIdsDevoirATraiter : Map <idClasse, id Devoir>
-     * @param idStructureATraiter : id Structure en cours de traitement
+     * @param idStructureATraiter          : id Structure en cours de traitement
      * @param handler
      */
-    private void transitionAnneeStructure(Map<String,List<String>> classeIdsEleves,  List<String> vListIdsGroupesATraiter,
-                                          Map<String,String> vMapGroupesATraiter, Map<String,Long> vMapGroupesIdsDevoirATraiter,
+    private void transitionAnneeStructure(Map<String, List<String>> classeIdsEleves, List<String> vListIdsGroupesATraiter,
+                                          Map<String, String> vMapGroupesATraiter, Map<String, Long> vMapGroupesIdsDevoirATraiter,
                                           String idStructureATraiter, Handler<Either<String, JsonArray>> handler) {
 
         log.info("DEBUT : transactions pour la transition année id Etablissement [transitionAnneeStructure] : " + idStructureATraiter);
@@ -308,13 +310,14 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
     /**
      * Suppressions : users et relations groupes d'enseignement - cycle
+     *
      * @param statements
      */
     private void deleteUsersGroups(JsonArray statements) {
         JsonArray values = new JsonArray();
 
         // Suppresion des relations groupes d'enseignement - cycle
-        String queryRelGroupeType= "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle WHERE type_groupe > 0";
+        String queryRelGroupeType = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle WHERE type_groupe > 0";
         statements.add(new JsonObject().put("statement", queryRelGroupeType).put("values", values).put("action", "prepared"));
 
         // Suppresion des users
@@ -334,15 +337,16 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
     /**
      * Conservation des  compétences max par l'élève, suppresion des devoirs, dispenses domaines
+     *
      * @param idStructureATraiter
      * @param vMapGroupesATraiter
      * @param vMapGroupesIdsDevoirATraiter
      * @param classeIdsEleves
      * @param statements
      */
-    private void manageDevoirsAndCompetences( String idStructureATraiter, Map<String,String> vMapGroupesATraiter,
-                                              Map<String, Long> vMapGroupesIdsDevoirATraiter, Map<String,List<String>> classeIdsEleves,
-                                              Boolean isSkillAverage, JsonArray statements) {
+    private void manageDevoirsAndCompetences(String idStructureATraiter, Map<String, String> vMapGroupesATraiter,
+                                             Map<String, Long> vMapGroupesIdsDevoirATraiter, Map<String, List<String>> classeIdsEleves,
+                                             Boolean isSkillAverage, JsonArray statements) {
 
         JsonArray values;// Ajout de l'utilisateur pour la transition année
         String username = "NC";
@@ -352,7 +356,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".users(id, username) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET username = ?";
         statements.add(new JsonObject().put("statement", query).put("values", values).put("action", "prepared"));
 
-        if(vMapGroupesATraiter.size() > 0) {
+        if (vMapGroupesATraiter.size() > 0) {
             // Création des évaluations libre par classe de l'établissement
             values = new fr.wseduc.webutils.collections.JsonArray();
             values.add(true).add(idStructureATraiter).add(idStructureATraiter);
@@ -374,7 +378,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "WHERE temp_periode.periode_id_classe = ? ) UNION ALL";
             }
 
-            queryInsertDevoir = queryInsertDevoir.substring(0,queryInsertDevoir.length()-10);
+            queryInsertDevoir = queryInsertDevoir.substring(0, queryInsertDevoir.length() - 10);
 
             statements.add(new JsonObject()
                     .put("statement", queryInsertDevoir)
@@ -385,7 +389,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         for (Map.Entry<String, String> entry : vMapGroupesATraiter.entrySet()) {
             String idClasse = entry.getKey();
             List<String> vListEleves = classeIdsEleves.get(idClasse);
-            if(null != vListEleves && vListEleves.size() > 0) {
+            if (null != vListEleves && vListEleves.size() > 0) {
                 JsonArray valuesMaxCompetence = new fr.wseduc.webutils.collections.JsonArray();
 
                 String queryMaxOrAvgCompNoteNiveauFinalByPeriode = "(SELECT competences_notes.id_competence, " +
@@ -395,14 +399,14 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "   THEN ";
                 queryMaxOrAvgCompNoteNiveauFinalByPeriode += (Boolean.TRUE.equals(isSkillAverage)) ?
                         "ROUND(AVG(competences_notes.evaluation), 2) "
-                        : "MAX(competences_notes.evaluation) " ;
+                        : "MAX(competences_notes.evaluation) ";
 
                 queryMaxOrAvgCompNoteNiveauFinalByPeriode += "WHEN competence_niveau_final.id_eleve IS NOT NULL AND competence_niveau_final_annuel.id_eleve IS NULL" +
                         "   THEN MAX(competence_niveau_final.niveau_final) " +
 
                         "ELSE MAX(competence_niveau_final_annuel.niveau_final) " +
 
-                        "END AS comp_note_by_subject_period "+
+                        "END AS comp_note_by_subject_period " +
                         "FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
                         "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = competences_notes.id_devoir " +
 
@@ -423,9 +427,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "competence_niveau_final_annuel.id_eleve, devoirs.id_periode, devoirs.id_matiere)";
 
                 String queryMaxOrAvgCompNoteMat = "(SELECT id_competence, ";
-                queryMaxOrAvgCompNoteMat += (Boolean.TRUE.equals(isSkillAverage)) ? "ROUND(AVG(comp_note_by_subject_period), 2) ":
+                queryMaxOrAvgCompNoteMat += (Boolean.TRUE.equals(isSkillAverage)) ? "ROUND(AVG(comp_note_by_subject_period), 2) " :
                         "MAX(comp_note_by_subject_period) ";
-                queryMaxOrAvgCompNoteMat +=  "AS comp_note_by_subject, id_eleve, id_matiere FROM " + queryMaxOrAvgCompNoteNiveauFinalByPeriode +
+                queryMaxOrAvgCompNoteMat += "AS comp_note_by_subject, id_eleve, id_matiere FROM " + queryMaxOrAvgCompNoteNiveauFinalByPeriode +
                         " AS max_or_avg_mat GROUP BY id_competence, id_eleve, id_matiere)";
 
                 String queryAverageCompNoteMat = "(SELECT id_competence, ROUND(AVG(comp_note_by_subject)+1,2) AS round, id_eleve FROM "
@@ -446,10 +450,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "THEN 3 " +
                         "END " +
                         ",'" + _id_user_transition_annee + "', id_eleve FROM " + queryAverageCompNoteMat + "as conversion_max_mats GROUP BY id_competence, id_eleve, round";
-
-
-
-
 
 
                 valuesMaxCompetence.add(idClasse).add(idStructureATraiter);
@@ -555,15 +555,16 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 + Competences.APPRECIATION_MATIERE_PERIODE_TABLE + " CASCADE ";
         statements.prepared(queryTruncateCascade, params);
 
-        Sql.getInstance().transaction(statements.build() ,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
+        Sql.getInstance().transaction(statements.build(), new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
                 getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler)
         );
 
     }
 
     @Override
-    public void cloneSchemas(final String currentYear, final Handler<Either<String, JsonObject>> handler) {
-        JsonArray statements = createStatements(currentYear);
+    public void cloneSchemas(final String currentYear, final String sqlVersion,
+                             final Handler<Either<String, JsonObject>> handler) {
+        JsonArray statements = createStatements(currentYear, sqlVersion);
 
         Sql.getInstance().transaction(statements, new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
                 getInteger("timeout-transaction") * 1000L), event -> {
@@ -592,48 +593,51 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         );
     }
 
-    @Override
-    public JsonArray createStatements(final String currentYear){
-        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+    private JsonArray createStatements(final String currentYear, String sqlVersion) {
+        JsonArray statements = new JsonArray();
 
         StringBuilder queryForClone = new StringBuilder()
-                .append("SELECT function_clone_schema_with_sequences(?::text, ?::text, TRUE)");
+                .append(
+                        String.format("SELECT %s(?::text, ?::text, TRUE)",
+                                SqlVersion.V1.equals(sqlVersion) ? "function_clone_schema_with_sequences"
+                                        : "function_clone_schema_with_sequences_v2")
+                );
 
         statements.add(new JsonObject()
-                .put("statement", "ALTER SCHEMA " + Competences.VSCO_SCHEMA + " RENAME TO " + Competences.VSCO_SCHEMA + "_" + currentYear)
-                .put("values", new fr.wseduc.webutils.collections.JsonArray())
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, "ALTER SCHEMA " + Competences.VSCO_SCHEMA + " RENAME TO " + Competences.VSCO_SCHEMA + "_" + currentYear)
+                .put(Field.VALUES, new JsonArray())
+                .put(Field.ACTION, Field.PREPARED));
 
-        JsonArray valuesForCloneVieSco = new fr.wseduc.webutils.collections.JsonArray()
+        JsonArray valuesForCloneVieSco = new JsonArray()
                 .add(Competences.VSCO_SCHEMA + "_" + currentYear).add(Competences.VSCO_SCHEMA);
 
         statements.add(new JsonObject()
-                .put("statement", queryForClone.toString())
-                .put("values", valuesForCloneVieSco)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryForClone.toString())
+                .put(Field.VALUES, valuesForCloneVieSco)
+                .put(Field.ACTION, Field.PREPARED));
 
         statements.add(new JsonObject()
-                .put("statement", "ALTER SCHEMA " + Competences.COMPETENCES_SCHEMA + " RENAME TO " + Competences.COMPETENCES_SCHEMA + "_" + currentYear)
-                .put("values", new fr.wseduc.webutils.collections.JsonArray())
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, "ALTER SCHEMA " + Competences.COMPETENCES_SCHEMA + " RENAME TO " + Competences.COMPETENCES_SCHEMA + "_" + currentYear)
+                .put(Field.VALUES, new JsonArray())
+                .put(Field.ACTION, Field.PREPARED));
 
-        JsonArray valuesForCloneNotes = new fr.wseduc.webutils.collections.JsonArray()
+        JsonArray valuesForCloneNotes = new JsonArray()
                 .add(Competences.COMPETENCES_SCHEMA + "_" + currentYear).add(Competences.COMPETENCES_SCHEMA);
 
         statements.add(new JsonObject()
-                .put("statement", queryForClone.toString())
-                .put("values", valuesForCloneNotes)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryForClone.toString())
+                .put(Field.VALUES, valuesForCloneNotes)
+                .put(Field.ACTION, Field.PREPARED));
 
         statements.add(new JsonObject()
-                .put("statement", "SELECT " + Competences.COMPETENCES_SCHEMA + ".function_renameConstraintFromViescoAfterClonning() ")
-                .put("values", new fr.wseduc.webutils.collections.JsonArray())
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, "SELECT " + Competences.COMPETENCES_SCHEMA + ".function_renameConstraintFromViescoAfterClonning() ")
+                .put(Field.VALUES, new JsonArray())
+                .put(Field.ACTION, Field.PREPARED));
 
         return statements;
     }
 
-    public void updateSqlMatchClassIdTransition( Handler<Either<String, JsonArray>> handler){
+    public void updateSqlMatchClassIdTransition(Handler<Either<String, JsonArray>> handler) {
         getIdGroupInSql(eventIdGroups -> {
             if (eventIdGroups.isLeft()) {
                 handler.handle(new Either.Left<>("Error in getIdGroupInSql function: " + eventIdGroups.left().getValue()));
@@ -724,14 +728,14 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .prepared(query.toString(), params, validResultHandler(handler));
     }
 
-    public void getOldIdClassTransition(final Handler<Either<String,JsonArray>> handler) {
+    public void getOldIdClassTransition(final Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT external_id FROM " + Competences.COMPETENCES_SCHEMA + ".match_class_id_transition";
 
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         sql.prepared(query, values, validResultHandler(handler));
     }
 
-    public void matchExternalId(JsonArray externalIdsClasses, final Handler<Either<String,JsonArray>> handler) {
+    public void matchExternalId(JsonArray externalIdsClasses, final Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (c:Class) WHERE c.externalId IN {idsClasses} return c.id as id, c.externalId as externalId";
 
         JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
@@ -743,7 +747,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         neo4j.execute(query, new JsonObject().put("idsClasses", ids), event -> {
             JsonObject body = event.body();
 
-            if(body.getString("status").equals("ok")) {
+            if (body.getString("status").equals("ok")) {
                 JsonArray classesGetFromNeo = body.getJsonArray("result");
                 handler.handle(new Either.Right<String, JsonArray>(classesGetFromNeo));
             } else {
@@ -754,12 +758,12 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         });
     }
 
-    public void getSubjectsNeo(final Handler<Either<String,JsonArray>> handler) {
+    public void getSubjectsNeo(final Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (s:Subject) RETURN s.id as id";
 
         neo4j.execute(query, new JsonObject(), event -> {
             JsonObject body = event.body();
-            if(body.getString("status").equals("ok")) {
+            if (body.getString("status").equals("ok")) {
                 JsonArray subjectsGetFromNeo = body.getJsonArray("result");
                 handler.handle(new Either.Right<String, JsonArray>(subjectsGetFromNeo));
             } else {
@@ -770,7 +774,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         });
     }
 
-    public void supprimerSousMatiereNonRattaches(JsonArray matieres, final Handler<Either<String,JsonArray>> handler) {
+    public void supprimerSousMatiereNonRattaches(JsonArray matieres, final Handler<Either<String, JsonArray>> handler) {
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder();
@@ -779,7 +783,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         for (int i = 0; i < matieres.size(); i++) {
             String id = matieres.getJsonObject(i).getString("id");
-            if(id != null)
+            if (id != null)
                 values.add(id);
         }
 
@@ -805,7 +809,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             String id = o.getString("id");
             String externalId = o.getString("externalId");
 
-            if(id != null && externalId != null) {
+            if (id != null && externalId != null) {
                 query.append("UPDATE " + Competences.COMPETENCES_SCHEMA + ".match_class_id_transition " +
                         "SET new_class_id = ? WHERE external_id = ?;");
                 values.add(id).add(externalId);
@@ -829,17 +833,19 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put("action", "prepared"));
     }
 
-    private void deleteRelationGroupCycleWhitoutNewIdClass(JsonArray statements){
-        String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_groupe_cycle r WHERE r.id_groupe = " +
-                "(SELECT old_class_id FROM "+ Competences.COMPETENCES_SCHEMA +".match_class_id_transition m " +
+    private void deleteRelationGroupCycleWhitoutNewIdClass(JsonArray statements) {
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle r WHERE r.id_groupe = " +
+                "(SELECT old_class_id FROM " + Competences.COMPETENCES_SCHEMA + ".match_class_id_transition m " +
                 "WHERE m.old_class_id = r.id_groupe AND m.new_class_id IS NULL);";
         statements.add(new JsonObject()
                 .put("statement", query)
                 .put("values", new fr.wseduc.webutils.collections.JsonArray())
                 .put("action", "prepared"));
-    };
+    }
 
-    public void updateTablesTransition(JsonArray classesFromNeo, final Handler<Either<String,JsonArray>> handler) {
+    ;
+
+    public void updateTablesTransition(JsonArray classesFromNeo, final Handler<Either<String, JsonArray>> handler) {
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
         updateNewIdClassTransition(statements, classesFromNeo);
