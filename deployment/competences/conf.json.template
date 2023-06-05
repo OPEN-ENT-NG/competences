@@ -26,7 +26,8 @@
            "template-path" : "./public/template/pdf/"
         },
         "transition" : {
-           "timeout-transaction" : 1000
+           "timeout-transaction" : 1000,
+           "sql-version": "v2"
         },
         "node-pdf-generator" : {
            "authorization" : "${pdfGeneratorAuth}",

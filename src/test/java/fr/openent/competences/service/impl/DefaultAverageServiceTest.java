@@ -27,7 +27,7 @@ public class DefaultAverageServiceTest {
     @Before
     public void setUp() throws NoSuchFieldException {
         Sql.getInstance().init(Vertx.vertx().eventBus(), "");
-        ServiceFactory serviceFactory = new ServiceFactory(Vertx.vertx(), null, null);
+        ServiceFactory serviceFactory = new ServiceFactory(Vertx.vertx(), null, null, null);
         this.averageService = serviceFactory.averageService();
     }
 
