@@ -253,6 +253,7 @@ public class Field {
 
     // TABLE
     public static final String APPRECIATION_CLASSE_TABLE = "appreciation_classe";
+    public static final String APPRECIATION_CPE_BILAN_PERIODIQUE = "appreciation_cpe_bilan_periodique";
     public static final String APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE = "appreciation_elt_bilan_periodique_classe";
     public static final String APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE = "appreciation_elt_bilan_periodique_eleve";
     public static final String APPRECIATION_MATIERE_PERIODE_TABLE = "appreciation_matiere_periode";
@@ -309,6 +310,7 @@ public class Field {
     public static final String REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE = "rel_elt_bilan_periodique_intervenant_matiere";
     public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
     public static final String REL_APPRECIATION_USERS_NEO_TABLE = "rel_appreciations_users_neo";
+    public static final String STUDENT_APPRECIATION_DIGITAL_SKILLS = "student_appreciation_digital_skills";
 
     public static final String STRUTUCTURE_OPTIONS = "structure_options";
     public static final String STUDENT_APPRECIATION_DIGITAL_SKILLS_TABLE = "student_appreciation_digital_skills";

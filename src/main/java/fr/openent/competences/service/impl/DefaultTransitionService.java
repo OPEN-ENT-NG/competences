@@ -524,31 +524,33 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
 
         String queryTruncate = "TRUNCATE TABLE " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATIONS_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CLASSE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_CPE_BILAN_PERIODIQUE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_DE_CLASSE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.AVIS_CONSEIL_ORIENTATION_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL_ANNUEL + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.ELEMENT_PROGRAMME_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.ELEVES_IGNORES_LSU_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.ELT_BILAN_PERIODIQUE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.MOYENNE_FINALE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.POSITIONNEMENT + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.CLASS_APPRECIATION_DIGITAL_SKILLS + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.STUDENT_APPRECIATION_DIGITAL_SKILLS + ", " +
-                Competences.COMPETENCES_SCHEMA + "." + Competences.STUDENT_DIGITAL_SKILLS_TABLE + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_ABSENCES_ET_RETARDS + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_PERIODE + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_MULTI_TEACHING + ", " +
-                Competences.VSCO_SCHEMA + "." + Competences.VSCO_SERVICES_TABLE;
+                Field.SCHEMA_COMPETENCES + "." + Field.APPRECIATIONS_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.APPRECIATION_CLASSE_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.APPRECIATION_CPE_BILAN_PERIODIQUE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.AVIS_CONSEIL_DE_CLASSE_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.AVIS_CONSEIL_ORIENTATION_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.COMPETENCE_NIVEAU_FINAL + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.COMPETENCE_NIVEAU_FINAL_ANNUEL + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.ELEMENT_PROGRAMME_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.ELEVES_IGNORES_LSU_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.ELT_BILAN_PERIODIQUE_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.MOYENNE_FINALE_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.POSITIONNEMENT + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.SYNTHESE_BILAN_PERIODIQUE_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.CLASS_APPRECIATION_DIGITAL_SKILLS + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.STUDENT_APPRECIATION_DIGITAL_SKILLS + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.STUDENT_DIGITAL_SKILLS_TABLE + ", " +
+                Field.SCHEMA_COMPETENCES + "." + Field.SERVICE_SUBTOPIC + ", " +
+                Field.SCHEMA_VIESCO + Competences.VSCO_ABSENCES_ET_RETARDS + ", " +
+                Field.SCHEMA_VIESCO + Competences.VSCO_PERIODE + ", " +
+                Field.SCHEMA_VIESCO + Competences.VSCO_MULTI_TEACHING + ", " +
+                Field.SCHEMA_VIESCO + Competences.VSCO_SERVICES_TABLE;
+
 
         statements.prepared(queryTruncate, params);
         String queryTruncateCascade = "TRUNCATE TABLE " + Competences.COMPETENCES_SCHEMA + "."
