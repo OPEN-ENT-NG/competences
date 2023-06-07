@@ -676,118 +676,117 @@ public class ExportPDFController extends ControllerHelper {
                     }
                 });
 
-                noteService.getNotesParElevesParDevoirs(idElevesFuture.result().toArray(new String[0]), idGroups.toArray(new String[0]), null, finalIdPeriode,
-                        resultNotesEleves -> {
-                            if (resultNotesEleves.isRight()) {
-                                Map<JsonObject, Map<String, List<NoteDevoir>>> notes = new HashMap<>();
-                                Map<JsonObject, Map<String, Map<Long, List<NoteDevoir>>>> notesBySousMatiere = new HashMap<>();
 
-                                resultNotesEleves.right().getValue().stream().forEach(line -> {
-                                    JsonObject lineObject = (JsonObject) line;
+                noteService.getAssessmentScores(idElevesFuture.result(), new ArrayList<>(idGroups) ,  finalIdPeriode)
+                      .onSuccess(
+                              responseScoresStudents -> {
+                                  Map<JsonObject, Map<String, List<NoteDevoir>>> notes = new HashMap<>();
+                                  Map<JsonObject, Map<String, Map<Long, List<NoteDevoir>>>> notesBySousMatiere = new HashMap<>();
 
-                                    JsonObject key = new JsonObject();
-                                    key.put(Field.ID_MATIERE, lineObject.getString(Field.ID_MATIERE));
-                                    key.put(Field.ID_GROUPE, lineObject.getString(Field.ID_GROUPE));
+                                  responseScoresStudents.stream().forEach(line -> {
+                                      JsonObject lineObject = (JsonObject) line;
 
-                                    MatGrp.add(key);
+                                      JsonObject key = new JsonObject();
+                                      key.put(Field.ID_MATIERE, lineObject.getString(Field.ID_MATIERE));
+                                      key.put(Field.ID_GROUPE, lineObject.getString(Field.ID_GROUPE));
 
-                                    Boolean isVisible = true;
-                                    JsonArray servicesJSON = (JsonArray) servicesPromise.future().result();
-                                    for (int i = 0; i < servicesJSON.size(); i++) {
-                                        JsonObject service = servicesJSON.getJsonObject(i);
+                                      MatGrp.add(key);
 
-                                        String serviceIdMatiere = service.getString(Field.ID_MATIERE);
-                                        String lineIdMatiere = lineObject.getString(Field.ID_MATIERE);
-                                        if (serviceIdMatiere.equals(lineIdMatiere)) {
-                                            isVisible = service.getBoolean(Field.IS_VISIBLE);
-                                            break;
-                                        }
-                                    }
-                                    if (!teachers.containsKey(key) && isVisible) {
-                                        teachers.put(key, lineObject.getString(Field.OWNER));
-                                    }
+                                      Boolean isVisible = true;
+                                      JsonArray servicesJSON = (JsonArray) servicesPromise.future().result();
+                                      for (int i = 0; i < servicesJSON.size(); i++) {
+                                          JsonObject service = servicesJSON.getJsonObject(i);
 
-                                    Matiere matiere = new Matiere(lineObject.getString(Field.ID_MATIERE));
-                                    Teacher teacher = new Teacher(lineObject.getString(Field.OWNER));
-                                    Group group = new Group(idClasse);
+                                          String serviceIdMatiere = service.getString(Field.ID_MATIERE);
+                                          String lineIdMatiere = lineObject.getString(Field.ID_MATIERE);
+                                          if (serviceIdMatiere.equals(lineIdMatiere)) {
+                                              isVisible = service.getBoolean(Field.IS_VISIBLE);
+                                              break;
+                                          }
+                                      }
+                                      if (!teachers.containsKey(key) && isVisible) {
+                                          teachers.put(key, lineObject.getString(Field.OWNER));
+                                      }
 
-                                    Service service = services.stream()
-                                            .filter(el -> teacher.getId().equals(el.getTeacher().getId())
-                                                    && matiere.getId().equals(el.getMatiere().getId())
-                                                    && group.getId().equals(el.getGroup().getId()))
-                                            .findFirst().orElse(null);
+                                      Matiere matiere = new Matiere(lineObject.getString(Field.ID_MATIERE));
+                                      Teacher teacher = new Teacher(lineObject.getString(Field.OWNER));
+                                      Group group = new Group(idClasse);
 
-                                    if (service == null) {
-                                        //On regarde les multiTeacher
-                                        for (Object mutliTeachO : multiTeachers) {
-                                            //multiTeaching.getString("second_teacher_id").equals(teacher.getId()
-                                            JsonObject multiTeaching = (JsonObject) mutliTeachO;
-                                            if (multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
-                                                    && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
-                                                    && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
-                                                service = services.stream()
-                                                        .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
-                                                                && matiere.getId().equals(el.getMatiere().getId())
-                                                                && group.getId().equals(el.getGroup().getId()))
-                                                        .findFirst().orElse(null);
-                                            }
+                                      Service service = services.stream()
+                                              .filter(el -> teacher.getId().equals(el.getTeacher().getId())
+                                                      && matiere.getId().equals(el.getMatiere().getId())
+                                                      && group.getId().equals(el.getGroup().getId()))
+                                              .findFirst().orElse(null);
 
-                                            if (multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
-                                                    && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
-                                                    && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
+                                      if (service == null) {
+                                          //On regarde les multiTeacher
+                                          for (Object mutliTeachO : multiTeachers) {
+                                              //multiTeaching.getString("second_teacher_id").equals(teacher.getId()
+                                              JsonObject multiTeaching = (JsonObject) mutliTeachO;
+                                              if (multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(teacher.getId())
+                                                      && multiTeaching.getString(Field.ID_CLASSE).equals(group.getId())
+                                                      && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
+                                                  service = services.stream()
+                                                          .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
+                                                                  && matiere.getId().equals(el.getMatiere().getId())
+                                                                  && group.getId().equals(el.getGroup().getId()))
+                                                          .findFirst().orElse(null);
+                                              }
 
-                                                service = services.stream()
-                                                        .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
-                                                                && matiere.getId().equals(el.getMatiere().getId())
-                                                                && group.getId().equals(el.getGroup().getId()))
-                                                        .findFirst().orElse(null);
-                                            }
-                                        }
-                                    }
+                                              if (multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
+                                                      && multiTeaching.getString(Field.CLASS_OR_GROUP_ID).equals(group.getId())
+                                                      && multiTeaching.getString(Field.SUBJECT_ID).equals(matiere.getId())) {
 
-                                    Long sousMatiereId = lineObject.getLong(Field.ID_SOUSMATIERE);
-                                    Long id_periode = lineObject.getLong(Field.ID_PERIODE);
+                                                  service = services.stream()
+                                                          .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
+                                                                  && matiere.getId().equals(el.getMatiere().getId())
+                                                                  && group.getId().equals(el.getGroup().getId()))
+                                                          .findFirst().orElse(null);
+                                              }
+                                          }
+                                      }
 
-                                    NoteDevoir note = new NoteDevoir(Double.parseDouble(lineObject.getString(Field.VALEUR)),
-                                            Double.valueOf(lineObject.getString(Field.DIVISEUR)),
-                                            lineObject.getBoolean(Field.RAMENER_SUR),
-                                            Double.parseDouble(lineObject.getString(COEFFICIENT)),
-                                            lineObject.getString(Field.ID_ELEVE), id_periode, service, sousMatiereId);
+                                      Long sousMatiereId = lineObject.getLong(Field.ID_SOUSMATIERE);
+                                      Long id_periode = lineObject.getLong(Field.ID_PERIODE);
 
-                                    if (sousMatiereId != null) {
-                                        if (!notesBySousMatiere.containsKey(key)) {
-                                            notesBySousMatiere.put(key, new HashMap<>());
-                                        }
+                                      NoteDevoir note = new NoteDevoir(Double.parseDouble(lineObject.getString(Field.VALEUR)),
+                                              Double.valueOf(lineObject.getString(Field.DIVISEUR)),
+                                              lineObject.getBoolean(Field.RAMENER_SUR),
+                                              Double.parseDouble(lineObject.getString(COEFFICIENT)),
+                                              lineObject.getString(Field.ID_ELEVE), id_periode, service, sousMatiereId);
 
-                                        if (!notesBySousMatiere.get(key).containsKey(lineObject.getString(Field.ID_ELEVE))) {
-                                            notesBySousMatiere.get(key).put(lineObject.getString(Field.ID_ELEVE), new HashMap<>());
-                                        }
+                                      if (sousMatiereId != null) {
+                                          if (!notesBySousMatiere.containsKey(key)) {
+                                              notesBySousMatiere.put(key, new HashMap<>());
+                                          }
 
-                                        if (!notesBySousMatiere.get(key).get(lineObject.getString(Field.ID_ELEVE)).containsKey(sousMatiereId)) {
-                                            notesBySousMatiere.get(key).get(lineObject.getString(Field.ID_ELEVE)).put(sousMatiereId, new ArrayList<>());
-                                        }
+                                          if (!notesBySousMatiere.get(key).containsKey(lineObject.getString(Field.ID_ELEVE))) {
+                                              notesBySousMatiere.get(key).put(lineObject.getString(Field.ID_ELEVE), new HashMap<>());
+                                          }
 
-                                        notesBySousMatiere.get(key).get(lineObject.getString(Field.ID_ELEVE)).get(sousMatiereId).add(note);
-                                    } else {
-                                        if (!notes.containsKey(key)) {
-                                            notes.put(key, new HashMap<>());
-                                        }
+                                          if (!notesBySousMatiere.get(key).get(lineObject.getString(Field.ID_ELEVE)).containsKey(sousMatiereId)) {
+                                              notesBySousMatiere.get(key).get(lineObject.getString(Field.ID_ELEVE)).put(sousMatiereId, new ArrayList<>());
+                                          }
 
-                                        if (!notes.get(key).containsKey(lineObject.getString(Field.ID_ELEVE))) {
-                                            notes.get(key).put(lineObject.getString(Field.ID_ELEVE), new ArrayList<>());
-                                        }
-                                        notes.get(key).get(lineObject.getString(Field.ID_ELEVE)).add(note);
-                                    }
-                                });
+                                          notesBySousMatiere.get(key).get(lineObject.getString(Field.ID_ELEVE)).get(sousMatiereId).add(note);
+                                      } else {
+                                          if (!notes.containsKey(key)) {
+                                              notes.put(key, new HashMap<>());
+                                          }
 
-                                notesFuture.complete(notes);
-                                notesBySousMatiereFuture.complete(notesBySousMatiere);
+                                          if (!notes.get(key).containsKey(lineObject.getString(Field.ID_ELEVE))) {
+                                              notes.get(key).put(lineObject.getString(Field.ID_ELEVE), new ArrayList<>());
+                                          }
+                                          notes.get(key).get(lineObject.getString(Field.ID_ELEVE)).add(note);
+                                      }
+                                  });
 
-                            } else {
-                                notesFuture.fail(resultNotesEleves.left().getValue());
-                                notesBySousMatiereFuture.fail(resultNotesEleves.left().getValue());
-                            }
-                        });
+                                  notesFuture.complete(notes);
+                                  notesBySousMatiereFuture.complete(notesBySousMatiere);
+                              }).onFailure( err -> {
+                          notesFuture.fail(err.getMessage());//resultNotesEleves.left().getValue());
+                          notesBySousMatiereFuture.fail(err.getMessage());//resultNotesEleves.left().getValue());
+                      } );
 
                 noteService.getMoyennesFinal(idElevesFuture.result().toArray(new String[0]), finalIdPeriode, null, idGroups.toArray(new String[0]), stringJsonArrayEither -> {
                     if (stringJsonArrayEither.isRight()) {

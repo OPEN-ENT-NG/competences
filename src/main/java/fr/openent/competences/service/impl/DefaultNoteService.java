@@ -4966,4 +4966,47 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }));
         return promise.future();
     }
+
+    @Override
+    public Future<JsonArray> getAssessmentScores (List<String> studentIds, List<String> groupIds, Integer periodId) {
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        Promise<JsonArray> scoresPromise = Promise.promise();
+        boolean students = studentIds != null && studentIds.size() != 0;
+        boolean groups = groupIds != null && groupIds.size() != 0;
+        boolean periode = periodId != null;
+
+        query.append("SELECT " + Field.NOTES_TABLE + ".id_devoir, " +  Field.NOTES_TABLE + ".id_eleve, " )
+                .append( Field.NOTES_TABLE + ".valeur, " + Field.DEVOIRS_TABLE + ".coefficient, " + DEVOIRS_TABLE + ".diviseur, ")
+                .append(DEVOIRS_TABLE +  ".ramener_sur, " + DEVOIRS_TABLE + ".owner, " + DEVOIRS_TABLE + ".id_matiere, ")
+                .append(DEVOIRS_TABLE + ".id_sousmatiere, grp.id_groupe ")
+                .append("FROM " + this.schema + Field.NOTES_TABLE )
+                .append(" LEFT JOIN " + this.schema + DEVOIRS_TABLE + " ON " + DEVOIRS_TABLE + ".id = " + Field.NOTES_TABLE + ".id_devoir ")
+                .append("INNER JOIN " + this.schema + TYPE_TABLE + " ON " + DEVOIRS_TABLE + ".id_type = " + TYPE_TABLE + ".id ")
+                .append("LEFT JOIN " + this.schema + Field.REL_DEVOIRS_GROUPES_TABLE + " AS grp ON " + Field.DEVOIRS_TABLE + ".id = grp.id_devoir ")
+                .append("WHERE " + Field.DEVOIRS_TABLE + ".is_evaluated = true AND " + TYPE_TABLE + ".formative IS FALSE AND ");
+
+        if(students) {
+            query.append(Field.NOTES_TABLE + ".id_eleve IN " + Sql.listPrepared(studentIds) + " AND ");
+            for(String s : studentIds) {
+                values.add(s);
+            }
+        }
+        if(groups) {
+            query.append("grp.id_groupe IN " + Sql.listPrepared(groupIds) + " AND ");
+            for(String s : groupIds) {
+                values.add(s);
+            }
+        }
+        if(periode) {
+            query.append(DEVOIRS_TABLE + ".id_periode = ? AND ");
+            values.add(periodId);
+        }
+
+        Sql.getInstance().prepared(query.toString().substring(0, query.length() - 5), values,
+                validResultHandler(FutureHelper.handler(scoresPromise,
+                String.format("[Competences@%s::getAssessmentScores] faimld to get scores ", this.getClass().getSimpleName()))));
+        return scoresPromise.future();
+    }
+
 }
