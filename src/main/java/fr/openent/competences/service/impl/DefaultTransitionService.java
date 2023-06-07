@@ -486,23 +486,28 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         }
 
         // Création des compétences par devoir (historisé)
-        values = new fr.wseduc.webutils.collections.JsonArray();
-        values.add(idStructureATraiter);
-        String queryInsertCompetenceDevoir = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".competences_devoirs (id_devoir, id_competence, index) " +
-                "( " +
-                "    SELECT competences_notes.id_devoir,competences_notes.id_competence,0" +
-                "    FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
-                "           INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON competences_notes.id_devoir = devoirs.id" +
-                "    WHERE " +
-                "           devoirs.eval_lib_historise = true" +
-                "           AND id_etablissement = ? " +
-                "    GROUP BY id_devoir, id_competence  " +
-                ")";
+        JsonArray assessmentIds = new JsonArray(Arrays.asList(vMapGroupesIdsDevoirATraiter.values().toArray()));
+        if (!assessmentIds.isEmpty()) {
+            values = new JsonArray();
+            values.add(idStructureATraiter)
+                    .addAll(assessmentIds);
+            String queryInsertCompetenceDevoir = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".competences_devoirs (id_devoir, id_competence, index) " +
+                    "( " +
+                    "    SELECT competences_notes.id_devoir,competences_notes.id_competence,0" +
+                    "    FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
+                    "           INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON competences_notes.id_devoir = devoirs.id" +
+                    "    WHERE " +
+                    "           devoirs.eval_lib_historise = true" +
+                    "           AND id_etablissement = ? " +
+                    "           AND competences_notes.id_devoir IN " + Sql.listPrepared(assessmentIds) +
+                    "    GROUP BY id_devoir, id_competence  " +
+                    ")";
 
-        statements.add(new JsonObject()
-                .put("statement", queryInsertCompetenceDevoir)
-                .put("values", values)
-                .put("action", "prepared"));
+            statements.add(new JsonObject()
+                    .put(Field.STATEMENT, queryInsertCompetenceDevoir)
+                    .put(Field.VALUES, values)
+                    .put(Field.ACTION, Field.PREPARED));
+        }
 
         // Suppression devoir non historisé
         String queryDeleteDevoirNonHistorise = "" +
@@ -512,9 +517,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 " AND id_etablissement = ? ";
 
         statements.add(new JsonObject()
-                .put("statement", queryDeleteDevoirNonHistorise)
-                .put("values", values)
-                .put("action", "prepared"));
+                .put(Field.STATEMENT, queryDeleteDevoirNonHistorise)
+                .put(Field.VALUES, new JsonArray().add(idStructureATraiter))
+                .put(Field.ACTION, Field.PREPARED));
     }
 
 
