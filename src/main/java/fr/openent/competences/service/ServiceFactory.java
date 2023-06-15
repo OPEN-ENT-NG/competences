@@ -12,6 +12,7 @@ import org.entcore.common.storage.Storage;
 public class ServiceFactory {
     private final Vertx vertx;
     private final Sql sql;
+    private final Sql sqlAdmin;
     private final Storage storage;
     private final Config config;
 
@@ -20,6 +21,7 @@ public class ServiceFactory {
         this.storage = storage;
         this.sql = sql;
         this.config = new Config(config);
+        this.sqlAdmin = Sql.createInstance(eventBus(), this.config.sqlAdminAdress());
     }
 
     public BilanPeriodiqueService bilanPeriodiqueService() {
@@ -76,6 +78,10 @@ public class ServiceFactory {
 
     public DevoirService devoirService() {
         return new DefaultDevoirService(eventBus());
+    }
+
+    public TransitionService transitionService() {
+        return new DefaultTransitionService(sqlAdmin);
     }
 
     // Helpers

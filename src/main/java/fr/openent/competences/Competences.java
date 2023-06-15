@@ -340,7 +340,7 @@ public class Competences extends BaseServer {
         addController(eventBusController);
 
         // Repository Events
-        setRepositoryEvents(new CompetenceRepositoryEvents(eb));
+        setRepositoryEvents(new CompetenceRepositoryEvents(serviceFactory));
 
         // Worker
         log.info("WORKER : " + CompetencesTransitionWorker.class.getSimpleName());

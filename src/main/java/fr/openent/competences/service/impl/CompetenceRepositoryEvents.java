@@ -19,6 +19,7 @@ package fr.openent.competences.service.impl;
 
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.service.ServiceFactory;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -41,9 +42,9 @@ public class CompetenceRepositoryEvents implements RepositoryEvents {
 
     private EventBus eb;
     private final TransitionService transitionService;
-    public CompetenceRepositoryEvents(EventBus eb) {
-        this.eb = eb;
-        this.transitionService = new DefaultTransitionService();
+    public CompetenceRepositoryEvents(ServiceFactory serviceFactory) {
+        this.eb = serviceFactory.eventBus();
+        this.transitionService = serviceFactory.transitionService();
     }
 
     @Override
