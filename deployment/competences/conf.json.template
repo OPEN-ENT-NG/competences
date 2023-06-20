@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~competences~1.40.4",
+      "name": "fr.openent~competences~1.40-SNAPSHOT",
       "config": {
         "main" : "fr.openent.competences.Competences",
         "port" : 8129,
@@ -26,8 +26,7 @@
            "template-path" : "./public/template/pdf/"
         },
         "transition" : {
-           "timeout-transaction" : 1000,
-           "sql-version": "v2"
+           "timeout-transaction" : 1000
         },
         "node-pdf-generator" : {
            "authorization" : "${pdfGeneratorAuth}",
