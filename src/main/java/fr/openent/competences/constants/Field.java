@@ -349,5 +349,5 @@ public class Field {
     //UserType
     public static final String TEACHER = "Teacher";
     public static final String RELATIVE  = "Relative";
-    public static final String STUDENT = "Strudent";
+    public static final String STUDENT = "Student";
 }
