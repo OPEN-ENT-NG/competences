@@ -20,7 +20,7 @@ $eval-lighter-grey: #f4f3f3;
 
 body.evaluations {
   .select:not(button) {
-    select{
+    select {
       margin: 0;
     }
   }
@@ -30,10 +30,10 @@ body.evaluations {
   .twentyFontSize {
     font-size: 20px !important;
   }
-  .bottomInfo{
+  .bottomInfo {
     padding-bottom: 25px;
   }
-  .allIgnored{
+  .allIgnored {
     transform: rotate(-90deg);
     position: relative;
     display: inline-block;
@@ -41,7 +41,7 @@ body.evaluations {
   i.allIgnored.users:before {
     color: $red;
   }
-  i.ignored.users:before{
+  i.ignored.users:before {
     color: green !important;
   }
 
@@ -65,7 +65,7 @@ body.evaluations {
     background: grey !important;
   }
 
-  .height-fit-content{
+  .height-fit-content {
     height: fit-content;
   }
 
@@ -91,7 +91,7 @@ body.evaluations {
   }
   c-skills-color-page c-skills-bubble > span.rounded {
     border: none;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.4);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
   }
   c-skill-note-devoir > .rounded {
     width: 20px !important;
@@ -103,10 +103,10 @@ body.evaluations {
     margin-left: 5px;
     margin-bottom: 10px;
   }
-  .FloatRight{
+  .FloatRight {
     float: right;
   }
-  .tuto-legend{
+  .tuto-legend {
     display: inline;
     list-style-type: none;
     padding-left: 0px;
@@ -115,7 +115,7 @@ body.evaluations {
     display: inline;
     padding: 5px;
   }
-  -webkit-font-smoothing:antialiased !important;
+  -webkit-font-smoothing: antialiased !important;
   /* tooltip sur l'écran de saisie des notes */
   .skills-color-page > li > span.tooltip-overlay {
     width: 22px !important;
@@ -130,7 +130,8 @@ body.evaluations {
   #volet {
     width: 250px;
     padding: 10px;
-    background: rgb(75, 175, 213); color: #fff;
+    background: rgb(75, 175, 213);
+    color: #fff;
   }
 
   #volet a.ouvrir,
@@ -143,10 +144,10 @@ body.evaluations {
 
   #volet {
     position: absolute;
-    right: -270px;  /* test fixed + scroll, on retire la position top */
-    -webkit-transition: all .5s ease-in;
-    -moz-transition: all .5s ease-in;
-    transition: all .5s ease-in;
+    right: -270px; /* test fixed + scroll, on retire la position top */
+    -webkit-transition: all 0.5s ease-in;
+    -moz-transition: all 0.5s ease-in;
+    transition: all 0.5s ease-in;
     -webkit-text-fill-color: #fff;
   }
   #volet a.ouvrir,
@@ -154,15 +155,15 @@ body.evaluations {
     position: absolute;
     left: -44px;
     top: 0px;
-    height : 30px;
+    height: 30px;
     width: 30px;
     -webkit-transform: rotate(270deg);
     -moz-transform: rotate(270deg);
     -o-transform: rotate(270deg);
     -ms-transform: rotate(270deg);
-    -moz-radius:  50% 50% 0 0;
+    -moz-radius: 50% 50% 0 0;
     border-radius: 50% 50% 0 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.26)
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.26);
   }
   .close a.fermer {
     display: none;
@@ -186,10 +187,10 @@ body.evaluations {
   /* test fixed + scroll */
   #volet_clos {
     position: fixed;
-    top: 170px; right: 0;
+    top: 170px;
+    right: 0;
     z-index: 4;
   }
-
 
   span.rounded.textColorPage {
     position: absolute;
@@ -212,38 +213,42 @@ body.evaluations {
     font-family: Helvetica Neue;
   }
   &.evaluations {
-    .datepicker{
+    .datepicker {
       z-index: 120000 !important;
     }
   }
   canvas.chart.chart-bar {
     cursor: pointer;
   }
-  @media screen and (max-width:  $small-mobile){
+  @media screen and (max-width: $small-mobile) {
     .input-moyenne {
-      float:none;
+      float: none;
       font-weight: bold;
       display: inline-block;
-      text-align : center !important;
+      text-align: center !important;
     }
   }
-  .evalLibre{
+  .evalLibre {
     height: 800px;
   }
   select.padding-select-accueil {
     padding-right: 30px !important;
   }
 
-  @media screen and (max-device-width:$fat-mobile) {
+  @media screen and (max-device-width: $fat-mobile) {
     .responsive-table table thead {
       display: none !important;
     }
-    input[type=text], input[type=password], input[type=search], input[type=tel], input[type=email] {
+    input[type="text"],
+    input[type="password"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="email"] {
       text-align: center !important;
     }
 
-    .suiviDesAcquis{
-      .selectable-list li{
+    .suiviDesAcquis {
+      .selectable-list li {
         float: none;
         display: inline;
       }
@@ -257,20 +262,20 @@ body.evaluations {
     padding-left: 5px;
   }
 
-  .domaine-maitrise{
+  .domaine-maitrise {
     padding-top: 5px;
   }
 
   .legende-bfc-left {
-    width: 20%!important;
+    width: 20% !important;
   }
 
   .legende-bfc-right {
     width: 65%;
-    .conversion-libelle{
+    .conversion-libelle {
       font-weight: 400;
       max-width: 100%;
-      width: 100%
+      width: 100%;
     }
   }
 
@@ -280,7 +285,8 @@ body.evaluations {
 
   //    Suivi élève : Vue Liste    //
 
-  table thead tr, ul.list-view thead tr {
+  table thead tr,
+  ul.list-view thead tr {
     color: $white !important;
   }
 
@@ -290,15 +296,15 @@ body.evaluations {
     width: 0%;
   }
 
-  .disabled{
+  .disabled {
     opacity: 0.45;
     cursor: default;
   }
-  .noClick{
+  .noClick {
     cursor: default;
   }
 
-  @media screen and (min-device-width:$tablette ) {
+  @media screen and (min-device-width: $tablette) {
     .enLargedLightBox div.content {
       width: 80% !important;
     }
@@ -312,7 +318,7 @@ body.evaluations {
       z-index: 1;
       height: 100%;
     }
-    .custom-mobile-releve{
+    .custom-mobile-releve {
       display: none;
     }
     .list-devoirs table tbody tr {
@@ -328,11 +334,10 @@ body.evaluations {
     margin: 10px;
     padding: 15px;
     background: #fff;
-    @include box-shadow(rgba(0,0,0,0.26) 0 1px 3px);
+    @include box-shadow(rgba(0, 0, 0, 0.26) 0 1px 3px);
   }
 
-
-  th{
+  th {
     &.colDevoir {
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -341,7 +346,7 @@ body.evaluations {
     }
   }
 
-  @media screen and (max-device-width: 1350px ) {
+  @media screen and (max-device-width: 1350px) {
     input.input-list {
       max-width: 49% !important;
     }
@@ -350,8 +355,7 @@ body.evaluations {
     }
   }
 
-  @media screen and (min-device-width: $tablette ) {
-
+  @media screen and (min-device-width: $tablette) {
     .overflowXScroll {
       overflow-x: scroll !important;
     }
@@ -363,18 +367,18 @@ body.evaluations {
     .nav-releve {
       margin-top: -50px;
     }
-    .toogleDevoir{
+    .toogleDevoir {
       align-content: right !important;
       display: inline-block;
       float: right;
       margin-right: -5px;
-      margin-top:  10px;
+      margin-top: 10px;
     }
-    .toogleIcon{
+    .toogleIcon {
       transform: rotate(90deg);
       position: relative;
     }
-    .toogleIcon:before{
+    .toogleIcon:before {
       color: $white !important;
     }
     .tableReleves {
@@ -385,8 +389,8 @@ body.evaluations {
       .responsive-table {
         margin-top: 0 !important;
         margin-bottom: 0 !important;
-        border:none;
-        border-bottom: 1px solid #ccc
+        border: none;
+        border-bottom: 1px solid #ccc;
       }
       .tableReleveStats {
         box-shadow: 0 0 0px 0 grey !important;
@@ -418,7 +422,7 @@ body.evaluations {
     }
 
     .tableReleve {
-      tr{
+      tr {
         display: flex !important;
         td {
           border-left: solid 1px #e0d8d8;
@@ -451,7 +455,7 @@ body.evaluations {
       }
 
       thead {
-        th{
+        th {
           height: 15px;
         }
       }
@@ -479,13 +483,13 @@ body.evaluations {
       max-width: 30%;
       height: 25px;
     }
-    ul.input-list{
+    ul.input-list {
       padding-top: 0px;
       padding-left: 0px;
       margin-top: 1px;
       margin-bottom: 1px;
     }
-    li.input-list{
+    li.input-list {
       list-style-type: none;
       background: #0499e2;
       color: white;
@@ -496,11 +500,11 @@ body.evaluations {
     }
     .col1 {
       width: 200px !important;
-
-    }.colMoyenne {
-       width: 100px !important;
-       text-align: center !important;
-     }
+    }
+    .colMoyenne {
+      width: 100px !important;
+      text-align: center !important;
+    }
   }
   .moyenneClasse {
     color: $primary-dark;
@@ -514,98 +518,99 @@ body.evaluations {
     color: $green;
     font-weight: bold;
   }
-  .display-check{
+  .display-check {
     height: 24px;
     text-align: center;
   }
   .statClasse {
     box-shadow: 0 0 1px 0 grey;
-    tbody{
-      tr{
-        &:nth-child(2n){
-          background-color: rgba(0, 0, 0,0.05);
+    tbody {
+      tr {
+        &:nth-child(2n) {
+          background-color: rgba(0, 0, 0, 0.05);
         }
-        &:hover{
-          background-color: rgba(0, 0, 0,0.15);
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.15);
         }
       }
     }
   }
 
-  .checkbox-domaine{
+  .checkbox-domaine {
     background-color: #4bafd5;
     margin-left: 6px !important;
   }
 
   .tableReleve {
     box-shadow: 0 0 1px 0 grey;
-    tbody{
-      tr{
-        &:nth-child(2n){
-          background-color: rgba(0, 0, 0,0.05);
+    tbody {
+      tr {
+        &:nth-child(2n) {
+          background-color: rgba(0, 0, 0, 0.05);
         }
-        &:hover{
-          background-color: rgba(0, 0, 0,0.15);
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.15);
         }
       }
     }
-    thead{
-      a{
+    thead {
+      a {
         color: $white;
       }
     }
   }
-  .ligneReleve{
-    &.visible{
-      &:nth-child(2n){
-        background-color: rgba(0,0,0,0.05);
+  .ligneReleve {
+    &.visible {
+      &:nth-child(2n) {
+        background-color: rgba(0, 0, 0, 0.05);
       }
     }
   }
-  .tableRelevePadding{
-    > tbody{
-      > tr{
-        > td{
+  .tableRelevePadding {
+    > tbody {
+      > tr {
+        > td {
           padding: 0px 10px !important;
-          input[type="text"]{
+          input[type="text"] {
             width: 5em;
             text-align: center;
           }
         }
       }
     }
-    .widthMax{
+    .widthMax {
       width: 66% !important;
-      input[type="text"]{
+      input[type="text"] {
         width: 100% !important;
       }
     }
   }
 
-  @media screen and (max-device-width:$small-mobile) {
+  @media screen and (max-device-width: $small-mobile) {
     .tableRelevePadding tbody tr td {
       padding: 10px !important;
     }
   }
 
-  @media screen and (max-device-width:$fat-mobile) {
+  @media screen and (max-device-width: $fat-mobile) {
     .tableRelevePadding tbody tr td {
       padding: 10px !important;
     }
   }
 
-  .download-link{
+  .download-link {
     margin-bottom: 20px;
   }
 
-  .input-note{
+  .input-note {
     text-align: right;
     display: block;
     padding: 0;
     margin: 0 auto;
   }
-  input[type=text]{
-    &.input-note, &.input-appreciation{
+  input[type="text"] {
+    &.input-note,
+    &.input-appreciation {
       border-bottom: 1px solid rgb(75, 175, 213) !important;
       margin-bottom: 0 !important;
       padding: 0;
@@ -635,7 +640,7 @@ body.evaluations {
     z-index: 1;
     height: 10.5vh;
     background: #ffffff;
-    box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.35);
+    box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.35);
   }
 
   .colMoyenne.size {
@@ -643,13 +648,13 @@ body.evaluations {
     justify-content: space-between;
   }
 
-  @media screen and (max-device-width:$small-mobile) {
+  @media screen and (max-device-width: $small-mobile) {
     .colMoyenne.size {
       display: block;
     }
   }
 
-  @media screen and (max-device-width:$fat-mobile) {
+  @media screen and (max-device-width: $fat-mobile) {
     .colMoyenne.size {
       display: block;
     }
@@ -660,8 +665,8 @@ body.evaluations {
     max-width: 58%;
   }
 
-  input[type=text]{
-    &.input-list{
+  input[type="text"] {
+    &.input-list {
       border-bottom: 1px solid rgb(75, 175, 213) !important;
       margin-bottom: 0 !important;
       padding: 0;
@@ -672,7 +677,7 @@ body.evaluations {
     }
   }
 
-  .input-moyenne{
+  .input-moyenne {
     font-weight: bold;
     width: 60%;
     display: block;
@@ -692,35 +697,35 @@ body.evaluations {
   .paddingHeight {
     padding: 8px;
   }
-  .expandable{
-    &:nth-child(2n){
-      background-color: rgba(0,0,0,0.05);
+  .expandable {
+    &:nth-child(2n) {
+      background-color: rgba(0, 0, 0, 0.05);
     }
-    &.opened{
-      .plus-input{
+    &.opened {
+      .plus-input {
         @include fonticon;
-        &::after{
+        &::after {
           content: "\e85e";
         }
       }
     }
-    &.cell{
-      &:hover{
-        background-color: rgba(0,0,0,0.05);
+    &.cell {
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.05);
       }
     }
   }
-  .devoir-header{
-    &::after{
+  .devoir-header {
+    &::after {
       content: none !important;
       clear: none !important;
     }
-    .cell{
+    .cell {
       border-left: solid 1px rgba(0, 0, 0, 0.3);
       border-bottom: solid 1px rgba(0, 0, 0, 0.2);
-      color: rgba(0,0,0,0.6);
+      color: rgba(0, 0, 0, 0.6);
       overflow: hidden;
-      &:first-child{
+      &:first-child {
         border-left: none;
       }
     }
@@ -736,18 +741,18 @@ body.evaluations {
 
     > input {
       cursor: not-allowed;
-      border:0px !important;
-      margin:0px !important;
+      border: 0px !important;
+      margin: 0px !important;
       background: none !important;
-      height:1em;
+      height: 1em;
     }
   }
-  .row{
-    input:not(input[type="button"]){
+  .row {
+    input:not(input[type="button"]) {
       height: 20px !important;
       margin-bottom: 2px !important;
     }
-    .devoirs-header{
+    .devoirs-header {
       display: block;
       background-color: $white;
       height: 90px !important;
@@ -792,15 +797,15 @@ body.evaluations {
       }
     }
 
-    .appreciation-classe{
+    .appreciation-classe {
       padding-top: 5px;
     }
 
-    .padding-table-elements{
+    .padding-table-elements {
       padding: 10px 20px;
     }
 
-    .elements-header{
+    .elements-header {
       display: block;
       background-color: $white;
       margin-top: 1%;
@@ -816,65 +821,65 @@ body.evaluations {
       }
     }
   }
-  .indent-five{
+  .indent-five {
     text-indent: 5px;
   }
-  .indent-fifteen{
+  .indent-fifteen {
     text-indent: 15px;
   }
-  .coche-case{
-    padding:5px 0 0 10px;
-    box-sizing:border-box;
+  .coche-case {
+    padding: 5px 0 0 10px;
+    box-sizing: border-box;
   }
-  .expandable-liste{
-    .expandable{
-      border-bottom: solid 1px rgba(0,0,0,0.2);
+  .expandable-liste {
+    .expandable {
+      border-bottom: solid 1px rgba(0, 0, 0, 0.2);
       @include transition(all 100ms ease-out);
       height: 35px;
       overflow: hidden;
       padding: 5px;
       box-sizing: border-box;
 
-      &.opened{
+      &.opened {
         height: auto;
         z-index: 1;
         transform: scale(1.005);
-        .row{
-          &:first-child{
-            border-bottom: solid 1px rgba(0,0,0,0.2);
+        .row {
+          &:first-child {
+            border-bottom: solid 1px rgba(0, 0, 0, 0.2);
           }
-          &:nth-child(2){
+          &:nth-child(2) {
             color: $text-light;
             text-indent: 40px;
           }
         }
       }
-      &:first-child{
+      &:first-child {
         //margin-top:15px;
       }
     }
 
-    &.notes-devoir-liste{
-      .expandable{
+    &.notes-devoir-liste {
+      .expandable {
         height: auto;
       }
     }
-    .expandable-content{
+    .expandable-content {
       padding: 0 4px 0 4px;
       font-size: 14px;
-      > label{
+      > label {
         margin-top: 2px;
         display: block;
       }
     }
-    .expandable-name{
+    .expandable-name {
       padding: 2px 10px 0px 6px;
       font-size: 13px;
     }
   }
 
   .expandable-appreciation {
-    border-bottom: solid 1px rgba(0,0,0,0.2);
+    border-bottom: solid 1px rgba(0, 0, 0, 0.2);
     transition: all 100ms ease-out;
     height: 30px;
     overflow: hidden;
@@ -883,8 +888,8 @@ body.evaluations {
   }
 
   @media screen and (max-width: $tablette) {
-    .expandable-liste{
-      .expandable-content{
+    .expandable-liste {
+      .expandable-content {
         padding: 0;
       }
     }
@@ -915,7 +920,7 @@ body.evaluations {
 
       .criterion {
         padding: 5px;
-        margin:0;
+        margin: 0;
 
         &.card {
           box-shadow: none;
@@ -923,7 +928,11 @@ body.evaluations {
       }
     }
 
-    input[type=text], input[type=password], input[type=search], input[type=tel], input[type=email] {
+    input[type="text"],
+    input[type="password"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="email"] {
       margin-bottom: 2px;
     }
 
@@ -938,14 +947,14 @@ body.evaluations {
   }
 
   .openedEleve {
-    box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.35);
+    box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.35);
     padding: 10px;
     z-index: 1;
     transform: scaleY(1.005);
     background: white;
   }
 
-  .devoir .row:nth-child(3){
+  .devoir .row:nth-child(3) {
     color: $text-light;
     text-indent: 40px;
   }
@@ -970,7 +979,7 @@ body.evaluations {
     min-width: 70px;
     white-space: nowrap;
   }
-  .gradetooltip{
+  .gradetooltip {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -979,9 +988,9 @@ body.evaluations {
     top: 0;
   }
 
-  .tooltip{
-    .content{
-      >	p{
+  .tooltip {
+    .content {
+      > p {
         margin: 0;
         padding: 0;
       }
@@ -1018,29 +1027,29 @@ body.evaluations {
   .center {
     text-align: center !important;
   }
-  .buttonHeader{
-    .button{
+  .buttonHeader {
+    .button {
       margin-left: 15px !important;
       margin-bottom: 15px !important;
-      &:first-child{
+      &:first-child {
         margin-left: 0px !important;
       }
     }
   }
-  .shadow{
-    @include box-shadow(0px 0px 5px 0px rgba(0,0,0,0.35));
+  .shadow {
+    @include box-shadow(0px 0px 5px 0px rgba(0, 0, 0, 0.35));
   }
-  .criteres{
-    &.opened{
+  .criteres {
+    &.opened {
       height: 205px;
     }
-    &.openedProgramme{
+    &.openedProgramme {
       height: auto;
       .plus-input::after {
         content: "\e841";
       }
     }
-    &.openedAppreciation{
+    &.openedAppreciation {
       height: 300px;
       .plus-input::after {
         content: "\e841";
@@ -1054,19 +1063,24 @@ body.evaluations {
     }
   }
 
-  .appreciationTextarea{
+  .appreciationTextarea {
     height: 220px;
   }
 
-  .criteres, .statistiques-devoir, .detail-devoir, .student-info, .devoir-info, .notes-help {
+  .criteres,
+  .statistiques-devoir,
+  .detail-devoir,
+  .student-info,
+  .devoir-info,
+  .notes-help {
     position: relative;
-    .plus-input{
+    .plus-input {
       right: 5px;
       position: absolute;
       top: 11px;
       z-index: 11;
       @include fonticon;
-      &::after{
+      &::after {
         content: "\e87b";
         font-size: 15px;
         color: $grey;
@@ -1077,39 +1091,45 @@ body.evaluations {
         background-color: inherit;
         font-size: 10px;
       }
-      &:hover::after{
+      &:hover::after {
         color: $cyan;
       }
     }
 
     &.opened {
-      .plus-input::after{
+      .plus-input::after {
         content: "\e841";
       }
     }
   }
-  .criteres, .statistiques-devoir, .detail-devoir, .devoir-info {
+  .criteres,
+  .statistiques-devoir,
+  .detail-devoir,
+  .devoir-info {
     height: 25px;
     overflow: hidden;
     @include transition(all 100ms ease-out);
   }
-  .fiche{
+  .fiche {
     margin-top: 10px;
     border-radius: 5px;
     font-size: 14px !important;
     background-color: $white;
     position: relative;
-    &.student-info, &.devoir-info, &.notes-help, &.diffsize{
+    &.student-info,
+    &.devoir-info,
+    &.notes-help,
+    &.diffsize {
       height: 40px;
       overflow: hidden;
       @include transition(all 100ms ease-out);
-      &.opened{
+      &.opened {
         min-height: 100px;
         height: auto;
       }
     }
-    &.student-info{
-      h2{
+    &.student-info {
+      h2 {
         color: $grey;
         line-height: 37px;
       }
@@ -1117,15 +1137,15 @@ body.evaluations {
     &.diffpadding {
       padding: 0;
     }
-    ul{
+    ul {
       margin: 0;
       padding: 0;
       list-style-type: none;
     }
-    > div{
+    > div {
       padding: 0 10px 5px 10px;
     }
-    .head{
+    .head {
       padding: 3px;
       text-align: left;
       margin: 0;
@@ -1137,14 +1157,18 @@ body.evaluations {
       width: 80%;
     }
   }
-  .datepicker{
-    z-index:10002 !important;
+  .datepicker {
+    z-index: 10002 !important;
     table {
       line-height: 24px !important;
     }
   }
-  h1, h2, h3, h4, h5{
-    > span{
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    > span {
       font-style: italic;
     }
   }
@@ -1159,17 +1183,17 @@ body.evaluations {
 
   .inputContainer {
     display: flex;
-    i{
-      margin-left : 10px
+    i {
+      margin-left: 10px;
     }
   }
 
-  .inputSection1{
+  .inputSection1 {
     width: 50%;
     border-right: 1px solid lightgrey;
   }
 
-  .inputSection2{
+  .inputSection2 {
     width: 50%;
   }
 
@@ -1177,36 +1201,36 @@ body.evaluations {
     margin: 14px;
   }
 
-  .header-opt{
+  .header-opt {
     font-style: italic;
     font-weight: bold !important;
   }
-  .controls-fixed{
-    background-color:rgba(0, 0, 0, 0.1);
-    bottom:0;
-    left:0;
-    padding:10px 15px;
-    position:fixed;
-    top:auto;
-    width:100%;
+  .controls-fixed {
+    background-color: rgba(0, 0, 0, 0.1);
+    bottom: 0;
+    left: 0;
+    padding: 10px 15px;
+    position: fixed;
+    top: auto;
+    width: 100%;
   }
-  .imgEleve{
+  .imgEleve {
     width: 100%;
     height: auto;
     display: inline-block;
     vertical-align: middle;
     text-align: center;
-    img{
+    img {
       width: 40%;
     }
   }
-  .close-input{
+  .close-input {
     right: 18px;
     position: absolute;
     top: 5px;
     @include fonticon;
-    &::after{
-      content: '\e866';
+    &::after {
+      content: "\e866";
       font-size: 15px;
       color: $grey;
       font-weight: 300;
@@ -1215,11 +1239,11 @@ body.evaluations {
       border: none;
       background-color: inherit;
     }
-    &:hover::after{
+    &:hover::after {
       color: $cyan;
     }
   }
-  .header-fixed{
+  .header-fixed {
     position: fixed;
     top: 64px;
     width: 100%;
@@ -1231,45 +1255,45 @@ body.evaluations {
     text-indent: 4px;
     margin-left: 15px;
   }
-  .absolute-button-header-releve{
+  .absolute-button-header-releve {
     position: absolute !important;
     right: 1%;
     top: 34px;
   }
-  .header-outter-fixed{
+  .header-outter-fixed {
     padding: 74px 0 0 0;
     position: relative;
     display: block;
   }
-  .detail-devoir{
-    &.opened{
+  .detail-devoir {
+    &.opened {
       min-height: 100px;
       height: auto;
     }
   }
-  .statistiques-devoir{
-    &.opened{
+  .statistiques-devoir {
+    &.opened {
       height: auto !important;
       max-height: 152px;
     }
   }
-  .children-list{
+  .children-list {
     text-align: center;
-    .dominos{
+    .dominos {
       margin-bottom: 0px !important;
       text-align: center;
-      .item{
+      .item {
         float: none !important;
         display: inline-block;
         cursor: pointer;
       }
     }
   }
-  .lightbox-parent{
-    section{
-      &.ligtbox{
-        > div{
-          &.content{
+  .lightbox-parent {
+    section {
+      &.ligtbox {
+        > div {
+          &.content {
             width: 400px;
           }
         }
@@ -1282,36 +1306,46 @@ body.evaluations {
     display: inline-block;
     position: relative;
     margin: 5px 0;
-    >i.download:before{
+    > i.download:before {
       margin-right: 9px !important;
       font-size: 20px !important;
     }
   }
-  .button-download{
+  .button-download {
     margin-left: 20px;
     top: 0px;
     position: relative;
     float: right;
   }
-  .ul-competences{
+  .ul-competences {
     list-style-type: none;
-    li{
+    li {
       padding: 5px;
     }
   }
-  .ul-domaines{
+  .ul-domaines {
     margin-top: 20px;
   }
   /**
       DIRECTIVE COLOR COMPETENCE
   **/
-  .green{background-color: $green !important;}
-  .yellow{background-color: $yellow !important;}
-  .orange{background-color: $orange !important;}
-  .red{background-color: $red !important;}
-  .grey{background-color: $grey !important;}
+  .green {
+    background-color: $green !important;
+  }
+  .yellow {
+    background-color: $yellow !important;
+  }
+  .orange {
+    background-color: $orange !important;
+  }
+  .red {
+    background-color: $red !important;
+  }
+  .grey {
+    background-color: $grey !important;
+  }
 
-  .competence-color{
+  .competence-color {
     display: inline-block;
     padding: 15px 0px 10px 35px;
     position: relative;
@@ -1325,19 +1359,19 @@ body.evaluations {
     @include transition(all 200ms ease);
     background-color: transparent !important;
     float: left;
-    &:hover{
+    &:hover {
       border: solid 1px rgba(0, 0, 0, 0.3);
     }
-    &.opened{
-      > .skills-text-overflow{
-        &::before{
+    &.opened {
+      > .skills-text-overflow {
+        &::before {
           content: "\f0d7";
         }
       }
     }
-    > .skills-text-overflow{
+    > .skills-text-overflow {
       @include fonticon;
-      &::before{
+      &::before {
         content: "\e823";
         /*left: 0px;*/
         /*position: absolute;*/
@@ -1348,7 +1382,7 @@ body.evaluations {
       }
     }
   }
-  .competence-color-header{
+  .competence-color-header {
     display: inline-block;
     padding: 10px 50px 10px 0px;
     position: relative;
@@ -1361,27 +1395,28 @@ body.evaluations {
     @include transition(all 200ms ease);
     background-color: transparent !important;
     float: none;
-    &:after{
+    &:after {
       top: 17px;
       right: 65px;
     }
   }
-  .competence-color, .competence-color-header{
-    &:after{
-      content : "";
+  .competence-color,
+  .competence-color-header {
+    &:after {
+      content: "";
       width: 20px;
       height: 20px;
       border-radius: 50%;
       display: inline-block;
-      position: absolute;;
+      position: absolute;
       background-color: #000;
       right: 20px;
       top: 19px;
       cursor: pointer;
       @include transition(all 200ms ease);
     }
-    > span{
-      &.competence-vignette{
+    > span {
+      &.competence-vignette {
         padding: 0 50px 0 0;
         position: relative;
         cursor: pointer;
@@ -1394,57 +1429,57 @@ body.evaluations {
         z-index: 2;
       }
     }
-    &.grey{
-      &:after{
+    &.grey {
+      &:after {
         background-color: $grey !important;
       }
     }
-    &.green{
-      &:after{
+    &.green {
+      &:after {
         background-color: $green !important;
       }
     }
-    &.yellow{
-      &:after{
+    &.yellow {
+      &:after {
         background-color: $yellow !important;
       }
     }
-    &.orange{
-      &:after{
+    &.orange {
+      &:after {
         background-color: $orange !important;
       }
     }
-    &.red{
-      &:after{
+    &.red {
+      &:after {
         background-color: $red !important;
       }
     }
   }
-  .competence-text-overflow{
+  .competence-text-overflow {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
   }
-  .competence-eye{
+  .competence-eye {
     display: inline-block;
     position: absolute;
     top: 20px;
     left: 5px;
     cursor: zoom-in;
-    &:hover{
+    &:hover {
       height: 100%;
-      ~ .competence-text-overflow{
-        > .competence-nom{
+      ~ .competence-text-overflow {
+        > .competence-nom {
           white-space: normal;
         }
       }
     }
   }
-  .rounded-color-vignette{
+  .rounded-color-vignette {
     top: 9px;
     right: -10px;
   }
-  .rounded{
+  .rounded {
     width: 23px;
     height: 23px;
     border-radius: 50%;
@@ -1461,14 +1496,14 @@ body.evaluations {
       outline: none;
     }
   }
-  .competence-color-popup-close{
+  .competence-color-popup-close {
     position: absolute;
     left: 3px;
     top: 0;
     text-align: center;
     cursor: pointer;
   }
-  .tooltip-overlay{
+  .tooltip-overlay {
     position: absolute;
     width: 43px;
     height: 34px;
@@ -1476,7 +1511,7 @@ body.evaluations {
     left: 0px;
     z-index: 10;
   }
-  .competence-color-popup{
+  .competence-color-popup {
     position: absolute;
     left: 0;
     top: 400px;
@@ -1486,33 +1521,33 @@ body.evaluations {
     width: 100%;
     z-index: 2;
     @include transition(all 200ms ease);
-    &.opened{
+    &.opened {
       top: 0;
     }
-    h4{
+    h4 {
       margin: 0;
       padding: 10px;
     }
     > h4 {
-      &:first-child{
-        border-bottom: solid 1px rgba(0,0,0,0.3);
+      &:first-child {
+        border-bottom: solid 1px rgba(0, 0, 0, 0.3);
       }
-      &:last-child{
-        border-top: solid 1px rgba(0,0,0,0.3);
+      &:last-child {
+        border-top: solid 1px rgba(0, 0, 0, 0.3);
       }
     }
   }
-  .color-list{
+  .color-list {
     min-width: 200px;
     max-width: 300px;
     text-indent: 0;
     text-align: center;
-    ul{
+    ul {
       width: 90%;
       padding: 15px 0;
       margin: 0 0 0 5%;
       height: 30px;
-      li{
+      li {
         display: inline-block;
         list-style-type: none;
         width: 23%;
@@ -1520,8 +1555,8 @@ body.evaluations {
         height: 30px;
         cursor: pointer;
         position: relative;
-        .rounded{
-          >.rounded{
+        .rounded {
+          > .rounded {
             position: absolute;
             left: 0;
             top: 0;
@@ -1530,9 +1565,9 @@ body.evaluations {
             height: 23px;
           }
         }
-        &:hover{
-          .rounded{
-            > .rounded{
+        &:hover {
+          .rounded {
+            > .rounded {
               opacity: 0.25;
               transform: scale(1.4);
             }
@@ -1541,10 +1576,10 @@ body.evaluations {
       }
     }
   }
-  .skills-h4{
+  .skills-h4 {
     margin: 0;
   }
-  .competence-nom{
+  .competence-nom {
     width: 95%;
     display: block;
     overflow: hidden;
@@ -1553,16 +1588,16 @@ body.evaluations {
   /***
                       DIRECTIVE SKILLS LIST
   ***/
-  .skills-list{
+  .skills-list {
     width: 90%;
     margin-left: 5%;
     list-style-type: none;
     padding: 0;
-    ul{
+    ul {
       list-style-type: none;
       padding: 0;
     }
-    li{
+    li {
       position: relative;
     }
   }
@@ -1571,18 +1606,18 @@ body.evaluations {
     list-style-type: none;
     overflow-y: scroll;
     height: 260px;
-    ul{
+    ul {
       list-style-type: none;
       overflow-y: hidden;
     }
-    li{
+    li {
       position: relative;
     }
   }
 
-  @media screen and (min-width: $tablette){
-    .skills-list{
-      ul{
+  @media screen and (min-width: $tablette) {
+    .skills-list {
+      ul {
         &:nth-child(2) {
           margin-left: 20px;
         }
@@ -1590,52 +1625,52 @@ body.evaluations {
     }
   }
 
-  .skills-header{
+  .skills-header {
     cursor: pointer;
     @include transition(all 200ms ease);
-    &.skill-50{
+    &.skill-50 {
       height: 50px;
       overflow: hidden;
     }
-    &.skill-30{
+    &.skill-30 {
       height: 30px;
       overflow: hidden;
     }
-    &.skill-40{
+    &.skill-40 {
       height: 40px;
       overflow: hidden;
     }
-    &.skill-45{
+    &.skill-45 {
       height: 45px;
       overflow: hidden;
     }
-    &.opened{
+    &.opened {
       height: auto;
       overflow: visible;
       @include transition(all 200ms ease);
-      > .skills-text-overflow{
+      > .skills-text-overflow {
         i.skills-open-icon::before {
           content: "\e841";
         }
       }
     }
-    > span{
+    > span {
       padding: 10px 35px 10px 50px;
       border-bottom: solid 1px #e0e0e0;
       display: block;
       cursor: pointer;
-      &.skills-teach{
+      &.skills-teach {
         padding: 10px 35px 10px 20px;
 
-        > span{
+        > span {
           margin-bottom: 5px;
         }
       }
     }
-    > .skills-text-overflow{
+    > .skills-text-overflow {
       i.skills-open-icon {
         @include fonticon;
-        &::before{
+        &::before {
           content: "\e823";
           left: 0;
           position: absolute;
@@ -1646,7 +1681,7 @@ body.evaluations {
     }
   }
 
-  .skills-text-overflow{
+  .skills-text-overflow {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
@@ -1654,33 +1689,33 @@ body.evaluations {
     @include transition(all 200ms ease);
   }
 
-  .skills-list-connaissance{
+  .skills-list-connaissance {
     margin: 10px 5px 0 45px;
     cursor: pointer;
     padding: 0 0 0 15px;
   }
 
-  .skills-list-proposition{
+  .skills-list-proposition {
     margin: 10px 5px 0 5px;
     cursor: pointer;
     padding: 0 0 0 5px;
   }
 
   .skills-list-proposition:hover {
-    color: #FF8500;
+    color: #ff8500;
   }
 
-  .skills-checkbox{
+  .skills-checkbox {
     left: 30px;
     position: absolute;
     top: 9px;
   }
 
-  .skills-headers-checkbox{
+  .skills-headers-checkbox {
     left: 20px;
   }
 
-  .skill-connaissance-eye{
+  .skill-connaissance-eye {
     height: 100%;
     display: inline-block;
     position: absolute;
@@ -1688,19 +1723,19 @@ body.evaluations {
     right: 0px;
     color: $grey;
     cursor: zoom-in;
-    @include transition(all 200ms ease);;
+    @include transition(all 200ms ease);
     &:before {
       padding: 6px;
     }
-    &:hover{
-      color: rgba(0,0,0,1);
-      ~ .skills-text-overflow{
+    &:hover {
+      color: rgba(0, 0, 0, 1);
+      ~ .skills-text-overflow {
         white-space: normal;
       }
     }
   }
 
-  .skills-label{
+  .skills-label {
     height: 100%;
     width: 100%;
     display: inline-block;
@@ -1709,7 +1744,7 @@ body.evaluations {
   /**
           DIRECTIVE SKILLS COLOR PAGE
   **/
-  .skills-color-page{
+  .skills-color-page {
     list-style-type: none;
     //float: right;
     padding: 0;
@@ -1719,17 +1754,18 @@ body.evaluations {
     //top: 68px !important;
     //margin-top: 5px !important;
     z-index: 10;
-    li{
+    li {
       display: inline-block;
       height: 34px;
       width: 43px;
       position: relative;
-      > .rounded, > .rounded > .rounded{
+      > .rounded,
+      > .rounded > .rounded {
         position: absolute;
         left: 0;
-        top:0;
+        top: 0;
         border: none;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.4);
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
       }
     }
 
@@ -1742,14 +1778,14 @@ body.evaluations {
     }
   }
   .grey-skill-page {
-    background-color: $grey!important;
+    background-color: $grey !important;
   }
 
   .skills-color-column {
     list-style-type: none;
     padding: 0 0 0 9px !important;
     margin: 0;
-    li{
+    li {
       display: inline-block;
 
       label.checkbox {
@@ -1765,7 +1801,7 @@ body.evaluations {
     transform: scale(1.3);
     box-shadow: 1px 2px 3px grey;
   }
-  .skills-eleve-list{
+  .skills-eleve-list {
     list-style-type: none;
     padding: 0;
     margin: 3px;
@@ -1775,9 +1811,9 @@ body.evaluations {
       height: 20px;
     }
   }
-  .devoir-icons-view{
+  .devoir-icons-view {
     text-align: center;
-    .devoir-icons-element{
+    .devoir-icons-element {
       display: inline-block;
       float: none;
       transition: all 0.2s ease-in-out;
@@ -1787,13 +1823,14 @@ body.evaluations {
       border-radius: 7px;
       min-width: 280px;
       max-width: 280px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 1px 2px rgba(0,0,0,0.24);
-      &:hover{
-        box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 1px 2px rgba(0, 0, 0, 0.24);
+      &:hover {
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19),
+          0 6px 6px rgba(0, 0, 0, 0.23);
       }
       .devoir-icons-container {
-        background: $white none repeat scroll 0 0 ;
-        border : 1px solid transparent;
+        background: $white none repeat scroll 0 0;
+        border: 1px solid transparent;
         box-sizing: border-box;
         display: block;
         transition: all 0.2s ease-in-out;
@@ -1810,33 +1847,35 @@ body.evaluations {
       }
     }
   }
-  .devoir-icons-name{
+  .devoir-icons-name {
     font-weight: 300;
     font-size: 20px;
   }
-  .devoir-icons-description{
+  .devoir-icons-description {
     padding-top: 16px;
     padding-bottom: 16px;
     min-height: 23px;
     font-style: italic;
   }
-  .devoir-icons-checkbox{
+  .devoir-icons-checkbox {
     top: 15px;
     position: absolute;
     right: 10px;
     z-index: 2;
-    > footer{
+    > footer {
       font-weight: 500;
-      > .devoir-icons-coef{
+      > .devoir-icons-coef {
         float: right;
       }
     }
-    > header, > footer{
+    > header,
+    > footer {
       display: block;
       width: 100%;
       min-height: 20px;
       padding: 5px 0;
-      > .devoir-icons-date, > .devoir-icons-class{
+      > .devoir-icons-date,
+      > .devoir-icons-class {
         float: left;
       }
     }
@@ -1844,14 +1883,14 @@ body.evaluations {
   .releve-coef {
     display: block;
   }
-  .nav-devoirs{
+  .nav-devoirs {
     //position: fixed !important;
     width: 96% !important;
     //height: 146px;
     background-color: $lightest-grey;
     z-index: 3;
     //margin-bottom: 25px;
-    top:0;
+    top: 0;
     button {
       position: absolute;
       bottom: 21px;
@@ -1859,15 +1898,15 @@ body.evaluations {
       margin: 0;
     }
   }
-  .button-devoir{
+  .button-devoir {
     margin-left: 0;
   }
-  .text-overflow{
+  .text-overflow {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .devoir-percent{
+  .devoir-percent {
     background-color: $cyan;
     height: 3px;
     display: block;
@@ -1875,29 +1914,29 @@ body.evaluations {
     top: 0;
     left: 0;
   }
-  .header-releve{
-    nav{
+  .header-releve {
+    nav {
       margin-right: 50px;
-      .button{
+      .button {
         margin-left: 10px;
       }
     }
   }
-  .releve-header-content{
+  .releve-header-content {
     width: 95%;
     padding-left: 0;
     margin-left: 0;
     left: 0;
   }
-  .nav-buttons{
+  .nav-buttons {
     width: 100%;
-    > button{
+    > button {
       width: 100%;
       top: 20px;
     }
   }
-  .header-notes{
-    > h2{
+  .header-notes {
+    > h2 {
       text-align: left;
       margin: 0;
       display: block;
@@ -1910,11 +1949,11 @@ body.evaluations {
     display: inline-block;
     margin-left: 15px;
     margin-top: 30px;
-    > h1{
+    > h1 {
       font-size: 25px;
     }
   }
-  .switch-view-buttons{
+  .switch-view-buttons {
     position: absolute !important;
     bottom: 20px;
     right: 1%;
@@ -1927,27 +1966,27 @@ body.evaluations {
   //.list-devoirs{
   //    margin-top: 60px;
   //}
-  .notes-help{
+  .notes-help {
     .legend {
       .rounded {
         position: absolute;
         left: -15px;
       }
-      > ul{
+      > ul {
         list-style-type: none;
         margin: 0;
-        > li{
+        > li {
           position: relative;
           text-indent: 15px;
           margin: 15px;
-          > .rounded{
+          > .rounded {
             position: absolute;
             left: -15px;
-            text-align: center!important;
+            text-align: center !important;
             text-indent: 0px !important;
-            &::before{
+            &::before {
               /*content: counter(step-counter)".";*/
-              content : " ";
+              content: " ";
               font-weight: 400;
               color: #444;
               opacity: 0.8;
@@ -1960,17 +1999,17 @@ body.evaluations {
       }
     }
 
-    > .eleven{
+    > .eleven {
       margin-left: 4%;
-      > h4{
-        border-bottom: solid 1px rgba(0,0,0,0.15);
+      > h4 {
+        border-bottom: solid 1px rgba(0, 0, 0, 0.15);
         font-weight: 400;
         text-indent: 15px;
       }
     }
   }
 
-  @media screen and(min-width: $tablette) {
+  @media screen and (min-width: $tablette) {
     .addRemplacement {
       .addRemplacementTable {
         padding: 15px 40px;
@@ -1980,17 +2019,16 @@ body.evaluations {
           text-align-last: right;
           padding-right: 10px;
           padding-top: 10px;
-
         }
       }
 
       .listRemplacementsTable {
-        margin:auto;
+        margin: auto;
       }
     }
   }
 
-  @media screen and(min-width: $tablette) {
+  @media screen and (min-width: $tablette) {
     .addDevoir {
       .skills-list {
         margin: 0 0 0 5% !important;
@@ -2014,8 +2052,7 @@ body.evaluations {
       }
     }
 
-
-    .addDevoirTable{
+    .addDevoirTable {
       padding: 15px 40px;
 
       .addDevoirTable__libelle {
@@ -2024,21 +2061,19 @@ body.evaluations {
         padding-right: 10px;
         padding-top: 10px;
       }
-
     }
-
   }
 
-  .button-add-devoir{
+  .button-add-devoir {
     margin-left: 10px !important;
     height: auto !important;
   }
-  .button-evaluation-devoir{
-    flex:auto;
+  .button-evaluation-devoir {
+    flex: auto;
     padding: 8px 0px 10px !important;
     z-index: 11 !important;
   }
-  .div-buttons-evaluation-devoir{
+  .div-buttons-evaluation-devoir {
     display: flex;
     width: 18%;
     right: -20px;
@@ -2091,36 +2126,36 @@ body.evaluations {
     border-radius: 10%;
   }
 
-  .columns-popup-items{
+  .columns-popup-items {
     margin: 10px;
   }
 
-  .checkbox-grid{
+  .checkbox-grid {
     display: grid;
   }
-  .nbr-Cartouche{
+  .nbr-Cartouche {
     margin-left: 3%;
     text-align: center;
     padding: 3px;
   }
-  .option-eleve{
+  .option-eleve {
     padding-top: 3px;
-    > span{
+    > span {
       margin-top: auto;
       margin-left: 2%;
       position: absolute;
       margin-bottom: auto;
     }
   }
-  .additional-options{
+  .additional-options {
     border-left: 2px solid;
     margin-left: 4%;
     margin-top: 3%;
     padding: 1.5%;
     animation-duration: 1s;
     background-image: linear-gradient(to right, #f2f2f2, #fff);
-    >div{
-      margin:6px;
+    > div {
+      margin: 6px;
     }
     //animation-name: slidein;
   }
@@ -2134,13 +2169,13 @@ body.evaluations {
       font-size: 100%;
     }
   }
-  .solid-bottom{
+  .solid-bottom {
     border-bottom: solid 2px black;
   }
 
   .button-edit-devoir-not-fixed {
     margin-top: -18px !important;
-    flex:auto;
+    flex: auto;
     padding: 8px 0px 10px !important;
   }
 
@@ -2161,7 +2196,7 @@ body.evaluations {
     display: inline-block;
   }
 
-  .devoir-skills-list{
+  .devoir-skills-list {
     padding: 0;
     list-style-type: none;
 
@@ -2170,11 +2205,11 @@ body.evaluations {
     }
   }
   //Relevé périodique lightbox par élève Acquis scolaire, suivi élève, historique
-  .acquis_scolaire{
-    span{
+  .acquis_scolaire {
+    span {
       font-size: 14px;
     }
-    .moyenne_pos{
+    .moyenne_pos {
       margin-left: 20px;
     }
   }
@@ -2204,17 +2239,17 @@ body.evaluations {
 
     .header {
       h2 {
-        color : $grey;
+        color: $grey;
         margin-top: 0;
       }
     }
   }
 
-  .criterion-fixed{
+  .criterion-fixed {
     position: fixed !important;
     top: 144px !important;
   }
-  .fixed-container{
+  .fixed-container {
     left: 17.66% !important;
   }
   .devoir-with-comp {
@@ -2226,80 +2261,80 @@ body.evaluations {
     padding: 0 10px;
   }
 
-  i.show-chart{
+  i.show-chart {
     @include fonticon;
     font-size: 24px;
     opacity: 0.2;
 
-    &::after{
-      content:"\e810";
+    &::after {
+      content: "\e810";
     }
 
-    &.selected{
+    &.selected {
       opacity: 0.6;
     }
   }
 
-  i.show-cards{
+  i.show-cards {
     @include fonticon;
     opacity: 0.2;
 
-    &::after{
-      content:"\e837";
+    &::after {
+      content: "\e837";
     }
 
-    &.selected{
+    &.selected {
       opacity: 0.6;
     }
   }
 
-  i.show-suivi-eleve{
+  i.show-suivi-eleve {
     @include fonticon;
     font-size: 24px;
     opacity: 0.2;
 
-    &::after{
-      content:"\e824";
+    &::after {
+      content: "\e824";
     }
 
-    &.selected{
+    &.selected {
       opacity: 0.6;
     }
   }
 
-  i.show-bilan-eleve{
+  i.show-bilan-eleve {
     @include fonticon;
     font-size: 24px;
     opacity: 0.2;
 
-    &::after{
-      content:"\e8b8";
+    &::after {
+      content: "\e8b8";
     }
 
-    &.selected{
+    &.selected {
       opacity: 0.6;
     }
   }
 
-  i.show-bilan-fin-cycle{
+  i.show-bilan-fin-cycle {
     @include fonticon;
     font-size: 24px;
     opacity: 0.2;
 
-    &::after{
-      content:"\e8b3";
+    &::after {
+      content: "\e8b3";
     }
 
-    &.selected{
+    &.selected {
       opacity: 0.6;
     }
   }
 
-  i.icon-back{
+  i.icon-back {
     @include fonticon;
 
-    &::after{
-      content:"\e84c";
+    &::after {
+      content: "\e84c";
     }
 
     margin-right: 15px;
@@ -2309,7 +2344,7 @@ body.evaluations {
     @include fonticon;
 
     &::after {
-      content : "\e817";
+      content: "\e817";
     }
   }
 
@@ -2317,7 +2352,7 @@ body.evaluations {
     @include fonticon;
 
     &::after {
-      content : "\e874";
+      content: "\e874";
     }
   }
 
@@ -2347,7 +2382,7 @@ body.evaluations {
   }
 
   .show-appreciation {
-    height:2em;
+    height: 2em;
   }
 
   .hide-appreciation {
@@ -2382,7 +2417,7 @@ body.evaluations {
       }
     }
   }
-  .clear-none{
+  .clear-none {
     clear: none !important;
   }
 
@@ -2390,7 +2425,7 @@ body.evaluations {
     margin: 0 auto;
     padding: 0 15px;
     box-sizing: border-box;
-    overflow : hidden;
+    overflow: hidden;
 
     .suivi-eleve-ctl {
       background-color: $white;
@@ -2409,23 +2444,23 @@ body.evaluations {
       width: 200%;
     }
 
-    i.show-chart{
+    i.show-chart {
       margin-right: 15px;
     }
 
-    i.show-suivi-eleve{
+    i.show-suivi-eleve {
       margin-right: 15px;
     }
 
-    i.show-bilan-eleve{
+    i.show-bilan-eleve {
       margin-right: 15px;
     }
 
-    i.show-bilan-fin-cycle{
+    i.show-bilan-fin-cycle {
       margin-right: 15px;
     }
 
-    i.icon-back{
+    i.icon-back {
       font-size: 24px;
     }
 
@@ -2433,28 +2468,29 @@ body.evaluations {
       @include fonticon;
 
       &::before {
-        content : '\e8be';
+        content: "\e8be";
       }
     }
 
-    .suivi-eleve, .detail-competence {
+    .suivi-eleve,
+    .detail-competence {
       float: left;
     }
 
     .classe-view {
-      .border-green{
+      .border-green {
         border: solid 3px $green;
       }
-      .border-yellow{
+      .border-yellow {
         border: solid 3px $yellow;
       }
-      .border-orange{
+      .border-orange {
         border: solid 3px $orange;
       }
-      .border-red{
+      .border-red {
         border: solid 3px $red;
       }
-      .border-grey{
+      .border-grey {
         border: solid 3px $grey;
       }
 
@@ -2464,7 +2500,8 @@ body.evaluations {
             transition: all 0.2s ease-in-out;
 
             &:hover {
-              box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+              box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19),
+                0 6px 6px rgba(0, 0, 0, 0.23);
             }
             .bottom {
               padding: 0px 10px 85% 10px;
@@ -2516,7 +2553,7 @@ body.evaluations {
         .domaine-display {
           padding: 2px 0 !important;
           font-weight: bold;
-          button{
+          button {
             padding: 0px 4px !important;
             font-size: 11px !important;
             text-transform: none !important;
@@ -2528,10 +2565,9 @@ body.evaluations {
           margin-top: 20px !important;
         }
 
-        .domaine-line{
-
-          &::after{
-            content: ' ';
+        .domaine-line {
+          &::after {
+            content: " ";
             display: block;
             clear: both;
           }
@@ -2540,7 +2576,6 @@ body.evaluations {
     }
 
     .detail-competence {
-
       .addDevoirTable__libelle {
         padding-right: 2px;
       }
@@ -2552,7 +2587,8 @@ body.evaluations {
       .detail {
         width: 100%;
         overflow: auto;
-        &.table-view, &.graph-view {
+        &.table-view,
+        &.graph-view {
           table {
             margin: 50px auto;
           }
@@ -2564,7 +2600,6 @@ body.evaluations {
 
         &.graph-view {
           table {
-
             tr {
               border-top: solid 1px transparent;
 
@@ -2601,7 +2636,7 @@ body.evaluations {
       margin: 0 10px;
       vertical-align: top;
 
-      .rounded{
+      .rounded {
         opacity: 0.45;
         &.selected {
           opacity: 1;
@@ -2610,16 +2645,14 @@ body.evaluations {
     }
   }
 
-
-  .indent-eight{
-    padding-top:8px;
+  .indent-eight {
+    padding-top: 8px;
   }
 
-  .graphe-widget{
-    height:240px !important;
-
+  .graphe-widget {
+    height: 240px !important;
   }
-  .RechercheAcceuil{
+  .RechercheAcceuil {
     margin-left: 60px !important;
   }
 
@@ -2634,29 +2667,25 @@ body.evaluations {
     width: 100%;
   }
 
-  .RechercheSuiviEleve{
+  .RechercheSuiviEleve {
     margin-left: 8.3% !important;
     width: 83.5%;
-
   }
-  .detail{
-
-    .info{
-      margin-left: 8.5%!important;
+  .detail {
+    .info {
+      margin-left: 8.5% !important;
     }
-
   }
-  .headerAccueil{
+  .headerAccueil {
     margin-left: 4%;
   }
-  .marginNiveau{
-    margin-left : 50%;
-    margin-right : 25%;
+  .marginNiveau {
+    margin-left: 50%;
+    margin-right: 25%;
   }
-  .openedSectionDom{
+  .openedSectionDom {
     height: 0 !important;
-    overflow: hidden!important;
-
+    overflow: hidden !important;
   }
 
   .chevron {
@@ -2678,8 +2707,8 @@ body.evaluations {
     }
   }
 
-  .rounded{
-    &.filterSpan{
+  .rounded {
+    &.filterSpan {
       opacity: 0.45;
       &.selectedFilterGrey {
         opacity: 1;
@@ -2687,36 +2716,35 @@ body.evaluations {
     }
   }
 
-
-  .chartSuiviEleve{
+  .chartSuiviEleve {
     //width : 90% !important;
     //height: 90% !important;
     margin: 2%;
   }
 
-  .switchToView{
+  .switchToView {
     margin-left: 6%;
     color: #4bafd5;
   }
 
-  .buttonEvalPopupDelete{
+  .buttonEvalPopupDelete {
     margin-bottom: 25px;
     margin-left: 10px;
     float: right;
   }
 
-  .buttonEvalPopupConfirm{
+  .buttonEvalPopupConfirm {
     margin-bottom: 25px;
     margin-right: 10px;
     float: right;
     background-color: silver;
   }
 
-  .lightBoxEval{
+  .lightBoxEval {
     width: 100%;
   }
 
-  .paddingTwenty{
+  .paddingTwenty {
     padding: 20px;
   }
 
@@ -2728,7 +2756,7 @@ body.evaluations {
     li {
       height: 50px;
 
-      div{
+      div {
         vertical-align: top;
         height: 100%;
         position: relative;
@@ -2738,7 +2766,7 @@ body.evaluations {
           text-align: right;
         }
 
-        .maxval{
+        .maxval {
           position: absolute;
           top: -10px;
           right: 10px;
@@ -2759,7 +2787,7 @@ body.evaluations {
       }
     }
 
-    .legend-line{
+    .legend-line {
       position: relative;
 
       .tick {
@@ -2771,35 +2799,35 @@ body.evaluations {
         z-index: 10;
         background-color: $black;
 
-        &.first-tick{
+        &.first-tick {
           top: 0;
         }
       }
 
-      &::before{
-        content: ' ';
+      &::before {
+        content: " ";
         width: 3px;
         height: 100%;
         display: block;
       }
 
-      &.green{
-        &:before{
+      &.green {
+        &:before {
           background-color: $green;
         }
       }
-      &.orange{
-        &:before{
+      &.orange {
+        &:before {
           background-color: $orange;
         }
       }
-      &.yellow{
-        &:before{
+      &.yellow {
+        &:before {
           background-color: $yellow;
         }
       }
-      &.red{
-        &:before{
+      &.red {
+        &:before {
           background-color: $red;
         }
       }
@@ -2808,7 +2836,7 @@ body.evaluations {
 
   //Enseignement de complément et bfc barème brevet
 
-  .bareme-brevet{
+  .bareme-brevet {
     font-size: 1.2em;
     font-weight: bold;
     line-height: 2.3em;
@@ -2822,10 +2850,10 @@ body.evaluations {
   }
 
   label.select-evaluation {
-    margin: 0!important;
+    margin: 0 !important;
   }
 
-  i.cross-annotation{
+  i.cross-annotation {
     padding-left: 5px;
     line-height: 34px;
   }
@@ -2836,7 +2864,8 @@ body.evaluations {
   .filter-domaine {
     margin: 0 0 0 5% !important;
     width: 95% !important;
-    .drop-down-block,.drop-down-block .drop-down-label {
+    .drop-down-block,
+    .drop-down-block .drop-down-label {
       margin-bottom: 0px;
     }
     .checkbox-domaine {
@@ -2853,7 +2882,6 @@ body.evaluations {
 
   //EXPORT LSU
   .lsu {
-
     .filtre {
       position: relative;
       height: 25px;
@@ -2885,7 +2913,6 @@ body.evaluations {
         margin-bottom: 4px;
         margin-top: 4px;
         line-height: 20px;
-
       }
 
       .selectable-list li {
@@ -2936,29 +2963,29 @@ body.evaluations {
     text-align: center !important;
     opacity: 0.8 !important;
 
-      img {
-        height: 100px;
-        width: 100px;
-        object-fit: cover;
-        border-radius: 50% !important;
-        border: 1px solid $medium-grey !important;
-      }
+    img {
+      height: 100px;
+      width: 100px;
+      object-fit: cover;
+      border-radius: 50% !important;
+      border: 1px solid $medium-grey !important;
+    }
 
-      span {
-        color: $grey !important;
-        font-weight: bold !important;
-        text-align: center !important;
-      }
+    span {
+      color: $grey !important;
+      font-weight: bold !important;
+      text-align: center !important;
+    }
   }
 
   .big-round-avatar {
     height: 240px !important;
     width: 200px !important;
 
-      img {
-        height: 200px !important;
-        width: 200px !important;
-      }
+    img {
+      height: 200px !important;
+      width: 200px !important;
+    }
   }
 
   .alignTablewithOtherWidget {
@@ -2985,7 +3012,7 @@ body.evaluations {
     .rounded {
       vertical-align: text-bottom !important;
     }
-    .content-box-accueil--table--content >.row {
+    .content-box-accueil--table--content > .row {
       padding: 12px 0 !important;
     }
     @media screen and (max-device-width: $tablette) {
@@ -2997,10 +3024,10 @@ body.evaluations {
       }
     }
     .shadowOne {
-      box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.35)!important;
+      box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.35) !important;
     }
     .shadowTwo {
-      box-shadow: 0px 2px 4px 0px rgba(0,0,0,0.35)!important;
+      box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.35) !important;
     }
     .content-box-accueil--table--content {
       overflow-y: hidden !important;
@@ -3017,10 +3044,10 @@ body.evaluations {
       float: right !important;
     }
     .DevoirField {
-      border: solid 1px #5f5f5f;;
+      border: solid 1px #5f5f5f;
       padding-left: 5px;
     }
-    .content-box-accueil--table--content>.row {
+    .content-box-accueil--table--content > .row {
       height: 40px;
     }
     .floatRight {
@@ -3032,46 +3059,46 @@ body.evaluations {
     .responsive-table {
       table {
         tbody {
-          tr:nth-child(even){
-            background: rgba(0,0,0,0.05);
+          tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.05);
           }
-          tr:nth-child(odd){
+          tr:nth-child(odd) {
             background: $white;
           }
         }
       }
     }
 
-    .background-grey{
-      background: rgba(0,0,0,0.05) !important;
+    .background-grey {
+      background: rgba(0, 0, 0, 0.05) !important;
     }
-    .background-white{
+    .background-white {
       background: $white !important;
     }
-    .height80{
+    .height80 {
       line-height: 80px;
     }
     .list-devoirs {
       .testAlignLeft {
-        @media screen and (min-device-width:$fat-mobile) {
+        @media screen and (min-device-width: $fat-mobile) {
           text-align: left !important;
         }
       }
       transition: all 100ms ease-out;
-      .shadow-first{
-        box-shadow:(0px 0px 0px 0px rgba(0,0,0,0.35));
+      .shadow-first {
+        box-shadow: (0px 0px 0px 0px rgba(0, 0, 0, 0.35));
       }
       table {
-        border-collapse : collapse;
+        border-collapse: collapse;
         tbody tr:hover {
           color: $orange;
         }
-        tbody tr:nth-child(even){
+        tbody tr:nth-child(even) {
           background: $white !important;
           border-bottom: 1px solid #ccc !important;
           border-top: 0px !important;
         }
-        tr:nth-child(odd){
+        tr:nth-child(odd) {
           border: 0 !important;
           td {
             border: 0 !important;
@@ -3083,13 +3110,13 @@ body.evaluations {
               border-right: 0px solid #fff;
               @media screen and (min-width: $tablette) {
                 border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-              };
+              }
               padding: 5px;
             }
             .firstElem {
               margin-left: 5px !important;
             }
-            .lastElem{
+            .lastElem {
               margin-right: 5px !important;
               margin-bottom: 1px !important;
             }
@@ -3103,7 +3130,6 @@ body.evaluations {
           border-bottom: 0px !important;
         }
       }
-
     }
     .opened.lastElem.shadow {
       margin-top: 5px !important;
@@ -3116,7 +3142,7 @@ body.evaluations {
     }
     @media screen and (min-width: $tablette) {
       table {
-        border-collapse : separate;
+        border-collapse: separate;
       }
     }
     .responsive-table table tbody tr td {
@@ -3150,7 +3176,6 @@ body.evaluations {
         }
       }
 
-
       @media screen and (max-width: 800px), screen and (max-height: 800px) {
         height: 110px;
         overflow: hidden;
@@ -3166,7 +3191,8 @@ body.evaluations {
         }
       }
     }
-    nav.vertical ul li a, .app-menu ul li a {
+    nav.vertical ul li a,
+    .app-menu ul li a {
       padding-right: 0px !important;
     }
 
@@ -3184,14 +3210,14 @@ body.evaluations {
     margin-top: 0px !important;
   }
 
-  .bilan-suivi-eleve{
+  .bilan-suivi-eleve {
     margin-left: 20px !important;
     margin-right: 20px !important;
     padding-bottom: 20px !important;
     border-radius: 5px !important;
   }
 
-  .titre-libelle{
+  .titre-libelle {
     color: #4bafd5;
     font-size: 18px;
   }
@@ -3217,9 +3243,8 @@ body.evaluations {
 
   .selectable-list li.positionnementcalculee {
     background: $cyan;
-    color: #FFFFFF;
+    color: #ffffff;
   }
-
 
   .width-td-0 {
     width: 0% !important;
@@ -3252,19 +3277,19 @@ body.evaluations {
     text-align: left !important;
   }
 
-  @media screen and (max-device-width:$small-mobile) {
+  @media screen and (max-device-width: $small-mobile) {
     .responsive-table table td {
       width: auto !important;
     }
   }
-  @media screen and (max-device-width:$fat-mobile) {
+  @media screen and (max-device-width: $fat-mobile) {
     .responsive-table table td {
       width: auto !important;
     }
   }
 
   .deletedStudent {
-    color: #E61758 !important;
+    color: #e61758 !important;
   }
 
   //  POP-UP Relevé Periodique - Acquis Scolaire
@@ -3277,7 +3302,6 @@ body.evaluations {
   .autocomplete div {
     padding: 0px !important;
   }
-
 
   //  Bilan périodique
 
@@ -3307,24 +3331,24 @@ body.evaluations {
 
   //suivi des acquis
 
-  .suiviDesAcquis{
-    th{
+  .suiviDesAcquis {
+    th {
       padding: 5px 11px !important;
     }
-    .matiere{
+    .matiere {
       font-weight: bold;
     }
-    span~ul{
+    span ~ ul {
       font-size: 12px;
       margin-top: 0px;
       margin-bottom: 0px;
       list-style-type: none;
       padding-left: 0px;
-      li{
+      li {
         padding-bottom: 0px;
       }
     }
-    textarea{
+    textarea {
       height: 75px;
       resize: none;
       margin-top: 0px;
@@ -3333,16 +3357,16 @@ body.evaluations {
       text-align: justify;
       padding: 7px;
     }
-    .element{
+    .element {
       text-align: justify;
       height: 75px;
       padding-right: 5px;
       overflow-y: auto;
     }
-    tfoot td{
+    tfoot td {
       padding: 10px 0px;
     }
-    .selectable-list{
+    .selectable-list {
       margin: 0px;
     }
   }
@@ -3350,7 +3374,6 @@ body.evaluations {
   .margin-zero {
     margin: 0;
   }
-
 
   .loaderGraph {
     border: 6px solid #f3f3f3; /* Light grey */
@@ -3374,90 +3397,91 @@ body.evaluations {
     margin: 0 45%;
   }
 
-  .grey-color{
+  .grey-color {
     color: grey;
   }
 
   .margin-top-releve-parentEleve {
-    margin-top:8px;
+    margin-top: 8px;
   }
 
-  .padding-right-downloadButton-SuiviEleve{
+  .padding-right-downloadButton-SuiviEleve {
     padding-right: 7px !important;
   }
 
-  .choice-export-suivi-eleve{
-    top:38px !important; bottom: auto!important;
+  .choice-export-suivi-eleve {
+    top: 38px !important;
+    bottom: auto !important;
   }
 
-  .loaderPage{
+  .loaderPage {
     margin: 20% 50%;
   }
-  .tabs{
+  .tabs {
     header {
       cursor: pointer;
     }
     .tabs-selected::after {
       transform: scaleX(1);
     }
-    .tabs-selected{
+    .tabs-selected {
       color: #4bafd5;
     }
   }
-  .buttons-suiviEleve{
+  .buttons-suiviEleve {
     position: absolute;
     right: 0;
   }
-  .buttons-suiviEleve-detail{
+  .buttons-suiviEleve-detail {
     position: absolute;
     width: 97%;
   }
-  .releveNotes-suiviEleve{
+  .releveNotes-suiviEleve {
     overflow: overlay;
   }
-  .releveNotes-noBorder{
+  .releveNotes-noBorder {
     border: none !important;
   }
-  .encartBlanc-suiviEleve{
+  .encartBlanc-suiviEleve {
     margin-left: 20px;
   }
-  .margin-text-underTabs{
+  .margin-text-underTabs {
     margin-bottom: 20px;
   }
-  .iframeReportClass{
+  .iframeReportClass {
     display: inline;
   }
-  .half-width{
+  .half-width {
     width: 50%;
   }
-  .followingClass{
+  .followingClass {
     margin-left: 15px;
     margin-right: 15px;
   }
-  .marginUnderTabs{
+  .marginUnderTabs {
     margin-bottom: 20px;
     padding-top: 15px;
   }
-  .choseDownloadFormat{
+  .choseDownloadFormat {
     display: flex;
     justify-content: space-around;
   }
-  .light-font-header{
-    font-weight: 100!important;
+  .light-font-header {
+    font-weight: 100 !important;
     font-size: 0.9em;
   }
-  .margin-loader{
+  .margin-loader {
     margin-bottom: 10px;
   }
-  .duplication-title{
+  .duplication-title {
     color: $red;
   }
-  .button-margin{
+  .button-margin {
     margin: 16px;
   }
 
-  @media screen and (min-device-width:1300px) {
-    .backgroundExportImage{
+  @media screen and (min-device-width: 1300px) {
+    .backgroundExportImage {
       background-image: url(/competences/public/img/export_image.svg);
       background-repeat: no-repeat;
       background-origin: content-box;
@@ -3466,36 +3490,36 @@ body.evaluations {
     }
   }
 
-  .archives-margin{
-    margin:2.5%;
+  .archives-margin {
+    margin: 2.5%;
   }
 
-  .archives-frame{
-    background-color:$eval-lighter-grey;
+  .archives-frame {
+    background-color: $eval-lighter-grey;
     border: dotted grey;
     margin-top: 2%;
     margin-bottom: 1%;
   }
 
-  .archives-list-margin{
-    margin-bottom:1%;
+  .archives-list-margin {
+    margin-bottom: 1%;
   }
 
   .lightbox-creation-competences {
-    .element{
+    .element {
       font-weight: bold;
       margin: 4% 0 0 0;
     }
 
-    .element-no-bold{
+    .element-no-bold {
       margin: 4% 0 0 0;
     }
 
-    .input-no-bold{
+    .input-no-bold {
       margin: 3.1% 0 0 0;
     }
 
-    .margin-bottom-5p{
+    .margin-bottom-5p {
       margin: 0 0 5% 0;
     }
 
@@ -3514,16 +3538,12 @@ body.evaluations {
       display: inline-block;
     }
   }
-
 }
-
 
 //   Sniplet module vie-scolaire
 
 .evaluations-sniplet {
-
   //  Bilan périodique - POP UP création EPI / AP / Parcours
-
 
   .marginLeft {
     margin-left: 15px;
@@ -3569,7 +3589,7 @@ body.evaluations {
       height: auto;
       overflow: visible;
       @include transition(all 200ms ease);
-      > .skills-text-overflow{
+      > .skills-text-overflow {
         i.skills-open-icon::before {
           content: "\e841";
         }
@@ -3587,10 +3607,10 @@ body.evaluations {
         }
       }
     }
-    > .skills-text-overflow{
+    > .skills-text-overflow {
       i.skills-open-icon {
         @include fonticon;
-        &::before{
+        &::before {
           content: "\e823";
           left: 0;
           position: absolute;
@@ -3605,7 +3625,7 @@ body.evaluations {
     padding-left: 10px;
     margin: 0;
     list-style-type: none;
-    ul{
+    ul {
       list-style-type: none;
     }
   }
@@ -3621,7 +3641,7 @@ body.evaluations {
   }
 
   .skills-list-proposition:hover {
-    color: #FF8500;
+    color: #ff8500;
   }
 
   .all.selected {
@@ -3649,8 +3669,8 @@ body.evaluations {
     }
   }
 
-  .skills-header >.skills-text-overflow i.skills-open-icon::before {
-    margin: 10px 0 0 5px!important;
+  .skills-header > .skills-text-overflow i.skills-open-icon::before {
+    margin: 10px 0 0 5px !important;
   }
 
   .champsRequis {
@@ -3676,7 +3696,6 @@ body.evaluations {
   }
 
   &.paramServices {
-
     .selectable-list {
       width: 80%;
       height: 100%;
@@ -3692,11 +3711,12 @@ body.evaluations {
       border: none;
       background-color: inherit;
       &::after {
-        content: '\e866';
+        content: "\e866";
       }
     }
 
-    .lightboxCreate, .lightboxUpdate {
+    .lightboxCreate,
+    .lightboxUpdate {
       margin: 20px;
     }
 
@@ -3710,9 +3730,8 @@ body.evaluations {
     }
 
     .filterButton {
-
       & > * {
-        margin : 0 10px 15px;
+        margin: 0 10px 15px;
       }
 
       & > input {
@@ -3723,21 +3742,21 @@ body.evaluations {
   }
 
   .cursor-auto {
-    cursor:auto;
+    cursor: auto;
   }
 
   .domain-header {
-    position:relative;
-    left:10px;
-    top:10px;
+    position: relative;
+    left: 10px;
+    top: 10px;
   }
 
   .margin-top-10 {
-    margin-top:10px;
+    margin-top: 10px;
   }
 
   .margin-left-10 {
-    margin-left:10px;
+    margin-left: 10px;
   }
 
   .margin-15 {
@@ -3766,7 +3785,3 @@ lightbox#delete-periodic div.content {
     margin-right: 5%;
   }
 }
-
-
-
-

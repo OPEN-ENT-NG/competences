@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
- /**
+/**
 * Angular JS slider directive
 *
 * (c) Rafal Zajac <rzajac$gmail.com>
@@ -37,7 +37,6 @@ $barDisabledFillColor: $disabled-color;
 $barNormalColor: $neutral-grey;
 
 body.vsco--global {
-
   $ticksColor: $barNormalColor;
   $selectedTicksColor: $barFillColor;
   $ticksWidth: 10px;
@@ -107,8 +106,8 @@ body.vsco--global {
     .rz-bar-wrapper {
       left: 0;
       box-sizing: border-box;
-      margin-top: -$handleSize / 2;
-      padding-top: $handleSize / 2;
+      margin-top: calc($handleSize / -2);
+      padding-top: calc($handleSize / 2);
       width: 100%;
       height: $handleSize;
       z-index: 1;
@@ -124,24 +123,24 @@ body.vsco--global {
       height: $barDimension;
       z-index: 1;
       background: $barNormalColor;
-      @include rounded($barDimension/2);
+      @include rounded(calc($barDimension/2));
     }
 
     .rz-selection {
       z-index: 2;
       background: $barFillColor;
-      @include rounded($barDimension/2);
+      @include rounded(calc($barDimension/2));
     }
 
     .rz-pointer {
       cursor: pointer;
       width: $handleSize;
       height: $handleSize;
-      top: -$handleSize/2 + $barDimension/2;
+      top: calc(($handleSize/-2) + ($barDimension/-2));
       background-color: $primary;
       z-index: 3;
-      @include rounded($handleSize/2);
-      @include box-shadow(rgba(0,0,0,0.26) 0 1px 3px);
+      @include rounded(calc($handleSize/2));
+      @include box-shadow(rgba(0, 0, 0, 0.26) 0 1px 3px);
       //  -webkit-transition:all linear 0.15s;
       //  -moz-transition:all linear 0.15s;
       //  -o-transition:all linear 0.15s;
@@ -170,7 +169,7 @@ body.vsco--global {
 
     .rz-bubble {
       cursor: default;
-      bottom: $handleSize/2;
+      bottom: calc($handleSize/2);
       padding: $bubblePadding;
       color: $labelTextColor;
       &.rz-limit {
@@ -184,7 +183,7 @@ body.vsco--global {
       height: 0;
       position: absolute;
       left: 0;
-      top: -($ticksHeight - $barDimension) / 2;
+      top: calc(($ticksHeight - $barDimension) / -2);
       margin: 0;
       z-index: 1;
       list-style: none;
@@ -207,7 +206,9 @@ body.vsco--global {
       position: absolute;
       top: 0;
       left: 0;
-      margin-left: $handleSize / 2 - $ticksWidth / 2; // for centering*padding:
+      margin-left: calc(
+        $handleSize / 2 - $ticksWidth / 2
+      ); // for centering*padding:
       padding: 0;
       &.rz-selected {
         background: $selectedTicksColor;
@@ -245,8 +246,8 @@ body.vsco--global {
       .rz-bar-wrapper {
         top: auto;
         left: 0;
-        margin: 0 0 0 -$handleSize / 2;
-        padding: 0 0 0 $handleSize / 2;
+        margin: 0 0 0 calc($handleSize / -2);
+        padding: 0 0 0 calc($handleSize / 2);
         height: 100%;
         width: $handleSize;
       }
@@ -259,13 +260,13 @@ body.vsco--global {
       }
 
       .rz-pointer {
-        left: -$handleSize/2 + $barDimension/2 !important;
+        left: calc($handleSize/-2 + $barDimension/2) !important;
         top: auto;
         bottom: 0;
       }
 
       .rz-bubble {
-        left: $handleSize/2 !important;
+        left: calc($handleSize/2) !important;
         margin-left: 3px;
         bottom: 0;
       }
@@ -273,14 +274,14 @@ body.vsco--global {
       .rz-ticks {
         height: 100%;
         width: 0;
-        left: -($ticksHeight - $barDimension) / 2;
+        left: calc($ticksHeight - $barDimension / -2);
         top: 0;
         z-index: 1;
       }
       .rz-tick {
         vertical-align: middle;
         margin-left: auto;
-        margin-top: $handleSize / 2 - $ticksWidth / 2; // for centering
+        margin-top: calc($handleSize / 2 - $ticksWidth / 2); // for centering
       }
       .rz-tick-value {
         left: $ticksValuePositionOnVertical;

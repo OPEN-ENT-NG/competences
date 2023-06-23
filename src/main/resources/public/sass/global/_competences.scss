@@ -15,19 +15,19 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-@import "specifics/mixins";
-@import "specifics/competences";
-@import "specifics/slider";
-@import "specifics/fancyCheckBox";
-@import "specifics/messageLoading";
-@import "sniplets/services";
-@import "sniplets/orderShowSubject";
-@import "sniplets/memento-notes";
-@import "specifics/_radioPillbox";
-@import "specifics/_tableNote";
-@import "specifics/_materialize";
-@import "specifics/proportionSuiviCompetence";
-@import "sniplets/switch";
+@import "./components/mixins";
+@import "./components/competences";
+@import "./components/slider";
+@import "./components/fancyCheckBox";
+@import "./components/messageLoading";
+@import "./sniplets/services";
+@import "./sniplets/orderShowSubject";
+@import "./sniplets/memento-notes";
+@import "./components/_radioPillbox";
+@import "./components/_tableNote";
+@import "./components/_materialize";
+@import "./components/proportionSuiviCompetence";
+@import "./sniplets/switch";
 @font-face {
   font-family: 'material-icons';
   src: url('/competences/public/font/material-design/fonts/materialdesignicons-webfont.eot');
