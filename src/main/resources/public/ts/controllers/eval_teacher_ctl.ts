@@ -313,7 +313,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 inColor: false,
                             };
                         }
-                        if (evaluations.structure.classes.empty()) {
+                        if (evaluations.structure.classes.length() == 0) {
                             await evaluations.structure.classes.sync();
                         }
                         $scope.structure.classes = evaluations.structure.classes;
@@ -519,7 +519,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         let classe: Classe = evaluations.classes.findWhere({id: params.idClasse});
                         $scope.search.classe = classe;
                         if (classe !== undefined) {
-                            if (classe.eleves.empty()) classe.eleves.sync();
+                            if (classe.eleves.length() == 0) classe.eleves.sync();
                             $scope.syncPeriode(params.idClasse);
                             await display();
                         }
@@ -865,7 +865,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             };
 
             let initFieldOfDevoir = async () => {
-                if (evaluations.structure.classes.empty()) {
+                if (evaluations.structure.classes.length() == 0) {
                     await evaluations.structure.classes.sync();
                 }
 
