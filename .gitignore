@@ -9,6 +9,7 @@
 .idea
 Competences.iml
 rev-manifest.json
+/src/main/resources/public/css/
 src/main/resources/public/dist
 src/main/resources/public/temp
 src/main/resources/public/js
@@ -19,3 +20,4 @@ build.sh
 docker-compose.yml
 /coverage/
 package-lock.json
+/yarn.lock

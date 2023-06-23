@@ -19,5 +19,8 @@ module.exports = {
     "coverageReporters": [
         "text",
         "cobertura"
-    ]
+    ],
+    moduleNameMapper: {
+        '^axios$': require.resolve('axios'),
+    },
 };
