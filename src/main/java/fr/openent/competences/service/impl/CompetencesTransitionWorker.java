@@ -1,5 +1,7 @@
 package fr.openent.competences.service.impl;
 
+import fr.openent.competences.constants.Field;
+import fr.openent.competences.model.Config;
 import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -8,6 +10,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.sql.Sql;
 import org.vertx.java.busmods.BusModBase;
 
 import java.util.ArrayList;
@@ -21,7 +24,9 @@ public class CompetencesTransitionWorker extends BusModBase implements Handler<M
     @Override
     public void start() {
         super.start();
-        this.transitionService = new DefaultTransitionService();
+        Config configuration = new Config(config);
+        Sql sqlAdmin = Sql.createInstance(vertx.eventBus(), configuration.sqlAdminAdress());
+        this.transitionService = new DefaultTransitionService(sqlAdmin);
         vertx.eventBus().localConsumer(CompetencesTransitionWorker.class.getSimpleName(), this);
     }
 

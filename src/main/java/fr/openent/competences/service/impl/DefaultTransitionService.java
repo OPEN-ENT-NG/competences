@@ -46,10 +46,12 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     protected static final Logger log = LoggerFactory.getLogger(DefaultTransitionService.class);
     private static final String _id_user_transition_annee = "id-user-transition-annee";
     private final Neo4j neo4j = Neo4j.getInstance();
+    private final Sql sqlAdmin;
     private StructureOptionsService structureOptionsService;
 
-    public DefaultTransitionService() {
+    public DefaultTransitionService(Sql sqlAdmin) {
         super(Competences.COMPETENCES_SCHEMA, Competences.TRANSITION_TABLE);
+        this.sqlAdmin = sqlAdmin;
         structureOptionsService = new DefaultStructureOptions();
     }
 
@@ -573,7 +575,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                              final Handler<Either<String, JsonObject>> handler) {
         JsonArray statements = createStatements(currentYear, sqlVersion);
 
-        Sql.getInstance().transaction(statements, new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
+        sqlAdmin.transaction(statements, new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
                 getInteger("timeout-transaction") * 1000L), event -> {
             JsonObject result = event.body();
             if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
@@ -641,7 +643,17 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put(Field.VALUES, new JsonArray())
                 .put(Field.ACTION, Field.PREPARED));
 
+        statements.add(grantPrivilegesToAppsStatement(Field.SCHEMA_COMPETENCES));
+        statements.add(grantPrivilegesToAppsStatement(Field.SCHEMA_VIESCO_SIMPLE));
+
         return statements;
+    }
+
+    private JsonObject grantPrivilegesToAppsStatement(String schema) {
+        return new JsonObject()
+                .put(Field.STATEMENT, "SELECT function_grants_permission_to_apps_user(?::text)")
+                .put(Field.VALUES, new JsonArray().add(schema))
+                .put(Field.ACTION, Field.PREPARED);
     }
 
     public void updateSqlMatchClassIdTransition(Handler<Either<String, JsonArray>> handler) {

@@ -4,17 +4,16 @@ import fr.openent.competences.enums.Common;
 import fr.openent.competences.helper.ManageError;
 import fr.openent.competences.service.ServiceFactory;
 import fr.openent.competences.service.TransitionService;
-import fr.openent.competences.service.impl.DefaultTransitionService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
-import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -22,6 +21,8 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.SuperAdminFilter;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +36,7 @@ public class YearTransitionController extends ControllerHelper {
 
     public YearTransitionController(ServiceFactory serviceFactory) {
         this.serviceFactory = serviceFactory;
-        transitionService = new DefaultTransitionService();
+        transitionService = serviceFactory.transitionService();
     }
 
     @Post("/transition/before")
@@ -55,16 +56,16 @@ public class YearTransitionController extends ControllerHelper {
     @ApiDoc("processing after transition and alimentation")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(SuperAdminFilter.class)
-    public void afterTransition(final HttpServerRequest request){
+    public void afterTransition(final HttpServerRequest request) {
         log.info("Start transition after ...");
         List<Future> futures = new ArrayList<>();
         Future<JsonArray> future1 = Future.future();
         log.info("START clearTablePostTransition ...");
-        transitionService.clearTablePostTransition(event ->{
-            if(event.isRight()){
+        transitionService.clearTablePostTransition(event -> {
+            if (event.isRight()) {
                 future1.complete(event.right().getValue());
                 log.info("SUCCESS clearTablePostTransition ...");
-            }else{
+            } else {
                 log.error("Problem in afterTransition in purge tables");
                 log.error(event.left());
                 future1.fail("Problem in afterTransition in purge tables");
@@ -93,13 +94,13 @@ public class YearTransitionController extends ControllerHelper {
     private void updateClassId(Future<JsonArray> future) {
         log.info("START updateClassId ...");
         transitionService.getOldIdClassTransition(oldIdClassEvent -> {
-            if(oldIdClassEvent.isRight()){
+            if (oldIdClassEvent.isRight()) {
                 JsonArray externalIdsClasses = oldIdClassEvent.right().getValue();
                 transitionService.matchExternalId(externalIdsClasses, matchExternalIdEvent -> {
-                    if(matchExternalIdEvent.isRight()) {
+                    if (matchExternalIdEvent.isRight()) {
                         JsonArray classesFromNeo = matchExternalIdEvent.right().getValue();
                         transitionService.updateTablesTransition(classesFromNeo, updateTableTransitionEvent -> {
-                            if(updateTableTransitionEvent.isRight()){
+                            if (updateTableTransitionEvent.isRight()) {
                                 future.complete(updateTableTransitionEvent.right().getValue());
                                 log.info("SUCCESS updateClassId ...");
                             } else {
@@ -124,10 +125,10 @@ public class YearTransitionController extends ControllerHelper {
     private void supprimerSousMatieresNonManuelles(Future<JsonArray> future) {
         log.info("START supprimerSousMatieresNonManuelles ...");
         transitionService.getSubjectsNeo(event -> {
-            if(event.isRight()){
+            if (event.isRight()) {
                 JsonArray matieres = event.right().getValue();
                 transitionService.supprimerSousMatiereNonRattaches(matieres, eventDelete -> {
-                    if(eventDelete.isRight()) {
+                    if (eventDelete.isRight()) {
                         future.complete(eventDelete.right().getValue());
                         log.info("SUCCESS supprimerSousMatieresNonManuelles ...");
                     } else {

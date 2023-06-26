@@ -249,6 +249,7 @@ public class Field {
     public static final String DB_SCHEMA = "db-schema";
     public static final String DB_VIESCO_SCHEMA = "vsco-schema";
     public static final String SCHEMA_VIESCO = "viesco.";
+    public static final String SCHEMA_VIESCO_SIMPLE = "viesco";
     public static final String SCHEMA_COMPETENCES = "notes";
 
     // TABLE
@@ -345,6 +346,10 @@ public class Field {
     //CONFIG
     public static final String TRANSITION = "transition";
     public static final String SQL_VERSION = "sql-version";
+    public static final String POSTGRESCONFIG = "postgresConfig";
+    public static final String SQLADMINADRESS = "sqlAdminAdress";
+    public static final String SQLPERSISTORADMIN = "sql.persistor.admin";
+    public static final String SQLAPPS = "apps";
 
 
     //numbers
