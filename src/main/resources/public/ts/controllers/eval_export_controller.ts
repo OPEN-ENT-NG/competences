@@ -141,7 +141,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             let file = files[0],
                 reader = new FileReader();
             reader.onload = async () => {
-                let text = reader.result;
+                let text : any = reader.result;
                 let parser = new DOMParser();
                 let doc = parser.parseFromString(text, "application/xml");
                 let individus = ((((utils.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;

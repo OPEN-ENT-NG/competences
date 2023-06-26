@@ -473,7 +473,7 @@ export class BilanPeriodique extends  Model {
         }
     }
 
-    private getGroupsId(allSubject, dirtyHomework): Array<String> {
+    private getGroupsId(allSubject, dirtyHomework): Array<any> {
         let result = new Set();
         if (dirtyHomework.length === 0 || dirtyHomework.length === 0) return [];
         allSubject.forEach(subject => {

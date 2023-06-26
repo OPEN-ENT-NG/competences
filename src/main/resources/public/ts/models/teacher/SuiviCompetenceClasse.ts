@@ -94,7 +94,7 @@ export class SuiviCompetenceClasse extends Model {
             sync: async () => {
                 return new Promise(async (resolve ) => {
                     let uriGetConversionTable = SuiviCompetence.api.getCompetenceNoteConverssion + '?idEtab=' + structure.id + '&idClasse=' + classe.id;
-                    let response = await Promise.all([
+                    let response : Array<any> = await Promise.all([
                         Enseignement.getAll(classe.id, classe.id_cycle, this.enseignements),
                         this.getCompetencesNotesClasse(classe, periode),
                         http.get(uriGetConversionTable)
