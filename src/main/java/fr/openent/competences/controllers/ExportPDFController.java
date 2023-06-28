@@ -626,7 +626,7 @@ public class ExportPDFController extends ControllerHelper {
 
         Promise<JsonArray> multiTeachingPromise = Promise.promise();
         utilsService.getMultiTeachers(idEtablissement,
-                new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+                new JsonArray().add(idClasse), idPeriode, FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
 
         Promise<JsonArray> servicesPromise = Promise.promise();
         utilsService.getServices(idEtablissement,
