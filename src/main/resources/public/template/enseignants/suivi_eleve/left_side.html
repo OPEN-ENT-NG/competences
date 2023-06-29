@@ -21,7 +21,8 @@
     </div>
     <section ng-if="evaluations.structures.all.length > 1">
         <label class="select">
-            <select ng-model="evaluations.structure" ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"  ng-change="switchEtablissementSuivi();"></select>
+            <select ng-model="evaluations.structure" ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"
+                    ng-change="switchEtablissementSuivi();"></select>
         </label>
     </section>
     <section>
@@ -45,11 +46,15 @@
     </section>
     <section ng-if="route.current.$$route.originalPath === '/competences/eleve'">
         <label class="select"
-               ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == '', 'deletedStudent': search.eleve.deleteDate !== null}">
+               ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
             <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
-                    ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in filteredEleves.all track by eleve.id"
-                    ng-change="initDataEleve(); changeContent();">
-                <option value="" class="header-opt">[[translate('viescolaire.utils.student')]]</option>
+                    ng-change="initDataEleve(); changeContent();"
+                    ng-class="{'deletedStudent': !!search.eleve.deleteDate}"
+                    ng-init="initStudentFromClassFollowup()">
+                <option disable value="" class="header-opt leftside">[[translate('viescolaire.utils.student')]]</option>
+                <option class="leftside" ng-repeat ="eleve in filteredEleves.all track by eleve.id"
+                    ng-class="{'deletedStudent': !!eleve.deleteDate}"
+                    ng-value = "eleve" >[[eleve.displayName]]</option>
             </select>
         </label>
     </section>

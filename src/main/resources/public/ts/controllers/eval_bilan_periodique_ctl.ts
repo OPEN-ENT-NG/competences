@@ -2,7 +2,7 @@ import {notify, idiom as lang, ng, template, model, Behaviours, angular, toasts}
 import * as utils from '../utils/teacher';
 import {ElementBilanPeriodique} from "../models/teacher/ElementBilanPeriodique";
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
-import {Classe, evaluations, Utils} from "../models/teacher";
+import {Classe, evaluations, Periode, Utils} from "../models/teacher";
 import {SyntheseBilanPeriodique} from "../models/teacher/SyntheseBilanPeriodique";
 import {AppreciationCPE} from "../models/teacher/AppreciationCPE";
 import {AvisConseil} from "../models/teacher/AvisConseil";
@@ -529,7 +529,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if ($scope.search.classe.eleves && $scope.search.classe.eleves.length() === 0) {
                 await $scope.search.classe.eleves.sync();
             }
-            $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
+            let periode : Periode = ($scope.search.periode.id !== null) ?
+                $scope.search.classe.periodes.all.find((p) => p.id_type == $scope.search.periode.id_type ): null
+            $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
             if (!$scope.canLoadStudent) {
                 return;
             }

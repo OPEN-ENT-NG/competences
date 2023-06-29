@@ -3552,6 +3552,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.displaySuiviEleve = async function (eleve) {
             $scope.informations.eleve = eleve;
             $scope.search.eleve = eleve;
+
             $scope.selected.eleve = eleve;
             $scope.displayFromClass = true;
             $scope.displayFromEleve = true;
