@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.*;
 import fr.openent.competences.constants.Field;
+import fr.openent.competences.enums.Common;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
 import fr.openent.competences.service.*;
@@ -3172,12 +3173,29 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             Boolean hasSousMatieres = false;
             for (int i = 0; i < listNotes.size(); i++) {
                 JsonObject note = listNotes.getJsonObject(i);
+
+
                 if (note.getString(VALEUR) == null || note.getString(COEFFICIENT) == null ||
-                        !note.getBoolean(IS_EVALUATED) || "0".equals(note.getString(COEFFICIENT)) ||
-                        (note.getBoolean(Field.FORMATIVE) != null && note.getBoolean(Field.FORMATIVE))) {
+                        !note.getBoolean(IS_EVALUATED) ) {
+
                     continue;
                     //Si la note fait partie d'un devoir qui n'est pas évalué,
                     // elle n'est pas prise en compte dans le calcul de la moyenne
+                }
+
+                if ( Common.ZERO.getString().equals(note.getString(COEFFICIENT)) ||
+                        (note.getBoolean(Field.FORMATIVE) != null && note.getBoolean(Field.FORMATIVE))){
+                    NoteDevoir noteDevoir;
+                    noteDevoir = new NoteDevoir(
+                            Double.valueOf(note.getString(VALEUR)),
+                            Double.valueOf(note.getString(DIVISEUR)),
+                            note.getBoolean(RAMENER_SUR),
+                            Double.valueOf(note.getString(COEFFICIENT)));
+                    Long idDevoir = note.getLong(ID_DEVOIR);
+                    utilsService.addToMap(idDevoir, notesByDevoir, noteDevoir);
+                    continue;
+                    //Si la note fait partie d'un devoir formatif ou avec un coeff à zéro,
+                    // elle n'est pas prise en compte dans le calcul de la moyenne des élèves
                 }
 
                 if (isNull(matiereId)) {
