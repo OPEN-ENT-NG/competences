@@ -143,7 +143,7 @@ export class Classe extends Model {
 
     };
 
-    filterEvaluableEleve (periode) {
+    filterEvaluableEleve (periode : Periode) {
         let res = _.omit(this, 'eleves');
 
         if (periode) {

@@ -51,9 +51,12 @@
         <section>
             <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == '', 'deletedStudent': search.eleve.deleteDate !== null}">
                 <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
-                        ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in filteredEleves.all track by eleve.id"
-                        ng-change="switchStudentPeriodReport();">
-                    <option disabled value="" class="header-opt">[[translate('viescolaire.utils.student')]]</option>
+                        ng-change="switchStudentPeriodReport();" ng-class="{'deletedStudent': !!search.eleve.deleteDate}">
+                    <option disabled value="" class="header-opt leftside">[[translate('viescolaire.utils.student')]]</option>
+                    <option class="leftside" ng-repeat ="eleve in filteredEleves.all track by eleve.id"
+                            ng-class="{'deletedStudent': !!eleve.deleteDate}"
+                            ng-value = "eleve" >[[eleve.displayName]]</option>
+                    </option>
                 </select>
             </label>
         </section>

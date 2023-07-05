@@ -809,7 +809,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             if(classeHasChange === undefined)
                 classeHasChange = $scope.route.current.$$route.originalPath;
             if(classeHasChange === true){
-                if($scope.search.eleve !== undefined
+                if(!!$scope.search.eleve
                     && $scope.search.classe.eleves.findWhere({id: $scope.search.eleve.id}) === undefined){
                     $scope.search.eleve = "";
                     delete $scope.informations.eleve;
@@ -818,25 +818,15 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 await $scope.syncPeriode($scope.search.classe.id);
                 if($scope.search.classe.eleves.empty())
                     await $scope.search.classe.eleves.sync();
-                let periode = new TypePeriode({
-                    id: $scope.search.periode ? $scope.search.periode.id_type : undefined,
-                    ordre: $scope.search.periode ? $scope.search.periode.ordre : undefined,
-                    type: $scope.search.periode ? $scope.search.periode.type : undefined
-                });
-                $scope.filteredEleves = $scope.search.classe ? $scope.search.classe.filterEvaluableEleve(periode).eleves : undefined;
+                $scope.filteredEleves = $scope.search.classe ? $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves : undefined;
             }
             $scope.selected.grey = true;
             if ($scope.search.eleve !== undefined && $scope.search.classe.eleves.empty()) {
                 await $scope.search.classe.eleves.sync();
-                let periode = new TypePeriode({
-                    id: $scope.search.periode ? $scope.search.periode.id_type : undefined,
-                    ordre: $scope.search.periode ? $scope.search.periode.ordre : undefined,
-                    type: $scope.search.periode ? $scope.search.periode.type : undefined
-                });
-                $scope.filteredEleves = $scope.search.classe ? $scope.search.classe.filterEvaluableEleve(periode).eleves : undefined;
+                $scope.filteredEleves = $scope.search.classe ? $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves : undefined;
             }
 
-            if ($scope.search.eleve !== undefined && $scope.filteredEleves !== undefined &&
+            if (!!$scope.search.eleve && $scope.filteredEleves !== undefined &&
                 _.findWhere($scope.filteredEleves.all, {id: $scope.search.eleve ? $scope.search.eleve.id : undefined}) === undefined) {
                 if($scope.search.eleve && $scope.search.eleve.id !== undefined){
                     notify.info('evaluations.student.is.no.more.evaluable');
@@ -846,6 +836,12 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             $scope.informations.eleve = $scope.search.eleve;
             await utils.safeApply($scope);
         };
+
+        $scope.initStudentFromClassFollowup = () : void => {
+            if($scope.search.eleve)
+            $scope.search.eleve = !!$scope.filteredEleves ? [...$scope.filteredEleves.all]
+                .find((student: Eleve) => $scope.search.eleve && $scope.search.eleve.id === student.id) : "";
+        }
 
         $scope.initSuiviCompetences = function() {
             $scope.suiviCompetence = undefined;
@@ -858,12 +854,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                         await $scope.search.classe.eleves.sync();
                     }
                     if($scope.search.periode && $scope.search.periode != "*") {
-                        let periode = new TypePeriode({
-                            id:  $scope.search.periode.id_type,
-                            ordre: $scope.search.periode.ordre,
-                            type: $scope.search.periode.type
-                        });
-                        $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
+                        $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
                     }
                 }
                 $scope.loadingTab = true;
