@@ -152,9 +152,9 @@ public class ParamsBulletins {
                 .put(Field.SHOWSKILLSVALIDATEDPERCENTAGE, otherParams.getBoolean(Field.SHOWSKILLSVALIDATEDPERCENTAGE,false));
         JsonArray niveauCompetences;
         try {
-            niveauCompetences = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
+            niveauCompetences = (JsonArray) otherParams.getValue(NIVEAU_COMPETENCE);
         }catch (ClassCastException e) {
-            niveauCompetences = new JsonArray(params.getString(NIVEAU_COMPETENCE));
+            niveauCompetences = new JsonArray(otherParams.getString(NIVEAU_COMPETENCE));
         }
         JsonArray footerArray = new JsonArray();
         if(niveauCompetences != null && !niveauCompetences.isEmpty()) {
