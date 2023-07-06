@@ -191,7 +191,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private UtilsService utilsService;
     private final DefaultCompetenceNoteService competenceNoteService;
     private final DefaultNiveauDeMaitriseService defaultNiveauDeMaitriseService;
-    private HttpClient httpClient;
     private DefaultNoteService noteService;
     private SubTopicService subTopicService;
     private WorkspaceHelper workspaceHelper;
@@ -236,7 +235,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         this.mongoExportService = new DefaultMongoExportService();
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
-        this.httpClient =  createHttpClient(vertx);
         workspaceHelper = new WorkspaceHelper(eb,storage);
         subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SERVICE_SUBTOPIC);
 
@@ -640,7 +638,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             log.info("[Competences:@getExportBulletin]------------------"+ idEleve + " end get datas for export bulletin  ---------------------");
                             finalHandler.handle(new Either.Right<>(student.toJsonObject()));
                         }catch (Exception e){
-                            finalHandler.handle(new Either.Left<>(e.getMessage()));
+                            String message = String.format("[Competences@%s::getExportBulletin] Fail to retrieve badge given.",
+                                    this.getClass().getSimpleName());
+                            log.error(String.format("%s %s", message, e.getMessage()));
+                            finalHandler.handle(new Either.Left<>(message));
 
                         }
 
@@ -2494,14 +2495,22 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 String civiliteResponsable = responsable.getString("civilite");
                                 String newLastNameResponsableToCheck;
 
-                                if (!addressResponsale.equals(addressResponsaleToCheck)) {
+                                JsonArray responsableOldLibelle = responsableToCheck
+                                        .getJsonArray(Field.RESPONSABLELIBELLE, new JsonArray());
+
+                                boolean areResponsiblesWithAndWithoutCoupleNames =
+                                        areResponsiblesWithAndWithoutCoupleNames(responsableToCheck, responsables);
+
+                                if (!addressResponsale.equals(addressResponsaleToCheck) ||
+                                        (areResponsiblesWithAndWithoutCoupleNames && !lastNameResponsable.equals(lastNameResponsableToCheck)) ||
+                                        !responsableOldLibelle.stream().allMatch(String.class::isInstance)) {
                                     isDifferentAddress = true;
                                     responsable.put("externalIdRelative", responsables.getJsonObject(i).getString("externalIdRelative")  );
                                     responsableToCheck.put("externalIdRelative", responsables.getJsonObject(i-1).getString("externalIdRelative"));
                                 } else { //if same adress
                                     //with same lastName
-                                    JsonArray responsableNewLibelle = new fr.wseduc.webutils.collections.JsonArray();
-                                    JsonArray responsableOldLibelle = responsableToCheck.getJsonArray("responsableLibelle");
+                                    JsonArray responsableNewLibelle = new JsonArray();
+
                                     if (lastNameResponsable.equals(lastNameResponsableToCheck)) {
                                         if ("M.".equals(civiliteResponsableToCheck)) {
                                             newLastNameResponsableToCheck = civiliteResponsableToCheck + " et Mme " +
@@ -2554,38 +2563,39 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return sortedJsonArray;
     }
 
+    private boolean areResponsiblesWithAndWithoutCoupleNames(JsonObject referentResponsible, JsonArray responsibles) {
+        List<JsonObject> sameAddressResponsibles = responsibles.stream()
+                .filter(JsonObject.class::isInstance)
+                .map(JsonObject.class::cast)
+                .filter(responsible -> referentResponsible.getString(Field.ADDRESSEPOSTALE, "")
+                        .equals(String.format("%s %s %s", responsible.getString(Field.ADDRESS, ""),
+                                responsible.getString(Field.ZIPCODE, ""), responsible.getString(Field.CITY, ""))))
+                .collect(Collectors.toList());
+
+        long sameNameResponsiblesSize = sameAddressResponsibles
+                        .stream()
+                        .filter(responsible -> referentResponsible.getString(Field.RESPONSABLELASTNAME, "")
+                                .equals(responsible.getString(Field.LASTNAMERELATIVE)))
+                        .count();
+
+        return sameNameResponsiblesSize > 1 && sameAddressResponsibles.size() > sameNameResponsiblesSize;
+    }
+
 
     private JsonObject setResponsablesLibelle(JsonObject o, JsonObject responsable) {
         Boolean relativesHaveTwoNames = false;
         JsonObject res = new JsonObject(o.getMap());
-        String civilite = responsable.getString("civilite");
-        String lastName = responsable.getString("lastNameRelative");
-        String firstName = responsable.getString("firstNameRelative");
-        String address = responsable.getString("address");
-        String city = responsable.getString("city");
+        String civilite = responsable.getString(Field.CIVILITE);
+        String lastName = responsable.getString(Field.LASTNAMERELATIVE);
+        String firstName = responsable.getString(Field.FIRSTNAMERELATIVE);
+        String address = responsable.getString(Field.ADDRESS, "");
+        String city = responsable.getString(Field.CITY, "");
         try{
-            String zipCode = responsable.getString("zipCode");
-            if (zipCode == null) {
-                zipCode = " ";
-            }
-
-            if (city == null) {
-                city = zipCode;
-            } else {
-                city = zipCode + " " + city;
-            }
-
+            String zipCode = responsable.getString(Field.ZIPCODE, "");
+            city = String.format("%s %s", zipCode, city);
         } catch(ClassCastException e){
-            String zipCode = String.valueOf(responsable.getInteger("zipcode"));
-            if (zipCode == null) {
-                zipCode = " ";
-            }
-
-            if (city == null) {
-                city = zipCode;
-            } else {
-                city = zipCode + " " + city;
-            }
+            String zipCode = String.valueOf(responsable.getInteger(Field.ZIPCODE_LOWER_CASE));
+            city = String.format("%s %s", zipCode, city);
         }
 
         if (civilite == null) {
@@ -2604,7 +2614,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         responsableLibelle.add(city);
 
         res.put("responsableLibelle", responsableLibelle);
-        res.put(ADDRESSE_POSTALE, address + city);
+        res.put(ADDRESSE_POSTALE, address + " " + city);
         res.put("responsableLastName", lastName);
         res.put("civilite", civilite);
         if("M.".equals(civilite)){
