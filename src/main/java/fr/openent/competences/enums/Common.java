@@ -3,7 +3,8 @@ package fr.openent.competences.enums;
 public enum Common {
     ERROR("Error"),
     INFO("Info"),
-    INVALID_PARAMETERS ("Invalid parameters") ;
+    INVALID_PARAMETERS ("Invalid parameters"),
+    ZERO("0");
 
     private String word ;
 
