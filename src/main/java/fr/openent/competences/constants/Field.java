@@ -351,6 +351,19 @@ public class Field {
     public static final String SQLPERSISTORADMIN = "sql.persistor.admin";
     public static final String SQLAPPS = "apps";
 
+    // Responsible
+    public static final String ZIPCODE = "zipCode";
+    public static final String ZIPCODE_LOWER_CASE = "zipcode";
+    public static final String CITY = "city";
+    public static final String ADDRESS = "address";
+    public static final String CIVILITE = "civilite";
+
+    public static final String ADDRESSEPOSTALE = "addressePostale";
+    public static final String RESPONSABLELASTNAME = "responsableLastName";
+    public static final String LASTNAMERELATIVE = "lastNameRelative";
+    public static final String FIRSTNAMERELATIVE = "firstNameRelative";
+    public static final String RESPONSABLELIBELLE = "responsableLibelle";
+
 
     //numbers
     public static final double ROUNDER = 10.0; //Cette constante permet d'arrondir au dixième près avec la formule mathémathique adéquate.
