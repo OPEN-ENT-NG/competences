@@ -160,6 +160,9 @@ public class Field {
     public static final String MOYENNESFINALES = "moyennesFinales";
     public static final String MOYENNEBYMAT = "moyenneByMat";
     public static final String MOYENNECLASSE = "moyenneClasse";
+    public static final String MOYCLASS = "moyClass";
+    public static final String MOYMINCLASS = "moyMinClass";
+    public static final String MOYMAXCLASS = "moyMaxClass";
     public static final String MAX = "max";
     public static final String MAXIMUM = "maximum";
     public static final String MIN = "min";
@@ -185,6 +188,8 @@ public class Field {
     public static final String dateFormateYYYYMMDDTHHMMSS  = "yyyy-MM-dd'T'HH:mm:ss";
     public static final String IS_ANNOTATION = "is_annotation";
     public static final String NOTE = "note";
+    public static final String NOTEMIN = "noteMin";
+    public static final String NOTEMAX = "noteMax";
     public static final String SIMPLE = "SIMPLE";
     public static final String LIBELLE_COURT = "libelle_court";
     public static final String HASDIVISEUR = "hasDiviseur";

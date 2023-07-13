@@ -2178,9 +2178,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 for (Map.Entry<String, Set<String>> setEntry : mapAllidMatAndidTeachers.entrySet()) {
                     String idMatOfAllMat = setEntry.getKey();
                     if (mapIdMatMoy.containsKey(idMatOfAllMat)) {
+                        Double subjectAverage = mapIdMatMoy.get(idMatOfAllMat);
                         eleveMoyByMat.add(new JsonObject()
                                 .put(Field.ID_MATIERE, idMatOfAllMat)
-                                .put(MOYENNEBYMAT, mapIdMatMoy.get(idMatOfAllMat)));
+                                .put(MOYENNEBYMAT, subjectAverage != null ? subjectAverage : Field.NN));
 
                         JsonObject service = servicesJSON.stream()
                                 .filter(JsonObject .class::isInstance)
@@ -2304,30 +2305,26 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                          HashMap<String, HashMap<String, HashMap<Long, List<NoteDevoir>>>> mapIdEleveIdMatIdSousMatListNotes) {
         for (int i = 0; i < respNotesMoysFinales.size(); i++) {
             JsonObject respNoteMoyFinale = respNotesMoysFinales.getJsonObject(i);
-            Double moyenneFinale = (respNoteMoyFinale.getString(MOYENNE_FINALE) != null ) ?
+            Double moyenneFinale = (respNoteMoyFinale.getString(MOYENNE_FINALE) != null) ?
                     Double.valueOf(respNoteMoyFinale.getString(MOYENNE_FINALE)) : null;
             String idEleveMoyF = respNoteMoyFinale.getString(ID_ELEVE_MOYENNE_FINALE);
             String idMatMoyF = respNoteMoyFinale.getString(ID_MATIERE_MOYF);
             String idEleveNotes = respNoteMoyFinale.getString(ID_ELEVE_NOTES);
             String idMatiere = respNoteMoyFinale.getString(Field.ID_MATIERE);
 
-            if (moyenneFinale != null ) {
-                if(!mapAllidMatAndidTeachers.containsKey(idMatMoyF))
-                    setListTeachers(servicesJSON, multiTeachers, mapAllidMatAndidTeachers,idMatMoyF);
-                if(mapAllidMatAndidTeachers.containsKey(idMatMoyF)){//idMatMoyF is on service
+            if (idMatMoyF != null) {
+                if (!mapAllidMatAndidTeachers.containsKey(idMatMoyF))
+                    setListTeachers(servicesJSON, multiTeachers, mapAllidMatAndidTeachers, idMatMoyF);
+                if (mapAllidMatAndidTeachers.containsKey(idMatMoyF)) {
                     setMapIdEleveMatMoy(mapIdEleveIdMatMoy, moyenneFinale, idEleveMoyF, idMatMoyF);
-                } else {
-                    continue;//idMatMoyF is not on service
                 }
-            } else if(idEleveMoyF == null && idEleveNotes != null ) {//pas de moyFinale => set mapIdEleveIdMatListNotes
-
-                if(respNoteMoyFinale.getLong(Field.ID_SOUSMATIERE) != null){
+            } else if (idEleveMoyF == null && idEleveNotes != null) {
+                if (respNoteMoyFinale.getLong(Field.ID_SOUSMATIERE) != null) {
                     setMapIdEleveIdMatIdSousMatListNotes(mapIdEleveIdMatIdSousMatListNotes, respNoteMoyFinale, idEleveNotes, idMatiere, services, multiTeachers, idClass);
-                }
-                else {
+                } else {
                     setMapIdEleveIdMatListNotes(mapIdEleveIdMatListNotes, respNoteMoyFinale, idEleveNotes, idMatiere);
                 }
-                if(!mapAllidMatAndidTeachers.containsKey(idMatiere)){
+                if (!mapAllidMatAndidTeachers.containsKey(idMatiere)) {
                     setListTeachers(servicesJSON, multiTeachers, mapAllidMatAndidTeachers, idMatiere);
                 }
             }
@@ -2336,7 +2333,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     private void setMapIdEleveMatMoy (Map<String, Map<String, Double>> mapIdEleveIdMatMoy, Double moyenneFinale,
                                       String idEleveMoyF, String idMatMoyF) {
-        if (mapIdEleveIdMatMoy.containsKey(idEleveMoyF)) {
+        if (mapIdEleveIdMatMoy.containsKey(idEleveMoyF) && moyenneFinale != null) {
             Map<String, Double> mapIdMatMoy = mapIdEleveIdMatMoy.get(idEleveMoyF);
             // meme eleve changement de matiere
             if (!mapIdMatMoy.containsKey(idMatMoyF)) {
@@ -2574,13 +2571,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         if (mapIdMatListMoyByEleve.containsKey(idMatAllMats)) {
                             JsonObject statClass = utilsService.calculMoyenneParDiviseur(
                                     mapIdMatListMoyByEleve.get(idMatAllMats), true);
-                            matiereJson.put("moyClass", statClass.getDouble("moyenne"));
-                            matiereJson.put("moyMinClass", statClass.getDouble("noteMin"));
-                            matiereJson.put("moyMaxClass", statClass.getDouble("noteMax"));
+                            matiereJson.put(Field.MOYCLASS, statClass.getValue(Field.MOYENNE, Field.NN));
+                            matiereJson.put(Field.MOYMINCLASS, statClass.getValue(Field.NOTEMIN, Field.NN));
+                            matiereJson.put(Field.MOYMAXCLASS, statClass.getValue(Field.NOTEMAX, Field.NN));
                         } else {
-                            matiereJson.put("moyClass", "");
-                            matiereJson.put("moyMinClass", "");
-                            matiereJson.put("moyMaxClass", "");
+                            matiereJson.put(Field.MOYCLASS, "");
+                            matiereJson.put(Field.MOYMINCLASS, "");
+                            matiereJson.put(Field.MOYMAXCLASS, "");
                         }
                         matieresResult.add(matiereJson);
                     }

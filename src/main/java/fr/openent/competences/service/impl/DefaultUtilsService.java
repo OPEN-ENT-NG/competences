@@ -24,7 +24,6 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.model.*;
-import fr.openent.competences.model.importservice.ExercizerStudent;
 import fr.openent.competences.service.SubTopicService;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
@@ -45,7 +44,6 @@ import org.entcore.common.user.UserInfos;
 import java.math.RoundingMode;
 import java.text.*;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
@@ -66,9 +64,9 @@ import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 public class DefaultUtilsService implements UtilsService {
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultUtilsService.class);
-    protected EventBus eb;
     private final Neo4j neo4j = Neo4j.getInstance();
     private final SubTopicService subTopicService;
+    protected EventBus eb;
 
     public DefaultUtilsService(EventBus eb) {
         this.eb = eb;
@@ -79,6 +77,31 @@ public class DefaultUtilsService implements UtilsService {
     public DefaultUtilsService() {
         subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SUBTOPIC_TABLE);
 
+    }
+
+    public static void setServices(Structure structure, JsonArray servicesJson, List<Service> services, List<SubTopic> subTopics) {
+        for (int i = 0; i < servicesJson.size(); i++) {
+            JsonObject serviceJo = servicesJson.getJsonObject(i);
+            Service service = new Service();
+            service.setStructure(structure);
+            Group group = new Group();
+            group.setId(serviceJo.getString("id_groupe"));
+            service.setGroup(group);
+            Matiere matiere = new Matiere();
+            matiere.setId(serviceJo.getString("id_matiere"));
+            service.setMatiere(matiere);
+            Teacher teacher = new Teacher();
+            teacher.setId(serviceJo.getString("id_enseignant"));
+            service.setTeacher(teacher);
+            service.setEvaluable(serviceJo.getBoolean("evaluable"));
+            service.setVisible(serviceJo.getBoolean("is_visible"));
+            service.setModalite(serviceJo.getString("modalite", ""));
+            service.setCoefficient(serviceJo.getLong("coefficient"));
+            subTopics.stream().filter(subTopic -> subTopic.getService().equals(service))
+                    .forEach(service::addSubtopics);
+            services.add(service);
+
+        }
     }
 
     @Override
@@ -167,45 +190,20 @@ public class DefaultUtilsService implements UtilsService {
         }));
     }
 
-    public Future<JsonArray> getAllMultiTeachers(final String structureId, final JsonArray groupIds){
+    public Future<JsonArray> getAllMultiTeachers(final String structureId, final JsonArray groupIds) {
         Promise<JsonArray> promiseMultiTeachers = Promise.promise();
         getAllMultiTeachers(structureId, groupIds, FutureHelper.handlerJsonArray(promiseMultiTeachers,
-              String.format("[Competences@%s::getAllMultiTeachers] Error during sql request: ",
-                      this.getClass().getSimpleName())));
+                String.format("[Competences@%s::getAllMultiTeachers] Error during sql request: ",
+                        this.getClass().getSimpleName())));
         return promiseMultiTeachers.future();
     }
 
-    public static void setServices(Structure structure, JsonArray servicesJson, List<Service> services, List<SubTopic> subTopics) {
-        for (int i = 0 ; i < servicesJson.size();i++){
-            JsonObject serviceJo = servicesJson.getJsonObject(i);
-            Service service = new Service();
-            service.setStructure(structure);
-            Group group = new Group();
-            group.setId(serviceJo.getString("id_groupe"));
-            service.setGroup(group);
-            Matiere matiere = new Matiere();
-            matiere.setId(serviceJo.getString("id_matiere"));
-            service.setMatiere(matiere);
-            Teacher teacher =  new Teacher();
-            teacher.setId(serviceJo.getString("id_enseignant"));
-            service.setTeacher(teacher);
-            service.setEvaluable(serviceJo.getBoolean("evaluable"));
-            service.setVisible(serviceJo.getBoolean("is_visible"));
-            service.setModalite(serviceJo.getString("modalite",""));
-            service.setCoefficient(serviceJo.getLong("coefficient"));
-            subTopics.stream().filter(subTopic -> subTopic.getService().equals(service))
-                    .forEach(service::addSubtopics);
-            services.add(service);
-
-        }
-    }
-
-
     /**
      * get only evaluable sql services
+     *
      * @param structureId
-     * @param idsClass groups or/and classes ids
-     * @param handler request response
+     * @param idsClass    groups or/and classes ids
+     * @param handler     request response
      */
     public void getServices(final String structureId, final JsonArray idsClass,
                             Handler<Either<String, JsonArray>> handler) {
@@ -227,7 +225,7 @@ public class DefaultUtilsService implements UtilsService {
     }
 
     @Override
-    public void getDefaultServices (final String structureId, final JsonArray groupIds, Handler<Either<String, JsonArray>> handler) {
+    public void getDefaultServices(final String structureId, final JsonArray groupIds, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "service.getDefaultServices")
                 .put("idEtablissement", structureId)
@@ -246,21 +244,22 @@ public class DefaultUtilsService implements UtilsService {
 
     /**
      * get All Services evaluable or no evaluable, neo and sql with multiTeachers on each service
+     *
      * @param structureId strusure id
-     * @param groupIds all groups or/and classes ids
-     * @param filters JsonObject with boolean parameters :
-     *                evaluable,noEvaluable,classes,groups,manualGroups are true by default,
-     *                compressed is false by default
-     * @param handler return services with fields of serviceModel (class java viesco) each service contains multiTeachers
+     * @param groupIds    all groups or/and classes ids
+     * @param filters     JsonObject with boolean parameters :
+     *                    evaluable,noEvaluable,classes,groups,manualGroups are true by default,
+     *                    compressed is false by default
+     * @param handler     return services with fields of serviceModel (class java viesco) each service contains multiTeachers
      */
     @Override
-    public void getDefaultServices (final String structureId, final JsonArray groupIds, final JsonObject filters,
-                                    Handler<Either<String, JsonArray>> handler) {
+    public void getDefaultServices(final String structureId, final JsonArray groupIds, final JsonObject filters,
+                                   Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "service.getDefaultServices")
                 .put("idEtablissement", structureId)
                 .put("idsGroupe", groupIds)
-                .put("filters",filters);
+                .put("filters", filters);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
@@ -284,7 +283,7 @@ public class DefaultUtilsService implements UtilsService {
                 event -> formate(multiTeachersFuture, event));
 
         CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(event -> {
-            if(event.failed()) {
+            if (event.failed()) {
                 log.error("[Competences] hasService : " + event.cause().getMessage());
                 handler.handle(false);
             } else {
@@ -388,7 +387,7 @@ public class DefaultUtilsService implements UtilsService {
      * @param listeNoteDevoirs : contient une liste de NoteDevoir.
      *                         La formule suivante est utilisée :(SUM ( ni *m *ci /di)  + SUM ( nj *cj)  ) / (S ( ci)  + SUM ( cj  *dj /m)  )
      * @param diviseurM        : diviseur de la moyenne. Par défaut, cette valeur est égale à 20 (optionnel).
-     * @param annual        : permet de savoir si on doit faire l'arrondi à la fin.
+     * @param annual           : permet de savoir si on doit faire l'arrondi à la fin.
      **/
     @Override
     public JsonObject calculMoyenne(List<NoteDevoir> listeNoteDevoirs, Boolean statistiques, Integer diviseurM, Boolean annual) {
@@ -413,7 +412,8 @@ public class DefaultUtilsService implements UtilsService {
             Double currCoefficient = noteDevoir.getCoefficient();
             Double currDiviseur = noteDevoir.getDiviseur();
 
-            if (!noteDevoir.getRamenerSur()) {
+            if (currNote == null) continue;
+            else if (!noteDevoir.getRamenerSur()) {
                 sumCJDJParM += (currCoefficient * currDiviseur / diviseurM);
                 sumCJDJ += (currNote * currCoefficient);
             } else if (currCoefficient == 0) {
@@ -448,7 +448,7 @@ public class DefaultUtilsService implements UtilsService {
             if (moyenne.isNaN()) {
                 moyenne = null;
             } else {
-                if(!annual)
+                if (!annual)
                     moyenne = Double.valueOf(df.format(moyenne));
             }
 
@@ -457,14 +457,14 @@ public class DefaultUtilsService implements UtilsService {
         }
         if (null == moyenne) moyenne = 0.0;
 
-        JsonObject r = new JsonObject().put("moyenne", moyenne)
-                .put("hasNote", listeNoteDevoirs.size() > 0);
+        JsonObject r = new JsonObject().put(Field.MOYENNE, moyenne)
+                .put(Field.HASNOTE, listeNoteDevoirs.size() > 0);
 
-        if(sumCoefficient == 0)
-            r.put("moyenne","NN");
+        if (sumCoefficient == 0)
+            r.put(Field.MOYENNE, Field.NN);
 
-        if( statistiques){
-            r.put("noteMax", noteMax).put("noteMin", noteMin);
+        if (statistiques) {
+            r.put(Field.NOTEMAX, noteMax).put(Field.NOTEMIN, noteMin);
         }
 
         return r;
@@ -485,6 +485,12 @@ public class DefaultUtilsService implements UtilsService {
 
         for (NoteDevoir noteDevoir : listeNoteDevoirs) {
             Double currNote = noteDevoir.getNote();
+            if (currNote == null) {
+                noteMax = null;
+                noteMin = null;
+                notes = null;
+                continue;
+            }
             notes += currNote;
             // Calcul de la note min et max
             if (statistiques) {
@@ -500,7 +506,7 @@ public class DefaultUtilsService implements UtilsService {
             }
         }
 
-        Double moyenne = ((notes) / (listeNoteDevoirs.size()));
+        Double moyenne = notes != null ? ((notes) / (listeNoteDevoirs.size())) : null;
 
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("fr", "FR"));
         symbols.setDecimalSeparator('.');
@@ -508,13 +514,13 @@ public class DefaultUtilsService implements UtilsService {
         DecimalFormat df = new DecimalFormat("#.0", symbols);
         df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
         try {
-            moyenne = Double.valueOf(df.format(moyenne));
+            moyenne = moyenne != null ? Double.valueOf(df.format(moyenne)) : null;
         } catch (NumberFormatException e) {
             log.error("Moyenne : " + moyenne, e);
         }
-        JsonObject r = new JsonObject().put("moyenne", moyenne);
+        JsonObject r = new JsonObject().put(Field.MOYENNE, moyenne != null ? moyenne : Field.NN);
         if (statistiques) {
-            r.put("noteMax", noteMax).put("noteMin", noteMin);
+            r.put(Field.NOTEMAX, noteMax != null ? noteMax : Field.NN ).put(Field.NOTEMIN, noteMin != null ? noteMin : Field.NN);
         }
         return r;
     }
@@ -556,7 +562,6 @@ public class DefaultUtilsService implements UtilsService {
         String functionMatch = "WITH u MATCH (s:Structure)<-[:DEPENDS]-(pg:ProfileGroup)-[:HAS_PROFILE]->(p:Profile), u-[:IN]->pg ";
 
 
-
         String query =
                 "MATCH " + filter + "(u:User) " +
                         functionMatch + filterProfile + optionalMatch +
@@ -588,40 +593,41 @@ public class DefaultUtilsService implements UtilsService {
 
     @Override
     public <K, V> void addToMap(K id, HashMap<K, ArrayList<V>> map, V valueToAdd) {
-        if (!map.containsKey(id) ) {
+        if (!map.containsKey(id)) {
             map.put(id, new ArrayList<>());
         }
-        if(isNull(map.get(id))){
+        if (isNull(map.get(id))) {
             map.put(id, new ArrayList<>());
         }
         map.get(id).add(valueToAdd);
     }
+
     @Override
     public <K, V> void addToMap(K id, Map<K, ArrayList<V>> map, V valueToAdd) {
-        if (!map.containsKey(id) ) {
+        if (!map.containsKey(id)) {
             map.put(id, new ArrayList<>());
         }
-        if(isNull(map.get(id))){
+        if (isNull(map.get(id))) {
             map.put(id, new ArrayList<>());
         }
         map.get(id).add(valueToAdd);
     }
 
 
-    public  void addToMap(String id, Long sousMatiereId,
-                          HashMap<String, HashMap<Long, ArrayList<NoteDevoir>>> map,
-                          NoteDevoir valueToAdd) {
+    public void addToMap(String id, Long sousMatiereId,
+                         HashMap<String, HashMap<Long, ArrayList<NoteDevoir>>> map,
+                         NoteDevoir valueToAdd) {
         if (!map.containsKey(id)) {
             map.put(id, new HashMap<>());
         }
-        if(!map.get(id).containsKey(sousMatiereId)) {
+        if (!map.get(id).containsKey(sousMatiereId)) {
             map.get(id).put(sousMatiereId, new ArrayList<>());
         }
 
         map.get(id).get(sousMatiereId).add(valueToAdd);
     }
 
-    public <K,V> void addToMapWithJsonArray(K id, HashMap<K, JsonArray> map, V valueToAdd){
+    public <K, V> void addToMapWithJsonArray(K id, HashMap<K, JsonArray> map, V valueToAdd) {
         if (map.containsKey(id)) {
 
             map.get(id).add(valueToAdd);
@@ -633,6 +639,7 @@ public class DefaultUtilsService implements UtilsService {
             map.put(id, values);
         }
     }
+
     /**
      * Récupère les cycles des classes dans la relation classe_cycle
      *
@@ -686,20 +693,20 @@ public class DefaultUtilsService implements UtilsService {
     }
 
     private Handler<Message<JsonObject>> nameHandler(String[] name, String field,
-                                                     Handler<Either<String, JsonArray>> handler){
+                                                     Handler<Either<String, JsonArray>> handler) {
         return event -> {
-            if (!OK.equals(( event.body()).getString(STATUS))) {
+            if (!OK.equals((event.body()).getString(STATUS))) {
                 String error = event.body().getString(MESSAGE);
                 log.error("nameHandler : " + error);
-                if(error.contains(CONNECTION_WAS_CLOSED) || error.contains(TIME)){
-                    log.info("RESTART "+ name);
+                if (error.contains(CONNECTION_WAS_CLOSED) || error.contains(TIME)) {
+                    log.info("RESTART " + name);
                     getNameEntity(name, field, handler);
-                    return ;
+                    return;
                 }
                 handler.handle(new Either.Left<>("Error While get User in Neo4J "));
             } else {
 
-                JsonArray rNeo =  event.body().getJsonArray(RESULT, new fr.wseduc.webutils.collections.JsonArray());
+                JsonArray rNeo = event.body().getJsonArray(RESULT, new fr.wseduc.webutils.collections.JsonArray());
                 if (rNeo.size() > 0) {
                     handler.handle(new Either.Right<>(rNeo));
                 } else {
@@ -713,30 +720,30 @@ public class DefaultUtilsService implements UtilsService {
                         paramsPostgres.add(name[i]);
                     }
 
-                    Sql.getInstance().prepared(queryPostgres, paramsPostgres,SqlResult.validResultHandler(handler));
+                    Sql.getInstance().prepared(queryPostgres, paramsPostgres, SqlResult.validResultHandler(handler));
                 }
             }
         };
     }
+
     @Override
-    public void getNameEntity(String[] name, String field,  Handler<Either<String, JsonArray>> handler) {
+    public void getNameEntity(String[] name, String field, Handler<Either<String, JsonArray>> handler) {
 
         String returning = "WHERE s.id IN {id} RETURN CASE WHEN s.name IS NULL THEN s.lastName ELSE s.name END AS name";
         String query = "";
-        if(field.equals(ID_STRUCTURE_KEY)){
-            query= "MATCH (s:Structure) " + returning;
-        } else if(field.equals(ID_CLASSE_KEY)){
-            query= " MATCH (s:Class) " + returning + " UNION MATCH (s:FunctionalGroup) " +  returning +
+        if (field.equals(ID_STRUCTURE_KEY)) {
+            query = "MATCH (s:Structure) " + returning;
+        } else if (field.equals(ID_CLASSE_KEY)) {
+            query = " MATCH (s:Class) " + returning + " UNION MATCH (s:FunctionalGroup) " + returning +
                     " UNION MATCH (s:ManualGroup) " + returning;
-        } else if(field.equals(ID_ELEVE_KEY)){
-            query= " MATCH (s:User {profiles: ['Student']}) " + returning;
+        } else if (field.equals(ID_ELEVE_KEY)) {
+            query = " MATCH (s:User {profiles: ['Student']}) " + returning;
         }
         JsonObject params = new JsonObject();
         params.put(ID_KEY, new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(name)));
         try {
             neo4j.execute(query, params, nameHandler(name, field, handler));
-        }
-        catch( VertxException e) {
+        } catch (VertxException e) {
             log.error("getNameEntity " + e.getMessage() + " stack : " + e.getStackTrace());
             getNameEntity(name, field, handler);
         }
@@ -773,7 +780,7 @@ public class DefaultUtilsService implements UtilsService {
                         // CREATION DU LIEN VERS LE NOUVEAU CYCLE
                         StringBuilder queryLink = new StringBuilder();
                         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-                        if(id_cycle.intValue() != 0) {
+                        if (id_cycle.intValue() != 0) {
                             queryLink.append("INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
                                     .append(" (id_cycle, id_groupe, type_groupe) VALUES ");
                             for (int i = 0; i < idClasses.length; i++) {
@@ -787,8 +794,7 @@ public class DefaultUtilsService implements UtilsService {
                                     values.add(id_cycle);
                                 }
                             }
-                        }
-                        else {
+                        } else {
                             queryLink.append("DELETE FROM ").append(COMPETENCES_SCHEMA).append(".rel_groupe_cycle")
                                     .append(" WHERE id_groupe IN ").append(Sql.listPrepared(idClasses));
                             for (String idClass : idClasses) {
@@ -895,10 +901,11 @@ public class DefaultUtilsService implements UtilsService {
         }
     }
 
-    public void getPeriodes(JsonArray idClasse, String idEtablissement, Handler<Either<String,JsonArray>> handler){
-        getPeriodes((List<String>)idClasse.getList(), idEtablissement, handler);
+    public void getPeriodes(JsonArray idClasse, String idEtablissement, Handler<Either<String, JsonArray>> handler) {
+        getPeriodes((List<String>) idClasse.getList(), idEtablissement, handler);
     }
-    public void getPeriodes(List<String> idClasses, String idEtablissement, Handler<Either<String,JsonArray>> handler){
+
+    public void getPeriodes(List<String> idClasses, String idEtablissement, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "periode.getPeriodes")
                 .put("idGroupes", idClasses)
@@ -910,7 +917,7 @@ public class DefaultUtilsService implements UtilsService {
             if ("ok".equals(body.getString("status"))) {
                 handler.handle(new Either.Right<>(periodes));
             } else {
-                handler.handle(new Either.Left<>("no periode for this class : " + body.getString("message")) );
+                handler.handle(new Either.Left<>("no periode for this class : " + body.getString("message")));
             }
         }));
     }
@@ -1271,9 +1278,9 @@ public class DefaultUtilsService implements UtilsService {
         if (isNotNull(array)) {
             for (int i = 0; i < array.size(); i++) {
                 JsonObject o = array.getJsonObject(i);
-                if (isNotNull(o)){
-                    if((isNotNull(o.getValue(key)) && o.getLong(key).equals(idPeriode) && isNotNull(idPeriode))
-                            || (isNull(idPeriode) && isNull(o.getValue(key))) ) {
+                if (isNotNull(o)) {
+                    if ((isNotNull(o.getValue(key)) && o.getLong(key).equals(idPeriode) && isNotNull(idPeriode))
+                            || (isNull(idPeriode) && isNull(o.getValue(key)))) {
                         res = o;
                     }
                 }
@@ -1331,7 +1338,7 @@ public class DefaultUtilsService implements UtilsService {
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(handler));
     }
 
-    public void getClassInfo ( final String idClass, Handler<Either<String,JsonObject>> handler){
+    public void getClassInfo(final String idClass, Handler<Either<String, JsonObject>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "classe.getClasseInfo")
                 .put("idClasse", idClass);
@@ -1344,7 +1351,7 @@ public class DefaultUtilsService implements UtilsService {
                     JsonObject classInfo = body.getJsonObject("result").getJsonObject("c").getJsonObject("data");
                     handler.handle(new Either.Right<>(classInfo));
                 } else {
-                    log.error("GetClassInfo : can not get class info : "+ idClass);
+                    log.error("GetClassInfo : can not get class info : " + idClass);
                     handler.handle(new Either.Left<>(body.getString(MESSAGE)));
                 }
             }
@@ -1353,12 +1360,12 @@ public class DefaultUtilsService implements UtilsService {
 
     @Override
     public void lauchTransition(List<String> structureIds) {
-        for(int i = 0;  i<structureIds.size();i++){
+        for (int i = 0; i < structureIds.size(); i++) {
             getStructure(structureIds.get(i), new Handler<Either<String, JsonObject>>() {
                 @Override
                 public void handle(Either<String, JsonObject> event) {
                     JsonObject structure = event.right().getValue().getJsonObject("s").getJsonObject("data");
-                    Competences.launchTransitionWorker(eb,new JsonObject().put("structure",structure).put("isHTTP",false),false);
+                    Competences.launchTransitionWorker(eb, new JsonObject().put("structure", structure).put("isHTTP", false), false);
 
                 }
             });
@@ -1367,17 +1374,17 @@ public class DefaultUtilsService implements UtilsService {
     }
 
     @Override
-    public void getYearsAndPeriodes(String idStructure, boolean onlyYear, Handler<Either<String,JsonObject>> handler) {
+    public void getYearsAndPeriodes(String idStructure, boolean onlyYear, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
         query.append("SELECT start_date, end_date");
 
-        if(!onlyYear){
+        if (!onlyYear) {
             query.append(", JSON_AGG(DISTINCT(id_type)) AS periodes");
         }
 
         query.append(" FROM viesco.setting_period");
 
-        if(!onlyYear) {
+        if (!onlyYear) {
             query.append(" JOIN viesco.periode ON id_etablissement = id_structure");
         }
 
@@ -1408,7 +1415,7 @@ public class DefaultUtilsService implements UtilsService {
      * @param handler
      */
     @Override
-    public void getPeriodesClasses (String idEtablissement, JsonArray idClasses, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
+    public void getPeriodesClasses(String idEtablissement, JsonArray idClasses, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "periode.getPeriodesClasses")
                 .put("idEtablissement", idEtablissement)
@@ -1422,9 +1429,9 @@ public class DefaultUtilsService implements UtilsService {
                         JsonObject body = message.body();
                         JsonArray periodes = body.getJsonArray("results");
                         if ("ok".equals(body.getString("status"))) {
-                            handler.handle(new Either.Right<String,JsonArray>(periodes) );
-                        }else{
-                            handler.handle(new Either.Left<String,JsonArray>("no periode for this class : " + body.getString("message")) );
+                            handler.handle(new Either.Right<String, JsonArray>(periodes));
+                        } else {
+                            handler.handle(new Either.Left<String, JsonArray>("no periode for this class : " + body.getString("message")));
                         }
 
                     }
@@ -1450,7 +1457,7 @@ public class DefaultUtilsService implements UtilsService {
     @Override
     public Future<List<SubTopic>> getSubTopicCoeff(String idEtablissement, String idClasse) {
         Promise<List<SubTopic>> promise = Promise.promise();
-        subTopicService.getSubtopicServices(idEtablissement,idClasse)
+        subTopicService.getSubtopicServices(idEtablissement, idClasse)
                 .compose(this::setSubtopics)
                 .onSuccess(promise::complete)
                 .onFailure(promise::fail);
@@ -1481,7 +1488,7 @@ public class DefaultUtilsService implements UtilsService {
     public Future<List<SubTopic>> setSubtopics(JsonArray subtopics) {
         Promise<List<SubTopic>> promise = Promise.promise();
         List<SubTopic> subTopics = new ArrayList<>();
-        for(Object subTopicobj : subtopics){
+        for (Object subTopicobj : subtopics) {
             SubTopic subTopic = new SubTopic();
             JsonObject subTopicJo = (JsonObject) subTopicobj;
             Service service = new Service();
@@ -1511,7 +1518,7 @@ public class DefaultUtilsService implements UtilsService {
                 JsonArray classInfo = body.getJsonArray(Field.RESULTS);
                 promise.complete(classInfo);
             } else {
-                log.error("getEleveClasseInfos : can not get students class info : "+ idClasse);
+                log.error("getEleveClasseInfos : can not get students class info : " + idClasse);
                 promise.fail(body.getString(MESSAGE));
             }
         });
