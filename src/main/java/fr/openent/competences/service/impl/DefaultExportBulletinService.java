@@ -2594,7 +2594,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             String zipCode = responsable.getString(Field.ZIPCODE, "");
             city = String.format("%s %s", zipCode, city);
         } catch(ClassCastException e){
-            String zipCode = String.valueOf(responsable.getInteger(Field.ZIPCODE_LOWER_CASE));
+            String zipCode = String.valueOf(responsable.getInteger(Field.ZIPCODE));
+            responsable.put(Field.ZIPCODE, zipCode);
             city = String.format("%s %s", zipCode, city);
         }
 
