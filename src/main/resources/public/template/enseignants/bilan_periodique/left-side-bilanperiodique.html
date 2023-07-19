@@ -55,7 +55,7 @@
                     <option disabled value="" class="header-opt leftside">[[translate('viescolaire.utils.student')]]</option>
                     <option class="leftside" ng-repeat ="eleve in filteredEleves.all track by eleve.id"
                             ng-class="{'deletedStudent': !!eleve.deleteDate}"
-                            ng-value = "eleve" >[[eleve.displayName]]</option>
+                            ng-value = "eleve" >[[eleve.lastName + ' ' + eleve.firstName]]</option>
                     </option>
                 </select>
             </label>
