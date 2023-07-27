@@ -395,7 +395,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 JsonArray valuesMaxCompetence = new fr.wseduc.webutils.collections.JsonArray();
 
                 String queryMaxOrAvgCompNoteNiveauFinalByPeriode = "(SELECT competences_notes.id_competence, " +
-                        "competences_notes.id_eleve, devoirs.id_periode, devoirs.id_matiere, CASE " +
+                        "competences_notes.id_eleve, devoirs.id_matiere, CASE " +
 
                         "WHEN competence_niveau_final.id_eleve IS NULL AND competence_niveau_final_annuel.id_eleve IS NULL" +
                         "   THEN ";
@@ -408,7 +408,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
                         "ELSE MAX(competence_niveau_final_annuel.niveau_final) " +
 
-                        "END AS comp_note_by_subject_period " +
+                        "END AS final_comp_note_by_subject " +
                         "FROM " + Competences.COMPETENCES_SCHEMA + ".competences_notes " +
                         "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = competences_notes.id_devoir " +
 
@@ -426,11 +426,11 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "WHERE competences_notes.owner != '" + _id_user_transition_annee +
                         "' AND competences_notes.id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
                         "GROUP BY competences_notes.id_competence, competences_notes.id_eleve, competence_niveau_final.id_eleve," +
-                        "competence_niveau_final_annuel.id_eleve, devoirs.id_periode, devoirs.id_matiere)";
+                        "competence_niveau_final_annuel.id_eleve, devoirs.id_matiere)";
 
                 String queryMaxOrAvgCompNoteMat = "(SELECT id_competence, ";
-                queryMaxOrAvgCompNoteMat += (Boolean.TRUE.equals(isSkillAverage)) ? "ROUND(AVG(comp_note_by_subject_period), 2) " :
-                        "MAX(comp_note_by_subject_period) ";
+                queryMaxOrAvgCompNoteMat += (Boolean.TRUE.equals(isSkillAverage)) ? "ROUND(AVG(final_comp_note_by_subject), 2) " :
+                        "MAX(final_comp_note_by_subject) ";
                 queryMaxOrAvgCompNoteMat += "AS comp_note_by_subject, id_eleve, id_matiere FROM " + queryMaxOrAvgCompNoteNiveauFinalByPeriode +
                         " AS max_or_avg_mat GROUP BY id_competence, id_eleve, id_matiere)";
 
