@@ -172,20 +172,32 @@ public interface NoteService extends CrudService {
     void deleteColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse,
                              String colonne,   Handler<Either<String, JsonArray>> handler);
 
-    void  getColonneReleve (JsonArray idEleves, Long idPeriode, String idMatiere, JsonArray idsClasse,
-                           String colonne, Boolean withPreviousAppreciation,Handler<Either<String, JsonArray>> handler);
-
     /**
-     * get appreciation or final average or position by idPeriode, idMatiere and studentIds
+     * @deprecated Use @link {{@link #getColumnReleve(JsonArray, Long, String, JsonArray, String, Boolean)}}
      * @param idEleves
      * @param idPeriode
      * @param idMatiere
      * @param idsClasse
      * @param colonne
-     * @return Future
+     * @param withPreviousAppreciation
+     * @param handler
      */
-    Future<JsonArray> getColumnReleve (JsonArray idEleves, Long idPeriode, String idMatiere, JsonArray idsClasse,
-                                      String colonne, Boolean withPreviousAppreciation);
+    @Deprecated
+    void  getColonneReleve (JsonArray idEleves, Long idPeriode, String idMatiere, JsonArray idsClasse,
+                           String colonne, Boolean withPreviousAppreciation,Handler<Either<String, JsonArray>> handler);
+
+    /**
+     *
+     * @param studentIds
+     * @param periodId
+     * @param subjectId
+     * @param classIds
+     * @param column
+     * @param withPreviousAppreciation
+     * @return
+     */
+    Future<JsonArray> getColumnReleve (JsonArray studentIds, Long periodId, String subjectId, JsonArray classIds,
+                                      String column, Boolean withPreviousAppreciation);
     /**
      * Met à jour la moyennes finale d'un élève pour une période, une matiere et une classe
      * @param idEleve idEleve

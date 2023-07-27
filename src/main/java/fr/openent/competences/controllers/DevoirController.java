@@ -38,10 +38,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -884,14 +881,17 @@ public class DevoirController extends ControllerHelper {
                     if (request.params().get("idPeriode") != null) {
                         idPeriode = testLongFormatParameter("idPeriode", request);
                     }
-                    devoirsService.getDevoirsNotes(idEtablissement, idEleve, idPeriode, event -> {
-                        if(event.isLeft()){
-                            leftToResponse(request, new Either.Left<>(event.left().getValue()));
-                        } else {
-                            JsonObject result = event.right().getValue();
-                            Renders.renderJson(request, Utils.sortJsonObjectIntValue("matiere_rank", result));
-                        }
-                    });
+
+                    devoirsService.getDevoirsNotes(idEtablissement, idEleve, idPeriode)
+                            .onSuccess((result) -> {
+                                Renders.renderJson(request, Utils.sortJsonObjectIntValue(Field.MATIERE_RANK, result));
+                            })
+                            .onFailure(err -> {
+                                String errorMessage = String.format("[Competences%s::getDevoirsNotes] error to get scores and average for the mobile app : %s",
+                                        this.getClass().getSimpleName(), err.getMessage());
+                                renderError(request);
+                                log.error(errorMessage);
+                            });
                 }
             } else {
                 unauthorized(request);

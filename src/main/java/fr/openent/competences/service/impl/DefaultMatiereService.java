@@ -364,7 +364,22 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         return underSubjectPromise.future();
     }
 
+    @Override
+    public Future<JsonArray> getMatieresEtab(String idStructure) {
+        Promise<JsonArray> promise = Promise.promise();
+        getMatieresEtab(idStructure, FutureHelper.handler(promise,
+                String.format("[Competences@%s::getMatieresEtab] Error during sql request: ",
+                this.getClass().getSimpleName())));
+        return promise.future();
+    }
 
+    /**
+     * @deprecated Use @link {#getMatieresEtab(String idStructure)}
+     * @param idEtablissement
+     * @param handler
+     */
+    @Override
+    @Deprecated
     public void getMatieresEtab(String idEtablissement, Handler<Either<String, JsonArray>> handler) {
         //vu qu on use pas le user peut être appeller un autre fonction de viesco?
         JsonObject action = new JsonObject()

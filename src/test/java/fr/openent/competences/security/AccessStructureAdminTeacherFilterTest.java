@@ -46,7 +46,7 @@ public class AccessStructureAdminTeacherFilterTest {
 
     @Test
     public void testAuthorize(TestContext ctx) {
-        user.setType(Field.TEACHER);
+        user.setType(Field.TEACHER_PROFIL);
         role1.setDisplayName(WorkflowActions.ADMIN_RIGHT.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
@@ -66,7 +66,7 @@ public class AccessStructureAdminTeacherFilterTest {
 
     @Test
     public void testBadRightButTeacher(TestContext ctx) {
-        user.setType(Field.TEACHER);
+        user.setType(Field.TEACHER_PROFIL);
         role1.setDisplayName(WorkflowActions.COMPETENCES_ACCESS.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
@@ -142,7 +142,7 @@ public class AccessStructureAdminTeacherFilterTest {
 
     @Test
     public void testBadStructureBadRight(TestContext ctx) {
-        user.setType(Field.TEACHER);
+        user.setType(Field.TEACHER_PROFIL);
         role1.setDisplayName(WorkflowActions.COMPETENCES_ACCESS.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);

@@ -49,8 +49,6 @@ import org.entcore.common.user.UserInfos;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
-import java.io.File;
-import java.io.FileDescriptor;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -743,11 +741,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
-
-
     @Override
-    public void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long idPeriode,
-                            boolean historise, Handler<Either<String, JsonArray>> handler) {
+    public Future<JsonArray> listDevoirs(String studentId, String structureId, String classId, String subjectId, Long periodId,
+                                         boolean historical) {
+        Promise<JsonArray> promise = Promise.promise();
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -756,7 +753,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append(Field.VIESCO_REL_TYPE_PERIODE + ".ordre as _periode_ordre, ")
                 .append(Field.USERS_TABLE + ".username as teacher, id_groupe ");
 
-        if (idEleve != null) {
+        if (studentId != null) {
             query.append(", " + Field.NOTES_TABLE + ".valeur as note, COUNT(" + Field.COMPETENCES_DEVOIRS + ".id) ")
                     .append("as nbcompetences, sum.sum_notes, sum.nbr_eleves ");
         }
@@ -771,12 +768,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("INNER JOIN ").append(this.schema).append(Field.REL_DEVOIRS_GROUPES_TABLE)
                 .append(" ON " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_devoir = " + this.table + ".id ");
 
-        if (idClasse != null) {
+        if (classId != null) {
             query.append("AND " + Field.REL_DEVOIRS_GROUPES_TABLE + ".id_groupe = ? ");
-            values.add(idClasse);
+            values.add(classId);
         }
 
-        if (idEleve != null) {
+        if (studentId != null) {
             query.append(" LEFT JOIN ").append(this.schema).append(Field.COMPETENCES_DEVOIRS)
                     .append(" ON " + this.table + ".id = " + Field.COMPETENCES_DEVOIRS + ".id_devoir ")
                     .append("INNER JOIN ").append(this.schema).append(Field.NOTES_TABLE)
@@ -787,34 +784,34 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     .append(" INNER JOIN ").append(this.schema).append(Field.NOTES_TABLE)
                     .append(" ON " + this.table + ".id = " + Field.NOTES_TABLE + ".id_devoir ")
                     .append("WHERE " + this.table + ".id_etablissement = ? AND date_publication <= Now() ");
-            values.add(idEtablissement);
-            if (idPeriode != null) {
+            values.add(structureId);
+            if (periodId != null) {
                 query.append("AND " + this.table + ".id_periode = ? ");
-                values.add(idPeriode);
+                values.add(periodId);
             }
             query.append("GROUP BY " + this.table + ".id) sum ON sum.id = " + this.table + ".id ");
         }
 
         query.append("WHERE " + this.table + ".id_etablissement = ? AND " + this.table + ".eval_lib_historise = ? ");
-        values.add(idEtablissement);
-        values.add(historise);
+        values.add(structureId);
+        values.add(historical);
 
-        if (idMatiere != null) {
+        if (subjectId != null) {
             query.append("AND " + this.table + ".id_matiere = ? ");
-            values.add(idMatiere);
+            values.add(subjectId);
         }
 
-        if (idEleve != null) {
+        if (studentId != null) {
             query.append(" AND " + Field.NOTES_TABLE + ".id_eleve = ? AND date_publication <= Now() ");
-            values.add(idEleve);
+            values.add(studentId);
         }
 
-        if (idPeriode != null) {
+        if (periodId != null) {
             query.append("AND " + this.table + ".id_periode = ? ");
-            values.add(idPeriode);
+            values.add(periodId);
         }
 
-        if (idEleve != null) {
+        if (studentId != null) {
             query.append(" GROUP BY " + this.table + ".id, " + Field.VIESCO_REL_TYPE_PERIODE + ".type , ")
                     .append( Field.VIESCO_REL_TYPE_PERIODE + ".ordre, " + Field.TYPE_TABLE + ".nom, " + Field.TYPE_TABLE + ".formative, ")
                     .append(Field.NOTES_TABLE + ".valeur, sum_notes, nbr_eleves, "+ Field.USERS_TABLE + ".username, id_groupe ")
@@ -823,7 +820,35 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             query.append(" ORDER BY " + this .table + ".date ASC, " + this.table + ".id ASC");
         }
 
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values, validResultHandler(FutureHelper.handler(promise,
+                String.format("[Competences@%s :: listDevoirs]  error to get sql request. ",
+                        this.getClass().getSimpleName()))));
+
+        return promise.future();
+    }
+
+    /***
+     * @deprecated Use {@link #listDevoirs(String studentId, String structureId, String classId, String subjectId, Long periodId,
+     *                                          boolean historical)}
+     * @param studentId identifiant de l'elève lorsqu'on veut récupérer les notes
+     * @param structureId identifiant de l'établissement
+     * @param classId identifiant de la classe
+     * @param subjectId identifiant de la matière
+     * @param periodId identifiant de la période
+     * @param historical evaluation historise
+     * @param handler handler portant le résultat de la requête
+     */
+    @Override
+    @Deprecated
+    public void listDevoirs(String studentId, String structureId, String classId, String subjectId, Long periodId,
+                            boolean historical, Handler<Either<String, JsonArray>> handler) {
+       listDevoirs( studentId, structureId, classId, subjectId, periodId, historical)
+               .onFailure(errorFutureDevoirs -> {
+                   handler.handle(new Either.Left(errorFutureDevoirs.getMessage()));
+                   log.error( String.format("[Competences@%s::listDevoirs]  error to get sql request : %s ",
+                           this.getClass().getSimpleName(), errorFutureDevoirs.getMessage()));
+               })
+                .onSuccess(responseFutureDevoirs -> handler.handle(new Either.Right(responseFutureDevoirs)));
     }
 
     @Override
@@ -975,28 +1000,45 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         String[] structureIds, String[] subjectIds, Boolean hasSkills, Boolean historized) {
         Promise<JsonArray> promise = Promise.promise();
         listDevoirs(studentId, groupIds, homeworkIds, periodIds, structureIds, subjectIds, hasSkills, historized,
-                FutureHelper.handlerJsonArray(promise.future()));
+                FutureHelper.handler(promise, String.format("[Competences@%s::listDevoirs] get Devoirs postgresql.",
+                        this.getClass().getSimpleName())));
+        return promise.future();
+    }
+    @Override
+    public Future<JsonArray> listDevoirsWithAnnotations (String studentId, Long periodId, String subjectId) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonObject action = new JsonObject()
+                .put(Field.ACTION, "eleve.getAnnotations")
+                .put(Field.IDELEVE, studentId)
+                .put(Field.IDPERIODE, periodId)
+                .put(Field.IDMATIERE, subjectId);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler( FutureHelper.handlerToAsyncHandler(promise,
+                        String.format("[Competences@%s::listDevoirsWithAnnotations] error to get sql request.",
+                                this.getClass().getSimpleName()))));
         return promise.future();
     }
 
+    /**
+     *  @deprecated Use {@link #listDevoirsWithAnnotations (String studentId, Long periodId, String subjectId)}
+     * @param studentId
+     * @param periodId
+     * @param subjectId
+     * @param handler
+     */
     @Override
-    public void listDevoirsWithAnnotations(String idEleve, Long idPeriode, String idMatiere,
+    @Deprecated
+    public void listDevoirsWithAnnotations(String studentId, Long periodId, String subjectId,
                                            Handler<Either<String, JsonArray>> handler) {
-        JsonObject action = new JsonObject()
-                .put(Field.ACTION, "eleve.getAnnotations")
-                .put(Field.IDELEVE, idEleve)
-                .put(Field.IDPERIODE, idPeriode)
-                .put(Field.IDMATIERE, idMatiere);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
-            JsonObject body = message.body();
-            if (Field.OK.equals(body.getString(Field.STATUS))) {
-                JsonArray result = body.getJsonArray(Field.RESULTS);
-                handler.handle(new Either.Right<>(result));
-            } else {
-                handler.handle(new Either.Left<>(body.getString("message")));
-                log.error("listDevoirsWithAnnotations : " + body.getString("message"));
-            }
-        }));
+
+        listDevoirsWithAnnotations(studentId, periodId, subjectId)
+                .onFailure(error -> {
+                    handler.handle(new Either.Left<>(error.getMessage()));
+                    log.error(String.format("[Competences@%s::listDevoirsWithAnnotations] error to get sql request : %s",
+                            this.getClass().getSimpleName(), error.getMessage()));
+                })
+                .onSuccess(res -> handler.handle(new Either.Right<>(res)));
+
     }
 
     @Override
@@ -1553,94 +1595,95 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void getDevoirsNotes(String idEtablissement, String idEleve, Long idPeriode,
-                                Handler<Either<String, JsonObject>> handler) {
+    public Future<JsonObject> getDevoirsNotes(String structureId, String studentId, Long periodId) {
+        Promise promise = Promise.promise();
+        JsonObject result = new JsonObject();
+        final JsonArray devoirs = new JsonArray();
+        final JsonArray annotations = new JsonArray();
+        final JsonArray moyennesFinales = new JsonArray();
+        final JsonArray matieres = new JsonArray();
+        final JsonArray groups = new JsonArray();
+        final JsonArray servicesJson = new JsonArray();
+        final JsonArray allMultiTeachers = new JsonArray();
+        final List<SubTopic> subTopics = new ArrayList<>();
+        List<Service> services = new ArrayList<>();
+
         List<Future> futures = new ArrayList<>();
 
-        Future<JsonArray> devoirsFuture = Future.future();
-        listDevoirs(idEleve, idEtablissement, null, null, idPeriode,
-                false, devoirsEvent -> formate(devoirsFuture, devoirsEvent));
+        Future<JsonArray> devoirsFuture = listDevoirs(studentId, structureId, null, null, periodId,
+                false);
         futures.add(devoirsFuture);
 
-        Future<JsonArray> annotationsFuture = Future.future();
-        listDevoirsWithAnnotations(idEleve, idPeriode, null,
-                annotationsEvent -> formate(annotationsFuture, annotationsEvent));
+        Future<JsonArray> annotationsFuture = listDevoirsWithAnnotations(studentId, periodId, null);
         futures.add(annotationsFuture);
 
-        Future<JsonArray> moyenneFinaleFuture = Future.future();
-        noteService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, null, null,
-                "moyenne", Boolean.FALSE, moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
+        Future<JsonArray> moyenneFinaleFuture =noteService.getColumnReleve(new JsonArray().add(studentId), periodId,
+                null, null,Field.MOYENNE, Boolean.FALSE);
         futures.add(moyenneFinaleFuture);
 
-        Future<JsonArray> matieresFuture = Future.future();
-        matiereService.getMatieresEtab(idEtablissement,
-                matieresEvent -> formate(matieresFuture, matieresEvent));
+        Future<JsonArray> matieresFuture = matiereService.getMatieresEtab(structureId);
         futures.add(matieresFuture);
 
-        Future<JsonArray> groupsFuture = Future.future();
-        Utils.getGroupsEleve(eb, idEleve, idEtablissement,
-                groupsEvent -> formate(groupsFuture, groupsEvent));
+        Future<JsonArray> groupsFuture = Utils.getGroupsEleve(eb, studentId, structureId);
         futures.add(groupsFuture);
 
-        CompositeFuture.all(futures).setHandler(futuresEvent -> {
-            if (futuresEvent.failed()) {
-                handler.handle(new Either.Left<>(futuresEvent.cause().getMessage()));
-            } else {
-                JsonObject result = new JsonObject();
+        CompositeFuture.all(futures)
+                .compose((res) -> {
 
-                final JsonArray devoirs = devoirsFuture.result();
-                final JsonArray annotations = annotationsFuture.result();
-                final JsonArray moyennesFinales = moyenneFinaleFuture.result();
-                final JsonArray matieres = matieresFuture.result();
-                final JsonArray groups = groupsFuture.result();
+                    devoirs.addAll(devoirsFuture.result());
+                    annotations.addAll(annotationsFuture.result());
+                    moyennesFinales.addAll(moyenneFinaleFuture.result());
+                    matieres.addAll(matieresFuture.result());
+                    groups.addAll(groupsFuture.result());
 
-                Future<JsonArray> servicesFuture = Future.future();
-                utilsService.getServices(idEtablissement, groups,
-                        servicesEvent -> formate(servicesFuture, servicesEvent)
-                );
+                    Future<JsonArray> servicesFuture = utilsService.getServices(structureId, groups);
+                    Future<JsonArray> multiTeachersFuture =  utilsService.getMultiTeachers(structureId, groups,
+                            periodId != null ? periodId.intValue() : null);
 
-                Future<JsonArray> multiTeachersFuture = Future.future();
-                utilsService.getMultiTeachers(idEtablissement, groups, idPeriode != null ? idPeriode.intValue() : null,
-                        multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent)
-                );
+                    Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(structureId);
 
-                utilsService.getSubTopicCoeff(idEtablissement)
-                        .onSuccess(subTopics -> CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(teachersEvent -> {
-                            if (teachersEvent.failed()) {
-                                handler.handle(new Either.Left<>(teachersEvent.cause().getMessage()));
-                            } else {
-                                final JsonArray servicesJson = servicesFuture.result();
-                                final JsonArray allMultiTeachers = multiTeachersFuture.result();
-                                ArrayList<Future> resultsFuture = new ArrayList<>();
-                                List<Service> services = new ArrayList<>();
+                  return completeVariablesForServices(servicesFuture, multiTeachersFuture, subTopicCoefFuture, servicesJson,
+                          allMultiTeachers, subTopics);
 
-                                Structure structure = new Structure();
-                                structure.setId(idEtablissement);
+                })
+                .compose((eventResponse) -> {
+                    Structure structure = new Structure();
+                    structure.setId(structureId);
 
-                                setServices(structure, servicesJson, services, subTopics);
+                    setServices(structure, servicesJson, services, subTopics);
+                    ArrayList<Future> resultsFuture = new ArrayList<>();
+                    buildArrayFromHomeworks(result, devoirs, annotations, moyennesFinales, matieres,
+                            servicesJson, allMultiTeachers, resultsFuture);
+                    return CompositeFuture.all(resultsFuture);
+                })
+                .onSuccess((res) -> {
+                            setAverageOfSubjects(result, services, allMultiTeachers, periodId);
+                            promise.complete(result);
+                        })
+                .onFailure(promise::fail);
 
+    return promise.future();
 
-                                buildArrayFromHomeworks(result, devoirs, annotations, moyennesFinales, matieres,
-                                        servicesJson, allMultiTeachers, resultsFuture, handler);
-                                CompositeFuture.all(resultsFuture).setHandler(resultEvent -> {
-                                    if (resultEvent.failed()) {
-                                        handler.handle(new Either.Left<>(resultEvent.cause().getMessage()));
-                                    } else {
-                                        setAverageOfSubjects(result, services, allMultiTeachers, idPeriode);
-                                        handler.handle(new Either.Right<>(result));
-                                    }
-                                });
-                            }
-                        }))
-                        .onFailure(err -> handler.handle(new Either.Left<>(err.getMessage())));
-            }
-        });
+    }
+
+    private Future<Void> completeVariablesForServices(Future<JsonArray> servicesFuture,  Future<JsonArray> multiTeachersFuture,
+                              Future<List<SubTopic>> subTopicCoefFuture, final JsonArray servicesJson,
+                              final JsonArray allMultiTeachers, final List<SubTopic> subTopics) {
+        Promise<Void> promise = Promise.promise();
+        CompositeFuture.all(servicesFuture, multiTeachersFuture, subTopicCoefFuture)
+                .onSuccess((r) -> {
+                    servicesJson.addAll(servicesFuture.result());
+                    allMultiTeachers.addAll(multiTeachersFuture.result());
+                    subTopics.addAll(subTopicCoefFuture.result());
+                    promise.complete();
+                })
+                .onFailure(promise::fail);
+        return promise.future();
     }
 
     private void buildArrayFromHomeworks(JsonObject result, JsonArray devoirs, JsonArray annotations,
                                          JsonArray moyennesFinales, JsonArray matieres, JsonArray services,
-                                         JsonArray allMultiTeachers, ArrayList<Future> resultsFuture,
-                                         Handler<Either<String, JsonObject>> handler) {
+                                         JsonArray allMultiTeachers, ArrayList<Future> resultsFuture) {
         devoirs.addAll(annotations);
         devoirs.addAll(moyennesFinales);
         devoirs.forEach(devoir -> {
@@ -1652,84 +1695,84 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             Long idPeriodeDevoir = devoirJson.getLong(Field.ID_PERIODE);
 
             JsonObject matiere = (JsonObject) matieres.stream()
-                    .filter(el -> idMatiere.equals(((JsonObject) el).getString("id")))
+                    .filter(el -> idMatiere.equals(((JsonObject) el).getString(Field.ID)))
                     .findFirst().orElse(null);
 
             JsonObject service = (JsonObject) services.stream()
-                    .filter(el -> idMatiere.equals(((JsonObject) el).getString("id_matiere")) &&
-                            idClass.equals(((JsonObject) el).getString("id_groupe")))
+                    .filter(el -> idMatiere.equals(((JsonObject) el).getString(Field.ID_MATIERE)) &&
+                            idClass.equals(((JsonObject) el).getString(Field.ID_GROUPE)))
                     .findFirst().orElse(null);
 
             JsonArray idsTeachers = new JsonArray();
             Long coefficient = 1L;
             if (service != null) {
-                idsTeachers.add(service.getString("id_enseignant"));
+                idsTeachers.add(service.getString(Field.ID_ENSEIGNANT));
                 List<Object> multiTeachers = allMultiTeachers.stream()
-                        .filter(el -> idMatiere.equals(((JsonObject) el).getString("subject_id")) &&
-                                idClass.equals(((JsonObject) el).getString("class_or_group_id")))
+                        .filter(el -> idMatiere.equals(((JsonObject) el).getString(Field.SUBJECT_ID)) &&
+                                idClass.equals(((JsonObject) el).getString(Field.CLASS_OR_GROUP_ID)))
                         .collect(Collectors.toList());
                 multiTeachers.forEach(multiTeacher -> {
                     JsonObject multiTeacherJson = (JsonObject) multiTeacher;
-                    if (multiTeacherJson.getBoolean("is_visible")) {
-                        idsTeachers.add(multiTeacherJson.getString("second_teacher_id"));
+                    if (multiTeacherJson.getBoolean(Field.IS_VISIBLE)) {
+                        idsTeachers.add(multiTeacherJson.getString(Field.SECOND_TEACHER_ID));
                     }
                 });
 
-                coefficient = service.getLong("coefficient");
+                coefficient = service.getLong(Field.COEFFICIENT);
             }
 
-            Future<String> resultFuture = Future.future();
+            Future<String> resultFuture = buildObjectForSubject(result, idsTeachers, idClass, matiere, coefficient, moyenneFinale,
+                    idPeriodeDevoir, idMatiere, devoirJson);
+
             resultsFuture.add(resultFuture);
-            buildObjectForSubject(result, idsTeachers, idClass, matiere, coefficient, moyenneFinale,
-                    idPeriodeDevoir, idMatiere, devoirJson, resultFuture, handler);
         });
     }
 
-    private void buildObjectForSubject(JsonObject result, JsonArray idsTeachers, String idClass, JsonObject matiere,
-                                       Long coefficient, String moyenneFinale, Long idPeriodeDevoir, String idMatiere,
-                                       JsonObject devoirJson, Future resultFuture,
-                                       Handler<Either<String, JsonObject>> handler) {
-        Utils.getLastNameFirstNameUser(eb, idsTeachers, teacherNameEvent -> {
-            if (teacherNameEvent.isLeft()) {
-                handler.handle(new Either.Left<>(teacherNameEvent.left().getValue()));
-            } else {
-                String teacherLibelle = teacherNameEvent.right().getValue().values()
-                        .stream().map(t -> t.getString("name") + " " + t.getString("firstName"))
-                        .collect(Collectors.joining(", "));
+    private Future<String> buildObjectForSubject(JsonObject result, JsonArray idsTeachers, String idClass, JsonObject matiere,
+                                                     Long coefficient, String moyenneFinale, Long idPeriodeDevoir, String idMatiere,
+                                                     JsonObject devoirJson) {
+        Promise<String> promise = Promise.promise();
+        Utils.getLastNameFirstNameUser(eb, idsTeachers)
+                .onSuccess((teacherNameResponse) -> {
+                    String teacherLibelle = teacherNameResponse.values().stream()
+                            .map(t -> t.getString(Field.NAME) + " " + t.getString(Field.FIRSTNAME))
+                            .collect(Collectors.joining(", "));
 
-                JsonObject resultMatiere = new JsonObject();
-                if (!result.containsKey(idMatiere)) {
-                    resultMatiere.put("id_groupe", idClass);
-                    resultMatiere.put("matiere", matiere != null ? matiere.getString("name") : "");
-                    resultMatiere.put("matiere_rank", matiere != null ? matiere.getInteger("rank") : 0);
-                    resultMatiere.put("matiere_coeff", coefficient);
-                    resultMatiere.put("teacher", teacherLibelle);
+                    JsonObject resultMatiere = new JsonObject();
+                    if (!result.containsKey(idMatiere)) {
+                        resultMatiere.put(Field.ID_GROUPE, idClass);
+                        resultMatiere.put(Field.MATIERE, matiere != null ? matiere.getString(Field.NAME) : "");
+                        resultMatiere.put(Field.MATIERE_RANK, matiere != null ? matiere.getInteger(Field.RANK) : 0);
+                        resultMatiere.put(Field.MATIERE_COEFF, coefficient);
+                        resultMatiere.put(Field.TEACHER, teacherLibelle);
 
-                    result.put(idMatiere, resultMatiere);
-                } else {
-                    resultMatiere = result.getJsonObject(idMatiere);
-                }
-
-                if (!Field.NN.equals(moyenneFinale)) {
-                    JsonObject moyenne = new JsonObject()
-                            .put(Field.ID_PERIODE, idPeriodeDevoir)
-                            .put(Field.MOYENNE, moyenneFinale);
-                    if (resultMatiere.containsKey(Field.MOYENNES)) {
-                        resultMatiere.getJsonArray(Field.MOYENNES).add(moyenne);
+                        result.put(idMatiere, resultMatiere);
                     } else {
-                        resultMatiere.put(Field.MOYENNES, new JsonArray().add(moyenne));
+                        resultMatiere = result.getJsonObject(idMatiere);
                     }
-                } else {
-                    if (resultMatiere.containsKey("devoirs")) {
-                        resultMatiere.getJsonArray("devoirs").add(devoirJson);
-                    } else {
-                        resultMatiere.put("devoirs", new JsonArray().add(devoirJson));
-                    }
-                }
 
-                resultFuture.complete();
-            }
-        });
+                    if (!Field.NN.equals(moyenneFinale)) {
+                        JsonObject moyenne = new JsonObject()
+                                .put(Field.ID_PERIODE, idPeriodeDevoir)
+                                .put(Field.MOYENNE, moyenneFinale);
+                        if (resultMatiere.containsKey(Field.MOYENNES)) {
+                            resultMatiere.getJsonArray(Field.MOYENNES).add(moyenne);
+                        } else {
+                            resultMatiere.put(Field.MOYENNES, new JsonArray().add(moyenne));
+                        }
+                    } else {
+                        if (resultMatiere.containsKey(Field.DEVOIRS)) {
+                            resultMatiere.getJsonArray(Field.DEVOIRS).add(devoirJson);
+                        } else {
+                            resultMatiere.put(Field.DEVOIRS, new JsonArray().add(devoirJson));
+                        }
+                    }
+                    promise.complete();
+                })
+                .onFailure(promise::fail);
+
+        return promise.future();
+
     }
 
     @Override
@@ -1972,7 +2015,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 JsonArray matiereDevoirs = matiereJO.getJsonArray("devoirs");
                 matiereDevoirs.forEach(matiereDevoir -> {
                     JsonObject matiereDevoirJson = (JsonObject) matiereDevoir;
-                    if (matiereDevoirJson.containsKey("note")) {
+                    if (matiereDevoirJson.containsKey("note") && !matiereDevoirJson.getBoolean(Field.FORMATIVE) ) {
                         if (matiereDevoirJson.getValue("id_sousmatiere") != null) {
                             AtomicReference<Double> coeff = new AtomicReference<>(1.d);
                             Matiere matiere = new Matiere(matiereDevoirJson.getString("id_matiere"));
@@ -2120,7 +2163,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     final JsonObject devoir = result.right().getValue();
                     competencesService.getDevoirCompetences(idDevoir, null, competencesResult -> {
                         if (competencesResult.isRight()) {
-                            if (user.getType().equals(Field.TEACHER)) {
+                            if (user.getType().equals(Field.TEACHER_PROFIL)) {
                                 callDuplicateDevoir(user, user.getUserId(), body.getJsonArray(Field.CLASSES), shareService, finalPromise, devoir, competencesResult);
 
                             } else {

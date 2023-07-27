@@ -122,7 +122,7 @@ public class Utils {
                 handler.handle(new Either.Right<>(queryResult));
             } else {
                 log.error(String.format("[Competences@%s::getEvaluableGroupsClass] error neo resquest %s",
-                        "Utils",
+                        Utils.class.getSimpleName(),
                         body.getString(Field.MESSAGE)));
                 handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
 
@@ -223,20 +223,28 @@ public class Utils {
         }));
     }
 
+
+    public static Future<JsonArray> getGroupsEleve(EventBus eb, String studentId, String structureId) {
+        Promise<JsonArray> promise = Promise.promise();
+        getGroupsEleve(eb, studentId, structureId, FutureHelper.handler(promise,
+               String.format("[Competences@%s::getGroupsEleve] error during get sql request", Utils.class.getSimpleName())));
+        return promise.future();
+    }
     /**
+     * @deprecated Use @link{#getGroupsEleve(EventBus eb, String studentId, String structureId)}
      * Get eleve group
      *
      * @param eb      EventBus
      * @param idEleve id Eleve
      * @param handler response eleve groups
      */
-
+    @Deprecated
     public static void getGroupsEleve(EventBus eb, String idEleve, String idEtablissement,
                                       Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getInfoEleve")
-                .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissement)
-                .put("idEleves", new fr.wseduc.webutils.collections.JsonArray().add(idEleve));
+                .put(Field.IDETABLISSEMENT, idEtablissement)
+                .put(Field.IDELEVES, new fr.wseduc.webutils.collections.JsonArray().add(idEleve));
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -724,6 +732,14 @@ public class Utils {
         }
     }
 
+    public static Future< Map<String, JsonObject>> getLastNameFirstNameUser(EventBus eb, final JsonArray usersIds) {
+        Promise< Map<String, JsonObject>> promise = Promise.promise();
+        getLastNameFirstNameUser(eb, usersIds, FutureHelper.handler(promise,
+                String.format("[Competences@%s :: getLastNameFirstNameUser] error to get sql request by eventBus viesco",
+                        Utils.class.getSimpleName())));
+        return promise.future();
+    }
+    @Deprecated
     public static void getLastNameFirstNameUser(EventBus eb, final JsonArray idsUsers,
                                                 final Handler<Either<String, Map<String, JsonObject>>> handler) {
         List<String> idsTeacherNotInNeo = idsUsers.stream().map(Object::toString).collect(Collectors.toList());

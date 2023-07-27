@@ -14,7 +14,7 @@ public class AccessStructureAdminTeacherFilter implements ResourcesProvider {
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         boolean isAdmin = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
         String idStructure = WorkflowActionUtils.getParamStructure(request);
-        boolean isTeacher = user.getType().equals(Field.TEACHER);
+        boolean isTeacher = user.getType().equals(Field.TEACHER_PROFIL);
         handler.handle(idStructure != null  && user.getStructures().contains(idStructure) && (isAdmin || isTeacher));
     }
 }

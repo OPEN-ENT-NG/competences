@@ -47,6 +47,9 @@ public interface UtilsService {
 
     void getMultiTeachersByClass( final String idEtablissement, final String idClasse, final Integer idPeriode,
                                    Handler<Either<String, JsonArray>> handler);
+
+    Future<JsonArray> getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer periodId);
+
     void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
                           Handler<Either<String, JsonArray>> handler);
 
@@ -59,6 +62,8 @@ public interface UtilsService {
      * @return Future JsonArray allMultiTeachers
      */
     Future <JsonArray> getAllMultiTeachers(final String structureId, final JsonArray groupIds);
+
+    Future<JsonArray> getServices(final String structureId, final JsonArray ClassIds);
 
     void getServices(final String idEtablissement, final JsonArray idClasse, Handler<Either<String, JsonArray>> handler);
 

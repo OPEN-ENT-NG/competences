@@ -674,8 +674,19 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
-
+    /**
+     * @deprecated Use {@link #getColumnReleve(JsonArray idsStudent, Long idPeriod, String idSubject, JsonArray idsClass,
+     *                                               String colonne, Boolean withPreviousAppreciations)}
+     * @param idEleves
+     * @param idPeriode
+     * @param idMatiere
+     * @param idsClasse
+     * @param colonne
+     * @param withPreviousAppreciations
+     * @param handler
+     */
     @Override
+    @Deprecated
     public void getColonneReleve(JsonArray idEleves, Long idPeriode, String idMatiere, JsonArray idsClasse,
                                  String colonne, Boolean withPreviousAppreciations, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
@@ -735,6 +746,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 validResultHandler(handler));
     }
 
+    @Override
     public Future<JsonArray> getColumnReleve(JsonArray studentsIds, Long periodId, String subjectId, JsonArray classesIds,
                                  String column, Boolean withPreviousAppreciation) {
 

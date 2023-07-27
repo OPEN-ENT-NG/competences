@@ -104,7 +104,11 @@ public interface DevoirService extends CrudService {
      */
     void listDevoirs(UserInfos user, String idEtablissement, Integer limit, Handler<Either<String, JsonArray>> handler);
 
+    Future<JsonArray> listDevoirs(String idStudent, String idStructure, String idClass, String idSubject, Long idPeriod,
+                                  boolean historical);
     /**
+     * @deprecated Use {@link #listDevoirs(String studentId, String structureId, String classId, String subjectId, Long periodId,
+     *                                            boolean historical)}
      * Liste des devoirs (avec ou sans note) pour un établissement, une classe, une matière et une période donnée.
      * La liste est ordonnée selon la date du devoir (du plus ancien au plus récent).
      * @param idEleve identifiant de l'elève lorsqu'on veut récupérer les notes
@@ -115,6 +119,7 @@ public interface DevoirService extends CrudService {
      * @param historise evaluation historise
      * @param handler handler portant le résultat de la requête
      */
+    @Deprecated
     void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long idPeriode,
                      boolean historise, Handler<Either<String, JsonArray>> handler);
 
@@ -125,6 +130,16 @@ public interface DevoirService extends CrudService {
     Future<JsonArray> listDevoirs(String studentId, String[] groupIds, Long[] homeworkIds, Long[] periodIds,
                                   String[] structureIds, String[] subjectIds, Boolean hasSkills, Boolean historized);
 
+    Future<JsonArray> listDevoirsWithAnnotations (String idStudent, Long idPeriod, String idSubject);
+
+    /**
+     * @deprecated Use {@link #listDevoirsWithAnnotations (String studentId, Long periodId, String subjectId)}
+     * @param idEleve
+     * @param idPeriode
+     * @param idMatiere
+     * @param handler
+     */
+    @Deprecated
     void listDevoirsWithAnnotations(String idEleve, Long idPeriode, String idMatiere,
                                     Handler<Either<String, JsonArray>> handler);
 
@@ -152,8 +167,6 @@ public interface DevoirService extends CrudService {
 
     /**
      * Récupère le nombre d'annotations en fonction du devoir pour un utilisateur donné
-     * @param user l'utilisateur connecté
-     * @param idEleves identifiants des élèves de la classe à l'instant T
      * @param idDevoir id du devoir concerné
      * @param handler handler portant le résultat de la requête
      */
@@ -186,7 +199,6 @@ public interface DevoirService extends CrudService {
     /**
      * Récupère les notes du devoirs dans la base et en calcule la moyenne
      * @param idDevoir Devoir dont on souhaite avoir la moyenne
-     * @param stats Booléen permettant de demander le calcul des statistique en plus
      * @param handler handler portant le résultat de la requête.
      */
     void getMoyenne(Long idDevoir, String[] idEleves, final Handler<Either<String, JsonObject>> handler);
@@ -271,8 +283,7 @@ public interface DevoirService extends CrudService {
     void getDevoirsEleve(String idEtablissement, String idEleve, String idMatiere, Long idPeriode,
                          Handler<Either<String, JsonObject>> handler);
 
-    void getDevoirsNotes(String idEtablissement, String idEleve, Long idPeriode,
-                         Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> getDevoirsNotes(String idEtablissement, String idEleve, Long idPeriode);
 
     JsonObject getNewShareStatements(String userIdSecondTeacher, String devoirID, List<String> actions);
 
