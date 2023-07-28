@@ -2242,17 +2242,19 @@ public class DefaultExportService implements ExportService {
                             .collect(Collectors.toList()));
 
                     for(int j = 0; j < multiTeachersMatiere.size(); j ++) {
-                        String coTeacherId = multiTeachersMatiere.getJsonObject(j).getString("second_teacher_id");
+                        if (multiTeachersMatiere.getJsonObject(j).getString("deleted_date") == null) {
+                            String coTeacherId = multiTeachersMatiere.getJsonObject(j).getString("second_teacher_id");
 
-                        JsonObject coTeacher = (JsonObject) users.stream()
-                                .filter(el -> coTeacherId.equals(((JsonObject) el).getString("id")))
-                                .findFirst().orElse(null);
+                            JsonObject coTeacher = (JsonObject) users.stream()
+                                    .filter(el -> coTeacherId.equals(((JsonObject) el).getString("id")))
+                                    .findFirst().orElse(null);
 
-                        if(coTeacher != null) {
-                            String multiTeacherName = coTeacher.getString("firstName").charAt(0) + "." +
-                                    coTeacher.getString("name");
-                            if(!_enseignantMatiere.contains(multiTeacherName)) {
-                                _enseignantMatiere.add(multiTeacherName);
+                            if(coTeacher != null) {
+                                String multiTeacherName = coTeacher.getString("firstName").charAt(0) + "." +
+                                        coTeacher.getString("name");
+                                if(!_enseignantMatiere.contains(multiTeacherName)) {
+                                    _enseignantMatiere.add(multiTeacherName);
+                                }
                             }
                         }
                     }
