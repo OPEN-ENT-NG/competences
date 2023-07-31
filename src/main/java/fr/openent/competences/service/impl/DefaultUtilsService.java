@@ -441,15 +441,13 @@ public class DefaultUtilsService implements UtilsService {
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("fr", "FR"));
         symbols.setDecimalSeparator('.');
 
-        DecimalFormat df = new DecimalFormat("#.0", symbols);
-        df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
-
+        double precision = 1e1;
         try {
             if (moyenne.isNaN()) {
                 moyenne = null;
             } else {
                 if (!annual)
-                    moyenne = Double.valueOf(df.format(moyenne));
+                    moyenne = Double.valueOf(Math.round(moyenne * precision) / precision);
             }
 
         } catch (NumberFormatException e) {
