@@ -18,8 +18,16 @@
 import {Model, Collection, _ ,angular} from 'entcore';
 import { Competence } from "../parent_eleve/Competence";
 import { Evaluations} from "../eval_parent_mdl";
-import http from "axios";
+import http, {AxiosResponse} from "axios";
 import {DefaultMatiere} from "./DefaultMatiere";
+import {ICompetenceResponse} from "./DefaultCompetence";
+
+export interface ITeachingResponse {
+    id: number;
+    nom?: string;
+    competences_1?: ICompetenceResponse[];
+    ids_domaine_int?: number[];
+}
 
 export class DefaultEnseignement extends Model {
     id;
@@ -113,27 +121,17 @@ export class DefaultEnseignement extends Model {
         });
     }
 
-    public static async getAll(idClasse: string, idCycle: string, model: any){
-        return new Promise(async (resolve,reject) => {
-            let uri = Evaluations.api.GET_ENSEIGNEMENT;
-            uri += '?idClasse=' + idClasse;
-            if (idCycle !== undefined) {
-                uri += '&idCycle=' + idCycle;
-            }
-            try {
-                if (_.isEmpty(model.all)) {
-                    let res = await http.get(uri);
-                    resolve(res);
-                }
-                else {
-                    resolve({data: model.all});
-                }
-            }
-            catch (e){
-                console.error(e);
-                reject(e);
-            }
-        });
+    public static async getAll(idClasse: string, idCycle: string, model: any): Promise<AxiosResponse<ITeachingResponse[]>> {
+        let cycleFilter: string = !!idCycle ? `&idCycle=${idCycle}` : '';
+        try {
+            return !!model.all && !!model.all.length ?
+                Promise.resolve({data: [...<ITeachingResponse[]>model.all.map(m => m.data)],
+                    status: 200, statusText: "OK", headers: {}, config: {}}) :
+                http.get(`${Evaluations.api.GET_ENSEIGNEMENT}?idClasse=${idClasse}${cycleFilter}`)
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
     }
     getListObjectMatEnseignement (idsMatiereEns, matieresStructure) : DefaultMatiere[]{
 
