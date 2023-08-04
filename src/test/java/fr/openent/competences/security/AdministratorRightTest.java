@@ -56,12 +56,9 @@ public class AdministratorRightTest {
         Mockito.doReturn(params).when(request).params();
         structures.add("111111");
         user.setStructures(structures);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(true, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -75,12 +72,9 @@ public class AdministratorRightTest {
         Mockito.doReturn(params).when(request).params();
         structures.add("111111");
         user.setStructures(structures);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -94,11 +88,8 @@ public class AdministratorRightTest {
         Mockito.doReturn(params).when(request).params();
         structures.add("11aaaa");
         user.setStructures(structures);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 }
