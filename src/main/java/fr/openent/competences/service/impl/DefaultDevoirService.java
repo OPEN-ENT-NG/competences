@@ -1012,8 +1012,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .put(Field.IDELEVE, studentId)
                 .put(Field.IDPERIODE, periodId)
                 .put(Field.IDMATIERE, subjectId);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler( FutureHelper.handlerToAsyncHandler(promise,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler(  FutureHelper.handlerToAsyncHandler(promise,
                         String.format("[Competences@%s::listDevoirsWithAnnotations] error to get sql request.",
                                 this.getClass().getSimpleName()))));
         return promise.future();

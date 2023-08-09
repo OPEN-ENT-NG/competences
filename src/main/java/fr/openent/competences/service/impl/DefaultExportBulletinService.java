@@ -3060,22 +3060,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         student.put(CLASSE_NAME_TO_SHOW, classe.getString("classeName"));
     }
 
-    private void getElevesClasse( String idClasse, Long idPeriode, Future<JsonArray> elevesFuture){
-        Utils.getElevesClasse(eb, idClasse, idPeriode, elevesEvent -> {
-            if(elevesEvent.isRight()){
-                elevesFuture.complete(elevesEvent.right().getValue());
-            }
-            else {
-                String error = elevesEvent.left().getValue();
-                if(error.contains(TIME)){
-                    log.error("[Competences getElevesClasse] : "+ error);
-                    getElevesClasse(idClasse, idPeriode, elevesFuture);
-                    return;
-                }
-                elevesFuture.complete(new JsonArray());
-            }
-        });
-    }
 
     private void getConversionNoteCompetence(String idEtablissement, String idClasse, Future<JsonArray> tab){
         competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse,

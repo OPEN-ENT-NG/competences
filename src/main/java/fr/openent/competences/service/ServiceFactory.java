@@ -48,6 +48,9 @@ public class ServiceFactory {
         return new DefaultNoteService(Field.SCHEMA_COMPETENCES, Field.NOTES_TABLE, eventBus());
     }
 
+    public ClassAppreciationService classAppreciationService() {
+        return new DefaultClassAppreciation(Field.SCHEMA_COMPETENCES, Field.APPRECIATION_CLASSE_TABLE, eventBus(), storage);
+    }
     public AverageService averageService() {
         return new DefaultAverageService(noteService(), utilsService(), syntheseBilanPeriodiqueService());
     }

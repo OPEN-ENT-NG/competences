@@ -20,7 +20,7 @@
  * Created by ledunoiss on 27/10/2016.
  */
 
-import {$, http, idiom as lang, model, ng, notify, template} from 'entcore';
+import {$, Collection, http, idiom as lang, model, ng, notify, template} from 'entcore';
 import httpAxios, {AxiosResponse} from "axios";
 import {evaluations, IClassReport, Matiere, SuiviCompetenceClasse} from '../models/teacher';
 import * as utils from '../utils/teacher';
@@ -31,6 +31,7 @@ import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Pers
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
 import {getTitulairesForRemplacantsCoEnseignant, translate} from "../utils/teacher";
 import {structureOptionsService} from "../services";
+import {Periode} from "../models/common/Periode";
 
 declare let _: any;
 
@@ -638,6 +639,21 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
         const cleanScopeTabs = () => {
             $scope.contentIframe = $scope.averagesClasses =  $scope.teacherNotesAndAppraisals = dataBodyCsv = undefined;
+        };
+
+        $scope.filterPeriodLightBox = (): (item: Periode) => boolean  => {
+            if($scope.suiviClasse && $scope.suiviClasse.print == 'printRecapAppreciations')
+            return (item: Periode) => {
+                return item.id_type != null;
+            };
+        }
+
+        $scope.filterPeriode = () : (item: Periode) => boolean => {
+            if($scope.displayFollowCompetencesClass == 'teacherAppraisals') {
+                return (item : Periode) => {
+                    return item.id != null;
+                };
+            }
         };
 
         $scope.selectDisplayClassTabs = async (tabsSelected:string):Promise<void> => {

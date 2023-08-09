@@ -57,6 +57,10 @@ public class Utils {
     protected static MatiereService matiereService = new DefaultMatiereService();
     private static String domain;
     private static String locale;
+    private EventBus eb;
+    private String idGroup;
+    private Integer idPeriod;
+    private int typeClass;
 
     /**
      * Recupere l'identifiant de la structure a laquelle appartiennent les classes dont l'identifiant est passe en
@@ -102,32 +106,48 @@ public class Utils {
 
 
     /**
+     * @Deprecated Use @link{#getGroupesClasse(EventBus eb, final JsonArray classesIds)}
      * retourne une classe avec ses groups (ids)
      *
      * @param eb         eventbus
      * @param classesIds array une clase
      * @param handler    response l'id de classe avec ses groups s'ils existent sinon retourne que id de la classe
      */
+    @Deprecated
     public static void getGroupesClasse(EventBus eb, final JsonArray classesIds,
                                         final Handler<Either<String, JsonArray>> handler) {
 
+        getGroupesClasse(eb,classesIds)
+                .onFailure( failGpsClass ->
+                {
+                    log.error(String.format("[Competences@%s::getEvaluableGroupsClass] error neo resquest %s",
+                            Utils.class.getSimpleName(),
+                            failGpsClass.getMessage()));
+                    handler.handle(new Either.Left<>(failGpsClass.getMessage()));
+                })
+                .onSuccess( responseGpsClass -> {
+                    handler.handle(new Either.Right<>(responseGpsClass));
+                });
+    }
+
+    /**
+     * retourne une classe avec ses groups (ids)
+     *
+     * @param eb         eventbus
+     * @param classesIds array une clase
+     * return future    response l'id de classe avec ses groups s'ils existent sinon retourne que id de la classe
+     */
+    public static Future<JsonArray> getGroupesClasse(EventBus eb, final JsonArray classesIds) {
+        Promise<JsonArray> gpsClassPromise = Promise.promise();
         JsonObject action = new JsonObject()
                 .put(ACTION, "classe.getEvaluableGroupsClasses")
                 .put("id_classes", classesIds);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
-            JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray queryResult = body.getJsonArray(RESULTS);
-                handler.handle(new Either.Right<>(queryResult));
-            } else {
-                log.error(String.format("[Competences@%s::getEvaluableGroupsClass] error neo resquest %s",
-                        Utils.class.getSimpleName(),
-                        body.getString(Field.MESSAGE)));
-                handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
-
-            }
-        }));
+        eb.request(VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(
+                FutureHelper.handlerToAsyncHandler(gpsClassPromise,
+                        String.format("[Competences@%s::getEvaluableGroupsClass] error neo resquest",
+                                Utils.class.getSimpleName()))));
+        return gpsClassPromise.future();
     }
 
     /**
@@ -162,7 +182,7 @@ public class Utils {
         JsonObject action = new JsonObject()
                 .put(ACTION, "classe.getClassesInfo")
                 .put("idClasses", idsClasses);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
             if (OK.equals(body.getString(STATUS))) {
@@ -184,43 +204,80 @@ public class Utils {
         }));
     }
 
-    public static void getIdElevesClassesGroupes(EventBus eb, final String idGroupe, final Integer idPeriode,
-                                                 final int typeClasse,
-                                                 final Handler<Either<String, List<String>>> handler) {
+    /**
+     *
+     * @param eb event bus
+     * @param idGroup id Group
+     * @param idPeriod id period
+     * @param typeClass type classe
+     * @return future List<String> idsStudent
+     */
+
+    public static Future<JsonArray> getElevesClassesGroupes(EventBus eb, final String idGroup, final Integer idPeriod,
+                                                 final int typeClass) {
+        Promise<JsonArray> studentPromise = Promise.promise();
+
         JsonObject action = new JsonObject();
-        if (typeClasse == 0) {
-            action.put(ACTION, "classe.getEleveClasse").put(ID_CLASSE_KEY, idGroupe);
+        if (typeClass == 0) {
+            action.put(ACTION, "classe.getEleveClasse").put(ID_CLASSE_KEY, idGroup);
 
-            if (idPeriode != null)
-                action.put("idPeriode", idPeriode);
-        } else if (typeClasse == 1 || typeClasse == 2) {
+            if (idPeriod != null)
+                action.put("idPeriode", idPeriod);
+        } else if (typeClass == 1 || typeClass == 2) {
             action.put(ACTION, "groupe.listUsersByGroupeEnseignementId")
-                    .put("groupEnseignementId", idGroupe).put("profile", "Student");
+                    .put("groupEnseignementId", idGroup).put("profile", "Student");
 
-            if (idPeriode != null)
-                action.put("idPeriode", idPeriode);
+            if (idPeriod != null)
+                action.put("idPeriode", idPeriod);
         }
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-                List<String> idEleves = new ArrayList<String>();
-                if (OK.equals(body.getString(STATUS))) {
-                    JsonArray queryResult = body.getJsonArray(RESULTS);
-                    if (queryResult != null) {
-                        for (int i = 0; i < queryResult.size(); i++) {
-                            idEleves.add(((JsonObject) queryResult.getJsonObject(i)).getString("id"));
-                        }
-                    }
-                    handler.handle(new Either.Right<String, List<String>>(idEleves));
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(
+                FutureHelper.handlerToAsyncHandler( studentPromise,
+                        "Error :can not get students of groupe : " + idGroup )));
+        return studentPromise.future();
 
-                } else {
-                    handler.handle(new Either.Left<String, List<String>>(body.getString("message")));
-                    log.error("Error :can not get students of groupe : " + idGroupe);
-                }
-            }
-        }));
+    }
+
+    public static Future<List<String>> getIdElevesClassesGroupes(EventBus eb, final String idGroup, final Integer idPeriod,
+                                                          final int typeClass){
+        Promise<List<String>> idsStudentPromise = Promise.promise();
+
+        getElevesClassesGroupes(eb, idGroup, idPeriod, typeClass)
+                .onSuccess(studentsClass -> {
+                            List<String> idEleves = new ArrayList<>();
+                            for (int i = 0; i < studentsClass.size(); i++) {
+                                idEleves.add((studentsClass.getJsonObject(i)).getString("id"));
+                            }
+                            idsStudentPromise.complete(idEleves);
+                })
+                .onFailure(idsStudentPromise::fail);
+
+    return idsStudentPromise.future();
+    }
+
+    /**
+     * @Deprecated Use @link{#getIdElevesClassesGroupes(EventBus eb, final String idGroup, final Integer idPeriod,
+     *                                                  final int typeClass)}
+     * @param eb event bus
+     * @param idGroup id group
+     * @param idPeriod id period
+     * @param typeClass type class
+     * @param handler response List<String> idsStudent
+     */
+    @Deprecated
+    public static void getIdElevesClassesGroupes(EventBus eb, final String idGroup, final Integer idPeriod,
+                                                 final int typeClass,
+                                                 final Handler<Either<String, List<String>>> handler) {
+
+        Future<List<String>> idElevesClassesGroupes = getIdElevesClassesGroupes(eb, idGroup, idPeriod, typeClass);
+        idElevesClassesGroupes.onSuccess(idsStudent -> {
+            handler.handle(new Either.Right<>(idsStudent));
+        });
+        idElevesClassesGroupes.onFailure(failIdsStudent -> {
+            handler.handle(new Either.Left<>(failIdsStudent.getMessage()));
+            log.error("Error :can not get students of groupe : " + idGroup + " error : " + failIdsStudent.getMessage());
+        });
+
     }
 
 

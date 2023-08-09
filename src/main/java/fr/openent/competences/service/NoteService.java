@@ -292,6 +292,8 @@ public interface NoteService extends CrudService {
     void getMoyennesFinal(String[] idEleves, Integer idPeriode, String[] idMatieres, String[] idClasses,
                           Handler<Either<String, JsonArray>> handler);
 
+    Future<JsonArray> getFinalAverage(String[] idEleves, Integer idPeriode, String[] idMatieres, String[] idClasses);
+
     /**
      * get all notes of a student by  matiere ,idGroup
      * @param idsEleve idsEleve list

@@ -50,6 +50,14 @@ public interface UtilsService {
 
     Future<JsonArray> getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer periodId);
 
+
+    /**
+     *
+     * @param structureId
+     * @param groupIds
+     * @param PeriodeId
+     * @param handler
+     */
     void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
                           Handler<Either<String, JsonArray>> handler);
 
@@ -63,8 +71,15 @@ public interface UtilsService {
      */
     Future <JsonArray> getAllMultiTeachers(final String structureId, final JsonArray groupIds);
 
-    Future<JsonArray> getServices(final String structureId, final JsonArray ClassIds);
+    Future<JsonArray> getServices(final String structureId, final JsonArray classIs);
 
+    /**
+     * @deprecated @link{#getServices(final String structureId, final JsonArray classIs)}
+     * @param idEtablissement
+     * @param idClasse
+     * @param handler
+     */
+    @Deprecated
     void getServices(final String idEtablissement, final JsonArray idClasse, Handler<Either<String, JsonArray>> handler);
 
     void getDefaultServices(final String structureId, final JsonArray groupIds, Handler<Either<String,JsonArray>> handler);

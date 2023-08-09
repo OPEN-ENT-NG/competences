@@ -114,16 +114,13 @@ public class Competences extends BaseServer {
     public static final String REL_COMPETENCES_DOMAINES_TABLE = "rel_competences_domaines";
     public static final String REL_COMPETENCES_ENSEIGNEMENTS_TABLE = "rel_competences_enseignements";
     public static final String REL_DEVOIRS_GROUPES = "rel_devoirs_groupes";
-    public static final String REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE = "rel_groupe_appreciation_elt_eleve";
-    public static final String REL_ELT_BILAN_PERIODIQUE_GROUPE_TABLE = "rel_elt_bilan_periodique_groupe";
-    public static final String REL_ELT_BILAN_PERIODIQUE_INTERVENANT_MATIERE_TABLE = "rel_elt_bilan_periodique_intervenant_matiere";
-    public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
+
     public static final String REL_APPRECIATION_USERS_NEO = "rel_appreciations_users_neo";
 
     public static final String STUDENT_APPRECIATION_DIGITAL_SKILLS = "student_appreciation_digital_skills";
     public static final String STUDENT_DIGITAL_SKILLS_TABLE = "student_digital_skills";
     public static final String STSFILE_TABLE = "sts_file";
-    public static final String SYNTHESE_BILAN_PERIODIQUE_TABLE = "synthese_bilan_periodique";
+
 
     public static final String THEMATIQUE_BILAN_PERIODIQUE_TABLE = "thematique_bilan_periodique";
     public static final String TRANSITION_TABLE = "transition";
