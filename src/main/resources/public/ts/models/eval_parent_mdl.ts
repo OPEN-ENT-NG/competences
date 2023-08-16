@@ -140,7 +140,7 @@ export class Evaluations extends Model {
                             uri += '&idClasse=' + classeId;
                         }
 
-                        if (idPeriode !== undefined) {
+                        if (idPeriode !== null && idPeriode > -1) {
                             uri += '&idPeriode=' + idPeriode;
                         }
 
@@ -200,7 +200,7 @@ export class Evaluations extends Model {
 
                                 // RECUPERATION DES ANNOTATIONS
                                 let uriAnnotations = Evaluations.api.GET_ANNOTATION + '?idEleve=' + userId;
-                                if (idPeriode !== undefined) {
+                                if (idPeriode !== null && idPeriode > -1) {
                                     uriAnnotations += '&idPeriode=' + idPeriode;
                                 }
 

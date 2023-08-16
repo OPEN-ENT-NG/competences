@@ -217,9 +217,9 @@ export async function calculMoyennesWithSubTopic(periode_idType: number, id_elev
                                                  subTopicsServices: SubtopicserviceService[], classe: Classe): Promise<{}> {
     return new Promise(async (resolve, reject) => {
         try {
-            let url = '/competences/eleve/' + id_eleve + "/moyenneFinale?";
-            if (periode_idType)
-                url += "idPeriode=" + periode_idType.toString();
+            let url = '/competences/eleve/' + id_eleve + "/moyenneFinale";
+            if (periode_idType != null && periode_idType > -1)
+                url += "?idPeriode=" + periode_idType.toString();
             http.get(url).then(res => {
                 let moyennesFinales: IOverrideAverageResponse[] = res.data;
                 setOverrideAverage(matieresReleve, matieres, moyennesFinales);
