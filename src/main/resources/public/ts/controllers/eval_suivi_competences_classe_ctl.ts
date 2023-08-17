@@ -665,9 +665,9 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     break;
                 case ('average'):
                     if(!$scope.averagesClasses) await getSubjectsNotesAppraisals();
-                    $scope.isDataOnPage = Object.keys($scope.averagesClasses)
-                        .map( element => $scope.averagesClasses[element])
-                        .some(array => array.length > 0);
+                    $scope.isDataOnPage = !!$scope.averagesClasses && [...$scope.averagesClasses.footerTable]
+                        .some((elem: any) => elem.length >= 2 && elem[1] != "NN");
+                    $scope.isDownloadWaiting = !$scope.isDataOnPage;
                     isManualCsvFromAngular = false;
                     fileDownloadName.pdf = 'printTabMoys';
                     fileDownloadName.csv = 'printTabMoyPosAppr';
