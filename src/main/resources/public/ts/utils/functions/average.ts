@@ -73,7 +73,8 @@ function getMoyenne(devoirs): number | string {
 
             if (null == moyenne) moyenne = 0.0;
 
-            return +(moyenne).toFixed(1);
+            const precision: number = 1;
+            return (+(Math.round(+(moyenne + 'e' + precision)) + 'e' + -precision)).toFixed(precision);
         } else {
             return "NN";
         }
