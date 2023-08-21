@@ -121,6 +121,7 @@ export class Evaluations extends Model {
                                     matiere.sousMatieres.load(_.find(matieres, {id : matiere.id}).sous_matieres);
                                 }
                             });
+                            console.log("on passe là", matieres);
                             resolve();
                         }).bind(this);
                     });
@@ -272,7 +273,9 @@ export class Evaluations extends Model {
                                                     if(_matiere !== undefined) {
 
                                                         let enseignant = that.enseignants.findWhere({id: service.id_enseignant});
-                                                        if(enseignant !== undefined && service.is_visible && _.contains(homeworksOwner, enseignant.id)) {
+                                                        if(enseignant !== undefined && service.is_visible &&
+                                                            (homeworksOwner.some(ownerId => ownerId === enseignant.id) ||
+                                                                service.id_enseignant === enseignant.id)) {
                                                             _matiere.ens.push(enseignant);
                                                         }
 
