@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
+import fr.openent.competences.helper.NumberHelper;
 import fr.openent.competences.helpers.ExportEvaluationHelper;
 import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.helpers.FutureHelper;
@@ -2504,7 +2505,7 @@ public class DefaultExportService implements ExportService {
                     sousMatiere.put(Field.COEFF,currentCoeff);
                 if(moySousMatiere != null) {
                     coefficient += currentCoeff;
-                    moyenneTotal += moySousMatiere.getDouble(MOYENNE) * currentCoeff;
+                    moyenneTotal += moySousMatiere.getDouble(Field.UNROUND_AVERAGE) * currentCoeff;
                 }
                 sousMatiere.put(DEVOIRS, devoirsSousMatieres);
                 if (i == 0) {
@@ -2513,12 +2514,9 @@ public class DefaultExportService implements ExportService {
                     sousMatieresWithoutFirst.add(sousMatiere);
                 }
             }
-            if(coefficient != 0 ){
-                DecimalFormat decimalFormat = new DecimalFormat("#.00");
-                decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
-                double moyenne = Double.parseDouble(decimalFormat.format((moyenneTotal / coefficient)).replaceAll(",", "."));
-                matiere.put(MOYENNE , moyenne + "/20");
-            }
+            if (coefficient != 0)
+                matiere.put(MOYENNE , NumberHelper.roundUpTenth(moyenneTotal / coefficient) + "/20");
+
             matiere.put(Field.SOUS_MATIERES + Field._TAIL, sousMatieresWithoutFirst);
         }
     }

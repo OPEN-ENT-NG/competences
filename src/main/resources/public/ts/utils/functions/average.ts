@@ -22,6 +22,7 @@ import {IOverrideAverageResponse, Matiere} from "../../models/parent_eleve/Matie
 import {Classe, Devoir} from "../../models/teacher";
 import {Service} from "../../models/common/ServiceSnipplet";
 import {MultiTeaching} from "../../models/common/MultiTeaching";
+import {NumberUtils} from "../number.utils";
 
 /**
  * @param arr liste de nombres
@@ -73,7 +74,7 @@ function getMoyenne(devoirs): number | string {
 
             if (null == moyenne) moyenne = 0.0;
 
-            return +(moyenne).toFixed(1);
+            return NumberUtils.roundUpTenth(moyenne);
         } else {
             return "NN";
         }
@@ -195,8 +196,9 @@ function setSubSubjectAndSubjectAverages(matiere: any, devoirsMatieres: Devoir[]
             if (coefficientSubTopic == 0) {
                 sousMat.moyenne = "NN";
             } else {
-                sousMat.moyenne = (sumMoyenneSubTopic / coefficientSubTopic).toFixed(1);
-                sumMoyenne += sousMat.moyenne * coefficient;
+                const unroundAverage: number = (sumMoyenneSubTopic / coefficientSubTopic);
+                sousMat.moyenne = NumberUtils.roundUpTenth(unroundAverage);
+                sumMoyenne += unroundAverage * coefficient;
                 coefficientMoyenne += coefficient;
             }
         } else {
@@ -205,10 +207,8 @@ function setSubSubjectAndSubjectAverages(matiere: any, devoirsMatieres: Devoir[]
     }
 
     if (!matiere.overrideAverage) {
-        if (coefficientMoyenne != 0)
-            matiere.moyenne = (sumMoyenne / coefficientMoyenne).toFixed(1);
-        else
-            matiere.moyenne = "";
+        if (coefficientMoyenne != 0) matiere.moyenne = NumberUtils.roundUpTenth(sumMoyenne / coefficientMoyenne);
+        else matiere.moyenne = "";
     }
 }
 

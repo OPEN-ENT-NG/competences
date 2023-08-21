@@ -153,6 +153,9 @@ public class Field {
     public static final String LASTNAME = "lastName";
     public static final String LIMIT = "limit";
     public static final String MOYENNE = "moyenne";
+    public static final String NOTEMAX = "noteMax";
+    public static final String NOTEMIN = "noteMin";
+    public static final String UNROUND_AVERAGE = "unround_average";
     public static final String MOYENNES ="moyennes";
     public static final String MOYGENERALEELEVE = "moyGeneraleEleve";
     public static final String MOYENNE_GENERALE = "moyenne_generale";
