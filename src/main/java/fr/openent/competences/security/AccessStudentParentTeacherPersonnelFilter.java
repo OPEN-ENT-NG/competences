@@ -13,7 +13,7 @@ public class AccessStudentParentTeacherPersonnelFilter implements ResourcesProvi
     @Override
     public void authorize(final HttpServerRequest request, Binding binding, UserInfos user, Handler<Boolean> handler) {
         handler.handle((user.getUserId().equals(request.params().get(ID_ELEVE_KEY))
-                || user.getChildrenIds().contains(request.params().get(ID_ELEVE_KEY)) || Field.TEACHER.equals(user.getType())
+                || user.getChildrenIds().contains(request.params().get(ID_ELEVE_KEY)) || Field.TEACHER_PROFIL.equals(user.getType())
                 || Field.PERSONNEL.equals(user.getType()))
         );
     }

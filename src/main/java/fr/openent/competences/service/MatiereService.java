@@ -56,11 +56,14 @@ public interface MatiereService extends CrudService {
       */
      Future<JsonArray> getUnderSubjects(String subjectId, String structureId);
 
+     Future<JsonArray> getMatieresEtab(String idStructure);
      /**
+      *  @deprecated Use @link {#getMatieresEtab(String idStructure)}
       * Récupération des Matières de l'établissement
       * @param idEtablissement
       * @param handler
       */
+     @Deprecated
      void getMatieresEtab(String idEtablissement, Handler<Either<String, JsonArray>> handler);
 
      /**

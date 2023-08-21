@@ -80,31 +80,6 @@ public class DefaultUtilsService implements UtilsService {
 
     }
 
-    public static void setServices(Structure structure, JsonArray servicesJson, List<Service> services, List<SubTopic> subTopics) {
-        for (int i = 0; i < servicesJson.size(); i++) {
-            JsonObject serviceJo = servicesJson.getJsonObject(i);
-            Service service = new Service();
-            service.setStructure(structure);
-            Group group = new Group();
-            group.setId(serviceJo.getString("id_groupe"));
-            service.setGroup(group);
-            Matiere matiere = new Matiere();
-            matiere.setId(serviceJo.getString("id_matiere"));
-            service.setMatiere(matiere);
-            Teacher teacher = new Teacher();
-            teacher.setId(serviceJo.getString("id_enseignant"));
-            service.setTeacher(teacher);
-            service.setEvaluable(serviceJo.getBoolean("evaluable"));
-            service.setVisible(serviceJo.getBoolean("is_visible"));
-            service.setModalite(serviceJo.getString("modalite", ""));
-            service.setCoefficient(serviceJo.getLong("coefficient"));
-            subTopics.stream().filter(subTopic -> subTopic.getService().equals(service))
-                    .forEach(service::addSubtopics);
-            services.add(service);
-
-        }
-    }
-
     @Override
     /**
      * Récupère la liste des professeurs remplaçants du titulaire
@@ -152,22 +127,37 @@ public class DefaultUtilsService implements UtilsService {
             }
         }));
     }
-
     @Override
-    public void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer PeriodeId,
+    public Future<JsonArray> getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer periodId) {
+        Promise promise = Promise.promise();
+        getMultiTeachers(structureId, groupIds, periodId, FutureHelper.handler(promise,
+                String.format("[Competences@%s :: getMultiTeachers] : error to get sql resquet ", this.getClass().getSimpleName())));
+        return promise.future();
+    }
+
+    /**
+     * @deprecated Use @link{#getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer periodId)}
+     * @param structureId
+     * @param groupIds
+     * @param periodId
+     * @param handler
+     */
+    @Override
+    @Deprecated
+    public void getMultiTeachers(final String structureId, final JsonArray groupIds, final Integer periodId,
                                  Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "multiTeaching.getMultiteachers")
-                .put("structureId", structureId)
-                .put("groupIds", groupIds)
-                .put("periodId", PeriodeId != null ? PeriodeId.toString() : null);
+                .put(Field.ACTION, "multiTeaching.getMultiteachers")
+                .put(Field.STRUCTUREID, structureId)
+                .put(Field.GROUPIDS, groupIds)
+                .put(Field.PERIODEID, periodId != null ? periodId.toString() : null);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray result = body.getJsonArray(RESULTS);
                 handler.handle(new Either.Right<>(result));
             } else {
-                handler.handle(new Either.Left<>(body.getString("message")));
+                handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
                 log.error("[Competences] DefaultUtilsService at getMultiteachers : " + body.getString("message"));
             }
         }));
@@ -199,13 +189,49 @@ public class DefaultUtilsService implements UtilsService {
         return promiseMultiTeachers.future();
     }
 
+    public static void setServices(Structure structure, JsonArray servicesJson, List<Service> services, List<SubTopic> subTopics) {
+        for (int i = 0 ; i < servicesJson.size();i++){
+            JsonObject serviceJo = servicesJson.getJsonObject(i);
+            Service service = new Service();
+            service.setStructure(structure);
+            Group group = new Group();
+            group.setId(serviceJo.getString("id_groupe"));
+            service.setGroup(group);
+            Matiere matiere = new Matiere();
+            matiere.setId(serviceJo.getString("id_matiere"));
+            service.setMatiere(matiere);
+            Teacher teacher =  new Teacher();
+            teacher.setId(serviceJo.getString("id_enseignant"));
+            service.setTeacher(teacher);
+            service.setEvaluable(serviceJo.getBoolean("evaluable"));
+            service.setVisible(serviceJo.getBoolean("is_visible"));
+            service.setModalite(serviceJo.getString("modalite",""));
+            service.setCoefficient(serviceJo.getLong("coefficient"));
+            subTopics.stream().filter(subTopic -> subTopic.getService().equals(service))
+                    .forEach(service::addSubtopics);
+            services.add(service);
+
+        }
+    }
+
+    @Override
+    public Future<JsonArray> getServices(final String structureId, final JsonArray ClassIds) {
+        Promise promise = Promise.promise();
+        getServices(structureId, ClassIds, FutureHelper.handler(promise,
+            String.format("[Competences%s::getServices] : error to get services ", this.getClass().getSimpleName())));
+        return promise.future();
+}
+
     /**
+     * @deprecated Use @link{#getServices(final String structureId, final JsonArray ClassIds)}
      * get only evaluable sql services
      *
      * @param structureId
      * @param idsClass    groups or/and classes ids
      * @param handler     request response
      */
+    @Override
+    @Deprecated
     public void getServices(final String structureId, final JsonArray idsClass,
                             Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()

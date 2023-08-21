@@ -20,6 +20,7 @@ public class Field {
     public static final String HASCOMPETENCESNOTES = "hasCompetencesNotes";
 
     //id
+    public static final String  GROUPIDS = "groupIds";
     public static final String ID = "id";
     public static final String _ID = "_id";
     public static final String IDDOMAINE = "idDomaine";
@@ -51,6 +52,7 @@ public class Field {
     public static final String PERIODID = "periodId";
     public static final String ID_ELEVE = "id_eleve";
     public static final String IDELEVE = "idEleve";
+    public static final String IDELEVES = "idEleves";
     public static final String ID_CLASSE = "id_classe";
     public static final String ID_ELEVE_MOYENNE_FINALE = "id_eleve_moyenne_finale";
     public static final String ID_SOUSMATIERE = "id_sousmatiere";
@@ -152,6 +154,9 @@ public class Field {
     public static final String TEACHERS = "teachers";
     public static final String LASTNAME = "lastName";
     public static final String LIMIT = "limit";
+    public static final String MATIERE = "matiere";
+    public static final String MATIERE_COEFF = "matiere_coeff";
+    public static final String MATIERE_RANK = "matiere_rank";
     public static final String MOYENNE = "moyenne";
     public static final String NOTEMAX = "noteMax";
     public static final String NOTEMIN = "noteMin";
@@ -225,6 +230,7 @@ public class Field {
     public static final String COMPETENCENOTES = "competenceNotes";
     public static final String COMPETENCES = "competences";
     public static final String CLASSES = "classes";
+    public static final String TEACHER = "teacher";
     public static final String TRUE = "true";
     public static final String UNDEFINED = "undefined";
     public static final String WHITE = "white";
@@ -374,7 +380,7 @@ public class Field {
 
 
     //UserType
-    public static final String TEACHER = "Teacher";
+    public static final String TEACHER_PROFIL = "Teacher";
     public static final String RELATIVE  = "Relative";
     public static final String STUDENT = "Student";
 }

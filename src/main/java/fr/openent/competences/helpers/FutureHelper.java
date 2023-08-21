@@ -1,11 +1,13 @@
 package fr.openent.competences.helpers;
 
 
+import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.impl.CompositeFutureImpl;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -78,6 +80,18 @@ public class FutureHelper {
         return handler(promise, null);
     }
 
+    public static <R> Handler<Message<JsonObject>> handlerToAsyncHandler(Promise<R> promise, String errorMessage) {
+        return message -> {
+            JsonObject body = message.body();
+            if (Field.OK.equals(body.getString(Field.STATUS))) {
+                promise.complete((R) body.getValue(Field.RESULTS));
+                return;
+            }
+            LOGGER.error(String.format("%s %s", (errorMessage != null ? errorMessage : ""), body.getString(Field.MESSAGE)));
+            promise.fail(errorMessage != null ? errorMessage : body.getString(Field.MESSAGE));
+        };
+    }
+
     public static <R> Handler<Either<String, R>> handler(Promise<R> promise, String errorMessage) {
         return event -> {
             if (event.isRight()) {
@@ -88,7 +102,6 @@ public class FutureHelper {
             promise.fail(errorMessage != null ? errorMessage : event.left().getValue());
         };
     }
-
     public static <T> CompositeFuture all(List<Future<T>> futures) {
         return CompositeFutureImpl.all(futures.toArray(new Future[futures.size()]));
     }
