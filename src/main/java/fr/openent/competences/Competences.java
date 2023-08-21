@@ -294,6 +294,7 @@ public class Competences extends BaseServer {
         ServiceFactory serviceFactory = new ServiceFactory(vertx, storage, Sql.getInstance(), config);
 
         // Controller
+        addController(new ConfigController());
         addController(new CompetencesController(eventStore));
         addController(new AnnotationController());
         addController(new AppreciationController());

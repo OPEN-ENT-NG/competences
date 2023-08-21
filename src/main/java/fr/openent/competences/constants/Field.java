@@ -359,6 +359,8 @@ public class Field {
     public static final String SQLADMINADRESS = "sqlAdminAdress";
     public static final String SQLPERSISTORADMIN = "sql.persistor.admin";
     public static final String SQLAPPS = "apps";
+    public static final String NODEPDFGENERATOR = "node-pdf-generator";
+    public static final String AUTHORIZATION = "authorization";
 
     // Responsible
     public static final String ZIPCODE = "zipCode";
