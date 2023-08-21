@@ -19,6 +19,23 @@ import { Model, Collection } from 'entcore';
 import { Competence } from "../teacher";
 import {Matiere} from "../parent_eleve/Matiere";
 
+export interface ICompetenceResponse {
+    id: number;
+    nom?: string;
+    index?: number;
+    code_domaine?: string;
+    hasnameperso?: boolean;
+    ismanuelle?: boolean;
+    masque?: boolean;
+    competences_2?: ICompetenceResponse[];
+    id_cycle?: number;
+    id_enseignement?: number;
+    id_parent?: number;
+    id_type?: number;
+    ids_domaine?: string;
+    ids_domaine_int?: number[];
+}
+
 export class DefaultCompetence extends Model {
     competences: Collection<Competence>;
     selected: boolean;
