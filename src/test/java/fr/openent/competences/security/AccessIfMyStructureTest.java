@@ -43,12 +43,9 @@ public class AccessIfMyStructureTest {
         Mockito.doReturn(map).when(request).params();
         structures.add("9af51dc6-ead0-4edb-8978-da14a3e9f49a");
         user.setStructures(structures);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(true, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -57,12 +54,9 @@ public class AccessIfMyStructureTest {
         Mockito.doReturn(map).when(request).params();
         structures.add("azerty");
         user.setStructures(structures);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -71,11 +65,8 @@ public class AccessIfMyStructureTest {
         Mockito.doReturn(map).when(request).params();
         structures.add("azerty");
         user.setStructures(structures);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 }

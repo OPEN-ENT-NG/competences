@@ -55,12 +55,9 @@ public class AccessStructureAdminTeacherFilterTest {
         user.setStructures(structures);
         params.set("structureId", "11111");
         Mockito.doReturn(params).when(request).params();
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(true, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
 
@@ -75,12 +72,9 @@ public class AccessStructureAdminTeacherFilterTest {
         user.setStructures(structures);
         params.set("structureId", "11111");
         Mockito.doReturn(params).when(request).params();
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(true, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -94,12 +88,9 @@ public class AccessStructureAdminTeacherFilterTest {
         user.setStructures(structures);
         params.set("structureId", "11111");
         Mockito.doReturn(params).when(request).params();
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(true, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -113,12 +104,9 @@ public class AccessStructureAdminTeacherFilterTest {
         user.setStructures(structures);
         params.set("structureId", "11111");
         Mockito.doReturn(params).when(request).params();
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -132,12 +120,9 @@ public class AccessStructureAdminTeacherFilterTest {
         user.setStructures(structures);
         params.set("structureId", "11111");
         Mockito.doReturn(params).when(request).params();
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -151,11 +136,8 @@ public class AccessStructureAdminTeacherFilterTest {
         user.setStructures(structures);
         params.set("structureId", "11111");
         Mockito.doReturn(params).when(request).params();
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 }

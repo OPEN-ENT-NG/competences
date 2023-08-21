@@ -1,11 +1,10 @@
 package fr.openent.competences.service.impl;
-
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.CompetenceNoteService;
 import fr.openent.competences.service.ServiceFactory;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.entcore.common.sql.Sql;
@@ -14,27 +13,33 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 import org.powermock.reflect.Whitebox;
-
 import java.util.Arrays;
 import java.util.List;
 
-import static org.mockito.Mockito.mock;
 
-@RunWith(VertxUnitRunner.class)
+@RunWith(PowerMockRunner.class)
+@PowerMockRunnerDelegate(VertxUnitRunner.class)
+@PrepareForTest({Sql.class})
 public class DefaultCompetenceNoteServiceTest {
 
     private static final String STRUCTURE_ID = "111";
     private static final List<String> STUDENT_IDS = Arrays.asList("222", "333");
     private static final long PERIOD_ID = 3;
     private static final String GROUP_ID = "444";
-    private final Sql sql = mock(Sql.class);
+    private Sql sql;
     private CompetenceNoteService competenceNoteService;
 
     @Before
     public void setUp() throws NoSuchFieldException {
-        Sql.getInstance().init(Vertx.vertx().eventBus(), "");
-        ServiceFactory serviceFactory = new ServiceFactory(Vertx.vertx(), null, Sql.getInstance(), null);
+        this.sql = Mockito.spy(Sql.getInstance());
+        PowerMockito.spy(Sql.class);
+        PowerMockito.when(Sql.getInstance()).thenReturn(sql);
+        ServiceFactory serviceFactory = new ServiceFactory(Vertx.vertx(), null, sql, null);
         this.competenceNoteService = serviceFactory.competenceNoteService();
     }
 
@@ -66,18 +71,20 @@ public class DefaultCompetenceNoteServiceTest {
                 .addAll(new JsonArray(STUDENT_IDS))
                 .add(PERIOD_ID)
                 .add(GROUP_ID);
-
+        Async async = ctx.async();
         Mockito.doAnswer((Answer<Void>) invocation -> {
             String queryResult = invocation.getArgument(0);
             JsonArray paramsResult = invocation.getArgument(1);
             ctx.assertEquals(queryResult.trim().replaceAll("\\s+", " "),
                     expectedQuery.trim().replaceAll("\\s+", " "));
             ctx.assertEquals(paramsResult, expectedParams);
+            async.complete();
             return null;
-        }).when(sql).prepared(Mockito.anyString(), Mockito.any(JsonArray.class), Mockito.any(Handler.class));
+        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
 
         Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsValidatedPercentageRequest",
                 STRUCTURE_ID, STUDENT_IDS, PERIOD_ID, GROUP_ID, true);
+        async.awaitSuccess(10000);
     }
 
     @Test

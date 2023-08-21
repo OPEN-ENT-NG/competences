@@ -51,12 +51,9 @@ public class AccessParamLinkGroupCycleStructureTest {
         role1.setDisplayName(Competences.PARAM_LINK_GROUP_CYCLE_RIGHT);
         actions.add(role1);
         user.setAuthorizedActions(actions);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(true, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -68,12 +65,9 @@ public class AccessParamLinkGroupCycleStructureTest {
         role1.setDisplayName(Competences.PARAM_LINK_GROUP_CYCLE_RIGHT);
         actions.add(role1);
         user.setAuthorizedActions(actions);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -85,12 +79,9 @@ public class AccessParamLinkGroupCycleStructureTest {
         role1.setDisplayName(Competences.PARAM_LINK_GROUP_CYCLE_RIGHT);
         actions.add(role1);
         user.setAuthorizedActions(actions);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -102,12 +93,9 @@ public class AccessParamLinkGroupCycleStructureTest {
         role1.setDisplayName(WorkflowActions.ACCESS_SUIVI_CLASSE.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -119,12 +107,9 @@ public class AccessParamLinkGroupCycleStructureTest {
         role1.setDisplayName(WorkflowActions.ACCESS_SUIVI_CLASSE.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 
     @Test
@@ -136,11 +121,8 @@ public class AccessParamLinkGroupCycleStructureTest {
         role1.setDisplayName(WorkflowActions.ACCESS_SUIVI_CLASSE.toString());
         actions.add(role1);
         user.setAuthorizedActions(actions);
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
     }
 }

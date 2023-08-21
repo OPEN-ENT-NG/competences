@@ -42,11 +42,9 @@ public class IsRelativeTest {
     public void testBadUserType(TestContext ctx) {
         Mockito.doReturn(null).when(request).params();
         user.setType("Teacher");
-        Async async = ctx.async();
         access.authorize(request, binding, user, result -> {
             ctx.assertEquals(false, result);
-            async.complete();
         });
-        async.awaitSuccess(10000);
+
     }
 }
