@@ -54,6 +54,6 @@
     "moment": "^2.21.0",
     "ts-jest": "^26.4.2",
     "sass": "^1.49.9",
-    "entcore-css-lib": "npm:ode-csslib@4.0.12"
+    "entcore-css-lib": "npm:ode-csslib@4.1.0"
   }
 }
