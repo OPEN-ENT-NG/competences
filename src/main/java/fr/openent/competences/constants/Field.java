@@ -24,6 +24,7 @@ public class Field {
     public static final String ID = "id";
     public static final String _ID = "_id";
     public static final String IDDOMAINE = "idDomaine";
+    public static final String IDUSERS = "idUsers";
     public static final String ID_ELEVE_NOTES = "id_eleve_notes";
     public static final String IDSTRUCTURE = "idStructure";
     public static final String STRUCTUREID = "structureId";
@@ -59,6 +60,7 @@ public class Field {
     public static final String ID_MATIERE_MOYF = "id_matiere_moyf";
     public static final String ID_ENSEIGNANT = "id_enseignant";
     public static final String IDENSEIGNANT = "idEnseignant";
+    public static final String C = "c";
     public static final String CLASSID = "classId";
     public static final String DEVOIRID = "devoirId";
     public static final String IDDEVOIR = "idDevoir";
@@ -187,9 +189,11 @@ public class Field {
     public static final String HASSOUSMATIERE = "hasSousMatiere";
     public static final String COEFF = "coeff";
     public static final String DISPLAYNAME = "displayName";
+    public static final String DISPLAYNAMEENSEIGNANT = "displayNameEnseignant";
     public static final String CLASSTYPE = "classType";
     public static final String FORMATE = "formate";
     public static final String IS_VISIBLE = "is_visible";
+    public static final String ISBACKUP = "isBackup";
     public static final String dateFormateYYYYMMDDTHHMMSS  = "yyyy-MM-dd'T'HH:mm:ss";
     public static final String IS_ANNOTATION = "is_annotation";
     public static final String NOTE = "note";
@@ -222,6 +226,7 @@ public class Field {
     public static final String SCORES = "scores";
     public static final String SHOWSKILLS = "showSkills";
     public static final String SHOWSCORES = "showScores";
+    public static final String SHOWSUBSUBJECTS = "showSubSubjects";
     public static final String EMPTY = "empty";
     public static final String NIVEAU_FINAL = "niveau_final";
     public static final String BODY = "body";
@@ -238,6 +243,7 @@ public class Field {
 
     // PDF
     public static final String TOTALCOLUMN = "totalColumn";
+    public static final String ROWSPAN = "rowspan";
 
     //
 

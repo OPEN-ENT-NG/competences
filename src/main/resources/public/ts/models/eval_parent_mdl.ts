@@ -18,7 +18,7 @@
 /**
  * Created by ledunoiss on 08/08/2016.
  */
-import {model, Model, http as HTTP, Collection, _, Behaviours} from 'entcore';
+import {model, Model, http as HTTP, Collection, _, Behaviours, workspace} from 'entcore';
 import { Classe } from './parent_eleve/Classe';
 import { Devoir } from './parent_eleve/Devoir';
 import { Matiere } from './parent_eleve/Matiere';
@@ -32,6 +32,8 @@ import http from 'axios';
 import {getTitulairesForRemplacantsCoEnseignant} from "../utils/functions/getTitulairesForRemplacantsCoEnseignant";
 import httpAxios from "axios";
 import {Service} from "./common/ServiceSnipplet";
+import service = workspace.v2.service;
+import {MultiTeaching} from "./common/MultiTeaching";
 
 declare let location: any;
 declare let require: any;
@@ -121,7 +123,6 @@ export class Evaluations extends Model {
                                     matiere.sousMatieres.load(_.find(matieres, {id : matiere.id}).sous_matieres);
                                 }
                             });
-                            console.log("on passe là", matieres);
                             resolve();
                         }).bind(this);
                     });
@@ -267,35 +268,29 @@ export class Evaluations extends Model {
                                                 let filteredServices = this.services.filter((service) => {
                                                     return _.contains(groupesDevoirs, service.id_groupe) && service.evaluable;
                                                 });
+                                                let showSecondTeacher = (serviceTeacher: MultiTeaching, teacher: Enseignant): boolean =>
+                                                    serviceTeacher.is_visible &&
+                                                    serviceTeacher.second_teacher_id === teacher.id;
 
-                                                _.forEach(filteredServices, service => {
-                                                    let _matiere = that.matieres.findWhere({id: service.id_matiere});
-                                                    if(_matiere !== undefined) {
+                                                that.matieres.forEach((matiere: Matiere) => {
+                                                    matiere.hasDevoirWithNote = matieresDevoirs
+                                                        .some(subjectRatingId => subjectRatingId === matiere.id);
 
-                                                        let enseignant = that.enseignants.findWhere({id: service.id_enseignant});
-                                                        if(enseignant !== undefined && service.is_visible &&
-                                                            (homeworksOwner.some(ownerId => ownerId === enseignant.id) ||
-                                                                service.id_enseignant === enseignant.id)) {
-                                                            _matiere.ens.push(enseignant);
-                                                        }
+                                                    let service = filteredServices.find((service: Service) =>
+                                                        service.is_visible && service.id_matiere === matiere.id);
 
-                                                        _.forEach(service.coTeachers, coTeacher => {
-                                                            let enseignant = that.enseignants.findWhere({id: coTeacher.second_teacher_id});
-                                                            if(coTeacher.is_visible && enseignant != undefined && !_.contains(_matiere.ens, enseignant)) {
-                                                                _matiere.ens.push(enseignant);
-                                                            }
-                                                        });
+                                                    if (!!service)
+                                                        matiere.ens = that.enseignants.filter((teacher: Enseignant) =>
+                                                            (teacher.id === service.id_enseignant) ||
 
-                                                        _.forEach(service.substituteTeachers, substituteTeacher => {
-                                                            let enseignant = that.enseignants.findWhere({id: substituteTeacher.second_teacher_id});
-                                                            let conditionForDate = periode != undefined ? Utils.checkDateForSubTeacher(substituteTeacher, periode) : true;
+                                                            (service.coTeachers.some((coTeacher: MultiTeaching) =>
+                                                                    showSecondTeacher(coTeacher, teacher)) &&
+                                                                homeworksOwner.some((ownerId: string) => ownerId === teacher.id)) ||
 
-                                                            if(substituteTeacher.is_visible && enseignant != undefined && !_.contains(_matiere.ens, enseignant) && conditionForDate) {
-                                                                _matiere.ens.push(enseignant);
-                                                            }
-                                                        });
-                                                        _matiere.hasDevoirWithNote = _.contains(matieresDevoirs, _matiere.id);
-                                                    }
+                                                            service.substituteTeachers.some((substituteTeacher: MultiTeaching) =>
+                                                                showSecondTeacher(substituteTeacher, teacher) &&
+                                                                (!periode || Utils.checkDateForSubTeacher(substituteTeacher, periode)))
+                                                        );
                                                 });
                                                 resolve();
                                             })
