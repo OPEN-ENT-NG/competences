@@ -131,11 +131,14 @@ public class Field {
     // SUBJECT
     public static final String SUBJECTS = "subjects";
 
+    //LSU
+    public static final String EPI = "EPI";
 
     //variables
     public static final String AVERAGES = "averages";
     public static final String APPRECIATION_MATIERE_PERIODE = "appreciation_matiere_periode";
     public static final String COLOR = "color";
+    public static final String DESCRIPTION = "description";
     public static final String PREVIOUSAPPRECIATIONS = "previousAppreciations";
     public static final String FIRSTNAME = "firstName";
     public static final String FINALAVERAGES = "finalAverages";
@@ -154,6 +157,7 @@ public class Field {
     public static final String COEFFICIENT = "coefficient";
     public static final String GROUPS = "groups";
     public static final String TEACHERS = "teachers";
+    public static final String THEME = "theme";
     public static final String LASTNAME = "lastName";
     public static final String LIMIT = "limit";
     public static final String MATIERE = "matiere";

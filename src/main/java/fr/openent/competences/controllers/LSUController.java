@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.lsun.ElementProgramme;
 import fr.openent.competences.bean.lsun.*;
+import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.LevelCycle;
 import fr.openent.competences.model.Service;
 import fr.openent.competences.model.SubTopic;
@@ -2188,13 +2189,14 @@ public class LSUController extends ControllerHelper {
                                 && element.getJsonArray("groupes").size() > 0) {
 
                             Epi epi = objectFactory.createEpi();
-                            EpiThematique epiThematique = objectFactory.createEpiThematique();;
+                            EpiThematique epiThematique = objectFactory.createEpiThematique();
                             EpiGroupe epiGroupe = objectFactory.createEpiGroupe();
-                            JsonObject theme = element.getJsonObject("theme");
+                            JsonObject theme = element.getJsonObject(Field.THEME);
 
-                            epi.setId("EPI_" + element.getInteger("id"));
-                            epi.setIntitule(theme.getString("libelle"));
-                            epi.setDescription(element.getString("description"));
+                            String description = element.getString(Field.DESCRIPTION);
+                            epi.setId(String.format("%s_%s", Field.EPI, element.getInteger(Field.ID)));
+                            epi.setIntitule(theme.getString(Field.LIBELLE));
+                            epi.setDescription(description != null && !"".equals(description.trim()) ? description : null);
 
                             if (ThematiqueEpi.contains(theme.getString("code"))) {
                                 epi.setThematique(theme.getString("code"));
