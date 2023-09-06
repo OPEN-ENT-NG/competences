@@ -2030,9 +2030,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                     .filter(el -> teacher.getId().equals(el.getTeacher().getId())
                                             && matiere.getId().equals(el.getMatiere().getId())
                                             && group.getId().equals(el.getGroup().getId()))
-                                    .findFirst().orElse(null);
+                                    .findFirst().orElse(new Service());
 
-                            if (service == null) {
+                            if (service.getStructure() == null) {
                                 //On regarde les multiTeacher
                                 for (Object mutliTeachO : multiTeachers) {
                                     JsonObject multiTeaching = (JsonObject) mutliTeachO;
@@ -2043,7 +2043,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                                 .filter(el -> el.getTeacher().getId().equals(multiTeaching.getString(Field.SECOND_TEACHER_ID))
                                                         && matiere.getId().equals(el.getMatiere().getId())
                                                         && group.getId().equals(el.getGroup().getId()))
-                                                .findFirst().orElse(null);
+                                                .findFirst().orElse(new Service());
                                     }
 
                                     if (multiTeaching.getString(Field.SECOND_TEACHER_ID).equals(teacher.getId())
@@ -2054,7 +2054,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                                 .filter(el -> multiTeaching.getString(Field.MAIN_TEACHER_ID).equals(el.getTeacher().getId())
                                                         && matiere.getId().equals(el.getMatiere().getId())
                                                         && group.getId().equals(el.getGroup().getId()))
-                                                .findFirst().orElse(null);
+                                                .findFirst().orElse(new Service());
                                     }
                                 }
                             }
