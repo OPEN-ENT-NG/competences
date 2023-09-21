@@ -1,4 +1,4 @@
-<div class="evaluations-sniplet paramServices vsco--global">
+<div class="evaluations-sniplet param-services vsco--global">
     <div class="twelve twelve-mobile">
 
         <h3>
@@ -44,38 +44,38 @@
             </div>
 
             <div class="twelve cell">
-                <div class="row tab-header"  offset="64">
-                    <span class="[[columns.matiere.size]] cell-indent cell service-tab-header-center">
+                <div class="flex-row tab-header"  offset="64">
+                    <span class="flex-two cell-indent cell service-tab-header-center">
                        <h4 class="fit-font-size" ng-click="changeSort('topicName')">[[lang.translate(columns.matiere.name)]]
                            <span ng-show="sortBy === 'topicName'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
                        </h4>
                     </span>
-                    <span class="[[columns.classe.size]] cell-indent cell service-tab-header-left">
+                    <span class="flex-two cell-indent cell service-tab-header-left">
                         <h4 class="fit-font-size" ng-click="changeSort('nom_groupe')">[[lang.translate(columns.classe.name)]]
                             <span ng-show="sortBy === 'nom_groupe'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
                         </h4>
                     </span>
-                    <span class="[[columns.enseignant.size]] cell-indent cell service-tab-header-center">
+                    <span class="flex-two cell-indent cell service-tab-header-center">
                         <h4 class="fit-font-size" ng-click="changeSort('nom_enseignant')">[[lang.translate(columns.enseignant.name)]]
                             <span ng-show="sortBy === 'nom_enseignant'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
                         </h4>
                     </span>
-                    <span class="[[columns.remplacement.size]] cell-indent cell service-tab-header-center">
+                    <span class="flex-two cell-indent cell service-tab-header-center">
                         <h4 class="fit-font-size" ng-click="changeSort('remplacement')">[[lang.translate(columns.remplacement.name)]]
                             <span ng-show="sortBy === 'remplacement'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
                         </h4>
                     </span>
-                    <span class="[[columns.coefficient.size]] cell-indent cell service-tab-header-center">
+                    <span class="flex-one cell-indent cell service-tab-header-center">
                         <h4 class="fit-font-size" ng-click="changeSort('coefficient')">[[lang.translate(columns.coefficient.name)]]
                             <span ng-show="sortBy === 'coefficient'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
                         </h4>
                     </span>
-                    <span class="[[columns.modalite.size]] cell-indent cell service-tab-header-center">
+                    <span class="flex-one cell-indent cell service-tab-header-center">
                         <h4 class="fit-font-size" ng-click="changeSort('modalite')">[[lang.translate(columns.modalite.name)]]
                             <span ng-show="sortBy === 'modalite'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
                         </h4>
                     </span>
-                    <span class="[[columns.evaluable.size]] cell-indent cell service-tab-header-center">
+                    <span class="flex-one cell-indent cell service-tab-header-center">
                         <h4 class="fit-font-size" ng-click="changeSort('evaluable')">[[lang.translate(columns.evaluable.name)]]
                             <span ng-show="sortBy === 'evaluable'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
                         </h4>
@@ -85,15 +85,15 @@
 
                 <div ng-show="!showServicesLoader" class="service-list-container"
                      ng-repeat="service in (filteredItems = ( services | orderBy:sortBy:!sortByAsc  | filter:filterSearch())) track by $index ">
-                    <div class="row serviceList" ng-click="deploySubtopics(service)" ng-class="{'active':service.deploy}">
-                        <div class="[[columns.matiere.size]] cellTab ellipsis cellTab-left" tooltip="[[service.topicName]]">
+                    <div class="flex-row align-center serviceList" ng-click="deploySubtopics(service)" ng-class="{'active':service.deploy}">
+                        <div class="flex-two cellTab ellipsis cellTab-left" tooltip="[[service.topicName]]">
                             <span>[[service.topicName]]</span>
                         </div>
-                        <div class="[[columns.classe.size]]  cellTab ellipsis cellTab-left" tooltip="[[service.groups_name]]">
+                        <div class="flex-two  cellTab ellipsis cellTab-left" tooltip="[[service.groups_name]]">
                             [[service.groups_name ? service.groups_name : service.nom_groupe]]
                         </div>
 
-                        <div class="[[columns.enseignant.size]] cellTab ellipsis cellTab-center">
+                        <div class="flex-two cellTab ellipsis cellTab-center">
                             <span ng-show="service.coTeachers.length > 0 || service.substituteTeachers.length > 0">
                                 <span ng-click="switchServiceVisibility(service)"
                                       ng-class="{'disabled-eye' : canSwitchServiceVisibility(service)}">
@@ -116,7 +116,7 @@
 
                             </div>
                         </div>
-                        <div class="[[columns.remplacement.size]] cellTab ellipsis cellTab-center">
+                        <div class="flex-two cellTab ellipsis cellTab-center">
                             <div ng-if="service.substituteTeachers.length > 0"
                                  ng-repeat="substituteTeacher in service.substituteTeachers">
                                 <div ng-if="substituteTeacher.displayName.length > 0">
@@ -138,14 +138,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="[[columns.coefficient.size]] ellipsis cellTab cellTab-center">
+                        <div class="flex-one ellipsis cellTab cellTab-center">
                             <input  type="number" class="eleven cellTab three-mobile cellTab-center"
                                     ng-blur="service.updateServices(false,true)"
                                     placeholder="[[service.coefficientPlaceHolder]]"
                                     ng-click="$event.stopPropagation()"
                                     ng-model="service.coefficient" min="0"></div>
 
-                        <div class="cellTab cellTab-left  select [[columns.modalite.size]]">
+                        <div class="cellTab cellTab-left  select flex-one">
                             <select ng-model="service.modalite"
                                     ng-click="$event.stopPropagation()"
                                     ng-change="service.updateServices(true,false)">
@@ -153,8 +153,8 @@
                                         ng-disabled="modalite === lang.translate('multiples')" >[[modalite]]</option>
                             </select>
                         </div>
-                        <div class="cellTab one cellTab-center flex-row">
-                            <div class="five inline-block">
+                        <div class="cellTab flex-one cellTab-center flex-row">
+                            <div style="display: flex">
                                 <div class="svg-image">
                                     <input ng-show="service.hasAllServicesEvaluable()" type="image" src="/competences/public/img/scss/checkbox-marked.svg"
                                            ng-click="switchEvaluableService(service);$event.stopPropagation()"alt="switchEvaluableService">
@@ -164,13 +164,13 @@
                                            ng-click="switchEvaluableService(service);$event.stopPropagation()"alt="switchEvaluableService">
                                 </div>
                             </div>
-                            <div class="three inline-block">
+                            <div style="display: flex">
                                 <div class="svg-image">
                                     <input ng-show="service.hasCompetencesParams()" type="image" src="/competences/public/img/scss/cog.svg"
                                            ng-click="openUpdateLightbox(service);$event.stopPropagation()"alt="i18nAfaire">
                                 </div>
                             </div>
-                            <div class="two inline-block" tooltip="[[lang.translate('evaluation.service.tooltip.subtopic')]]">
+                            <div style="display: flex" tooltip="[[lang.translate('evaluation.service.tooltip.subtopic')]]">
                                 <div ng-show="service.subTopics && service.subTopics.length > 0" class="svg-image">
                                     <i class="mdi-book"></i>
                                 </div>
@@ -316,4 +316,8 @@
             </button>
         </lightbox>
     </div>
+
+    <script>
+
+    </script>
 </div>

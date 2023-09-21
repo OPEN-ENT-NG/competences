@@ -13,7 +13,6 @@ export const paramServices = {
     description: 'Permet le parametrage des services',
     that: undefined,
     controller: {
-
         initServices: async function () {
             await paramServices.that.setServices();
             paramServices.that.classesSelected = [];
@@ -21,6 +20,13 @@ export const paramServices = {
 
         init: async function () {
             console.log(" ParamServices");
+
+            let linkElement: HTMLLinkElement = document.createElement('link');
+            linkElement.rel = 'stylesheet';
+            linkElement.type = 'text/css';
+            linkElement.href = '/competences/public/css/competences.css?v=@@VERSION';
+            document.head.appendChild(linkElement);
+
             this.idStructure = this.source.idStructure;
             this.services = [];
             this.searchToFilter = [];
@@ -575,5 +581,5 @@ export const paramServices = {
                 new MultiTeaching(multiTeacher).updateMultiTeaching();
             }
         },
-    }
+    },
 }
