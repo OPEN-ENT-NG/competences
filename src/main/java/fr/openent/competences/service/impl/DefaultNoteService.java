@@ -1933,33 +1933,45 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public void getMoyennesFinal(String[] idEleves, Integer idPeriode,
                                  String[] idMatieres, String[] idClasses, Handler<Either<String, JsonArray>> handler) {
 
+        getFinalAverage(idEleves, idPeriode, idMatieres, idClasses)
+                .onSuccess( responseFianalAverage -> new Either.Right(responseFianalAverage))
+                .onFailure(failAverageFinal -> {
+                    new Either.Left<>(failAverageFinal.getMessage());
+                    log.error ( String.format("[Competences@%s::getFinalAverage] error sql to get final average : %s",
+                            getClass().getSimpleName(), failAverageFinal.getMessage()));
+                });
+    }
+
+    public Future<JsonArray> getFinalAverage(String[] idStudents, Integer idPeriod, String[] idsSubjects, String[] idsClasses) {
+        Promise averageFinalPromise = Promise.promise();
+
         String query = "SELECT * FROM " + COMPETENCES_SCHEMA + ".moyenne_finale";
         String condition = "";
         JsonArray values = new JsonArray();
 
-        if ((idEleves != null && idEleves.length > 0)
-                || (idMatieres != null && idMatieres.length > 0)
-                || (idClasses != null && idClasses.length > 0)
-                || idPeriode != null) {
+        if ((idStudents != null && idStudents.length > 0)
+                || (idsSubjects != null && idsSubjects.length > 0)
+                || (idsClasses != null && idsClasses.length > 0)
+                || idPeriod != null) {
             condition += " WHERE ";
-            if (idEleves != null && idEleves.length > 0) {
-                condition += "id_eleve IN " + Sql.listPrepared(idEleves) + " AND ";
-                Arrays.stream(idEleves).forEach(values::add);
+            if (idStudents != null && idStudents.length > 0) {
+                condition += "id_eleve IN " + Sql.listPrepared(idStudents) + " AND ";
+                Arrays.stream(idStudents).forEach(values::add);
             }
 
-            if (idMatieres != null && idMatieres.length > 0) {
-                condition += "id_matiere IN " + Sql.listPrepared(idMatieres) + " AND ";
-                Arrays.stream(idMatieres).forEach(values::add);
+            if (idsSubjects != null && idsSubjects.length > 0) {
+                condition += "id_matiere IN " + Sql.listPrepared(idsSubjects) + " AND ";
+                Arrays.stream(idsSubjects).forEach(values::add);
             }
 
-            if (idClasses != null && idClasses.length > 0) {
-                condition += "id_classe IN " + Sql.listPrepared(idClasses) + " AND ";
-                Arrays.stream(idClasses).forEach(values::add);
+            if (idsClasses != null && idsClasses.length > 0) {
+                condition += "id_classe IN " + Sql.listPrepared(idsClasses) + " AND ";
+                Arrays.stream(idsClasses).forEach(values::add);
             }
 
-            if (idPeriode != null) {
+            if (idPeriod != null) {
                 condition += "id_periode = ?";
-                values.add(idPeriode);
+                values.add(idPeriod);
             }
 
             if (condition.endsWith(" AND ")) {
@@ -1967,7 +1979,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
         }
 
-        Sql.getInstance().prepared(query + condition, values, validResultHandler(handler));
+        Sql.getInstance().prepared(query + condition, values, validResultHandler(FutureHelper.handler(averageFinalPromise,
+                String.format("[Competences@%s::getFinalAverage] error sql to get final average : ", getClass().getSimpleName()))));
+
+
+        return averageFinalPromise.future();
     }
 
     @Override

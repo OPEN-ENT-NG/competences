@@ -3,10 +3,7 @@ package fr.openent.competences.helpers;
 
 import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.impl.CompositeFutureImpl;
 import io.vertx.core.json.JsonArray;
@@ -79,7 +76,6 @@ public class FutureHelper {
     public static <R> Handler<Either<String, R>> handler(Promise<R> promise) {
         return handler(promise, null);
     }
-
     public static <R> Handler<Message<JsonObject>> handlerToAsyncHandler(Promise<R> promise, String errorMessage) {
         return message -> {
             JsonObject body = message.body();

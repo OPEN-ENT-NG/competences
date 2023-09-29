@@ -88,7 +88,8 @@
                               function-open-detail-competence="openDetailCompetence">
             </teachings-skills>
             <div  ng-if="enseignement.matieres.all.length > 0" ng-repeat=" matiere in enseignement.matieres.all | orderBy:['name']">
-                <h2 class="changedAverage" ng-class="{'openedDom' : matiere.OpenMat}" ng-click =" matiere.OpenMat = !matiere.OpenMat" ng-init= "matiere.OpenMat = false">[[matiere.name]]</h2>
+                <h2 class="changedAverage" ng-class="{'openedDom' : matiere.OpenMat}" ng-click =" matiere.OpenMat = !matiere.OpenMat"
+                    ng-init= "matiere.OpenMat = false">[[matiere.name]]</h2>
                 <div ng-class="{'openedSectionDom' : matiere.OpenMat}" style='height: auto;'>
                     <teachings-skills data="matiere"
                                       suivi-filter="suiviFilter"

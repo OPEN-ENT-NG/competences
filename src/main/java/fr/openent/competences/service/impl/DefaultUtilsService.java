@@ -169,7 +169,7 @@ public class DefaultUtilsService implements UtilsService {
                 .put("action", "multiTeaching.getAllMultiteachers")
                 .put("structureId", structureId)
                 .put("groupIds", groupIds);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray result = body.getJsonArray(RESULTS);
@@ -214,41 +214,56 @@ public class DefaultUtilsService implements UtilsService {
         }
     }
 
-    @Override
-    public Future<JsonArray> getServices(final String structureId, final JsonArray ClassIds) {
-        Promise promise = Promise.promise();
-        getServices(structureId, ClassIds, FutureHelper.handler(promise,
-            String.format("[Competences%s::getServices] : error to get services ", this.getClass().getSimpleName())));
-        return promise.future();
-}
+    /**
+     *
+     * @param structureId
+     * @param idsClass
+     * @return future JsonArray
+     */
+    public Future<JsonArray> getServices(final String structureId, final JsonArray idsClass){
+        Promise promiseService = Promise.promise();
+
+        JsonObject action = new JsonObject()
+                .put(Field.ACTION, "service.getServices")
+                .put(Field.IDSTRUCTURE, structureId)
+                .put(Field.AIDGROUPE, idsClass)
+                .put(Field.EVALUABLE, true);
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray results = body.getJsonArray(RESULTS);
+                promiseService.complete(results);//handler.handle(new Either.Right<String, JsonArray>(results));
+            } else {
+                promiseService.fail(body.getString(Field.MESSAGE));//handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                log.error(String.format("[Competences@%s::getServices ] sql request eventBus viesco  : %s",
+                        this.getClass().getSimpleName(), body.getString(Field.MESSAGE)));
+            }
+        }));
+
+        return promiseService.future();
+    }
+
 
     /**
-     * @deprecated Use @link{#getServices(final String structureId, final JsonArray ClassIds)}
+     * @link{#Future<JsonArray> getServices(final String structureId, final JsonArray idsClass)}
      * get only evaluable sql services
      *
      * @param structureId
      * @param idsClass    groups or/and classes ids
      * @param handler     request response
      */
-    @Override
     @Deprecated
     public void getServices(final String structureId, final JsonArray idsClass,
                             Handler<Either<String, JsonArray>> handler) {
-        JsonObject action = new JsonObject()
-                .put("action", "service.getServices")
-                .put("idStructure", structureId)
-                .put("aIdGroupe", idsClass)
-                .put("evaluable", true);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
-            JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                JsonArray results = body.getJsonArray(RESULTS);
-                handler.handle(new Either.Right<String, JsonArray>(results));
-            } else {
-                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                log.error("getServices : " + body.getString("message"));
-            }
-        }));
+        getServices(structureId,  idsClass)
+                .onSuccess(results -> {
+                    handler.handle(new Either.Right<String, JsonArray>(results));
+                })
+                .onFailure(error -> {
+                    handler.handle(new Either.Left<String, JsonArray>(error.getMessage()));
+                    log.error(String.format("[Competences@%s::getServices ] sql request eventBus viesco  : %s",
+                            this.getClass().getSimpleName(), error.getMessage()));
+        });
     }
 
     @Override

@@ -16,7 +16,8 @@
   -->
 <div ng-if="!search.classe || search.classe.id_cycle !== null">
     <article class="ten card twelve-mobile centered"
-             ng-if="informations.classe === undefined || informations.classe === '' || search.classe === ''|| search.classe === '*'  || search.classe === null">
+             ng-if="informations.classe === undefined || informations.classe === '' || search.classe === ''|| search.classe === '*'
+              || search.classe === null || search.periode === null">
         <i18n>evaluation.suivi.classe.empty</i18n>
     </article>
 </div>
@@ -42,8 +43,9 @@
             <input type="radio" ng-change="changePrintSuiviClasse('printTabMoys')" ng-model="suiviClasse.print" value="printTabMoys">
             <span><i18n>evaluations.tab.moys</i18n></span>
         </label>
-        <label>
-            <input type="radio" ng-change="changePrintSuiviClasse('printRecapAppreciations')"  ng-model="suiviClasse.print" value="printRecapAppreciations">
+        <label ng-if="suiviClasse.periode.id !== null">
+            <input type="radio" ng-change="changePrintSuiviClasse('printRecapAppreciations')"
+                   ng-model="suiviClasse.print" value="printRecapAppreciations">
             <span><i18n>evaluations.recapAppreciations.classe</i18n></span>
         </label>
         <label class="flex-row gap-24">
@@ -95,7 +97,7 @@
             <label class=" six select">
                 <select ng-model="suiviClasse.periode"
                         ng-change="exportRelCompObj.errExport = false; closeWarningMessages(); disableAppreciation();"
-                        ng-options="periode as getI18nPeriode(periode) for periode in search.classe.periodes.all">
+                        ng-options="periode as getI18nPeriode(periode) for periode in search.classe.periodes.all | filter:filterPeriodLightBox()">
                     <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
                 </select>
             </label><br/>
@@ -265,7 +267,7 @@
           (search.classe || search.classe.id_cycle !== undefined) &&
           informations.classe !== '' &&
            informations.classe !== undefined &&
-            search.classe !== ''">
+            search.classe !== '' && search.periode !== null" >
     <div class="twelve suivi-eleve-ctl marginUnderTabs">
         <h2 class="align-center">
             <i class="previous cell"
@@ -292,6 +294,7 @@
                 <i18n>evaluation.class.evaluation.header.average</i18n>
             </header>
             <header ng-class="displayFollowCompetencesClass === 'teacherAppraisals'? 'tabs-selected': ''"
+                    ng-if="search.periode.id != null"
                     data-ng-click="selectDisplayClassTabs('teacherAppraisals')">
                 <i18n>evaluation.class.evaluation.header.teacherAppraisals</i18n>
             </header>
