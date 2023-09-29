@@ -2935,7 +2935,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                             // Récupération des moyennes, positionnement Finales, appréciations, avis conseil de classe et orientation
                             Future<JsonArray> bigRequestFuture = Future.future();
-                            getColonneReleveTotale(idEleves, idPeriode, idMatieres, new JsonArray().add(idClasse),
+                            getColonneReleveTotale(idEleves, idPeriode, idMatieres, idGroups,
                                     idEtablissement, event -> formate(bigRequestFuture, event));
 
                             // Récupération des Notes du Relevé
