@@ -486,7 +486,7 @@ public class DefaultUtilsService implements UtilsService {
 
         try {
             if (Double.isNaN(unroundAverage)) unroundAverage =  0.0;
-            else if (Boolean.FALSE.equals(annual)) average = NumberHelper.roundUpTenth(unroundAverage);
+            average = (Boolean.FALSE.equals(annual)) ? NumberHelper.roundUpTenth(unroundAverage) : unroundAverage;
         } catch (NumberFormatException e) {
             log.error("Moyenne : " + unroundAverage, e);
         }
