@@ -27,7 +27,7 @@
     "@types/core-js": "0.9.42",
     "angular-chart.js": "^1.1.1",
     "animejs": "^3.0.1",
-    "axios": "0.27.2",
+    "axios": "1.6.0",
     "chart.js": "^2.7.2",
     "color": "^3.1.2",
     "core-js": "2.4.1",
