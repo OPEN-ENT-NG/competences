@@ -844,11 +844,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                             boolean historical, Handler<Either<String, JsonArray>> handler) {
        listDevoirs( studentId, structureId, classId, subjectId, periodId, historical)
                .onFailure(errorFutureDevoirs -> {
-                   handler.handle(new Either.Left(errorFutureDevoirs.getMessage()));
+                   handler.handle(new Either.Left<>(errorFutureDevoirs.getMessage()));
                    log.error( String.format("[Competences@%s::listDevoirs]  error to get sql request : %s ",
                            this.getClass().getSimpleName(), errorFutureDevoirs.getMessage()));
                })
-                .onSuccess(responseFutureDevoirs -> handler.handle(new Either.Right(responseFutureDevoirs)));
+                .onSuccess(responseFutureDevoirs -> handler.handle(new Either.Right<>(responseFutureDevoirs)));
     }
 
     @Override
