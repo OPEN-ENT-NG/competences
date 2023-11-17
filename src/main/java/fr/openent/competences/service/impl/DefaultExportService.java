@@ -1967,7 +1967,8 @@ public class DefaultExportService implements ExportService {
                             FutureHelper.handlerJsonArray(competencesPromise.future()));
                     futuresList.add(competencesPromise.future());
 
-                    competenceNoteService.getConversionNoteCompetence(structureId, idClass.toString(), FutureHelper.handler(tableauDeConversionPromise));
+                    competenceNoteService.getConversionNoteCompetence(structureId, idClass.toString(),
+                            FutureHelper.handler(tableauDeConversionPromise));
                     futuresList.add(tableauDeConversionPromise.future());
 
                     structureOptionsService.isAverageSkills(structureId).onComplete(isAvgSkillPromise);
@@ -1976,9 +1977,10 @@ public class DefaultExportService implements ExportService {
                     if (null != params.get(Field.IDTYPEPERIODE) && null != params.get(Field.ORDREPERIODE)) {
                         final long idTypePeriode = Long.parseLong(params.get(Field.IDTYPEPERIODE));
                         final long ordrePeriode = Long.parseLong(params.get(Field.ORDREPERIODE));
-                        String libellePeriode = getLibelle(VIESCO_BUS_ADDRESS + "." + Field.VIESCO_PERIODE_TABLE + "." + idTypePeriode) + " " + ordrePeriode;
+                        String libellePeriode = getLibelle(VIESCO_BUS_ADDRESS + "." + Field.VIESCO_PERIODE_TABLE +
+                                "." + idTypePeriode) + " " + ordrePeriode;
                         periodeJSON.put(Field.LIBELLE, libellePeriode);
-                        addPeriodDates(periodeJSON, periodsPromise.future().result(), params.get(Field.IDPERIODE));
+                        addPeriodDates(periodeJSON, periodsPromise.future().result(), periodId.toString());
                     } else {
                         // Construction de la période année
                         periodeJSON.put(Field.LIBELLE, Field.ANNEE);
