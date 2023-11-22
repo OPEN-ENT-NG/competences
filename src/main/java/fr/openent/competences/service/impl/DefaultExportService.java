@@ -2465,7 +2465,7 @@ public class DefaultExportService implements ExportService {
                 }
                 if (currentCoeff != 1)
                     sousMatiere.put(Field.COEFF, currentCoeff);
-                if (moySousMatiere != null) {
+                if (moySousMatiere != null && !Field.NN.equals(moySousMatiere.getValue(Field.UNROUND_AVERAGE).toString())) {
                     coefficient += currentCoeff;
                     moyenneTotal += moySousMatiere.getDouble(Field.UNROUND_AVERAGE) * currentCoeff;
                 }
