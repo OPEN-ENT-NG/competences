@@ -3774,8 +3774,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     utils.safeApply($scope);
                 }
                 $scope.opened.displayStructureLoader = false;
+                utils.safeApply($scope);
             });
-            utils.safeApply($scope);
         }).catch(() => {
             $location.path() === '/disabled' ?
                 executeAction() :

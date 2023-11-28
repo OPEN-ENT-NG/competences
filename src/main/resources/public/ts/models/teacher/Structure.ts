@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {_, Collection, http, idiom as lang, model, Model, angular, toasts} from 'entcore';
+import {_, Collection, http, idiom as lang, model, Model, angular, toasts, notify} from 'entcore';
 import * as utils from '../../utils/teacher';
 import {
     Annotation,
@@ -350,10 +350,10 @@ export class Structure extends Model {
 
                     this.eleves.sync().then(() => {
                         model.trigger('apply');
-                        if (Utils.isChefEtabOrHeadTeacher())
-                            resolve();
+                        this.synchronized.classes = true;
+                        resolve();
                     });
-                    this.synchronized.classes = true;
+
                 });
             }
         });
@@ -374,53 +374,19 @@ export class Structure extends Model {
 
     sync() {
         return new Promise((resolve, reject) => {
-            let isSynced = () => {
-                let b =
-                    this.synchronized.matieres &&
-                    this.synchronized.types &&
-                    this.synchronized.typeSousMatieres &&
-                    this.synchronized.classes &&
-                    this.synchronized.annotations &&
-                    this.synchronized.niveauCompetences &&
-                    this.synchronized.typePeriodes &&
-                    this.synchronized.devoirs &&
-                    this.synchronized.detailsUser;
-                if (Utils.isChefEtabOrHeadTeacher()) {
-                    b = b && this.synchronized.enseignants;
-                }
-
-                if (Utils.canCreateElementBilanPeriodique() || Utils.canSaisieProjet()) {
-                    b = b && this.synchronized.classesBilanPeriodique;
-                }
-
-                if (b) {
-                    this.isSynchronized = true;
-                    resolve();
-                }
-            };
-            this.matieres.sync().then(isSynced);
-            this.annotations.sync().then(isSynced);
-            this.types.sync().then(isSynced);
-            this.classes.sync().then(isSynced);
-            /*this.usePersoFun(model.me.userId).then((res) => {
-                let useDefautTheme = !res;
-                this.usePerso = res;
-                this.niveauCompetences.sync(useDefautTheme).then(isSynced);
-            });*/
-            this.niveauCompetences.sync().then(isSynced);
-
-            this.syncDevoirs(25).then(isSynced);
-
-            this.getDetailsOfUser().then(isSynced);
-            this.syncEnseignants().then(isSynced);
-
-            this.typePeriodes.sync().then(isSynced);
-
-            if (Utils.canCreateElementBilanPeriodique() || Utils.canSaisieProjet()) {
-                this.syncClassesBilanPeriodique().then(isSynced);
-            }
-
-            this.syncTypeSousMatieres().then(isSynced);
+            let promises : Promise<any>[] = [this.matieres.sync(), this.annotations.sync(), this.types.sync(), this.classes.sync(),
+                this.niveauCompetences.sync(), this.syncDevoirs(25), this.getDetailsOfUser(), this.syncEnseignants(), this.typePeriodes.sync(),
+                this.syncTypeSousMatieres()];
+            if (Utils.canCreateElementBilanPeriodique() || Utils.canSaisieProjet()) promises.push(this.syncClassesBilanPeriodique());
+            Promise.all(promises)
+                .then(() => {
+                this.isSynchronized = true;
+                resolve();
+            }).catch((error) => {
+                reject();
+                notify.error('evaluations.structure.error.synchronozation');
+                console.log(`Problème de synchronisation de la structure : ${error.message}`) ;
+            }) ;
         });
     }
 
