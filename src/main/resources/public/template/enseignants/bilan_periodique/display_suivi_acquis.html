@@ -24,19 +24,19 @@
                 <span ng-hide="showPopUpColumns === true">&#x25BC;</span>
             </div>
             <div ng-class="{'open' : showPopUpColumns === true}" class="right-magnet columns-popup">
-                <label class="columns-popup-items">
+                <label class="columns-popup-items-v2">
                     <input type="checkbox" ng-model="showColumns.moyEleve" ng-change="saveColumnsPreferences()">
                     <span><i18n>average.min.eleve</i18n></span>
                 </label>
-                <label class="columns-popup-items">
+                <label class="columns-popup-items-v2">
                     <input type="checkbox" ng-model="showColumns.moyClasse" ng-change="saveColumnsPreferences()">
                     <span><i18n>average.min.classe</i18n></span>
                 </label>
-                <label class="columns-popup-items">
+                <label class="columns-popup-items-v2">
                     <input type="checkbox" ng-model="showColumns.pos" ng-change="saveColumnsPreferences()">
                     <span><i18n>evaluations.releve.positionnement</i18n></span>
                 </label>
-                <label class="columns-popup-items">
+                <label class="columns-popup-items-v2">
                     <input type="checkbox" ng-model="showColumns.skillsValidatedPercentage"
                            ng-change="saveColumnsPreferences()">
                     <span><i18n>evaluations.validated.skills</i18n>&nbsp;&#40;&#37;&#41;</span>
