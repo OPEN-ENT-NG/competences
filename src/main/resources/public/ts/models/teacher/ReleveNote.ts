@@ -348,6 +348,7 @@ export class ReleveNote extends  Model implements IModel {
                             _eval = Mix.castAs(Evaluation, _.findWhere(_notesEleve, {id_devoir: devoir.id}));
 
                             if (_eval.id_devoir != null) {
+                                _eval.name = devoir.name;
                                 _eval.oldValeur = _eval.valeur;
                                 _eval.oldAppreciation = _eval.appreciation !== undefined ? _eval.appreciation : '';
                                 if (_eval.annotation !== undefined && _eval.annotation !== null
@@ -362,7 +363,7 @@ export class ReleveNote extends  Model implements IModel {
                                     valeur: "", oldValeur: "", appreciation: "",
                                     oldAppreciation: "", id_devoir: devoir.id, id_eleve: eleve.id,
                                     ramener_sur: devoir.ramener_sur, coefficient: devoir.coefficient,
-                                    is_evaluated: devoir.is_evaluated, endSaisie: endSaisie
+                                    is_evaluated: devoir.is_evaluated, endSaisie: endSaisie, name: devoir.name
                                 });
                             }
                         } else {
@@ -370,7 +371,7 @@ export class ReleveNote extends  Model implements IModel {
                                 valeur: "", oldValeur: "", appreciation: "",
                                 oldAppreciation: "", id_devoir: devoir.id, id_eleve: eleve.id,
                                 ramener_sur: devoir.ramener_sur, coefficient: devoir.coefficient,
-                                is_evaluated: devoir.is_evaluated, endSaisie: endSaisie
+                                is_evaluated: devoir.is_evaluated, endSaisie: endSaisie, name: devoir.name
                             });
                         }
 
