@@ -505,6 +505,7 @@
   "evaluations.delete.evaluation.title": "Supprimer une évaluation",
   "evaluations.delete.evaluation.text": "Vous allez supprimer l'évaluation ",
   "evaluations.delete.evaluation.question": "Voulez-vous continuer ?",
+  "evaluations.structure.error.synchronozation": "erreur lors de la synchronosation de la structure",
   "viescolaire.utils.enseignements":"Enseignements",
   "viescolaire.utils.langues.culture.regionale.choix" : "Choix langue",
   "viescolaire.structure.load": "Chargement de l'établissement ",
