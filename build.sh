@@ -45,9 +45,9 @@ buildCss() {
 }
 
 publish () {
-  if [ -e "?/.gradle" ] && [ ! -e "?/.gradle/gradle.properties" ]
+  if [ ! -e "?/.gradle/gradle.properties" ]
   then
-    echo "odeUsername=$NEXUS_ODE_USERNAME" > "?/.gradle/gradle.properties"
+    mkdir -p "?/.gradle/"    echo "odeUsername=$NEXUS_ODE_USERNAME" > "?/.gradle/gradle.properties"
     echo "odePassword=$NEXUS_ODE_PASSWORD" >> "?/.gradle/gradle.properties"
     echo "sonatypeUsername=$NEXUS_SONATYPE_USERNAME" >> "?/.gradle/gradle.properties"
     echo "sonatypePassword=$NEXUS_SONATYPE_PASSWORD" >> "?/.gradle/gradle.properties"
