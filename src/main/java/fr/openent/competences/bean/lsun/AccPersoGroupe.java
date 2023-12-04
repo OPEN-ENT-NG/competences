@@ -78,7 +78,7 @@ public class AccPersoGroupe {
 
     protected String commentaire;
     @XmlElement(name = "enseignants-disciplines", required = true)
-    protected EnseignantsDisciplines enseignantsDisciplines;
+    protected AccPersoGroupe.EnseignantsDisciplines enseignantsDisciplines;
     @XmlAttribute(name = "id", required = true)
     @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
     @XmlID
@@ -125,7 +125,7 @@ public class AccPersoGroupe {
      *     {@link EnseignantsDisciplines }
      *     
      */
-    public EnseignantsDisciplines getEnseignantsDisciplines() {
+    public AccPersoGroupe.EnseignantsDisciplines getEnseignantsDisciplines() {
         return enseignantsDisciplines;
     }
 
@@ -134,10 +134,10 @@ public class AccPersoGroupe {
      * 
      * @param value
      *     allowed object is
-     *     {@link EnseignantsDisciplines }
+     *     {@link AccPersoGroupe.EnseignantsDisciplines }
      *     
      */
-    public void setEnseignantsDisciplines(EnseignantsDisciplines value) {
+    public void setEnseignantsDisciplines(AccPersoGroupe.EnseignantsDisciplines value) {
         this.enseignantsDisciplines = value;
     }
 

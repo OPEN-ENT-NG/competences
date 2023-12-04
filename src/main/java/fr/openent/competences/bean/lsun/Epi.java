@@ -50,7 +50,7 @@ import java.util.List;
  *       &lt;/sequence>
  *       &lt;attribute name="id" use="required" type="{http://www.w3.org/2001/XMLSchema}ID" />
  *       &lt;attribute name="intitule" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine150" />
- *       &lt;attribute name="thematique" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}ThematiqueEpi" />
+ *       &lt;attribute name="thematique" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}CodeThematiqueEpi" />
  *       &lt;attribute name="discipline-refs" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}AtLeast2IDREFS" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -158,7 +158,7 @@ public class Epi {
      * 
      * @return
      *     possible object is
-     *     {@link ThematiqueEpi }
+     *     {@link String }
      *     
      */
     public String getThematique() {
@@ -170,11 +170,10 @@ public class Epi {
      * 
      * @param value
      *     allowed object is
-     *     {@link ThematiqueEpi }
+     *     {@link String }
      *     
      */
     public void setThematique(String value) {
-
         this.thematique = value;
     }
 

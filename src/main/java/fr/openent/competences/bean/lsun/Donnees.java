@@ -508,13 +508,30 @@ public class Donnees {
         this.viesScolairesCommuns = value;
     }
 
-    public Donnees.EpisThematiques getEpisThematiques(){
+    /**
+     * Obtient la valeur de la propriété episThematiques.
+     *
+     * @return
+     *     possible object is
+     *     {@link Donnees.EpisThematiques }
+     *
+     */
+    public Donnees.EpisThematiques getEpisThematiques() {
         return episThematiques;
     }
 
-    public void setEpisThematiques(Donnees.EpisThematiques value){
+    /**
+     * Définit la valeur de la propriété episThematiques.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link Donnees.EpisThematiques }
+     *
+     */
+    public void setEpisThematiques(Donnees.EpisThematiques value) {
         this.episThematiques = value;
     }
+
     /**
      * Gets the value of the epis property.
      *
@@ -583,7 +600,7 @@ public class Donnees {
      *     {@link Donnees.AccPersos }
      *
      */
-    public void setAccPersos(AccPersos value) {
+    public void setAccPersos(Donnees.AccPersos value) {
         this.accPersos = value;
     }
 
@@ -681,7 +698,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "accPerso"
+        "accPerso"
     })
     public static class AccPersos {
 
@@ -741,7 +758,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "accPersoGroupe"
+        "accPersoGroupe"
     })
     public static class AccPersosGroupes {
 
@@ -801,7 +818,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "bilanCycle"
+        "bilanCycle"
     })
     public static class BilansCycle {
 
@@ -860,7 +877,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "bilanPeriodique"
+        "bilanPeriodique"
     })
     public static class BilansPeriodiques {
 
@@ -920,7 +937,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "competencesNumeriquesCommun"
+        "competencesNumeriquesCommun"
     })
     public static class CompetencesNumeriquesCommuns {
 
@@ -980,7 +997,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "discipline"
+        "discipline"
     })
     public static class Disciplines {
 
@@ -1040,7 +1057,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "elementProgramme"
+        "elementProgramme"
     })
     public static class ElementsProgramme {
 
@@ -1100,7 +1117,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "eleve"
+        "eleve"
     })
     public static class Eleves {
 
@@ -1209,7 +1226,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "enseignant"
+        "enseignant"
     })
     public static class Enseignants {
 
@@ -1268,7 +1285,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "epi"
+        "epi"
     })
     public static class Epis {
 
@@ -1374,6 +1391,8 @@ public class Donnees {
         }
 
     }
+
+
     /**
      * <p>Classe Java pour anonymous complex type.
      *
@@ -1395,15 +1414,35 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "epiThematique"
+        "epiThematique"
     })
     public static class EpisThematiques {
 
         @XmlElement(name = "epi-thematique", required = true)
-
         protected List<EpiThematique> epiThematique;
 
-
+        /**
+         * Gets the value of the epiThematique property.
+         *
+         * <p>
+         * This accessor method returns a reference to the live list,
+         * not a snapshot. Therefore any modification you make to the
+         * returned list will be present inside the JAXB object.
+         * This is why there is not a <CODE>set</CODE> method for the epiThematique property.
+         *
+         * <p>
+         * For example, to add a new item, do as follows:
+         * <pre>
+         *    getEpiThematique().add(newItem);
+         * </pre>
+         *
+         *
+         * <p>
+         * Objects of the following type(s) are allowed in the list
+         * {@link EpiThematique }
+         *
+         *
+         */
         public List<EpiThematique> getEpiThematique() {
             if (epiThematique == null) {
                 epiThematique = new ArrayList<EpiThematique>();
@@ -1412,6 +1451,7 @@ public class Donnees {
         }
 
     }
+
 
     /**
      * <p>Java class for anonymous complex type.
@@ -1446,7 +1486,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "parcoursCommun"
+        "parcoursCommun"
     })
     public static class ParcoursCommuns {
 
@@ -1522,7 +1562,7 @@ public class Donnees {
          */
         @XmlAccessorType(XmlAccessType.FIELD)
         @XmlType(name = "", propOrder = {
-                "parcours"
+            "parcours"
         })
         public static class ParcoursCommun {
 
@@ -1638,7 +1678,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "periode"
+        "periode"
     })
     public static class Periodes {
 
@@ -1709,7 +1749,7 @@ public class Donnees {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-            "responsableEtab"
+        "responsableEtab"
     })
     public static class ResponsablesEtab {
 

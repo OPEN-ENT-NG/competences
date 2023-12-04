@@ -49,7 +49,7 @@ import java.util.List;
  *       &lt;/sequence>
  *       &lt;attribute name="discipline-ref" use="required" type="{http://www.w3.org/2001/XMLSchema}IDREF" />
  *       &lt;attribute name="enseignant-refs" use="required" type="{http://www.w3.org/2001/XMLSchema}IDREFS" />
- *       &lt;attribute name="element-programme-refs" use="required" type="{http://www.w3.org/2001/XMLSchema}IDREFS" />
+ *       &lt;attribute name="element-programme-refs" type="{http://www.w3.org/2001/XMLSchema}IDREFS" />
  *       &lt;attribute name="moyenne-eleve" type="{urn:fr:edu:scolarite:lsun:bilans:import}MoyenneAlphanumerique" />
  *       &lt;attribute name="moyenne-structure" type="{urn:fr:edu:scolarite:lsun:bilans:import}MoyenneAlphanumerique" />
  *       &lt;attribute name="eleve-non-note" type="{http://www.w3.org/2001/XMLSchema}boolean" />
@@ -77,7 +77,7 @@ public class Acquis {
     @XmlIDREF
     @XmlSchemaType(name = "IDREFS")
     protected List<Object> enseignantRefs;
-    @XmlAttribute(name = "element-programme-refs", required = true)
+    @XmlAttribute(name = "element-programme-refs")
     @XmlIDREF
     @XmlSchemaType(name = "IDREFS")
     protected List<Object> elementProgrammeRefs;

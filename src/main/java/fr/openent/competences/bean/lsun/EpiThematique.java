@@ -22,6 +22,30 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
+
+/**
+ * Contient l'intitulé, la thématique, la description et les disciplines
+ *                 de l'EPI
+ *                 (enseignement pratique inter-disciplinaire)
+ *
+ *
+ * <p>Classe Java pour EpiThematique complex type.
+ *
+ * <p>Le fragment de schema suivant indique le contenu attendu figurant dans cette classe.
+ *
+ * <pre>
+ * &lt;complexType name="EpiThematique">
+ *   &lt;complexContent>
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;attribute name="code" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}CodeThematiqueEpi" />
+ *       &lt;attribute name="libelle" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine100" />
+ *     &lt;/restriction>
+ *   &lt;/complexContent>
+ * &lt;/complexType>
+ * </pre>
+ *
+ *
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "EpiThematique")
 public class EpiThematique {
@@ -31,19 +55,52 @@ public class EpiThematique {
     @XmlAttribute(name = "libelle", required = true)
     protected String libelle;
 
+    /**
+     * Obtient la valeur de la propriété code.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
     public String getCode() {
         return code;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    /**
+     * Définit la valeur de la propriété code.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setCode(String value) {
+        this.code = value;
     }
 
+    /**
+     * Obtient la valeur de la propriété libelle.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
     public String getLibelle() {
         return libelle;
     }
 
-    public void setLibelle(String libelle) {
-        this.libelle = libelle;
+    /**
+     * D�finit la valeur de la propriété libelle.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setLibelle(String value) {
+        this.libelle = value;
     }
+
 }

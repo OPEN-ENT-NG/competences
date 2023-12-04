@@ -78,7 +78,7 @@ public class EpiGroupe {
 
     protected String commentaire;
     @XmlElement(name = "enseignants-disciplines", required = true)
-    protected EnseignantsDisciplines enseignantsDisciplines;
+    protected EpiGroupe.EnseignantsDisciplines enseignantsDisciplines;
     @XmlAttribute(name = "id", required = true)
     @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
     @XmlID
@@ -122,10 +122,10 @@ public class EpiGroupe {
      * 
      * @return
      *     possible object is
-     *     {@link EnseignantsDisciplines }
+     *     {@link EpiGroupe.EnseignantsDisciplines }
      *     
      */
-    public EnseignantsDisciplines getEnseignantsDisciplines() {
+    public EpiGroupe.EnseignantsDisciplines getEnseignantsDisciplines() {
         return enseignantsDisciplines;
     }
 
@@ -134,10 +134,10 @@ public class EpiGroupe {
      * 
      * @param value
      *     allowed object is
-     *     {@link EnseignantsDisciplines }
+     *     {@link EpiGroupe.EnseignantsDisciplines }
      *     
      */
-    public void setEnseignantsDisciplines(EnseignantsDisciplines value) {
+    public void setEnseignantsDisciplines(EpiGroupe.EnseignantsDisciplines value) {
         this.enseignantsDisciplines = value;
     }
 

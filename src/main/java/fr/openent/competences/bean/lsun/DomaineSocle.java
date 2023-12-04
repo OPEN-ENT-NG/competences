@@ -45,7 +45,7 @@ import java.math.BigInteger;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;attribute name="code" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}CodeDomaineSocle" />
- *       &lt;attribute name="positionnement" type="{urn:fr:edu:scolarite:lsun:bilans:import}PositionnementSocle" />
+ *       &lt;attribute name="positionnement" type="{urn:fr:edu:scolarite:lsun:bilans:import}PositionnementSocle use="required" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -59,7 +59,7 @@ public class DomaineSocle {
 
     @XmlAttribute(name = "code", required = true)
     protected CodeDomaineSocle code;
-    @XmlAttribute(name = "positionnement")
+    @XmlAttribute(name = "positionnement", required = true)
     protected BigInteger positionnement;
 
     /**
