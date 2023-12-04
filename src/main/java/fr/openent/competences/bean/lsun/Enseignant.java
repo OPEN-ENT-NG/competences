@@ -48,7 +48,7 @@ import java.math.BigInteger;
  *       &lt;attribute name="id-sts" use="required" type="{http://www.w3.org/2001/XMLSchema}positiveInteger" />
  *       &lt;attribute name="civilite" type="{urn:fr:edu:scolarite:lsun:bilans:import}Civilite" />
  *       &lt;attribute name="nom" type="{urn:fr:edu:scolarite:lsun:bilans:import}NomPrenom" />
- *       &lt;attribute name="prenom" type="{urn:fr:edu:scolarite:lsun:bilans:import}NomPrenom" />
+ *       &lt;attribute name="prenom" type="{urn:fr:edu:scolarite:lsun:bilans:import}ChaineEmptyWithMax100" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>

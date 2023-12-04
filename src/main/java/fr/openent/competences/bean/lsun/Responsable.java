@@ -47,12 +47,13 @@ import java.util.regex.Pattern;
  *       &lt;sequence>
  *         &lt;element name="adresse" type="{urn:fr:edu:scolarite:lsun:bilans:import}Adresse" minOccurs="0"/>
  *       &lt;/sequence>
- *       &lt;attribute name="civilite" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}Civilite" />
- *       &lt;attribute name="nom" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}NomPrenom" />
- *       &lt;attribute name="prenom" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}NomPrenom" />
+ *       &lt;attribute name="civilite" type="{urn:fr:edu:scolarite:lsun:bilans:import}Civilite" />
+ *       &lt;attribute name="nom" type="{urn:fr:edu:scolarite:lsun:bilans:import}NomPrenom" />
+ *       &lt;attribute name="prenom" type="{urn:fr:edu:scolarite:lsun:bilans:import}NomPrenom" />
  *       &lt;attribute name="legal1" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *       &lt;attribute name="legal2" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *       &lt;attribute name="lien-parente" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine40" />
+ *       &lt;attribute name="denomination" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine600" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -64,14 +65,14 @@ import java.util.regex.Pattern;
 @XmlType(name = "Responsable", propOrder = {
     "adresse"
 })
-public class  Responsable {
+public class Responsable {
 
     protected Adresse adresse;
-    @XmlAttribute(name = "civilite", required = true)
+    @XmlAttribute(name = "civilite")
     protected Civilite civilite;
-    @XmlAttribute(name = "nom", required = true)
+    @XmlAttribute(name = "nom")
     protected String nom;
-    @XmlAttribute(name = "prenom", required = true)
+    @XmlAttribute(name = "prenom")
     protected String prenom;
     @XmlAttribute(name = "legal1")
     protected Boolean legal1;
@@ -79,6 +80,8 @@ public class  Responsable {
     protected Boolean legal2;
     @XmlAttribute(name = "lien-parente")
     protected String lienParente;
+    @XmlAttribute(name = "denomination")
+    protected String denomination;
     @XmlTransient
     protected String externalId;
 
@@ -354,6 +357,30 @@ public class  Responsable {
             this.setLienParente(paramRelative[1]);
             this.setLegals(paramRelative[3]);
         }
+    }
+
+    /**
+     * Obtient la valeur de la propriete denomination.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getDenomination() {
+        return denomination;
+    }
+
+    /**
+     * Definit la valeur de la propriete denomination.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setDenomination(String value) {
+        this.denomination = value;
     }
 
 }

@@ -43,6 +43,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="L"/>
  *     &lt;enumeration value="R"/>
  *     &lt;enumeration value="X"/>
+ *     &lt;enumeration value="D"/>
  *   &lt;/restriction>
  * &lt;/simpleType>
  * </pre>
@@ -57,7 +58,8 @@ public enum ModaliteElection {
     F,
     L,
     R,
-    X;
+    X,
+    D;
 
     public String value() {
         return name();

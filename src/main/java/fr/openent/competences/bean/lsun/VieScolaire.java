@@ -64,16 +64,12 @@ public class VieScolaire {
 
     protected String commentaire;
     @XmlAttribute(name = "nb-retards", required = true)
-    @XmlSchemaType(name = "nonNegativeInteger")
     protected BigInteger nbRetards;
     @XmlAttribute(name = "nb-abs-justifiees", required = true)
-    @XmlSchemaType(name = "nonNegativeInteger")
     protected BigInteger nbAbsJustifiees;
     @XmlAttribute(name = "nb-abs-injustifiees", required = true)
-    @XmlSchemaType(name = "nonNegativeInteger")
     protected BigInteger nbAbsInjustifiees;
     @XmlAttribute(name = "nb-heures-manquees")
-    @XmlSchemaType(name = "nonNegativeInteger")
     protected BigInteger nbHeuresManquees;
 
     /**

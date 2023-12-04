@@ -31,8 +31,8 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 
 /**
- * Contient les informations relatives � la discpline
- *                 (le code doit correspondre � un code de mati�re nationale)
+ * Contient les informations relatives à la discpline
+ *                 (le code doit correspondre à un code de matière nationale)
  *             
  * 
  * <p>Java class for Discipline complex type.
@@ -48,6 +48,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  *       &lt;attribute name="code-national" type="{urn:fr:edu:scolarite:lsun:bilans:import}CodeMatiere" />
  *       &lt;attribute name="modalite-election" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}ModaliteElection" />
  *       &lt;attribute name="libelle" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine40" />
+ *       &lt;attribute name="id-lv" type="{http://www.w3.org/2001/XMLSchema}IDREF" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -72,6 +73,10 @@ public class Discipline {
     protected ModaliteElection modaliteElection;
     @XmlAttribute(name = "libelle", required = true)
     protected String libelle;
+    @XmlAttribute(name = "id-lv")
+    @XmlIDREF
+    @XmlSchemaType(name = "IDREF")
+    protected Object idLv;
 
     /**
      * Gets the value of the id property.
@@ -194,6 +199,30 @@ public class Discipline {
             value = value.substring(0, 39);
         }
         this.libelle = value;
+    }
+
+    /**
+     * Obtient la valeur de la propriete idLv.
+     *
+     * @return
+     *     possible object is
+     *     {@link Object }
+     *
+     */
+    public Object getIdLv() {
+        return idLv;
+    }
+
+    /**
+     * Définit la valeur de la propriéte idLv.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link Object }
+     *
+     */
+    public void setIdLv(Object value) {
+        this.idLv = value;
     }
 
 }

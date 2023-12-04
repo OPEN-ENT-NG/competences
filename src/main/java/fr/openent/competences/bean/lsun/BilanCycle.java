@@ -75,7 +75,7 @@ import java.util.List;
  *       &lt;attribute name="cycle" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}Cycle" />
  *       &lt;attribute name="millesime" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}Millesime" />
  *       &lt;attribute name="date-creation" use="required" type="{http://www.w3.org/2001/XMLSchema}date" />
- *       &lt;attribute name="date-verrou" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}StringDateTime" />
+ *       &lt;attribute name="date-verrou" type="{urn:fr:edu:scolarite:lsun:bilans:import}StringDateTime" />
  *       &lt;attribute name="responsable-etab-ref" use="required" type="{http://www.w3.org/2001/XMLSchema}IDREF" />
  *       &lt;attribute name="prof-princ-refs" type="{http://www.w3.org/2001/XMLSchema}IDREFS" />
  *     &lt;/restriction>
@@ -96,12 +96,12 @@ import java.util.List;
 public class BilanCycle {
 
     @XmlElement(required = true)
-    protected Socle socle;
+    protected BilanCycle.Socle socle;
     @XmlElement(required = true)
     protected String synthese;
     @XmlElement(name = "enseignement-complement")
     protected EnseignementComplement enseignementComplement;
-    protected Responsables responsables;
+    protected BilanCycle.Responsables responsables;
     @XmlElement(name = "langue-culture-regionale")
     protected LangueCultureRegionale langueCultureRegionale;
     @XmlAttribute(name = "eleve-ref", required = true)
@@ -115,7 +115,7 @@ public class BilanCycle {
     @XmlAttribute(name = "date-creation", required = true)
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar dateCreation;
-    @XmlAttribute(name = "date-verrou", required = true)
+    @XmlAttribute(name = "date-verrou")
     protected String dateVerrou;
     @XmlAttribute(name = "responsable-etab-ref", required = true)
     @XmlIDREF
@@ -134,7 +134,7 @@ public class BilanCycle {
      *     {@link Socle }
      *     
      */
-    public Socle getSocle() {
+    public BilanCycle.Socle getSocle() {
         return socle;
     }
 
@@ -146,7 +146,7 @@ public class BilanCycle {
      *     {@link Socle }
      *     
      */
-    public void setSocle(Socle value) {
+    public void setSocle(BilanCycle.Socle value) {
         this.socle = value;
     }
 
@@ -171,7 +171,6 @@ public class BilanCycle {
      *     
      */
     public void setSynthese(String value) {
-        //this.synthese = new String(value.getBytes(Charset.forName("UTF-8")));
         this.synthese = value;
     }
 
@@ -184,7 +183,6 @@ public class BilanCycle {
      *     
      */
     public EnseignementComplement getEnseignementComplement() {
-
         return enseignementComplement;
     }
 
@@ -197,8 +195,6 @@ public class BilanCycle {
      *     
      */
     public void setEnseignementComplement(EnseignementComplement value) {
-
-
         this.enseignementComplement = value;
     }
 
@@ -219,10 +215,10 @@ public class BilanCycle {
      * 
      * @param value
      *     allowed object is
-     *     {@link Responsables }
+     *     {@link BilanCycle.Responsables }
      *     
      */
-    public void setResponsables(Responsables value) {
+    public void setResponsables(BilanCycle.Responsables value) {
         this.responsables = value;
     }
 

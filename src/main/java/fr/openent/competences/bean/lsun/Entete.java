@@ -46,6 +46,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;all>
  *         &lt;element name="editeur" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine50"/>
  *         &lt;element name="application" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine50"/>
+ *         &lt;element name="appliVersion" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine50" minOccurs="0"/>
  *         &lt;element name="etablissement" type="{urn:fr:edu:scolarite:lsun:bilans:import}CodeUai"/>
  *       &lt;/all>
  *     &lt;/restriction>
@@ -65,6 +66,7 @@ public class Entete {
     protected String editeur;
     @XmlElement(required = true)
     protected String application;
+    protected String appliVersion;
     @XmlElement(required = true)
     protected String etablissement;
 
@@ -125,7 +127,31 @@ public class Entete {
     }
 
     /**
-     * Gets the value of the etablissement property.
+     * Obtient la valeur de la propriété appliVersion.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getAppliVersion() {
+        return appliVersion;
+    }
+
+    /**
+     * D�finit la valeur de la propriété appliVersion.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setAppliVersion(String value) {
+        this.appliVersion = value;
+    }
+
+    /**
+     * Obtient la valeur de la propriété etablissement.
      * 
      * @return
      *     possible object is

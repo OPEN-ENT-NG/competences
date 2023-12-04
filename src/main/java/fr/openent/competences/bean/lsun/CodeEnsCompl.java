@@ -39,11 +39,12 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
  *     &lt;enumeration value="AUC"/>
  *     &lt;enumeration value="LCA"/>
+ *     &lt;enumeration value="LCE"/>
  *     &lt;enumeration value="LCR"/>
+ *     &lt;enumeration value="CHK"/>
  *     &lt;enumeration value="PRO"/>
  *     &lt;enumeration value="LSF"/>
  *     &lt;enumeration value="LVE"/>
- *     &lt;enumeration value="CHK"/>
  *   &lt;/restriction>
  * &lt;/simpleType>
  * </pre>
@@ -55,12 +56,12 @@ public enum CodeEnsCompl {
 
     AUC,
     LCA,
+    LCE,
     LCR,
+    CHK,
     PRO,
     LSF,
-    LVE,
-    CHK,
-    LCE;
+    LVE;
 
     public String value() {
         return name();

@@ -413,7 +413,7 @@ public class LSUController extends ControllerHelper {
         };
         lsuService.getMapIdClassCodeDomaineById(idsClasse,getMapCodeDomaineByIdHandler);
 
-        lsunBilans.setSchemaVersion("3.0");
+        lsunBilans.setSchemaVersion("7.0");
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
             CompositeFuture.all(listFutureGetMethodsBFC).setHandler(event -> {
@@ -586,7 +586,7 @@ public class LSUController extends ControllerHelper {
         lsuService.getUnheededStudents(new JsonArray(idsTypePeriodes), new JsonArray(idsClasse),
                 unheededStudents -> formate(ignoredStudentFuture, unheededStudents));
 
-        lsunBilans.setSchemaVersion("3.0");
+        lsunBilans.setSchemaVersion("7.0");
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
             Handler<String> getElevesHandler = event -> {
@@ -1349,7 +1349,6 @@ public class LSUController extends ControllerHelper {
                         //dates
                         XMLGregorianCalendar dateCreation = getDateFormatGregorian(datesCreationVerrou.getString("date_creation"));
                         bilanCycle.setDateCreation(dateCreation);
-                        bilanCycle.setDateVerrou(datesCreationVerrou.getString("date_verrou").substring(0,19));
                         bilanCycle.setMillesime(millesime);
 
                         //on ajoute les différents attributs de la balise BilanCycle de l'élève
@@ -3173,10 +3172,8 @@ public class LSUController extends ControllerHelper {
             }
 
             XMLGregorianCalendar dateConseil = getDateFormatGregorian(periode.getString("date_conseil_classe"));
-            String dateVerrou = periode.getString("date_fin_saisie").substring(0,19);
             bilanPeriodique.setDateScolarite(dateScolarite);
             bilanPeriodique.setDateConseilClasse(dateConseil);
-            bilanPeriodique.setDateVerrou(dateVerrou);
             return true;
 
         }

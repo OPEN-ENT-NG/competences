@@ -40,6 +40,8 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
  *     &lt;enumeration value="epp"/>
  *     &lt;enumeration value="local"/>
+ *     &lt;enumeration value="dir"/>
+ *     &lt;enumeration value="autre"/>
  *   &lt;/restriction>
  * &lt;/simpleType>
  * </pre>
@@ -57,7 +59,6 @@ public enum TypeEnseignant {
     DIR("dir"),
     @XmlEnumValue("autre")
     AUTRE("autre");
-
     private final String value;
 
     TypeEnseignant(String v) {

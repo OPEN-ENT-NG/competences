@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "TypeStructure")
 @XmlEnum
 public enum TypeStructure {
+
     D,
     G;
 
@@ -32,4 +33,5 @@ public enum TypeStructure {
     public static TypeStructure fromValue(String v) {
         return valueOf(v);
     }
+
 }

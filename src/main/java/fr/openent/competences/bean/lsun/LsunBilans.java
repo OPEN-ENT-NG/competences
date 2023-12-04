@@ -49,6 +49,10 @@ import javax.xml.bind.annotation.*;
  *           &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
  *             &lt;enumeration value="2.0"/>
  *             &lt;enumeration value="3.0"/>
+ *             &lt;enumeration value="4.0"/>
+ *             &lt;enumeration value="5.0"/>
+ *             &lt;enumeration value="6.0"/>
+ *             &lt;enumeration value="7.0"/>
  *           &lt;/restriction>
  *         &lt;/simpleType>
  *       &lt;/attribute>

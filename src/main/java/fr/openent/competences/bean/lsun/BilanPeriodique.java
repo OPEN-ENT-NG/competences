@@ -120,7 +120,7 @@ import java.util.List;
  *           &lt;complexType>
  *             &lt;complexContent>
  *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *                 &lt;sequence maxOccurs="8" minOccurs="8">
+ *                 &lt;sequence maxOccurs="8">
  *                   &lt;element name="domaine" type="{urn:fr:edu:scolarite:lsun:bilans:import}DomaineSocle"/>
  *                 &lt;/sequence>
  *               &lt;/restriction>
@@ -143,7 +143,7 @@ import java.util.List;
  *       &lt;attribute name="periode-ref" use="required" type="{http://www.w3.org/2001/XMLSchema}IDREF" />
  *       &lt;attribute name="date-conseil-classe" use="required" type="{http://www.w3.org/2001/XMLSchema}date" />
  *       &lt;attribute name="date-scolarite" use="required" type="{http://www.w3.org/2001/XMLSchema}date" />
- *       &lt;attribute name="date-verrou" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}StringDateTime" />
+ *       &lt;attribute name="date-verrou" type="{urn:fr:edu:scolarite:lsun:bilans:import}StringDateTime" />
  *       &lt;attribute name="responsable-etab-ref" use="required" type="{http://www.w3.org/2001/XMLSchema}IDREF" />
  *       &lt;attribute name="prof-princ-refs" type="{http://www.w3.org/2001/XMLSchema}IDREFS" />
  *     &lt;/restriction>
@@ -203,7 +203,7 @@ public class BilanPeriodique {
     @XmlAttribute(name = "date-scolarite", required = true)
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar dateScolarite;
-    @XmlAttribute(name = "date-verrou", required = true)
+    @XmlAttribute(name = "date-verrou")
     protected String dateVerrou;
     @XmlAttribute(name = "responsable-etab-ref", required = true)
     @XmlIDREF
@@ -471,7 +471,7 @@ public class BilanPeriodique {
      *
      * @param value
      *     allowed object is
-     *     {@link Responsables }
+     *     {@link BilanPeriodique.Responsables }
      *
      */
     public void setResponsables(BilanPeriodique.Responsables value) {
@@ -1144,7 +1144,7 @@ public class BilanPeriodique {
      * &lt;complexType>
      *   &lt;complexContent>
      *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-     *       &lt;sequence maxOccurs="8" minOccurs="8">
+     *       &lt;sequence maxOccurs="1" minOccurs="8">
      *         &lt;element name="domaine" type="{urn:fr:edu:scolarite:lsun:bilans:import}DomaineSocle"/>
      *       &lt;/sequence>
      *     &lt;/restriction>

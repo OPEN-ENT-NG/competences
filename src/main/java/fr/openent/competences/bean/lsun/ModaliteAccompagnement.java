@@ -41,6 +41,7 @@ import javax.xml.bind.annotation.*;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
  *         &lt;element name="complement-ppre" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine600" minOccurs="0"/>
+ *         &lt;element name="complement-contrat-reussite" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine600" minOccurs="0"/>
  *       &lt;/sequence>
  *       &lt;attribute name="code" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}CodeModalite" />
  *     &lt;/restriction>
@@ -52,12 +53,15 @@ import javax.xml.bind.annotation.*;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ModaliteAccompagnement", propOrder = {
-    "complementPpre"
+    "complementPpre",
+    "complementContratReussite"
 })
 public class ModaliteAccompagnement {
 
     @XmlElement(name = "complement-ppre")
     protected String complementPpre;
+    @XmlElement(name = "complement-contrat-reussite")
+    protected String complementContratReussite;
     @XmlAttribute(name = "code", required = true)
     protected CodeModalite code;
 
@@ -86,7 +90,31 @@ public class ModaliteAccompagnement {
     }
 
     /**
-     * Gets the value of the code property.
+     * Obtient la valeur de la propriete complementContratReussite.
+     *
+     * @return
+     *     possible object is
+     *     {@link String }
+     *
+     */
+    public String getComplementContratReussite() {
+        return complementContratReussite;
+    }
+
+    /**
+     * Definit la valeur de la propriete complementContratReussite.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *
+     */
+    public void setComplementContratReussite(String value) {
+        this.complementContratReussite = value;
+    }
+
+    /**
+     * Obtient la valeur de la propriete code.
      * 
      * @return
      *     possible object is

@@ -40,7 +40,7 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType name="Adresse">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="ligne1" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine50" />
+ *       &lt;attribute name="ligne1" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine50" />
  *       &lt;attribute name="ligne2" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine50" />
  *       &lt;attribute name="ligne3" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine50" />
  *       &lt;attribute name="ligne4" type="{urn:fr:edu:scolarite:lsun:bilans:import}Chaine50" />
@@ -57,7 +57,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "Adresse")
 public class Adresse {
 
-    @XmlAttribute(name = "ligne1", required = true)
+    @XmlAttribute(name = "ligne1")
     protected String ligne1;
     @XmlAttribute(name = "ligne2")
     protected String ligne2;
@@ -72,7 +72,6 @@ public class Adresse {
 
     public Adresse(){}
     public Adresse(String adress,String codePostal, String commune){
-        //this.ligne1 = adress;
         this.cutAdressSetLigne(adress);
         this.codePostal=codePostal;
         this.commune=commune;
@@ -194,11 +193,7 @@ public class Adresse {
      *     
      */
     public void setCodePostal(String value) {
-       // if(value!=null) {
-            this.codePostal = value;
-       /* }else{
-            this.codePostal = "00000";
-        }*/
+        this.codePostal = value;
     }
 
     /**

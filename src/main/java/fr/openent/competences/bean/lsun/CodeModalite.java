@@ -61,7 +61,8 @@ public enum CodeModalite {
     SEGPA("SEGPA"),
     ULIS("ULIS"),
     PAI("PAI"),
-    PPRE("PPRE");
+    PPRE("PPRE"),
+    CTR("CTR");
     private final String value;
 
     CodeModalite(String v) {
