@@ -30,11 +30,12 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
     async function ($scope) {
 
         async function initparams(typeLSU, typeArchive?, stsFile?, errorResponse?) {
+            getResponsablesAndClasses();
             $scope.lsu = new LSU($scope.structure.id,
-                $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE}),
+                $scope.structure.classes.where({type_groupe: Classe.type.CLASSE}),
                 $scope.structure.responsables.all);
             $scope.archive = new Archives($scope.structure.id);
-            $scope.allClasses = $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE});
+            $scope.allClasses = $scope.structure.classes.where({type_groupe: Classe.type.CLASSE});
             $scope.errorResponse = (errorResponse !== undefined) ? errorResponse : null;
             $scope.inProgress = false;
             $scope.showMessageBulletin = false;
@@ -61,14 +62,14 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             await utils.safeApply($scope);
         }
 
-        $scope.initSelectStsFiles = async () => {
+       async function initSelectStsFiles() {
             $scope.selectStsFiles = new STSFiles();
             await $scope.selectStsFiles.sync($scope.structure.id);
             if ($scope.selectStsFiles.selected != null) {
                 $scope.paramsLSU.stsFile = $scope.selectStsFiles.selected.content;
             }
             await utils.safeApply($scope);
-        };
+        }
 
         $scope.changeType = async function (type: String) {
             await initparams(type);
@@ -94,10 +95,16 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
             await utils.safeApply($scope);
         };
 
-        $scope.getResponsablesAndClasses = function () {
-            $scope.structure = _.findWhere($scope.evaluations.structures.all, {id: $scope.lsu.idStructure});
+         $scope.changeStructure = async () => {
+             $scope.structure = $scope.evaluations.structure =
+                 _.findWhere($scope.evaluations.structures.all, {id: $scope.lsu.idStructure})
+             await initparams($scope.paramsLSU.type, $scope.paramsArchive.type);
+             await initSelectStsFiles();
+             await utils.safeApply($scope);
+        }
 
-            if($scope.structure.responsables.length() === 0){
+        function getResponsablesAndClasses() {
+           if($scope.structure.responsables.length() === 0){
                 $scope.structure.responsables.sync().then(async function () {
                     if($scope.structure.responsables.length() > 0)
                         $scope.lsu.responsable = $scope.structure.responsables.all[0].displayName;
@@ -105,13 +112,14 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
                 });
             }
 
-            if($scope.structure.classes.length() === 0){
-                $scope.structure.classes.sync().then(async function () {
+           if($scope.structure.classes.length() === 0){
+               $scope.structure.classes.sync().then(async function () {
                     $scope.lsu.classes = $scope.structure.classes.where({type_groupe: Classe.type.CLASSE});
                     await utils.safeApply($scope);
                 });
-            }
-        };
+           }
+        }
+
         $scope.setParamsContentFile = () => {
             $scope.paramsLSU.stsFile = $scope.selectStsFiles.selected.content;
             utils.safeApply($scope);
@@ -457,8 +465,7 @@ export let exportControleur = ng.controller('ExportController', ['$scope',
          * Séquence exécuté au chargement du controleur
          *********************************************************************************************/
         await initparams("2","bfc");
-        $scope.getResponsablesAndClasses();
-        $scope.initSelectStsFiles();
+        await initSelectStsFiles();
     }
 ]);
 
