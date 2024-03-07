@@ -1055,7 +1055,7 @@ public class DefaultExportService implements ExportService {
                 }
                 JsonArray competencesInDomainArray = new fr.wseduc.webutils.collections.JsonArray();
 
-                for (String competence : competencesInDomain.getValue()) {
+                for (String competenceId : competencesInDomain.getValue()) {
                     JsonObject competenceNote = new JsonObject();
                     LinkedHashMap<String, Long> valuesByComp = new LinkedHashMap<>();
                     List<Long> valuesByCompActualClasse = new ArrayList<>();
@@ -1072,26 +1072,27 @@ public class DefaultExportService implements ExportService {
                         }
 
                         if (Objects.equals(Integer.parseInt(classe.substring(0, 1)), eleveLevel)) {
-                            for (String devoir : devoirByCompetences.get(competence)) {
+                            for (String devoir : devoirByCompetences.get(competenceId)) {
                                 if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
-                                        .containsKey(competence)
+                                        .containsKey(competenceId)
                                         && isInPeriode(devoirs.get(devoir).getString("date"), beginningYear, endingYear)) {
-                                    valuesByCompActualClasse.add(competenceNotesByDevoir.get(devoir).get(competence) + 1);
+                                    valuesByCompActualClasse.add(competenceNotesByDevoir.get(devoir).get(competenceId) + 1);
                                 }
                             }
                         } else {
-                            for (String devoir : devoirByCompetences.get(competence)) {
+                            for (String devoir : devoirByCompetences.get(competenceId)) {
                                 if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
-                                        .containsKey(competence) && devoirs.get(devoir).getBoolean("eval_lib_historise")
+                                        .containsKey(competenceId) && devoirs.get(devoir).getBoolean("eval_lib_historise")
                                         && isInPeriode(devoirs.get(devoir).getString("date"), beginningYear, endingYear)) {
-                                    valuesByComp.put(classe, competenceNotesByDevoir.get(devoir).get(competence) + 1);
+                                    valuesByComp.put(classe, competenceNotesByDevoir.get(devoir).get(competenceId) + 1);
                                 }
                             }
                         }
                     }
                     if (!valuesByComp.isEmpty() || !valuesByCompActualClasse.isEmpty()) {
-                        JsonArray competencesNotes = calcWidthNotePeriode(text, usePerso, maitrises, valuesByComp, valuesByCompActualClasse, devoirs.size());
-                        competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
+                        JsonArray competencesNotes = calcWidthNotePeriode(text, usePerso, maitrises, valuesByComp,
+                                valuesByCompActualClasse, devoirByCompetences.get(competenceId).size());
+                        competenceNote.put("header", competencesObjByIdComp.get(competenceId).getString("nom"));
                         competenceNote.put("competenceNotes", competencesNotes);
                         competencesInDomainArray.add(competenceNote);
                     }
@@ -1126,7 +1127,8 @@ public class DefaultExportService implements ExportService {
                     }
                     JsonObject competenceNote = new JsonObject();
                     competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
-                    competenceNote.put("competenceNotes", calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size()));
+                    competenceNote.put("competenceNotes", calcWidthNote(text, usePerso, maitrises, valuesByComp,
+                            devoirByCompetences.get(competence).size()));
                     competencesInDomainArray.add(competenceNote);
                 }
                 domainObj.put("domainBody", competencesInDomainArray);
