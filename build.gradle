@@ -119,20 +119,20 @@ publishing {
   }
   publications {
     maven(MavenPublication) {
-      groupId "${modowner}"
-      artifactId "${modname}"
-      artifact("build/libs/${modowner}~${modname}~$version-fat.jar") { classifier "fat" }
-    }
-    maven(MavenPublication) {
-      groupId "${modowner}"
-      artifactId "${modname}"
-      artifact("build/libs/${modname}-$version-deployment.jar") { classifier "deployment" }
-    }
-    maven(MavenPublication) {
-      groupId "${modowner}"
-      artifactId "${modname}"
-      artifact("build/libs/${modname}-$version-tests.jar") { classifier "tests" }
-    }
+                groupId "$modowner"
+                artifactId "$modname"
+                artifact("build/libs/$modowner~$modname~$version-fat.jar") { classifier "fat" }
+            }
+            maven(MavenPublication) {
+                groupId "$modowner"
+                artifactId "$modname"
+                artifact("build/libs/$modname-$version-deployment.jar") { classifier "deployment" }
+            }
+            maven(MavenPublication) {
+                groupId "$modowner"
+                artifactId "$modname"
+                artifact("build/libs/$modname-$version-tests.jar") { classifier "tests" }
+            }
   }
 }
 

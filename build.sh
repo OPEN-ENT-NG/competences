@@ -5,17 +5,18 @@ then
   mkdir node_modules
 fi
 
-case `uname -s` in
-  MINGW*)
-    USER_UID=1000
-    GROUP_UID=1000
-    ;;
-  *)
-    if [ -z ${USER_UID:+x} ]
-    then
-      USER_UID=`id -u`
-      GROUP_GID=`id -g`
-    fi
+case $(uname -s) in
+MINGW*)
+  USER_UID=1000
+  GROUP_UID=1000
+  ;;
+*)
+  if [ -z ${USER_UID:+x} ]; then
+		
+    USER_UID=$(id -u)
+    GROUP_GID=$(id -g)
+  fi
+  ;;
 esac
 
 clean () {
@@ -45,12 +46,12 @@ buildCss() {
 }
 
 publish () {
-  if [ ! -e "?/.gradle/gradle.properties" ]
-  then
-    mkdir -p "?/.gradle/"    echo "odeUsername=$NEXUS_ODE_USERNAME" > "?/.gradle/gradle.properties"
-    echo "odePassword=$NEXUS_ODE_PASSWORD" >> "?/.gradle/gradle.properties"
-    echo "sonatypeUsername=$NEXUS_SONATYPE_USERNAME" >> "?/.gradle/gradle.properties"
-    echo "sonatypePassword=$NEXUS_SONATYPE_PASSWORD" >> "?/.gradle/gradle.properties"
+  if [ -e "?/.gradle" ] && [ ! -e "?/.gradle/gradle.properties" ]; then
+	  
+    echo "odeUsername=$NEXUS_ODE_USERNAME" >"?/.gradle/gradle.properties"
+    echo "odePassword=$NEXUS_ODE_PASSWORD" >>"?/.gradle/gradle.properties"
+    echo "sonatypeUsername=$NEXUS_SONATYPE_USERNAME" >>"?/.gradle/gradle.properties"
+    echo "sonatypePassword=$NEXUS_SONATYPE_PASSWORD" >>"?/.gradle/gradle.properties"
   fi
   docker-compose run --rm -u "$USER_UID:$GROUP_GID" gradle gradle publish
 }
