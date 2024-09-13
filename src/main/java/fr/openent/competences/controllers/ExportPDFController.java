@@ -202,19 +202,19 @@ public class ExportPDFController extends ControllerHelper {
 
         // Ou exclusif sur la presence des parametres, de facon a s'assurer qu'un seul soit renseigne.
         if (idStructure != null ^ !idClasses.isEmpty() ^ !idEleves.isEmpty()) {
-            Future<JsonObject> exportResult = Future.future();
-            Future<String> periodeNameFuture = Future.future();
+            Promise<JsonObject> exportResultPromise = Promise.promise();
+            Promise<String> periodeNamePromise = Promise.promise();
             bfcService.generateBFCExport(idPeriode, idEtablissement, new JsonArray(idClasses), new JsonArray(idEleves),
-                    idCycle, getHost(request), I18n.acceptLanguage(request), vertx, config, exportResult,
-                    periodeNameFuture);
-            CompositeFuture.all(exportResult, periodeNameFuture).setHandler(event -> {
+                    idCycle, getHost(request), I18n.acceptLanguage(request), vertx, config, exportResultPromise,
+                    periodeNamePromise);
+            Future.all(exportResultPromise.future(), periodeNamePromise.future()).onComplete(event -> {
                 if (event.failed()) {
                     leftToResponse(request, new Either.Left<>(event.cause().getMessage()));
                     return;
                 }
 
-                JsonObject result = exportResult.result();
-                String periodeName = periodeNameFuture.result();
+                JsonObject result = exportResultPromise.future().result();
+                String periodeName = periodeNamePromise.future().result();
                 String fileNamePrefix = result.getString(NAME);
                 String prefixPdfName = "BFC_" + fileNamePrefix + periodeName;
                 String templateName = "BFC.pdf.xhtml";
@@ -272,7 +272,7 @@ public class ExportPDFController extends ControllerHelper {
                         .put(ACTION, "classe.getClasseInfo")
                         .put(ID_CLASSE_KEY, idClasses.get(0));
 
-                eb.send(Competences.VIESCO_BUS_ADDRESS, actionClass, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+                eb.request(Competences.VIESCO_BUS_ADDRESS, actionClass, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
                     if (body.getJsonObject("result").getJsonObject("c").
                             getJsonObject("metadata").getJsonArray("labels").contains("Class")) {
@@ -472,33 +472,33 @@ public class ExportPDFController extends ControllerHelper {
         final List<String> idEtablissement = new ArrayList<>();
 
         // Récupération des matières
-        Future<String> matieresFuture = Future.future();
-        exportService.getMatiereExportReleveComp(idMatieres, event -> formate(matieresFuture, event));
+        Promise<String> matieresPromise = Promise.promise();
+        exportService.getMatiereExportReleveComp(idMatieres, event -> formate(matieresPromise, event));
 
         // Récupération du libelle des périodes
-        Future<String> periodeFuture = Future.future();
+        Promise<String> periodePromise = Promise.promise();
         exportService.getLibellePeriodeExportReleveComp(request, finalIdPeriode, isCycle, idCycle, event ->
-                formate(periodeFuture, event));
+                formate(periodePromise, event));
 
         // Récupération des élèves
-        Future<Object> elevesFuture = Future.future();
+        Promise<Object> elevesPromise = Promise.promise();
         final Map<String, String> elevesMap = new LinkedHashMap<>();
         exportService.getElevesExportReleveComp(finalIdClasse, idStructure, finalIdEleve, finalIdPeriode,
-                elevesMap, event -> formate(elevesFuture, event));
+                elevesMap, event -> formate(elevesPromise, event));
 
         // Une fois la récupération effectuée, lancement de l'export
-        CompositeFuture.all(matieresFuture, periodeFuture, elevesFuture).setHandler(event -> {
+        Future.all(matieresPromise.future(), periodePromise.future(), elevesPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String error = event.cause().getMessage();
                 log.error(error);
                 leftToResponse(request, new Either.Left<>(error));
                 return;
             }
-            final String matieres = matieresFuture.result();
-            final String libellePeriode = periodeFuture.result();
+            final String matieres = matieresPromise.future().result();
+            final String libellePeriode = periodePromise.future().result();
 
             if (finalIdClasse == null) {
-                JsonObject eleve = (JsonObject) elevesFuture.result();
+                JsonObject eleve = (JsonObject) elevesPromise.future().result();
                 final String nomClasse = eleve.getString("classeName");
                 final String idEtablissementEl = eleve.getString(ID_ETABLISSEMENT_KEY);
                 final int eleveLevel = getEleveLevel(eleve);
@@ -520,7 +520,7 @@ public class ExportPDFController extends ControllerHelper {
                 exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleves[0], eleveLevel, idGroupes.toArray(new String[0]),
                         _iGroupesdArr, idEtablissementEl, listIdMatieres, finalIdPeriode, isCycle, idCycle, finalHandler);
             } else {
-                JsonArray eleves = (JsonArray) elevesFuture.result();
+                JsonArray eleves = (JsonArray) elevesPromise.future().result();
                 if (eleves.size() != elevesMap.size()) {
                     leftToResponse(request, new Either.Left<>("one or more students are in several classes"));
                 } else {
@@ -646,7 +646,7 @@ public class ExportPDFController extends ControllerHelper {
                         .put("action", "classe.getEtabClasses")
                         .put("idClasses", new JsonArray(idClasses));
 
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+                eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
                     if ("ok" .equals(body.getString("status"))) {
                         final String idEtablissement = body.getJsonArray("results")
@@ -715,7 +715,7 @@ public class ExportPDFController extends ControllerHelper {
                                         .put("idClasse", idClasse)
                                         .put("idPeriode", idPeriode);
 
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+                                eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                                     JsonObject body = message.body();
 
                                     if ("ok" .equals(body.getString("status"))) {
@@ -816,7 +816,7 @@ public class ExportPDFController extends ControllerHelper {
                             JsonObject action = new JsonObject()
                                     .put("action", "classe.getClasseInfo")
                                     .put("idClasse", idClasse);
-                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+                            eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                                 JsonObject body = message.body();
 
                                 if ("ok" .equals(body.getString("status"))) {
@@ -853,7 +853,7 @@ public class ExportPDFController extends ControllerHelper {
                 .put("action", "periode.getLibellePeriode")
                 .put("idType", idPeriode)
                 .put("request", jsonRequest);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
             if ("ok" .equals(body.getString("status"))) {

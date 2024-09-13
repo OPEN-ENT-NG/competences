@@ -97,7 +97,7 @@ public class FilterPeriodeUtils {
                 .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse))
                 .put("request", jsonRequest);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();

@@ -7,10 +7,7 @@ import fr.openent.competences.model.PdfFile;
 import fr.openent.competences.model.Folder;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -69,10 +66,10 @@ public class ArchiveUtils {
     }
 
     public static void deleteAll(String table, Storage storage, Handler<JsonObject> handler){
-        Future<JsonObject> idFileFuture = Future.future();
+        Promise<JsonObject> idFilePromise = Promise.promise();
         getAllIdFileArchive(table, event -> {
-            FormateFutureEvent.formate(idFileFuture, event);
-            JsonArray results = idFileFuture.result().getJsonArray("ids");
+            FormateFutureEvent.formate(idFilePromise, event);
+            JsonArray results = idFilePromise.future().result().getJsonArray("ids");
             if(results == null){
                 handler.handle(new JsonObject().put(RESULT, "NO files archived "));
                 return;
@@ -81,8 +78,8 @@ public class ArchiveUtils {
             JsonArray removesFiles = new JsonArray();
             results.stream().forEach(files -> removesFiles.add(((JsonArray)files).getValue(1)));
 
-            if(idFileFuture.failed() ||  removesFiles == null) {
-                String error = (removesFiles == null) ? idFileFuture.cause().getMessage() : " no result";
+            if(idFilePromise.future().failed() ||  removesFiles == null) {
+                String error = (removesFiles == null) ? idFilePromise.future().cause().getMessage() : " no result";
                 log.error("deleteAll : " + error);
                 handler.handle(new JsonObject().put(ERROR, error));
                 return;
@@ -106,12 +103,12 @@ public class ArchiveUtils {
     private static void getArchive(final String idEleve, final String idClasse, final Long idPeriode,
                                    Storage storage, String table, Boolean isCycle,
                                    Handler<Either<String, Buffer>> bufferEither){
-        Future<JsonObject> idFileFuture = Future.future();
+        Promise<JsonObject> idFilePromise = Promise.promise();
         getIdFileArchive(idEleve, idClasse, idPeriode, table, isCycle, event -> {
-            FormateFutureEvent.formate(idFileFuture, event);
-            JsonObject result = idFileFuture.result();
-            if(idFileFuture.failed() ||  result == null){
-                String error = (result == null)? idFileFuture.cause().getMessage() : " no result";
+            FormateFutureEvent.formate(idFilePromise, event);
+            JsonObject result = idFilePromise.future().result();
+            if(idFilePromise.future().failed() ||  result == null){
+                String error = (result == null)? idFilePromise.future().cause().getMessage() : " no result";
 
                 log.error("get" + table + " : " + error);
                 bufferEither.handle(new Either.Left<>(error));
@@ -303,7 +300,7 @@ public class ArchiveUtils {
         List<JsonObject> files = new ArrayList<>();
         files = getAllFilesAndFolders(structureFolder);
 
-        zipBuilder.exportAndSendZip(structureFolder.toJsonObject(),files , request, workspaceHelper == null).setHandler(zipEvent -> {
+        zipBuilder.exportAndSendZip(structureFolder.toJsonObject(),files , request, workspaceHelper == null).onComplete(zipEvent -> {
             if (zipEvent.failed()) {
                 request.response().setStatusCode(500).end();
             }else{
@@ -467,12 +464,12 @@ public class ArchiveUtils {
 //        }
 //    }
 
-    private static Handler<Either<String, Folder>> getHandlerFolder(Future<Folder> serviceFuture) {
+    private static Handler<Either<String, Folder>> getHandlerFolder(Promise<Folder> servicePromise) {
         return event -> {
             if (event.isRight()) {
-                serviceFuture.complete(event.right().getValue());
+                servicePromise.complete(event.right().getValue());
             } else {
-                serviceFuture.fail(event.left().getValue());
+                servicePromise.fail(event.left().getValue());
             }
         };
     }

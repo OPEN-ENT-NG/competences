@@ -13,6 +13,7 @@ import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -58,30 +59,30 @@ public class YearTransitionController extends ControllerHelper {
     @ResourceFilter(SuperAdminFilter.class)
     public void afterTransition(final HttpServerRequest request) {
         log.info("Start transition after ...");
-        List<Future> futures = new ArrayList<>();
-        Future<JsonArray> future1 = Future.future();
+        List<Future<JsonArray>> futures = new ArrayList<>();
+        Promise<JsonArray> clearTablePostTransitionPromise = Promise.promise();
         log.info("START clearTablePostTransition ...");
         transitionService.clearTablePostTransition(event -> {
             if (event.isRight()) {
-                future1.complete(event.right().getValue());
+                clearTablePostTransitionPromise.complete(event.right().getValue());
                 log.info("SUCCESS clearTablePostTransition ...");
             } else {
                 log.error("Problem in afterTransition in purge tables");
                 log.error(event.left());
-                future1.fail("Problem in afterTransition in purge tables");
+                clearTablePostTransitionPromise.fail("Problem in afterTransition in purge tables");
             }
         });
-        futures.add(future1);
+        futures.add(clearTablePostTransitionPromise.future());
 
-        Future<JsonArray> future2 = Future.future();
-        updateClassId(future2);
-        futures.add(future2);
+        Promise<JsonArray> updateClassIdPromise = Promise.promise();
+        updateClassId(updateClassIdPromise);
+        futures.add(updateClassIdPromise.future());
 
-        Future<JsonArray> future3 = Future.future();
-        supprimerSousMatieresNonManuelles(future3);
-        futures.add(future3);
+        Promise<JsonArray> deleteSubSubjectPromise = Promise.promise();
+        supprimerSousMatieresNonManuelles(deleteSubSubjectPromise);
+        futures.add(deleteSubSubjectPromise.future());
 
-        CompositeFuture.all(futures).setHandler(
+        Future.all(futures).onComplete(
                 eventFutur -> {
                     if (eventFutur.succeeded()) {
                         Renders.ok(request);
@@ -91,7 +92,7 @@ public class YearTransitionController extends ControllerHelper {
                 });
     }
 
-    private void updateClassId(Future<JsonArray> future) {
+    private void updateClassId(Promise<JsonArray> promise) {
         log.info("START updateClassId ...");
         transitionService.getOldIdClassTransition(oldIdClassEvent -> {
             if (oldIdClassEvent.isRight()) {
@@ -101,43 +102,43 @@ public class YearTransitionController extends ControllerHelper {
                         JsonArray classesFromNeo = matchExternalIdEvent.right().getValue();
                         transitionService.updateTablesTransition(classesFromNeo, updateTableTransitionEvent -> {
                             if (updateTableTransitionEvent.isRight()) {
-                                future.complete(updateTableTransitionEvent.right().getValue());
+                                promise.complete(updateTableTransitionEvent.right().getValue());
                                 log.info("SUCCESS updateClassId ...");
                             } else {
-                                future.fail("Problem in afterTransition in updateClassId function where " +
+                                promise.fail("Problem in afterTransition in updateClassId function where " +
                                         "updating the id of the class");
                                 log.error("Problem afterTransition");
                             }
                         });
                     } else {
-                        future.fail("Problem in afterTransition in updateClassId function where getting " +
+                        promise.fail("Problem in afterTransition in updateClassId function where getting " +
                                 "classes informations in NEO");
                         log.error("Problem afterTransition");
                     }
                 });
             } else {
-                future.fail("Problem in afterTransition in updateClassId function where getting oldIdClassTransition");
+                promise.fail("Problem in afterTransition in updateClassId function where getting oldIdClassTransition");
                 log.error("Problem afterTransition");
             }
         });
     }
 
-    private void supprimerSousMatieresNonManuelles(Future<JsonArray> future) {
+    private void supprimerSousMatieresNonManuelles(Promise<JsonArray> promise) {
         log.info("START supprimerSousMatieresNonManuelles ...");
         transitionService.getSubjectsNeo(event -> {
             if (event.isRight()) {
                 JsonArray matieres = event.right().getValue();
                 transitionService.supprimerSousMatiereNonRattaches(matieres, eventDelete -> {
                     if (eventDelete.isRight()) {
-                        future.complete(eventDelete.right().getValue());
+                        promise.complete(eventDelete.right().getValue());
                         log.info("SUCCESS supprimerSousMatieresNonManuelles ...");
                     } else {
-                        future.fail("Problem in afterTransition supprimerSousMatieresNonManuelles");
+                        promise.fail("Problem in afterTransition supprimerSousMatieresNonManuelles");
                         log.error("Problem afterTransition");
                     }
                 });
             } else {
-                future.fail("Problem in afterTransition in supprimerSousMatieresNonManuelles");
+                promise.fail("Problem in afterTransition in supprimerSousMatieresNonManuelles");
                 log.error("Problem afterTransition");
             }
         });

@@ -138,7 +138,7 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
                 .put("action", "classe.getClasseIdByEleve")
                 .put("idEleve", idEleve);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();

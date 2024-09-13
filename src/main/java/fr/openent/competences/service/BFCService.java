@@ -19,6 +19,7 @@ package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.service.CrudService;
@@ -146,5 +147,5 @@ public interface BFCService extends CrudService {
     void generateBFCExport(final Long idPeriode, final String idStructure, final JsonArray idClasses,
                            final JsonArray idEleves, final Long idCycle,
                            final String host, final String acceptLanguage, Vertx vertx, JsonObject config,
-                           Future<JsonObject> exportResult, Future<String> periodeNameResult);
+                           Promise<JsonObject> exportResultPromise, Promise<String> periodeNameResultPromise);
 }

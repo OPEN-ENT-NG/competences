@@ -7,11 +7,8 @@ import fr.openent.competences.bean.lsun.Discipline;
 import fr.openent.competences.bean.lsun.Donnees;
 import fr.openent.competences.service.LSUService;
 import fr.openent.competences.service.UtilsService;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
+import io.vertx.core.*;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -171,16 +168,16 @@ public class DefaultLSUService implements LSUService {
     @Override
     public void getMapIdClassCodeDomaineById(List<String> idsClass, Handler<Either<String, Map<String,Map<Long, String>>>> handler) {
 
-        List<Future> listFutureClass = new ArrayList<>();
+        List<Future<Void>> listFutureClass = new ArrayList<>();
         Map<String,Map<Long,String>> mapIdClassCodesDomaines = new HashMap<>();
         for(String idClass : idsClass) {
-            Future classFuture = Future.future();
-            listFutureClass.add(classFuture);
+            Promise<Void> classPromise = Promise.promise();
+            listFutureClass.add(classPromise.future());
             JsonObject action = new JsonObject()
                     .put("action", "user.getCodeDomaine")
                     .put("idClass", idClass);
 
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                 int count = 0;
                 AtomicBoolean answer = new AtomicBoolean(false);
                 final String thread = "classIds -> " + idsClass.toString();
@@ -202,7 +199,7 @@ public class DefaultLSUService implements LSUService {
                             //la mapDomaines n'est renvoyee que si elle contient les 8 codes domaine du socle commun
                             if (mapDomaines.size() == CodeDomaineSocle.values().length) {
                                 mapIdClassCodesDomaines.put(idClass,mapDomaines);
-                                classFuture.complete();
+                                classPromise.complete();
                                 // log for time-out
                                 answer.set(true);
                                 serviceResponseOK(answer, count, thread, method);
@@ -227,7 +224,7 @@ public class DefaultLSUService implements LSUService {
                         count++;
                         serviceResponseOK(answer, count, thread, method);
                         if (error != null && error.contains(TIME)) {
-                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                            eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                     handlerToAsyncHandler(this));
                         } else {
                             handler.handle(new Either.Left<String, Map<String,Map<Long, String>>>(
@@ -239,7 +236,7 @@ public class DefaultLSUService implements LSUService {
                 }
             }));
         }
-        CompositeFuture.all(listFutureClass).setHandler(event -> {
+        Future.all(listFutureClass).onComplete(event -> {
             handler.handle(new Either.Right<String, Map<String,Map<Long, String>>>(mapIdClassCodesDomaines));
         });
     }
@@ -314,42 +311,42 @@ public class DefaultLSUService implements LSUService {
                     Map<String, List<JsonObject>> ignoredInfos =  ((List<JsonObject>)unheededStudents.getList())
                             .stream().collect(Collectors.groupingBy(  o ->  o.getString("id_eleve")));
 
-                    List<Future> futures = new ArrayList<>();
+                    List<Future<JsonArray>> futures = new ArrayList<>();
 
                     // Récupération des infos sur les élèves ignorés
-                    Future<JsonArray> infosElevesIgnores = Future.future();
+                    Promise<JsonArray> infosElevesIgnoresPromise = Promise.promise();
                     JsonObject action = new JsonObject()
                             .put("action", "eleve.getInfoEleve")
                             .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
                             .put("idEleves", new JsonArray(Arrays.asList(ignoredInfos.keySet().toArray())));
 
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(studentsInfo -> {
+                    eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(studentsInfo -> {
                         JsonObject body = studentsInfo.body();
                         if (!"ok".equals(body.getString("status"))) {
                             handler.handle(new Either.Left<>(body.getString(MESSAGE)));
                         } else {
-                            infosElevesIgnores.complete(body.getJsonArray("results"));
+                            infosElevesIgnoresPromise.complete(body.getJsonArray("results"));
                         }
                     }));
-                    futures.add(infosElevesIgnores);
+                    futures.add(infosElevesIgnoresPromise.future());
 
                     // Récupération des infos sur les classes
-                    Future<JsonArray> infosClasses = Future.future();
+                    Promise<JsonArray> infosClassesPromise = Promise.promise();
                     action = new JsonObject()
                             .put(ACTION, "classe.getClassesInfo")
                             .put("idClasses", idClasses);
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+                    eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                         JsonObject body = message.body();
                         if (OK.equals(body.getString(STATUS))) {
-                            infosClasses.complete(body.getJsonArray("results"));
+                            infosClassesPromise.complete(body.getJsonArray("results"));
                         } else {
                             handler.handle(new Either.Left<>(body.getString("message")));
                             log.error("getInfosGroupes : " + body.getString("message"));
                         }
                     }));
-                    futures.add(infosClasses);
+                    futures.add(infosClassesPromise.future());
 
-                    CompositeFuture.all(futures).setHandler(getStudentIgnoredInfos(handler, ignoredInfos, infosElevesIgnores, infosClasses));
+                    Future.all(futures).onComplete(getStudentIgnoredInfos(handler, ignoredInfos, infosElevesIgnoresPromise.future(), infosClassesPromise.future()));
                 }
             }
         });
@@ -407,13 +404,13 @@ public class DefaultLSUService implements LSUService {
         };
     }
 
-    public void getStudents(final List<String> classids, Future<Message<JsonObject>> studentsFuture,
+    public void getStudents(final List<String> classids, Promise<Message<JsonObject>> studentsPromise,
                             AtomicInteger count, AtomicBoolean answer, final String thread, final String method){
         JsonObject action = new JsonObject()
                 .put("action", "user.getElevesRelatives")
                 .put("idsClass", new fr.wseduc.webutils.collections.JsonArray(classids));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> message) {
@@ -424,15 +421,15 @@ public class DefaultLSUService implements LSUService {
                             count.addAndGet(1);
                             serviceResponseOK(answer, count.get(), thread, method);
                             if (error != null && error.contains(TIME)) {
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                                eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                         handlerToAsyncHandler(this));
                             } else {
                                 String failure = "getBaliseEleves : error when collecting Eleves " + error;
-                                studentsFuture.fail(failure);
+                                studentsPromise.fail(failure);
                                 log.error("method getBaliseEleves an error occured when collecting Eleves " + error);
                             }
                         } else {
-                            studentsFuture.complete(message);
+                            studentsPromise.complete(message);
                         }
                     }
                 }));
@@ -449,11 +446,11 @@ public class DefaultLSUService implements LSUService {
 
         if(periodesByClass != null && periodesByClass.size()>0){
 
-            final List<Future> futuresList = new ArrayList<>();
+            final List<Future<JsonArray>> futuresList = new ArrayList<>();
 
             for(Map.Entry<String,JsonArray> classPeriodes : periodesByClass.entrySet()){
-                Future<JsonArray> futureDeletedStudentsByClass = Future.future();
-                futuresList.add(futureDeletedStudentsByClass);
+                Promise<JsonArray> deletedStudentsByClassPromise = Promise.promise();
+                futuresList.add(deletedStudentsByClassPromise.future());
 
                 String beginingPeriode = Utils.getPeriode(classPeriodes.getValue(),true);
 
@@ -462,7 +459,7 @@ public class DefaultLSUService implements LSUService {
                         .put("idClass",classPeriodes.getKey())
                         .put("beginningPeriode",beginingPeriode);
                 final String finalBeginingPeriode = beginingPeriode;
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                         handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
 
                             AtomicBoolean answer = new AtomicBoolean(false);
@@ -502,17 +499,17 @@ public class DefaultLSUService implements LSUService {
                                     //log for time-out
                                     answer.set(true);
                                     serviceResponseOK(answer, count.get(),thread,method);
-                                    futureDeletedStudentsByClass.complete();
+                                    deletedStudentsByClassPromise.complete();
                                 }else{
                                     String error =  message.body().getString(MESSAGE);
                                     if (error!=null && error.contains(TIME)){
-                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                                        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                                 handlerToAsyncHandler(this));
                                     }
                                     else {
                                         // log for time-out
                                         answer.set(true);
-                                        futureDeletedStudentsByClass.complete();
+                                        deletedStudentsByClassPromise.complete();
                                     }
                                     serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                                 }
@@ -523,7 +520,7 @@ public class DefaultLSUService implements LSUService {
 
             }
 
-            CompositeFuture.all(futuresList).setHandler(event -> {
+            Future.all(futuresList).onComplete(event -> {
                 if(event.failed()){
                     String error = event.cause().getMessage();
                     log.info(error);
@@ -543,7 +540,7 @@ public class DefaultLSUService implements LSUService {
                 .put("idStructure",idStructure)
                 .put("idsClass",new fr.wseduc.webutils.collections.JsonArray(idsClass))
                 .put("idsDeletedStudent",new fr.wseduc.webutils.collections.JsonArray(idsDeletedStudent));
-        eb.send(Competences.VIESCO_BUS_ADDRESS,action, Competences.DELIVERY_OPTIONS,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.request(Competences.VIESCO_BUS_ADDRESS,action, Competences.DELIVERY_OPTIONS,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             AtomicInteger count = new AtomicInteger(0);
             String thread = "idsresponsable -> " + action.encode();
             String method = "getAllStudentWithRelatives";
@@ -563,7 +560,7 @@ public class DefaultLSUService implements LSUService {
                     String error = body.getString(MESSAGE);
                     serviceResponseOK(answer,count.incrementAndGet(),thread,method);
                     if(error != null && error.contains(TIME)){
-                        eb.send(Competences.VIESCO_BUS_ADDRESS, action,Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(this));
+                        eb.request(Competences.VIESCO_BUS_ADDRESS, action,Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(this));
                     }else{
                         handler.handle(new Either.Left<>("get all students : error when collecting Students : "+ error));
                         log.error("method getAllStudentWithRelatives error when collecting Students : "+ error);

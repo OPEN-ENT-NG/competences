@@ -60,21 +60,21 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
     public void getRetardsAndAbsences(String structureId, List<String> idEleves, List<String> idClasses,
                                       Handler<Either<String, JsonArray>> eitherHandler) {
         // Récupération de l'état d'activation du module présences de l'établissement
-        Future<JsonObject> activationFuture = Future.future();
-        structureOptionsService.getActiveStatePresences(structureId, event -> formate(activationFuture, event));
+        Promise<JsonObject> activationPromise = Promise.promise();
+        structureOptionsService.getActiveStatePresences(structureId, event -> formate(activationPromise, event));
 
         // Récupération de l'état de la récupération des données du modules présences
-        Future<JsonObject> syncFuture = Future.future();
-        structureOptionsService.getSyncStatePresences(structureId, event -> formate(syncFuture, event));
+        Promise<JsonObject> syncPromise = Promise.promise();
+        structureOptionsService.getSyncStatePresences(structureId, event -> formate(syncPromise, event));
 
-        CompositeFuture.all(syncFuture, activationFuture).setHandler(event -> {
+        Future.all(syncPromise.future(), activationPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String error = event.cause().getMessage();
                 log.error("[initRecuperationAbsencesRetardsFromPresences] : " + error);
                 eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-config] Failed"));
             } else {
-                JsonObject activationState = activationFuture.result();
-                JsonObject syncState = syncFuture.result();
+                JsonObject activationState = activationPromise.future().result();
+                JsonObject syncState = syncPromise.future().result();
                 if (activationState.getBoolean("installed") && activationState.getBoolean("activate") &&
                         syncState.containsKey("presences_sync") && syncState.getBoolean("presences_sync")) {
                     getRetardsAndAbsencesFromPresences(structureId, idEleves, idClasses, eitherHandler);
@@ -103,43 +103,43 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
 
     private void getRetardsAndAbsencesFromPresences(String structureId, List<String> idEleves, List<String> idClasses,
                                                     Handler<Either<String, JsonArray>> handler) {
-        Future<JsonArray> periodesFuture = Future.future();
+        Promise<JsonArray> periodesPromise = Promise.promise();
 
-        utilsService.getPeriodes(idClasses, structureId, event -> formate(periodesFuture, event));
+        utilsService.getPeriodes(idClasses, structureId, event -> formate(periodesPromise, event));
 
-        Future<JsonArray> reasonsFuture = Future.future();
-        utilsService.getPresencesReasonsId(structureId, event -> formate(reasonsFuture, event));
+        Promise<JsonArray> reasonsPromise = Promise.promise();
+        utilsService.getPresencesReasonsId(structureId, event -> formate(reasonsPromise, event));
 
-        CompositeFuture.all(periodesFuture, reasonsFuture).setHandler(eventParams -> {
+        Future.all(periodesPromise.future(), reasonsPromise.future()).onComplete(eventParams -> {
             if (eventParams.failed()) {
                 String error = eventParams.cause().getMessage();
                 log.error("[getRetardsAndAbsencesFromPresences] : " + error);
                 handler.handle(new Either.Left<>("[getRetardsAndAbsencesFromPresences] Failed"));
             } else {
-                JsonArray periodes = periodesFuture.result();
-                JsonArray reasons = reasonsFuture.result();
+                JsonArray periodes = periodesPromise.future().result();
+                JsonArray reasons = reasonsPromise.future().result();
                 List<Integer> reasonIds = ((List<JsonObject>) reasons.getList()).stream()
                         .map(reason -> reason.getLong("id").intValue())
                         .collect(Collectors.toList());
                 String beginningDateYear = periodes.getJsonObject(0).getString("timestamp_dt").substring(0, 10);
                 String endDateYear = periodes.getJsonObject(periodes.size() - 1).getString("timestamp_fn").substring(0, 10);
 
-                Future<JsonArray> absencesRegularizedFuture = Future.future();
+                Promise<JsonArray> absencesRegularizedPromise = Promise.promise();
                 sendEventBusGetEvent(EventType.ABSENCE.getType(), idEleves, structureId,
                         beginningDateYear, endDateYear, "HALF_DAY", true, false,
-                        null, true, event -> formate(absencesRegularizedFuture, event));
+                        null, true, event -> formate(absencesRegularizedPromise, event));
 
-                Future<JsonArray> absencesUnregularizedFuture = Future.future();
+                Promise<JsonArray> absencesUnregularizedPromise = Promise.promise();
                 sendEventBusGetEvent(EventType.ABSENCE.getType(), idEleves, structureId,
                         beginningDateYear, endDateYear, "HALF_DAY", false, true,
-                        reasonIds, true, event -> formate(absencesUnregularizedFuture, event));
+                        reasonIds, true, event -> formate(absencesUnregularizedPromise, event));
 
-                Future<JsonArray> retardsFuture = Future.future();
+                Promise<JsonArray> retardsPromise = Promise.promise();
                 sendEventBusGetEvent(EventType.LATENESS.getType(), idEleves, structureId,
                         beginningDateYear, endDateYear, "HOUR", null, true,
-                        reasonIds, true, event -> formate(retardsFuture, event));
+                        reasonIds, true, event -> formate(retardsPromise, event));
 
-                CompositeFuture.all(absencesRegularizedFuture, absencesUnregularizedFuture, retardsFuture).setHandler(event -> {
+                Future.all(absencesRegularizedPromise.future(), absencesUnregularizedPromise.future(), retardsPromise.future()).onComplete(event -> {
                     if (event.failed()) {
                         String message = event.cause().getMessage();
                         log.error("[getRetardsAndAbsencesFromPresences-getEventsStudent] : " + message);
@@ -147,9 +147,9 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
                     } else {
                         JsonArray result = new JsonArray();
 
-                        JsonArray absencesRegularizedArray = absencesRegularizedFuture.result();
-                        JsonArray absencesNotRegularizedArray = absencesUnregularizedFuture.result();
-                        JsonArray retardsArray = retardsFuture.result();
+                        JsonArray absencesRegularizedArray = absencesRegularizedPromise.future().result();
+                        JsonArray absencesNotRegularizedArray = absencesUnregularizedPromise.future().result();
+                        JsonArray retardsArray = retardsPromise.future().result();
 
                         for (String idEleve : idEleves) {
                             for (Object periode : periodes) {
@@ -255,64 +255,64 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
             action.put("compliance", compliance);
         }
 
-        eb.send("fr.openent.presences", action, MessageResponseHandler.messageJsonArrayHandler(handler));
+        eb.request("fr.openent.presences", action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
     //TODO A APPELER QU UNE FOIS -> Voir comment précharger
     public void getSubjectLibelleForSuivi(final String idEtablissement,
-                                          Future<Map<String, JsonObject>> libelleMatiereFuture) {
+                                          Promise<Map<String, JsonObject>> libelleMatierePromise) {
         // Récupération des matières de l'établissement
-        Future<JsonArray> subjectF = Future.future();
-        defautlMatiereService.getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
+        Promise<JsonArray> subjectPromise = Promise.promise();
+        defautlMatiereService.getMatieresEtab(idEtablissement, event -> formate(subjectPromise, event));
 
         // Récupération des libellé court des matières
-        Future<Map<String, String>> libelleCourtsFuture = Future.future();
+        Promise<Map<String, String>> libelleCourtsPromise = Promise.promise();
         defautlMatiereService.getLibellesCourtsMatieres(true,
-                event -> formate(libelleCourtsFuture, event));
+                event -> formate(libelleCourtsPromise, event));
 
-        CompositeFuture.all(subjectF, libelleCourtsFuture).setHandler(event -> {
+        Future.all(subjectPromise.future(), libelleCourtsPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String error = event.cause().getMessage();
                 log.error("[getSubjectLibelleForSuivi] : " + error);
                 if (error.contains(TIME)) {
-                    getSubjectLibelleForSuivi(idEtablissement, libelleMatiereFuture);
+                    getSubjectLibelleForSuivi(idEtablissement, libelleMatierePromise);
                 } else {
-                    libelleMatiereFuture.fail(error);
+                    libelleMatierePromise.fail(error);
                 }
                 return;
             }
-            Map<String, String> mapCodeLibelleCourt = libelleCourtsFuture.result();
-            JsonArray subjects = subjectF.result();
+            Map<String, String> mapCodeLibelleCourt = libelleCourtsPromise.future().result();
+            JsonArray subjects = subjectPromise.future().result();
             Map<String, JsonObject> mapSubjects = new HashMap<>();
 
             Utils.buildMapSubject(subjects, mapSubjects, mapCodeLibelleCourt);
-            libelleMatiereFuture.complete(mapSubjects);
+            libelleMatierePromise.complete(mapSubjects);
         });
     }
 
     public void getSuiviAcquis(final String idEtablissement, final Long idPeriode, final String idEleve,
                                final JsonArray idClasseGroups, final List<Service> services, final JsonArray multiTeachers,
                                Handler<Either<String, JsonArray>> handler) {
-        List<Future> listOfFutures = new ArrayList<>();
+        List<Future<JsonArray>> listOfFutures = new ArrayList<>();
 
-        Future<JsonArray> subjectEleveFuture = Future.future();
+        Promise<JsonArray> subjectElevePromise = Promise.promise();
         devoirService.getMatiereTeacherForOneEleve(idEleve, idEtablissement, idClasseGroups, event -> {
             formate("[Competences] DefaultBilanPeriodique at getSuiviAcquis : getMatiereTeacherForOneEleve ",
-                    subjectEleveFuture, event);
+                    subjectElevePromise, event);
         });
-        listOfFutures.add(subjectEleveFuture);
+        listOfFutures.add(subjectElevePromise.future());
 
-        Future<JsonArray> groupsStudentFuture = Future.future();
+        Promise<JsonArray> groupsStudentPromise = Promise.promise();
         Utils.getGroupsEleve(eb, idEleve, idEtablissement, responseGroupsStudent -> {
             formate("[Competences] DefaultBilanPeriodique at getSuiviAcquis : getGroupsEleve",
-                    groupsStudentFuture, responseGroupsStudent);
+                    groupsStudentPromise, responseGroupsStudent);
         });
-        listOfFutures.add(groupsStudentFuture);
+        listOfFutures.add(groupsStudentPromise.future());
 
-        CompositeFuture.all(listOfFutures).setHandler(event -> {
+        Future.all(listOfFutures).onComplete(event -> {
             if (event.succeeded()) {
-                JsonArray subjects = subjectEleveFuture.result();
-                JsonArray groupsStudent = groupsStudentFuture.result();
+                JsonArray subjects = subjectElevePromise.future().result();
+                JsonArray groupsStudent = groupsStudentPromise.future().result();
 
                 if (subjects == null || subjects.isEmpty()) {
                     handler.handle(new Either.Right<>(new JsonArray()));
@@ -323,21 +323,21 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
                     buildSubjectForSuivi(idsMatieresIdsTeachers, idsTeachers, subjects,
                             idPeriode, multiTeachers, services, groupsStudent);
 
-                    List<Future> futures = new ArrayList<>();
+                    List<Future<Map<String, JsonObject>>> futures = new ArrayList<>();
 
                     // Récupération du libelle des matières et sous Matières
-                    Future<Map<String, JsonObject>> libelleMatiereFuture = Future.future();
-                    getSubjectLibelleForSuivi(idEtablissement, libelleMatiereFuture);
-                    futures.add(libelleMatiereFuture);
+                    Promise<Map<String, JsonObject>> libelleMatierePromise = Promise.promise();
+                    getSubjectLibelleForSuivi(idEtablissement, libelleMatierePromise);
+                    futures.add(libelleMatierePromise.future());
 
                     // Récupération des noms et prénoms des professeurs
-                    Future<Map<String, JsonObject>> lastNameAndFirstNameFuture = Future.future();
+                    Promise<Map<String, JsonObject>> lastNameAndFirstNamePromise = Promise.promise();
                     Utils.getLastNameFirstNameUser(eb, idsTeachers, lastNameAndFirstNameEvent -> {
-                        formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
+                        formate(lastNameAndFirstNamePromise, lastNameAndFirstNameEvent);
                     });
-                    futures.add(lastNameAndFirstNameFuture);
+                    futures.add(lastNameAndFirstNamePromise.future());
 
-                    CompositeFuture.all(futures).setHandler(
+                    Future.all(futures).onComplete(
                             setSubjectLibelleAndTeachersHandler(idEtablissement, idPeriode, idEleve,
                                     handler, idsMatieresIdsTeachers, idClasseGroups, groupsStudent, futures, multiTeachers, services)
                     );
@@ -354,7 +354,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
     setSubjectLibelleAndTeachersHandler(String idEtablissement, Long idPeriode, String idEleve,
                                         Handler<Either<String, JsonArray>> handler,
                                         Map<String, JsonObject> idsMatieresIdsTeachers,
-                                        JsonArray idClasseGroups, JsonArray groupsStudent, List<Future> futures, JsonArray multiTeachers, List<Service> services) {
+                                        JsonArray idClasseGroups, JsonArray groupsStudent, List<Future<Map<String, JsonObject>>> futures, JsonArray multiTeachers, List<Service> services) {
         return event -> {
             if (event.succeeded()) {
                 Map<String, JsonObject> idsMatLibelle = (Map<String, JsonObject>) futures.get(0).result();
@@ -418,7 +418,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
                                               Map<String, JsonObject> idsMatLibelle,
                                               Map<String, JsonObject> teachersInfos, Long idPeriod,
                                               JsonArray multiTeachers, List<Service> services, Handler<Either<String, JsonArray>> handler) {
-        ArrayList<Future> subjectsFuture = new ArrayList<>();
+        ArrayList<Future<String>> subjectsFuture = new ArrayList<>();
         JsonArray results = new JsonArray();
 
         String idClasse = idClasseGroups.getString(0);
@@ -442,57 +442,57 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
             result.put("idClasse", idGroupe);
 
             // Récupération des élements du Programme
-            Future<JsonArray> elementsProgFuture = Future.future();
+            Promise<JsonArray> elementsProgPromise = Promise.promise();
             elementProgramme.getElementProgrammeClasses(idPeriod, idMatiere, groupsStudent,
-                    elementsProgEvent -> formate(elementsProgFuture, elementsProgEvent));
+                    elementsProgEvent -> formate(elementsProgPromise, elementsProgEvent));
 
             // Récupération des appreciations, des moyenne finales et positionnements finales
-            Future<JsonArray> appreciationMoyFinalePosFuture = Future.future();
+            Promise<JsonArray> appreciationMoyFinalePosPromise = Promise.promise();
             noteService.getAppreciationMoyFinalePositionnement(idEleve, idMatiere, null, idClasseGroups,
-                    appreciationMoyPosEvent -> formate(appreciationMoyFinalePosFuture, appreciationMoyPosEvent));
+                    appreciationMoyPosEvent -> formate(appreciationMoyFinalePosPromise, appreciationMoyPosEvent));
 
             // Récupération des notes
-            Future<JsonArray> notesFuture = Future.future();
+            Promise<JsonArray> notesPromise = Promise.promise();
             noteService.getNoteElevePeriode(null, idEtablissement, idClasseGroups, idMatiere, null,
-                    notesEvent -> formate(notesFuture, notesEvent));
+                    notesEvent -> formate(notesPromise, notesEvent));
 
             // Récupération des compétences-notes
-            Future<JsonArray> compNotesFuture = Future.future();
+            Promise<JsonArray> compNotesPromise = Promise.promise();
             //USAGE DU IN NORMALEMENT
             noteService.getCompetencesNotesReleve(idEtablissement, null, null, idMatiere,
                     null, idEleve, null, false, false,
-                    compNotesEvent -> formate(compNotesFuture, compNotesEvent));
+                    compNotesEvent -> formate(compNotesPromise, compNotesEvent));
 
             // Récupération de la moyenne finale de la classe
-            Future<JsonArray> moyenneFinaleFuture = Future.future();
+            Promise<JsonArray> moyenneFinalePromise = Promise.promise();
             noteService.getColonneReleve(null, null, idMatiere, idClasseGroups, "moyenne", Boolean.FALSE,
-                    moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
+                    moyenneFinaleEvent -> formate(moyenneFinalePromise, moyenneFinaleEvent));
 
             // Récupération du tableau de conversion des compétences notes
-            Future<JsonArray> tableauDeConversionFuture = Future.future();
+            Promise<JsonArray> tableauDeConversionPromise = Promise.promise();
             new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE)
                     .getConversionNoteCompetence(idEtablissement, idClasse,  // note : Est ce que c'est pas l'idGroupeClasse qu'on doit passé ici ?
-                            tableauEvent -> formate(tableauDeConversionFuture, tableauEvent));
+                            tableauEvent -> formate(tableauDeConversionPromise, tableauEvent));
 
             Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
 
-            Future<String> subjectFuture = Future.future();
-            subjectsFuture.add(subjectFuture);
+            Promise<String> subjectPromise = Promise.promise();
+            subjectsFuture.add(subjectPromise.future());
 
             isAvgSkillFuture
-                    .onSuccess(isAvgSkillResult -> CompositeFuture.all(elementsProgFuture, appreciationMoyFinalePosFuture, notesFuture, compNotesFuture,
-                            moyenneFinaleFuture, tableauDeConversionFuture).setHandler(event -> {
+                    .onSuccess(isAvgSkillResult -> Future.all(elementsProgPromise.future(), appreciationMoyFinalePosPromise.future(), notesPromise.future(), compNotesPromise.future(),
+                            moyenneFinalePromise.future(), tableauDeConversionPromise.future()).onComplete(event -> {
                         if (event.succeeded()) {
                             List<String> idsClassWithNoteAppCompNoteStudent = new ArrayList<>();
-                            setAppreciationMoyFinalePositionnementEleve(result, appreciationMoyFinalePosFuture.result(),
+                            setAppreciationMoyFinalePositionnementEleve(result, appreciationMoyFinalePosPromise.future().result(),
                                     idsClassWithNoteAppCompNoteStudent);
-                            setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(), moyenneFinaleFuture.result(),
-                                    result, idEleve, idPeriod, tableauDeConversionFuture.result(), idsClassWithNoteAppCompNoteStudent, isAvgSkillResult, services, multiTeachers);
-                            setElementProgramme(result, elementsProgFuture.result(), idsClassWithNoteAppCompNoteStudent);
+                            setMoyAndPosForSuivi(notesPromise.future().result(), compNotesPromise.future().result(), moyenneFinalePromise.future().result(),
+                                    result, idEleve, idPeriod, tableauDeConversionPromise.future().result(), idsClassWithNoteAppCompNoteStudent, isAvgSkillResult, services, multiTeachers);
+                            setElementProgramme(result, elementsProgPromise.future().result(), idsClassWithNoteAppCompNoteStudent);
                             results.add(result);
-                            subjectFuture.complete();
+                            subjectPromise.complete();
                         } else {
-                            subjectFuture.fail(event.cause().getMessage());
+                            subjectPromise.fail(event.cause().getMessage());
                             log.error("[DefaultBilanPeriodique] : setSubjectLibelleAndTeachers subjectFuture " + event.cause().getMessage());
                         }
                     }))
@@ -502,7 +502,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
                     });
         }
 
-        CompositeFuture.all(subjectsFuture).setHandler(event -> {
+        Future.all(subjectsFuture).onComplete(event -> {
             if (event.succeeded()) {
                 handler.handle(new Either.Right<>(Utils.sortJsonArrayIntValue("rank", results)));
             } else {

@@ -173,7 +173,7 @@ public class Subject extends Model implements Cloneable {
                 .put(ACTION, "matiere.listMatieresEtab")
                 .put("onlyId", false)
                 .put(ID_STRUCTURE_KEY, idStructure);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     List<Subject> subjects = new ArrayList<>();
 

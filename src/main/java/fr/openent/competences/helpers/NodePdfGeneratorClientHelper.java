@@ -2,6 +2,7 @@ package fr.openent.competences.helpers;
 
 import fr.openent.competences.Competences;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -72,16 +73,28 @@ public class NodePdfGeneratorClientHelper extends ControllerHelper{
 
     private static HttpClientRequest createPostToNodepdfGenerator(HttpClient httpClient, URI url,
                                                                   Handler<Either<String, Buffer>> handler){
-        return httpClient.postAbs(url.toString(), response -> {
-            if (response.statusCode() == 200) {
-                final Buffer buff = Buffer.buffer();
-                response.handler( event ->  appendBuffer(buff,event));
-                response.endHandler( end -> handler.handle(new Either.Right<>(buff)));
-            } else {
-                log.error("fail to post node-pdf-generator" + response.statusMessage());
-                response.bodyHandler( event -> handler.handle(new Either.Left<>(event.toString("UTF-8"))));
-            }
-        });
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(url.toString())
+                .setMethod(HttpMethod.POST);
+
+        Future<HttpClientRequest> requestFuture = httpClient.request(requestOptions)
+                .onSuccess(request -> request.send()
+                    .onSuccess(response -> {
+                        if (response.statusCode() == 200) {
+                            final Buffer buff = Buffer.buffer();
+                            response.handler(event -> buff.appendBuffer(event));
+                            response.endHandler(end -> handler.handle(new Either.Right<>(buff)));
+                        } else {
+                            log.error("Fail to post to node-pdf-generator: " + response.statusMessage());
+                            response.bodyHandler(event -> handler.handle(new Either.Left<>(event.toString("UTF-8"))));
+                        }
+                    })
+                    .onFailure(throwable -> {
+                        log.error("An error occurred during the request: ", throwable);
+                        handler.handle(new Either.Left<>(throwable.getMessage()));
+                    })
+                );
+        return requestFuture.result();
     }
 
     private static void appendBuffer(Buffer dest, Buffer src){

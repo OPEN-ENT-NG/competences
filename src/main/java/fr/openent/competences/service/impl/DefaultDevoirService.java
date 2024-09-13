@@ -1050,7 +1050,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .put(Field.IDPERIODE, idPeriode)
                 .put(Field.IDMATIERE, idMatiere)
                 .put(Field.IDGROUPS, groups);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (Field.OK.equals(body.getString(Field.STATUS))) {
                 JsonArray result = body.getJsonArray(Field.RESULTS);
@@ -1552,22 +1552,22 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 formatDevoirsInfos(devoirInfos, result);
 
                 // Récupération de la période pour l'export
-                Future periodeFuture = getPeriodeForFormaSaisie(devoirInfos, acceptLanguage, host, result, eb);
+                Future<Void> periodeFuture = getPeriodeForFormaSaisie(devoirInfos, acceptLanguage, host, result, eb);
 
                 // Récupération des élèves de la classe
-                Future studentsFuture = getStudentsForFormSaisie(devoirInfos, result, eb);
+                Future<Void> studentsFuture = getStudentsForFormSaisie(devoirInfos, result, eb);
 
                 // Récupération du libellé de la matière du devoir
-                Future subjectFuture = getSubjectsFuture(devoirInfos, result, eb);
+                Future<Void> subjectFuture = getSubjectsFuture(devoirInfos, result, eb);
 
                 // Récupération du nom de la classe
-                Future classeFuture = getClasseFuture(devoirInfos, result, eb);
+                Future<Void> classeFuture = getClasseFuture(devoirInfos, result, eb);
 
                 // Récupération des compétences du devoir
-                Future compFuture = getCompFuture(idDevoir, devoirInfos, result, eb);
+                Future<Void> compFuture = getCompFuture(idDevoir, devoirInfos, result, eb);
 
-                CompositeFuture.all(periodeFuture, studentsFuture, subjectFuture, compFuture, classeFuture)
-                        .setHandler(event -> {
+                Future.all(periodeFuture, studentsFuture, subjectFuture, compFuture, classeFuture)
+                        .onComplete(event -> {
                             if (event.failed()) {
                                 returnFailure("[getFormSaisieDevoir] ", event, handler);
                             } else {
@@ -1778,68 +1778,68 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     @Override
     public void getDevoirsEleve(String idEtablissement, String idEleve, String idMatiere, Long idPeriode,
                                 Handler<Either<String, JsonObject>> handler) {
-        List<Future> futures = new ArrayList<>();
+        List<Future<JsonArray>> futures = new ArrayList<>();
 
-        Future<JsonArray> devoirsFuture = Future.future();
-        Future<JsonArray> annotationsFuture = Future.future();
+        Promise<JsonArray> devoirsPromise = Promise.promise();
+        Promise<JsonArray> annotationsPromise = Promise.promise();
         if (idEtablissement != null && idEleve != null) {
             listDevoirs(idEleve, idEtablissement, null, idMatiere,
-                    idPeriode, false, devoirsEvent -> formate(devoirsFuture, devoirsEvent)
+                    idPeriode, false, devoirsEvent -> formate(devoirsPromise, devoirsEvent)
             );
-            futures.add(devoirsFuture);
+            futures.add(devoirsPromise.future());
 
             listDevoirsWithAnnotations(idEleve, idPeriode, idMatiere,
-                    annotationsEvent -> formate(annotationsFuture, annotationsEvent)
+                    annotationsEvent -> formate(annotationsPromise, annotationsEvent)
             );
-            futures.add(annotationsFuture);
+            futures.add(annotationsPromise.future());
         } else {
             handler.handle(new Either.Left<>("getLastDevoirs : missing idEleve or idEtablissement"));
         }
 
-        Future<JsonArray> matieresFuture = Future.future();
+        Promise<JsonArray> matieresPromise = Promise.promise();
         matiereService.getMatieresEtab(idEtablissement,
-                matieresEvent -> formate(matieresFuture, matieresEvent)
+                matieresEvent -> formate(matieresPromise, matieresEvent)
         );
-        futures.add(matieresFuture);
+        futures.add(matieresPromise.future());
 
-        Future<JsonArray> groupsFuture = Future.future();
+        Promise<JsonArray> groupsPromise = Promise.promise();
         Utils.getGroupsEleve(eb, idEleve, idEtablissement,
-                groupsEvent -> formate(groupsFuture, groupsEvent)
+                groupsEvent -> formate(groupsPromise, groupsEvent)
         );
-        futures.add(groupsFuture);
+        futures.add(groupsPromise.future());
 
-        CompositeFuture.all(futures).setHandler(futuresEvent -> {
+        Future.all(futures).onComplete(futuresEvent -> {
             if (futuresEvent.failed()) {
                 handler.handle(new Either.Left<>(futuresEvent.cause().getMessage()));
             } else {
-                JsonArray devoirs = devoirsFuture.result();
-                JsonArray annotations = annotationsFuture.result();
+                JsonArray devoirs = devoirsPromise.future().result();
+                JsonArray annotations = annotationsPromise.future().result();
 
-                JsonArray matieres = matieresFuture.result();
-                JsonArray groups = groupsFuture.result();
+                JsonArray matieres = matieresPromise.future().result();
+                JsonArray groups = groupsPromise.future().result();
 
-                Future<JsonArray> servicesFuture = Future.future();
+                Promise<JsonArray> servicesPromise = Promise.promise();
                 utilsService.getServices(idEtablissement, groups,
-                        servicesEvent -> formate(servicesFuture, servicesEvent)
+                        servicesEvent -> formate(servicesPromise, servicesEvent)
                 );
 
-                Future<JsonArray> multiTeachersFuture = Future.future();
+                Promise<JsonArray> multiTeachersPromise = Promise.promise();
                 utilsService.getMultiTeachers(idEtablissement, groups, idPeriode != null ? idPeriode.intValue() : null,
-                        multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent)
+                        multiTeachersEvent -> formate(multiTeachersPromise, multiTeachersEvent)
                 );
 
-                Future<JsonArray> devoirWithCompetencesFuture = Future.future();
+                Promise<JsonArray> devoirWithCompetencesPromise = Promise.promise();
                 listDevoirsWithCompetences(idEleve, idPeriode, idMatiere, groups,
-                        devoirsCompetencesEvent -> formate(devoirWithCompetencesFuture, devoirsCompetencesEvent)
+                        devoirsCompetencesEvent -> formate(devoirWithCompetencesPromise, devoirsCompetencesEvent)
                 );
 
-                CompositeFuture.all(servicesFuture, multiTeachersFuture, devoirWithCompetencesFuture).setHandler(teachersEvent -> {
+                Future.all(servicesPromise.future(), multiTeachersPromise.future(), devoirWithCompetencesPromise.future()).onComplete(teachersEvent -> {
                     if (teachersEvent.failed()) {
                         handler.handle(new Either.Left<>(teachersEvent.cause().getMessage()));
                     } else {
-                        final JsonArray services = servicesFuture.result();
-                        final JsonArray allMultiTeachers = multiTeachersFuture.result();
-                        final JsonArray devoirsWithCompetences = devoirWithCompetencesFuture.result();
+                        final JsonArray services = servicesPromise.future().result();
+                        final JsonArray allMultiTeachers = multiTeachersPromise.future().result();
+                        final JsonArray devoirsWithCompetences = devoirWithCompetencesPromise.future().result();
 
                         devoirsWithCompetences.addAll(annotations).forEach(devoirCompetences -> {
                             JsonObject devoirCompetencesJson = (JsonObject) devoirCompetences;
@@ -1861,11 +1861,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
                         JsonArray resultsDevoirs = new JsonArray();
 
-                        ArrayList<Future> resultsFuture = new ArrayList<>();
+                        ArrayList<Future<String>> resultsFuture = new ArrayList<>();
                         buildArrayOfHomeworks(orderedDevoirs, matieres, services, allMultiTeachers, idEleve,
                                 resultsDevoirs, resultsFuture, handler);
 
-                        CompositeFuture.all(resultsFuture).setHandler(resultEvent -> {
+                        Future.all(resultsFuture).onComplete(resultEvent -> {
                             if (resultEvent.failed()) {
                                 handler.handle(new Either.Left<>(resultEvent.cause().getMessage()));
                             } else {
@@ -1907,7 +1907,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     private void buildArrayOfHomeworks(JsonArray orderedDevoirs, JsonArray matieres, JsonArray services,
                                        JsonArray allMultiTeachers, String idEleve, JsonArray results,
-                                       ArrayList<Future> resultsFuture, Handler<Either<String, JsonObject>> handler) {
+                                       ArrayList<Future<String>> resultsFuture, Handler<Either<String, JsonObject>> handler) {
         orderedDevoirs.forEach(devoir -> {
             JsonObject devoirJson = (JsonObject) devoir;
             String idMat = devoirJson.getString("id_matiere");
@@ -1938,27 +1938,27 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 });
             }
 
-            Future<Map<String, JsonObject>> teacherNamesFuture = Future.future();
+            Promise<Map<String, JsonObject>> teacherNamesPromise = Promise.promise();
             Utils.getLastNameFirstNameUser(eb, idsTeachers, teacherNameEvent ->
-                    formate(teacherNamesFuture, teacherNameEvent)
+                    formate(teacherNamesPromise, teacherNameEvent)
             );
 
-            Future<JsonArray> competencesFuture = Future.future();
+            Promise<JsonArray> competencesPromise = Promise.promise();
             competenceNoteService.getCompetencesNotesDevoir(idDevoir,
-                    competencesEvent -> formate(competencesFuture, competencesEvent)
+                    competencesEvent -> formate(competencesPromise, competencesEvent)
             );
 
-            Future<String> resultFuture = Future.future();
-            resultsFuture.add(resultFuture);
-            CompositeFuture.all(teacherNamesFuture, competencesFuture).setHandler(event -> {
+            Promise<String> resultPromise = Promise.promise();
+            resultsFuture.add(resultPromise.future());
+            Future.all(teacherNamesPromise.future(), competencesPromise.future()).onComplete(event -> {
                 if (event.failed()) {
                     handler.handle(new Either.Left<>(event.cause().getMessage()));
                 } else {
-                    final Map<String, JsonObject> teachersName = teacherNamesFuture.result();
-                    final JsonArray competences = competencesFuture.result();
+                    final Map<String, JsonObject> teachersName = teacherNamesPromise.future().result();
+                    final JsonArray competences = competencesPromise.future().result();
 
                     buildObjectForHomework(devoirJson, matiere, idDevoir, idEleve,
-                            teachersName, competences, results, resultFuture);
+                            teachersName, competences, results, resultPromise);
                 }
             });
         });
@@ -1966,7 +1966,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     private void buildObjectForHomework(JsonObject devoirJson, JsonObject matiere, Long idDevoir, String idEleve,
                                         Map<String, JsonObject> teachersName, JsonArray competences, JsonArray results,
-                                        Future<String> resultFuture) {
+                                        Promise<String> resultPromise) {
         JsonObject result = new JsonObject();
 
         String teacherLibelle = teachersName.values().stream()
@@ -1999,7 +1999,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         result.put("competences", competencesDevoirs);
 
         results.add(result);
-        resultFuture.complete();
+        resultPromise.complete();
     }
 
     private void setAverageOfSubjects(JsonObject result, List<Service> services, JsonArray multiTeachers, Long idPeriod) {

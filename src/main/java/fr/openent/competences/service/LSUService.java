@@ -21,6 +21,7 @@ import fr.openent.competences.bean.lsun.Donnees;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -131,13 +132,13 @@ public interface LSUService {
     /**
      * Récupère les élèves pour le LSU
      * @param classids
-     * @param studentsFuture
+     * @param studentsPromise
      * @param count
      * @param answer
      * @param thread
      * @param method
      */
-    void getStudents(final List<String> classids, Future<Message<JsonObject>> studentsFuture,
+    void getStudents(final List<String> classids, Promise<Message<JsonObject>> studentsPromise,
                      AtomicInteger count, AtomicBoolean answer, final String thread, final String method);
 
     /**
