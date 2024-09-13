@@ -21,3 +21,6 @@ docker-compose.yml
 /coverage/
 package-lock.json
 /yarn.lock
+.env
+target
+dependency-reduced-pom.xml
