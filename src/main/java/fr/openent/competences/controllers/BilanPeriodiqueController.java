@@ -19,6 +19,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -87,14 +88,14 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     Future<JsonArray> periodesFuture = utilsService.getPeriodes(idGroupClasse.getList(), idEtablissement);
                     Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idGroupClasse);
 
-                    Future<JsonArray> servicesFuture = Future.future();
+                    Promise<JsonArray> servicesPromise = Promise.promise();
                     utilsService.getServices(idEtablissement, idGroupClasse,
-                            servicesEvent -> formate(servicesFuture, servicesEvent));
+                            servicesEvent -> formate(servicesPromise, servicesEvent));
 
-                    Future<JsonArray> multiTeachersFuture = Future.future();
-                    utilsService.getAllMultiTeachers(idEtablissement, idGroupClasse, multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
+                    Promise<JsonArray> multiTeachersPromise = Promise.promise();
+                    utilsService.getAllMultiTeachers(idEtablissement, idGroupClasse, multiTeachersEvent -> formate(multiTeachersPromise, multiTeachersEvent));
 
-                    CompositeFuture.all(servicesFuture, multiTeachersFuture, subTopicCoefFuture, periodesFuture).setHandler(futuresEvent -> {
+                    Future.all(servicesPromise.future(), multiTeachersPromise.future(), subTopicCoefFuture, periodesFuture).onComplete(futuresEvent -> {
                         if (futuresEvent.failed()) {
                             String error = futuresEvent.cause().getMessage();
                             log.error(error);
@@ -103,8 +104,8 @@ public class BilanPeriodiqueController extends ControllerHelper{
                             List<Object> periodes = (periodesFuture.result().stream().filter(obj ->
                                     ((JsonObject) obj).getLong(Field.ID_TYPE).equals(idPeriode)).collect(Collectors.toList()));
 
-                            JsonArray servicesJsonArray = servicesFuture.result();
-                            JsonArray multiTeachers = multiTeachersFuture.result();
+                            JsonArray servicesJsonArray = servicesPromise.future().result();
+                            JsonArray multiTeachers = multiTeachersPromise.future().result();
                             multiTeachers = MultiTeachersUtils.filterSubtitute(periodes, multiTeachers);
                             List<SubTopic> subTopics = subTopicCoefFuture.result();
                             Structure structure = new Structure();
@@ -173,32 +174,32 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     if(request.params().get("idEleve") != null && request.params().get("idEtablissement") != null){
                         String idEleve = request.params().get("idEleve");
                         String idStructure = request.params().get("idEtablissement");
-                        Future<JsonArray> libelleAvisFuture = Future.future();
+                        Promise<JsonArray> libelleAvisPromise = Promise.promise();
                         avisConseilService.getLibelleAvis(null, idStructure, event -> {
-                            formate(libelleAvisFuture, event);
+                            formate(libelleAvisPromise, event);
                         });
 
-                        Future<JsonArray> getSynthesesFuture = Future.future();
+                        Promise<JsonArray> getSynthesesPromise = Promise.promise();
                         syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(null, idEleve, idStructure, event -> {
-                            formate(getSynthesesFuture, event);
+                            formate(getSynthesesPromise, event);
                         });
 
-                        Future<JsonArray> getAvisConseilFuture = Future.future();
+                        Promise<JsonArray> getAvisConseilPromise = Promise.promise();
                         avisConseilService.getAvisConseil(idEleve,null,idStructure,event -> {
-                            formate(getAvisConseilFuture, event);
+                            formate(getAvisConseilPromise, event);
                         });
 
-                        Future<JsonArray> getAvisOrientationFuture = Future.future();
+                        Promise<JsonArray> getAvisOrientationPromise = Promise.promise();
                         avisOrientationService.getAvisOrientation(idEleve,null,idStructure,event -> {
-                            formate(getAvisOrientationFuture, event);
+                            formate(getAvisOrientationPromise, event);
                         });
 
-                        CompositeFuture.all(libelleAvisFuture, getSynthesesFuture,getAvisConseilFuture,getAvisOrientationFuture).setHandler(event -> {
+                        Future.all(libelleAvisPromise.future(), getSynthesesPromise.future(), getAvisConseilPromise.future(), getAvisOrientationPromise.future()).onComplete(event -> {
                             if(event.succeeded()){
-                                JsonArray libelleAvis = libelleAvisFuture.result();
-                                JsonArray syntheses = getSynthesesFuture.result();
-                                JsonArray avisConseil = getAvisConseilFuture.result();
-                                JsonArray avisOrientation = getAvisOrientationFuture.result();
+                                JsonArray libelleAvis = libelleAvisPromise.future().result();
+                                JsonArray syntheses = getSynthesesPromise.future().result();
+                                JsonArray avisConseil = getAvisConseilPromise.future().result();
+                                JsonArray avisOrientation = getAvisOrientationPromise.future().result();
                                 JsonObject result = new JsonObject();
 
                                 JsonObject avisPerso = new JsonObject().put("id", 0).put("libelle","-- Personnalisé --")

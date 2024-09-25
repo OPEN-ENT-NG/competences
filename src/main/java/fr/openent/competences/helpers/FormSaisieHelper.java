@@ -5,6 +5,7 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -14,9 +15,9 @@ import static fr.openent.competences.Utils.isNotNull;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class FormSaisieHelper {
-    public static Future getPeriodeForFormaSaisie(JsonObject devoirInfos, String language, String host,
+    public static Future<Void> getPeriodeForFormaSaisie(JsonObject devoirInfos, String language, String host,
                                                   JsonObject result, EventBus eb) {
-        Future periodeFuture = Future.future();
+        Promise<Void> periodePromise = Promise.promise();
         JsonObject jsonRequest = new JsonObject()
                 .put("headers", new JsonObject().put("Accept-Language", language))
                 .put("Host", host);
@@ -25,84 +26,84 @@ public class FormSaisieHelper {
                 .put("type", devoirInfos.getInteger("periodetype"))
                 .put("ordre", devoirInfos.getInteger("periodeordre"))
                 .put("request", jsonRequest);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if ("ok".equals(body.getString("status"))) {
                 result.put("periode", body.getString("result"));
-                periodeFuture.complete();
+                periodePromise.complete();
             }
             else {
-                periodeFuture.fail("Error :can not get periode devoir ");
+                periodePromise.fail("Error :can not get periode devoir ");
             }
         }));
 
-        return periodeFuture;
+        return periodePromise.future();
     }
 
-    public static Future getStudentsForFormSaisie(JsonObject devoirInfos, JsonObject result, EventBus eb){
-        Future studentsFuture = Future.future();
+    public static Future<Void> getStudentsForFormSaisie(JsonObject devoirInfos, JsonObject result, EventBus eb){
+        Promise<Void> studentsPromise = Promise.promise();
         JsonObject action = new JsonObject()
                 .put("action", "classe.getEleveClasse")
                 .put("idClasse", devoirInfos.getString("id_groupe"))
                 .put("idPeriode", devoirInfos.getInteger("id_periode"));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
             if ("ok".equals(body.getString("status"))) {
                 result.put("eleves", Utils.sortElevesByDisplayName(body.getJsonArray("results")));
-                studentsFuture.complete();
+                studentsPromise.complete();
             }
             else {
-                studentsFuture.fail("Error :can not get students ");
+                studentsPromise.fail("Error :can not get students ");
             }
         }));
-        return studentsFuture;
+        return studentsPromise.future();
     }
 
 
-    public static  Future getSubjectsFuture(JsonObject devoirInfos, JsonObject result, EventBus eb){
-        Future subjectFuture = Future.future();
+    public static Future<Void> getSubjectsFuture(JsonObject devoirInfos, JsonObject result, EventBus eb){
+        Promise<Void> subjectPromise = Promise.promise();
         JsonObject action = new JsonObject()
                 .put("action", "matiere.getMatiere")
                 .put("idMatiere", devoirInfos.getString("id_matiere"));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(
                 message -> {
                     JsonObject body = message.body();
 
                     if ("ok".equals(body.getString("status"))) {
                         result.put("matiere", body.getJsonObject("result").getJsonObject("n").getJsonObject("data")
                                 .getString("label"));
-                        subjectFuture.complete();
+                        subjectPromise.complete();
                     } else {
-                        subjectFuture.fail("Error :can not get classe info ");
+                        subjectPromise.fail("Error :can not get classe info ");
                     }
                 }));
-        return subjectFuture;
+        return subjectPromise.future();
     }
 
-    public static  Future getClasseFuture(JsonObject devoirInfos, JsonObject result, EventBus eb) {
-        Future classeFuture = Future.future();
+    public static Future<Void> getClasseFuture(JsonObject devoirInfos, JsonObject result, EventBus eb) {
+        Promise<Void> classePromise = Promise.promise();
         JsonObject action = new JsonObject()
                 .put("action", "classe.getClasseInfo")
                 .put("idClasse", devoirInfos.getString("id_groupe"));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if ("ok".equals(body.getString("status"))) {
                 result.put("classeName", body.getJsonObject("result").getJsonObject("c").getJsonObject("data")
                         .getString("name"));
-                classeFuture.complete();
+                classePromise.complete();
             } else {
-                classeFuture.fail("Error :can not get classe informations ");
+                classePromise.fail("Error :can not get classe informations ");
             }
         }));
-        return classeFuture;
+        return classePromise.future();
     }
 
-    public static Future getCompFuture (Long idDevoir, JsonObject devoirInfos, JsonObject result, EventBus eb) {
-        Future compFuture = Future.future();
+    public static Future<Void> getCompFuture (Long idDevoir, JsonObject devoirInfos, JsonObject result, EventBus eb) {
+        Promise<Void> compPromise = Promise.promise();
         if(devoirInfos.getInteger("nbrcompetence") > 0) {
             new DefaultCompetencesService(eb).getDevoirCompetences(idDevoir, null,
                     CompetencesObject -> {
@@ -134,16 +135,16 @@ public class FormSaisieHelper {
                                 result.put("hasCompetences",false);
                             }
                             result.put("competences",CompetencesNew);
-                            compFuture.complete();
+                            compPromise.complete();
                         }else{
-                            compFuture.fail("Error :can not get competences devoir ");
+                            compPromise.fail("Error :can not get competences devoir ");
                         }
                     });
         }else{
-            compFuture.complete();
+            compPromise.complete();
         }
 
-        return compFuture;
+        return compPromise.future();
     }
 
     public static void formatDevoirsInfos(JsonObject devoirInfos, JsonObject result) {

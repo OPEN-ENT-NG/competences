@@ -132,6 +132,9 @@ do
     publish)
       publish
       ;;
+    publishNexus)
+      publishNexus
+      ;;
     test)
       testNode ; test
       ;;

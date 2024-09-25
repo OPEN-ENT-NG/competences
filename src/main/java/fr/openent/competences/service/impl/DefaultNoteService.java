@@ -1338,26 +1338,27 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     @Override
     public void getAppreciationMoyFinalePositionnement(String idEleve, String idMatiere, Long idPeriode,
                                                        JsonArray idGroups, Handler<Either<String, JsonArray>> handler){
-        Future<JsonArray> appreciationFuture = Future.future();
+        Promise<JsonArray> appreciationPromise = Promise.promise();
+
         getAppreciationMatierePeriode(idEleve, idMatiere, idPeriode, idGroups, event -> {
-            formate(appreciationFuture, event);
+            formate(appreciationPromise, event);
         });
 
-        Future<JsonArray> moyenneFinaleFuture = Future.future();
+        Promise<JsonArray> moyenneFinalePromise = Promise.promise();
         getMoyenneFinale(idEleve, idMatiere, idPeriode, idGroups, event -> {
-            formate(moyenneFinaleFuture, event);
+            formate(moyenneFinalePromise, event);
         });
 
-        Future<JsonArray> positionnementFinalFuture = Future.future();
+        Promise<JsonArray> positionnementFinalPromise = Promise.promise();
         getPositionnementFinal(idEleve, idMatiere, idPeriode, event -> {
-            formate(positionnementFinalFuture, event);
+            formate(positionnementFinalPromise, event);
         });
 
-        CompositeFuture.all(appreciationFuture, moyenneFinaleFuture, positionnementFinalFuture).setHandler(event -> {
+        Future.all(appreciationPromise.future(), moyenneFinalePromise.future(), positionnementFinalPromise.future()).onComplete(event -> {
             if(event.succeeded()){
-                JsonArray appreciation = appreciationFuture.result();
-                JsonArray moyenneFinale = moyenneFinaleFuture.result();
-                JsonArray positionnement = positionnementFinalFuture.result();
+                JsonArray appreciation = appreciationPromise.future().result();
+                JsonArray moyenneFinale = moyenneFinalePromise.future().result();
+                JsonArray positionnement = positionnementFinalPromise.future().result();
                 JsonArray result = fullJoinAppMoyPosiFinale(appreciation, moyenneFinale, positionnement);
                 handler.handle(new Either.Right<>(result));
             } else{
@@ -2107,18 +2108,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     //Récupération des Services
                     Promise<JsonArray> servicesPromise = Promise.promise();
                     utilsService.getServices(idEtablissement,
-                            idsGroups, FutureHelper.handlerJsonArray(servicesPromise.future()));
+                            idsGroups, FutureHelper.handler(servicesPromise));
 
                     //Récupération des Multi-teachers
                     Promise<JsonArray> multiTeachingPromise = Promise.promise();
                     utilsService.getMultiTeachers(idEtablissement,
-                            idsGroups, idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+                            idsGroups, idPeriode.intValue(), FutureHelper.handler(multiTeachingPromise));
 
                     //Récupération des Sous-Matières
                     Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idsGroups);
 
-                    CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefFuture)
-                            .setHandler(event -> {
+                    Future.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefFuture)
+                            .onComplete(event -> {
                                 Structure structure = new Structure();
                                 structure.setId(idEtablissement);
                                 JsonArray servicesJson = servicesPromise.future().result();
@@ -2514,10 +2515,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                         Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
                                         Handler<Either<String, JsonObject>> handler) {
         Eleves eleves = new Eleves();
-        List<Future> futureListPeriodes = new ArrayList<>();
+        List<Future<JsonObject>> futureListPeriodes = new ArrayList<>();
         for(int i = 0; i < periodes.size(); i++){
-            Future<JsonObject> futurePeriode = Future.future();
-            futureListPeriodes.add(futurePeriode);
+            Promise<JsonObject> promisePeriode = Promise.promise();
+            futureListPeriodes.add(promisePeriode.future());
             JsonObject periode = periodes.getJsonObject(i);
             Map<String, List<NoteDevoir>> mapIdMatListMoyByEleveByPeriode = new LinkedHashMap<>();
             getMoysEleveByMatByPeriode(periode.getString(Field.ID_CLASSE), periode.getInteger("id_type"), idEtablissement,
@@ -2526,7 +2527,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         @Override
                         public void handle(Either<String, JsonObject> event) {
                             if(event.isLeft()){
-                                futurePeriode.fail(event.left().getValue());
+                                promisePeriode.fail(event.left().getValue());
                                 handler.handle(new Either.Left<>( event.left().getValue()));
                                 log.error(event.left().getValue());
 
@@ -2536,13 +2537,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                                 eleves.setEleves(elevesJsonArray,"id_matiere", "moyenneByMat",
                                         "eleveMoyByMat", "moyGeneraleEleve");
-                                futurePeriode.complete();
+                                promisePeriode.complete();
                             }
                         }
                     });
         }
 
-        CompositeFuture.all(futureListPeriodes).setHandler( event -> {
+        Future.all(futureListPeriodes).onComplete( event -> {
             if(event.failed()){
                 handler.handle(new Either.Left<>( event.cause().getMessage()));
                 log.error(event.cause().getMessage());
@@ -2898,43 +2899,43 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     getStudentClassForExportReleve(idClasse, idPeriode, idEleves, typeClasse, elevesMapObject);
 
                     // Récupération du tableau de conversion
-                    Future<JsonArray> tableauDeConversionFuture = Future.future();
+                    Promise<JsonArray> tableauDeConversionPromise = Promise.promise();
                     competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse, tableauEvent ->
-                            formate(tableauDeConversionFuture, tableauEvent));
+                            formate(tableauDeConversionPromise, tableauEvent));
 
-                    Future<JsonArray> servicesFuture = Future.future();
+                    Promise<JsonArray> formatedServicePromise = Promise.promise();
                     utilsService.getServices(idEtablissement, idGroups, event -> {
-                        formate(servicesFuture, event);
+                        formate(formatedServicePromise, event);
                     });
 
                     //Récupération des Services
                     Promise<JsonArray> servicesPromise = Promise.promise();
                     utilsService.getServices(idEtablissement,
-                            idGroups, FutureHelper.handlerJsonArray(servicesPromise.future()));
+                            idGroups, FutureHelper.handler(servicesPromise));
 
                     //Récupération des Multi-teachers
                     Promise<JsonArray> multiTeachingPromise = Promise.promise();
                     utilsService.getMultiTeachers(idEtablissement,
-                            idGroups, idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+                            idGroups, idPeriode.intValue(), FutureHelper.handler(multiTeachingPromise));
 
                     //Récupération des Sous-Matières
                     Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idGroups);
 
-                    List<Future> listFuturesFirst = new ArrayList<>(
-                            Arrays.asList(studentsClassFuture, tableauDeConversionFuture, servicesFuture,
+                    List<Future<?>> listFuturesFirst = new ArrayList<>(
+                            Arrays.asList(studentsClassFuture, tableauDeConversionPromise.future(), formatedServicePromise.future(),
                                     servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefFuture));
                     for (Object idMatiere : idMatieres){
                         // Récupération du nombre de devoirs avec évaluation numérique
-                        Future<JsonObject> nbEvaluatedHomeWork = Future.future();
+                        Promise<JsonObject> nbEvaluatedHomeWorkPromise = Promise.promise();
                         getNbEvaluatedHomeWork(idClasse, idMatiere.toString(), idPeriode, idGroups, event ->
-                                formate(nbEvaluatedHomeWork, event)
+                                formate(nbEvaluatedHomeWorkPromise, event)
                         );
-                        listFuturesFirst.add(nbEvaluatedHomeWork);
+                        listFuturesFirst.add(nbEvaluatedHomeWorkPromise.future());
                     }
 
                     // Avec les ids des élèves de la classe, récupération des moyennes Finales , des Notes, des Competences Notes
                     // et des Appreciations et des Positionnements finaux
-                    CompositeFuture.all(listFuturesFirst).setHandler(idElevesEvent -> {
+                    Future.all(listFuturesFirst).onComplete(idElevesEvent -> {
 //                        try{
                         if(idElevesEvent.succeeded()) {
                             //Récupération des services, multiteachers et subtopics afin de calculer la moyenne en prenant en compte le coefficient des sous-matières
@@ -2950,26 +2951,26 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             setServices(structure, servicesJson, services, subTopics);
 
                             // Récupération des moyennes, positionnement Finales, appréciations, avis conseil de classe et orientation
-                            Future<JsonArray> bigRequestFuture = Future.future();
+                            Promise<JsonArray> bigRequestPromise = Promise.promise();
                             getColonneReleveTotale(idEleves, idPeriode, idMatieres, idGroups,
-                                    idEtablissement, event -> formate(bigRequestFuture, event));
+                                    idEtablissement, event -> formate(bigRequestPromise, event));
 
                             // Récupération des Notes du Relevé
-                            Future<JsonArray> notesFuture = Future.future();
+                            Promise<JsonArray> notesPromise = Promise.promise();
                             getNotesReleveEleves(idEleves, idEtablissement, idClasse, idPeriode, false,
-                                    idGroups, idMatieres, notesEvent -> formate(notesFuture, notesEvent));
+                                    idGroups, idMatieres, notesEvent -> formate(notesPromise, notesEvent));
 
                             // Récupération des Compétences-Notes du Relevé
-                            Future<JsonArray> compNotesFuture = Future.future();
+                            Promise<JsonArray> compNotesPromise = Promise.promise();
                             getCompetencesNotesReleveEleves(idEleves, idEtablissement, null, idMatieres, idPeriode,
                                     null, true, annual,
-                                    compNotesEvent -> formate(compNotesFuture, compNotesEvent));
+                                    compNotesEvent -> formate(compNotesPromise, compNotesEvent));
 
 
                             Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
-                            List<Future> listFutures = new ArrayList<>(Arrays.asList(bigRequestFuture, compNotesFuture, notesFuture));
+                            List<Future<?>> listFutures = new ArrayList<>(Arrays.asList(bigRequestPromise.future(), compNotesPromise.future(), notesPromise.future()));
                             listFutures.add(isAvgSkillFuture);
-                            CompositeFuture.all(listFutures).setHandler(event -> {
+                            Future.all(listFutures).onComplete(event -> {
                                 try{
                                     if(event.succeeded()) {
                                         // Rajout des moyennes finales
@@ -2981,7 +2982,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                                             JsonArray notesMatiere = new JsonArray();
 
-                                            for(Object note : notesFuture.result()){
+                                            for(Object note : notesPromise.future().result()){
                                                 if(((JsonObject) note).getString("id_matiere").equals(idMatiere)){
                                                     notesMatiere.add(note);
                                                 }
@@ -3011,7 +3012,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                         for (Object idMatiere : idMatieres){
                                             JsonArray notesMatiere = new JsonArray();
 
-                                            for(Object note : compNotesFuture.result()){
+                                            for(Object note : compNotesPromise.future().result()){
                                                 if(((JsonObject)note).getString("id_matiere").equals(idMatiere.toString())){
                                                     notesMatiere.add(note);
                                                 }
@@ -3043,7 +3044,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                     }
                                                     JsonObject resultNotes = new JsonObject();
                                                     calculPositionnementAutoByEleveByMatiere(compNotesEleve, resultNotes,
-                                                            annual, tableauDeConversionFuture.result(),
+                                                            annual, tableauDeConversionPromise.future().result(),
                                                             null , null, isAvgSkillFuture.result());
                                                     if(eleveObject.containsKey(POSITIONNEMENT_AUTO)){
                                                         eleveObject.getJsonObject(POSITIONNEMENT_AUTO).put(idMatiere.toString(),
@@ -3075,24 +3076,24 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                             String idMatiere = idMatieres.getString(i - 6);
                                             // Récupération du  nombre de devoirs avec évaluation numérique
                                             Boolean hasEvaluatedHomeWork = (((JsonObject)listFuturesFirst.get(i).result()).getLong("nb") > 0);
-                                            FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
+                                            FormateColonneFinaleReleveTotale(bigRequestPromise.future().result(), elevesMapObject,
                                                     Field.MOYENNE, idPeriode, hasEvaluatedHomeWork, idMatiere);
                                             //Rajout des notes par devoir et Calcul des moyennes auto
                                             //Rajout des positionnements finaux
-                                            FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
+                                            FormateColonneFinaleReleveTotale(bigRequestPromise.future().result(), elevesMapObject,
                                                     Field.POSITIONNEMENT, idPeriode, hasEvaluatedHomeWork, idMatiere);
 
                                             getMoyenneMinMaxByMatiere(elevesMapObject, idPeriode, idMatiere, annual, resultHandler);
                                         }
 
                                         getMoyenneGeneraleMinMax(elevesMapObject, idPeriode, idMatieres,
-                                                servicesFuture.result(), annual, resultHandler);
+                                                servicesPromise.future().result(), annual, resultHandler);
                                         //Rajout des appreciations par élèves
-                                        FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
+                                        FormateColonneFinaleReleveTotale(bigRequestPromise.future().result(), elevesMapObject,
                                                 SYNTHESE_BILAN_PERIODIQUE, idPeriode, false, "");
-                                        FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
+                                        FormateColonneFinaleReleveTotale(bigRequestPromise.future().result(), elevesMapObject,
                                                 AVIS_CONSEIL_DE_CLASSE, idPeriode, false, "");
-                                        FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
+                                        FormateColonneFinaleReleveTotale(bigRequestPromise.future().result(), elevesMapObject,
                                                 AVIS_CONSEIL_ORIENTATION, idPeriode, false, "");
 
                                         handler.handle(new Either.Right<>(resultHandler.put(Field.ELEVES,
@@ -3766,7 +3767,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     private void getStudentClassForExportReleve(String idClasse, Long idPeriode, JsonArray idEleves, Integer typeClasse,
                                                 Map<String, JsonObject> eleveMapObject,
-                                                Future<JsonArray> studentsClassFuture ){
+                                                Promise<JsonArray> studentsClassPromise ){
         new DefaultUtilsService(this.eb).studentAvailableForPeriode(idClasse, idPeriode, typeClasse,
                 message -> {
                     JsonObject body = message.body();
@@ -3783,10 +3784,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     + eleve.getString(FIRST_NAME_KEY));
                             eleveMapObject.put(idEleve, eleve);
                         }
-                        studentsClassFuture.complete(eleves);
+                        studentsClassPromise.complete(eleves);
                     }
                     else {
-                        studentsClassFuture.fail("[getStudentClassForExportReleve] " +
+                        studentsClassPromise.fail("[getStudentClassForExportReleve] " +
                                 ": Error while getting students ");
                     }
                 });
@@ -3796,7 +3797,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                 Map<String, JsonObject> studentMapObject){
         Promise<JsonArray> promiseStudents = Promise.promise();
         Promise<JsonArray> promiseStudentsClass = Promise.promise();
-        getStudentClassForExportReleve(classId, periodId, studentsIds, typeClass,studentMapObject, promiseStudentsClass.future());
+        getStudentClassForExportReleve(classId, periodId, studentsIds, typeClass,studentMapObject, promiseStudentsClass);
 
         promiseStudentsClass.future()
                 .onSuccess(promiseStudents::complete)
@@ -4188,46 +4189,46 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public void exportPDFRelevePeriodique(JsonObject param, final HttpServerRequest request, Vertx vertx,
                                           JsonObject config ){
         // Récupération des données de l'export
-        Future<JsonObject> exportResult = Future.future();
-        getDatasReleve(param, event -> formate(exportResult, event));
+        Promise<JsonObject> exportResultPromise = Promise.promise();
+        getDatasReleve(param, event -> formate(exportResultPromise, event));
 
         String key = Field.ELEVES;
         String idStructure = param.getString(ID_ETABLISSEMENT_KEY);
         Map<String, JsonObject> mapEleve = new HashMap<>();
-        Future<JsonObject> structureFuture = Future.future();
+        Promise<JsonObject> structurePromise = Promise.promise();
         mapEleve.put(key, new JsonObject().put(ID_ETABLISSEMENT_KEY, idStructure));
 
         // Récupération des informations sur l'établissment
         new DefaultExportBulletinService(eb, null).getStructure(key, mapEleve.get(key),
-                event -> formate(structureFuture, event));
+                event -> formate(structurePromise, event));
 
         // Récupération du logo de l'établissment
-        Future<JsonObject> imgStructureFuture = Future.future();
-        utilsService.getParametersForExport(idStructure, event -> formate(imgStructureFuture, event));
+        Promise<JsonObject> imgStructurePromise = Promise.promise();
+        utilsService.getParametersForExport(idStructure, event -> formate(imgStructurePromise, event));
 
         // Récupération du libellé de la période
-        Future<String> periodeLibelleFuture = Future.future();
+        Promise<String> periodeLibellePromise = Promise.promise();
         getLibellePeriode(eb, request, param.getInteger(ID_PERIODE_KEY),  periodeLibelleEvent -> {
-            formate(periodeLibelleFuture, periodeLibelleEvent );
+            formate(periodeLibellePromise, periodeLibelleEvent );
         });
 
-        CompositeFuture.all(exportResult, structureFuture, imgStructureFuture, periodeLibelleFuture)
-                .setHandler((event -> {
+        Future.all(exportResultPromise.future(), structurePromise.future(), imgStructurePromise.future(), periodeLibellePromise.future())
+                .onComplete((event -> {
                     if (event.failed()) {
                         log.info(event.cause().getMessage());
                         badRequest(request);
                     }
                     else{
-                        JsonObject exportJson = exportResult.result();
+                        JsonObject exportJson = exportResultPromise.future().result();
                         putLibelleAndParamsForExportReleve(exportJson, param);
 
-                        JsonObject imgStructure =  imgStructureFuture.result();
+                        JsonObject imgStructure =  imgStructurePromise.future().result();
                         if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
                             exportJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
                                     .getValue("path"));
                         }
                         exportJson.put("structureLibelle", mapEleve.get(key).getValue("structureLibelle"));
-                        exportJson.put("periodeLibelle", periodeLibelleFuture.result());
+                        exportJson.put("periodeLibelle", periodeLibellePromise.future().result());
                         new DefaultExportService(eb, null).genererPdf(request, exportJson,
                                 "releve-periodique.pdf.xhtml", exportJson.getString("title"),
                                 vertx, config);
@@ -4242,38 +4243,38 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         final Long idPeriode = (idPeriodeString != null) ? Long.parseLong(idPeriodeString) : null;
 
         // 1. On récupère les CompétencesNotes de toutes les matières et de tous les élèves
-        Future<JsonArray> compNoteF = Future.future();
+        Promise<JsonArray> compNotePromise = Promise.promise();
         getCompetencesNotesReleve(idEtablissement,idClasse, groupIds,null, idPeriode,null,
-                typeClasse,true, isYear, eventReleve ->  formate(compNoteF, eventReleve));
+                typeClasse,true, isYear, eventReleve ->  formate(compNotePromise, eventReleve));
 
         // 2. On récupère les Notes de toutes les matières et de tous les élèves
-        Future<JsonArray> noteF = Future.future();
+        Promise<JsonArray> notePromise = Promise.promise();
         getNotesReleve(idEtablissement, idClasse, null, idPeriode, typeClasse, true,
-                groupIds, event -> formate(noteF, event));
+                groupIds, event -> formate(notePromise, event));
 
         // 3. On récupère toutes les matières de l'établissement
-        Future<JsonArray> subjectF = Future.future();
+        Promise<JsonArray> subjectPromise = Promise.promise();
         JsonObject action = new JsonObject().put("action", "matiere.getMatieresForUser").put("userType", "Personnel")
                 .put("idUser", "null").put("idStructure", idEtablissement).put("onlyId", false);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (Field.OK.equals(body.getString(Field.STATUS))) {
-                subjectF.complete(body.getJsonArray(Field.RESULTS));
+                subjectPromise.complete(body.getJsonArray(Field.RESULTS));
             } else {
-                subjectF.fail(body.getString(Field.MESSAGE));
+                subjectPromise.fail(body.getString(Field.MESSAGE));
             }
         }));
 
         // Récupération du tableau de conversion
-        Future<JsonArray> tableauDeConversionFuture = Future.future();
+        Promise<JsonArray> tableauDeConversionPromise = Promise.promise();
         // On récupère le tableau de conversion des compétences notes pour Lire le positionnement
         competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse, tableauEvent ->
-                formate(tableauDeConversionFuture, tableauEvent));
+                formate(tableauDeConversionPromise, tableauEvent));
 
         Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
 
         isAvgSkillFuture
-                .onSuccess(isAvgSkillpromiseResult -> CompositeFuture.all(compNoteF, noteF, subjectF, tableauDeConversionFuture).setHandler(event -> {
+                .onSuccess(isAvgSkillpromiseResult -> Future.all(compNotePromise.future(), notePromise.future(), subjectPromise.future(), tableauDeConversionPromise.future()).onComplete(event -> {
                     if(event.failed()){
                         String message = "[getReleveDataForGraph] " + event.cause().getMessage();
                         log.error(message);
@@ -4294,7 +4295,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     //Récupération des Sous-Matières
                     Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
 
-                    CompositeFuture.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefFuture).setHandler(e -> {
+                    Future.all(servicesPromise.future(), multiTeachingPromise.future(), subTopicCoefFuture).onComplete(e -> {
                         if (e.failed()) {
                             String message = "[getReleveDataForGraph] " + event.cause().getMessage();
                             log.error(message);
@@ -4314,8 +4315,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             new DefaultExportBulletinService(eb, null).setMultiTeaching(structure, multiTeachers, multiTeachings, idClasse);
                             setServices(structure, servicesJson, services, subTopics);
 
-                            final JsonArray listCompNotes = compNoteF.result();
-                            final JsonArray listNotes = noteF.result();
+                            final JsonArray listCompNotes = compNotePromise.future().result();
+                            final JsonArray listNotes = notePromise.future().result();
                             Map<String,JsonArray> matieresCompNotes = new HashMap<>();
                             Map<String,JsonArray> matieresCompNotesEleve = new HashMap<>();
 
@@ -4405,9 +4406,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                             // 6. On récupère tous les libelles des matières de l'établissement et on fait correspondre
                             // aux résultats par idMatière
-                            linkIdSubjectToLibelle(idEleve, idPeriode, getMaxOrAvgByItem(matieresCompNotes, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ),
-                                    getMaxOrAvgByItem(matieresCompNotesEleve, tableauDeConversionFuture.result(),isAvgSkillpromiseResult ), matieresNotes, matieresNotesEleve,
-                                    mapMatieresStatClasseAndEleve, idMatieres, subjectF.result(), handler);
+                            linkIdSubjectToLibelle(idEleve, idPeriode, getMaxOrAvgByItem(matieresCompNotes, tableauDeConversionPromise.future().result(),isAvgSkillpromiseResult ),
+                                    getMaxOrAvgByItem(matieresCompNotesEleve, tableauDeConversionPromise.future().result(),isAvgSkillpromiseResult ), matieresNotes, matieresNotesEleve,
+                                    mapMatieresStatClasseAndEleve, idMatieres, subjectPromise.future().result(), handler);
                         }
                     });
                 }))
@@ -4424,7 +4425,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
 
         // 1. On récupère les Compétences-Notes de tous les domaines et de tous les élèves
-        Future<JsonArray> compNotesFuture = Future.future();
+        Promise<JsonArray> compNotesPromise = Promise.promise();
         getCompetencesNotesReleve(idEtablissement, idClasse, groupIds, null,
                 (idPeriodeString != null)? Long.parseLong(idPeriodeString) : null,
                 null, typeClasse,true, isYear, event -> {
@@ -4433,35 +4434,35 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         handler.handle(new Either.Left<>(message));
                     }
                     else {
-                        compNotesFuture.complete(event.right().getValue());
+                        compNotesPromise.complete(event.right().getValue());
                     }
                 });
 
         // 2. En parallèle, On récupère les domaines du cycle auquel la classe est rattachée
-        Future<JsonArray> domainesCycleFuture = Future.future();
+        Promise<JsonArray> domainesCyclePromise = Promise.promise();
         new DefaultDomaineService().getDomaines(idClasse, event -> {
             if (event.isLeft()) {
                 String message = "[DomaineDataForGraph] error while getting domaines";
-                domainesCycleFuture.fail(message);
+                domainesCyclePromise.fail(message);
             }
             else {
-                domainesCycleFuture.complete(event.right().getValue());
+                domainesCyclePromise.complete(event.right().getValue());
             }
         });
 
         //3. En parallèle, On va chercher la table de conversion des notes-compétences
-        Future<JsonArray> tableauDeConversionFuture = Future.future();
+        Promise<JsonArray> tableauDeConversionPromise = Promise.promise();
         competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse,tableauEvent ->
-                formate(tableauDeConversionFuture, tableauEvent));
+                formate(tableauDeConversionPromise, tableauEvent));
 
         Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
 
         isAvgSkillFuture
                 .onSuccess(isAvgSkillpromiseResult -> {
-                    CompositeFuture.all(compNotesFuture, domainesCycleFuture,tableauDeConversionFuture).setHandler(event -> {
+                    Future.all(compNotesPromise.future(), domainesCyclePromise.future(), tableauDeConversionPromise.future()).onComplete(event -> {
                         if (event.succeeded()) {
-                            handler.handle(new Either.Right<>(linkCompNoteToLibelle(domainesCycleFuture.result(),
-                                    compNotesFuture.result(), tableauDeConversionFuture.result(), idEleve, isAvgSkillpromiseResult)));
+                            handler.handle(new Either.Right<>(linkCompNoteToLibelle(domainesCyclePromise.future().result(),
+                                    compNotesPromise.future().result(), tableauDeConversionPromise.future().result(), idEleve, isAvgSkillpromiseResult)));
                         } else {
                             String message = event.cause().getMessage();
                             handler.handle(new Either.Left<>(message));
@@ -4867,49 +4868,49 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                  final String idEtablissement, final HttpServerRequest request){
         JsonObject result = new JsonObject();
         final JsonArray idEleves = new JsonArray();
-        List<Future> detailsFuture = new ArrayList<>();
+        List<Future<?>> detailsFuture = new ArrayList<>();
 
         // Récupération des compétences Note de l'élève
-        Future<JsonArray> listCompNotesF = Future.future();
+        Promise<JsonArray> listCompNotesPromise = Promise.promise();
         getCompetencesNotesReleve(idEtablissement, idClasse,null, idMatiere, null,
-                idEleve,null, true, true, event -> formate(listCompNotesF, event));
-        detailsFuture.add(listCompNotesF);
+                idEleve,null, true, true, event -> formate(listCompNotesPromise, event));
+        detailsFuture.add(listCompNotesPromise.future());
 
         // Récupération des notes de l'élève
-        Future<JsonArray> listNoteF = Future.future();
+        Promise<JsonArray> listNotePromise = Promise.promise();
         getNoteElevePeriode(null, idEtablissement, new JsonArray().add(idClasse), idMatiere, null,
-                event -> formate(listNoteF, event));
-        detailsFuture.add(listNoteF);
+                event -> formate(listNotePromise, event));
+        detailsFuture.add(listNotePromise.future());
 
         // Récupération des moyennes finales de tous les élèves de la classe
-        Future<JsonArray> moyFinalesElevesF = Future.future();
+        Promise<JsonArray> moyFinalesElevesPromise = Promise.promise();
         getColonneReleve(null, null, idMatiere,
-                new JsonArray().add(idClasse), Field.MOYENNE, Boolean.FALSE, event -> formate(moyFinalesElevesF, event));
-        detailsFuture.add(moyFinalesElevesF);
+                new JsonArray().add(idClasse), Field.MOYENNE, Boolean.FALSE, event -> formate(moyFinalesElevesPromise, event));
+        detailsFuture.add(moyFinalesElevesPromise.future());
 
         // Récupération des appréciations matières, des moyennesFinales et  positionnements finaux
         // de l'élève sur toutes les périodes de la classe
-        Future<JsonArray> appreciationMatierePeriode = Future.future();
+        Promise<JsonArray> appreciationMatierePeriodePromise = Promise.promise();
         getColonneReleve(new JsonArray().add(idEleve), null, idMatiere, new JsonArray().add(idClasse),
-                APPRECIATION_MATIERE_PERIODE, Boolean.FALSE, event -> formate(appreciationMatierePeriode, event));
-        detailsFuture.add(appreciationMatierePeriode);
+                APPRECIATION_MATIERE_PERIODE, Boolean.FALSE, event -> formate(appreciationMatierePeriodePromise, event));
+        detailsFuture.add(appreciationMatierePeriodePromise.future());
 
-        Future<JsonArray> moyenneFinalesF = Future.future();
+        Promise<JsonArray> moyenneFinalesPromise = Promise.promise();
         getColonneReleve(new JsonArray().add(idEleve), null, idMatiere, new JsonArray().add(idClasse),
-                Field.MOYENNE, Boolean.FALSE, event -> formate(moyenneFinalesF, event));
-        detailsFuture.add(moyenneFinalesF);
+                Field.MOYENNE, Boolean.FALSE, event -> formate(moyenneFinalesPromise, event));
+        detailsFuture.add(moyenneFinalesPromise.future());
 
-        Future<JsonArray> positionnementF = Future.future();
+        Promise<JsonArray> positionnementPromise = Promise.promise();
         getColonneReleve(new JsonArray().add(idEleve), null, idMatiere, new JsonArray().add(idClasse),
-                Field.POSITIONNEMENT, Boolean.FALSE, event -> formate(positionnementF, event));
-        detailsFuture.add(positionnementF);
+                Field.POSITIONNEMENT, Boolean.FALSE, event -> formate(positionnementPromise, event));
+        detailsFuture.add(positionnementPromise.future());
 
         // Récupération du tableau de conversion
         // On récupère le tableau de conversion des compétences notes pour Lire le positionnement
-        Future<JsonArray> tableauDeConversionFuture = Future.future();
+        Promise<JsonArray> tableauDeConversionPromise = Promise.promise();
         competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse, tableauEvent ->
-                formate(tableauDeConversionFuture, tableauEvent));
-        detailsFuture.add(tableauDeConversionFuture);
+                formate(tableauDeConversionPromise, tableauEvent));
+        detailsFuture.add(tableauDeConversionPromise.future());
 
         Promise<Object> servicesPromise = Promise.promise();
         detailsFuture.add(servicesPromise.future());
@@ -4930,7 +4931,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         Future<Boolean> isAvgSkillFuture = structureOptionsService.isAverageSkills(idEtablissement);
         detailsFuture.add(isAvgSkillFuture);
 
-        CompositeFuture.all(detailsFuture).setHandler(event -> {
+        Future.all(detailsFuture).onComplete(event -> {
             if(event.failed()){
                 String error = event.cause().getMessage();
                 log.error(error);
@@ -4949,20 +4950,20 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             setServices(structure, servicesJson, services,subTopics);
 
 
-            result.put("appreciations", appreciationMatierePeriode.result());
-            result.put("moyennes_finales", moyenneFinalesF.result());
-            result.put("positionnements", positionnementF.result());
+            result.put("appreciations", appreciationMatierePeriodePromise.future().result());
+            result.put("moyennes_finales", moyenneFinalesPromise.future().result());
+            result.put("positionnements", positionnementPromise.future().result());
 
             // Calcul des positionements
-            JsonArray listCompNotes = listCompNotesF.result();
-            calculPositionnementAutoByEleveByMatiere(listCompNotes, result,false, tableauDeConversionFuture.result(),
+            JsonArray listCompNotes = listCompNotesPromise.future().result();
+            calculPositionnementAutoByEleveByMatiere(listCompNotes, result,false, tableauDeConversionPromise.future().result(),
                     null ,null, isAvgSkillFuture.result());
 
             // Calcul des moyennes par période pour la classe
-            JsonArray moyFinalesEleves = moyFinalesElevesF.result();
+            JsonArray moyFinalesEleves = moyFinalesElevesPromise.future().result();
 
             HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
-                    calculMoyennesEleveByPeriode(listNoteF.result(), result, idEleve, idEleves,
+                    calculMoyennesEleveByPeriode(listNotePromise.future().result(), result, idEleve, idEleves,
                             null , null,services,multiTeachers );
             calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
             Renders.renderJson(request, result);

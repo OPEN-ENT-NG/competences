@@ -251,27 +251,28 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     public void getModels(String idStructure, Long idModelToget, Handler<Either<String, JsonArray>> handler) {
 
         // Récupération des matières de l'établissement dans l'annuaire
-        Future<JsonArray> subjectNeo = Future.future();
+        Promise<JsonArray> subjectNeoPromise = Promise.promise();
+
         listMatieresEtab(idStructure, subjectsEvent ->
-                formate(subjectNeo, subjectsEvent));
+                formate(subjectNeoPromise, subjectsEvent));
 
         // Récupération des libelles courts dans la table notes.matiere
-        Future<JsonArray> libelleCourt = Future.future();
+        Promise<JsonArray> libelleCourtPromise = Promise.promise();
         getDefaultLibele(event ->
-                formate(libelleCourt, event));
+                formate(libelleCourtPromise, event));
 
         // Récupération des libelles et des models de l'établissement
-        Future<JsonArray> modelsFuture = Future.future();
+        Promise<JsonArray> modelsPromise = Promise.promise();
         getLibelleMatierePostgres(idStructure, idModelToget, modelsEvent ->
-                formate(modelsFuture, modelsEvent));
+                formate(modelsPromise, modelsEvent));
 
-        CompositeFuture.all(subjectNeo, modelsFuture, libelleCourt).setHandler(
+        Future.all(subjectNeoPromise.future(), modelsPromise.future(), libelleCourtPromise.future()).onComplete(
                 event -> {
                     if (event.failed()) {
                         handler.handle(new Either.Left<>(event.cause().getMessage()));
                     } else {
-                        JsonArray subjects = subjectNeo.result();
-                        JsonArray defaultSubject = libelleCourt.result();
+                        JsonArray subjects = subjectNeoPromise.future().result();
+                        JsonArray defaultSubject = libelleCourtPromise.future().result();
                         JsonArray models = new JsonArray().add(new JsonObject()
                                 .put(TITLE, getLibelle("evaluations.default.model.libelle"))
                                 .put(SUBJECTS, subjects));
@@ -279,7 +280,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                         // Construction des libelles par défault
                         buildSubjectForDefaultModel(subjects, defaultSubject);
 
-                        JsonArray modelsMatiere = modelsFuture.result();
+                        JsonArray modelsMatiere = modelsPromise.future().result();
 
                         // - Groupement des libelles enregistrés par model
                         // - Et mapping (par l'externalId) de chaque libelle enregistré dans postgres
@@ -323,7 +324,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                 .put(ACTION, "matiere.listMatieresEtab")
                 .put(ID_STRUCTURE_KEY, idStructure)
                 .put("onlyId", false);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
                     if (OK.equals(body.getString(STATUS))) {
@@ -388,7 +389,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                 .put("idUser", "null")
                 .put("idStructure", idEtablissement)
                 .put("onlyId", false);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 handler.handle(new Either.Right<>(body.getJsonArray(RESULTS)));
@@ -442,19 +443,19 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
 
     public void updateDevoirs(JsonArray idsMatieres, Handler<Either<String, JsonArray>> handler) {
         //Récupération des matières avec sousMatières
-        Future<JsonArray> subjectFuture = Future.future();
-        getSubJectInfos(idsMatieres, event -> formate(subjectFuture, event));
+        Promise<JsonArray> subjectPromise = Promise.promise();
+        getSubJectInfos(idsMatieres, event -> formate(subjectPromise, event));
 
         //Récupération des devoirs rattachés auxMatières avec sousMAtières
-        Future<JsonArray> devoirsFuture = Future.future();
-        getDevoirsToUpdate(idsMatieres, event -> formate(devoirsFuture, event));
+        Promise<JsonArray> devoirsPromise = Promise.promise();
+        getDevoirsToUpdate(idsMatieres, event -> formate(devoirsPromise, event));
 
-        CompositeFuture.all(devoirsFuture, subjectFuture).setHandler(event -> {
+        Future.all(devoirsPromise.future(), subjectPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 returnFailure("updateDevoirs", event, handler);
                 return;
             }
-            JsonArray subjects = subjectFuture.result();
+            JsonArray subjects = subjectPromise.future().result();
             Map<String, JsonObject> defaultSousMatiere = new HashMap<>();
             for (int i = 0; i < subjects.size(); i++) {
                 JsonObject subject = subjects.getJsonObject(i);
@@ -466,7 +467,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
             }
 
             JsonArray statements = new JsonArray();
-            JsonArray devoirs = devoirsFuture.result();
+            JsonArray devoirs = devoirsPromise.future().result();
             for (int i = 0; i < devoirs.size(); i++) {
                 JsonObject devoir = devoirs.getJsonObject(i);
                 String idMatiereDevoir = devoir.getString(ID_MATIERE);

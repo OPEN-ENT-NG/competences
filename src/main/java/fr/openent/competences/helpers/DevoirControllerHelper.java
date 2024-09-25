@@ -167,12 +167,12 @@ public class DevoirControllerHelper {
         };
     }
 
-    private static Handler<Either<String, JsonObject>> getFutureHandler(Future<JsonObject> shareServiceFuture) {
+    private static Handler<Either<String, JsonObject>> getFutureHandler(Promise<JsonObject> shareServicePromise) {
         return event -> {
             if (event.isRight()) {
-                shareServiceFuture.complete(event.right().getValue());
+                shareServicePromise.complete(event.right().getValue());
             } else {
-                shareServiceFuture.fail(event.left().getValue());
+                shareServicePromise.fail(event.left().getValue());
             }
         };
     }

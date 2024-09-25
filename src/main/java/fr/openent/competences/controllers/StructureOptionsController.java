@@ -113,22 +113,22 @@ public class StructureOptionsController extends ControllerHelper {
                 if(user != null && request.params().contains(Field.STRUCTUREID)){
                     final String structureId = request.params().get(Field.STRUCTUREID);
                     // Récupération de l'état d'activation du module présences de l'établissement
-                    Future<JsonObject> activationFuture = Future.future();
-                    structureOptionService.getActiveStatePresences(structureId,event -> formate(activationFuture,event));
+                    Promise<JsonObject> activationPromise = Promise.promise();
+                    structureOptionService.getActiveStatePresences(structureId,event -> formate(activationPromise,event));
 
                     // Récupération de l'état de la récupération des données du modules présences
-                    Future<JsonObject> syncFuture = Future.future();
-                    structureOptionService.getSyncStatePresences(structureId,event -> formate(syncFuture,event));
+                    Promise<JsonObject> syncPromise = Promise.promise();
+                    structureOptionService.getSyncStatePresences(structureId,event -> formate(syncPromise,event));
 
-                    CompositeFuture.all(syncFuture, activationFuture).onComplete(
+                    Future.all(syncPromise.future(), activationPromise.future()).onComplete(
                             event -> {
                                 if(event.failed()){
                                     String error = event.cause().getMessage();
                                     log.error("[initRecuperationAbsencesRetardsFromPresences] : " + error);
                                     badRequest(request, "[initRecuperationAbsencesRetardsFromPresences] : " + error);
                                 } else{
-                                    JsonObject activationState = activationFuture.result();
-                                    JsonObject syncState = syncFuture.result();
+                                    JsonObject activationState = activationPromise.future().result();
+                                    JsonObject syncState = syncPromise.future().result();
                                     JsonObject result = activationState.mergeIn(syncState);
                                     Renders.renderJson(request, result);
                                 }

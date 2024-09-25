@@ -10,6 +10,7 @@ import fr.wseduc.webutils.security.SecuredAction;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -42,19 +43,20 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
             String groupId = ids.getString(3);
             List<String> actions = new ArrayList<String>();
             actions.add(Competences.DEVOIR_ACTION_UPDATE);
-            List<Future> futures = new ArrayList<>();
-            Future<JsonArray> getSecondTeacherHomewokFuture = Future.future();
-            Future<JsonArray> getMainTeacherHomewokFuture = Future.future();
+            List<Future<JsonArray>> futures = new ArrayList<>();
+            Promise<JsonArray> getSecondTeacherHomewokPromise = Promise.promise();
 
-            futures.add(getMainTeacherHomewokFuture);
-            futures.add(getSecondTeacherHomewokFuture);
+            Promise<JsonArray> getMainTeacherHomewokPromise = Promise.promise();
+
+            futures.add(getMainTeacherHomewokPromise.future());
+            futures.add(getSecondTeacherHomewokPromise.future());
 //
             devoirService.getHomeworksFromSubjectAndTeacher(subjectId, userIdMainTeacher, groupId,
-                    getShareHandler(getHandlerJsonArray(getSecondTeacherHomewokFuture), userIdSecondTeacher, actions));
+                    getShareHandler(getHandlerJsonArray(getSecondTeacherHomewokPromise), userIdSecondTeacher, actions));
             devoirService.getHomeworksFromSubjectAndTeacher(subjectId, userIdSecondTeacher, groupId,
-                    getShareHandler(getHandlerJsonArray(getMainTeacherHomewokFuture), userIdMainTeacher, actions));
+                    getShareHandler(getHandlerJsonArray(getMainTeacherHomewokPromise), userIdMainTeacher, actions));
 
-            CompositeFuture.all(futures).setHandler(eventFuture -> {
+            Future.all(futures).onComplete(eventFuture -> {
                 jsonArrayBusResultHandler.handle(new Either.Right(new JsonArray(eventFuture.result().list())));
             });
         }
@@ -138,12 +140,12 @@ public class DefaultShareCompetencesService implements ShareCompetencesService {
                 .put(Field.ACTION, Field.PREPARED);
     }
 
-    private Handler<Either<String, JsonArray>> getHandlerJsonArray(Future<JsonArray> serviceFuture) {
+    private Handler<Either<String, JsonArray>> getHandlerJsonArray(Promise<JsonArray> servicePromise) {
         return event -> {
             if (event.isRight()) {
-                serviceFuture.complete(event.right().getValue());
+                servicePromise.complete(event.right().getValue());
             } else {
-                serviceFuture.fail(event.left().getValue());
+                servicePromise.fail(event.left().getValue());
             }
         };
     }

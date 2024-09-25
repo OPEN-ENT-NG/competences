@@ -19,6 +19,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -86,15 +87,15 @@ public class ExportBulletinController extends ControllerHelper {
             JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
             String idClasse = params.getString(ID_CLASSE_KEY);
             String idEtablissement = params.getString(ID_STRUCTURE_KEY);
-            Future<JsonArray> elevesFuture = Future.future();
+            Promise<JsonArray> elevesPromise = Promise.promise();
             final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
             final AtomicBoolean answered = new AtomicBoolean();
 
             final Handler<Either<String, JsonObject>> finalHandler = exportBulletinService
-                    .getFinalBulletinHandler(request, elevesMap, vertx, config, elevesFuture, params);
+                    .getFinalBulletinHandler(request, elevesMap, vertx, config, elevesPromise.future(), params);
 
             exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, params,
-                    elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
+                    elevesPromise, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
                     finalHandler, null, vertx);
             eventStore.createAndStoreEvent(EventStoresCompetences.DO_SCHOOL_REPORT.name(), request);
         });
@@ -172,20 +173,20 @@ public class ExportBulletinController extends ControllerHelper {
         String idStructure = request.params().get(ID_STRUCTURE_KEY);
         String type = request.params().get("type");
 
-        Future<JsonArray> yearsFuture = Future.future();
-        utilsService.getYearsArchive(idStructure, type, yearsEvent -> formate(yearsFuture, yearsEvent));
+        Promise<JsonArray> yearsPromise = Promise.promise();
+        utilsService.getYearsArchive(idStructure, type, yearsEvent -> formate(yearsPromise, yearsEvent));
 
-        Future<JsonObject> activeYearFuture = Future.future();
-        utilsService.getYearsAndPeriodes(idStructure, false, activeYearEvent -> formate(activeYearFuture, activeYearEvent));
+        Promise<JsonObject> activeYearPromise = Promise.promise();
+        utilsService.getYearsAndPeriodes(idStructure, false, activeYearEvent -> formate(activeYearPromise, activeYearEvent));
 
-        CompositeFuture.all(yearsFuture, activeYearFuture).setHandler(event -> {
+        Future.all(yearsPromise.future(), activeYearPromise.future()).onComplete(event -> {
             if(event.failed()){
                 String error = event.cause().getMessage();
                 log.error("[getYearsAndPeriodes] : " + error);
                 badRequest(request,"[getYearsAndPeriodes] Failed");
             } else {
-                JsonArray years = yearsFuture.result();
-                JsonObject activeYear = activeYearFuture.result();
+                JsonArray years = yearsPromise.future().result();
+                JsonObject activeYear = activeYearPromise.future().result();
 
                 JsonObject result = new JsonObject();
                 result.put("years", years);

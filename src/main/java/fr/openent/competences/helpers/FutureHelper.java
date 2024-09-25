@@ -5,13 +5,13 @@ import fr.openent.competences.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.impl.CompositeFutureImpl;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FutureHelper {
 
@@ -28,18 +28,6 @@ public class FutureHelper {
             } else {
                 LOGGER.error(event.left().getValue());
                 promise.fail(event.left().getValue());
-            }
-        };
-    }
-
-    @Deprecated
-    public static Handler<Either<String, JsonArray>> handlerJsonArray(Future<JsonArray> future) {
-        return event -> {
-            if (event.isRight()) {
-                future.complete(event.right().getValue());
-            } else {
-                LOGGER.error(event.left().getValue());
-                future.fail(event.left().getValue());
             }
         };
     }
@@ -99,14 +87,14 @@ public class FutureHelper {
         };
     }
     public static <T> CompositeFuture all(List<Future<T>> futures) {
-        return CompositeFutureImpl.all(futures.toArray(new Future[futures.size()]));
+        return Future.all(futures);
     }
 
     public static <T> CompositeFuture join(List<Future<T>> futures) {
-        return CompositeFutureImpl.join(futures.toArray(new Future[futures.size()]));
+        return Future.join(futures);
     }
 
     public static <T> CompositeFuture any(List<Future<T>> futures) {
-        return CompositeFutureImpl.any(futures.toArray(new Future[0]));
+        return Future.any(futures);
     }
 }

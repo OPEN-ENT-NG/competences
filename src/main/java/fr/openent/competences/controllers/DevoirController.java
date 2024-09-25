@@ -195,7 +195,7 @@ public class DevoirController extends ControllerHelper {
                 .put("idPeriode", new Long(resource.getInteger("id_periode")))
                 .put(Competences.ID_ETABLISSEMENT_KEY, resource.getString("id_etablissement"));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
@@ -326,7 +326,7 @@ public class DevoirController extends ControllerHelper {
                         .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idGroupe))
                         .put("request", jsonRequest);
 
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                eb.request(Competences.VIESCO_BUS_ADDRESS, action,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
@@ -649,32 +649,32 @@ public class DevoirController extends ControllerHelper {
                             listOfListEleves.get(listOfListGroups.indexOf(groupes)).add(jsonObjectEleve.getString("idEleve"));
                         }
                     }
-                    List<Future> futures = new ArrayList<>();
+                    List<Future<JsonArray>> futures = new ArrayList<>();
                     for (int i = 0; i < listOfListGroups.size(); i++) {
                         List<String> listEleves = listOfListEleves.get(i);
                         List<String> listGroups = listOfListGroups.get(i);
-                        Future<JsonArray> future1 = Future.future();
+                        Promise<JsonArray> positionnementTablePromise = Promise.promise();
                         devoirsService.updatePositionnementTableAfterDelete(listEleves, listGroups, idMatiere, idPeriode, eventFutur -> {
                             if (eventFutur.isRight()) {
-                                future1.complete(eventFutur.right().getValue());
+                                positionnementTablePromise.complete(eventFutur.right().getValue());
                             } else {
                                 log.error(eventFutur.left());
-                                future1.complete(new JsonArray());
+                                positionnementTablePromise.complete(new JsonArray());
                             }
                         });
-                        futures.add(future1);
-                        Future<JsonArray> future2 = Future.future();
+                        futures.add(positionnementTablePromise.future());
+                        Promise<JsonArray> competenceNiveauFinalPromise = Promise.promise();
                         devoirsService.updateCompetenceNiveauFinalTableAfterDelete(listEleves, listGroups, idMatiere, idPeriode, eventFutur -> {
                             if (eventFutur.isRight()) {
-                                future2.complete(eventFutur.right().getValue());
+                                competenceNiveauFinalPromise.complete(eventFutur.right().getValue());
                             } else {
                                 log.error(eventFutur.left());
-                                future2.complete(new JsonArray());
+                                competenceNiveauFinalPromise.complete(new JsonArray());
                             }
                         });
-                        futures.add(future2);
+                        futures.add(competenceNiveauFinalPromise.future());
                     }
-                    CompositeFuture.all(futures).setHandler(eventFutur -> {
+                    Future.all(futures).onComplete(eventFutur -> {
                         if (eventFutur.succeeded()) {
                             Renders.ok(request);
                         } else {
@@ -721,22 +721,22 @@ public class DevoirController extends ControllerHelper {
                                                     final boolean is_evaluated, final HttpServerRequest request,
                                                     final boolean devoirHasCompetence, final Integer nbStudents){
         // On récupère le nombre d'annotations
-        Future<JsonArray> nbAnnotationsDevoirsFuture = Future.future();
+        Promise<JsonArray> nbAnnotationsDevoirsPromise = Promise.promise();
         devoirsService.getNbAnnotationsDevoirs(idDevoir,
-                nbsAnnotations -> formate(nbAnnotationsDevoirsFuture, nbsAnnotations));
+                nbsAnnotations -> formate(nbAnnotationsDevoirsPromise, nbsAnnotations));
 
         // On récupère le nombre de compétences par élèves pour le devoir courant
-        Future<JsonArray> nbCompetenceNotesDevoirsFuture = Future.future();
+        Promise<JsonArray> nbCompetenceNotesDevoirsPromise = Promise.promise();
         devoirsService.getNbCompetencesDevoirsByEleve(idDevoir,
-                nbCompetenceNotes -> formate(nbCompetenceNotesDevoirsFuture, nbCompetenceNotes));
+                nbCompetenceNotes -> formate(nbCompetenceNotesDevoirsPromise, nbCompetenceNotes));
 
-        CompositeFuture.all(nbAnnotationsDevoirsFuture, nbCompetenceNotesDevoirsFuture).setHandler(event -> {
+        Future.all(nbAnnotationsDevoirsPromise.future(), nbCompetenceNotesDevoirsPromise.future()).onComplete(event -> {
             if(event.failed()){
                 String error = event.cause().getMessage();
                 log.info(error);
                 leftToResponse(request, new Either.Left<>(error));
             } else {
-                JsonArray resultNbAnnotationsDevoir = nbAnnotationsDevoirsFuture.result();
+                JsonArray resultNbAnnotationsDevoir = nbAnnotationsDevoirsPromise.future().result();
                 if (resultNbAnnotationsDevoir.size() > 0) {
                     for (int i = 0; i < resultNbAnnotationsDevoir.size(); i++) {
                         JsonObject o = resultNbAnnotationsDevoir.getJsonObject(i);
@@ -755,7 +755,7 @@ public class DevoirController extends ControllerHelper {
                     }
                 }
 
-                JsonArray resultNbCompetencesByStudents = nbCompetenceNotesDevoirsFuture.result();
+                JsonArray resultNbCompetencesByStudents = nbCompetenceNotesDevoirsPromise.future().result();
                 Float nbCompetences = Float.valueOf(0);
                 for (int i = 0; i < resultNbCompetencesByStudents.size(); i++) {
                     JsonObject ob = resultNbCompetencesByStudents.getJsonObject(i);

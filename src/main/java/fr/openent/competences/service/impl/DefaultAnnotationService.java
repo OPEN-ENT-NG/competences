@@ -25,6 +25,7 @@ import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -135,42 +136,42 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
                                        final String idEleve,final  Handler<Either<String, JsonObject>> handler) {
 
         // Récupération des notes de l'élèves sur le devoir
-        Future<JsonArray> notesFuture = Future.future();
+        Promise<JsonArray> notesPromise = Promise.promise();
         noteService.getNotesParElevesParDevoirs(new String[]{idEleve}, new Long[]{idDevoir}, event -> {
-            FormateFutureEvent.formate(notesFuture, event);
+            FormateFutureEvent.formate(notesPromise, event);
         });
 
 
         // Récupération des competences notes sur le devoir
-        Future<JsonArray> competencesNotesFuture = Future.future();
+        Promise<JsonArray> competencesNotesPromise = Promise.promise();
         competenceNoteService.getCompetencesNotes(idDevoir,idEleve,false, null, event -> {
-            FormateFutureEvent.formate(competencesNotesFuture, event);
+            FormateFutureEvent.formate(competencesNotesPromise, event);
         });
 
         // Récupération de l'annotation  de l'établissement
-        Future<JsonArray> annotationFuture = Future.future();
-        getAnnotation(idAnnotation, annotation -> FormateFutureEvent.formate(annotationFuture, annotation));
+        Promise<JsonArray> annotationPromise = Promise.promise();
+        getAnnotation(idAnnotation, annotation -> FormateFutureEvent.formate(annotationPromise, annotation));
 
         // Récupération des informations sur le devoir
-        Future<JsonObject> infosDevoirFuture = Future.future();
+        Promise<JsonObject> infosDevoirPromise = Promise.promise();
         new DefaultDevoirService(null).getDevoirInfo(idDevoir,
-                devoir -> FormateFutureEvent.formate(infosDevoirFuture, devoir));
+                devoir -> FormateFutureEvent.formate(infosDevoirPromise, devoir));
 
-        CompositeFuture.all(notesFuture, competencesNotesFuture, annotationFuture, infosDevoirFuture)
-                .setHandler( event -> {
+        Future.all(notesPromise.future(), competencesNotesPromise.future(), annotationPromise.future(), infosDevoirPromise.future())
+                .onComplete( event -> {
                     if(event.failed()){
                         handler.handle(new Either.Left<>(event.cause().getMessage()));
                     }
                     else {
                         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
-                        JsonArray aRes = annotationFuture.result();
+                        JsonArray aRes = annotationPromise.future().result();
                         Boolean isAnnotationNN = aRes.isEmpty()? false : isAnnotationNN(aRes.getJsonObject(0));
-                        JsonObject devoir = infosDevoirFuture.result();
+                        JsonObject devoir = infosDevoirPromise.future().result();
                         Boolean isEvaluated = devoir != null ? devoir.getBoolean("is_evaluated") : false;
 
                         //Si on a des compétences notes sur le devoir, pour un élève donné, et qu'on insert
                         // une annotation autre que l'annotation NN, on les supprimes
-                        JsonArray competencesDevoir = competencesNotesFuture.result();
+                        JsonArray competencesDevoir = competencesNotesPromise.future().result();
                         if(competencesDevoir != null && competencesDevoir.size()>0
                                 && (!isAnnotationNN || isAnnotationNN && !isEvaluated)){
                             // Suppression compétence note
@@ -178,7 +179,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
                         }
 
                         //Si on une note existe sur le devoir, pour un élève donné, on le supprime
-                        JsonArray notesDevoir =  notesFuture.result();
+                        JsonArray notesDevoir =  notesPromise.future().result();
                         if(notesDevoir!= null && notesDevoir.size()>0){
                             // Suppression Note
                             addStatementdeleteNote(statements, idDevoir, idEleve);

@@ -6,6 +6,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -94,12 +95,12 @@ public class BulletinUtils {
     private static void getBulletin(final String idEleve, final String idClasse, final Long idPeriode,
                                     String idEtablissement, String idParent, String idYear, Storage storage,
                                     Handler<Either<String, Buffer>> bufferEither){
-        Future<JsonArray> idFileFuture = Future.future();
+        Promise<JsonArray> idFilePromise = Promise.promise();
         getIdFile(idEleve, idClasse, idPeriode, idEtablissement, idYear, event -> {
-            FormateFutureEvent.formate(idFileFuture, event);
-            JsonArray result = idFileFuture.result();
-            if(idFileFuture.failed() || result == null || result.size() == 0){
-                String error = (result == null) ? idFileFuture.cause().getMessage() : "no result";
+            FormateFutureEvent.formate(idFilePromise, event);
+            JsonArray result = idFilePromise.future().result();
+            if(idFilePromise.future().failed() || result == null || result.size() == 0){
+                String error = (result == null) ? idFilePromise.future().cause().getMessage() : "no result";
 
                 if(result != null && result.size() == 0)
                     log.error("error get bulletin storage : " + error);

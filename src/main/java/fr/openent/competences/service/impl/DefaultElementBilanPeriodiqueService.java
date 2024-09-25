@@ -28,6 +28,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
@@ -354,7 +355,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 .put("action", "matiere.getMatieres")
                 .put("idMatieres", new fr.wseduc.webutils.collections.JsonArray(idMatieres));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
 
@@ -388,7 +389,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 .put("idClasses",
                         new fr.wseduc.webutils.collections.JsonArray(idClasses));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler( message -> {
                     JsonObject body = message.body();
 
@@ -429,7 +430,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 .put("action", "user.getUsers")
                 .put("idUsers", idUsers);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler( message -> {
                     JsonObject body = message.body();
 
@@ -574,38 +575,38 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
     }
     public void getClasseProjets (String idStructure, UserInfos user, Handler<Either<String, JsonArray>> handler){
-        Future<JsonArray> classesElemFuture = Future.future();
+        Promise<JsonArray> classesElemPromise = Promise.promise();
         if(WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())){
-            getClassesElementsBilanPeriodique(idStructure, event -> formate(classesElemFuture, event));
+            getClassesElementsBilanPeriodique(idStructure, event -> formate(classesElemPromise, event));
         }
         else{
             String userId = user.getUserId();
-            getClassesElementsBilanPeriodique(idStructure, userId, event -> formate(classesElemFuture, event));
+            getClassesElementsBilanPeriodique(idStructure, userId, event -> formate(classesElemPromise, event));
         }
         // On récupère la liste des classes de l'établissement
-        Future<JsonArray> classesEtab = Future.future();
+        Promise<JsonArray> classesEtabPromise = Promise.promise();
         JsonObject action = new JsonObject()
                 .put(ACTION, "classe.listAllGroupes")
                 .put(ID_STRUCTURE_KEY, idStructure);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler( message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler( message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
-                classesEtab.complete(body.getJsonArray(RESULTS));
+                classesEtabPromise.complete(body.getJsonArray(RESULTS));
             }
             else {
-                classesEtab.fail("error while retreiving classes getClassesElementBilanPeriodique");
+                classesEtabPromise.fail("error while retreiving classes getClassesElementBilanPeriodique");
             }
         }));
 
-        CompositeFuture.all(classesElemFuture, classesEtab).setHandler(event -> {
+        Future.all(classesElemPromise.future(), classesEtabPromise.future()).onComplete(event -> {
             if(event.failed()){
                 String error = event.cause().getMessage();
                 log.warn("getClassesElementBilanPeriodique failed " + error);
                 handler.handle(new Either.Left<>(error));
             }
             else {
-                JsonArray listGroupesEtablissement = classesEtab.result();
-                JsonArray externalIdElementBilanPeriodique = classesElemFuture.result();
+                JsonArray listGroupesEtablissement = classesEtabPromise.future().result();
+                JsonArray externalIdElementBilanPeriodique = classesElemPromise.future().result();
                 JsonArray jsonArrayResultat = new fr.wseduc.webutils.collections.JsonArray();
                 if (listGroupesEtablissement.size() > 0) {
                     for (int i = 0; i < listGroupesEtablissement.size(); i++) {
@@ -1177,26 +1178,26 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                         final boolean isAdmin = WorkflowActionUtils.hasRight(user,
                                 WorkflowActions.ADMIN_RIGHT.toString());
 
-                        Future<Boolean> validateElement = Future.future();
+                        Promise<Boolean> validateElementPromise = Promise.promise();
                         if(isAdmin){
-                            validateElement.complete(true);
+                            validateElementPromise.complete(true);
                         }
                         else {
                             new FilterUserUtils(user, eb).validateElement(idsElements, idClasse,
-                                    isValid -> validateElement.complete(isValid ||
+                                    isValid -> validateElementPromise.complete(isValid ||
                                             request.params().get("type").equals("eleve-bilanPeriodique")));
                         }
 
-                        Future<Boolean> validateEleve = Future.future();
+                        Promise<Boolean> validateElevePromise = Promise.promise();
                         if(isAdmin){
-                            validateEleve.complete(true);
+                            validateElevePromise.complete(true);
                         }
                         else {
                             new FilterUserUtils(user, eb).validateEleve(idEleve, idClasse, idEtablissement,
-                                    isValid -> validateEleve.complete(isValid));
+                                    isValid -> validateElevePromise.complete(isValid));
                         }
 
-                        CompositeFuture.all(validateElement, validateEleve).setHandler(
+                        Future.all(validateElementPromise.future(), validateElevePromise.future()).onComplete(
                                 event -> {
                                    if(event.failed()){
                                        String error = event.cause().getMessage();
@@ -1204,8 +1205,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                                        leftToResponse(request, new Either.Left<>(error));
                                    }
                                    else {
-                                       Boolean isValidateElement = validateElement.result();
-                                       Boolean isValidateEleve = validateEleve.result();
+                                       Boolean isValidateElement = validateElementPromise.future().result();
+                                       Boolean isValidateEleve = validateElevePromise.future().result();
 
                                        if(isNull(isValidateElement) || isNull(isValidateEleve) ||
                                        !isValidateElement || !isValidateEleve) {

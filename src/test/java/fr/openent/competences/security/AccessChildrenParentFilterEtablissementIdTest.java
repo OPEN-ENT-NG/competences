@@ -6,7 +6,7 @@ import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.http.impl.HeadersAdaptor;
+import io.vertx.core.http.impl.headers.HeadersAdaptor;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.entcore.common.user.UserInfos;

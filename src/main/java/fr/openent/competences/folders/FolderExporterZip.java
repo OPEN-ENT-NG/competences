@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.zip.Deflater;
 
+import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.storage.Storage;
@@ -35,15 +36,15 @@ public class FolderExporterZip extends FolderExporter {
     }
 
     private Future<JsonObject> createZip(ZipContext context) {
-        Future<JsonObject> future = Future.future();
+        Promise<JsonObject> promise = Promise.promise();
         Zip.getInstance().zipFolder(context.basePath, context.zipFullPath, true, Deflater.NO_COMPRESSION, res -> {
             if ("ok".equals(res.body().getString("status"))) {
-                future.complete(res.body());
+                promise.complete(res.body());
             } else {
-                future.fail(res.body().getString("message"));
+                promise.fail(res.body().getString("message"));
             }
         });
-        return future;
+        return promise.future();
     }
 
     public FolderExporterZip(Storage storage, FileSystem fs, boolean throwErrors) {
@@ -63,7 +64,7 @@ public class FolderExporterZip extends FolderExporter {
     }
 
     public Future<Void> sendZip(HttpServerRequest req, ZipContext context) {
-        Future<Void> future = Future.future();
+        Promise<Void> promise = Promise.promise();
         try {
             final HttpServerResponse resp = req.response();
             System.out.println("sending  ");
@@ -71,12 +72,12 @@ public class FolderExporterZip extends FolderExporter {
             resp.putHeader("Content-Type", "application/octet-stream");
             resp.putHeader("Content-Description", "File Transfer");
             resp.putHeader("Content-Transfer-Encoding", "binary");
-            resp.sendFile(context.zipFullPath, future.completer());
+            resp.sendFile(context.zipFullPath, promise);
         }catch (java.lang.IllegalStateException e){
-            future.complete();
+            promise.complete();
         }
 
-        return future;
+        return promise.future();
     }
 
     public Future<ZipContext> exportAndSendZip(JsonObject root, List<JsonObject> rows, HttpServerRequest req, boolean clean) {
@@ -92,10 +93,10 @@ public class FolderExporterZip extends FolderExporter {
     }
 
     public Future<ZipContext> removeZip(ZipContext context){
-        Future<ZipContext> future = Future.future();
+        Promise<ZipContext> promise = Promise.promise();
         this.fs.deleteRecursive(context.rootBase,true, resRmDir->{
-            future.complete();
+            promise.complete();
         });
-        return future;
+        return promise.future();
     }
 }
