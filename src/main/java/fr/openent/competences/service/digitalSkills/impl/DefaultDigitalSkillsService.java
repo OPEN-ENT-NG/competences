@@ -7,10 +7,7 @@ import fr.openent.competences.service.digitalSkills.DigitalSkillsService;
 import fr.openent.competences.service.digitalSkills.StudentDigitalSkillsService;
 import fr.openent.competences.service.digitalSkills.StudentAppreciationDigitalSkillsService;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -44,22 +41,22 @@ public class DefaultDigitalSkillsService implements DigitalSkillsService {
     @Override
     public void getDigitalSkillsByStudentByClass(String idStudent, String idClass, String idStructure,
                                                  Handler<Either<String, JsonObject>> handler) {
-        Future<JsonObject> getStudentAppFuture = Future.future();
-        Future<JsonObject> getClassAppFuture = Future.future();
-        Future<JsonArray> getEvaluatedDigitalSkillsFuture = Future.future();
+        Promise<JsonObject> getStudentAppPromise = Promise.promise();
+        Promise<JsonObject> getClassAppPromise = Promise.promise();
+        Promise<JsonArray> getEvaluatedDigitalSkillsPromise = Promise.promise();
 
         studentAppDigitalSkills.getStudentAppreciation(idStudent, idStructure, responseStudentApp ->
                 FormateFutureEvent.formate("[Competences] DefaultDigitalSkills No student appreciation Digital Skills ",
-                        getStudentAppFuture, responseStudentApp));
+                        getStudentAppPromise, responseStudentApp));
         classAppDigitalSkills.getClassAppreciation(idClass, responseClassApp ->
                 FormateFutureEvent.formate("[Competences] DefaultDigitalSkills No class appreciation Digital Skills ",
-                        getClassAppFuture, responseClassApp));
+                        getClassAppPromise, responseClassApp));
         studentDigitalSkills.getEvaluatedDigitalSkills(idStudent, idStructure, responseEvaluations ->
                 FormateFutureEvent.formate("[Competences] DefaultDigitalSkills No evaluated Digital Skills ",
-                        getEvaluatedDigitalSkillsFuture, responseEvaluations));
+                        getEvaluatedDigitalSkillsPromise, responseEvaluations));
 
-        CompositeFuture.all(getStudentAppFuture,getClassAppFuture, getEvaluatedDigitalSkillsFuture).setHandler(
-                getHandlerAllDigitalSkills(handler, getStudentAppFuture,getClassAppFuture, getEvaluatedDigitalSkillsFuture));
+        Future.all(getStudentAppPromise.future(), getClassAppPromise.future(), getEvaluatedDigitalSkillsPromise.future()).onComplete(
+                getHandlerAllDigitalSkills(handler, getStudentAppPromise.future(), getClassAppPromise.future(), getEvaluatedDigitalSkillsPromise.future()));
     }
 
     private Handler<AsyncResult<CompositeFuture>> getHandlerAllDigitalSkills(
@@ -88,19 +85,19 @@ public class DefaultDigitalSkillsService implements DigitalSkillsService {
     @Override
     public void getDigitalSkillsByStudent(String id_student, String id_structure,
                                           Handler<Either<String, JsonObject>> handler) {
-        Future<JsonObject> getStudentAppFuture = Future.future();
+        Promise<JsonObject> getStudentAppPromise = Promise.promise();
 
-        Future<JsonArray> getEvaluatedDigitalSkillsFuture = Future.future();
+        Promise<JsonArray> getEvaluatedDigitalSkillsPromise = Promise.promise();
 
         studentAppDigitalSkills.getStudentAppreciation(id_student, id_structure, responseStudentApp ->
                 FormateFutureEvent.formate("[Competences] DefaultDigitalSkills No student appreciation Digital Skills ",
-                        getStudentAppFuture, responseStudentApp));
+                        getStudentAppPromise, responseStudentApp));
         studentDigitalSkills.getEvaluatedDigitalSkills(id_student, id_structure, responseEvaluations ->
                 FormateFutureEvent.formate("[Competences] DefaultDigitalSkills No evaluated Digital Skills ",
-                        getEvaluatedDigitalSkillsFuture, responseEvaluations));
+                        getEvaluatedDigitalSkillsPromise, responseEvaluations));
 
-        CompositeFuture.all(getStudentAppFuture, getEvaluatedDigitalSkillsFuture).setHandler(
-                getHandlerAllDigitalSkillsStudent(handler, getStudentAppFuture, getEvaluatedDigitalSkillsFuture));
+        Future.all(getStudentAppPromise.future(), getEvaluatedDigitalSkillsPromise.future()).onComplete(
+                getHandlerAllDigitalSkillsStudent(handler, getStudentAppPromise.future(), getEvaluatedDigitalSkillsPromise.future()));
     }
 
     private Handler<AsyncResult<CompositeFuture>> getHandlerAllDigitalSkillsStudent(Handler<Either<String, JsonObject>> handler,

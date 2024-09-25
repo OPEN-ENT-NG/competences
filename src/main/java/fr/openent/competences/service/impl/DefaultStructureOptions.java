@@ -113,7 +113,7 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
         Promise<JsonObject> configFuture = Promise.promise();
         JsonObject action = new JsonObject()
                 .put("action", "config.generale");
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
                     if (OK.equals(body.getString(STATUS))) {
                         JsonObject queryResult = body.getJsonObject(RESULT);
@@ -135,9 +135,9 @@ public class DefaultStructureOptions extends SqlCrudService implements Structure
                     boolean configInstalled = Boolean.TRUE.equals(configEvent.getBoolean(Field.PRESENCES));
                     result.put(Field.INSTALLED, configInstalled);
                     if (configInstalled) {
-                        Future<JsonObject> activationFuture = Future.future();
-                        isStructureActivatePresences(idStructure, event -> formate(activationFuture, event));
-                        activationFuture.onSuccess(event -> {
+                        Promise<JsonObject> activationPromise = Promise.promise();
+                        isStructureActivatePresences(idStructure, event -> formate(activationPromise, event));
+                        activationPromise.future().onSuccess(event -> {
                             result.put(Field.ACTIVATE, !event.isEmpty() && event.getBoolean(Field.ACTIF));
                             handler.handle(new Either.Right<>(result));
                         }).onFailure(event -> handler.handle(new Either.Left<>("[getRetardsAndAbsences-config] " + event.getMessage())));

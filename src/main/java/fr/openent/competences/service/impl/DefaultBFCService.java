@@ -811,39 +811,39 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     final String[] idsEleves = classe.getValue().toArray(new String[0]);
                     final String idClasse = classe.getKey();
                     //On récupère la valeur max du barèmebrevet et map des ordres(=niveau ds le JsonObject du buildBFC)/bareme
-                    Future<Map<Integer, Map<Integer, Integer>>> maxBaremFuture = Future.future();
+                    Promise<Map<Integer, Map<Integer, Integer>>> maxBaremPromise = Promise.promise();
                     competenceNoteService.getMaxBaremeMapOrderBaremeBrevet(idStructure, idClasse, max ->
-                            formate(maxBaremFuture, max));
+                            formate(maxBaremPromise, max));
 
                     //On récupère le nb de DomainesRacines
-                    Future<JsonArray> domainesRacineFuture = Future.future();
+                    Promise<JsonArray> domainesRacinePromise = Promise.promise();
                     domaineService.getDomainesRacines(idClasse, null,
-                            event -> formate(domainesRacineFuture, event));
+                            event -> formate(domainesRacinePromise, event));
 
                     //On récupère les élèves qui sont dispensés pour un domaine racine
-                    Future<Map<String, Map<Long, Boolean>>> dispenseDomaineFuture = Future.future();
+                    Promise<Map<String, Map<Long, Boolean>>> dispenseDomainePromise = Promise.promise();
                     dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(classe.getValue(),event ->
-                            formate(dispenseDomaineFuture, event));
+                            formate(dispenseDomainePromise, event));
 
                     //On récupère pour tous les élèves de la classe leurs résultats pour chaque domainesRacines évalué
-                    Future<JsonObject> bfcFuture = Future.future();
+                    Promise<JsonObject> bfcPromise = Promise.promise();
                     buildBFC(false, idsEleves, idClasse, idStructure, idPeriode, idCycle, false,
-                            event-> formate(bfcFuture, event));
+                            event-> formate(bfcPromise, event));
 
-                    CompositeFuture.all(maxBaremFuture, domainesRacineFuture, dispenseDomaineFuture, bfcFuture)
-                            .setHandler(event -> {
+                    Future.all(maxBaremPromise.future(), domainesRacinePromise.future(), dispenseDomainePromise.future(), bfcPromise.future())
+                            .onComplete(event -> {
                                 if(event.failed()){
                                     handler.handle(new Either.Left(event.cause().getMessage()));
                                     log.error("getMoyenneControlesContinusBrevet : " + event.cause().getMessage());
                                     return;
                                 }
                                 Map<String, Map<Long, Boolean>> dispensesDomainesEleves =
-                                        dispenseDomaineFuture.result();
-                                final Integer nbDomainesRacines = domainesRacineFuture.result().size();
-                                final JsonObject resultsElevesByDomaine = bfcFuture.result();
-                                final Integer maxBareme = maxBaremFuture.result().entrySet().iterator().next().getKey();
+                                        dispenseDomainePromise.future().result();
+                                final Integer nbDomainesRacines = domainesRacinePromise.future().result().size();
+                                final JsonObject resultsElevesByDomaine = bfcPromise.future().result();
+                                final Integer maxBareme = maxBaremPromise.future().result().entrySet().iterator().next().getKey();
                                 final Map<Integer, Integer> mapOrdreBaremeBrevet =
-                                        maxBaremFuture.result().entrySet().iterator().next().getValue();
+                                        maxBaremPromise.future().result().entrySet().iterator().next().getValue();
 
                                 runMoyenneControleContinue(moyControlesContinusEleves, maxBareme,
                                         dispensesDomainesEleves, nbDomainesRacines,resultsElevesByDomaine,
@@ -863,35 +863,35 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         idsEleves.add(idEleve);
 
         //On récupère la valeur max du barèmebrevet et map des ordres(=niveau ds le JsonObject du buildBFC)/bareme
-        Future<Map<Integer, Map<Integer, Integer>>> maxBaremFuture = Future.future();
+        Promise<Map<Integer, Map<Integer, Integer>>> maxBaremPromise = Promise.promise();
         competenceNoteService.getMaxBaremeMapOrderBaremeBrevet(idStructure, idClasse, event ->
-                formate(maxBaremFuture, event));
+                formate(maxBaremPromise, event));
 
         //On récupère le nb de DomainesRacines
-        Future<JsonArray> domainesRacineFuture = Future.future();
+        Promise<JsonArray> domainesRacinePromise = Promise.promise();
         domaineService.getDomainesRacines(idClasse, null, event ->
-                formate(domainesRacineFuture, event));
+                formate(domainesRacinePromise, event));
 
         //On récupère les élèves qui sont dispensés pour un domaine racine
-        Future<Map<String, Map<Long, Boolean>>> dispDomaineFuture = Future.future();
+        Promise<Map<String, Map<Long, Boolean>>> dispDomainePromise = Promise.promise();
         dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(idsEleves, event ->
-                formate(dispDomaineFuture, event));
+                formate(dispDomainePromise, event));
 
         //On récupère pour tous les élèves de la classe leurs résultats pour chaque domainesRacines évalué
-        Future<JsonObject> bfcFuture = Future.future();
+        Promise<JsonObject> bfcPromise = Promise.promise();
         buildBFC(false, new String[]{idEleve}, idClasse, idStructure, idPeriode, idCycle, false,
-                event -> formate(bfcFuture, event));
+                event -> formate(bfcPromise, event));
 
-        CompositeFuture.all(maxBaremFuture, domainesRacineFuture, dispDomaineFuture, bfcFuture).setHandler(event -> {
+        Future.all(maxBaremPromise.future(), domainesRacinePromise.future(), dispDomainePromise.future(), bfcPromise.future()).onComplete(event -> {
             if(event.failed()){
                 returnFailure("getMoyenneControlesContinusBrevet ", event, handler);
                 return;
             }
-            Map<String, Map<Long, Boolean>> dispensesDomainesEleves = dispDomaineFuture.result();
-            final Integer nbDomainesRacines = domainesRacineFuture.result().size();
-            final JsonObject resultsElevesByDomaine = bfcFuture.result();
-            final Integer maxBareme = maxBaremFuture.result().entrySet().iterator().next().getKey();
-            final Map<Integer, Integer> mapOrdreBaremeBrevet = maxBaremFuture.result().entrySet().iterator().next().getValue();
+            Map<String, Map<Long, Boolean>> dispensesDomainesEleves = dispDomainePromise.future().result();
+            final Integer nbDomainesRacines = domainesRacinePromise.future().result().size();
+            final JsonObject resultsElevesByDomaine = bfcPromise.future().result();
+            final Integer maxBareme = maxBaremPromise.future().result().entrySet().iterator().next().getKey();
+            final Map<Integer, Integer> mapOrdreBaremeBrevet = maxBaremPromise.future().result().entrySet().iterator().next().getValue();
 
             Map<String, List<String>> classe = new HashMap<>();
             classe.put(idClasse, new ArrayList<>());
@@ -908,22 +908,22 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                             final Handler<Either<String, Map<String, Map<String, List<String>>>>> handler){
         final Map<String, Map<String, List<String>>> paramsMethods = new HashMap<>();
 
-        Future<String> structureF =  Future.future();
-        Utils.getStructClasses(eb, idsClasses.toArray(new String[0]), event -> formate(structureF, event));
+        Promise<String> structurePromise =  Promise.promise();
+        Utils.getStructClasses(eb, idsClasses.toArray(new String[0]), event -> formate(structurePromise, event));
 
-        Future<Map<String, List<String>>> repElevesF = Future.future();
-        Utils.getElevesClasses(eb, idsClasses.toArray(new String[0]), idPeriode, event -> formate(repElevesF, event));
+        Promise<Map<String, List<String>>> repElevesPromise = Promise.promise();
+        Utils.getElevesClasses(eb, idsClasses.toArray(new String[0]), idPeriode, event -> formate(repElevesPromise, event));
 
-        CompositeFuture.all(structureF, repElevesF).setHandler(event -> {
+        Future.all(structurePromise.future(), repElevesPromise.future()).onComplete(event -> {
             if(event.failed()){
                 String error = event.cause().getMessage();
                 log.error("[getParamsMethodGetMoyenne] : " +  error);
                 handler.handle(new Either.Left<>(error));
                 return;
             }
-            final String idStructure = structureF.result();
+            final String idStructure = structurePromise.future().result();
             paramsMethods.put(idStructure,new LinkedHashMap<>());
-            for (final Map.Entry<String, List<String>> idclasse : repElevesF.result().entrySet()) {
+            for (final Map.Entry<String, List<String>> idclasse : repElevesPromise.future().result().entrySet()) {
                 paramsMethods.get(idStructure).put(idclasse.getKey(),idclasse.getValue());
             }
             handler.handle(new Either.Right<>(paramsMethods));
@@ -1061,10 +1061,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
 
     private void getPrefixPdfNameResult(Long idPeriode, final String host,
-                                        final String acceptLanguage, Future<String> periodeName){
+                                        final String acceptLanguage, Promise<String> periodeNamePromise){
 
         if (idPeriode == null) {
-            periodeName.complete(StringUtils.EMPTY_STRING);
+            periodeNamePromise.complete(StringUtils.EMPTY_STRING);
         }
         else {
             JsonObject jsonRequest = new JsonObject()
@@ -1075,15 +1075,15 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     .put("idType", idPeriode)
                     .put("request", jsonRequest);
 
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+            eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                     handlerToAsyncHandler(message -> {
                         JsonObject body = message.body();
                         if (OK.equals(body.getString(STATUS))) {
                             String periodeNameStr = body.getString(RESULT);
                             periodeNameStr = periodeNameStr.replace(" ", "_");
-                            periodeName.complete(periodeNameStr);
+                            periodeNamePromise.complete(periodeNameStr);
                         } else {
-                            periodeName.fail(body.getString(MESSAGE));
+                            periodeNamePromise.fail(body.getString(MESSAGE));
                             log.error("getPeriode : Unable to get the label of the specified entity (idPeriode).");
                         }
                     }));
@@ -1092,10 +1092,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     public void generateBFCExport(final Long idPeriode, final String idStructure, final JsonArray idClasses,
                                   final JsonArray idEleves, final Long idCycle,
                                   final String host, final String acceptLanguage, Vertx vertx, JsonObject config,
-                                  Future<JsonObject> exportResult, Future<String> periodeNameResult){
-        getPrefixPdfNameResult(idPeriode, host, acceptLanguage, periodeNameResult);
+                                  Promise<JsonObject> exportResultPromise, Promise<String> periodeNameResultPromise){
+        getPrefixPdfNameResult(idPeriode, host, acceptLanguage, periodeNameResultPromise);
         generateBFC(idStructure, idClasses, idEleves, idCycle, idPeriode, vertx, exportResultEvent ->
-                formate(exportResult, exportResultEvent));
+                formate(exportResultPromise, exportResultEvent));
     }
 
     /**
@@ -1172,7 +1172,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         });
     }
 
-    private void formatEleve (JsonObject eleveJson, String idClasse, Future formatFuture) {
+    private void formatEleve (JsonObject eleveJson, String idClasse, Promise<Void> formatPromise) {
         eleveJson.put(CLASSE_NAME_TO_SHOW, eleveJson.getValue(NOM_CLASSE));
         exportBulletinService.setLevel(eleveJson);
         exportBulletinService.setBirthDate(eleveJson);
@@ -1187,23 +1187,23 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         final String idEleve = eleveJson.getString(ID_ELEVE_KEY);
 
-        Future<JsonObject> structureFuture = Future.future();
-        exportBulletinService.getStructure(idEleve, eleveJson, st -> formate(structureFuture, st));
+        Promise<JsonObject> structurePromise = Promise.promise();
+        exportBulletinService.getStructure(idEleve, eleveJson, st -> formate(structurePromise, st));
 
-        Future<JsonObject> anneeScolaireFuture = Future.future();
+        Promise<JsonObject> anneeScolairePromise = Promise.promise();
         exportBulletinService.getAnneeScolaire(idEleve, idClasse, eleveJson, year ->
-                formate(anneeScolaireFuture, year));
+                formate(anneeScolairePromise, year));
 
-        Future<JsonObject> headTeachersFuture = Future.future();
+        Promise<JsonObject> headTeachersPromise = Promise.promise();
         exportBulletinService.getHeadTeachers(idEleve, idClasse, eleveJson, hdTeacher ->
-                formate(headTeachersFuture, hdTeacher));
+                formate(headTeachersPromise, hdTeacher));
 
-        CompositeFuture.all(structureFuture, anneeScolaireFuture, headTeachersFuture).setHandler(
+        Future.all(structurePromise.future(), anneeScolairePromise.future(), headTeachersPromise.future()).onComplete(
                 event -> {
                     if(event.failed()) {
                         log.error(event.cause().getMessage());
                     }
-                    formatFuture.complete();
+                    formatPromise.complete();
                 }
         );
     }
@@ -1234,29 +1234,29 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         final Map<Integer, String> libelleEchelle = new HashMap<>();
 
-        Future conversionNoteFuture = Future.future();
+        Promise conversionNotePromise = Promise.promise();
         getConversionNoteCompetenceClasse(idStructure, classe, result, libelleEchelle,
-                event -> formate(conversionNoteFuture, event ));
+                event -> formate(conversionNotePromise, event ));
 
-        Future domaineRacineFuture = Future.future();
+        Promise domaineRacinePromise = Promise.promise();
         getDomainesRacinesByClass(classe, idEleves, idCycle,
-                event -> formate(domaineRacineFuture, event ));
+                event -> formate(domaineRacinePromise, event ));
 
-        Future<JsonObject> buildBfcFuture = Future.future();
+        Promise<JsonObject> buildBfcPromise = Promise.promise();
         final Boolean recapEvalForBfc = false;
         buildBFC(recapEvalForBfc, idEleves.toArray(new String[0]), classe.getKey(), idStructure, idPeriode, idCycle,
-                false, buildBfcEvent -> formate(buildBfcFuture, buildBfcEvent));
+                false, buildBfcEvent -> formate(buildBfcPromise, buildBfcEvent));
 
-        Future<JsonArray> listCplByEleveFuture = Future.future();
+        Promise<JsonArray> listCplByElevePromise = Promise.promise();
         eleveEnseignementComplementService.listNiveauCplByEleves(idEleves.toArray(new String[1]),
-                eventNCPL -> formate(listCplByEleveFuture, eventNCPL));
+                eventNCPL -> formate(listCplByElevePromise, eventNCPL));
 
-        Future<JsonArray> syntheseFuture = Future.future();
+        Promise<JsonArray> synthesePromise = Promise.promise();
         bfcSynthseService.getBfcSyntheseByIdsEleveAndClasse(idEleves.toArray(new String[1]), classe.getKey(),
-                repSynthese -> formate(syntheseFuture, repSynthese));
+                repSynthese -> formate(synthesePromise, repSynthese));
 
-        CompositeFuture.all(buildBfcFuture, listCplByEleveFuture, syntheseFuture, conversionNoteFuture,
-                domaineRacineFuture).setHandler(event -> {
+        Future.all(buildBfcPromise.future(), listCplByElevePromise.future(), synthesePromise.future(), conversionNotePromise.future(),
+                domaineRacinePromise.future()).onComplete(event -> {
                     if(event.failed()){
                         String error = classe.getValue().get(0).getNomClasse() + ";\n" + event.cause().getMessage();
                         collectBFCEleve(classe.getKey(), new JsonObject().put(ERROR, error), result, handler);
@@ -1265,7 +1265,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     }
 
                     // On récupère les enseignements de complément par élève
-                    JsonArray niveauEnseignementComplementEleveResultArray = listCplByEleveFuture.result();
+                    JsonArray niveauEnseignementComplementEleveResultArray = listCplByElevePromise.future().result();
                     Map<String, Map<String, Long>> niveauEnseignementComplementEleve = new HashMap<>();
                     Map<String, Map<String, Long>> niveauLangueCultureRegionaleEleve = new HashMap<>();
                     getEnsComplByStudent( niveauEnseignementComplementEleve,niveauLangueCultureRegionaleEleve,
@@ -1273,7 +1273,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
                     // On récupère les synthèses des bfcs par cycle par élève
                     Map<String, String> syntheseEleve = new HashMap<>();
-                    JsonArray syntheseEleveResultArray = syntheseFuture.result();
+                    JsonArray syntheseEleveResultArray = synthesePromise.future().result();
                     for (int i = 0; i < syntheseEleveResultArray.size(); i++) {
                         JsonObject _o = syntheseEleveResultArray.getJsonObject(i);
                         String id_eleve = _o.getString(ID_ELEVE);
@@ -1283,7 +1283,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     }
 
                     // On récupère les résultats par domaine par élève
-                    JsonObject resultByDomaine = buildBfcFuture.result();
+                    JsonObject resultByDomaine = buildBfcPromise.future().result();
                     for (int i = 0; i <idEleves.size() ; i++) {
                         JsonArray resultats = resultByDomaine.getJsonArray(idEleves.get(i));
                         Map<Long, Integer> resultEleves = new HashMap<>();
@@ -1322,25 +1322,25 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     if(classe.getValue().size() != 0) {
                         final String idClasse = classe.getValue().get(0).getIdClasse();
                         if (classeResult != null) {
-                            List<Future> listeFutures = new ArrayList<>();
+                            List<Future<?>> listeFutures = new ArrayList<>();
                             for (int i = 0; i < classeResult.size(); i++) {
                                 JsonObject eleveJson = classeResult.getJsonObject(i);
                                 eleveJson.put(ID_ETABLISSEMENT_KEY, idStructure);
                                 // formatEleve se charge de lancer la récupération des informations manquants et rajoute
                                 // les appels dans la listeFutures
-                                Future formatEleveFuture = Future.future();
-                                listeFutures.add(formatEleveFuture);
-                                formatEleve(eleveJson, idClasse, formatEleveFuture);
+                                Promise<Void> formatElevePromise = Promise.promise();
+                                listeFutures.add(formatElevePromise.future());
+                                formatEleve(eleveJson, idClasse, formatElevePromise);
                             }
 
                             // Récupération du logo de l'établissment
-                            Future<JsonObject> imageStructureFuture = Future.future();
+                            Promise<JsonObject> imageStructurePromise = Promise.promise();
                             utilsService.getParametersForExport(idStructure, img ->
-                                    formate(imageStructureFuture, img));
-                            listeFutures.add(imageStructureFuture);
+                                    formate(imageStructurePromise, img));
+                            listeFutures.add(imageStructurePromise.future());
 
                             // Une fois la récupération des informations de tous les élèves
-                            CompositeFuture.all(listeFutures).setHandler(listeEvent -> {
+                            Future.all(listeFutures).onComplete(listeEvent -> {
                                 if (listeEvent.failed()) {
                                     String error = "Une erreur est survenue lors de la recuperation des adresses et de " +
                                             "l'image de l'établissement : " + classe.getValue().get(0).getNomClasse()
@@ -1349,10 +1349,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                     log.error("getBFC: buildBFC (Array of idEleves, " + classe.getKey() + ", "
                                             + idStructure + ") : " + event.toString());
                                 } else {
-                                    List<Future> futures = new ArrayList<>();
+                                    List<Future<JsonObject>> futures = new ArrayList<>();
                                     for (Object eleve : classeResult) {
                                         JsonObject eleveJson = ((JsonObject) eleve);
-                                        JsonObject imgStructure = imageStructureFuture.result();
+                                        JsonObject imgStructure = imageStructurePromise.future().result();
                                         eleveJson.put("pathLogoImg", "img/education_nationale.png");
                                         if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
                                             eleveJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
@@ -1366,14 +1366,14 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                                     .getValue(PATH));
                                             eleveJson.put("hasNameAndBrad", true);
                                         }
-                                        Future<JsonObject> getImagesBase64Future = Future.future();
-                                        futures.add(getImagesBase64Future);
+                                        Promise<JsonObject> getImagesBase64Promise = Promise.promise();
+                                        futures.add(getImagesBase64Promise.future());
                                         exportBulletinService.generateImagesFromPathForBulletin(eleveJson, vertx,
                                                 eventImage -> {
-                                                    formate(getImagesBase64Future, eventImage);
+                                                    formate(getImagesBase64Promise, eventImage);
                                                 } );
                                     }
-                                    CompositeFuture.all(futures).setHandler(eventFutureStudent -> {
+                                    Future.all(futures).onComplete(eventFutureStudent -> {
 
                                         collectBFCEleve(classe.getKey(), new JsonObject().put(ELEVES, classeResult), result,
                                                 handler);
@@ -1391,14 +1391,15 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                            final List<String> idEleves, final Long idCycle,
                                            final Handler<Either<String, JsonArray>> handler){
 
-        Future<JsonArray> domsFuture = Future.future();
-        domaineService.getDomainesRacines(classe.getKey(), idCycle, event -> formate(domsFuture, event));
+        Promise<JsonArray> domsPromise = Promise.promise();
 
-        Future<Map<String, Map<Long, Boolean>>> dispenseDomaineFuture = Future.future();
+        domaineService.getDomainesRacines(classe.getKey(), idCycle, event -> formate(domsPromise, event));
+
+        Promise<Map<String, Map<Long, Boolean>>> dispenseDomainePromise = Promise.promise();
         dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(idEleves, event ->
-                formate(dispenseDomaineFuture, event));
+                formate(dispenseDomainePromise, event));
 
-        CompositeFuture.all(domsFuture, dispenseDomaineFuture).setHandler(event -> {
+        Future.all(domsPromise.future(), dispenseDomainePromise.future()).onComplete(event -> {
             if(event.failed()){
                 String error = event.cause().getMessage();
                 if(error.contains(TIME)){
@@ -1409,8 +1410,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 log.error("getDomainesRacinesByClasse (" + classe.getKey() + ") : " + error);
                 return ;
             }
-            final JsonArray queryResult = domsFuture.result();
-            Map<String, Map<Long, Boolean>> mapIdsElevesIdsDomainesDispenses = dispenseDomaineFuture.result();
+            final JsonArray queryResult = domsPromise.future().result();
+            Map<String, Map<Long, Boolean>> mapIdsElevesIdsDomainesDispenses = dispenseDomainePromise.future().result();
 
             if (queryResult.size() == 0) {
                 String error = "Une erreur est survenue lors de la recuperation des domaines pour " +
@@ -1586,16 +1587,16 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     private void getParamClasses(final List<String> idClasses, final Long idPeriode, final Long idCycle,
                                  final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
         // Récupération de l'idStructure  de la classe
-        Future<String> structureFucture = Future.future();
+        Promise<String> structurePromise = Promise.promise();
         Utils.getStructClasses(eb, idClasses.toArray(new String[0]),
-                event -> formate(structureFucture, event));
+                event -> formate(structurePromise, event));
 
         // Récupération des élèves de la classe
-        Future<Map<String, JsonArray>> studentsFuture = Future.future();
+        Promise<Map<String, JsonArray>> studentsPromise = Promise.promise();
         getClassesEleves(eb, idClasses.toArray(new String[0]), idPeriode,
-                event -> formate(studentsFuture, event));
+                event -> formate(studentsPromise, event));
 
-        CompositeFuture.all(structureFucture, studentsFuture).setHandler(event -> {
+        Future.all(structurePromise.future(), studentsPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 String error = event.cause().getMessage();
                 log.error("getParamClasses : " + error);
@@ -1603,11 +1604,11 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 return;
             }
 
-            final String idStructure = structureFucture.result();
+            final String idStructure = structurePromise.future().result();
             final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
             population.put(idStructure, new LinkedHashMap());
 
-            Map<String, JsonArray> mapEleves = studentsFuture.result();
+            Map<String, JsonArray> mapEleves = studentsPromise.future().result();
             if(mapEleves.isEmpty()){
                 log.info("getParamClasses  NO student ");
                 handler.handle(new Either.Right(population));

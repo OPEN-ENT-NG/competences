@@ -25,6 +25,7 @@ import fr.openent.competences.service.impl.CompetencesTransitionWorker;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
@@ -266,8 +267,8 @@ public class Competences extends BaseServer {
     public static  String TEMPLATE_PATH;
 
     @Override
-    public void start() throws Exception {
-        super.start();
+    public void start(Promise<Void> startPromise) throws Exception {
+        super.start(startPromise);
 
         COMPETENCES_SCHEMA = config.getString(DB_SCHEMA);
         VSCO_SCHEMA = config.getString(DB_VIESCO_SCHEMA);
@@ -345,10 +346,12 @@ public class Competences extends BaseServer {
         vertx.deployVerticle(CompetencesTransitionWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
         log.info("WORKER : " + BulletinWorker.class.getSimpleName());
         vertx.deployVerticle(BulletinWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+        startPromise.tryComplete();
+        startPromise.tryFail("[Competences@Competences::start] Fail to start Competences");
     }
 
     public static void launchTransitionWorker(EventBus eb, JsonObject params, boolean isHTTP) {
-        eb.send(CompetencesTransitionWorker.class.getSimpleName(), params.put("isHTTP", isHTTP),
+        eb.request(CompetencesTransitionWorker.class.getSimpleName(), params.put("isHTTP", isHTTP),
                 new DeliveryOptions().setSendTimeout(1000 * 1000L), handlerToAsyncHandler(eventExport -> {
                             if(!eventExport.body().getString("status").equals("ok"))
                                 launchTransitionWorker(eb, params, isHTTP);

@@ -147,7 +147,7 @@ public class FilterUserUtils {
                     .put("action", "eleve.getInfoEleve")
                     .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissement)
                     .put("idEleves", idsEleves);
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                 @Override
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();
@@ -188,7 +188,7 @@ public class FilterUserUtils {
                     if (null == eb) {
                         handler.handle(false);
                     } else {
-                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                             @Override
                             public void handle(Message<JsonObject> message) {
                                 JsonObject body = message.body();
@@ -274,7 +274,7 @@ public class FilterUserUtils {
                     .put("action", "eleve.getInfoEleve")
                     .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissement)
                     .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(idsEleve.getList()));
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                 @Override
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();

@@ -38,6 +38,7 @@ public class DefaultMongoService extends MongoDbCrudService implements MongoServ
                     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
                     LocalDateTime now = LocalDateTime.now();
                     JsonObject exportProperties = either.right().getValue();
+                    sanitizeExportProperties(exportProperties);
                     if(exportProperties != null && exportProperties.containsKey(STATUS) && !exportProperties.getString(STATUS).equals("SUCCESS")) {
                         exportProperties.put("updated", dtf.format(now));
                         exportProperties.put(STATUS, status);
@@ -60,6 +61,18 @@ public class DefaultMongoService extends MongoDbCrudService implements MongoServ
             handler.handle("mongoinsertfailed");
         }
     }
+
+    private void sanitizeExportProperties(JsonObject exportProperties){
+        JsonArray niveauCompetences = exportProperties
+                .getJsonObject("params", new JsonObject())
+                .getJsonObject("eleve", new JsonObject())
+                .getJsonArray("niveauCompetences");
+
+        if (niveauCompetences != null) {
+            niveauCompetences.forEach(niveau -> ((JsonObject) niveau).remove("$$hashKey"));
+        }
+    }
+
     @Override
     public void getExports(Handler<Either<String, JsonArray>> handler, String userId) {
         mongo.find(collection, new JsonObject().put("userId",userId), MongoDbResult.validResultsHandler(handler));

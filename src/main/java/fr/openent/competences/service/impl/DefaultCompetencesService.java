@@ -81,7 +81,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     .put("action", "classe.getEtabClasses")
                     .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
 
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
 
                 @Override
                 public void handle(Message<JsonObject> message) {
@@ -97,7 +97,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                                     .put("action", "eleve.getCycle")
                                     .put("idClasse", idClasse);
 
-                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                            eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                 @Override
                                 public void handle(Message<JsonObject> message) {
                                     JsonObject body = message.body();
@@ -309,7 +309,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 .put("action", "classe.getEtabClasses")
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
@@ -402,7 +402,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 .put("action", "classe.getEtabClasses")
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();

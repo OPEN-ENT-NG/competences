@@ -33,6 +33,7 @@ import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.template.TemplateProcessor;
+import fr.wseduc.webutils.template.FileTemplateProcessor;
 import fr.wseduc.webutils.template.lambdas.I18nLambda;
 import fr.wseduc.webutils.template.lambdas.LocaleDateLambda;
 import io.vertx.core.*;
@@ -163,27 +164,27 @@ public class DefaultExportService implements ExportService {
                 String idStructure = devoir.getString("id_etablissement");
                 final String idClass = devoir.getString("id_groupe");
 
-                Future<JsonObject> classInfoFuture = Future.future();
+                Promise<JsonObject> classInfoPromise = Promise.promise();
                 utilsService.getClassInfo(idClass, event ->
-                        FormateFutureEvent.formate(classInfoFuture, event));
+                        FormateFutureEvent.formate(classInfoPromise, event));
 
-                Future<JsonArray> competencesFuture = Future.future();
+                Promise<JsonArray> competencesPromise = Promise.promise();
                 if (devoir.getInteger("nbrcompetence") > 0) {
                     competencesService.getDevoirCompetences(idDevoir, null, event ->
-                            FormateFutureEvent.formate(competencesFuture, event));
+                            FormateFutureEvent.formate(competencesPromise, event));
                 } else {
-                    competencesFuture.complete(new JsonArray());
+                    competencesPromise.complete(new JsonArray());
                 }
 
-                CompositeFuture.all(classInfoFuture, competencesFuture).setHandler(event -> {
+                Future.all(classInfoPromise.future(), competencesPromise.future()).onComplete(event -> {
                     if (event.failed()) {
                         handler.handle(new Either.Left<>(event.cause().getMessage()));
                         log.error("error to get niveau de maitrise, classInfo and competence : "
                                 + event.cause().getMessage());
                     } else {
 
-                        JsonObject classInfo = classInfoFuture.result();
-                        JsonArray competences = competencesFuture.result();
+                        JsonObject classInfo = classInfoPromise.future().result();
+                        JsonArray competences = competencesPromise.future().result();
                         Map<String, JsonArray> mapResult = new HashMap<>();
                         if (classInfo.isEmpty() || competences.isEmpty()) {
                             handler.handle(new Either.Left<>("no classInfo or no competences"));
@@ -211,7 +212,7 @@ public class DefaultExportService implements ExportService {
                                                         .put("idClasse", devoir.getString("id_groupe"))
                                                         .put("idPeriode", devoir.getInteger("id_periode"));
 
-                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                                                eb.request(Competences.VIESCO_BUS_ADDRESS, action,
                                                         handlerToAsyncHandler(message -> {
 
                                                             JsonObject body = message.body();
@@ -276,30 +277,30 @@ public class DefaultExportService implements ExportService {
 
     private void getResultsEleves(Long idDevoir, String idStructure, Map mapResult, Handler<Either<String, Boolean>> handler) {
 
-        Future<JsonArray> competencesNotesFuture = Future.future();
+        Promise<JsonArray> competencesNotesPromise = Promise.promise();
         competenceNoteService.getCompetencesNotesDevoir(idDevoir, event -> {
-            FormateFutureEvent.formate(competencesNotesFuture, event);
+            FormateFutureEvent.formate(competencesNotesPromise, event);
         });
 
-        Future<JsonArray> annotationsFuture = Future.future();
+        Promise<JsonArray> annotationsPromise = Promise.promise();
         annotationsService.listAnnotations(idStructure, event -> {
-            FormateFutureEvent.formate(annotationsFuture, event);
+            FormateFutureEvent.formate(annotationsPromise, event);
         });
 
-        Future<JsonArray> notesFuture = Future.future();
+        Promise<JsonArray> notesPromise = Promise.promise();
         noteService.listNotesParDevoir(idDevoir, event -> {
-            FormateFutureEvent.formate(notesFuture, event);
+            FormateFutureEvent.formate(notesPromise, event);
         });
 
-        CompositeFuture.all(competencesNotesFuture, annotationsFuture, notesFuture)
-                .setHandler(new Handler<AsyncResult<CompositeFuture>>() {
+        CompositeFuture.all(competencesNotesPromise.future(), annotationsPromise.future(), notesPromise.future())
+                .onComplete(new Handler<AsyncResult<CompositeFuture>>() {
                     @Override
                     public void handle(AsyncResult<CompositeFuture> event) {
                         if (event.succeeded()) {
                             //notes = note, annotations et appreciation
-                            JsonArray notes = notesFuture.result();
-                            JsonArray competencesNotes = competencesNotesFuture.result();
-                            JsonArray annotations = annotationsFuture.result();
+                            JsonArray notes = notesPromise.future().result();
+                            JsonArray competencesNotes = competencesNotesPromise.future().result();
+                            JsonArray annotations = annotationsPromise.future().result();
 
                             if (competencesNotes.isEmpty() && notes.isEmpty() || annotations.isEmpty() && !notes.isEmpty()) {
                                 handler.handle(new Either.Right<>(false));
@@ -476,38 +477,38 @@ public class DefaultExportService implements ExportService {
                               String idGroupe, final String idEtablissement, HttpServerRequest request,
                               final Handler<Either<String, JsonObject>> handler) {
 
-        List<Future> exportDatas = new ArrayList<>();
+        List<Future<?>> exportDatas = new ArrayList<>();
         Long idDevoir = devoir.getLong(ID_KEY);
         HashMap devoirMap = new HashMap();
         ExportEvaluationHelper.formatDevoir(devoir, getHost(request), I18n.acceptLanguage(request), devoirMap);
-        exportDatas.add(getClasseDevoir(devoir, devoirMap, eb));
-        exportDatas.add(getMatiereDevoir(devoir, devoirMap, eb));
+        exportDatas.add(getClasseDevoir(devoir, devoirMap, eb).future());
+        exportDatas.add(getMatiereDevoir(devoir, devoirMap, eb).future());
 
         JsonArray maitrises = new JsonArray();
-        Future maitriseFuture = getNiveauDeMaitriseDevoir(devoir, onlyEvaluation, maitrises);
-        exportDatas.add(maitriseFuture);
+        Promise<JsonArray> maitrisePromise = getNiveauDeMaitriseDevoir(devoir, onlyEvaluation, maitrises);
+        exportDatas.add(maitrisePromise.future());
 
         final JsonArray elevesArray = new JsonArray();
-        Future eleveFuture = getStudents(devoir, eb, idGroupe, elevesArray);
-        exportDatas.add(eleveFuture);
+        Promise<Void> elevePromise = getStudents(devoir, eb, idGroupe, elevesArray);
+        exportDatas.add(elevePromise.future());
 
         JsonArray notesArray = new JsonArray();
-        Future noteFuture = listNotes(idDevoir, eb, notesArray);
-        exportDatas.add(noteFuture);
+        Promise<Void> notePromise = listNotes(idDevoir, eb, notesArray);
+        exportDatas.add(notePromise.future());
 
         JsonArray annotationsArray = new JsonArray();
-        Future annotationF = listAnnotations(idEtablissement, annotationsArray);
-        exportDatas.add(annotationF);
+        Promise<Void> annotationPromise = listAnnotations(idEtablissement, annotationsArray);
+        exportDatas.add(annotationPromise.future());
 
         JsonArray competencesArray = new JsonArray();
-        Future competenceFuture = getDevoirCompetences(idDevoir, onlyEvaluation, eb, competencesArray);
-        exportDatas.add(competenceFuture);
+        Promise<Void> competencePromise = getDevoirCompetences(idDevoir, onlyEvaluation, eb, competencesArray);
+        exportDatas.add(competencePromise.future());
 
         JsonArray cmpNotesAr = new JsonArray();
-        Future compNotesFuture = getCompetencesNotesDevoir(idDevoir, onlyEvaluation, cmpNotesAr);
-        exportDatas.add(compNotesFuture);
+        Promise<Void> compNotesPromise = getCompetencesNotesDevoir(idDevoir, onlyEvaluation, cmpNotesAr);
+        exportDatas.add(compNotesPromise.future());
 
-        CompositeFuture.all(exportDatas).setHandler(event -> {
+        Future.all(exportDatas).onComplete(event -> {
             if (event.failed()) {
                 returnFailure("getExportEval", event, handler);
             } else {
@@ -1420,7 +1421,7 @@ public class DefaultExportService implements ExportService {
 
                         actionObject.put("content", bytes)
                                 .put("baseUrl", baseUrl);
-                        eb.send(_node + "entcore.pdf.generator", actionObject,
+                        eb.request(_node + "entcore.pdf.generator", actionObject,
                                 new DeliveryOptions().setSendTimeout(
                                         TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
                                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -1541,7 +1542,7 @@ public class DefaultExportService implements ExportService {
         final String templatePath = FileResolver.absolutePath(config.getJsonObject("exports").getString("template-path"));
         final String baseUrl = getScheme(request) + "://" + Renders.getHost(request) + config.getString("app-address") + "/public/";
 
-        TemplateProcessor templateProcessor = new TemplateProcessor(vertx, templatePath).escapeHTML(true);
+        TemplateProcessor templateProcessor = new FileTemplateProcessor(vertx, templatePath).escapeHTML(true);
         templateProcessor.setLambda("i18n", new I18nLambda("fr"));
         templateProcessor.setLambda("datetime", new LocaleDateLambda("fr"));
         JsonObject localTemplateProps = templateProps.copy();
@@ -1660,7 +1661,7 @@ public class DefaultExportService implements ExportService {
 
     public void getMatiereExportReleveComp(final JsonArray idMatieres, Handler<Either<String, String>> handler) {
         JsonObject action = new JsonObject().put(ACTION, "matiere.getMatieres").put("idMatieres", idMatieres);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
 
@@ -1703,7 +1704,7 @@ public class DefaultExportService implements ExportService {
         if (!"undefined".equals(finalIdPeriode)) {
             action.put("idType", finalIdPeriode);
         }
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             final JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 String libellePeriode = body.getString(RESULT)
@@ -1723,10 +1724,9 @@ public class DefaultExportService implements ExportService {
             JsonObject action = new JsonObject()
                     .put("action", "eleve.getInfoEleve")
                     .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
-                    .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(
-                            Arrays.asList(new String[]{finalIdEleve})));
+                    .put("idEleves", new JsonArray(Arrays.asList(finalIdEleve)));
 
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+            eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                     handlerToAsyncHandler(message -> {
                         JsonObject body = message.body();
 
@@ -1747,7 +1747,7 @@ public class DefaultExportService implements ExportService {
                     .put(ACTION, "classe.getEleveClasse")
                     .put(ID_CLASSE_KEY, finalIdClasse)
                     .put(ID_PERIODE_KEY, finalIdPeriode);
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(
+            eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(
                     message -> {
                         if (OK.equals(message.body().getString(STATUS))) {
                             JsonArray eleves = message.body().getJsonArray(RESULTS);
@@ -1765,7 +1765,7 @@ public class DefaultExportService implements ExportService {
                                     .put("action", "eleve.getInfoEleve")
                                     .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
                                     .put("idEleves", new JsonArray(Arrays.asList(idEleves)));
-                            eb.send(Competences.VIESCO_BUS_ADDRESS, infosAction, Competences.DELIVERY_OPTIONS,
+                            eb.request(Competences.VIESCO_BUS_ADDRESS, infosAction, Competences.DELIVERY_OPTIONS,
                                     handlerToAsyncHandler(event -> {
                                         JsonObject body = event.body();
 
@@ -1787,7 +1787,7 @@ public class DefaultExportService implements ExportService {
 
     public void getDataForExportReleveEleve(String userId, String structureId, Long periodId,
                                             final MultiMap params, Handler<Either<String, JsonObject>> handler) {
-        List<Future> futures = new ArrayList<>();
+        List<Future<?>> futures = new ArrayList<>();
         final JsonArray compNotes = new JsonArray();
         HashMap<String, Boolean> isBackup = new HashMap<>();
         isBackup.put(Field.ISBACKUP, false);
@@ -1801,48 +1801,48 @@ public class DefaultExportService implements ExportService {
         final JsonArray finalAverages = new JsonArray();
 
         // récupération de l'élève
-        Future<JsonObject> infoEleve = Future.future();
-        utilsService.getInfoEleve(userId, event -> formate(infoEleve, event));
-        futures.add(infoEleve);
+        Promise<JsonObject> infoElevePromise = Promise.promise();
+        utilsService.getInfoEleve(userId, event -> formate(infoElevePromise, event));
+        futures.add(infoElevePromise.future());
 
         // récupération du Backup de l'élève s'il est supprimé
-        Future<JsonObject> infoEleveBackup = Future.future();
-        utilsService.getInfoEleveBackup(userId, event -> formate(infoEleveBackup, event));
-        futures.add(infoEleveBackup);
+        Promise<JsonObject> infoEleveBackupPromise = Promise.promise();
+        utilsService.getInfoEleveBackup(userId, event -> formate(infoEleveBackupPromise, event));
+        futures.add(infoEleveBackupPromise.future());
 
         // Récupération de la liste des devoirs de la personne avec ses notes associées
-        Future<JsonArray> devoirsFuture = Future.future();
+        Promise<JsonArray> devoirsPromise = Promise.promise();
         devoirService.listDevoirs(userId, structureId, null, null, periodId,
-                false, event -> formate(devoirsFuture, event));
-        futures.add(devoirsFuture);
+                false, event -> formate(devoirsPromise, event));
+        futures.add(devoirsPromise.future());
 
         // Récupération de la liste des devoirs de la personne avec ses notes associées
-        Future<JsonArray> annotationsFuture = Future.future();
-        devoirService.listDevoirsWithAnnotations(userId, periodId, null, event -> formate(annotationsFuture, event));
-        futures.add(annotationsFuture);
+        Promise<JsonArray> annotationsPromise = Promise.promise();
+        devoirService.listDevoirsWithAnnotations(userId, periodId, null, event -> formate(annotationsPromise, event));
+        futures.add(annotationsPromise.future());
 
         // Récupération des moyennes finales
-        Future<JsonArray> moyenneFinaleFuture = Future.future();
+        Promise<JsonArray> moyenneFinalePromise = Promise.promise();
         noteService.getColonneReleve(new JsonArray().add(userId), periodId, null, null, "moyenne",
                 Boolean.FALSE,
-                moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
-        futures.add(moyenneFinaleFuture);
+                moyenneFinaleEvent -> formate(moyenneFinalePromise, moyenneFinaleEvent));
+        futures.add(moyenneFinalePromise.future());
 
         //Récupération de la structure
-        Future<JsonObject> structureFuture = Future.future();
-        utilsService.getStructure(structureId, event -> formate(structureFuture, event));
-        futures.add(structureFuture);
+        Promise<JsonObject> structurePromise = Promise.promise();
+        utilsService.getStructure(structureId, event -> formate(structurePromise, event));
+        futures.add(structurePromise.future());
 
         // Récupération des matières de l'établissement
-        Future<JsonArray> subjectF = Future.future();
-        defaultMatiereService.getMatieresEtab(structureId, event -> formate(subjectF, event));
-        futures.add(subjectF);
+        Promise<JsonArray> subjectPromise = Promise.promise();
+        defaultMatiereService.getMatieresEtab(structureId, event -> formate(subjectPromise, event));
+        futures.add(subjectPromise.future());
 
-        Future<JsonArray> compNotesFuture = Future.future();
+        Promise<JsonArray> compNotesPromise = Promise.promise();
         noteService.getCompetencesNotesReleveEleves(new JsonArray().add(userId), structureId, null, null, periodId,
                 userId, true, false,
-                compNotesEvent -> formate(compNotesFuture, compNotesEvent));
-        futures.add(compNotesFuture);
+                compNotesEvent -> formate(compNotesPromise, compNotesEvent));
+        futures.add(compNotesPromise.future());
 
         // promises for next iterations
         Promise<JsonArray> groupsClassPromise = Promise.promise();
@@ -1856,9 +1856,9 @@ public class DefaultExportService implements ExportService {
         Promise<Boolean> isAvgSkillPromise = Promise.promise();
 
 
-        CompositeFuture.all(futures)
+        Future.all(futures)
                 .compose(event -> {
-                    if (infoEleve.result().isEmpty() && infoEleveBackup.result().isEmpty()) {
+                    if (infoElevePromise.future().result().isEmpty() && infoEleveBackupPromise.future().result().isEmpty()) {
                         String errorMessage = String.format("[Competences@%s::getExportReleveEleve] No informations about the student",
                                 this.getClass().getSimpleName());
                         log.error(String.format("[Competences@%s::getExportReleveEleve] No informations about the student",
@@ -1866,12 +1866,12 @@ public class DefaultExportService implements ExportService {
                         return Future.failedFuture(errorMessage);
                     }
 
-                    compNotes.addAll(compNotesFuture.result());
+                    compNotes.addAll(compNotesPromise.future().result());
 
-                    if (!infoEleve.result().isEmpty()) {
-                        userJSON.mergeIn(infoEleve.result());
+                    if (!infoElevePromise.future().result().isEmpty()) {
+                        userJSON.mergeIn(infoElevePromise.future().result());
                     } else {
-                        userJSON.mergeIn(infoEleveBackup.result());
+                        userJSON.mergeIn(infoEleveBackupPromise.future().result());
                         isBackup.put(Field.ISBACKUP, true);
                     }
 
@@ -1903,7 +1903,7 @@ public class DefaultExportService implements ExportService {
                     List<Future> futuresList = new ArrayList<>();
 
                     utilsService.getAllMultiTeachers(structureId,
-                            idGroupClasse, FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+                            idGroupClasse, FutureHelper.handler(multiTeachingPromise));
                     futuresList.add(multiTeachingPromise.future());
 
                     utilsService.getSubTopicCoeff(structureId, idGroupClasse).onComplete(subTopicCoefPromise);
@@ -1913,9 +1913,9 @@ public class DefaultExportService implements ExportService {
                     futuresList.add(servicesPromise.future());
 
                     // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
-                    devoirsJSON.addAll(devoirsFuture.result());
-                    final JsonArray annotationsJSON = annotationsFuture.result();
-                    finalAverages.addAll(moyenneFinaleFuture.result());
+                    devoirsJSON.addAll(devoirsPromise.future().result());
+                    final JsonArray annotationsJSON = annotationsPromise.future().result();
+                    finalAverages.addAll(moyenneFinalePromise.future().result());
 
                     annotationsJSON.stream().forEach(annotation -> {
                         JsonObject annotationJson = (JsonObject) annotation;
@@ -1953,8 +1953,8 @@ public class DefaultExportService implements ExportService {
                         subjectIds.add(idSubject);
                     }
 
-                    for (int i = 0; i < subjectF.result().size(); i++) {
-                        JsonObject o = subjectF.result().getJsonObject(i);
+                    for (int i = 0; i < subjectPromise.future().result().size(); i++) {
+                        JsonObject o = subjectPromise.future().result().getJsonObject(i);
                         String idSubject = o.getString(ID_KEY);
                         if (subjectIds.contains(idSubject)) {
                             subjects.add(o);
@@ -1962,11 +1962,11 @@ public class DefaultExportService implements ExportService {
                     }
 
                     niveauDeMaitriseService.getNiveauDeMaitrise(structureId, cycle.getLong(Field.ID_CYCLE),
-                            FutureHelper.handlerJsonArray(maitrisePromise.future()));
+                            FutureHelper.handler(maitrisePromise));
                     futuresList.add(maitrisePromise.future());
 
                     competencesService.getDevoirCompetences(idDevoirsCompetences, structureId, cycle.getLong(Field.ID_CYCLE),
-                            FutureHelper.handlerJsonArray(competencesPromise.future()));
+                            FutureHelper.handler(competencesPromise));
                     futuresList.add(competencesPromise.future());
 
                     competenceNoteService.getConversionNoteCompetence(structureId, idClass.toString(),
@@ -2020,7 +2020,7 @@ public class DefaultExportService implements ExportService {
                     Map<String, JsonObject> competencesMap = extractData(competencesJson, ID_KEY);
                     Map<String, JsonObject> matieresMap = extractData(subjects, ID_KEY);
 
-                    final JsonObject etabJSON = structureFuture.result().getJsonObject("s").getJsonObject(Field.DATA);
+                    final JsonObject etabJSON = structurePromise.future().result().getJsonObject("s").getJsonObject(Field.DATA);
                     buildCompetenceNotesMap(compNotes, competenceNotesMap);
                     boolean showSkills = null != params.get(Field.SHOWSKILLS) && Boolean.parseBoolean(params.get(Field.SHOWSKILLS));
                     if (showSkills) {
@@ -2123,7 +2123,7 @@ public class DefaultExportService implements ExportService {
                 .put(ACTION, "eleve.getUsers")
                 .put(Field.IDUSERS, idEnseignants);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray users = body.getJsonArray(RESULTS);
@@ -2503,14 +2503,14 @@ public class DefaultExportService implements ExportService {
             }
 
             JsonArray exportResultClasse = new JsonArray();
-            List<Future> classeFuture = new ArrayList<>();
+            List<Future<Void>> classeFutures = new ArrayList<>();
             MultiMap params = MultiMap.caseInsensitiveMultiMap();
             params.add(Field.IDTYPEPERIODE, isNotNull(idTypePeriode) ? idTypePeriode.toString() : null)
                     .add(Field.ORDREPERIODE, isNotNull(ordre) ? ordre.toString() : null).add(Field.SHOWSCORES, String.valueOf(showScores))
                     .add(Field.SHOWSKILLS, String.valueOf(showSkills));
-            getDataForClasse(elevesClasse, idEtablissement, idPeriode, params, exportResultClasse, classeFuture);
+            getDataForClasse(elevesClasse, idEtablissement, idPeriode, params, exportResultClasse, classeFutures);
 
-            CompositeFuture.all(classeFuture).setHandler(event -> {
+            Future.all(classeFutures).onComplete(event -> {
                 if (event.failed()) {
                     returnFailure("getDataForExportReleveClasse", event, handler);
                     return;
@@ -2522,31 +2522,31 @@ public class DefaultExportService implements ExportService {
     }
 
     private void getDataForClasse(JsonArray elevesClasse, String idEtablissement, Long idPeriode, MultiMap params,
-                                  JsonArray exportResultClasse, List<Future> classeFuture) {
+                                  JsonArray exportResultClasse, List<Future<Void>> classeFuture) {
         for (int i = 0; i < elevesClasse.size(); i++) {
             JsonObject eleve = elevesClasse.getJsonObject(i);
             String idEleve = eleve.getString(ID_KEY);
             if (isNull(idEleve)) {
                 idEleve = eleve.getString(ID_ELEVE_KEY);
             }
-            Future eleveFuture = Future.future();
+            Promise<Void> elevePromise = Promise.promise();
 
-            classeFuture.add(eleveFuture);
-            getDataForEleve(idEleve, idEtablissement, idPeriode, params, eleveFuture, exportResultClasse);
+            classeFuture.add(elevePromise.future());
+            getDataForEleve(idEleve, idEtablissement, idPeriode, params, elevePromise, exportResultClasse);
         }
     }
 
     private void getDataForEleve(String idEleve, String idEtablissement, Long idPeriode, MultiMap params,
-                                 Future eleveFuture, JsonArray exportResultClasse) {
+                                 Promise<Void> elevePromise, JsonArray exportResultClasse) {
         getDataForExportReleveEleve(idEleve, idEtablissement, idPeriode, params, event -> {
             if (event.isLeft()) {
                 String error = event.left().getValue();
                 log.error("[getDataForEleve] " + error);
-                eleveFuture.fail(getLibelle("evaluations.get.data.student.classe.error"));
+                elevePromise.fail(getLibelle("evaluations.get.data.student.classe.error"));
                 return;
             }
             exportResultClasse.add(event.right().getValue());
-            eleveFuture.complete();
+            elevePromise.complete();
         });
 
     }

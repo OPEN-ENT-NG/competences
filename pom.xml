@@ -23,12 +23,11 @@
         </repository>
     </repositories>
     <properties>
-        <vertxVersion>3.9.5</vertxVersion>
         <toolsVersion>2.0.0-final</toolsVersion>
         <junitVersion>5.1.0</junitVersion>
         <powerMockVersion>2.0.2</powerMockVersion>
         <mockitoVersion>[2.0,3.0)</mockitoVersion>
-        <entCoreVersion>4.11-SNAPSHOT</entCoreVersion>
+        <entCoreVersion>6.0-SNAPSHOT</entCoreVersion>
         <gatlingHighchartsVersion>2.3.1</gatlingHighchartsVersion>
         <opencsvVersion>4.0</opencsvVersion>
         <pdfboxVersion>1.8.3</pdfboxVersion>

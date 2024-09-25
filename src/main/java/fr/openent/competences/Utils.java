@@ -75,7 +75,7 @@ public class Utils {
                 .put(ACTION, "classe.getEtabClasses")
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idClasses)));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
             if (OK.equals(body.getString(STATUS))) {
@@ -161,7 +161,7 @@ public class Utils {
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getGroups")
                 .put("idEleve", idEleve);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> message) {
@@ -303,7 +303,7 @@ public class Utils {
                 .put(Field.IDETABLISSEMENT, idEtablissement)
                 .put(Field.IDELEVES, new fr.wseduc.webutils.collections.JsonArray().add(idEleve));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> message) {
@@ -362,7 +362,7 @@ public class Utils {
                 .put(ID_PERIODE_KEY, idPeriode)
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idClasses)));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
 
@@ -398,7 +398,7 @@ public class Utils {
                 .put(ID_PERIODE_KEY, idPeriode)
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idsClasse)));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
 
@@ -432,7 +432,7 @@ public class Utils {
                 .put(ID_PERIODE_KEY, idPeriode)
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
             if (OK.equals(body.getString(STATUS))) {
@@ -500,7 +500,7 @@ public class Utils {
                 .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissment)
                 .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idEleves)));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(response -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(response -> {
             JsonObject bodyResponse = response.body();
 
             if (OK.equals(bodyResponse.getString(STATUS))) {
@@ -648,7 +648,7 @@ public class Utils {
                 .put(ACTION, "classe.getClasseEtablissement")
                 .put(ID_ETABLISSEMENT_KEY, idStructure);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
                     if (OK.equals(body.getString(STATUS))) {
@@ -680,7 +680,7 @@ public class Utils {
                 .put(ACTION, "periode.getDatesDtFnAnneeByClasse")
                 .put("idEtablissement", idStructure)
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(idClasses));
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
@@ -722,7 +722,7 @@ public class Utils {
         JsonObject action = new JsonObject()
                 .put(ACTION, "matiere.getMatieres")
                 .put("idMatieres", idsMatieres);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
@@ -803,7 +803,7 @@ public class Utils {
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getUsers")
                 .put("idUsers", idsUsers);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
 
                     JsonObject body = message.body();
@@ -842,7 +842,7 @@ public class Utils {
         JsonObject action2 = new JsonObject()
                 .put(ACTION,"user.getDeletedTeachers")
                 .put("idsTeacher", idsTeacherNotInNeo);
-        eb.send(VIESCO_BUS_ADDRESS, action2, DELIVERY_OPTIONS,
+        eb.request(VIESCO_BUS_ADDRESS, action2, DELIVERY_OPTIONS,
                 handlerToAsyncHandler(event -> {
                     JsonObject bodyDeletedUsers = event.body();
                     if(OK.equals(bodyDeletedUsers.getString(STATUS)) &&
@@ -886,7 +886,7 @@ public class Utils {
                 .put(ID_CLASSE_KEY, idClasse)
                 .put("idPeriode", idPeriode);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();

@@ -2,8 +2,11 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.CompetenceNoteService;
 import fr.openent.competences.service.ServiceFactory;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.eventbus.Message;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -80,7 +83,7 @@ public class DefaultCompetenceNoteServiceTest {
             ctx.assertEquals(paramsResult, expectedParams);
             async.complete();
             return null;
-        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
+        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any(Handler.class));
 
         Whitebox.invokeMethod(competenceNoteService, "getSubjectSkillsValidatedPercentageRequest",
                 STRUCTURE_ID, STUDENT_IDS, PERIOD_ID, GROUP_ID, true);

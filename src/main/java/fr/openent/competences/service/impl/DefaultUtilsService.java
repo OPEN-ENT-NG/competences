@@ -116,7 +116,7 @@ public class DefaultUtilsService implements UtilsService {
                 .put("structureId", idEtablissement)
                 .put("groupId", idClasse)
                 .put("periodId", idPeriode != null ? idPeriode.toString() : null);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray result = body.getJsonArray(RESULTS);
@@ -151,7 +151,7 @@ public class DefaultUtilsService implements UtilsService {
                 .put(Field.STRUCTUREID, structureId)
                 .put(Field.GROUPIDS, groupIds)
                 .put(Field.PERIODEID, periodId != null ? periodId.toString() : null);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray result = body.getJsonArray(RESULTS);
@@ -272,7 +272,7 @@ public class DefaultUtilsService implements UtilsService {
                 .put("action", "service.getDefaultServices")
                 .put("idEtablissement", structureId)
                 .put("idsGroupe", groupIds);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray results = body.getJsonArray(RESULTS);
@@ -302,7 +302,7 @@ public class DefaultUtilsService implements UtilsService {
                 .put("idEtablissement", structureId)
                 .put("idsGroupe", groupIds)
                 .put("filters", filters);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 JsonArray results = body.getJsonArray(RESULTS);
@@ -317,20 +317,20 @@ public class DefaultUtilsService implements UtilsService {
     @Override
     public void hasService(String idEtablissement, JsonArray idClasses, String idMatiere, Long idPeriode,
                            UserInfos user, Handler<Boolean> handler) {
-        Future<JsonArray> servicesFuture = Future.future();
-        getServices(idEtablissement, idClasses, event -> formate(servicesFuture, event));
+        Promise<JsonArray> servicesPromise = Promise.promise();
+        getServices(idEtablissement, idClasses, event -> formate(servicesPromise, event));
 
-        Future<JsonArray> multiTeachersFuture = Future.future();
+        Promise<JsonArray> multiTeachersPromise = Promise.promise();
         getMultiTeachers(idEtablissement, idClasses, idPeriode != null ? idPeriode.intValue() : null,
-                event -> formate(multiTeachersFuture, event));
+                event -> formate(multiTeachersPromise, event));
 
-        CompositeFuture.all(servicesFuture, multiTeachersFuture).setHandler(event -> {
+        Future.all(servicesPromise.future(), multiTeachersPromise.future()).onComplete(event -> {
             if (event.failed()) {
                 log.error("[Competences] hasService : " + event.cause().getMessage());
                 handler.handle(false);
             } else {
-                JsonArray services = servicesFuture.result();
-                JsonArray multiTeachers = multiTeachersFuture.result();
+                JsonArray services = servicesPromise.future().result();
+                JsonArray multiTeachers = multiTeachersPromise.future().result();
 
                 List<Object> userServices = services.stream()
                         .filter(el -> !user.getUserId().equals(((JsonObject) el).getString("id_enseignant")) ||
@@ -888,7 +888,7 @@ public class DefaultUtilsService implements UtilsService {
             action.put("action", "periode.getPeriodes")
                     .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+            eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                     handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                         @Override
                         public void handle(Message<JsonObject> message) {
@@ -946,7 +946,7 @@ public class DefaultUtilsService implements UtilsService {
                 .put("idGroupes", idClasses)
                 .put("idEtablissement", idEtablissement);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             JsonArray periodes = body.getJsonArray("result");
             if ("ok".equals(body.getString("status"))) {
@@ -959,7 +959,7 @@ public class DefaultUtilsService implements UtilsService {
 
     public Future<JsonArray> getPeriodes(List<String> idClasses, String idEtablissement) {
         Promise<JsonArray> promise = Promise.promise();
-        getPeriodes(idClasses, idEtablissement, FutureHelper.handlerJsonArray(promise.future()));
+        getPeriodes(idClasses, idEtablissement, FutureHelper.handler(promise));
         return promise.future();
     }
 
@@ -1097,31 +1097,31 @@ public class DefaultUtilsService implements UtilsService {
 
     @Override
     public void getParametersForExport(String idStructure, Handler<Either<String, JsonObject>> handler) {
-        Future<JsonObject> imageStructureFuture = Future.future();
+        Promise<JsonObject> imageStructurePromise = Promise.promise();
         getStructureImage(idStructure, event -> {
             if (event.isRight()) {
-                imageStructureFuture.complete(event.right().getValue());
+                imageStructurePromise.complete(event.right().getValue());
             } else {
                 log.error(event.left());
-                imageStructureFuture.complete(new JsonObject());
+                imageStructurePromise.complete(new JsonObject());
             }
         });
 
-        Future<JsonObject> infosCEFuture = Future.future();
+        Promise<JsonObject> infosCEPromise = Promise.promise();
         getInformationCE(idStructure, event -> {
             if (event.isRight()) {
-                infosCEFuture.complete(event.right().getValue());
+                infosCEPromise.complete(event.right().getValue());
             } else {
                 log.error(event.left());
-                infosCEFuture.complete(new JsonObject());
+                infosCEPromise.complete(new JsonObject());
             }
         });
 
-        CompositeFuture.all(infosCEFuture, imageStructureFuture).setHandler(event -> {
+        Future.all(infosCEPromise.future(), imageStructurePromise.future()).onComplete(event -> {
             if (event.succeeded()) {
                 JsonObject result = new JsonObject();
-                result.put("imgStructure", imageStructureFuture.result());
-                result.put("nameAndBrad", infosCEFuture.result());
+                result.put("imgStructure", imageStructurePromise.future().result());
+                result.put("nameAndBrad", infosCEPromise.future().result());
                 handler.handle(new Either.Right<>(result));
             } else {
                 handler.handle(new Either.Left<>(event.cause().getMessage()));
@@ -1370,7 +1370,7 @@ public class DefaultUtilsService implements UtilsService {
         if (idPeriode != null) {
             action.put(ID_PERIODE_KEY, idPeriode);
         }
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(handler));
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(handler));
     }
 
     public void getClassInfo(final String idClass, Handler<Either<String, JsonObject>> handler) {
@@ -1378,7 +1378,7 @@ public class DefaultUtilsService implements UtilsService {
                 .put("action", "classe.getClasseInfo")
                 .put("idClasse", idClass);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
@@ -1438,7 +1438,7 @@ public class DefaultUtilsService implements UtilsService {
                 .put("reasonType", 0)
                 .put("structure", idStructure);
 
-        eb.send("fr.openent.presences", action, MessageResponseHandler.messageJsonArrayHandler(handler));
+        eb.request("fr.openent.presences", action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
 
     /**
@@ -1457,7 +1457,7 @@ public class DefaultUtilsService implements UtilsService {
                 .put("idsClasse", idClasses)
                 .put("idPeriode", idPeriode);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> message) {

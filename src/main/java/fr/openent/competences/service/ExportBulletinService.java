@@ -90,7 +90,7 @@ public interface ExportBulletinService {
   * @param promise handler servant à la synchronisation des services
   */
  void getProjets (Student student,
-                  Promise<Object> promise);
+                  Promise<JsonObject> promise);
 
  /**
   * Récupère la synthèse du bilan périodique d'un élève
@@ -170,7 +170,7 @@ public interface ExportBulletinService {
   * @param student Student to handle
   * @param promise handler servant à la synchronisation des services.
   */
- void getArbreDomaines(Student student, Promise<Object> promise);
+ void getArbreDomaines(Student student, Promise<JsonObject> promise);
 
 
  /**
@@ -232,19 +232,19 @@ public interface ExportBulletinService {
   * @param idStudents
   * @param idPeriode
   * @param params
-  * @param elevesFuture
+  * @param elevesPromise
   * @param elevesMap
   * @param answered
   * @param host de la request
   * @param acceptLanguage de la request
   * @param finalHandler
-  * @param future
+  * @param promise
   * @param vertx
   */
  void runExportBulletin(String idEtablissement, String idClasse, JsonArray idStudents, Long idPeriode,
-                        JsonObject params, Future<JsonArray> elevesFuture, final Map<String, JsonObject> elevesMap,
+                        JsonObject params, Promise<JsonArray> elevesPromise, final Map<String, JsonObject> elevesMap,
                         final AtomicBoolean answered, String host, String acceptLanguage,
-                        final Handler<Either<String, JsonObject>> finalHandler, Future<JsonObject> future, Vertx vertx);
+                        final Handler<Either<String, JsonObject>> finalHandler, Promise<JsonObject> promise, Vertx vertx);
 
 
 

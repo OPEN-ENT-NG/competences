@@ -1,6 +1,6 @@
 package fr.openent.competences.service.impl;
 
-import com.mongodb.QueryBuilder;
+import com.mongodb.client.model.Filters;
 import fr.openent.competences.enums.report_model_print_export.ReportModelPrintExportMongo;
 import fr.openent.competences.model.ReportModelPrintExport;
 import fr.openent.competences.service.ReportModelPrintExportService;
@@ -9,6 +9,7 @@ import fr.wseduc.mongodb.MongoUpdateBuilder;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
+import org.bson.conversions.Bson;
 import org.entcore.common.service.impl.MongoDbCrudService;
 
 import static org.entcore.common.mongodb.MongoDbResult.validActionResultHandler;
@@ -39,8 +40,7 @@ public class DefaultReportModelPrintExportService extends MongoDbCrudService imp
 
     public void putReportModel(ReportModelPrintExport reportModelPrintExport, Handler<Either<String, JsonObject>> handler){
         JsonObject jsonReportModel = reportModelPrintExport.toJsonObject();
-        QueryBuilder matcher = QueryBuilder.start(ReportModelPrintExportMongo.KEY_ID.getString())
-                .is(reportModelPrintExport.getId());
+        Bson matcher = Filters.eq(ReportModelPrintExportMongo.KEY_ID.getString(), reportModelPrintExport.getId());
 
         MongoUpdateBuilder update = new MongoUpdateBuilder();
         jsonReportModel.remove(ReportModelPrintExportMongo.KEY_ID.getString());

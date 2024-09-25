@@ -4,6 +4,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.DevoirService;
 import fr.openent.competences.service.ServiceFactory;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.unit.Async;
@@ -78,7 +79,7 @@ public class DefaultDevoirServiceTest {
             async.complete();
             return null;
 
-        }).when(sql).prepared(Mockito.anyString(),Mockito.any(), Mockito.any());
+        }).when(sql).prepared(Mockito.anyString(),Mockito.any(), Mockito.any(Handler.class));
         Whitebox.invokeMethod(devoirService,"listDevoirs",
                 (String)null, STRUCTURE_ID,null, null, null, HISTORISE);
         async.awaitSuccess(10000);
@@ -144,7 +145,7 @@ public class DefaultDevoirServiceTest {
             async.complete();
             return null;
 
-        }).when(sql).prepared(Mockito.anyString(),Mockito.any(), Mockito.any());
+        }).when(sql).prepared(Mockito.anyString(),Mockito.any(), Mockito.any(Handler.class));
         Whitebox.invokeMethod(devoirService,"listDevoirs",
                 STUDENT_ID, STRUCTURE_ID,CLASS_ID, SUBJECT_ID, PERIOD_ID, HISTORISE);
         async.awaitSuccess(10000);

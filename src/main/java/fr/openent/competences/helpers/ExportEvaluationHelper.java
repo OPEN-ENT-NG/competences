@@ -5,6 +5,7 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -41,81 +42,80 @@ public class ExportEvaluationHelper {
 
 
 
-    public static Future getStudents(JsonObject devoir , EventBus eb, String idGroupe , JsonArray eleves){
-        Future future = Future.future();
+    public static Promise<Void> getStudents(JsonObject devoir , EventBus eb, String idGroupe , JsonArray eleves){
+        Promise<Void> promise = Promise.promise();
         JsonObject action = new JsonObject()
                 .put(ACTION, "classe.getElevesClasses")
                 .put(ID_CLASSES_KEY, new JsonArray().add(idGroupe))
                 .put(ID_PERIODE_KEY, devoir.getLong(ID_PERIODE));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler( message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler( message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
                 eleves.addAll(body.getJsonArray(RESULTS));
-                future.complete();
+                promise.complete();
             }
             else{
                 String error = "getDevoirsInfos : devoir > cannot  getStudents " + idGroupe;
                 log.error(error + "\n" + body.encode() + "\n");
-                future.fail(error);
+                promise.fail(error);
             }
 
         }));
-        return future;
+        return promise;
     }
 
-    public static Future getClasseDevoir(JsonObject devoir , Map<String, Object> devoirMap, EventBus eb) {
-        Future future = Future.future();
+    public static Promise<Void> getClasseDevoir(JsonObject devoir , Map<String, Object> devoirMap, EventBus eb) {
+        Promise<Void> promise = Promise.promise();
         JsonObject action = new JsonObject()
                 .put(ACTION, "classe.getClasseInfo")
                 .put(ID_CLASSE_KEY, devoir.getString("id_groupe"));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action,  DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action,  DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
             if (OK.equals(body.getString(STATUS))) {
                 devoirMap.put("classe", body.getJsonObject(RESULT).getJsonObject("c").getJsonObject("data")
                         .getString(NAME));
-                future.complete();
+                promise.complete();
             }
             else{
                 String error = "getDevoirsInfos : devoir '" + devoirMap.get(ID_KEY) + "), couldn't get class name.";
                 log.error(error);
-                future.fail(error);
+                promise.fail(error);
             }
         }));
-        return future;
+        return promise;
     }
 
-    public  static Future getMatiereDevoir(JsonObject devoir, Map<String, Object> devoirMap, EventBus eb){
+    public  static Promise<Void> getMatiereDevoir(JsonObject devoir, Map<String, Object> devoirMap, EventBus eb){
 
-        Future future = Future.future();
+        Promise<Void> promise = Promise.promise();
         JsonObject matiereAction = new JsonObject()
                 .put(ACTION, "matiere.getMatiere")
                 .put(ID_MATIERE_KEY, devoir.getString(ID_MATIERE));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, matiereAction, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+        eb.request(Competences.VIESCO_BUS_ADDRESS, matiereAction, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
             if (OK.equals(body.getString(STATUS))) {
                 devoirMap.put("matiere", body.getJsonObject(RESULT).getJsonObject("n").getJsonObject("data")
                         .getString("label"));
-                future.complete();
+                promise.complete();
             } else {
                 String error = "getDevoirsInfos : devoir '" +devoirMap.get(ID_KEY)+ "), couldn't get matiere name.";
                 log.error(error);
-                future.fail(error);
+                promise.fail(error);
             }
         }));
-        return  future;
+        return promise;
     }
 
-    public  static Future getNiveauDeMaitriseDevoir(JsonObject devoir, Boolean onlyEvaluation, JsonArray maitrises) {
+    public  static Promise<JsonArray> getNiveauDeMaitriseDevoir(JsonObject devoir, Boolean onlyEvaluation, JsonArray maitrises) {
 
-        Future<JsonArray> maitriseFuture = Future.future();
-
+        Promise<JsonArray> maitrisePromise = Promise.promise();
         if(onlyEvaluation) {
-            maitriseFuture.complete(new JsonArray());
+            maitrisePromise.complete(new JsonArray());
         }else {
             final String idEtablissement = devoir.getString(ID_ETABLISSEMENT);
             final Long idCycle = devoir.getLong("id_cycle");
@@ -123,88 +123,89 @@ public class ExportEvaluationHelper {
                     event -> {
                         if(event.isRight()) {
                             maitrises.addAll(event.right().getValue());
-                            maitriseFuture.complete();
+                            maitrisePromise.complete();
                         }
                         else {
                             String error = event.left().getValue();
                             log.error(error);
-                            maitriseFuture.fail(error);
+                            maitrisePromise.fail(error);
                         }
                     });
         }
-        return maitriseFuture;
+        return maitrisePromise;
     }
    
 
 
-    public static Future getCompetencesNotesDevoir(Long idDevoir, Boolean onlyEvaluation, JsonArray competencesNotes) {
-        Future future = Future.future();
+    public static Promise<Void> getCompetencesNotesDevoir(Long idDevoir, Boolean onlyEvaluation, JsonArray competencesNotes) {
+        Promise<Void> promise = Promise.promise();
+
         if (onlyEvaluation) {
-            future.complete();
+            promise.complete();
         }
         else {
             new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE)
                     .getCompetencesNotesDevoir(idDevoir, event -> {
                         if(event.isLeft()){
-                            future.fail(event.left().getValue());
+                            promise.fail(event.left().getValue());
                         }
                         else{
                             competencesNotes.addAll(event.right().getValue());
-                            future.complete();
+                            promise.complete();
                         }
                     });
         }
-        return future;
+        return promise;
     }
 
-    public static Future getDevoirCompetences(Long idDevoir, Boolean onlyEvaluation,
+    public static Promise<Void> getDevoirCompetences(Long idDevoir, Boolean onlyEvaluation,
                                               EventBus eb, JsonArray competences) {
-        Future future = Future.future();
+        Promise<Void> promise = Promise.promise();
         if (onlyEvaluation) {
-            future.complete();
+            promise.complete();
         }
         else {
             new DefaultCompetencesService(eb).getDevoirCompetences(idDevoir, null, event -> {
                 if(event.isLeft()){
-                    future.fail(event.left().getValue());
+                    promise.fail(event.left().getValue());
                 }
                 else{
                     competences.addAll(event.right().getValue());
-                    future.complete();
+                    promise.complete();
                 }
             });
         }
-        return future;
+        return promise;
     }
 
-    public static Future listNotes(Long idDevoir, EventBus eb, JsonArray notes) {
-        Future future = Future.future();
+    public static Promise<Void> listNotes(Long idDevoir, EventBus eb, JsonArray notes) {
+        Promise<Void> promise = Promise.promise();
         new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb)
                 .listNotesParDevoir(idDevoir, event -> {
                     if(event.isLeft()){
-                        future.fail(event.left().getValue());
+                        promise.fail(event.left().getValue());
                     }
                     else{
                         notes.addAll(event.right().getValue());
-                        future.complete();
+                        promise.complete();
                     }
                 });
-        return future;
+        return promise;
     }
 
-    public static Future listAnnotations(String idEtablissement, JsonArray annotations) {
-        Future future = Future.future();
+    public static Promise<Void> listAnnotations(String idEtablissement, JsonArray annotations) {
+        Promise<Void> promise = Promise.promise();
         new DefaultAnnotationService(Competences.COMPETENCES_SCHEMA, Competences.REL_ANNOTATIONS_DEVOIRS_TABLE)
                 .listAnnotations(idEtablissement, event -> {
                     if(event.isLeft()){
-                        future.fail(event.left().getValue());
+                        promise.fail(event.left().getValue());
                     }
                     else{
                         annotations.addAll(event.right().getValue());
-                        future.complete();
+                        promise.complete();
                     }
                 });
-        return future;
+        return promise;
     }
 
 

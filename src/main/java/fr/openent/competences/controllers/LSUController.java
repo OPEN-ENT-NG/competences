@@ -252,7 +252,7 @@ public class LSUController extends ControllerHelper {
                     JsonObject action = new JsonObject()
                             .put("action", "user.getResponsablesDirection")
                             .put("idStructure", request.params().get("idStructure"));
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                    eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                         @Override
                         public void handle(Message<JsonObject> message) {
                             JsonObject body = message.body();
@@ -308,46 +308,46 @@ public class LSUController extends ControllerHelper {
             }
         };
 
-        List<Future> listFutureGetMethodsBFC = new ArrayList<>();
+        List<Future<?>> listFutureGetMethodsBFC = new ArrayList<>();
 
-        Future<JsonObject> getEnteteFuture = Future.future();
-        listFutureGetMethodsBFC.add(getEnteteFuture);
+        Promise<Void> getEntetePromise = Promise.promise();
+        listFutureGetMethodsBFC.add(getEntetePromise.future());
         Handler<String> getEnteteHandler = event -> {
             if (event.equals("success")) {
-                getEnteteFuture.complete();
+                getEntetePromise.complete();
             } else {
-                getEnteteFuture.fail("can't generate Balises Entete Future");
+                getEntetePromise.fail("can't generate Balises Entete Future");
                 log.error("getXML : getBaliseEntete " + event);
             }
         };
         getBaliseEntete(lsunBilans, idStructure, getEnteteHandler);
 
-        Future<JsonObject> getResponsableFuture = Future.future();
-        listFutureGetMethodsBFC.add(getResponsableFuture);
+        Promise<Void> getResponsablePromise = Promise.promise();
+        listFutureGetMethodsBFC.add(getResponsablePromise.future());
         Handler<String> getResponsableHandler = event -> {
             if (event.equals("success")) {
-                getResponsableFuture.complete();
+                getResponsablePromise.complete();
             } else {
-                getResponsableFuture.fail("can't generate Balises Responsables Future");
+                getResponsablePromise.fail("can't generate Balises Responsables Future");
                 log.error("getXML : getBaliseResponsable " + event);
             }
         };
         getBaliseResponsables(donnees, idsResponsable, getResponsableHandler);
 
-        Future<JsonObject> getElevesFuture = Future.future();
-        listFutureGetMethodsBFC.add(getElevesFuture);
+        Promise<Void> getElevesPromise = Promise.promise();
+        listFutureGetMethodsBFC.add(getElevesPromise.future());
         Handler<String> getElevesHandler = event -> {
             if (event.equals("success")) {
-                getElevesFuture.complete();
+                getElevesPromise.complete();
             } else {
-                getElevesFuture.fail(event);
+                getElevesPromise.fail(event);
                 log.error("getXML : getBaliseEleves " + event);
             }
         };
         getBaliseEleves(donnees, idsClasse, getElevesHandler);
 
-        Future<Map<String,List<Enseignant>>> getHeadTeachersFuture = Future.future();
-        listFutureGetMethodsBFC.add(getHeadTeachersFuture);
+        Promise<Map<String,List<Enseignant>>> getHeadTeachersPromise = Promise.promise();
+        listFutureGetMethodsBFC.add(getHeadTeachersPromise.future());
         Handler<String> getHeadTeachersHandler = event -> {
             Map<String,List<Enseignant>> mapIdClassListHeadTeacher = new HashMap<>();
             if(event.equals("success")){
@@ -365,50 +365,50 @@ public class LSUController extends ControllerHelper {
                         mapIdClassListHeadTeacher.put(jsonArrayEntry.getKey(),listHeadTeacher);
                     }
                 }
-                getHeadTeachersFuture.complete(mapIdClassListHeadTeacher);
+                getHeadTeachersPromise.complete(mapIdClassListHeadTeacher);
             }else{
-                getHeadTeachersFuture.complete(mapIdClassListHeadTeacher);
+                getHeadTeachersPromise.complete(mapIdClassListHeadTeacher);
                 log.error("getXML LSU : getHeadteachers "+ event);
             }
         };
         getHeadTeachers( idsClasse, mapIdClassHeadTeacher,getHeadTeachersHandler);
 
-        Future<Map<String, JsonObject>> getDatesCreationVerrouByClassesFuture = Future.future();
-        listFutureGetMethodsBFC.add(getDatesCreationVerrouByClassesFuture);
+        Promise<Map<String, JsonObject>> getDatesCreationVerrouByClassesPromise = Promise.promise();
+        listFutureGetMethodsBFC.add(getDatesCreationVerrouByClassesPromise.future());
         Handler<Either<String, Map<String, JsonObject>>> getDatesCreationVerrouHandler = event -> {
             if(event.isRight()){
-                getDatesCreationVerrouByClassesFuture.complete(event.right().getValue());
+                getDatesCreationVerrouByClassesPromise.complete(event.right().getValue());
             }else{
                 log.error("getXML LSU : getDatesCreationVerrouByClasses " + event);
-                getDatesCreationVerrouByClassesFuture.fail("getXML LSU : getDatesCreationVerrouByClasses " +
+                getDatesCreationVerrouByClassesPromise.fail("getXML LSU : getDatesCreationVerrouByClasses " +
                         event.left().getValue());
             }
         };
         Utils.getDatesCreationVerrouByClasses(eb, idStructure, idsClasse, getDatesCreationVerrouHandler);
 
-        Future<List<Map>> getIdClassIdCycleValueFuture = Future.future();
-        listFutureGetMethodsBFC.add(getIdClassIdCycleValueFuture);
+        Promise<List<Map>> getIdClassIdCycleValuePromise = Promise.promise();
+        listFutureGetMethodsBFC.add(getIdClassIdCycleValuePromise.future());
         Handler<Either<String, List<Map>>> getIdClassIdCycleValueHandler = event -> {
             if(event.isRight()){
-                getIdClassIdCycleValueFuture.complete(event.right().getValue());
+                getIdClassIdCycleValuePromise.complete(event.right().getValue());
             }else{
                 log.error("getXML LSU : getIdClassIdCycleValue : list (map<idclasse,idCycle>,map<idCycle,cycle>) " +
                         event.left().getValue());
-                getIdClassIdCycleValueFuture.fail(
+                getIdClassIdCycleValuePromise.fail(
                         "getXML LSU : getIdClassIdCycleValue : list (map<idclasse,idCycle>,map<idCycle,cycle>) "
                                 + event.left().getValue());
             }
         };
         lsuService.getIdClassIdCycleValue(idsClasse, getIdClassIdCycleValueHandler );
 
-        Future<Map<String,Map<Long, String>>> getMapIdClassCodeDomaineByIdFuture = Future.future();
-        listFutureGetMethodsBFC.add(getMapIdClassCodeDomaineByIdFuture);
+        Promise<Map<String,Map<Long, String>>> getMapIdClassCodeDomaineByIdPromise = Promise.promise();
+        listFutureGetMethodsBFC.add(getMapIdClassCodeDomaineByIdPromise.future());
         Handler<Either<String, Map<String,Map<Long, String>>>> getMapCodeDomaineByIdHandler = event -> {
             if(event.isRight()){
-                getMapIdClassCodeDomaineByIdFuture.complete(event.right().getValue());
+                getMapIdClassCodeDomaineByIdPromise.complete(event.right().getValue());
             }else{
                 log.error("getXML LSU : getMapCodeDomaineById error when collecting codeDomaineById " + event.left().getValue());
-                getMapIdClassCodeDomaineByIdFuture.fail("getMapCodeDomaineById : map<");
+                getMapIdClassCodeDomaineByIdPromise.fail("getMapCodeDomaineById : map<");
             }
         };
         lsuService.getMapIdClassCodeDomaineById(idsClasse,getMapCodeDomaineByIdHandler);
@@ -416,12 +416,12 @@ public class LSUController extends ControllerHelper {
         lsunBilans.setSchemaVersion("7.0");
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
-            CompositeFuture.all(listFutureGetMethodsBFC).setHandler(event -> {
+            Future.all(listFutureGetMethodsBFC).onComplete(event -> {
                 if(event.succeeded()){
-                    Map<String, JsonObject> dateCreationVerrouByClasse = getDatesCreationVerrouByClassesFuture.result();
-                    Map<String,List<Enseignant>> mapIdClassListHeadTeacher = getHeadTeachersFuture.result();
-                    List<Map> listMapClassCycle = getIdClassIdCycleValueFuture.result();
-                    Map<String,Map<Long,String>> mapIdClasseCodesDomaines = getMapIdClassCodeDomaineByIdFuture.result();
+                    Map<String, JsonObject> dateCreationVerrouByClasse = getDatesCreationVerrouByClassesPromise.future().result();
+                    Map<String,List<Enseignant>> mapIdClassListHeadTeacher = getHeadTeachersPromise.future().result();
+                    List<Map> listMapClassCycle = getIdClassIdCycleValuePromise.future().result();
+                    Map<String,Map<Long,String>> mapIdClasseCodesDomaines = getMapIdClassCodeDomaineByIdPromise.future().result();
                     getBaliseBilansCycle(mapIdClasseCodesDomaines, listMapClassCycle, donnees, idsClasse, idStructure,
                             dateCreationVerrouByClasse, mapIdClassListHeadTeacher, getBilanfinCycleHandler);
                 }else{
@@ -488,14 +488,14 @@ public class LSUController extends ControllerHelper {
             }
         };
 
-        List<Future> listGetFuture = new ArrayList<>();
+        List<Future<Void>> listGetFuture = new ArrayList<>();
 
-        Future getClassGroupsFuture = Future.future();
-        listGetFuture.add(getClassGroupsFuture);
+        Promise<Void> getClassGroupsPromise = Promise.promise();
+        listGetFuture.add(getClassGroupsPromise.future());
         Handler<String> getGroupsClassHandler = event -> {
             if (event.equals("success")) {
                 log.info("getGroupsClass");
-                getClassGroupsFuture.complete();
+                getClassGroupsPromise.complete();
             } else {
                 badRequest(request,"getXML : getGroupsClass " + event);
                 log.error("getXML : getGroupsClass " + event);
@@ -503,12 +503,12 @@ public class LSUController extends ControllerHelper {
         };
         getGroupsClass(idsClasse, idsGroupsClasses, mapIdsGroupsClasses, getGroupsClassHandler);
 
-        Future getCycleFuture = Future.future();
-        listGetFuture.add(getCycleFuture);
+        Promise<Void> getCyclePromise = Promise.promise();
+        listGetFuture.add(getCyclePromise.future());
         Handler<String> getCycleHandler = event -> {
             if (event.equals("success")) {
                 log.info("getCycle");
-                getCycleFuture.complete();
+                getCyclePromise.complete();
             } else {
                 badRequest(request,"getXML : getCycle " + event);
                 log.error("getXML : getCycle " + event);
@@ -516,12 +516,12 @@ public class LSUController extends ControllerHelper {
         };
         getCycle(idsClasse, cyclesByClass, getCycleHandler);
 
-        Future getHeadTeachersFuture = Future.future();
-        listGetFuture.add(getHeadTeachersFuture);
+        Promise<Void> getHeadTeachersPromise = Promise.promise();
+        listGetFuture.add(getHeadTeachersPromise.future());
         Handler<String> getHeadTeachersHandler = event -> {
             if (event.equals("success")) {
                 log.info("getHeadTeachers");
-                getHeadTeachersFuture.complete();
+                getHeadTeachersPromise.complete();
             } else {
                 badRequest(request,"getXML : getBaliseEnseignants " + event);
                 log.error("getXML : getBaliseEnseignants " + event);
@@ -529,100 +529,100 @@ public class LSUController extends ControllerHelper {
         };
         getHeadTeachers(idsClasse, mapIdClassHeadTeachers, getHeadTeachersHandler);
 
-        Future<JsonObject> getTableConversionFuture = Future.future();
-        listGetFuture.add(getTableConversionFuture);
+        Promise<Void> getTableConversionPromise = Promise.promise();
+        listGetFuture.add(getTableConversionPromise.future());
         Handler<String> getTableConversionHandler = event -> {
             if(event.equals("success")){
                 log.info("getConversionTableFuture");
-                getTableConversionFuture.complete();
+                getTableConversionPromise.complete();
             }else{
                 log.error("getXML : getConversionTable ");
-                getTableConversionFuture.fail("can't get the conversion table Future");
+                getTableConversionPromise.fail("can't get the conversion table Future");
             }
         };
         getTableConversion(idStructure, idsClasse, tableConversionByClass, getTableConversionHandler);
 
-        Future<JsonObject> getDisciplineFuture = Future.future();
-        listGetFuture.add(getDisciplineFuture);
+        Promise<Void> getDisciplinePromise = Promise.promise();
+        listGetFuture.add(getDisciplinePromise.future());
         Handler<String> getDisciplineHandler = event -> {
             if (event.equals("success")) {
                 log.info("getDisciplineFuture");
-                getDisciplineFuture.complete();
+                getDisciplinePromise.complete();
             } else {
-                getDisciplineFuture.fail("can't generate Balises Disciplines Future");
+                getDisciplinePromise.fail("can't generate Balises Disciplines Future");
                 log.error("getXML : getBaliseDiscipline " + event);
             }
         };
         getBaliseDisciplines(donnees, idStructure, getDisciplineHandler);
 
-        Future<JsonObject> getResponsableFuture = Future.future();
-        listGetFuture.add(getResponsableFuture);
+        Promise<Void> getResponsablePromise = Promise.promise();
+        listGetFuture.add(getResponsablePromise.future());
         Handler<String> getResponsableHandler = event -> {
             if (event.equals("success")) {
                 log.info("getResponsableFututre");
-                getResponsableFuture.complete();
+                getResponsablePromise.complete();
             } else {
-                getResponsableFuture.fail("can't generate Balises Responsables Future");
+                getResponsablePromise.fail("can't generate Balises Responsables Future");
                 log.error("getXML : getBaliseResponsable " + event);
             }
         };
         getBaliseResponsables(donnees, idsResponsable, getResponsableHandler);
 
-        Future<JsonObject> getEnteteFuture = Future.future();
-        listGetFuture.add(getEnteteFuture);
+        Promise<Void> getEntetePromise = Promise.promise();
+        listGetFuture.add(getEntetePromise.future());
         Handler<String> getEnteteHandler = event -> {
             if (event.equals("success")) {
                 log.info("getEnteteFuture");
-                getEnteteFuture.complete();
+                getEntetePromise.complete();
             } else {
-                getEnteteFuture.fail("can't generate Balises Entete Future");
+                getEntetePromise.fail("can't generate Balises Entete Future");
                 log.error("getXML : getBaliseEntete " + event);
             }
         };
         getBaliseEntete(lsunBilans, idStructure, getEnteteHandler);
 
         // Récupération des élèves à ignorer pour l'export
-        Future<JsonArray> ignoredStudentFuture = Future.future();
+        Promise<JsonArray> ignoredStudentPromise = Promise.promise();
         lsuService.getUnheededStudents(new JsonArray(idsTypePeriodes), new JsonArray(idsClasse),
-                unheededStudents -> formate(ignoredStudentFuture, unheededStudents));
+                unheededStudents -> formate(ignoredStudentPromise, unheededStudents));
 
         lsunBilans.setSchemaVersion("7.0");
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
             Handler<String> getElevesHandler = event -> {
                 if (event.equals("success")) {
-                    CompositeFuture.all(listGetFuture).setHandler(eventFuture -> {
+                    Future.all(listGetFuture).onComplete(eventFuture -> {
                         if (eventFuture.succeeded()) {
-                            List<Future> listGetProjectAndCompNum = new ArrayList();
+                            List<Future<?>> listGetProjectAndCompNum = new ArrayList();
 
-                            Future futureProject = Future.future();
-                            listGetProjectAndCompNum.add(futureProject);
+                            Promise<Void> projectPromise = Promise.promise();
+                            listGetProjectAndCompNum.add(projectPromise.future());
                             Handler<String> getProjectHandler = project -> {
                                 if(project.equals("success")){
-                                    futureProject.complete();
+                                    projectPromise.complete();
                                 } else {
-                                    futureProject.fail("getXML : getApEpiParcoursBalises");
+                                    projectPromise.fail("getXML : getApEpiParcoursBalises");
                                     log.error("getXML : getApEpiParcoursBalises " + project);
                                 }
                             };
                             getApEpiParcoursBalises(donnees, idsGroupsClasses, idStructure, epiGroupAdded,
                                     enseignantFromSts, getProjectHandler);
 
-                            Future futureCompNumCommun = Future.future();
-                            listGetProjectAndCompNum.add(futureCompNumCommun);
+                            Promise<Void> compNumCommunPromise = Promise.promise();
+                            listGetProjectAndCompNum.add(compNumCommunPromise.future());
                             List<String> idsClasesCycle3 = new ArrayList<>();
                             if(hasClassesWithCycle3(donnees, idsClasse, idsClasesCycle3, cyclesByClass)) {
                                 Handler<String> getBaliseCompNumCommuneHandler = compNumCommun -> {
                                     if(compNumCommun.equals("success")){
-                                        futureCompNumCommun.complete();
+                                        compNumCommunPromise.complete();
                                     } else {
-                                        futureCompNumCommun.fail("getXML : getBaliseCompetencesNumeriqueCommun");
+                                        compNumCommunPromise.fail("getXML : getBaliseCompetencesNumeriqueCommun");
                                         log.error("getXML : log.error(\"getXML : getApEpiParcoursBalises \" + project); " + compNumCommun);
                                     }
                                 };
                                 getBaliseCompetencesNumeriqueCommun(donnees, idsClasesCycle3, getBaliseCompNumCommuneHandler);
                             } else {
-                                futureCompNumCommun.complete();
+                                compNumCommunPromise.complete();
                             }
 
                             List<String> idEleves = donnees.getEleves().getEleve().stream()
@@ -631,25 +631,25 @@ public class LSUController extends ControllerHelper {
                             Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idStructure);
                             listGetProjectAndCompNum.add(subTopicCoefFuture);
 
-                            Future<JsonArray> getAbsencesAndRetardsFuture = Future.future();
-                            listGetProjectAndCompNum.add(getAbsencesAndRetardsFuture);
+                            Promise<JsonArray> getAbsencesAndRetardsPromise = Promise.promise();
+                            listGetProjectAndCompNum.add(getAbsencesAndRetardsPromise.future());
                             bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idEleves, idsClasse,
-                                    absencesEvent -> formate(getAbsencesAndRetardsFuture, absencesEvent));
+                                    absencesEvent -> formate(getAbsencesAndRetardsPromise, absencesEvent));
 
-                            Future<JsonArray> servicesFuture = Future.future();
-                            listGetProjectAndCompNum.add(servicesFuture);
+                            Promise<JsonArray> servicesPromise = Promise.promise();
+                            listGetProjectAndCompNum.add(servicesPromise.future());
                             utilsService.getServices(idStructure, new JsonArray(idsGroupsClasses),
-                                    servicesEvent -> formate(servicesFuture, servicesEvent));
+                                    servicesEvent -> formate(servicesPromise, servicesEvent));
 
-                            Future<JsonArray> multiTeachersFuture = Future.future();
-                            listGetProjectAndCompNum.add(multiTeachersFuture);
+                            Promise<JsonArray> multiTeachersPromise = Promise.promise();
+                            listGetProjectAndCompNum.add(multiTeachersPromise.future());
                             utilsService.getAllMultiTeachers(idStructure, new JsonArray(idsGroupsClasses),
-                                    multiTeachersEvent -> formate(multiTeachersFuture, multiTeachersEvent));
-                            CompositeFuture.all(listGetProjectAndCompNum).setHandler(eventProjectCompNum -> {
+                                    multiTeachersEvent -> formate(multiTeachersPromise, multiTeachersEvent));
+                            Future.all(listGetProjectAndCompNum).onComplete(eventProjectCompNum -> {
                                 if(eventProjectCompNum.succeeded()){
-                                    final JsonArray absencesAndRetards = getAbsencesAndRetardsFuture.result();
-                                    final JsonArray servicesJsonArray = servicesFuture.result();
-                                    final JsonArray multiTeachers = multiTeachersFuture.result();
+                                    final JsonArray absencesAndRetards = getAbsencesAndRetardsPromise.future().result();
+                                    final JsonArray servicesJsonArray = servicesPromise.future().result();
+                                    final JsonArray multiTeachers = multiTeachersPromise.future().result();
                                     List<SubTopic> subTopics = subTopicCoefFuture.result();
 
                                     fr.openent.competences.model.Structure structure = new fr.openent.competences.model.Structure();
@@ -678,10 +678,10 @@ public class LSUController extends ControllerHelper {
 
             Handler<String> getPeriodesHandler = event -> {
                 if (event.equals("success")) {
-                    CompositeFuture.all(ignoredStudentFuture, Future.succeededFuture()).setHandler(eventignoredStudent -> {
+                    Future.all(ignoredStudentPromise.future(), Future.succeededFuture()).onComplete(eventignoredStudent -> {
                         if (eventignoredStudent.succeeded()) {
                             log.info("getAllStudentAndBaliseEleve");
-                            lsuService.setLsuUnheededStudents(ignoredStudentFuture, periodeUnheededStudents);
+                            lsuService.setLsuUnheededStudents(ignoredStudentPromise.future(), periodeUnheededStudents);
                             getAllStudentAndBaliseEleve(request, donnees, idsClasse, periodesByClass, idStructure,
                                     periodeUnheededStudents, getElevesHandler);
                         } else{
@@ -711,7 +711,7 @@ public class LSUController extends ControllerHelper {
                 .put("action", "user.getUAI")
                 .put("idEtabl", idStructure);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     int count = 0;
                     AtomicBoolean answer = new AtomicBoolean(false);
@@ -738,7 +738,7 @@ public class LSUController extends ControllerHelper {
                             String error = body.getString(MESSAGE);
                             count ++;
                             if(error!=null && error.contains(TIME)){
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                                eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                         handlerToAsyncHandler(this));
                             }
                             else {
@@ -757,7 +757,7 @@ public class LSUController extends ControllerHelper {
         JsonObject action = new JsonObject()
                 .put("action", "user.getUsers")
                 .put("idUsers", new fr.wseduc.webutils.collections.JsonArray(idsResponsable));
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     int count = 0;
                     AtomicBoolean answer = new AtomicBoolean(false);
@@ -796,7 +796,7 @@ public class LSUController extends ControllerHelper {
                             String error =  body.getString(MESSAGE);
                             count ++;
                             if (error!=null && error.contains(TIME)){
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                                eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                         handlerToAsyncHandler(this));
                             }
                             else {
@@ -1094,21 +1094,21 @@ public class LSUController extends ControllerHelper {
         final String method = "getBaliseEleves";
 
         // Récupération des élèves de la classe
-        Future<Message<JsonObject>>studentsFuture = Future.future() ;
-        lsuService.getStudents(classids, studentsFuture, count, answer, thread, method);
+        Promise<Message<JsonObject>> studentsPromise = Promise.promise() ;
+        lsuService.getStudents(classids, studentsPromise, count, answer, thread, method);
 
         // Récupération des élèves à ignorer pour l'export
-        Future<JsonArray> ignoredStudentFuture = Future.future();
+        Promise<JsonArray> ignoredStudentPromise = Promise.promise();
         lsuService.getUnheededStudents(new JsonArray(), new JsonArray(classids),
-                unheededStudents -> formate(ignoredStudentFuture, unheededStudents));
+                unheededStudents -> formate(ignoredStudentPromise, unheededStudents));
 
-        CompositeFuture.all(studentsFuture, ignoredStudentFuture).setHandler( event -> {
+        Future.all(studentsPromise.future(), ignoredStudentPromise.future()).onComplete( event -> {
             if(event.failed()) {
                 handler. handle(event.cause().getMessage());
             }
             else {
-                JsonArray allStudents = studentsFuture.result().body().getJsonArray("results");
-                JsonArray ignoratedStudents = ignoredStudentFuture.result();
+                JsonArray allStudents = studentsPromise.future().result().body().getJsonArray("results");
+                JsonArray ignoratedStudents = ignoredStudentPromise.future().result();
 
                 // Suppression des élèves ignorés de la liste des élèves récupérés
                 JsonArray jsonElevesRelatives = lsuService.filterUnheededStrudentsForBfc(allStudents,
@@ -1465,16 +1465,16 @@ public class LSUController extends ControllerHelper {
                                             }
                                             else{
                                                 Map<String, Map<Long, Boolean>> mapIdEleveIdDomainedispense = respDispenseDomaine.right().getValue();
-                                                final List<Future> futureDispensesElevesList = new ArrayList<Future>();
+                                                final List<Future<JsonObject>> futureDispensesElevesList = new ArrayList<>();
                                                 for (String idEleve : idsEleve) {
-                                                    Future<JsonObject> futureDispenseEleve = Future.future();
-                                                    futureDispensesElevesList.add(futureDispenseEleve);
+                                                    Promise<JsonObject> dispenseElevePromise = Promise.promise();
+                                                    futureDispensesElevesList.add(dispenseElevePromise.future());
                                                     JsonArray resultats = repBuildBFC.right().getValue().getJsonArray(idEleve);
                                                     Map<Long, Integer> resultEleves = new HashMap<>();
 
                                                     // si pas de resultats, on passe a l'élève suivant
                                                     if (resultats == null) {
-                                                        futureDispenseEleve.complete();
+                                                        dispenseElevePromise.complete();
                                                         continue;
                                                     }
 
@@ -1514,9 +1514,9 @@ public class LSUController extends ControllerHelper {
                                                     }
 
                                                     resultatsEleves.put(idEleve, resultEleves);
-                                                    futureDispenseEleve.complete();
+                                                    dispenseElevePromise.complete();
                                                 }
-                                                CompositeFuture.all(futureDispensesElevesList).setHandler(
+                                                Future.all(futureDispensesElevesList).onComplete(
                                                         event ->  {
                                                             // log for time-out
                                                             answer.set(true);
@@ -1712,9 +1712,9 @@ public class LSUController extends ControllerHelper {
         }
     }
     private void getBaliseDisciplines(final Donnees donnees, final String idStructure, final Handler<String> handler) {
-        Future<Map<String, String>> libelleCourtFuture = Future.future();
+        Promise<Map<String, String>> libelleCourtPromise = Promise.promise();
         new DefaultMatiereService().getLibellesCourtsMatieres(false, event -> {
-            formate(libelleCourtFuture, event);
+            formate(libelleCourtPromise, event);
         });
         JsonObject action = new JsonObject()
                 .put("action", "matiere.getMatieresForUser")
@@ -1722,8 +1722,8 @@ public class LSUController extends ControllerHelper {
                 .put("idUser", "null")
                 .put("idStructure", idStructure)
                 .put("onlyId", false);
-        Future<JsonArray> disciplines = Future.future();
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+        Promise<JsonArray> disciplinesPromise = Promise.promise();
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     AtomicBoolean answer = new AtomicBoolean(false);
                     AtomicInteger count = new AtomicInteger(0);
@@ -1735,33 +1735,33 @@ public class LSUController extends ControllerHelper {
                         if ("ok".equals(body.getString("status"))) {
                             try {
                                 JsonArray listSubject = body.getJsonArray("results");
-                                disciplines.complete(listSubject);
+                                disciplinesPromise.complete(listSubject);
                                 answer.set(true);
                                 lsuService.serviceResponseOK(answer, count.get(), thread, method);
                             } catch (Throwable e) {
-                                disciplines.fail("method getBaliseResponsable : " + e.getMessage());
+                                disciplinesPromise.fail("method getBaliseResponsable : " + e.getMessage());
                             }
                         } else {
                             String error = body.getString(MESSAGE);
                             lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                             if (error!=null && error.contains(TIME)) {
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                                eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                         handlerToAsyncHandler(this));
                             }
                             else {
                                 String failureMessage = "getBaliseDisciplines discipline :" +
                                         " error eb matiere.getMatieresForUser ko";
-                                disciplines.fail(failureMessage);
+                                disciplinesPromise.fail(failureMessage);
                             }
                         }
                     }}));
 
-        CompositeFuture.all(libelleCourtFuture, disciplines).setHandler(event -> {
+        Future.all(libelleCourtPromise.future(), disciplinesPromise.future()).onComplete(event -> {
             if(event.failed()){
                 handler.handle(event.cause().getMessage());
             }
             else{
-                setDisciplineForStructure(donnees, disciplines.result(), libelleCourtFuture.result(), handler);
+                setDisciplineForStructure(donnees, disciplinesPromise.future().result(), libelleCourtPromise.future().result(), handler);
             }
 
         });
@@ -1851,7 +1851,7 @@ public class LSUController extends ControllerHelper {
                 .put(ACTION, "classe.getGroupesClasse")
                 .put("idClasses", idsClasses);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     int count = 0;
                     AtomicBoolean answer = new AtomicBoolean(false);
@@ -1887,7 +1887,7 @@ public class LSUController extends ControllerHelper {
                             String error = body.getString(MESSAGE);
                             count ++;
                             if(error !=null && error.contains(TIME)){
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                                eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                         handlerToAsyncHandler(this));
                             } else {
                                 handler.handle("method getGroupsClass : error when collecting Groups  " + error);
@@ -1918,13 +1918,13 @@ public class LSUController extends ControllerHelper {
     private void getHeadTeachers( List<String> idsClasse,
                                   Map<String, JsonArray> mapIdClasseHeadTeachers,
                                   final Handler<String> handler){
-        List<Future> listFutureClasses = new ArrayList<Future>();
+        List<Future<Void>> listFutureClasses = new ArrayList<>();
         for(String idClass : idsClasse){
-            Future futureClass = Future.future();
-            listFutureClasses.add(futureClass);
+            Promise<Void> classPromise = Promise.promise();
+            listFutureClasses.add(classPromise.future());
             JsonObject action = new JsonObject();
             action.put("action","classe.getHeadTeachersClasse").put("idClasse", idClass);
-            eb.send(Competences.VIESCO_BUS_ADDRESS,action,Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            eb.request(Competences.VIESCO_BUS_ADDRESS,action,Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                 AtomicBoolean answer = new AtomicBoolean(false);
                 AtomicInteger count = new AtomicInteger(0);
                 final String thread = "( "  + idClass + " )";
@@ -1937,13 +1937,13 @@ public class LSUController extends ControllerHelper {
                     if(!"ok".equals(body.getString("status"))){
                         String error = body.getString(MESSAGE);
                         if (error!=null && error.contains(TIME)) {
-                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                            eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                     handlerToAsyncHandler(this));
                         }
                         else {
                             // log for time-out
                             answer.set(true);
-                            futureClass.complete();
+                            classPromise.complete();
                         }
                         lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
 
@@ -1953,7 +1953,7 @@ public class LSUController extends ControllerHelper {
                         // log for time-out
                         answer.set(true);
                         lsuService.serviceResponseOK(answer, count.get(), thread, method);
-                        futureClass.complete();
+                        classPromise.complete();
 
                     }
 
@@ -1962,7 +1962,7 @@ public class LSUController extends ControllerHelper {
 
 
         }
-        CompositeFuture.all(listFutureClasses).setHandler(
+        Future.all(listFutureClasses).onComplete(
                 event -> handler.handle("success"));
 
     }
@@ -1981,13 +1981,13 @@ public class LSUController extends ControllerHelper {
                         if (responseTableConversion.isRight()) {
                             answer.set(true);
                             JsonArray allTablesConversion = responseTableConversion.right().getValue();
-                            List<Future> listFutureTable = new ArrayList<Future>();
+                            List<Future<JsonObject>> listFutureTable = new ArrayList<>();
 
 
                             for (int i = 0; i < allTablesConversion.size(); i++) {
 
-                                Future<JsonObject> futureTable = Future.future();
-                                listFutureTable.add(futureTable);
+                                Promise<JsonObject> tablePromise = Promise.promise();
+                                listFutureTable.add(tablePromise.future());
 
                                 JsonObject tableConversion = allTablesConversion.getJsonObject(i);
                                 if (tableConversionByClass != null && !tableConversion.isEmpty()
@@ -1998,10 +1998,10 @@ public class LSUController extends ControllerHelper {
                                                 new JsonArray(tableConversion.getString("table_conversion")));
                                     }
                                 }
-                                futureTable.complete();
+                                tablePromise.complete();
                             }
                             lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
-                            CompositeFuture.all(listFutureTable).setHandler(event -> {
+                            Future.all(listFutureTable).onComplete(event -> {
                                 handler.handle("success");
                             });
 
@@ -2110,24 +2110,24 @@ public class LSUController extends ControllerHelper {
                                 handler.handle("success");
                                 log.info(" getElementsBilanPeriodique in getApEpiParcoursBalises");
                             } else {
-                                final List<Future> futuresListApEpiParcours = new ArrayList<>();
+                                final List<Future<JsonObject>> futuresListApEpiParcours = new ArrayList<>();
 
                                 for (int i = 0; i < elementBilanPeriodique.size(); i++) {
-                                    final Future<JsonObject> futureEltBilanPeriodique = Future.future();
-                                    futuresListApEpiParcours.add(futureEltBilanPeriodique);
+                                    final Promise<JsonObject> eltBilanPeriodiquePromise = Promise.promise();
+                                    futuresListApEpiParcours.add(eltBilanPeriodiquePromise.future());
                                     JsonObject element = elementBilanPeriodique.getJsonObject(i);
                                     if (element != null) {
                                         Long typeElement = element.getLong("type");
                                         if (3L == typeElement) { //parcours group
-                                            addParcoursGroup(element, futureEltBilanPeriodique);
+                                            addParcoursGroup(element, eltBilanPeriodiquePromise);
                                         } else if (2L == typeElement) { //ap class/group
-                                            addAccGroup(element, futureEltBilanPeriodique);
+                                            addAccGroup(element, eltBilanPeriodiquePromise);
                                         } else if (1L == typeElement) { //epi group
-                                            addEpiGroup(element, epiGroupAdded, futureEltBilanPeriodique);
+                                            addEpiGroup(element, epiGroupAdded, eltBilanPeriodiquePromise);
                                         }
                                     }
                                 }
-                                CompositeFuture.all(futuresListApEpiParcours).setHandler(eventFutureApEpiParcours -> {
+                                Future.all(futuresListApEpiParcours).onComplete(eventFutureApEpiParcours -> {
                                     handler.handle("success");
                                 });
                             }
@@ -2145,7 +2145,7 @@ public class LSUController extends ControllerHelper {
                         }
                     }
 
-                    private void addParcoursGroup(JsonObject element, Future futureEltBilanPeriodique) {
+                    private void addParcoursGroup(JsonObject element, Promise eltBilanPeriodiquePromise) {
                         if(donnees.getParcoursCommuns() == null){
                             donnees.setParcoursCommuns(objectFactory.createDonneesParcoursCommuns());
                         }
@@ -2172,10 +2172,10 @@ public class LSUController extends ControllerHelper {
                                 parcoursCommun.getParcours().add(parcours);
                             }
                         }
-                        futureEltBilanPeriodique.complete();
+                        eltBilanPeriodiquePromise.complete();
                     }
 
-                    private void addEpiGroup(JsonObject element, JsonObject epiGroupAdded, Future futureEltBilanPeriodique) {
+                    private void addEpiGroup(JsonObject element, JsonObject epiGroupAdded, Promise eltBilanPeriodiquePromise) {
                         if (element != null
                                 && !element.isEmpty()
                                 && element.containsKey("id")
@@ -2208,17 +2208,17 @@ public class LSUController extends ControllerHelper {
                             EpiGroupe.EnseignantsDisciplines enseignantsDisciplinesEpi = objectFactory.createEpiGroupeEnseignantsDisciplines();
 
                             JsonArray intervenantsMatieres = element.getJsonArray("intervenantsMatieres");
-                            final List<Future> futureMyResponse1Lst = new ArrayList<>();
+                            final List<Future<JsonObject>> futureMyResponse1Lst = new ArrayList<>();
 
                             for (int j = 0; j < intervenantsMatieres.size(); j++) {
-                                final Future<JsonObject> resp1FutureComposite = Future.future();
-                                futureMyResponse1Lst.add(resp1FutureComposite);
+                                final Promise<JsonObject> resp1Promise = Promise.promise();
+                                futureMyResponse1Lst.add(resp1Promise.future());
                                 addEnseignantDiscipline(intervenantsMatieres.getJsonObject(j),
                                         enseignantsDisciplinesEpi.getEnseignantDiscipline(), epi.getDisciplineRefs(),
-                                        donnees, enseignantFromSts, resp1FutureComposite);
+                                        donnees, enseignantFromSts, resp1Promise);
                             }
 
-                            CompositeFuture.all(futureMyResponse1Lst).setHandler(event -> {
+                            Future.all(futureMyResponse1Lst).onComplete(event -> {
                                 epiGroupe.setId(EPI_GROUPE + element.getInteger("id"));
                                 epiGroupe.setEpiRef(epi);
                                 String libelle = element.getString("libelle");
@@ -2237,7 +2237,7 @@ public class LSUController extends ControllerHelper {
                                             .put(NAME,libelle)
                                             .put("groupes", groupes)
                                             .put("intervenantsMatieres", intervenantsMatieres));
-                                    futureEltBilanPeriodique.complete();
+                                    eltBilanPeriodiquePromise.complete();
                                     return;
                                 }
 
@@ -2265,7 +2265,7 @@ public class LSUController extends ControllerHelper {
                                 }
                                 donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
 
-                                futureEltBilanPeriodique.complete();
+                                eltBilanPeriodiquePromise.complete();
                             });
                         }
                     }
@@ -2273,7 +2273,7 @@ public class LSUController extends ControllerHelper {
                     private void addEnseignantDiscipline(JsonObject currentIntervenantMatiere,
                                                          List<EnseignantDiscipline> enseignantDiscipline,
                                                          List<Object> disciplineRefs, final Donnees donnees,
-                                                         final JsonArray enseignantFromSts, final Future<JsonObject> resp1FutureComposite) {
+                                                         final JsonArray enseignantFromSts, final Promise<JsonObject> resp1Promise) {
                         Discipline currentSubj = getDisciplineInXML(currentIntervenantMatiere.getJsonObject("matiere").getString("id"), donnees);
                         if (currentSubj != null) {
                             Enseignant currentEnseignant = getEnseignantInXML(
@@ -2287,21 +2287,21 @@ public class LSUController extends ControllerHelper {
                                                 Enseignant newEnseignant = getEnseignantInXML(
                                                         currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
                                                 finalInsertAddEnseignantDiscipline(enseignantDiscipline, disciplineRefs,
-                                                        resp1FutureComposite, currentSubj, newEnseignant);
+                                                        resp1Promise, currentSubj, newEnseignant);
                                             }
                                         });
                             }else {
-                                finalInsertAddEnseignantDiscipline(enseignantDiscipline, disciplineRefs, resp1FutureComposite, currentSubj, currentEnseignant);
+                                finalInsertAddEnseignantDiscipline(enseignantDiscipline, disciplineRefs, resp1Promise, currentSubj, currentEnseignant);
                             }
                             lsuService.addIdsEvaluatedDiscipline(currentSubj.getId().replaceAll(DISCIPLINE_KEY, ""));
                         } else {
                             log.info("addEnseignantDiscipline no completed " + currentIntervenantMatiere.getJsonObject("intervenant").getString("displayName"));
-                            resp1FutureComposite.complete();
+                            resp1Promise.complete();
                         }
                     }
 
                     private void finalInsertAddEnseignantDiscipline(List<EnseignantDiscipline> enseignantDiscipline, List<Object> disciplineRefs,
-                                                                    final Future<JsonObject> resp1FutureComposite, Discipline currentSubj,
+                                                                    final Promise<JsonObject> resp1Promise, Discipline currentSubj,
                                                                     Enseignant currentEnseignant) {
                         if (currentEnseignant != null) {
                             EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
@@ -2317,10 +2317,10 @@ public class LSUController extends ControllerHelper {
                                 disciplineRefs.add(currentSubj);
                             }
                         }
-                        resp1FutureComposite.complete();
+                        resp1Promise.complete();
                     }
 
-                    private void addAccGroup(JsonObject element, Future futureEltBilanPeriodique) {
+                    private void addAccGroup(JsonObject element, Promise eltBilanPeriodiquePromise) {
                         if (element != null
                                 && !element.isEmpty()
                                 && element.containsKey("id")
@@ -2344,17 +2344,17 @@ public class LSUController extends ControllerHelper {
                                     objectFactory.createAccPersoGroupeEnseignantsDisciplines();
 
                             JsonArray intervenantsMatieres = element.getJsonArray("intervenantsMatieres");
-                            final List<Future> futureMyResponse1Lst = new ArrayList<>();
+                            final List<Future<JsonObject>> futureMyResponse1Lst = new ArrayList<>();
 
                             for (int i = 0; i < intervenantsMatieres.size(); i++) {
-                                final Future<JsonObject> resp1FutureComposite = Future.future();
-                                futureMyResponse1Lst.add(resp1FutureComposite);
+                                final Promise<JsonObject> resp1Promise = Promise.promise();
+                                futureMyResponse1Lst.add(resp1Promise.future());
                                 addEnseignantDiscipline(intervenantsMatieres.getJsonObject(i),
                                         enseignantsDisciplinesAcc.getEnseignantDiscipline(), accPerso.getDisciplineRefs(),
-                                        donnees, enseignantFromSts, resp1FutureComposite);
+                                        donnees, enseignantFromSts, resp1Promise);
                             }
 
-                            CompositeFuture.all(futureMyResponse1Lst).setHandler(event -> {
+                            Future.all(futureMyResponse1Lst).onComplete(event -> {
                                 accPersoGroupe.setId(ACC_GROUPE + element.getInteger("id"));
                                 accPersoGroupe.setAccPersoRef(accPerso);
                                 accPersoGroupe.setEnseignantsDisciplines(enseignantsDisciplinesAcc);
@@ -2367,7 +2367,7 @@ public class LSUController extends ControllerHelper {
 
                                 donnees.getAccPersos().getAccPerso().add(accPerso);
                                 donnees.getAccPersosGroupes().getAccPersoGroupe().add(accPersoGroupe);
-                                futureEltBilanPeriodique.complete();
+                                eltBilanPeriodiquePromise.complete();
                             });
                         }
                     }
@@ -2556,14 +2556,14 @@ public class LSUController extends ControllerHelper {
                     response.put("status", 200);
                     getOut.handle(new Either.Right<String, JsonObject>(response));
                 } else{
-                    Future<JsonObject> getAppreciationsFuture = Future.future();
-                    Future<JsonObject> getSuiviAcquisFuture = Future.future();
-                    Future<JsonObject> getSyntheseFuture = Future.future();
-                    Future<JsonObject> getDigitalSkillsFuture = Future.future();
+                    Promise<JsonObject> getAppreciationsPromise = Promise.promise();
+                    Promise<JsonObject> getSuiviAcquisPromise = Promise.promise();
+                    Promise<JsonObject> getSynthesePromise = Promise.promise();
+                    Promise<JsonObject> getDigitalSkillsPromise = Promise.promise();
                     final BilanPeriodique bilanPeriodique = objectFactory.createBilanPeriodique();
 
-                    CompositeFuture.all(getAppreciationsFuture, getSuiviAcquisFuture,
-                            getSyntheseFuture, getDigitalSkillsFuture).setHandler(event -> {
+                    Future.all(getAppreciationsPromise.future(), getSuiviAcquisPromise.future(),
+                            getSynthesePromise.future(), getDigitalSkillsPromise.future()).onComplete(event -> {
                         if (event.succeeded()) {
                             response.put("status", 200);
                             getOut.handle(new Either.Right<String, JsonObject>(response));
@@ -2615,7 +2615,7 @@ public class LSUController extends ControllerHelper {
                                 setError(errorsExport, currentEleve, messageError, null);
                                 String error = eventSynthese.left().getValue();
                                 if (error != null && error.contains(TIME)) {
-                                    if (getSyntheseFuture.isComplete()) {
+                                    if (getSynthesePromise.future().isComplete()) {
                                         return;
                                     }
                                     syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(idPeriode, idEleve, idStructure, this);
@@ -2632,7 +2632,7 @@ public class LSUController extends ControllerHelper {
                                             currentPeriode.getLabel();
                                     setError(errorsExport, currentEleve, messageError, null);
                                 }
-                                getSyntheseFuture.complete();
+                                getSynthesePromise.complete();
                             }
                         }
                     });
@@ -2683,7 +2683,7 @@ public class LSUController extends ControllerHelper {
                                     }
                                     lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                                     if (answer.get()) {
-                                        getAppreciationsFuture.complete();
+                                        getAppreciationsPromise.complete();
                                     }
                                 }
 
@@ -2793,11 +2793,11 @@ public class LSUController extends ControllerHelper {
                                 public void handle(Either<String, JsonArray> suiviAcquisResponse) {
                                     if (suiviAcquisResponse.isLeft()) {
                                         String error = suiviAcquisResponse.left().getValue();
-                                        if (error != null && error.contains(TIME) && !getSuiviAcquisFuture.isComplete()) {
+                                        if (error != null && error.contains(TIME) && !getSuiviAcquisPromise.future().isComplete()) {
                                             bilanPeriodiqueService.getSuiviAcquis(idStructure, idPeriode, idEleve,
                                                     idClasseGroups, servicesClasse, multiTeachersClasse,this);
                                         } else {
-                                            getSuiviAcquisFuture.complete();
+                                            getSuiviAcquisPromise.complete();
                                         }
                                     } else {
                                         if (!suiviAcquisResponse.right().getValue().isEmpty()) {
@@ -2814,8 +2814,8 @@ public class LSUController extends ControllerHelper {
                                                 log.info(idEleve + " NO ");
                                             }
                                         }
-                                        if (!getSuiviAcquisFuture.isComplete()) {
-                                            getSuiviAcquisFuture.complete();
+                                        if (!getSuiviAcquisPromise.future().isComplete()) {
+                                            getSuiviAcquisPromise.complete();
                                         }
                                     }
                                     lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
@@ -3077,7 +3077,7 @@ public class LSUController extends ControllerHelper {
                                 }
                                 lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                                 if (answer.get()) {
-                                    getDigitalSkillsFuture.complete();
+                                    getDigitalSkillsPromise.complete();
                                 }
 
                             }
@@ -3096,7 +3096,7 @@ public class LSUController extends ControllerHelper {
                             }
                         });
                     } else {
-                        getDigitalSkillsFuture.complete();
+                        getDigitalSkillsPromise.complete();
                     }
 
                 }

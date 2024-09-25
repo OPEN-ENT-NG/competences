@@ -362,17 +362,17 @@ public class NoteController extends ControllerHelper {
             } else {
                 try{
                     final JsonObject resultHandler = new JsonObject();
-                    List<Future> listFuturesEachPeriode = new ArrayList<>();
+                    List<Future<JsonObject>> listFuturesEachPeriode = new ArrayList<>();
                     for (Object idPeriode : idPeriodes){
                         // Récupération du  nombre de devoirs avec évaluation numérique
                         Long periode = ((Integer)idPeriode).longValue();
-                        Future<JsonObject> exportPeriode = Future.future();
+                        Promise<JsonObject> exportPeriodePromise = Promise.promise();
                         notesService.getTotaleDatasReleve(param, periode, annual, event -> {
-                            formate(exportPeriode, event);
+                            formate(exportPeriodePromise, event);
                         });
-                        listFuturesEachPeriode.add(exportPeriode);
+                        listFuturesEachPeriode.add(exportPeriodePromise.future());
                     }
-                    CompositeFuture.all(listFuturesEachPeriode).setHandler(exportPeriodeEvent -> {
+                    Future.all(listFuturesEachPeriode).onComplete(exportPeriodeEvent -> {
                         try{
                             if (exportPeriodeEvent.succeeded()) {
                                 DecimalFormat decimalFormat = new DecimalFormat("#.0");
@@ -755,40 +755,40 @@ public class NoteController extends ControllerHelper {
                     }
 
                     // Récupération des moyennes finales
-                    Future<JsonArray> moyenneFinaleFuture = Future.future();
+                    Promise<JsonArray> moyenneFinalePromise = Promise.promise();
                     notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, idMatiere, null, Field.MOYENNE,
                             Boolean.FALSE,
-                            moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
+                            moyenneFinaleEvent -> formate(moyenneFinalePromise, moyenneFinaleEvent));
 
                     // Récupération des notes des devoirs
-                    Future<JsonArray> notesFuture = Future.future();
+                    Promise<JsonArray> notesPromise = Promise.promise();
                     notesService.getNotesParElevesParDevoirs(new String[]{idEleve}, idDevoirsArray,
-                            notesEvent -> formate(notesFuture, notesEvent));
+                            notesEvent -> formate(notesPromise, notesEvent));
 
                     Long finalIdPeriode = idPeriode;
 
                     //Récupération des Services
                     Promise<JsonArray> servicesPromise = Promise.promise();
                     utilsService.getServices(idEtablissement,
-                            new JsonArray().add(idClasse), FutureHelper.handlerJsonArray(servicesPromise.future()));
+                            new JsonArray().add(idClasse), FutureHelper.handler(servicesPromise));
 
                     //Récupération des Multi-teachers
                     Promise<JsonArray> multiTeachingPromise = Promise.promise();
                     utilsService.getMultiTeachers(idEtablissement,
-                            new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handlerJsonArray(multiTeachingPromise.future()));
+                            new JsonArray().add(idClasse), idPeriode.intValue(), FutureHelper.handler(multiTeachingPromise));
 
                     //Récupération des Sous-Matières
                     Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idEtablissement, idClasse);
 
-                    CompositeFuture.all(notesFuture, moyenneFinaleFuture, servicesPromise.future(),
+                    Future.all(notesPromise.future(), moyenneFinalePromise.future(), servicesPromise.future(),
                                     multiTeachingPromise.future(), subTopicCoefFuture)
-                            .setHandler(event -> {
+                            .onComplete(event -> {
                                 if (event.failed()) {
                                     renderError(request, new JsonObject().put("error",request.params()));
                                 }
                                 else {
-                                    JsonArray notesEleve = notesFuture.result();
-                                    JsonArray moyenneFinaleArray = moyenneFinaleFuture.result();
+                                    JsonArray notesEleve = notesPromise.future().result();
+                                    JsonArray moyenneFinaleArray = moyenneFinalePromise.future().result();
                                     List<NoteDevoir> notes = new ArrayList<>();
 
                                     Structure structure = new Structure();
@@ -1063,7 +1063,7 @@ public class NoteController extends ControllerHelper {
                                             final JsonObject result = new JsonObject();
                                             final JsonArray listNotes = event.right().getValue();
 
-                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                            eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                 @Override
                                                 public void handle(Message<JsonObject> message) {
                                                     JsonObject body = message.body();
