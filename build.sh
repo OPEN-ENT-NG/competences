@@ -35,7 +35,7 @@ buildNode () {
 }
 
 install() {
-    docker-compose run --rm maven mvn $MVN_OPTS install -DskipTests
+    docker compose run --rm maven mvn $MVN_OPTS clean install -U -DskipTests
 }
 
 buildGulp() {
