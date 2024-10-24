@@ -1723,8 +1723,7 @@ public class DefaultExportService implements ExportService {
             JsonObject action = new JsonObject()
                     .put("action", "eleve.getInfoEleve")
                     .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
-                    .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(
-                            Arrays.asList(new String[]{finalIdEleve})));
+                    .put("idEleves", new JsonArray(Arrays.asList(finalIdEleve)));
 
             eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                     handlerToAsyncHandler(message -> {

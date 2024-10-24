@@ -559,8 +559,16 @@ public class ExportPDFController extends ControllerHelper {
         if (eleveLevelString != null) {
             eleveLevel = Integer.parseInt(eleveLevelString.split(" ")[0].replaceAll("[^\\d.]", ""));
         } else {
-            eleveLevelString = eleve.getString("classeName");
-            eleveLevel = Integer.parseInt(eleveLevelString.substring(0, 1));
+            try{
+                eleveLevelString = eleve.getString("classeName");
+                eleveLevel = Integer.parseInt(eleveLevelString.substring(0, 1));
+            } catch(Exception e) {
+                String message = String.format("[Competences@%s::getEleveLevel] Failed to parse level from classname, set to 0: %s",
+                        this.getClass().getSimpleName(), e.getMessage());
+                log.error(message);
+                eleveLevel = 0;
+            } 
+            
         }
         return eleveLevel;
     }
