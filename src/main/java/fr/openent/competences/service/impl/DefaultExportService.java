@@ -46,10 +46,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.pdfbox.exceptions.COSVisitorException;
+
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.util.PDFMergerUtility;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.entcore.common.storage.Storage;
 
 import javax.imageio.ImageIO;
@@ -1418,12 +1419,10 @@ public class DefaultExportService implements ExportService {
                             bytes = processedTemplate.getBytes();
                             log.error(e.getMessage(), e);
                         }
-
                         actionObject.put("content", bytes)
                                 .put("baseUrl", baseUrl);
                         eb.request(_node + "entcore.pdf.generator", actionObject,
-                                new DeliveryOptions().setSendTimeout(
-                                        TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
                                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                     @Override
                                     public void handle(Message<JsonObject> reply) {
@@ -1436,10 +1435,8 @@ public class DefaultExportService implements ExportService {
                                         }
                                         byte[] pdf = pdfResponse.getBinary("content");
 
-                                        if (templateProps.containsKey("image") && templateProps
-                                                .getBoolean("image")) {
-                                            File pdfFile = new File(prefixPdfName + "_"
-                                                    + dateDebut + ".pdf");
+                                        if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
+                                            File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
                                             OutputStream outStream = null;
                                             try {
                                                 outStream = new FileOutputStream(pdfFile);
@@ -1454,61 +1451,38 @@ public class DefaultExportService implements ExportService {
                                                 e.printStackTrace();
                                             }
 
-                                            try {
+                                           try {
                                                 String sourceDir = pdfFile.getAbsolutePath();
                                                 File sourceFile = new File(sourceDir);
+
                                                 while (!sourceFile.exists()) {
-                                                    System.err.println(sourceFile.getName()
-                                                            + " File does not exist");
+                                                    log.info(sourceFile.getName() + " file does not exist");
                                                 }
+
                                                 if (sourceFile.exists()) {
-                                                    PDDocument document = PDDocument.load(sourceDir);
-                                                    @SuppressWarnings("unchecked")
-                                                    List<PDPage> list = document.getDocumentCatalog()
-                                                            .getAllPages();
-                                                    File imageFile = null;
-                                                    for (PDPage page : list) {
-                                                        BufferedImage image = page.convertToImage();
-                                                        int height = 150
-                                                                + Integer.parseInt(templateProps
-                                                                .getString("nbrCompetences")) * 50;
-                                                        BufferedImage SubImage =
-                                                                image.getSubimage(0, 0, 1684, height);
-                                                        imageFile = new File(prefixPdfName
-                                                                + "_" + dateDebut + ".jpg");
-                                                        ImageIO.write(SubImage, "jpg", imageFile);
-                                                    }
-                                                    document.close();
-                                                    FileInputStream fis = new FileInputStream(imageFile);
-                                                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                                                    byte[] buf = new byte[(int) imageFile.length()];
-                                                    for (int readNum; (readNum = fis.read(buf)) != -1; ) {
-                                                        bos.write(buf, 0, readNum);
-                                                    }
-                                                    byte[] bytes = bos.toByteArray();
+                                                    try (PDDocument document = PDDocument.load(sourceFile)) {
+                                                        PDFRenderer pdfRenderer = new PDFRenderer(document);
+                                                        int pageCount = document.getNumberOfPages();
+                                                        File imageFile = null;
 
-                                                    request.response()
-                                                            .putHeader("Content-Type", "image/jpg");
-                                                    request.response()
-                                                            .putHeader("Content-Disposition",
-                                                                    "attachment; filename="
-                                                                            + prefixPdfName + "_"
-                                                                            + dateDebut + ".jpg");
-                                                    request.response().end(Buffer.buffer(bytes));
-                                                    outStream.close();
-                                                    bos.close();
-                                                    fis.close();
+                                                        for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+                                                            BufferedImage image = pdfRenderer.renderImageWithDPI(pageIndex, 150);
 
-                                                    Files.deleteIfExists(Paths.get(pdfFile.getAbsolutePath()));
-                                                    Files.deleteIfExists(
-                                                            Paths.get(imageFile.getAbsolutePath()));
+                                                            int height = 150 + Integer.parseInt(templateProps.getString("nbrCompetences")) * 50;
+                                                            int cropHeight = Math.min(height, image.getHeight());
+                                                            int cropWidth = Math.min(1684, image.getWidth());
+
+                                                            BufferedImage subImage = image.getSubimage(0, 0, cropWidth, cropHeight);
+
+                                                            imageFile = new File(prefixPdfName + "_" + dateDebut + ".jpg");
+                                                            ImageIO.write(subImage, "jpg", imageFile);
+                                                        }                                           
+                                                    }
                                                 }
                                             } catch (Exception e) {
-                                                e.printStackTrace();
+                                                log.error("[Competences::generateJpgFromPdf] Erreur pendant la génération d'image à partir du PDF", e);
                                             }
-                                            log.info(new SimpleDateFormat("HH:mm:ss:S")
-                                                    .format(new Date().getTime())
-                                                    + " -> Fin Generation Image du template " + templateName);
+                                            log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Fin Generation Image du template " + templateName);
                                         } else {
                                             log.info(" response final ");
                                             request.response()
@@ -1517,16 +1491,13 @@ public class DefaultExportService implements ExportService {
                                                     "attachment; filename=" + prefixPdfName + "_"
                                                             + dateDebut + ".pdf");
                                             request.response().end(Buffer.buffer(pdf));
-                                            JsonArray removesFiles = templateProps.getJsonArray(
-                                                    "idImagesFiles");
+                                            JsonArray removesFiles = templateProps.getJsonArray("idImagesFiles");
                                             if (removesFiles != null) {
                                                 storage.removeFiles(removesFiles, event -> {
                                                     log.info(" [Remove graph Images] " + event.encode());
                                                 });
                                             }
-                                            log.info(new SimpleDateFormat("HH:mm:ss:S")
-                                                    .format(new Date().getTime())
-                                                    + " -> Fin Generation PDF du template " + templateName);
+                                            log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Fin Generation PDF du template " + templateName);
                                         }
                                     }
                                 }));
@@ -1577,7 +1548,16 @@ public class DefaultExportService implements ExportService {
                             outputStream.write(studentByte);
                             pdfFiles.add(outputFile);
                         }
-                        pdfFiles.forEach(mergedPdf::addSource);
+                        pdfFiles.forEach(t -> {
+                            try {
+                                mergedPdf.addSource(t);
+                            } catch (FileNotFoundException e) {
+                                String error = String.format("[Competences@%s::generateSchoolReportPdf] file not found: %s",
+                                this.getClass().getSimpleName(), e.getMessage());
+                                log.error(error);
+                                badRequest(request, error);
+                            }
+                        });
                         ByteArrayOutputStream pdfDocOutputstream = new ByteArrayOutputStream();
                         mergedPdf.setDestinationFileName(fileName);
                         mergedPdf.setDestinationStream(pdfDocOutputstream);
@@ -1595,7 +1575,7 @@ public class DefaultExportService implements ExportService {
                             storage.removeFiles(removesFiles, event -> log.info(String.format("[Competences@%s::generateSchoolReportPdf] - " +
                                     "Remove graph Images: %s", this.getClass().getSimpleName(), event.encode())));
                         }
-                    } catch (IOException | COSVisitorException e) {
+                    } catch (IOException e) {
                         String error = String.format("[Competences@%s::generateSchoolReportPdf] An exception has occured during process: %s",
                                 this.getClass().getSimpleName(), e.getMessage());
                         log.error(error);

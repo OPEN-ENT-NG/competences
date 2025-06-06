@@ -30,7 +30,7 @@
         <entCoreVersion>6.6-SNAPSHOT</entCoreVersion>
         <gatlingHighchartsVersion>2.3.1</gatlingHighchartsVersion>
         <opencsvVersion>4.0</opencsvVersion>
-        <pdfboxVersion>1.8.3</pdfboxVersion>
+        <pdfboxVersion>2.0.30</pdfboxVersion>
     </properties>
     <dependencies>
         <dependency>

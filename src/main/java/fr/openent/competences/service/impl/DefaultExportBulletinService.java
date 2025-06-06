@@ -22,14 +22,13 @@ import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.file.FileSystemException;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.http.request.JsonHttpServerRequest;
 import org.entcore.common.neo4j.Neo4j;
@@ -43,7 +42,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.RoundingMode;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -65,6 +63,10 @@ import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.utils.BulletinUtils.getIdParentForStudent;
 import static fr.openent.competences.utils.HomeworkUtils.safeGetDouble;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.badRequest;
+import static fr.wseduc.webutils.http.Renders.getHost;
+import static fr.wseduc.webutils.http.Renders.getScheme;
+import static fr.wseduc.webutils.http.Renders.renderError;
 
 public class DefaultExportBulletinService implements ExportBulletinService{
 
@@ -3450,49 +3452,48 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         };
     }
 
-    private void handleCreateFile(File pdfFile, OutputStream outStream, JsonObject templateProps, String prefixPdfName,
-                                  String dateDebut, JsonObject eleve, Handler<Either<String, String>> finalHandler) {
+   private void handleCreateFile(File pdfFile, OutputStream outStream, JsonObject templateProps, String prefixPdfName,
+                               String dateDebut, JsonObject eleve, Handler<Either<String, String>> finalHandler) {
+        File imageFile = null;
         try {
             String sourceDir = pdfFile.getAbsolutePath();
             File sourceFile = new File(sourceDir);
-            while (!sourceFile.exists()) {
-                System.err.println(sourceFile.getName() + " File does not exist");
-            }
-            if (sourceFile.exists()) {
-                PDDocument document = PDDocument.load(sourceDir);
-                @SuppressWarnings("unchecked")
-                List<PDPage> list = document.getDocumentCatalog().getAllPages();
-                File imageFile = null;
-                for (PDPage page : list) {
-                    BufferedImage image = page.convertToImage();
-                    int height = 150 + Integer.parseInt(templateProps.getString("nbrCompetences")) * 50;
-                    BufferedImage SubImage = image.getSubimage(0, 0, 1684, height);
-                    imageFile = new File(prefixPdfName + "_" + dateDebut + ".jpg");
-                    ImageIO.write(SubImage, "jpg", imageFile);
-                }
-                document.close();
-                FileInputStream fis = new FileInputStream(imageFile);
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                byte[] buf = new byte[(int) imageFile.length()];
-                for (int readNum; (readNum = fis.read(buf)) != -1; ) {
-                    bos.write(buf, 0, readNum);
-                }
-                byte[] bytes = bos.toByteArray();
-                Buffer buffer = Buffer.buffer(bytes);
-                savePdfDefault(buffer, eleve, finalHandler);
-                bos.close();
-                fis.close();
 
-                Files.deleteIfExists(Paths.get(pdfFile.getAbsolutePath()));
-                Files.deleteIfExists(Paths.get(imageFile.getAbsolutePath()));
+            while (!sourceFile.exists()) {
+                System.err.println(sourceFile.getName() + " file does not exist");
+                Thread.sleep(100); // éviter CPU spin
+            }
+
+            try (PDDocument document = PDDocument.load(sourceFile)) {
+                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                int pageCount = document.getNumberOfPages();
+
+                for (int i = 0; i < pageCount; i++) {
+                    BufferedImage image = pdfRenderer.renderImageWithDPI(i, 150); // DPI ajustable
+                    int height = 150 + Integer.parseInt(templateProps.getString("nbrCompetences")) * 50;
+                    int cropHeight = Math.min(height, image.getHeight());
+                    int cropWidth = Math.min(1684, image.getWidth());
+
+                    BufferedImage subImage = image.getSubimage(0, 0, cropWidth, cropHeight);
+                    imageFile = new File(prefixPdfName + "_" + dateDebut + ".jpg");
+                    ImageIO.write(subImage, "jpg", imageFile);
+                }
+            }
+
+            byte[] bytes = Files.readAllBytes(imageFile.toPath());
+            Buffer buffer = Buffer.buffer(bytes);
+            savePdfDefault(buffer, eleve, finalHandler);
+
+            Files.deleteIfExists(pdfFile.toPath());
+            if (imageFile != null) {
+                Files.deleteIfExists(imageFile.toPath());
             }
         } catch (Exception e) {
             e.printStackTrace();
             log.error("[DefaultExportBulletinService | handleCreateFile] : " + e.getMessage() + " "
                     + eleve.getString("idEleve") + " " + eleve.getString("lastName"));
             finalHandler.handle(new Either.Left<>(e.getMessage()));
-        }
-        finally {
+        } finally {
             try {
                 outStream.close();
             } catch (IOException e) {
