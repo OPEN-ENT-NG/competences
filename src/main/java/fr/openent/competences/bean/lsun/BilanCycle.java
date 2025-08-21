@@ -75,7 +75,6 @@ import java.util.List;
  *       &lt;attribute name="cycle" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}Cycle" />
  *       &lt;attribute name="millesime" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}Millesime" />
  *       &lt;attribute name="date-creation" use="required" type="{http://www.w3.org/2001/XMLSchema}date" />
- *       &lt;attribute name="date-verrou" type="{urn:fr:edu:scolarite:lsun:bilans:import}StringDateTime" />
  *       &lt;attribute name="responsable-etab-ref" use="required" type="{http://www.w3.org/2001/XMLSchema}IDREF" />
  *       &lt;attribute name="prof-princ-refs" type="{http://www.w3.org/2001/XMLSchema}IDREFS" />
  *     &lt;/restriction>
@@ -115,8 +114,6 @@ public class BilanCycle {
     @XmlAttribute(name = "date-creation", required = true)
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar dateCreation;
-    @XmlAttribute(name = "date-verrou")
-    protected String dateVerrou;
     @XmlAttribute(name = "responsable-etab-ref", required = true)
     @XmlIDREF
     @XmlSchemaType(name = "IDREF")
@@ -340,30 +337,6 @@ public class BilanCycle {
      */
     public void setDateCreation(XMLGregorianCalendar value) {
         this.dateCreation = value;
-    }
-
-    /**
-     * Gets the value of the dateVerrou property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getDateVerrou() {
-        return dateVerrou;
-    }
-
-    /**
-     * Sets the value of the dateVerrou property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setDateVerrou(String value) {
-        this.dateVerrou = value;
     }
 
     /**
