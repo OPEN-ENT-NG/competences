@@ -47,7 +47,7 @@ import java.util.List;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;attribute name="id" use="required" type="{http://www.w3.org/2001/XMLSchema}ID" />
- *       &lt;attribute name="id-be" use="required" type="{http://www.w3.org/2001/XMLSchema}positiveInteger" />
+ *       &lt;attribute name="id-be" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="nom" type="{urn:fr:edu:scolarite:lsun:bilans:import}NomPrenom" />
  *       &lt;attribute name="prenom" type="{urn:fr:edu:scolarite:lsun:bilans:import}NomPrenom" />
  *       &lt;attribute name="code-division" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}CodeStructure" />
@@ -68,8 +68,7 @@ public class Eleve {
     @XmlSchemaType(name = "ID")
     protected String id;
     @XmlAttribute(name = "id-be", required = true)
-    @XmlSchemaType(name = "positiveInteger")
-    protected BigInteger idBe;
+    protected String idBe;
     @XmlAttribute(name = "nom")
     protected String nom;
     @XmlAttribute(name = "prenom")
@@ -98,7 +97,7 @@ public class Eleve {
     }
     public Eleve(String externalId,String attachementId,String firstName, String lastName, String nameClass, String idNeo4j,String idClass,String level){
             this.id="EL_"+externalId.replaceAll("[^a-bA-Z0-9-\\._]","");
-            this.idBe=new BigInteger(attachementId);
+            this.idBe=attachementId;
             this.prenom=firstName;
             this.nom=lastName;
             this.codeDivision=nameClass;
@@ -165,10 +164,10 @@ public class Eleve {
      * 
      * @return
      *     possible object is
-     *     {@link BigInteger }
+     *     {@link String }
      *     
      */
-    public BigInteger getIdBe() {
+    public String getIdBe() {
         return idBe;
     }
 
@@ -177,10 +176,10 @@ public class Eleve {
      *
      * @param value
      *     allowed object is
-     *     {@link BigInteger }
+     *     {@link String }
      *
      */
-    public void setIdBe(BigInteger value) {
+    public void setIdBe(String value) {
         this.idBe = value;
     }
 

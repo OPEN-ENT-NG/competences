@@ -85,6 +85,7 @@ import java.util.stream.Collectors;
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.bean.lsun.TypeEnseignant.fromValue;
+import static fr.openent.competences.constants.LSUConstants.DEFAULT_SCHEMA_VERSION_VALUE;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultLSUService.DISCIPLINE_KEY;
 import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
@@ -413,7 +414,7 @@ public class LSUController extends ControllerHelper {
         };
         lsuService.getMapIdClassCodeDomaineById(idsClasse,getMapCodeDomaineByIdHandler);
 
-        lsunBilans.setSchemaVersion("7.0");
+        lsunBilans.setSchemaVersion(DEFAULT_SCHEMA_VERSION_VALUE);
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
             Future.all(listFutureGetMethodsBFC).onComplete(event -> {
@@ -586,7 +587,7 @@ public class LSUController extends ControllerHelper {
         lsuService.getUnheededStudents(new JsonArray(idsTypePeriodes), new JsonArray(idsClasse),
                 unheededStudents -> formate(ignoredStudentPromise, unheededStudents));
 
-        lsunBilans.setSchemaVersion("7.0");
+        lsunBilans.setSchemaVersion(DEFAULT_SCHEMA_VERSION_VALUE);
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
             Handler<String> getElevesHandler = event -> {
