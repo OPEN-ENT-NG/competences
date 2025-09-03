@@ -171,6 +171,8 @@ public class Field {
     public static final String MATIERE = "matiere";
     public static final String MATIERE_COEFF = "matiere_coeff";
     public static final String MATIERE_RANK = "matiere_rank";
+    public static final String MODULE = "module";
+    public static final String MODULENAME = "moduleName";
     public static final String MOYENNE = "moyenne";
     public static final String MOY = "moy";
     public static final String NOTEMAX = "noteMax";

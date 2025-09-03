@@ -702,8 +702,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             query.append("SELECT id_periode, id_eleve, " + APPRECIATION_MATIERE_PERIODE + ", id_classe, id_matiere, appreciation_matiere_periode.id AS id_appreciation_matiere_periode ");
             query.append(" FROM " + COMPETENCES_SCHEMA + "." + APPRECIATION_MATIERE_PERIODE);
         } else if(colonne.equals(Field.MOYENNE)){
-            query.append("SELECT id_periode, id_eleve, " + Field.MOYENNE + ", id_classe, id_matiere ");
-            query.append(" FROM " + COMPETENCES_SCHEMA + "." + Field.MOYENNE_FINALE_TABLE);
+            query.append("SELECT * FROM " + COMPETENCES_SCHEMA + "." + Field.MOYENNE_FINALE_TABLE);
         } else{
             String textError = "Error when trying to get data, selected column is not supported.";
             log.error(textError);
@@ -926,8 +925,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
      */
     private void updateOrInsertAverageOrPositioning(String column, JsonArray values, Handler<Either<String, JsonArray>> handler) {
         String query;
-        query = "" +
-                "INSERT INTO " + COMPETENCES_SCHEMA + "." + column +
+        query = "INSERT INTO " + COMPETENCES_SCHEMA + "." + column +
                 ("moyenne".equals(column) ? "_finale" : " ") +
                 " (id_periode, id_eleve," + column + ", id_classe, id_matiere) VALUES " +
                 " ( ? , ? , ? , ? , ? ) " +
