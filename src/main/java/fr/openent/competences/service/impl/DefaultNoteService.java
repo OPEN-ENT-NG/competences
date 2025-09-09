@@ -24,6 +24,7 @@ import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.Common;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
+import fr.openent.competences.repository.RepositoryFactory;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
@@ -36,6 +37,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.tuple.MutableTriple;
+import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -92,12 +94,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private UtilsService utilsService;
     private AnnotationService annotationService;
     private CompetenceNoteService competenceNoteService;
-    private SubTopicService subTopicService;
     private StructureOptionsService structureOptionsService;
+    private UserService userService;
     protected static final Logger log = LoggerFactory.getLogger(DefaultNoteService.class);
 
     public DefaultNoteService(String schema, String table) {
         super(schema, table);
+        Neo4j neo4j = Neo4j.getInstance();
+        RepositoryFactory repositoryFactory = new RepositoryFactory(neo4j);
+        this.userService = new DefaultUserService(repositoryFactory);
     }
 
     public DefaultNoteService(String schema, String table, EventBus eb) {
@@ -106,7 +111,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         utilsService = new DefaultUtilsService(eb);
         annotationService = new DefaultAnnotationService(COMPETENCES_SCHEMA, Field.REL_ANNOTATIONS_DEVOIRS_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, Field.COMPETENCES_NOTES_TABLE);
-        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SUBTOPIC_TABLE);
         structureOptionsService = new DefaultStructureOptions();
     }
 
@@ -3427,7 +3431,21 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 JsonObject moyenne = new JsonObject().put(Field.MOYENNE, moyenneComputed)
                         .put(Field.HASNOTE, hasNote);
                 if (!hasNote) {
-                    moyenne.put(Field.MOYENNE, "NN");
+                    // niko : checker ici si 3eme
+                    userService.isUserInThirdClassLevel(idEleve)
+                            .onSuccess(
+                                    isInThirdClass -> {
+                                        if (isInThirdClass) {
+                                            moyenne.put(Field.MOYENNE, "EA");
+                                        } else {
+                                            moyenne.put(Field.MOYENNE, "NN");
+                                        }
+                                    }
+                            ).onFailure(
+                                    _ -> {
+                                        moyenne.put(Field.MOYENNE, "NN");
+                                    }
+                            );
                 }
                 if (withStat) {
                     moyenne.put("noteMax", moyenneComputed).put("noteMin", moyenneComputed);
