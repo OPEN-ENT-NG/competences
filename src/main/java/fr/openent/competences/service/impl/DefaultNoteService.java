@@ -3431,13 +3431,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 JsonObject moyenne = new JsonObject().put(Field.MOYENNE, moyenneComputed)
                         .put(Field.HASNOTE, hasNote);
                 if (!hasNote) {
+                    System.out.println("niko1 : no note for student " + idEleve);
                     // niko : checker ici si 3eme
                     userService.isUserInThirdClassLevel(idEleve)
                         .onSuccess(
                             isInThirdClass -> {
                                 if (isInThirdClass) {
+                                    System.out.println("niko2 : is in 3eme");
                                     moyenne.put(Field.MOYENNE, "EA");
                                 } else {
+                                    System.out.println("niko3 : is NOT in 3eme");
                                     moyenne.put(Field.MOYENNE, "NN");
                                 }
                             }
