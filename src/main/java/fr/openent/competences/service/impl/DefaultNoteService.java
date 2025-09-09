@@ -3433,19 +3433,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 if (!hasNote) {
                     // niko : checker ici si 3eme
                     userService.isUserInThirdClassLevel(idEleve)
-                            .onSuccess(
-                                    isInThirdClass -> {
-                                        if (isInThirdClass) {
-                                            moyenne.put(Field.MOYENNE, "EA");
-                                        } else {
-                                            moyenne.put(Field.MOYENNE, "NN");
-                                        }
-                                    }
-                            ).onFailure(
-                                    _ -> {
-                                        moyenne.put(Field.MOYENNE, "NN");
-                                    }
-                            );
+                        .onSuccess(
+                            isInThirdClass -> {
+                                if (isInThirdClass) {
+                                    moyenne.put(Field.MOYENNE, "EA");
+                                } else {
+                                    moyenne.put(Field.MOYENNE, "NN");
+                                }
+                            }
+                        )
+                        .onFailure(error -> moyenne.put(Field.MOYENNE, "NN"));
                 }
                 if (withStat) {
                     moyenne.put("noteMax", moyenneComputed).put("noteMin", moyenneComputed);
