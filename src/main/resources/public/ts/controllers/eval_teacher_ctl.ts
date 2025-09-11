@@ -4205,9 +4205,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     eleve.moyenneFinale = eleve.moyenneFinale.replace(",",".");
                 }
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
-                if(eleve.moyenneFinale.toUpperCase() === "NN") eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
+                if(eleve.moyenneFinale.toUpperCase() === getNN()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
+                if(eleve.moyenneFinale.toUpperCase() === getEA()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
                 if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
-                    eleve.moyenneFinale === "" || eleve.moyenneFinale === "NN"){
+                    eleve.moyenneFinale === "" || 
+                    (eleve.moyenneFinale === getNN() && !eleve.isUserInThirdClassLevel) ||
+                    (eleve.moyenneFinale === getEA() && eleve.isUserInThirdClassLevel)
+                ){
                     if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) ||
                         eleve.oldMoyenneFinale !== eleve.moyenneFinale || eleve.moyenneFinale !== "") {
 
