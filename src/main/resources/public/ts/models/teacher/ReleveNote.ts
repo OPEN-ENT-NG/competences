@@ -412,17 +412,17 @@ export class ReleveNote extends  Model implements IModel {
                 if (this.hasEvaluatedDevoirs && sumCoeff > 0) {
                     _.each(this.classe.eleves.all, (eleve) => {
                         let e = _.findWhere(_eleves, {id: eleve.id});
-                        if (e !== undefined && e.moyenne != null) {
-                            eleve.moyenne = e.moyenne;
-                        } else {
-                            eleve.moyenne = getNN();
-                        }
+                        // if (e !== undefined && e.moyenne != null) {
+                        //     eleve.moyenne = e.moyenne;
+                        // } else {
+                        //     eleve.moyenne = getNN();
+                        // }
                     });
                 } else {
                     this.isNN = true;
-                    _.each(this.classe.eleves.all, (eleve) => {
-                        eleve.moyenne = getNN();
-                    })
+                    // _.each(this.classe.eleves.all, (eleve) => {
+                    //     eleve.moyenne = getNN();
+                    // })
                 }
                 resolve();
             } catch (e) {
