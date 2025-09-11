@@ -42,6 +42,7 @@ import {
     PreferencesUtils
 } from "../utils/preferences";
 import * as utils from '../utils/teacher';
+import { getEA, getNN } from "../utils/teacher";
 
 declare let $: any;
 declare let document: any;
@@ -4152,8 +4153,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
                 eleve.moyenneFinaleIsSet = false;
             }else{
-                if(utils.isNN(eleve.moyenneFinale))
-                    eleve.moyenneFinale = utils.setNullAverageForStudent(eleve);
+                if(utils.isNN(eleve.moyenneFinale)) {
+                    !!eleve.isUserInThirdClassLevel ? eleve.moyenneFinale = getEA() : eleve.moyenneFinale = getNN();
+                }
                 eleve.moyenneFinaleIsSet = eleve.moyenne !== eleve.moyenneFinale;
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
             }
