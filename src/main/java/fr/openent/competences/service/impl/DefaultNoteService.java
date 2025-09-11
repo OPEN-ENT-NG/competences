@@ -2842,9 +2842,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     APPRECIATION_MATIERE_PERIODE, idPeriode, hasEvaluatedHomeWork, withPreviousAppreciations);
 
                         }
-                        addIsThirdClassLevelFieldForEachStudent(elevesMapObject);
-                        handler.handle(new Either.Right<>(resultHandler.put(Field.ELEVES,
-                                new DefaultExportBulletinService(eb, null).sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
+                        addIsThirdClassLevelFieldForEachStudent(elevesMapObject)
+                                .onSuccess(v -> {
+                                    handler.handle(new Either.Right<>(resultHandler.put(Field.ELEVES,
+                                            new DefaultExportBulletinService(eb, null).sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
+                                })
+                                .onFailure(err -> {
+                                    handler.handle(new Either.Left<>(err.getMessage()));
+                                });
                     } else {
                         handler.handle(new Either.Left<>(event.cause().getMessage()));
                     }
@@ -2855,16 +2860,24 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         });
     }
 
-    private void addIsThirdClassLevelFieldForEachStudent(Map<String, JsonObject> elevesMapObject) {
-        for(Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
+    private Future<Void> addIsThirdClassLevelFieldForEachStudent(Map<String, JsonObject> elevesMapObject) {
+        List<Future> futures = new ArrayList<>();
+
+        for (Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
             String studentId = entry.getKey();
             JsonObject student = entry.getValue();
-            userService.isUserInThirdClassLevel(studentId)
-                    .onSuccess(isInThirdClass ->
-                            student.put(Field.ISUSERINTHIRDCLASSLEVEl, isInThirdClass)
-                    ).onFailure(error -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, false));
+
+            Future<Void> future = userService.isUserInThirdClassLevel(studentId)
+                    .onSuccess(isInThirdClass -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, isInThirdClass))
+                    .onFailure(err -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, false))
+                    .mapEmpty();
+
+            futures.add(future);
         }
+
+        return CompositeFuture.all(futures).mapEmpty();
     }
+
 
     private JsonArray getAppreciationSelectedPeriod (JsonArray appreciations, Long idPeriod) {
         List<JsonObject> fileredAppreciations = new ArrayList<>();
