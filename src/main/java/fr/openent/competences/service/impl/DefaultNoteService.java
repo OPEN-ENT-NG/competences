@@ -2839,7 +2839,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     APPRECIATION_MATIERE_PERIODE, idPeriode, hasEvaluatedHomeWork, withPreviousAppreciations);
 
                         }
-                        System.out.println("************* elevesMapObject = " + elevesMapObject);
+                        log.info("************* elevesMapObject = " + elevesMapObject);
                         handler.handle(new Either.Right<>(resultHandler.put(Field.ELEVES,
                                 new DefaultExportBulletinService(eb, null).sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
                     } else {
