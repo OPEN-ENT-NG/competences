@@ -15,11 +15,15 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {_, Collection, http, idiom as lang, IModel, Model, model, moment, notify} from 'entcore';
 import httpAxios from 'axios';
+import { _, Collection, http, IModel, idiom as lang, Model, model, moment, notify } from 'entcore';
+import { Mix } from "entcore-toolkit";
+import * as utils from "../../utils/teacher";
+import { getTitulairesForRemplacantsCoEnseignant, setNullAverageForStudent } from "../../utils/teacher";
+import { Graph } from "../common/Graph";
 import {
     Annotation,
-    AppreciationClasse, AppreciationMatiere, BaremeBrevetEleve,
+    AppreciationClasse, AppreciationMatiere,
     Classe, CompetenceNote,
     Devoir,
     Domaine,
@@ -31,12 +35,6 @@ import {
     TableConversion,
     Utils
 } from './index';
-import {getNN} from "../../utils/functions/utilsNN";
-import * as utils from "../../utils/teacher";
-import {getTitulairesForRemplacantsCoEnseignant} from "../../utils/teacher";
-import {Graph} from "../common/Graph";
-import {Mix} from "entcore-toolkit";
-import {StudentAppreciation} from "./digital_skills/StudentAppreciationDigitalSkills";
 
 
 export class ReleveNote extends  Model implements IModel {
@@ -412,17 +410,17 @@ export class ReleveNote extends  Model implements IModel {
                 if (this.hasEvaluatedDevoirs && sumCoeff > 0) {
                     _.each(this.classe.eleves.all, (eleve) => {
                         let e = _.findWhere(_eleves, {id: eleve.id});
-                        // if (e !== undefined && e.moyenne != null) {
-                        //     eleve.moyenne = e.moyenne;
-                        // } else {
-                        //     eleve.moyenne = getNN();
-                        // }
+                        if (e !== undefined && !utils.isNN(e.moyenne)) {
+                            eleve.moyenne = e.moyenne;
+                        } else {
+                            setNullAverageForStudent(eleve);
+                        }
                     });
                 } else {
                     this.isNN = true;
-                    // _.each(this.classe.eleves.all, (eleve) => {
-                    //     eleve.moyenne = getNN();
-                    // })
+                    _.each(this.classe.eleves.all, (eleve) => {
+                        setNullAverageForStudent(eleve);
+                    })
                 }
                 resolve();
             } catch (e) {

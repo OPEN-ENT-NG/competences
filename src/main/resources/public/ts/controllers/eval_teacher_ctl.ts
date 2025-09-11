@@ -14,34 +14,34 @@
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
-import {Mix} from "entcore-toolkit";
-import {model, notify, idiom as lang, ng, template, moment, _, angular, http, skin, Behaviours} from 'entcore';
+import httpAxios from "axios";
+import { _, angular, Behaviours, http, idiom as lang, model, moment, ng, notify, template } from 'entcore';
+import { LengthLimit } from "../constants/ConstantCommonLength";
+import { ShortTermAnnotation } from "../constants/ShortTermAnnotation";
+import { CLASS_REPORT_URI_OPTIONS, PRINT_OPTIONS } from "../core/enum/print.enum";
+import { selectCycleForView, updateNiveau } from "../models/common/Personnalisation";
+import { Defaultcolors } from "../models/eval_niveau_comp";
 import {
+    Classe,
     Devoir,
     Evaluation,
     evaluations,
+    IClassReport,
     ReleveNote,
     ReleveNoteTotale,
-    Classe, IClassReport
+    Utils
 } from '../models/teacher';
-import * as utils from '../utils/teacher';
-import {Defaultcolors} from "../models/eval_niveau_comp";
-import {Utils} from "../models/teacher";
-import {selectCycleForView, updateNiveau} from "../models/common/Personnalisation";
-import httpAxios from "axios";
-import {AppreciationCPE} from "../models/teacher/AppreciationCPE";
+import { AppreciationCPE } from "../models/teacher/AppreciationCPE";
+import { AppreciationSubjectPeriodStudent } from "../models/teacher/AppreciationSubjectPeriodStudent";
+import { isValidDevoir } from "../utils/filters/isValidDevoir";
+import { isValidClasse } from "../utils/functions/isValidClasse";
 import {
     evaluationCreationCompetences,
     evaluationCreationCompetencesDevoir,
     evaluationCreationEnseignements,
     PreferencesUtils
 } from "../utils/preferences";
-import {ShortTermAnnotation} from "../constants/ShortTermAnnotation";
-import { LengthLimit} from "../constants/ConstantCommonLength"
-import {isValidClasse} from "../utils/functions/isValidClasse";
-import {isValidDevoir} from "../utils/filters/isValidDevoir";
-import {AppreciationSubjectPeriodStudent} from "../models/teacher/AppreciationSubjectPeriodStudent";
-import {CLASS_REPORT_URI_OPTIONS, PRINT_OPTIONS} from "../core/enum/print.enum";
+import * as utils from '../utils/teacher';
 
 declare let $: any;
 declare let document: any;
@@ -4152,9 +4152,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
                 eleve.moyenneFinaleIsSet = false;
             }else{
-                if(eleve.moyenneFinale === null)
-                    eleve.moyenneFinale = "NN";
-                eleve.moyenneFinaleIsSet = (eleve.moyenneFinale === "NN" && eleve.moyenne === eleve.moyenneFinale ) ? false :true;
+                if(utils.isNN(eleve.moyenneFinale))
+                    eleve.moyenneFinale = utils.setNullAverageForStudent(eleve);
+                eleve.moyenneFinaleIsSet = eleve.moyenne !== eleve.moyenneFinale;
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
             }
         };
