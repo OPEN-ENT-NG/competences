@@ -3221,7 +3221,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             let moyenne = 0, max = 0, nbEleve = 0, moyenneFinal = 0, maxFinal = 0, nbEleveFinal = 0;
             let min = 20, minFinal = 20;
             $scope.releveNote.classe.eleves.all.forEach(eleve => {
-                if(eleve.moyenne !== utils.getNN()){
+                if(!utils.isNN(eleve.moyenne)){
                     moyenne += eleve.moyenne;
                     nbEleve++;
                     if(eleve.moyenne > max)
@@ -3229,7 +3229,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if(min > eleve.moyenne)
                         min = eleve.moyenne;
                 }
-                if(eleve.moyenneFinale !== utils.getNN()){
+                if(!utils.isNN(eleve.moyenneFinale)){
                     let moyF = eleve.moyenneFinale;
                     if(eleve.moyenneFinaleIsSet)
                         moyF = parseFloat(moyF);

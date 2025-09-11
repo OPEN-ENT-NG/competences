@@ -19,3 +19,11 @@
 export function getNN(){
     return 'NN';
 };
+
+export function getEA(){
+    return 'EA';
+}
+
+export function isNN(moyenne) {
+    return moyenne === getNN() || moyenne === getEA() || !moyenne;
+}

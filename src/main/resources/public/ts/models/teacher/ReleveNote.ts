@@ -174,6 +174,7 @@ export class ReleveNote extends  Model implements IModel {
                 http().getJson(url).done((res) => {
                     this._tmp = res;
                     utils.sortByLastnameWithAccentIgnored(this._tmp.eleves);
+                    utils.setNullAverage(this._tmp.eleves);
                     this.synchronized.evaluations = true;
                     resolve();
                 });
