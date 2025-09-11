@@ -61,6 +61,7 @@ public class Field {
     public static final String ID_MATIERE_MOYF = "id_matiere_moyf";
     public static final String ID_ENSEIGNANT = "id_enseignant";
     public static final String IDENSEIGNANT = "idEnseignant";
+    public static final String ISUSERINTHIRDCLASSLEVEl = "isUserInThirdClassLevel";
     public static final String C = "c";
     public static final String CLASSID = "classId";
     public static final String DEVOIRID = "devoirId";

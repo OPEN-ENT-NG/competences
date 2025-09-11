@@ -2839,7 +2839,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     APPRECIATION_MATIERE_PERIODE, idPeriode, hasEvaluatedHomeWork, withPreviousAppreciations);
 
                         }
-                        log.info("************* elevesMapObject = " + elevesMapObject);
+                        addIsThirdClassLevelFieldForEachStudent(elevesMapObject);
                         handler.handle(new Either.Right<>(resultHandler.put(Field.ELEVES,
                                 new DefaultExportBulletinService(eb, null).sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
                     } else {
@@ -2850,6 +2850,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 handler.handle(new Either.Left<>(idElevesEvent.cause().getMessage()));
             }
         });
+    }
+
+    private void addIsThirdClassLevelFieldForEachStudent(Map<String, JsonObject> elevesMapObject) {
+        for(Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
+            String studentId = entry.getKey();
+            JsonObject student = entry.getValue();
+            userService.isUserInThirdClassLevel(studentId)
+                    .onSuccess(isInThirdClass ->
+                            student.put(Field.ISUSERINTHIRDCLASSLEVEl, isInThirdClass)
+                    ).onFailure(error -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, false));
+        }
     }
 
     private JsonArray getAppreciationSelectedPeriod (JsonArray appreciations, Long idPeriod) {
