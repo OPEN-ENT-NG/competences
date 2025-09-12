@@ -575,7 +575,14 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     private Future<Optional<NeoMatiere>> getSubjectById(String idSubject) {
         Promise<Optional<NeoMatiere>> promise = Promise.promise();
 
-        String query = "MATCH (s:Subject {id: {id}}) RETURN s";
+        String query = "MATCH (s:Subject {id: {id}}) RETURN " +
+                "s.id AS id, s.rank AS rank, s.label AS label, " +
+                "s.lastUpdated AS lastUpdated, s.code AS code, " +
+                "s.externalId AS externalId, s.source AS source, " +
+                "s.idStructure AS idStructure, s.name AS name, " +
+                "s.externalIdSubject AS externalIdSubject";
+
+
         JsonObject params = new JsonObject().put("id", idSubject);
 
         String errorMessage = String.format("[SubjectRepository::getSubjectCodeById] Failed to retrieve code for subject with id %s : ", idSubject);
