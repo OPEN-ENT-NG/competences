@@ -2843,10 +2843,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         }
                         addIsThirdClassLevelFieldForEachStudent(elevesMapObject)
-                                .compose(v -> new DefaultMatiereService(null).isSubjectDispensable(idMatiere))
-                                .onSuccess(isDispensable -> {
+                                .compose(v -> addIsMatiereDispensableFieldForEachStudent(elevesMapObject, idMatiere))
+                                .onSuccess(v -> {
                                     handler.handle(new Either.Right<>(resultHandler
-                                            .put(Field.ISMATIEREDISPENSABLE, isDispensable)
                                             .put(Field.ELEVES,
                                             new DefaultExportBulletinService(eb, null).sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
                                 })
@@ -2873,6 +2872,23 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             Future<Void> future = userService.isUserInThirdClassLevel(studentId)
                     .onSuccess(isInThirdClass -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, isInThirdClass))
                     .onFailure(err -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, false))
+                    .mapEmpty();
+
+            futures.add(future);
+        }
+
+        return CompositeFuture.all(futures).mapEmpty();
+    }
+
+    private Future<Void> addIsMatiereDispensableFieldForEachStudent(Map<String, JsonObject> elevesMapObject, String idMatiere) {
+        List<Future> futures = new ArrayList<>();
+
+        for (Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
+            JsonObject student = entry.getValue();
+
+            Future<Void> future = new DefaultMatiereService(null).isSubjectDispensable(idMatiere)
+                    .onSuccess(isInThirdClass -> student.put(ISMATIEREDISPENSABLE, isInThirdClass))
+                    .onFailure(err -> student.put(Field.ISMATIEREDISPENSABLE, false))
                     .mapEmpty();
 
             futures.add(future);

@@ -4211,7 +4211,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     eleve.moyenneFinale === "" || 
                     (eleve.moyenneFinale === getNN() && !eleve.isUserInThirdClassLevel) ||
                     (eleve.moyenneFinale === getEA() && eleve.isUserInThirdClassLevel) ||
-                    (eleve.moyenneFinale === getDI() && eleve.isUserInThirdClassLevel && $scope.releveNote.isMatiereDispensable)
+                    (eleve.moyenneFinale === getDI() && eleve.isUserInThirdClassLevel && eleve.isMatiereDispensable)
                 ){
                     if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) ||
                         eleve.oldMoyenneFinale !== eleve.moyenneFinale || eleve.moyenneFinale !== "") {
