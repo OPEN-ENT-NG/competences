@@ -2843,8 +2843,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         }
                         addIsThirdClassLevelFieldForEachStudent(elevesMapObject)
-                                .onSuccess(v -> {
-                                    handler.handle(new Either.Right<>(resultHandler.put(Field.ELEVES,
+                                .compose(v -> new DefaultMatiereService(null).isSubjectDispensable(idMatiere))
+                                .onSuccess(isDispensable -> {
+                                    handler.handle(new Either.Right<>(resultHandler
+                                            .put(Field.ISMATIEREDISPENSABLE, isDispensable)
+                                            .put(Field.ELEVES,
                                             new DefaultExportBulletinService(eb, null).sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
                                 })
                                 .onFailure(err -> {

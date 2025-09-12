@@ -62,6 +62,7 @@ public class Field {
     public static final String ID_ENSEIGNANT = "id_enseignant";
     public static final String IDENSEIGNANT = "idEnseignant";
     public static final String ISUSERINTHIRDCLASSLEVEl = "isUserInThirdClassLevel";
+    public static final String ISMATIEREDISPENSABLE = "isMatiereDispensable";
     public static final String C = "c";
     public static final String CLASSID = "classId";
     public static final String DEVOIRID = "devoirId";
@@ -142,6 +143,7 @@ public class Field {
     public static final String APPRECIATION_MATIERE_PERIODE = "appreciation_matiere_periode";
     public static final String APPRECIATION = "appreciation";
     public static final String CLASSE = "classe";
+    public static final String CODE = "code";
     public static final String COLOR = "color";
     public static final String COT = "coT";
     public static final String DESCRIPTION = "description";
@@ -219,6 +221,8 @@ public class Field {
     public static final String HASDIVISEUR = "hasDiviseur";
     public static final String DATA = "data";
     public static final String ORDREPERIODE = "ordrePeriode";
+    public static final String LABEL = "label";
+    public static final String LASTUPDATE = "lastUpdate";
     public static final String LIBELLE = "libelle";
     public static final String ANNEE = "Ann\u00E9e";
     public static final String TYPEGROUPE = "typeGroupe";
