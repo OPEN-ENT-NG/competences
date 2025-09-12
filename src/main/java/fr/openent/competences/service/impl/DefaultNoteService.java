@@ -2845,6 +2845,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         addIsThirdClassLevelFieldForEachStudent(elevesMapObject)
                                 .compose(v -> new DefaultMatiereService(null).isSubjectDispensable(idMatiere))
                                 .onSuccess(isDispensable -> {
+                                    log.info("niko : isDispensable = " + isDispensable);
                                     handler.handle(new Either.Right<>(resultHandler
                                             .put(Field.ISMATIEREDISPENSABLE, isDispensable)
                                             .put(Field.ELEVES,
