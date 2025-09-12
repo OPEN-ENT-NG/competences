@@ -118,6 +118,7 @@ public class Field {
     //Event bus
     public static final String OK = "ok";
     public static final String STATUS = "status";
+    public static final String STATUT = "statut";
     public static final String RESULT = "result";
     public static final String RESULTS = "results";
 

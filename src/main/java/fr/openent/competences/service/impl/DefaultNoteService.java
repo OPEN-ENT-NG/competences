@@ -921,28 +921,45 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     .add(idSubject)
                     .add(field.getValue(column));
 
-            updateOrInsertAverageOrPositioning(column, valuesAverageOrPositioning, handler);
+            if (Field.MOYENNE.equals(column))  valuesAverageOrPositioning.add(field.getValue(Field.STATUT));
+
+            if (column.equals(Field.MOYENNE)) {
+                updateOrInsertAverage(valuesAverageOrPositioning, handler);
+            } else {
+                updateOrInsertPositioning(valuesAverageOrPositioning, handler);
+            }
         }
     }
 
     /**
-     * @param column
-     * @param values =[field.getValue(column)?, idClassSchool, idSubject, field.getValue(column)? ]
+     * @param values =[idPeriod, idStudent, field.getValue("moyenne"), idClassSchool, idSubject, field.getValue("moyenne"), field.getValue("statut")]
      * @param handler
      */
-    private void updateOrInsertAverageOrPositioning(String column, JsonArray values, Handler<Either<String, JsonArray>> handler) {
-        log.info("niko values : ", values);
-        String query;
-        query = "INSERT INTO " + COMPETENCES_SCHEMA + "." + column +
-                ("moyenne".equals(column) ? "_finale" : " ") +
-                " (id_periode, id_eleve," + column + ", id_classe, id_matiere) VALUES " +
-                " ( ? , ? , ? , ? , ? ) " +
-                " ON CONFLICT (id_periode, id_eleve, id_classe, id_matiere) " +
-                " DO UPDATE SET " + column + " = ? ";
-
+    private void updateOrInsertAverage(JsonArray values, Handler<Either<String, JsonArray>> handler) {
+        String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".moyenne_finale " +
+                "(id_periode, id_eleve, moyenne, id_classe, id_matiere, statut) VALUES " +
+                "(?, ?, ?, ?, ?, ?) " +
+                "ON CONFLICT (id_periode, id_eleve, id_classe, id_matiere) " +
+                "DO UPDATE SET moyenne = ?";
 
         Sql.getInstance().prepared(query, values, validResultHandler(handler));
     }
+
+    /**
+     * @param values =[idPeriod, idStudent, field.getValue("positionnement"), idClassSchool, idSubject, field.getValue("positionnement")]
+     * @param handler
+     */
+    private void updateOrInsertPositioning(JsonArray values, Handler<Either<String, JsonArray>> handler) {
+        String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".positionnement " +
+                "(id_periode, id_eleve, positionnement, id_classe, id_matiere) VALUES " +
+                "(?, ?, ?, ?, ?) " +
+                "ON CONFLICT (id_periode, id_eleve, id_classe, id_matiere) " +
+                "DO UPDATE SET positionnement = ?";
+
+        Sql.getInstance().prepared(query, values, validResultHandler(handler));
+    }
+
+
 
     public void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes,
                                                  final JsonObject result, String idEleve, JsonArray idEleves, List<Service> services,
