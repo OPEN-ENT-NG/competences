@@ -42,7 +42,7 @@ import {
     PreferencesUtils
 } from "../utils/preferences";
 import * as utils from '../utils/teacher';
-import { getEA, getNN } from "../utils/teacher";
+import { getDI, getEA, getNN } from "../utils/teacher";
 
 declare let $: any;
 declare let document: any;
@@ -4210,7 +4210,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
                     eleve.moyenneFinale === "" || 
                     (eleve.moyenneFinale === getNN() && !eleve.isUserInThirdClassLevel) ||
-                    (eleve.moyenneFinale === getEA() && eleve.isUserInThirdClassLevel)
+                    (eleve.moyenneFinale === getEA() && eleve.isUserInThirdClassLevel) ||
+                    (eleve.moyenneFinale === getDI() && eleve.isUserInThirdClassLevel && $scope.releveNote.isMatiereDispensable)
                 ){
                     if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) ||
                         eleve.oldMoyenneFinale !== eleve.moyenneFinale || eleve.moyenneFinale !== "") {
