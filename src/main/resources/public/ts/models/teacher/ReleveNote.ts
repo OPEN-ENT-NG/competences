@@ -19,7 +19,7 @@ import httpAxios from 'axios';
 import { _, Collection, http, IModel, idiom as lang, Model, model, moment, notify } from 'entcore';
 import { Mix } from "entcore-toolkit";
 import * as utils from "../../utils/teacher";
-import { getTitulairesForRemplacantsCoEnseignant, setNullAverageForStudent } from "../../utils/teacher";
+import { getDI, getEA, getNN, getTitulairesForRemplacantsCoEnseignant, setNullAverageForStudent } from "../../utils/teacher";
 import { Graph } from "../common/Graph";
 import {
     Annotation,
@@ -439,10 +439,13 @@ export class ReleveNote extends  Model implements IModel {
 
     saveMoyenneFinaleEleve(eleve): any {
         return new Promise((resolve, reject) => {
+            let majMoyenneFinale = eleve.moyenneFinale.toUpperCase();
+            let statut = majMoyenneFinale === getNN() || majMoyenneFinale === getEA() || majMoyenneFinale === getDI() ? majMoyenneFinale : null;
             let _data = _.extend(this.toJson(), {
                 idEleve: eleve.id,
                 colonne: 'moyenne',
                 moyenne: parseFloat(eleve.moyenneFinale),
+                statut: statut,
                 delete: eleve.moyenneFinale === "" || eleve.moyenne === eleve.moyenneFinale || eleve.moyenne === parseFloat(eleve.moyenneFinale)
             });
 
