@@ -26,7 +26,7 @@ public class NeoMatiere implements IModel<NeoMatiere> {
     // Constructor
 
     public NeoMatiere(JsonObject neoMatiere) {
-        log.ingo("nikoCreating NeoMatiere from JsonObject: " + neoMatiere);
+        log.info("nikoCreating NeoMatiere from JsonObject: " + neoMatiere);
         this.setId(neoMatiere.getString(ID, null))
                 .setIdStructure(neoMatiere.getString(ID_STRUCTURE, null))
                 .setName(neoMatiere.getString(NAME, null))
