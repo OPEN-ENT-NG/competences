@@ -29,5 +29,5 @@ export function getDI(){
 };
 
 export function isNN(moyenne) {
-    return moyenne === getNN() || moyenne === getEA() || !moyenne;
+    return moyenne === getNN() || moyenne === getEA() || moyenne === getDI() || !moyenne;
 }

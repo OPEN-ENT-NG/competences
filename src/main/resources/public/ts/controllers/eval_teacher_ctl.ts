@@ -4207,6 +4207,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
                 if(eleve.moyenneFinale.toUpperCase() === getNN()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
                 if(eleve.moyenneFinale.toUpperCase() === getEA()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
+                if(eleve.moyenneFinale.toUpperCase() === getDI()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
                 if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
                     eleve.moyenneFinale === "" || 
                     (eleve.moyenneFinale === getNN() && !eleve.isUserInThirdClassLevel) ||
