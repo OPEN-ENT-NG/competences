@@ -1,12 +1,16 @@
 package fr.openent.competences.model;
 
 import fr.openent.competences.helper.ModelHelper;
+import fr.openent.competences.service.impl.DefaultMatiereService;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import static fr.openent.competences.constants.Field.*;
 
 public class NeoMatiere implements IModel<NeoMatiere> {
 
+    private static final Logger log = LoggerFactory.getLogger(NeoMatiere.class);
     private String id;
     private String rank;
     private String label;
@@ -22,6 +26,7 @@ public class NeoMatiere implements IModel<NeoMatiere> {
     // Constructor
 
     public NeoMatiere(JsonObject neoMatiere) {
+        log.ingo("nikoCreating NeoMatiere from JsonObject: " + neoMatiere);
         this.setId(neoMatiere.getString(ID, null))
                 .setIdStructure(neoMatiere.getString(ID_STRUCTURE, null))
                 .setName(neoMatiere.getString(NAME, null))

@@ -554,7 +554,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                     boolean isDispensable = false;
                     if (optSubject.isPresent()) {
                         NeoMatiere subject = optSubject.get();
-                        log.info("niko : subject = " + subject);
+                        log.info("niko : subject = " + subject.toJson());
                         String code = subject.getCode();
                         log.info("niko : code = " + code);
 
