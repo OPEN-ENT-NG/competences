@@ -8,10 +8,10 @@ import static fr.openent.competences.constants.Field.*;
 public class NeoMatiere implements IModel<NeoMatiere> {
 
     private String id;
-    private int rank;
+    private String rank;
     private String label;
     private String lastUpdated;
-    private Integer code;
+    private String code;
     private String externalId;
     private String source;
 
@@ -25,9 +25,9 @@ public class NeoMatiere implements IModel<NeoMatiere> {
         this.setId(neoMatiere.getString(ID, null))
                 .setIdStructure(neoMatiere.getString(ID_STRUCTURE, null))
                 .setName(neoMatiere.getString(NAME, null))
-                .setRank(neoMatiere.getInteger(RANK, null))
+                .setRank(neoMatiere.getString(RANK, null))
                 .setLastUpdated(neoMatiere.getString(LASTUPDATE, null))
-                .setCode(neoMatiere.getInteger(CODE, null))
+                .setCode(neoMatiere.getString(CODE, null))
                 .setLabel(neoMatiere.getString(LABEL, null));
     }
 
@@ -37,7 +37,7 @@ public class NeoMatiere implements IModel<NeoMatiere> {
         return id;
     }
 
-    public int getRank() {
+    public String getRank() {
         return rank;
     }
 
@@ -49,7 +49,7 @@ public class NeoMatiere implements IModel<NeoMatiere> {
         return lastUpdated;
     }
 
-    public Integer getCode() {
+    public String getCode() {
         return code;
     }
 
@@ -80,7 +80,7 @@ public class NeoMatiere implements IModel<NeoMatiere> {
         return this;
     }
 
-    public NeoMatiere setRank(int rank) {
+    public NeoMatiere setRank(String rank) {
         this.rank = rank;
         return this;
     }
@@ -95,7 +95,7 @@ public class NeoMatiere implements IModel<NeoMatiere> {
         return this;
     }
 
-    public NeoMatiere setCode(int code) {
+    public NeoMatiere setCode(String code) {
         this.code = code;
         return this;
     }
