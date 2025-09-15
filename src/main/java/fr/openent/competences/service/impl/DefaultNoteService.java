@@ -936,6 +936,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
      * @param handler
      */
     private void updateOrInsertAverage(JsonArray values, Handler<Either<String, JsonArray>> handler) {
+        log.info("niko : " + values.encodePrettily());
         String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".moyenne_finale " +
                 "(id_periode, id_eleve, moyenne, id_classe, id_matiere, statut) VALUES " +
                 "(?, ?, ?, ?, ?, ?) " +
