@@ -2907,11 +2907,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         for (Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
             String studentId = entry.getKey();
             JsonObject student = entry.getValue();
-            student.remove(Field.MOYENNE_FINALE);
+            student.remove(MOYENNEFINALE);
 
             Future<Optional<MoyenneFinale>> future = getMoyenneFinaleByIdEleveAndIdMatiere(studentId, idMatiere)
                     .onSuccess(optMoyenneFinale -> {
-                        optMoyenneFinale.ifPresent(moyenneFinale -> student.put(Field.MOYENNE_FINALE, getMoyenneFinaleValue(moyenneFinale)));
+                        optMoyenneFinale.ifPresent(moyenneFinale -> student.put(MOYENNEFINALE, getMoyenneFinaleValue(moyenneFinale)));
                     });
 
             futures.add(future);
