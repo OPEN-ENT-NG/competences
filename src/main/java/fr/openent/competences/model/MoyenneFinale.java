@@ -8,7 +8,7 @@ import static fr.openent.competences.constants.Field.*;
 public class MoyenneFinale implements IModel<MoyenneFinale> {
 
     private String id;
-    private Integer id_periode;
+    private String id_periode;
     private Integer moyenne;
     private String id_classe;
     private String id_matiere;
@@ -19,7 +19,7 @@ public class MoyenneFinale implements IModel<MoyenneFinale> {
 
     public MoyenneFinale(JsonObject json) {
         this.setId(json.getString(ID))
-                .setIdPeriode(json.getInteger(ID_PERIODE))
+                .setIdPeriode(json.getString(ID_PERIODE))
                 .setMoyenne(json.getInteger(MOYENNE))
                 .setIdClasse(json.getString(ID_CLASSE))
                 .setIdMatiere(json.getString(ID_MATIERE))
@@ -32,7 +32,7 @@ public class MoyenneFinale implements IModel<MoyenneFinale> {
         return id;
     }
 
-    public Integer getIdPeriode() {
+    public String getIdPeriode() {
         return id_periode;
     }
 
@@ -59,7 +59,7 @@ public class MoyenneFinale implements IModel<MoyenneFinale> {
         return this;
     }
 
-    public MoyenneFinale setIdPeriode(Integer id_periode) {
+    public MoyenneFinale setIdPeriode(String id_periode) {
         this.id_periode = id_periode;
         return this;
     }
