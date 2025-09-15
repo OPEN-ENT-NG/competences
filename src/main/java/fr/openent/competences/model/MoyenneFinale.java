@@ -6,34 +6,29 @@ import io.vertx.core.json.JsonObject;
 import static fr.openent.competences.constants.Field.*;
 
 public class MoyenneFinale implements IModel<MoyenneFinale> {
-
-    private String id;
-    private String id_periode;
+    
+    private Integer idPeriode;
     private Integer moyenne;
-    private String id_classe;
-    private String id_matiere;
+    private String idClasse;
+    private String idMatiere;
     private String statut;
 
     public MoyenneFinale() {
     }
 
     public MoyenneFinale(JsonObject json) {
-        this.setId(json.getString(ID))
-                .setIdPeriode(json.getString(ID_PERIODE))
-                .setMoyenne(json.getInteger(MOYENNE))
-                .setIdClasse(json.getString(ID_CLASSE))
-                .setIdMatiere(json.getString(ID_MATIERE))
-                .setStatut(json.getString(STATUT));
+        this.setIdPeriode(json.getValue(ID_PERIODE) != null ? Integer.valueOf(json.getValue(ID_PERIODE).toString()) : null)
+            .setMoyenne(json.getValue(MOYENNE) != null ? Integer.valueOf(json.getValue(MOYENNE).toString()) : null)
+            .setIdClasse(json.getString(ID_CLASSE))
+            .setIdMatiere(json.getString(ID_MATIERE))
+            .setStatut(json.getString(STATUT));
     }
+
 
     // Getters
 
-    public String getId() {
-        return id;
-    }
-
-    public String getIdPeriode() {
-        return id_periode;
+    public Integer getIdPeriode() {
+        return idPeriode;
     }
 
     public Integer getMoyenne() {
@@ -41,11 +36,11 @@ public class MoyenneFinale implements IModel<MoyenneFinale> {
     }
 
     public String getIdClasse() {
-        return id_classe;
+        return idClasse;
     }
 
     public String getIdMatiere() {
-        return id_matiere;
+        return idMatiere;
     }
 
     public String getStatut() {
@@ -54,13 +49,8 @@ public class MoyenneFinale implements IModel<MoyenneFinale> {
 
     // Setters (style fluide)
 
-    public MoyenneFinale setId(String id) {
-        this.id = id;
-        return this;
-    }
-
-    public MoyenneFinale setIdPeriode(String id_periode) {
-        this.id_periode = id_periode;
+    public MoyenneFinale setIdPeriode(Integer idPeriode) {
+        this.idPeriode = idPeriode;
         return this;
     }
 
@@ -69,13 +59,13 @@ public class MoyenneFinale implements IModel<MoyenneFinale> {
         return this;
     }
 
-    public MoyenneFinale setIdClasse(String id_classe) {
-        this.id_classe = id_classe;
+    public MoyenneFinale setIdClasse(String idClasse) {
+        this.idClasse = idClasse;
         return this;
     }
 
-    public MoyenneFinale setIdMatiere(String id_matiere) {
-        this.id_matiere = id_matiere;
+    public MoyenneFinale setIdMatiere(String idMatiere) {
+        this.idMatiere = idMatiere;
         return this;
     }
 
