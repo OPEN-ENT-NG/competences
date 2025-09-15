@@ -22,6 +22,7 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.*;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.Common;
+import fr.openent.competences.helper.ModelHelper;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
 import fr.openent.competences.repository.RepositoryFactory;
@@ -2862,6 +2863,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         }
                         addIsThirdClassLevelFieldForEachStudent(elevesMapObject)
+                                .compose(v -> addMoyenneFinale(elevesMapObject))
                                 .compose(v -> addIsMatiereDispensableFieldForEachStudent(elevesMapObject, idMatiere))
                                 .onSuccess(v -> {
                                     handler.handle(new Either.Right<>(resultHandler
@@ -2899,6 +2901,25 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return CompositeFuture.all(futures).mapEmpty();
     }
 
+    private Future<Void> addMoyenneFinale(Map<String, JsonObject> elevesMapObject) {
+        List<Future> futures = new ArrayList<>();
+
+        for (Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
+            String studentId = entry.getKey();
+            JsonObject student = entry.getValue();
+            student.remove(Field.MOYENNE_FINALE);
+
+            Future<Optional<MoyenneFinale>> future = getMoyenneFinaleByIdEleve(studentId)
+                    .onSuccess(optMoyenneFinale -> {
+                        optMoyenneFinale.ifPresent(moyenneFinale -> student.put(Field.MOYENNE_FINALE, getMoyenneFinaleValue(moyenneFinale)));
+                    });
+
+            futures.add(future);
+        }
+
+        return CompositeFuture.all(futures).mapEmpty();
+    }
+
     private Future<Void> addIsMatiereDispensableFieldForEachStudent(Map<String, JsonObject> elevesMapObject, String idMatiere) {
         List<Future> futures = new ArrayList<>();
 
@@ -2916,6 +2937,31 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return CompositeFuture.all(futures).mapEmpty();
     }
 
+    private Future<Optional<MoyenneFinale>> getMoyenneFinaleByIdEleve(String idEleve) {
+        Promise<Optional<MoyenneFinale>> promise = Promise.promise();
+
+        String query = "SELECT * FROM " + COMPETENCES_SCHEMA + "." + Field.MOYENNE_FINALE_TABLE +
+                " WHERE id_eleve = ? ";
+
+        JsonArray params = new JsonArray().add(idEleve);
+
+        String errorMessage = String.format("[Competences@getMoyenneFinaleByIdEleve] Fail to retrieve moyenne_finale for élève %s : ", idEleve);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(
+                ModelHelper.uniqueResultToIModel(promise, MoyenneFinale.class, errorMessage)
+        ));
+
+        return promise.future();
+    }
+
+    private String getMoyenneFinaleValue(MoyenneFinale moyenneFinale) {
+        if (moyenneFinale.getMoyenne() != null) {
+            return moyenneFinale.getMoyenne().toString();
+        }
+        else {
+            return moyenneFinale.getStatut();
+        }
+    }
 
     private JsonArray getAppreciationSelectedPeriod (JsonArray appreciations, Long idPeriod) {
         List<JsonObject> fileredAppreciations = new ArrayList<>();
