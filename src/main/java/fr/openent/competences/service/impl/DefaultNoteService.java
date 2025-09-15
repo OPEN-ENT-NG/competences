@@ -2863,7 +2863,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         }
                         addIsThirdClassLevelFieldForEachStudent(elevesMapObject)
-                                .compose(v -> addMoyenneFinale(elevesMapObject))
+                                .compose(v -> addMoyenneFinale(elevesMapObject, idMatiere))
                                 .compose(v -> addIsMatiereDispensableFieldForEachStudent(elevesMapObject, idMatiere))
                                 .onSuccess(v -> {
                                     handler.handle(new Either.Right<>(resultHandler
@@ -2901,7 +2901,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return CompositeFuture.all(futures).mapEmpty();
     }
 
-    private Future<Void> addMoyenneFinale(Map<String, JsonObject> elevesMapObject) {
+    private Future<Void> addMoyenneFinale(Map<String, JsonObject> elevesMapObject, String idMatiere) {
         List<Future> futures = new ArrayList<>();
 
         for (Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
@@ -2909,7 +2909,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonObject student = entry.getValue();
             student.remove(Field.MOYENNE_FINALE);
 
-            Future<Optional<MoyenneFinale>> future = getMoyenneFinaleByIdEleve(studentId)
+            Future<Optional<MoyenneFinale>> future = getMoyenneFinaleByIdEleveAndIdMatiere(studentId, idMatiere)
                     .onSuccess(optMoyenneFinale -> {
                         optMoyenneFinale.ifPresent(moyenneFinale -> student.put(Field.MOYENNE_FINALE, getMoyenneFinaleValue(moyenneFinale)));
                     });
@@ -2937,15 +2937,20 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return CompositeFuture.all(futures).mapEmpty();
     }
 
-    private Future<Optional<MoyenneFinale>> getMoyenneFinaleByIdEleve(String idEleve) {
+    private Future<Optional<MoyenneFinale>> getMoyenneFinaleByIdEleveAndIdMatiere(String idEleve, String idMatiere) {
         Promise<Optional<MoyenneFinale>> promise = Promise.promise();
 
         String query = "SELECT * FROM " + COMPETENCES_SCHEMA + "." + Field.MOYENNE_FINALE_TABLE +
-                " WHERE id_eleve = ? ";
+                " WHERE id_eleve = ? AND id_matiere = ?";
 
-        JsonArray params = new JsonArray().add(idEleve);
+        JsonArray params = new JsonArray()
+                .add(idEleve)
+                .add(idMatiere);
 
-        String errorMessage = String.format("[Competences@getMoyenneFinaleByIdEleve] Fail to retrieve moyenne_finale for élève %s : ", idEleve);
+        String errorMessage = String.format(
+                "[Competences@getMoyenneFinaleByIdEleveAndIdMatiere] Échec récupération moyenne_finale pour élève %s et matière %s : ",
+                idEleve, idMatiere
+        );
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(
                 ModelHelper.uniqueResultToIModel(promise, MoyenneFinale.class, errorMessage)
@@ -2953,6 +2958,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         return promise.future();
     }
+
 
     private String getMoyenneFinaleValue(MoyenneFinale moyenneFinale) {
         if (moyenneFinale.getMoyenne() != null) {
