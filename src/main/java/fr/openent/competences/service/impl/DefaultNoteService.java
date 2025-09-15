@@ -2863,7 +2863,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         }
                         addIsThirdClassLevelFieldForEachStudent(elevesMapObject)
-                                .compose(v -> addMoyenneFinale(elevesMapObject, idMatiere))
+                                .compose(v -> addMoyenneFinale(elevesMapObject, idMatiere, idPeriode))
                                 .compose(v -> addIsMatiereDispensableFieldForEachStudent(elevesMapObject, idMatiere))
                                 .onSuccess(v -> {
                                     handler.handle(new Either.Right<>(resultHandler
@@ -2901,7 +2901,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return CompositeFuture.all(futures).mapEmpty();
     }
 
-    private Future<Void> addMoyenneFinale(Map<String, JsonObject> elevesMapObject, String idMatiere) {
+    private Future<Void> addMoyenneFinale(Map<String, JsonObject> elevesMapObject, String idMatiere, Long idPeriode) {
         List<Future> futures = new ArrayList<>();
 
         for (Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
@@ -2909,7 +2909,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonObject student = entry.getValue();
             student.remove(MOYENNEFINALE);
 
-            Future<Optional<MoyenneFinale>> future = getMoyenneFinaleByIdEleveAndIdMatiere(studentId, idMatiere)
+            Future<Optional<MoyenneFinale>> future = getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(studentId, idMatiere, idPeriode)
                     .onSuccess(optMoyenneFinale -> {
                         optMoyenneFinale.ifPresent(moyenneFinale -> student.put(MOYENNEFINALE, getMoyenneFinaleValue(moyenneFinale)));
                     });
@@ -2937,15 +2937,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return CompositeFuture.all(futures).mapEmpty();
     }
 
-    private Future<Optional<MoyenneFinale>> getMoyenneFinaleByIdEleveAndIdMatiere(String idEleve, String idMatiere) {
+    private Future<Optional<MoyenneFinale>> getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(String idEleve, String idMatiere, Long idPeriode) {
         Promise<Optional<MoyenneFinale>> promise = Promise.promise();
 
         String query = "SELECT * FROM " + COMPETENCES_SCHEMA + "." + Field.MOYENNE_FINALE_TABLE +
-                " WHERE id_eleve = ? AND id_matiere = ?";
+                " WHERE id_eleve = ? AND id_matiere = ? AND id_periode = ?";
 
         JsonArray params = new JsonArray()
                 .add(idEleve)
-                .add(idMatiere);
+                .add(idMatiere)
+                .add(idPeriode);
 
         String errorMessage = String.format(
                 "[Competences@getMoyenneFinaleByIdEleveAndIdMatiere] Échec récupération moyenne_finale pour élève %s et matière %s : ",

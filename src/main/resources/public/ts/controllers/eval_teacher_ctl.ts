@@ -4154,7 +4154,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 eleve.moyenneFinaleIsSet = false;
             }else{
                 if(utils.isNN(eleve.moyenneFinale)) {
-                    !!eleve.isUserInThirdClassLevel ? eleve.moyenneFinale = getEA() : eleve.moyenneFinale = getNN();
+                    if(eleve.moyenneFinale === getDI()) {
+                        eleve.moyenneFinale = getDI();
+                    } else {
+                        !!eleve.isUserInThirdClassLevel ? eleve.moyenneFinale = getEA() : eleve.moyenneFinale = getNN();
+                    }
                 }
                 eleve.moyenneFinaleIsSet = eleve.moyenne !== eleve.moyenneFinale;
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
