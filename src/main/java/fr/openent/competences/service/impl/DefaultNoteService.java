@@ -918,10 +918,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
             valuesAverageOrPositioning.add(field.getValue(column))
                     .add(idClassSchool)
-                    .add(idSubject)
-                    .add(field.getValue(column));
+                    .add(idSubject);
 
             if (Field.MOYENNE.equals(column))  valuesAverageOrPositioning.add(field.getValue(Field.STATUT));
+
+            valuesAverageOrPositioning.add(field.getValue(column));
 
             if (column.equals(Field.MOYENNE)) {
                 updateOrInsertAverage(valuesAverageOrPositioning, handler);
@@ -936,7 +937,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
      * @param handler
      */
     private void updateOrInsertAverage(JsonArray values, Handler<Either<String, JsonArray>> handler) {
-        log.info("niko : " + values.encodePrettily());
         String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".moyenne_finale " +
                 "(id_periode, id_eleve, moyenne, id_classe, id_matiere, statut) VALUES " +
                 "(?, ?, ?, ?, ?, ?) " +
