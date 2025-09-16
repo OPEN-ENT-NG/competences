@@ -22,8 +22,10 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.*;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.Common;
+import fr.openent.competences.helper.ModelHelper;
 import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.model.*;
+import fr.openent.competences.repository.RepositoryFactory;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
@@ -36,6 +38,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.tuple.MutableTriple;
+import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -92,12 +95,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private UtilsService utilsService;
     private AnnotationService annotationService;
     private CompetenceNoteService competenceNoteService;
-    private SubTopicService subTopicService;
     private StructureOptionsService structureOptionsService;
+    private UserService userService;
     protected static final Logger log = LoggerFactory.getLogger(DefaultNoteService.class);
 
     public DefaultNoteService(String schema, String table) {
         super(schema, table);
+        Neo4j neo4j = Neo4j.getInstance();
+        RepositoryFactory repositoryFactory = new RepositoryFactory(neo4j);
+        this.userService = new DefaultUserService(repositoryFactory);
     }
 
     public DefaultNoteService(String schema, String table, EventBus eb) {
@@ -106,8 +112,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         utilsService = new DefaultUtilsService(eb);
         annotationService = new DefaultAnnotationService(COMPETENCES_SCHEMA, Field.REL_ANNOTATIONS_DEVOIRS_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, Field.COMPETENCES_NOTES_TABLE);
-        subTopicService = new DefaultSubTopicService(Competences.COMPETENCES_SCHEMA, Field.SUBTOPIC_TABLE);
         structureOptionsService = new DefaultStructureOptions();
+        Neo4j neo4j = Neo4j.getInstance();
+        RepositoryFactory repositoryFactory = new RepositoryFactory(neo4j);
+        this.userService = new DefaultUserService(repositoryFactory);
     }
 
     @Override
@@ -702,8 +710,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             query.append("SELECT id_periode, id_eleve, " + APPRECIATION_MATIERE_PERIODE + ", id_classe, id_matiere, appreciation_matiere_periode.id AS id_appreciation_matiere_periode ");
             query.append(" FROM " + COMPETENCES_SCHEMA + "." + APPRECIATION_MATIERE_PERIODE);
         } else if(colonne.equals(Field.MOYENNE)){
-            query.append("SELECT id_periode, id_eleve, " + Field.MOYENNE + ", id_classe, id_matiere ");
-            query.append(" FROM " + COMPETENCES_SCHEMA + "." + Field.MOYENNE_FINALE_TABLE);
+            query.append("SELECT * FROM " + COMPETENCES_SCHEMA + "." + Field.MOYENNE_FINALE_TABLE);
         } else{
             String textError = "Error when trying to get data, selected column is not supported.";
             log.error(textError);
@@ -912,31 +919,49 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
             valuesAverageOrPositioning.add(field.getValue(column))
                     .add(idClassSchool)
-                    .add(idSubject)
-                    .add(field.getValue(column));
+                    .add(idSubject);
 
-            updateOrInsertAverageOrPositioning(column, valuesAverageOrPositioning, handler);
+            if (Field.MOYENNE.equals(column))  valuesAverageOrPositioning.add(field.getValue(Field.STATUT));
+
+            valuesAverageOrPositioning.add(field.getValue(column));
+
+            if (column.equals(Field.MOYENNE)) {
+                updateOrInsertAverage(valuesAverageOrPositioning, handler);
+            } else {
+                updateOrInsertPositioning(valuesAverageOrPositioning, handler);
+            }
         }
     }
 
     /**
-     * @param column
-     * @param values =[field.getValue(column)?, idClassSchool, idSubject, field.getValue(column)? ]
+     * @param values =[idPeriod, idStudent, field.getValue("moyenne"), idClassSchool, idSubject, field.getValue("moyenne"), field.getValue("statut")]
      * @param handler
      */
-    private void updateOrInsertAverageOrPositioning(String column, JsonArray values, Handler<Either<String, JsonArray>> handler) {
-        String query;
-        query = "" +
-                "INSERT INTO " + COMPETENCES_SCHEMA + "." + column +
-                ("moyenne".equals(column) ? "_finale" : " ") +
-                " (id_periode, id_eleve," + column + ", id_classe, id_matiere) VALUES " +
-                " ( ? , ? , ? , ? , ? ) " +
-                " ON CONFLICT (id_periode, id_eleve, id_classe, id_matiere) " +
-                " DO UPDATE SET " + column + " = ? ";
-
+    private void updateOrInsertAverage(JsonArray values, Handler<Either<String, JsonArray>> handler) {
+        String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".moyenne_finale " +
+                "(id_periode, id_eleve, moyenne, id_classe, id_matiere, statut) VALUES " +
+                "(?, ?, ?, ?, ?, ?) " +
+                "ON CONFLICT (id_periode, id_eleve, id_classe, id_matiere) " +
+                "DO UPDATE SET moyenne = ?";
 
         Sql.getInstance().prepared(query, values, validResultHandler(handler));
     }
+
+    /**
+     * @param values =[idPeriod, idStudent, field.getValue("positionnement"), idClassSchool, idSubject, field.getValue("positionnement")]
+     * @param handler
+     */
+    private void updateOrInsertPositioning(JsonArray values, Handler<Either<String, JsonArray>> handler) {
+        String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".positionnement " +
+                "(id_periode, id_eleve, positionnement, id_classe, id_matiere) VALUES " +
+                "(?, ?, ?, ?, ?) " +
+                "ON CONFLICT (id_periode, id_eleve, id_classe, id_matiere) " +
+                "DO UPDATE SET positionnement = ?";
+
+        Sql.getInstance().prepared(query, values, validResultHandler(handler));
+    }
+
+
 
     public void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes,
                                                  final JsonObject result, String idEleve, JsonArray idEleves, List<Service> services,
@@ -2837,8 +2862,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     APPRECIATION_MATIERE_PERIODE, idPeriode, hasEvaluatedHomeWork, withPreviousAppreciations);
 
                         }
-                        handler.handle(new Either.Right<>(resultHandler.put(Field.ELEVES,
-                                new DefaultExportBulletinService(eb, null).sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
+                        addIsThirdClassLevelFieldForEachStudent(elevesMapObject)
+                                .compose(v -> addMoyenneFinale(elevesMapObject, idMatiere, idPeriode))
+                                .compose(v -> addIsMatiereDispensableFieldForEachStudent(elevesMapObject, idMatiere))
+                                .onSuccess(v -> {
+                                    handler.handle(new Either.Right<>(resultHandler
+                                            .put(Field.ELEVES,
+                                            new DefaultExportBulletinService(eb, null).sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
+                                })
+                                .onFailure(err -> {
+                                    handler.handle(new Either.Left<>(err.getMessage()));
+                                });
                     } else {
                         handler.handle(new Either.Left<>(event.cause().getMessage()));
                     }
@@ -2847,6 +2881,93 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 handler.handle(new Either.Left<>(idElevesEvent.cause().getMessage()));
             }
         });
+    }
+
+    private Future<Void> addIsThirdClassLevelFieldForEachStudent(Map<String, JsonObject> elevesMapObject) {
+        List<Future> futures = new ArrayList<>();
+
+        for (Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
+            String studentId = entry.getKey();
+            JsonObject student = entry.getValue();
+
+            Future<Void> future = userService.isUserInThirdClassLevel(studentId)
+                    .onSuccess(isInThirdClass -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, isInThirdClass))
+                    .onFailure(err -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, false))
+                    .mapEmpty();
+
+            futures.add(future);
+        }
+
+        return CompositeFuture.all(futures).mapEmpty();
+    }
+
+    private Future<Void> addMoyenneFinale(Map<String, JsonObject> elevesMapObject, String idMatiere, Long idPeriode) {
+        List<Future> futures = new ArrayList<>();
+
+        for (Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
+            String studentId = entry.getKey();
+            JsonObject student = entry.getValue();
+            student.remove(MOYENNEFINALE);
+
+            Future<Optional<MoyenneFinale>> future = getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(studentId, idMatiere, idPeriode)
+                    .onSuccess(optMoyenneFinale -> {
+                        optMoyenneFinale.ifPresent(moyenneFinale -> student.put(MOYENNEFINALE, getMoyenneFinaleValue(moyenneFinale)));
+                    });
+
+            futures.add(future);
+        }
+
+        return CompositeFuture.all(futures).mapEmpty();
+    }
+
+    private Future<Void> addIsMatiereDispensableFieldForEachStudent(Map<String, JsonObject> elevesMapObject, String idMatiere) {
+        List<Future> futures = new ArrayList<>();
+
+        for (Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
+            JsonObject student = entry.getValue();
+
+            Future<Void> future = new DefaultMatiereService(null).isSubjectDispensable(idMatiere)
+                    .onSuccess(isInThirdClass -> student.put(ISMATIEREDISPENSABLE, isInThirdClass))
+                    .onFailure(err -> student.put(Field.ISMATIEREDISPENSABLE, false))
+                    .mapEmpty();
+
+            futures.add(future);
+        }
+
+        return CompositeFuture.all(futures).mapEmpty();
+    }
+
+    private Future<Optional<MoyenneFinale>> getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(String idEleve, String idMatiere, Long idPeriode) {
+        Promise<Optional<MoyenneFinale>> promise = Promise.promise();
+
+        String query = "SELECT * FROM " + COMPETENCES_SCHEMA + "." + Field.MOYENNE_FINALE_TABLE +
+                " WHERE id_eleve = ? AND id_matiere = ? AND id_periode = ?";
+
+        JsonArray params = new JsonArray()
+                .add(idEleve)
+                .add(idMatiere)
+                .add(idPeriode);
+
+        String errorMessage = String.format(
+                "[Competences@getMoyenneFinaleByIdEleveAndIdMatiere] Échec récupération moyenne_finale pour élève %s et matière %s : ",
+                idEleve, idMatiere
+        );
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(
+                ModelHelper.uniqueResultToIModel(promise, MoyenneFinale.class, errorMessage)
+        ));
+
+        return promise.future();
+    }
+
+
+    private String getMoyenneFinaleValue(MoyenneFinale moyenneFinale) {
+        if (moyenneFinale.getMoyenne() != null) {
+            return moyenneFinale.getMoyenne().toString();
+        }
+        else {
+            return moyenneFinale.getStatut();
+        }
     }
 
     private JsonArray getAppreciationSelectedPeriod (JsonArray appreciations, Long idPeriod) {
