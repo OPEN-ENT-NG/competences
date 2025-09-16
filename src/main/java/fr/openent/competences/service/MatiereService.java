@@ -87,4 +87,11 @@ public interface MatiereService extends CrudService {
       * @param handler return id of subject
       */
      void updateListRank(List<Subject> subjects, Handler<Either<String, JsonObject>> handler);
+
+     /**
+      * Check if a subject is dispensable
+      * @param idSubject subject id
+      * @return future with boolean result
+      */
+     Future<Boolean> isSubjectDispensable(String idSubject);
 }

@@ -15,11 +15,15 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {_, Collection, http, idiom as lang, IModel, Model, model, moment, notify} from 'entcore';
 import httpAxios from 'axios';
+import { _, Collection, http, IModel, idiom as lang, Model, model, moment, notify } from 'entcore';
+import { Mix } from "entcore-toolkit";
+import * as utils from "../../utils/teacher";
+import { getDI, getEA, getNN, getTitulairesForRemplacantsCoEnseignant, setNullAverageForStudent } from "../../utils/teacher";
+import { Graph } from "../common/Graph";
 import {
     Annotation,
-    AppreciationClasse, AppreciationMatiere, BaremeBrevetEleve,
+    AppreciationClasse, AppreciationMatiere,
     Classe, CompetenceNote,
     Devoir,
     Domaine,
@@ -31,12 +35,6 @@ import {
     TableConversion,
     Utils
 } from './index';
-import {getNN} from "../../utils/functions/utilsNN";
-import * as utils from "../../utils/teacher";
-import {getTitulairesForRemplacantsCoEnseignant} from "../../utils/teacher";
-import {Graph} from "../common/Graph";
-import {Mix} from "entcore-toolkit";
-import {StudentAppreciation} from "./digital_skills/StudentAppreciationDigitalSkills";
 
 
 export class ReleveNote extends  Model implements IModel {
@@ -174,6 +172,7 @@ export class ReleveNote extends  Model implements IModel {
                 http().getJson(url).done((res) => {
                     this._tmp = res;
                     utils.sortByLastnameWithAccentIgnored(this._tmp.eleves);
+                    utils.setNullAverage(this._tmp.eleves);
                     this.synchronized.evaluations = true;
                     resolve();
                 });
@@ -411,16 +410,16 @@ export class ReleveNote extends  Model implements IModel {
                 if (this.hasEvaluatedDevoirs && sumCoeff > 0) {
                     _.each(this.classe.eleves.all, (eleve) => {
                         let e = _.findWhere(_eleves, {id: eleve.id});
-                        if (e !== undefined && e.moyenne != null) {
+                        if (e !== undefined && !utils.isNN(e.moyenne)) {
                             eleve.moyenne = e.moyenne;
                         } else {
-                            eleve.moyenne = getNN();
+                            setNullAverageForStudent(eleve);
                         }
                     });
                 } else {
                     this.isNN = true;
                     _.each(this.classe.eleves.all, (eleve) => {
-                        eleve.moyenne = getNN();
+                        setNullAverageForStudent(eleve);
                     })
                 }
                 resolve();
@@ -440,10 +439,13 @@ export class ReleveNote extends  Model implements IModel {
 
     saveMoyenneFinaleEleve(eleve): any {
         return new Promise((resolve, reject) => {
+            let majMoyenneFinale = eleve.moyenneFinale.toUpperCase();
+            let statut = majMoyenneFinale === getNN() || majMoyenneFinale === getEA() || majMoyenneFinale === getDI() ? majMoyenneFinale : null;
             let _data = _.extend(this.toJson(), {
                 idEleve: eleve.id,
                 colonne: 'moyenne',
                 moyenne: parseFloat(eleve.moyenneFinale),
+                statut: statut,
                 delete: eleve.moyenneFinale === "" || eleve.moyenne === eleve.moyenneFinale || eleve.moyenne === parseFloat(eleve.moyenneFinale)
             });
 

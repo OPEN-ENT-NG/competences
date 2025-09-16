@@ -18,6 +18,7 @@
 package fr.openent.competences;
 
 import fr.openent.competences.controllers.*;
+import fr.openent.competences.repository.RepositoryFactory;
 import fr.openent.competences.service.ServiceFactory;
 import fr.openent.competences.service.impl.BulletinWorker;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
@@ -34,6 +35,7 @@ import org.entcore.common.email.EmailFactory;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.BaseServer;
+import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.share.impl.SqlShareService;
 import org.entcore.common.sql.Sql;
@@ -289,7 +291,11 @@ public class Competences extends BaseServer {
 
         AccessEventBus.getInstance().init(eb);
 
-        ServiceFactory serviceFactory = new ServiceFactory(vertx, storage, Sql.getInstance(), config);
+        // DB
+        final Neo4j neo = Neo4j.getInstance();
+
+        RepositoryFactory repositoryFactory = new RepositoryFactory(neo);
+        ServiceFactory serviceFactory = new ServiceFactory(vertx, storage, Sql.getInstance(), config, repositoryFactory);
 
         // Controller
         addController(new ConfigController());

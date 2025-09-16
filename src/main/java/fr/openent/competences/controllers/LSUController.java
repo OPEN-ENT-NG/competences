@@ -74,6 +74,7 @@ import javax.xml.validation.Validator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -2847,7 +2848,6 @@ public class LSUController extends ControllerHelper {
                                     JsonArray tableConversion = tableConversionByClasse.get(idClasse);
                                     addAcquis_addMoyennes(currentAcquis, acquisEleve);
                                     addAcquis_addPositionnement(currentAcquis, tableConversion, acquisEleve);
-                                    addAcquis_setEleveNonNote(acquisEleve);
                                     addAcquis_addAppreciation(currentAcquis, acquisEleve, currentPeriode);
                                     return acquisEleve;
                                 }
@@ -2864,18 +2864,29 @@ public class LSUController extends ControllerHelper {
                                     JsonObject moyClasse = utilsService.getObjectForPeriode(moyennesClasse,
                                             idPeriode, "id");
 
-                                    String valueMoyEleve;
-                                    if (moyEleve != null) {
-                                        valueMoyEleve = (moyFinale != null) ? ((moyFinale.getValue("moyenneFinale") == "NN") ? "NN" : moyFinale.getValue("moyenneFinale") + "/20") :
-                                                moyEleve.getValue("moyenne") + "/20";
-                                    } else {
-                                        valueMoyEleve = (moyFinale != null) ? ((moyFinale.getValue("moyenneFinale") == "NN") ? "NN" : moyFinale.getValue("moyenneFinale") + "/20")  :
-                                                "NN";
+                                    BigDecimal valueMoyEleve = null;
+
+                                    if (moyFinale != null) {
+                                        Object val = moyFinale.getValue("moyenneFinale");
+                                        if (val instanceof Number) {
+                                            valueMoyEleve = new BigDecimal(((Number) val).toString());
+                                        }
+                                    }
+                                    if (valueMoyEleve == null && moyEleve != null) {
+                                        Object val = moyEleve.getValue("moyenne");
+                                        if (val instanceof Number) {
+                                            valueMoyEleve = new BigDecimal(((Number) val).toString());
+                                        }
                                     }
                                     acquisEleve.setMoyenneEleve(valueMoyEleve);
 
-                                    String valueMoyClasse = (moyClasse != null) ? moyClasse.getValue("moyenne") + "/20" :
-                                            "NN";
+                                    BigDecimal valueMoyClasse = null;
+                                    if (moyClasse != null) {
+                                        Object val = moyClasse.getValue("moyenne");
+                                        if (val instanceof Number) {
+                                            valueMoyClasse = new BigDecimal(((Number) val).toString());
+                                        }
+                                    }
                                     acquisEleve.setMoyenneStructure(valueMoyClasse);
                                 }
 
@@ -2910,20 +2921,10 @@ public class LSUController extends ControllerHelper {
                                     }
                                 }
 
-                                private void addAcquis_setEleveNonNote(Acquis acquisEleve) {
-                                    if (acquisEleve.getPositionnement() != null || !"NN".equals(acquisEleve.getMoyenneEleve())) {
-                                        acquisEleve.setEleveNonNote(false);
-                                    } else {
-                                        acquisEleve.setEleveNonNote("NN".equals(acquisEleve.getMoyenneEleve()) && acquisEleve.getPositionnement() == null);
-                                    }
-                                    acquisEleve.setStructureNonNotee(false);
-                                }
-
                                 private void addAcquis_addAppreciation(JsonObject currentAcquis, Acquis acquisEleve,
                                                                        Periode currentPeriode) {
                                     JsonArray appreciations = currentAcquis.getJsonArray("appreciations");
                                     boolean hasAppreciation = false;
-                                    boolean studentIsNN = acquisEleve.isEleveNonNote();
                                     JsonObject app = addAppreciation_getObjectForPeriode(appreciations, idPeriode);
                                     if (app != null) {
                                         JsonArray appreciationByClasse = app.getJsonArray("appreciationByClasse");
@@ -2941,7 +2942,7 @@ public class LSUController extends ControllerHelper {
                                         }
                                     }
 
-                                    if (!hasAppreciation && !studentIsNN) {
+                                    if (!hasAppreciation) {
                                         String messageError = getLibelle("evaluation.lsu.error.no.appreciation") +
                                                 currentPeriode.getLabel() +
                                                 getLibelle("evaluation.lsu.error.on.subject");
@@ -2952,7 +2953,7 @@ public class LSUController extends ControllerHelper {
                                     }
 
                                     boolean toAdd = false;
-                                    if (hasAppreciation || !studentIsNN) {
+                                    if (hasAppreciation) {
                                         bilanPeriodique.setEleveRef(currentEleve);
                                         bilanPeriodique.setPeriodeRef(currentPeriode);
                                         addResponsable(bilanPeriodique);

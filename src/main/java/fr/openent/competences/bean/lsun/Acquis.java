@@ -26,6 +26,7 @@
 package fr.openent.competences.bean.lsun;
 
 import javax.xml.bind.annotation.*;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,10 +51,10 @@ import java.util.List;
  *       &lt;attribute name="discipline-ref" use="required" type="{http://www.w3.org/2001/XMLSchema}IDREF" />
  *       &lt;attribute name="enseignant-refs" use="required" type="{http://www.w3.org/2001/XMLSchema}IDREFS" />
  *       &lt;attribute name="element-programme-refs" type="{http://www.w3.org/2001/XMLSchema}IDREFS" />
- *       &lt;attribute name="moyenne-eleve" type="{urn:fr:edu:scolarite:lsun:bilans:import}MoyenneAlphanumerique" />
- *       &lt;attribute name="moyenne-structure" type="{urn:fr:edu:scolarite:lsun:bilans:import}MoyenneAlphanumerique" />
- *       &lt;attribute name="eleve-non-note" type="{http://www.w3.org/2001/XMLSchema}boolean" />
- *       &lt;attribute name="structure-non-notee" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="moyenne-eleve" type="{urn:fr:edu:scolarite:lsun:bilans:import}MoyenneNumerique" />
+ *       &lt;attribute name="moyenne-structure" type="{urn:fr:edu:scolarite:lsun:bilans:import}MoyenneNumerique" />
+ *       &lt;attribute name="statut-evaluation-eleve" type="{urn:fr:edu:scolarite:lsun:bilans:import}StatutEvaluationEleve" />
+ *       &lt;attribute name="statut-evaluation-structure" type="{urn:fr:edu:scolarite:lsun:bilans:import}StatutEvaluationStructure" />
  *       &lt;attribute name="positionnement" type="{urn:fr:edu:scolarite:lsun:bilans:import}PositionnementAcquis" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -82,13 +83,13 @@ public class Acquis {
     @XmlSchemaType(name = "IDREFS")
     protected List<Object> elementProgrammeRefs;
     @XmlAttribute(name = "moyenne-eleve")
-    protected String moyenneEleve;
+    protected BigDecimal moyenneEleve;
     @XmlAttribute(name = "moyenne-structure")
-    protected String moyenneStructure;
-    @XmlAttribute(name = "eleve-non-note")
-    protected Boolean eleveNonNote;
-    @XmlAttribute(name = "structure-non-notee")
-    protected Boolean structureNonNotee;
+    protected BigDecimal moyenneStructure;
+    @XmlAttribute(name = "statut-evaluation-eleve")
+    protected BigInteger statutEvaluationEleve;
+    @XmlAttribute(name = "statut-evaluation-structure")
+    protected BigInteger statutEvaluationStructure;
     @XmlAttribute(name = "positionnement")
     protected BigInteger positionnement;
 
@@ -206,10 +207,10 @@ public class Acquis {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigDecimal }
      *     
      */
-    public String getMoyenneEleve() {
+    public BigDecimal getMoyenneEleve() {
         return moyenneEleve;
     }
 
@@ -218,10 +219,10 @@ public class Acquis {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigDecimal }
      *     
      */
-    public void setMoyenneEleve(String value) {
+    public void setMoyenneEleve(BigDecimal value) {
         this.moyenneEleve = value;
     }
 
@@ -230,10 +231,10 @@ public class Acquis {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigDecimal }
      *     
      */
-    public String getMoyenneStructure() {
+    public BigDecimal getMoyenneStructure() {
         return moyenneStructure;
     }
 
@@ -242,59 +243,59 @@ public class Acquis {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigDecimal }
      *     
      */
-    public void setMoyenneStructure(String value) {
+    public void setMoyenneStructure(BigDecimal value) {
         this.moyenneStructure = value;
     }
 
     /**
-     * Gets the value of the eleveNonNote property.
-     * 
+     * Gets the value of the statutEvaluationEleve property.
+     *
      * @return
      *     possible object is
-     *     {@link Boolean }
-     *     
+     *     {@link BigInteger }
+     *
      */
-    public Boolean isEleveNonNote() {
-        return eleveNonNote;
+    public BigInteger getStatutEvaluationEleve() {
+        return statutEvaluationEleve;
     }
 
     /**
-     * Sets the value of the eleveNonNote property.
-     * 
+     * Sets the value of the statutEvaluationEleve property.
+     *
      * @param value
      *     allowed object is
-     *     {@link Boolean }
-     *     
+     *     {@link BigInteger }
+     *
      */
-    public void setEleveNonNote(Boolean value) {
-        this.eleveNonNote = value;
+    public void setStatutEvaluationEleve(BigInteger value) {
+        this.statutEvaluationEleve = value;
     }
 
     /**
-     * Gets the value of the structureNonNotee property.
-     * 
+     * Gets the value of the statutEvaluationStructure property.
+     *
      * @return
      *     possible object is
-     *     {@link Boolean }
-     *     
+     *     {@link BigInteger }
+     *
      */
-    public Boolean isStructureNonNotee() {
-        return structureNonNotee;
+    public BigInteger getStatutEvaluationStructure() {
+        return statutEvaluationStructure;
     }
 
     /**
-     * Sets the value of the structureNonNotee property.
-     * 
+     * Sets the value of the statutEvaluationStructure property.
+     *
      * @param value
      *     allowed object is
-     *     {@link Boolean }
-     *     
+     *     {@link BigInteger }
+     *
      */
-    public void setStructureNonNotee(Boolean value) {
-        this.structureNonNotee = value;
+    public void setStatutEvaluationStructure(BigInteger value) {
+        this.statutEvaluationStructure = value;
     }
 
     /**
