@@ -1,7 +1,10 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.helper.ModelHelper;
 import fr.openent.competences.helpers.FutureHelper;
+import fr.openent.competences.model.NeoMatiere;
+import fr.openent.competences.model.NeoUser;
 import fr.openent.competences.model.Subject;
 import fr.openent.competences.service.MatiereService;
 import fr.wseduc.webutils.Either;
@@ -370,14 +373,14 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         Promise<JsonArray> promise = Promise.promise();
         getMatieresEtab(idStructure, FutureHelper.handler(promise,
                 String.format("[Competences@%s::getMatieresEtab] Error during sql request: ",
-                this.getClass().getSimpleName())));
+                        this.getClass().getSimpleName())));
         return promise.future();
     }
 
     /**
-     * @deprecated Use @link {#getMatieresEtab(String idStructure)}
      * @param idEtablissement
      * @param handler
+     * @deprecated Use @link {#getMatieresEtab(String idStructure)}
      */
     @Override
     @Deprecated
@@ -540,5 +543,49 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                 .append("RETURN ids ;");
 
         Neo4j.getInstance().execute(queryFinal.toString(), params, Neo4jResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public Future<Boolean> isSubjectDispensable(String idSubject) {
+        Promise<Boolean> promise = Promise.promise();
+
+        getSubjectById(idSubject)
+                .onSuccess(optSubject -> {
+                    boolean isDispensable = false;
+                    if (optSubject.isPresent()) {
+                        NeoMatiere subject = optSubject.get();
+                        String code = subject.getCode();
+
+                        if (code != null) {
+                            isDispensable = code.equals("100100") || code.matches("03\\d{2}02");
+                        }
+                    }
+                    promise.complete(isDispensable);
+                }
+                ).onFailure(err -> {
+                    log.error(String.format("Failed to determine if subject with id %s is dispensable", idSubject), err);
+                    promise.complete(false);
+                });
+
+        return promise.future();
+    }
+
+    private Future<Optional<NeoMatiere>> getSubjectById(String idSubject) {
+        Promise<Optional<NeoMatiere>> promise = Promise.promise();
+
+        String query = "MATCH (s:Subject {id: {id}}) RETURN " +
+                "s.id AS id, s.rank AS rank, s.label AS label, " +
+                "s.lastUpdated AS lastUpdated, s.code AS code, " +
+                "s.externalId AS externalId, s.source AS source, " +
+                "s.idStructure AS idStructure, s.name AS name, " +
+                "s.externalIdSubject AS externalIdSubject";
+
+
+        JsonObject params = new JsonObject().put("id", idSubject);
+
+        String errorMessage = String.format("[SubjectRepository::getSubjectCodeById] Failed to retrieve code for subject with id %s : ", idSubject);
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validUniqueResultHandler(ModelHelper.uniqueResultToIModel(promise, NeoMatiere.class, errorMessage)));
+
+        return promise.future();
     }
 }

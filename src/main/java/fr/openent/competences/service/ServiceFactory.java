@@ -2,6 +2,7 @@ package fr.openent.competences.service;
 
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.model.Config;
+import fr.openent.competences.repository.RepositoryFactory;
 import fr.openent.competences.service.impl.*;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
@@ -15,6 +16,7 @@ public class ServiceFactory {
     private final Sql sqlAdmin;
     private final Storage storage;
     private final Config config;
+    private final UserService userService;
 
     public ServiceFactory(Vertx vertx, Storage storage, Sql sql, JsonObject config) {
         this.vertx = vertx;
@@ -22,6 +24,16 @@ public class ServiceFactory {
         this.sql = sql;
         this.config = new Config(config);
         this.sqlAdmin = Sql.createInstance(eventBus(), this.config.sqlAdminAdress());
+        this.userService = null;
+    }
+
+    public ServiceFactory(Vertx vertx, Storage storage, Sql sql, JsonObject config, RepositoryFactory repositoryFactory) {
+        this.vertx = vertx;
+        this.storage = storage;
+        this.sql = sql;
+        this.config = new Config(config);
+        this.sqlAdmin = Sql.createInstance(eventBus(), this.config.sqlAdminAdress());
+        this.userService = new DefaultUserService(repositoryFactory);
     }
 
     public BilanPeriodiqueService bilanPeriodiqueService() {
@@ -85,6 +97,10 @@ public class ServiceFactory {
 
     public TransitionService transitionService() {
         return new DefaultTransitionService(sqlAdmin);
+    }
+
+    public UserService userService() {
+        return this.userService;
     }
 
     // Helpers
