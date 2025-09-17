@@ -14,6 +14,7 @@ import fr.openent.competences.utils.BulletinUtils;
 import fr.openent.competences.utils.MultiTeachersUtils;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.collections.SharedDataHelper;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.*;
@@ -54,7 +55,6 @@ import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.constants.Field.IDCLASSE;
 import static fr.openent.competences.constants.Field.IDETABLISSEMENT;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
-import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.*;
 import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.*;
@@ -3316,13 +3316,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .getString("template-path"));
             final String baseUrl = getScheme(request) + "://" + Renders.getHost(request) +
                     config.getString("app-address") + "/public/";
-            String node = (String) vertx.sharedData().getLocalMap("server").get("node");
-            if (node == null) {
-                node = "";
-            }
-            final String _node = node;
-            processTemplate(request, resultFinal, templateName, prefixPdfName, eleve, vertx, config, finalHandler,
-                    dateDebut, templatePath, baseUrl, _node);
+          SharedDataHelper.getInstance().<String, String>getMulti("server", "node")
+            .map(map -> map.get("node"))
+            .map(node -> node == null ? "" : node)
+            .onFailure(th -> {
+              log.error("An error occurred while fetching shared 'server' map", th);
+              finalHandler.handle(new Either.Left<>("[DefaultExportBulletinService | processTemplate] Internal server error"));
+            })
+            .onSuccess(node -> {
+              processTemplate(request, resultFinal, templateName, prefixPdfName, eleve, vertx, config, finalHandler,
+                dateDebut, templatePath, baseUrl, node);
+            });
         }catch (Exception e){
             finalHandler.handle(new Either.Left<>("generateAndSavePdf " + e.getMessage() + " "+
                     eleve.getString("idEleve") + " " + eleve.getString("lastName")));
