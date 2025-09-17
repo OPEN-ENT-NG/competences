@@ -9,7 +9,7 @@
     </parent>
     <groupId>fr.openent</groupId>
     <artifactId>competences</artifactId>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.0-zookeeper-SNAPSHOT</version>
     <scm>
         <connection>scm:git:https://github.com/OPEN-ENT-NG/competences.git</connection>
         <developerConnection>scm:git:https://github.com/OPEN-ENT-NG/competences.git</developerConnection>
@@ -27,8 +27,7 @@
         <junitVersion>5.1.0</junitVersion>
         <powerMockVersion>2.0.2</powerMockVersion>
         <mockitoVersion>[2.0,3.0)</mockitoVersion>
-        <entCoreVersion>6.11-SNAPSHOT</entCoreVersion>
-        <gatlingHighchartsVersion>2.3.1</gatlingHighchartsVersion>
+        <entCoreVersion>6.10-zookeeper-SNAPSHOT</entCoreVersion>
         <opencsvVersion>4.0</opencsvVersion>
         <pdfboxVersion>2.0.30</pdfboxVersion>
     </properties>
@@ -109,12 +108,6 @@
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-testng</artifactId>
             <version>${powerMockVersion}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.gatling.highcharts</groupId>
-            <artifactId>gatling-charts-highcharts</artifactId>
-            <version>${gatlingHighchartsVersion}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

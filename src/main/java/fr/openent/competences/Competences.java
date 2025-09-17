@@ -25,6 +25,7 @@ import fr.openent.competences.service.impl.CompetencesTransitionWorker;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
@@ -39,6 +40,9 @@ import org.entcore.common.share.impl.SqlShareService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static fr.openent.competences.constants.Field.DB_SCHEMA;
 import static fr.openent.competences.constants.Field.DB_VIESCO_SCHEMA;
@@ -268,23 +272,26 @@ public class Competences extends BaseServer {
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
-        super.start(startPromise);
+      final Promise<Void> promise = Promise.promise();
+      super.start(promise);
+      promise.future().compose(e -> this.initCompetences()).onComplete(startPromise);
+    }
+    private Future<Void> initCompetences() {
+      COMPETENCES_SCHEMA = config.getString(DB_SCHEMA);
+      VSCO_SCHEMA = config.getString(DB_VIESCO_SCHEMA);
+      LSUN_CONFIG = config.getJsonObject("lsun");
+      TRANSITION_CONFIG = config.getJsonObject("transition");
+      DELIVERY_OPTIONS = new DeliveryOptions()
+        .setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L);
+      NODE_PDF_GENERATOR = config.getJsonObject("node-pdf-generator");
+      TEMPLATE_PATH = FileResolver.absolutePath(config.getJsonObject("exports")
+        .getString("template-path")).toString();
+      EmailFactory emailFactory = EmailFactory.getInstance();
+      EmailSender notification = emailFactory.getSender();
 
-        COMPETENCES_SCHEMA = config.getString(DB_SCHEMA);
-        VSCO_SCHEMA = config.getString(DB_VIESCO_SCHEMA);
-        LSUN_CONFIG = config.getJsonObject("lsun");
-        TRANSITION_CONFIG = config.getJsonObject("transition");
-        DELIVERY_OPTIONS = new DeliveryOptions()
-                .setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L);
-        NODE_PDF_GENERATOR = config.getJsonObject("node-pdf-generator");
-        TEMPLATE_PATH =  FileResolver.absolutePath(config.getJsonObject("exports")
-                .getString("template-path")).toString();
-        EmailFactory emailFactory = new EmailFactory(vertx, config);
-        EmailSender notification = emailFactory.getSender();
-
-        final EventBus eb = getEventBus(vertx);
-        final Storage storage = new StorageFactory(vertx).getStorage();
-
+      final EventBus eb = getEventBus(vertx);
+      return StorageFactory.build(vertx).compose(storageFactory -> {
+        final Storage storage = storageFactory.getStorage();
         EventStore eventStore = EventStoreFactory.getFactory().getEventStore(Competences.class.getSimpleName());
 
         AccessEventBus.getInstance().init(eb);
@@ -302,7 +309,7 @@ public class Competences extends BaseServer {
         addController(new CompetenceController(eb));
         addController(new CompetenceNoteController(serviceFactory));
         addController(new ModaliteController());
-        addController(new ExportBulletinController(eb,storage,eventStore));
+        addController(new ExportBulletinController(eb, storage, eventStore));
         addController(new DomaineController(eb));
         addController(new EnseignementController(eb));
         addController(new ExportPDFController(serviceFactory));
@@ -310,7 +317,7 @@ public class Competences extends BaseServer {
         addController(new NiveauDeMaitriseController());
         addController(new NoteController(serviceFactory));
         addController(new ElementProgrammeController());
-        addController(new UtilsController(storage,eb));
+        addController(new UtilsController(storage, eb));
         addController(new BilanPeriodiqueController(serviceFactory));
         addController(new MatiereController(eb));
         addController(new ElementBilanPeriodiqueController(eb));
@@ -324,30 +331,31 @@ public class Competences extends BaseServer {
         // Devoir Controller
         DevoirController devoirController = new DevoirController(eb, eventStore);
         SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,
-                new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
+          new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
         devoirController.setCrudService(devoirSqlCrudService);
-       // devoirController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions,
+        // devoirController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions,
         //        null));
         addController(devoirController);
 
         EventBusController eventBusController = new EventBusController(securedActions);
         SqlCrudService eventBusSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,
-                new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
+          new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
         eventBusController.setCrudService(eventBusSqlCrudService);
         eventBusController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions,
-                null));
+          null));
         addController(eventBusController);
 
         // Repository Events
         setRepositoryEvents(new CompetenceRepositoryEvents(serviceFactory));
 
+        final List<Future<?>> futures = new ArrayList<>();
         // Worker
         log.info("WORKER : " + CompetencesTransitionWorker.class.getSimpleName());
-        vertx.deployVerticle(CompetencesTransitionWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+        futures.add(vertx.deployVerticle(CompetencesTransitionWorker.class, new DeploymentOptions().setConfig(config).setWorker(true)));
         log.info("WORKER : " + BulletinWorker.class.getSimpleName());
-        vertx.deployVerticle(BulletinWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
-        startPromise.tryComplete();
-        startPromise.tryFail("[Competences@Competences::start] Fail to start Competences");
+        futures.add(vertx.deployVerticle(BulletinWorker.class, new DeploymentOptions().setConfig(config).setWorker(true)));
+        return Future.all(futures);
+      }).mapEmpty();
     }
 
     public static void launchTransitionWorker(EventBus eb, JsonObject params, boolean isHTTP) {

@@ -30,6 +30,7 @@ import fr.openent.competences.model.*;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.collections.SharedDataHelper;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.template.TemplateProcessor;
@@ -49,7 +50,6 @@ import io.vertx.core.logging.LoggerFactory;
 
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.entcore.common.storage.Storage;
 
@@ -1378,133 +1378,141 @@ public class DefaultExportService implements ExportService {
         final String baseUrl = getScheme(request) + "://"
                 + Renders.getHost(request) + config.getString("app-address") + "/public/";
 
-        String node = (String) vertx.sharedData().getLocalMap("server").get("node");
-        if (node == null) {
-            node = "";
-        }
-        final String _node = node;
-        vertx.fileSystem().readFile(templatePath + templateName, new Handler<AsyncResult<Buffer>>() {
-            @Override
-            public void handle(AsyncResult<Buffer> result) {
+        SharedDataHelper.getInstance().<String, String>getMulti("server", "node")
+          .map(map -> map.get("node"))
+          .map(node -> node == null ? "" : node)
+          .onFailure(th -> {
+            log.error("An error occurred while fetching shared 'server' map", th);
+            renderError(request);
+          })
+          .onSuccess(node -> {
+            if (node == null) {
+              node = "";
+            }
+            final String _node = node;
+            vertx.fileSystem().readFile(templatePath + templateName, new Handler<AsyncResult<Buffer>>() {
+              @Override
+              public void handle(AsyncResult<Buffer> result) {
                 log.info(" result vertx.fileSystem");
                 if (!result.succeeded()) {
-                    log.info("Error while reading template : " + templatePath + templateName);
-                    badRequest(request, "Error while reading template : " + templatePath
-                            + templateName);
-                    log.error("Error while reading template : " + templatePath + templateName);
-                    return;
+                  log.info("Error while reading template : " + templatePath + templateName);
+                  badRequest(request, "Error while reading template : " + templatePath
+                    + templateName);
+                  log.error("Error while reading template : " + templatePath + templateName);
+                  return;
                 }
                 StringReader reader = new StringReader(result.result().toString("UTF-8"));
                 Renders render = new Renders(vertx, config);
                 render.processTemplate(request, templateProps, templateName, reader, new Handler<Writer>() {
-                    @Override
-                    public void handle(Writer writer) {
-                        log.info("write render.processTemplate");
-                        String processedTemplate = ((StringWriter) writer).getBuffer().toString();
-                        if (processedTemplate == null) {
-                            log.info("processing error : \ntemplateProps : " + templateProps.toString()
-                                    + "\ntemplateName : " + templateName);
-                            badRequest(request, "Error while processing.");
-                            if (templateProps != null) {
-                                log.error("processing error : \ntemplateProps : " + templateProps.toString()
-                                        + "\ntemplateName : " + templateName);
-                            }
-                            return;
-                        }
-                        JsonObject actionObject = new JsonObject();
-                        byte[] bytes;
-                        try {
-                            bytes = processedTemplate.getBytes("UTF-8");
-                        } catch (UnsupportedEncodingException e) {
-                            bytes = processedTemplate.getBytes();
-                            log.error(e.getMessage(), e);
-                        }
-                        actionObject.put("content", bytes)
-                                .put("baseUrl", baseUrl);
-                        eb.request(_node + "entcore.pdf.generator", actionObject,
-                                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
-                                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                    @Override
-                                    public void handle(Message<JsonObject> reply) {
-                                        log.info("response entcore.pdf.generator");
-                                        JsonObject pdfResponse = reply.body();
-                                        if (!"ok".equals(pdfResponse.getString("status"))) {
-                                            log.info(" response entcore.pdf.generator status ko : " + pdfResponse.getString("message"));
-                                            badRequest(request, pdfResponse.getString("message"));
-                                            return;
-                                        }
-                                        byte[] pdf = pdfResponse.getBinary("content");
-
-                                        if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
-                                            File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
-                                            OutputStream outStream = null;
-                                            try {
-                                                outStream = new FileOutputStream(pdfFile);
-                                            } catch (FileNotFoundException e) {
-                                                log.error(e.getMessage());
-                                                e.printStackTrace();
-                                            }
-                                            try {
-                                                outStream.write(pdf);
-                                            } catch (IOException e) {
-                                                log.error(e.getMessage());
-                                                e.printStackTrace();
-                                            }
-
-                                           try {
-                                                String sourceDir = pdfFile.getAbsolutePath();
-                                                File sourceFile = new File(sourceDir);
-
-                                                while (!sourceFile.exists()) {
-                                                    log.info(sourceFile.getName() + " file does not exist");
-                                                }
-
-                                                if (sourceFile.exists()) {
-                                                    try (PDDocument document = PDDocument.load(sourceFile)) {
-                                                        PDFRenderer pdfRenderer = new PDFRenderer(document);
-                                                        int pageCount = document.getNumberOfPages();
-                                                        File imageFile = null;
-
-                                                        for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-                                                            BufferedImage image = pdfRenderer.renderImageWithDPI(pageIndex, 150);
-
-                                                            int height = 150 + Integer.parseInt(templateProps.getString("nbrCompetences")) * 50;
-                                                            int cropHeight = Math.min(height, image.getHeight());
-                                                            int cropWidth = Math.min(1684, image.getWidth());
-
-                                                            BufferedImage subImage = image.getSubimage(0, 0, cropWidth, cropHeight);
-
-                                                            imageFile = new File(prefixPdfName + "_" + dateDebut + ".jpg");
-                                                            ImageIO.write(subImage, "jpg", imageFile);
-                                                        }                                           
-                                                    }
-                                                }
-                                            } catch (Exception e) {
-                                                log.error("[Competences::generateJpgFromPdf] Erreur pendant la génération d'image à partir du PDF", e);
-                                            }
-                                            log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Fin Generation Image du template " + templateName);
-                                        } else {
-                                            log.info(" response final ");
-                                            request.response()
-                                                    .putHeader("Content-Type", "application/pdf");
-                                            request.response().putHeader("Content-Disposition",
-                                                    "attachment; filename=" + prefixPdfName + "_"
-                                                            + dateDebut + ".pdf");
-                                            request.response().end(Buffer.buffer(pdf));
-                                            JsonArray removesFiles = templateProps.getJsonArray("idImagesFiles");
-                                            if (removesFiles != null) {
-                                                storage.removeFiles(removesFiles, event -> {
-                                                    log.info(" [Remove graph Images] " + event.encode());
-                                                });
-                                            }
-                                            log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Fin Generation PDF du template " + templateName);
-                                        }
-                                    }
-                                }));
+                  @Override
+                  public void handle(Writer writer) {
+                    log.info("write render.processTemplate");
+                    String processedTemplate = ((StringWriter) writer).getBuffer().toString();
+                    if (processedTemplate == null) {
+                      log.info("processing error : \ntemplateProps : " + templateProps.toString()
+                        + "\ntemplateName : " + templateName);
+                      badRequest(request, "Error while processing.");
+                      if (templateProps != null) {
+                        log.error("processing error : \ntemplateProps : " + templateProps.toString()
+                          + "\ntemplateName : " + templateName);
+                      }
+                      return;
                     }
+                    JsonObject actionObject = new JsonObject();
+                    byte[] bytes;
+                    try {
+                      bytes = processedTemplate.getBytes("UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                      bytes = processedTemplate.getBytes();
+                      log.error(e.getMessage(), e);
+                    }
+                    actionObject.put("content", bytes)
+                      .put("baseUrl", baseUrl);
+                    eb.request(_node + "entcore.pdf.generator", actionObject,
+                      new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                      handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                        @Override
+                        public void handle(Message<JsonObject> reply) {
+                          log.info("response entcore.pdf.generator");
+                          JsonObject pdfResponse = reply.body();
+                          if (!"ok".equals(pdfResponse.getString("status"))) {
+                            log.info(" response entcore.pdf.generator status ko : " + pdfResponse.getString("message"));
+                            badRequest(request, pdfResponse.getString("message"));
+                            return;
+                          }
+                          byte[] pdf = pdfResponse.getBinary("content");
+
+                          if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
+                            File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
+                            OutputStream outStream = null;
+                            try {
+                              outStream = new FileOutputStream(pdfFile);
+                            } catch (FileNotFoundException e) {
+                              log.error(e.getMessage());
+                              e.printStackTrace();
+                            }
+                            try {
+                              outStream.write(pdf);
+                            } catch (IOException e) {
+                              log.error(e.getMessage());
+                              e.printStackTrace();
+                            }
+
+                            try {
+                              String sourceDir = pdfFile.getAbsolutePath();
+                              File sourceFile = new File(sourceDir);
+
+                              while (!sourceFile.exists()) {
+                                log.info(sourceFile.getName() + " file does not exist");
+                              }
+
+                              if (sourceFile.exists()) {
+                                try (PDDocument document = PDDocument.load(sourceFile)) {
+                                  PDFRenderer pdfRenderer = new PDFRenderer(document);
+                                  int pageCount = document.getNumberOfPages();
+                                  File imageFile = null;
+
+                                  for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+                                    BufferedImage image = pdfRenderer.renderImageWithDPI(pageIndex, 150);
+
+                                    int height = 150 + Integer.parseInt(templateProps.getString("nbrCompetences")) * 50;
+                                    int cropHeight = Math.min(height, image.getHeight());
+                                    int cropWidth = Math.min(1684, image.getWidth());
+
+                                    BufferedImage subImage = image.getSubimage(0, 0, cropWidth, cropHeight);
+
+                                    imageFile = new File(prefixPdfName + "_" + dateDebut + ".jpg");
+                                    ImageIO.write(subImage, "jpg", imageFile);
+                                  }
+                                }
+                              }
+                            } catch (Exception e) {
+                              log.error("[Competences::generateJpgFromPdf] Erreur pendant la génération d'image à partir du PDF", e);
+                            }
+                            log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Fin Generation Image du template " + templateName);
+                          } else {
+                            log.info(" response final ");
+                            request.response()
+                              .putHeader("Content-Type", "application/pdf");
+                            request.response().putHeader("Content-Disposition",
+                              "attachment; filename=" + prefixPdfName + "_"
+                                + dateDebut + ".pdf");
+                            request.response().end(Buffer.buffer(pdf));
+                            JsonArray removesFiles = templateProps.getJsonArray("idImagesFiles");
+                            if (removesFiles != null) {
+                              storage.removeFiles(removesFiles, event -> {
+                                log.info(" [Remove graph Images] " + event.encode());
+                              });
+                            }
+                            log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Fin Generation PDF du template " + templateName);
+                          }
+                        }
+                      }));
+                  }
                 });
-            }
-        });
+              }
+            });
+          });
     }
 
     @Override
@@ -1613,27 +1621,32 @@ public class DefaultExportService implements ExportService {
                 log.error(error);
                 promise.fail(error);
             } else {
-                String node = (String) vertx.sharedData().getLocalMap("server").get("node");
-                if (node == null) {
-                    node = "";
-                }
-                JsonObject actionObject = new JsonObject()
-                        .put("content", writer.getBytes(StandardCharsets.UTF_8))
-                        .put("baseUrl", baseUrl);
+                SharedDataHelper.getInstance().<String, String>getMulti("server", "node")
+                  .map(map -> map.get("node"))
+                  .map(node -> node == null ? "" : node)
+                  .onFailure(th -> {
+                    log.error("An error occurred while fetching shared 'server' map", th);
+                    promise.fail(th);
+                  })
+                  .onSuccess(node -> {
+                    JsonObject actionObject = new JsonObject()
+                      .put("content", writer.getBytes(StandardCharsets.UTF_8))
+                      .put("baseUrl", baseUrl);
 
-                eb.request(node + "entcore.pdf.generator", actionObject, new DeliveryOptions()
-                        .setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L), handlerToAsyncHandler(reply -> {
-                    JsonObject pdfResponse = reply.body();
-                    if (!"ok".equals(pdfResponse.getString("status"))) {
+                    eb.request(node + "entcore.pdf.generator", actionObject, new DeliveryOptions()
+                      .setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L), handlerToAsyncHandler(reply -> {
+                      JsonObject pdfResponse = reply.body();
+                      if (!"ok".equals(pdfResponse.getString("status"))) {
                         String error = String.format("[Competences@%s::renderTemplateAndGeneratePdf] Failed to generate PDF" +
-                                        " after processTemplate for student : %s",
-                                this.getClass().getSimpleName(), student.getString("idEleve"));
+                            " after processTemplate for student : %s",
+                          this.getClass().getSimpleName(), student.getString("idEleve"));
                         log.error(error);
                         promise.fail(error);
-                    } else {
+                      } else {
                         promise.complete(pdfResponse.getBinary("content"));
-                    }
-                }));
+                      }
+                    }));
+                  });
             }
         });
         return promise.future();

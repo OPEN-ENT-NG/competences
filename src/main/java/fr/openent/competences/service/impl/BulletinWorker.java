@@ -6,7 +6,10 @@ import fr.openent.competences.enums.TypePDF;
 import fr.openent.competences.service.ExportBulletinService;
 import fr.openent.competences.service.MongoExportService;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.collections.SharedDataHelper;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -29,14 +32,22 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     private boolean isSleeping = true;
 
     @Override
-    public void start(){
+    public void start(final Promise<Void> startPromise){
         super.start();
-        String neo4jConfig = (String) vertx.sharedData().getLocalMap("server").get("neo4jConfig");
-        Neo4j.getInstance().init(vertx, new JsonObject(neo4jConfig));
-        this.storage = new StorageFactory(vertx).getStorage();
-        this.exportBulletinService = new DefaultExportBulletinService(eb, storage, vertx);
-        vertx.eventBus().localConsumer(BulletinWorker.class.getSimpleName(), this);
-        processExport();
+        SharedDataHelper.getInstance().<String, String>getMulti("server", "neo4jConfig")
+          .map(map -> map.get("neo4jConfig"))
+          .compose(neo4jConfig ->  {
+            Neo4j.getInstance().init(vertx, new JsonObject(neo4jConfig));
+            return StorageFactory.build(vertx);
+          })
+          .compose(factory -> {
+              this.storage = factory.getStorage();
+              this.exportBulletinService = new DefaultExportBulletinService(eb, storage, vertx);
+              vertx.eventBus().localConsumer(BulletinWorker.class.getSimpleName(), this);
+              processExport();
+              return Future.<Void>succeededFuture();
+          })
+          .onComplete(startPromise);
     }
 
     @Override
