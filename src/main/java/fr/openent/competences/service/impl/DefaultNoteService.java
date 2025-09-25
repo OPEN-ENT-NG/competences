@@ -2863,10 +2863,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         }
                         addIsThirdClassLevelFieldForEachStudent(elevesMapObject)
-                                .compose(v -> {
-                                    log.info("\n\n" + elevesMapObject + "\n\n");
-                                    return addMoyenneFinale(elevesMapObject, idMatiere, idPeriode);
-                                })
+                                .compose(v -> addMoyenneFinale(elevesMapObject, idMatiere, idPeriode))
                                 .compose(v -> addIsMatiereDispensableFieldForEachStudent(elevesMapObject, idMatiere))
                                 .onSuccess(v -> {
                                     handler.handle(new Either.Right<>(resultHandler
@@ -2894,7 +2891,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonObject student = entry.getValue();
 
             Future<Void> future = userService.isUserInThirdClassLevel(studentId)
-                    .onSuccess(isInThirdClass -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, isInThirdClass))
+                    .onSuccess(isInThirdClass -> {
+                        student.put(Field.ISUSERINTHIRDCLASSLEVEl, isInThirdClass);
+                        if (isInThirdClass && Objects.equals(student.getString(Field.MOYENNE), Field.NN)) {
+                            student.remove(Field.MOYENNE);
+                            student.put(Field.MOYENNE, EA);
+                        }
+                    })
                     .onFailure(err -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, false))
                     .mapEmpty();
 
@@ -2914,7 +2917,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
             Future<Optional<MoyenneFinale>> future = getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(studentId, idMatiere, idPeriode)
                     .onSuccess(optMoyenneFinale -> {
-                        optMoyenneFinale.ifPresent(moyenneFinale -> student.put(MOYENNEFINALE, getMoyenneFinaleValue(moyenneFinale)));
+                        if (optMoyenneFinale.isPresent()) {
+                            student.put(MOYENNEFINALE, getMoyenneFinaleValue(optMoyenneFinale.get()));
+                        } else {
+                            student.put(MOYENNEFINALE, student.getValue(Field.MOYENNE));
+                        }
                     });
 
             futures.add(future);
