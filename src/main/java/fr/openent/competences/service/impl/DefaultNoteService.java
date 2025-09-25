@@ -2863,7 +2863,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         }
                         addIsThirdClassLevelFieldForEachStudent(elevesMapObject)
-                                .compose(v -> addMoyenneFinale(elevesMapObject, idMatiere, idPeriode))
+                                .compose(v -> {
+                                    log.info("\n\n" + elevesMapObject + "\n\n");
+                                    return addMoyenneFinale(elevesMapObject, idMatiere, idPeriode);
+                                })
                                 .compose(v -> addIsMatiereDispensableFieldForEachStudent(elevesMapObject, idMatiere))
                                 .onSuccess(v -> {
                                     handler.handle(new Either.Right<>(resultHandler
