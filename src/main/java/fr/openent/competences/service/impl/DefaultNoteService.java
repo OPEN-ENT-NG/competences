@@ -2893,9 +2893,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             Future<Void> future = userService.isUserInThirdClassLevel(studentId)
                     .onSuccess(isInThirdClass -> {
                         student.put(Field.ISUSERINTHIRDCLASSLEVEl, isInThirdClass);
-                        if (isInThirdClass && Objects.equals(student.getString(Field.MOYENNE), Field.NN)) {
-                            student.remove(Field.MOYENNE);
-                            student.put(Field.MOYENNE, EA);
+                        if (!student.containsKey(Field.MOYENNE) || Objects.equals(student.getString(Field.MOYENNE), Field.NN)) {
+                            if (isInThirdClass) {
+                                student.put(Field.MOYENNE, EA);
+                            }
+                            else {
+                                student.put(Field.MOYENNE, Field.NN);
+                            }
                         }
                     })
                     .onFailure(err -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, false))
