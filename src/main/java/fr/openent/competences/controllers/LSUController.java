@@ -23,8 +23,10 @@ import fr.openent.competences.bean.lsun.ElementProgramme;
 import fr.openent.competences.bean.lsun.*;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.LevelCycle;
+import fr.openent.competences.model.MoyenneFinale;
 import fr.openent.competences.model.Service;
 import fr.openent.competences.model.SubTopic;
+import fr.openent.competences.repository.RepositoryFactory;
 import fr.openent.competences.security.HasExportLSURight;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.digitalSkills.ClassAppreciationDigitalSkillsService;
@@ -32,7 +34,6 @@ import fr.openent.competences.service.digitalSkills.DigitalSkillsService;
 import fr.openent.competences.service.digitalSkills.impl.DefaultClassAppreciationDigitalSkills;
 import fr.openent.competences.service.digitalSkills.impl.DefaultDigitalSkillsService;
 import fr.openent.competences.service.impl.*;
-import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -54,7 +55,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.http.response.DefaultResponseHandler;
+import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.xml.sax.SAXException;
@@ -86,6 +87,8 @@ import java.util.stream.Collectors;
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.bean.lsun.TypeEnseignant.fromValue;
+import static fr.openent.competences.constants.Field.DI;
+import static fr.openent.competences.constants.Field.EA;
 import static fr.openent.competences.constants.LSUConstants.DEFAULT_SCHEMA_VERSION_VALUE;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultLSUService.DISCIPLINE_KEY;
@@ -116,6 +119,7 @@ public class LSUController extends ControllerHelper {
     private final DigitalSkillsService digitalSkillsService;
     private final ClassAppreciationDigitalSkillsService classAppreciationDigitalSkillsService;
     private final LSUService lsuService;
+    private final UserService userService;
     private int fakeCode = 10;
 
     private static final String TIME = "Time";
@@ -145,6 +149,9 @@ public class LSUController extends ControllerHelper {
         digitalSkillsService = new DefaultDigitalSkillsService();
         classAppreciationDigitalSkillsService = new DefaultClassAppreciationDigitalSkills(COMPETENCES_SCHEMA,
                 CLASS_APPRECIATION_DIGITAL_SKILLS);
+        Neo4j neo4j = Neo4j.getInstance();
+        RepositoryFactory repositoryFactory = new RepositoryFactory(neo4j);
+        this.userService = new DefaultUserService(repositoryFactory);
     }
 
     /**
@@ -2864,30 +2871,53 @@ public class LSUController extends ControllerHelper {
                                     JsonObject moyClasse = utilsService.getObjectForPeriode(moyennesClasse,
                                             idPeriode, "id");
 
-                                    BigDecimal valueMoyEleve = null;
+                                    String idMatiere = currentAcquis.getString(ID_MATIERE);
 
-                                    if (moyFinale != null) {
-                                        Object val = moyFinale.getValue("moyenneFinale");
-                                        if (val instanceof Number) {
-                                            valueMoyEleve = new BigDecimal(((Number) val).toString());
-                                        }
-                                    }
-                                    if (valueMoyEleve == null && moyEleve != null) {
-                                        Object val = moyEleve.getValue("moyenne");
-                                        if (val instanceof Number) {
-                                            valueMoyEleve = new BigDecimal(((Number) val).toString());
-                                        }
-                                    }
-                                    acquisEleve.setMoyenneEleve(valueMoyEleve);
+                                    DefaultNoteService.getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(idEleve, idMatiere, idPeriode)
+                                        .onSuccess(optMoyenneFinale -> {
+                                            if (optMoyenneFinale.isPresent()) {
+                                                MoyenneFinale moyenneFinale = optMoyenneFinale.get();
+                                                if (moyenneFinale.getMoyenne() != null) {
+                                                    acquisEleve.setMoyenneEleve(new BigDecimal(moyenneFinale.getMoyenne().toString()));
+                                                }
+                                                if (moyenneFinale.getStatut() != null) {
+                                                    String statut = moyenneFinale.getStatut();
+                                                    if (Objects.equals(statut, NN)) acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(1L));
+                                                    else if (Objects.equals(statut, EA)) acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(2L));
+                                                    else if (Objects.equals(statut, DI)) acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(3L));
+                                                }
+                                            }
+                                            else {
+                                                if (moyEleve != null && moyEleve.containsKey(MOYENNE)) {
+                                                    acquisEleve.setMoyenneEleve(new BigDecimal(moyEleve.getValue(MOYENNE).toString()));
+                                                }
+                                            }
+                                        });
 
-                                    BigDecimal valueMoyClasse = null;
-                                    if (moyClasse != null) {
-                                        Object val = moyClasse.getValue("moyenne");
-                                        if (val instanceof Number) {
-                                            valueMoyClasse = new BigDecimal(((Number) val).toString());
+                                    Object val = moyClasse != null ? moyClasse.getValue(MOYENNE) : null;
+
+                                    if (val instanceof Number) {
+                                        acquisEleve.setMoyenneStructure(new BigDecimal(val.toString()));
+                                    } else {
+                                        acquisEleve.setMoyenneStructure(null);
+                                    }
+
+                                    if (moyClasse != null && moyClasse.containsKey(MOYENNE)) {
+                                        Object valClasse = moyClasse.getValue(MOYENNE);
+                                        if (valClasse instanceof Number) {
+                                            acquisEleve.setMoyenneStructure(new BigDecimal(valClasse.toString()));
                                         }
                                     }
-                                    acquisEleve.setMoyenneStructure(valueMoyClasse);
+
+                                    if (acquisEleve.getMoyenneStructure() == null) {
+                                        userService.isUserInThirdClassLevel(idEleve)
+                                            .onSuccess(
+                                                isInThirdClassLevel -> {
+                                                    if (isInThirdClassLevel) acquisEleve.setStatutEvaluationStructure(BigInteger.valueOf(2L));
+                                                    else acquisEleve.setStatutEvaluationStructure(BigInteger.valueOf(1L));
+                                                }
+                                            );
+                                    }
                                 }
 
                                 private void addAcquis_addPositionnement(JsonObject currentAcquis,

@@ -2951,7 +2951,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return CompositeFuture.all(futures).mapEmpty();
     }
 
-    private Future<Optional<MoyenneFinale>> getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(String idEleve, String idMatiere, Long idPeriode) {
+    public static Future<Optional<MoyenneFinale>> getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(String idEleve, String idMatiere, Long idPeriode) {
         Promise<Optional<MoyenneFinale>> promise = Promise.promise();
 
         String query = "SELECT * FROM " + COMPETENCES_SCHEMA + "." + Field.MOYENNE_FINALE_TABLE +
