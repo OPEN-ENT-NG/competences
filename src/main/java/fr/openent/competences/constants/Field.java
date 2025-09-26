@@ -162,6 +162,7 @@ public class Field {
     public static final String HASMOYENNECLASSE = "hasMoyenneClasse";
     public static final String HISTORISE = " historise";
     public static final String NN = "NN";
+    public static final String EA = "EA";
     public static final String SAVE_BFC = "saveBFC";
     public static final String SUBCOEF = "subCoef";
     public static final String SERVICE_SUBTOPIC = "services_subtopic";

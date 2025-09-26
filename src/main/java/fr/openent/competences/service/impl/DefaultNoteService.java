@@ -2891,7 +2891,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonObject student = entry.getValue();
 
             Future<Void> future = userService.isUserInThirdClassLevel(studentId)
-                    .onSuccess(isInThirdClass -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, isInThirdClass))
+                    .onSuccess(isInThirdClass -> {
+                        student.put(Field.ISUSERINTHIRDCLASSLEVEl, isInThirdClass);
+                        if (!student.containsKey(Field.MOYENNE) || Objects.equals(student.getString(Field.MOYENNE), Field.NN)) {
+                            if (isInThirdClass) {
+                                student.put(Field.MOYENNE, EA);
+                            }
+                            else {
+                                student.put(Field.MOYENNE, Field.NN);
+                            }
+                        }
+                    })
                     .onFailure(err -> student.put(Field.ISUSERINTHIRDCLASSLEVEl, false))
                     .mapEmpty();
 
@@ -2911,7 +2921,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
             Future<Optional<MoyenneFinale>> future = getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(studentId, idMatiere, idPeriode)
                     .onSuccess(optMoyenneFinale -> {
-                        optMoyenneFinale.ifPresent(moyenneFinale -> student.put(MOYENNEFINALE, getMoyenneFinaleValue(moyenneFinale)));
+                        if (optMoyenneFinale.isPresent()) {
+                            student.put(MOYENNEFINALE, getMoyenneFinaleValue(optMoyenneFinale.get()));
+                        } else {
+                            student.put(MOYENNEFINALE, student.getValue(Field.MOYENNE));
+                        }
                     });
 
             futures.add(future);
