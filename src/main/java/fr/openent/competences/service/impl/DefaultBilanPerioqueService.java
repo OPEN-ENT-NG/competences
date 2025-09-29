@@ -547,7 +547,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
                             moyenneFinale.put(MOYENNEFINALE, value);
                             moyenneFinale.put(Field.ID_PERIODE, idPeriod.toString()); // stocké en String pour éviter les erreurs de comparaison
 
-                            JsonArray moyennesFinales = result.getJsonArray(MOYENNESFINALE, new JsonArray());
+                            JsonArray moyennesFinales = result.getJsonArray(MOYENNESFINALES, new JsonArray());
 
                             // Supprimer les doublons avec le même ID_PERIODE
                             JsonArray filtered = new JsonArray();
@@ -558,14 +558,14 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
                                 }
                             }
                             filtered.add(moyenneFinale);
-                            result.put(MOYENNESFINALE, filtered);
+                            result.put(MOYENNESFINALES, filtered);
                         }
                         return userService.isUserInThirdClassLevel(idEleve);
                     })
                     .onSuccess(isThirdClassLevel -> {
                         JsonObject newMoyenne = new JsonObject()
                                 .put(Field.MOYENNE, isThirdClassLevel ? EA : Field.NN)
-                                .put(ID, idPeriod.toString());
+                                .put(ID, idPeriod);
 
                         JsonArray moyennes = result.getJsonArray(Field.MOYENNES, new JsonArray());
 
