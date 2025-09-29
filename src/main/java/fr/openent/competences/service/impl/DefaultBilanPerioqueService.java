@@ -375,7 +375,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
     private void setSubjectLibelle(String idMatiere, JsonObject result, Map<String, JsonObject> idsMatLibelle) {
         if (idsMatLibelle != null && !idsMatLibelle.isEmpty() && idsMatLibelle.containsKey(idMatiere)) {
             result.put("id_matiere", idMatiere)
-                    .put("libelleMatiere", idsMatLibelle.get(idMatiere).getString(NAME))
+                    .put("libelleMatiere", idsMatLibelle.get(idMatiere).getString(Field.NAME))
                     .put(SOUS_MATIERES, idsMatLibelle.get(idMatiere).getJsonArray("sous_matieres"))
                     .put("rank", idsMatLibelle.get(idMatiere).getInteger("rank"));
         } else {
@@ -475,7 +475,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
 
             // Récupération du tableau de conversion des compétences notes
             Promise<JsonArray> tableauDeConversionPromise = Promise.promise();
-            new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE)
+            new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, Field.COMPETENCES_NOTES_TABLE)
                     .getConversionNoteCompetence(idEtablissement, idClasse,  // note : Est ce que c'est pas l'idGroupeClasse qu'on doit passé ici ?
                             tableauEvent -> formate(tableauDeConversionPromise, tableauEvent));
 
@@ -594,7 +594,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
 
         for (int i = 0; i < subjects.size(); i++) {
             JsonObject subject = subjects.getJsonObject(i);
-            final String idMatiere = subject.getString(ID_MATIERE);
+            final String idMatiere = subject.getString(Field.ID_MATIERE);
             Long id_periode = subject.getLong("id_periode");
             String id_groupe = subject.getString("id_groupe");
 
