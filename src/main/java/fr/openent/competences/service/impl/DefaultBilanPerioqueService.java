@@ -504,6 +504,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
 
         Future.all(subjectsFuture).onComplete(event -> {
             if (event.succeeded()) {
+                log.info("niko : " + results);
                 handler.handle(new Either.Right<>(Utils.sortJsonArrayIntValue("rank", results)));
             } else {
                 String error = event.cause().getMessage();
