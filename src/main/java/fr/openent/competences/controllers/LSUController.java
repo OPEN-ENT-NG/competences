@@ -2888,19 +2888,13 @@ public class LSUController extends ControllerHelper {
                                                 }
                                             }
                                             else {
+                                                log.info("niko1: " + moyEleve);
+                                                log.info("niko2: " + moyEleve.getValue(MOYENNE));
                                                 if (moyEleve != null && moyEleve.containsKey(MOYENNE)) {
                                                     acquisEleve.setMoyenneEleve(new BigDecimal(moyEleve.getValue(MOYENNE).toString()));
                                                 }
                                             }
                                         });
-
-                                    Object val = moyClasse != null ? moyClasse.getValue(MOYENNE) : null;
-
-                                    if (val instanceof Number) {
-                                        acquisEleve.setMoyenneStructure(new BigDecimal(val.toString()));
-                                    } else {
-                                        acquisEleve.setMoyenneStructure(null);
-                                    }
 
                                     if (moyClasse != null && moyClasse.containsKey(MOYENNE)) {
                                         Object valClasse = moyClasse.getValue(MOYENNE);
