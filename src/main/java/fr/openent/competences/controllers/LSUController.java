@@ -2967,21 +2967,29 @@ public class LSUController extends ControllerHelper {
                                                     }
                                                 }
 
-                                                // Statut selon niveau
-                                                if (acquisEleve.getMoyenneStructure() == null) {
+                                                if (acquisEleve.getMoyenneStructure() == null || acquisEleve.getMoyenneEleve() == null) {
                                                     return userService.isUserInThirdClassLevel(idEleve)
                                                             .map(isInThirdClassLevel -> {
-                                                                if (isInThirdClassLevel) {
-                                                                    acquisEleve.setStatutEvaluationStructure(BigInteger.valueOf(2L));
-                                                                } else {
-                                                                    acquisEleve.setStatutEvaluationStructure(BigInteger.valueOf(1L));
+                                                                // Statut structure
+                                                                if (acquisEleve.getMoyenneStructure() == null) {
+                                                                    acquisEleve.setStatutEvaluationStructure(
+                                                                            isInThirdClassLevel ? BigInteger.valueOf(2L) : BigInteger.valueOf(1L)
+                                                                    );
                                                                 }
+
+                                                                // Statut élève
+                                                                if (acquisEleve.getMoyenneEleve() == null) {
+                                                                    acquisEleve.setStatutEvaluationEleve(
+                                                                            isInThirdClassLevel ? BigInteger.valueOf(2L) : BigInteger.valueOf(1L)
+                                                                    );
+                                                                }
+
                                                                 return null;
                                                             });
                                                 } else {
+                                                    // Aucun besoin d'appeler userService
                                                     return Future.succeededFuture();
                                                 }
-
                                             })
                                             .onSuccess(v -> promise.complete())
                                             .onFailure(err -> {
