@@ -2800,66 +2800,127 @@ public class LSUController extends ControllerHelper {
 
                                 @Override
                                 public void handle(Either<String, JsonArray> suiviAcquisResponse) {
+                                    final AtomicBoolean answer = new AtomicBoolean(false);
+                                    final AtomicInteger count = new AtomicInteger(0);
+                                    final String thread = "(" + currentEleve.getNom() + " " + currentEleve.getPrenom() + ")";
+                                    final String method = "getBaliseBilansPeriodiques | getSuiviAcquis";
+
                                     if (suiviAcquisResponse.isLeft()) {
                                         String error = suiviAcquisResponse.left().getValue();
-                                        if (error != null && error.contains(TIME) && !getSuiviAcquisPromise.future().isComplete()) {
-                                            bilanPeriodiqueService.getSuiviAcquis(idStructure, idPeriode, idEleve,
-                                                    idClasseGroups, servicesClasse, multiTeachersClasse,this);
-                                        } else {
-                                            getSuiviAcquisPromise.complete();
-                                        }
-                                    } else {
-                                        if (!suiviAcquisResponse.right().getValue().isEmpty()) {
-                                            final JsonArray suiviAcquis = suiviAcquisResponse.right().getValue();
 
-                                            addListeAcquis(suiviAcquis, bilanPeriodique);
-                                            // add Only if suiviAcquis is not Empty
-                                            bilansPeriodiques.getBilanPeriodique().add(bilanPeriodique);
+                                        if (error != null && error.contains(TIME) && !getSuiviAcquisPromise.future().isComplete()) {
+                                            // Retry
+                                            bilanPeriodiqueService.getSuiviAcquis(
+                                                    idStructure, idPeriode, idEleve, idClasseGroups,
+                                                    servicesClasse, multiTeachersClasse, this
+                                            );
                                         } else {
-                                            if (suiviAcquisResponse.isRight()) {
-                                                String messageError = getLibelle("evaluation.lsu.error.no.suivi.acquis") +
-                                                        currentPeriode.getLabel();
-                                                setError(errorsExport, currentEleve, messageError, null);
-                                                log.info(idEleve + " NO ");
-                                            }
-                                        }
-                                        if (!getSuiviAcquisPromise.future().isComplete()) {
                                             getSuiviAcquisPromise.complete();
+                                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
+                                        }
+
+                                    } else {
+                                        JsonArray suiviAcquis = suiviAcquisResponse.right().getValue();
+
+                                        if (!suiviAcquis.isEmpty()) {
+                                            // On attend le traitement asynchrone de tous les acquis avant d'ajouter au bilan
+                                            addListeAcquis(suiviAcquis, bilanPeriodique)
+                                                    .onSuccess(v -> {
+                                                        bilansPeriodiques.getBilanPeriodique().add(bilanPeriodique);
+
+                                                        if (!getSuiviAcquisPromise.future().isComplete()) {
+                                                            getSuiviAcquisPromise.complete();
+                                                        }
+
+                                                        lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
+                                                    })
+                                                    .onFailure(err -> {
+                                                        log.error("Erreur lors du traitement des acquis pour l'élève : " + idEleve, err);
+
+                                                        String messageError = getLibelle("evaluation.lsu.error.acquis.async")
+                                                                + currentPeriode.getLabel();
+                                                        setError(errorsExport, currentEleve, messageError, null);
+
+                                                        if (!getSuiviAcquisPromise.future().isComplete()) {
+                                                            getSuiviAcquisPromise.complete();
+                                                        }
+
+                                                        lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
+                                                    });
+
+                                        } else {
+                                            // Pas d'acquis dans la réponse
+                                            String messageError = getLibelle("evaluation.lsu.error.no.suivi.acquis")
+                                                    + currentPeriode.getLabel();
+                                            setError(errorsExport, currentEleve, messageError, null);
+                                            log.info(idEleve + " NO ");
+
+                                            if (!getSuiviAcquisPromise.future().isComplete()) {
+                                                getSuiviAcquisPromise.complete();
+                                            }
+
+                                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                                         }
                                     }
-                                    lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                                 }
 
-                                private void addListeAcquis(JsonArray suiviAcquis, BilanPeriodique bilanPeriodique) {
+                                private Future<Void> addListeAcquis(JsonArray suiviAcquis, BilanPeriodique bilanPeriodique) {
+                                    Promise<Void> promise = Promise.promise();
                                     BilanPeriodique.ListeAcquis acquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
+
+                                    List<Future> futures = new ArrayList<>();
+
                                     for (int i = 0; i < suiviAcquis.size(); i++) {
                                         final JsonObject currentAcquis = suiviAcquis.getJsonObject(i);
-                                        Acquis acquisEleve = addListeAcquis_addAcquis(currentAcquis);
-                                        if(currentAcquis.getBoolean("toAdd")) {
-                                            addAcquis_addDiscipline(currentAcquis, acquisEleve);
-                                            addAcquis_addElementProgramme(currentAcquis, acquisEleve);
-                                            addAcquis_addMissingTeacher(acquisEleveList, currentAcquis, acquisEleve);
-                                        }
+
+                                        Future<Acquis> futureAcquis = addListeAcquis_addAcquis(currentAcquis)
+                                                .compose(acquisEleve -> {
+                                                    if (currentAcquis.getBoolean("toAdd")) {
+                                                        addAcquis_addDiscipline(currentAcquis, acquisEleve);
+                                                        addAcquis_addElementProgramme(currentAcquis, acquisEleve);
+                                                        addAcquis_addMissingTeacher(acquisEleveList, currentAcquis, acquisEleve);
+                                                    }
+                                                    return Future.succeededFuture(acquisEleve);
+                                                });
+
+                                        futures.add(futureAcquis);
                                     }
-                                    if(!acquisEleveList.getAcquis().isEmpty()) {
-                                        bilanPeriodique.setListeAcquis(acquisEleveList);
-                                    } else {
-                                        String messageError = getLibelle("evaluation.lsu.error.no.suivi.acquis") +
-                                                currentPeriode.getLabel();
-                                        setError(errorsExport, currentEleve, messageError, null);
-                                    }
+
+                                    CompositeFuture.all(futures)
+                                            .onSuccess(cf -> {
+                                                if (!acquisEleveList.getAcquis().isEmpty()) {
+                                                    bilanPeriodique.setListeAcquis(acquisEleveList);
+                                                } else {
+                                                    String messageError = getLibelle("evaluation.lsu.error.no.suivi.acquis") + currentPeriode.getLabel();
+                                                    setError(errorsExport, currentEleve, messageError, null);
+                                                }
+                                                promise.complete();
+                                            })
+                                            .onFailure(err -> {
+                                                log.error("Erreur lors du traitement des acquis", err);
+                                                String messageError = getLibelle("evaluation.lsu.error.acquis.async") + currentPeriode.getLabel();
+                                                setError(errorsExport, currentEleve, messageError, null);
+                                                promise.fail(err);
+                                            });
+
+                                    return promise.future();
                                 }
 
-                                private Acquis addListeAcquis_addAcquis(JsonObject currentAcquis) {
+                                private Future<Acquis> addListeAcquis_addAcquis(JsonObject currentAcquis) {
                                     Acquis acquisEleve = objectFactory.createAcquis();
                                     JsonArray tableConversion = tableConversionByClasse.get(idClasse);
-                                    addAcquis_addMoyennes(currentAcquis, acquisEleve);
-                                    addAcquis_addPositionnement(currentAcquis, tableConversion, acquisEleve);
-                                    addAcquis_addAppreciation(currentAcquis, acquisEleve, currentPeriode);
-                                    return acquisEleve;
+
+                                    return addAcquis_addMoyennes(currentAcquis, acquisEleve)
+                                            .compose(v -> {
+                                                addAcquis_addPositionnement(currentAcquis, tableConversion, acquisEleve);
+                                                addAcquis_addAppreciation(currentAcquis, acquisEleve, currentPeriode);
+                                                return Future.succeededFuture(acquisEleve);
+                                            });
                                 }
 
-                                private void addAcquis_addMoyennes(JsonObject currentAcquis, Acquis acquisEleve) {
+                                private Future<Void> addAcquis_addMoyennes(JsonObject currentAcquis, Acquis acquisEleve) {
+                                    Promise<Void> promise = Promise.promise();
+
                                     JsonArray moyennesEleves = currentAcquis.getJsonArray("moyennes");
                                     JsonArray moyennesFinales = currentAcquis.getJsonArray("moyennesFinales");
                                     JsonArray moyennesClasse = currentAcquis.getJsonArray("moyennesClasse");
@@ -2892,15 +2953,13 @@ public class LSUController extends ControllerHelper {
                                                     }
 
                                                 } else {
-                                                    // Si pas de moyenneFinale en base, on tente avec les moyennes JSON
-                                                    log.info("niko1: " + moyEleve);
+                                                    // Si pas de moyenne en base, on essaie le JSON
                                                     if (moyEleve != null && moyEleve.containsKey(MOYENNE)) {
-                                                        log.info("niko3: " + new BigDecimal(moyEleve.getValue(MOYENNE).toString()));
                                                         acquisEleve.setMoyenneEleve(new BigDecimal(moyEleve.getValue(MOYENNE).toString()));
                                                     }
                                                 }
 
-                                                // Traitement moyenne de classe
+                                                // Moyenne de classe
                                                 if (moyClasse != null && moyClasse.containsKey(MOYENNE)) {
                                                     Object valClasse = moyClasse.getValue(MOYENNE);
                                                     if (valClasse instanceof Number) {
@@ -2908,7 +2967,7 @@ public class LSUController extends ControllerHelper {
                                                     }
                                                 }
 
-                                                // Si la moyenneStructure est toujours null, on vérifie si l’élève est en 3e
+                                                // Statut selon niveau
                                                 if (acquisEleve.getMoyenneStructure() == null) {
                                                     return userService.isUserInThirdClassLevel(idEleve)
                                                             .map(isInThirdClassLevel -> {
@@ -2920,15 +2979,18 @@ public class LSUController extends ControllerHelper {
                                                                 return null;
                                                             });
                                                 } else {
-                                                    // Rien d'autre à faire, on retourne une Future vide
                                                     return Future.succeededFuture();
                                                 }
 
-                                            }).onFailure(err -> {
+                                            })
+                                            .onSuccess(v -> promise.complete())
+                                            .onFailure(err -> {
                                                 log.error("Erreur lors de l'ajout des moyennes pour l'acquis", err);
+                                                promise.fail(err);
                                             });
-                                }
 
+                                    return promise.future();
+                                }
 
                                 private void addAcquis_addPositionnement(JsonObject currentAcquis,
                                                                          JsonArray tableConversion, Acquis acquisEleve){
