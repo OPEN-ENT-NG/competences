@@ -2978,7 +2978,7 @@ public class LSUController extends ControllerHelper {
                                                                 }
 
                                                                 // Statut élève
-                                                                if (acquisEleve.getMoyenneEleve() == null) {
+                                                                if (acquisEleve.getMoyenneEleve() == null && acquisEleve.getStatutEvaluationEleve() == null) {
                                                                     acquisEleve.setStatutEvaluationEleve(
                                                                             isInThirdClassLevel ? BigInteger.valueOf(2L) : BigInteger.valueOf(1L)
                                                                     );
