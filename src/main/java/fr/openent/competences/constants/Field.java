@@ -181,6 +181,8 @@ public class Field {
     public static final String MODULENAME = "moduleName";
     public static final String MOYENNE = "moyenne";
     public static final String MOY = "moy";
+    public static final String MOYENNEFINALE = "moyenneFinale";
+    public static final String MOYENNESFINALE = "moyennesFinale";
     public static final String NOTEMAX = "noteMax";
     public static final String NOTEMIN = "noteMin";
     public static final String UNROUND_AVERAGE = "unround_average";
