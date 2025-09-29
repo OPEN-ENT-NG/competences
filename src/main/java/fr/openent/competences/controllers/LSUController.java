@@ -2889,8 +2889,8 @@ public class LSUController extends ControllerHelper {
                                             }
                                             else {
                                                 log.info("niko1: " + moyEleve);
-                                                log.info("niko2: " + moyEleve.getValue(MOYENNE));
                                                 if (moyEleve != null && moyEleve.containsKey(MOYENNE)) {
+                                                    log.info("niko3: " + new BigDecimal(moyEleve.getValue(MOYENNE).toString()));
                                                     acquisEleve.setMoyenneEleve(new BigDecimal(moyEleve.getValue(MOYENNE).toString()));
                                                 }
                                             }
