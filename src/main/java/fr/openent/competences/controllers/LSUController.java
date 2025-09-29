@@ -2793,11 +2793,6 @@ public class LSUController extends ControllerHelper {
 
                     bilanPeriodiqueService.getSuiviAcquis(idStructure, idPeriode, idEleve, idClasseGroups,
                             servicesClasse, multiTeachersClasse, new Handler<Either<String, JsonArray>>() {
-                                AtomicBoolean answer = new AtomicBoolean(false);
-                                AtomicInteger count = new AtomicInteger(0);
-                                final String thread = "(" + currentEleve.getNom() + " " + currentEleve.getPrenom() + ")";
-                                final String method = "getBaliseBilansPeriodiques | getSuiviAcquis";
-
                                 @Override
                                 public void handle(Either<String, JsonArray> suiviAcquisResponse) {
                                     final AtomicBoolean answer = new AtomicBoolean(false);
@@ -2835,7 +2830,7 @@ public class LSUController extends ControllerHelper {
                                                         lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                                                     })
                                                     .onFailure(err -> {
-                                                        log.error("Erreur lors du traitement des acquis pour l'élève : " + idEleve, err);
+                                                        log.error("[Competences@LSUController@getBaliseBilansPeriodique] Erreur lors du traitement des acquis pour l'élève : " + idEleve);
 
                                                         String messageError = getLibelle("evaluation.lsu.error.acquis.async")
                                                                 + currentPeriode.getLabel();
@@ -2897,7 +2892,7 @@ public class LSUController extends ControllerHelper {
                                                 promise.complete();
                                             })
                                             .onFailure(err -> {
-                                                log.error("Erreur lors du traitement des acquis", err);
+                                                log.error("[Competences@LSUController::getBaliseBilansPeriodique] Erreur lors du traitement des acquis : " + err.getMessage());
                                                 String messageError = getLibelle("evaluation.lsu.error.acquis.async") + currentPeriode.getLabel();
                                                 setError(errorsExport, currentEleve, messageError, null);
                                                 promise.fail(err);
@@ -2993,7 +2988,7 @@ public class LSUController extends ControllerHelper {
                                             })
                                             .onSuccess(v -> promise.complete())
                                             .onFailure(err -> {
-                                                log.error("Erreur lors de l'ajout des moyennes pour l'acquis", err);
+                                                log.error("[Competences@LSUController::getBaliseBilansPeriodique] Erreur lors de l'ajout des moyennes pour l'acquis : " + err.getMessage());
                                                 promise.fail(err);
                                             });
 
