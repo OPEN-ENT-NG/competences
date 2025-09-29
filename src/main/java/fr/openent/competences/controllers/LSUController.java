@@ -2864,55 +2864,71 @@ public class LSUController extends ControllerHelper {
                                     JsonArray moyennesFinales = currentAcquis.getJsonArray("moyennesFinales");
                                     JsonArray moyennesClasse = currentAcquis.getJsonArray("moyennesClasse");
 
-                                    JsonObject moyEleve = utilsService.getObjectForPeriode(moyennesEleves,
-                                            idPeriode, "id");
-                                    JsonObject moyFinale = utilsService.getObjectForPeriode(moyennesFinales,
-                                            idPeriode, "id_periode");
-                                    JsonObject moyClasse = utilsService.getObjectForPeriode(moyennesClasse,
-                                            idPeriode, "id");
+                                    JsonObject moyEleve = utilsService.getObjectForPeriode(moyennesEleves, idPeriode, "id");
+                                    JsonObject moyFinale = utilsService.getObjectForPeriode(moyennesFinales, idPeriode, "id_periode");
+                                    JsonObject moyClasse = utilsService.getObjectForPeriode(moyennesClasse, idPeriode, "id");
 
                                     String idMatiere = currentAcquis.getString(ID_MATIERE);
 
                                     DefaultNoteService.getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(idEleve, idMatiere, idPeriode)
-                                        .onSuccess(optMoyenneFinale -> {
-                                            if (optMoyenneFinale.isPresent()) {
-                                                MoyenneFinale moyenneFinale = optMoyenneFinale.get();
-                                                if (moyenneFinale.getMoyenne() != null) {
-                                                    acquisEleve.setMoyenneEleve(new BigDecimal(moyenneFinale.getMoyenne().toString()));
-                                                }
-                                                if (moyenneFinale.getStatut() != null) {
-                                                    String statut = moyenneFinale.getStatut();
-                                                    if (Objects.equals(statut, NN)) acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(1L));
-                                                    else if (Objects.equals(statut, EA)) acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(2L));
-                                                    else if (Objects.equals(statut, DI)) acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(3L));
-                                                }
-                                            }
-                                            else {
-                                                log.info("niko1: " + moyEleve);
-                                                if (moyEleve != null && moyEleve.containsKey(MOYENNE)) {
-                                                    log.info("niko3: " + new BigDecimal(moyEleve.getValue(MOYENNE).toString()));
-                                                    acquisEleve.setMoyenneEleve(new BigDecimal(moyEleve.getValue(MOYENNE).toString()));
-                                                }
-                                            }
-                                        });
+                                            .compose(optMoyenneFinale -> {
+                                                if (optMoyenneFinale.isPresent()) {
+                                                    MoyenneFinale moyenneFinale = optMoyenneFinale.get();
 
-                                    if (moyClasse != null && moyClasse.containsKey(MOYENNE)) {
-                                        Object valClasse = moyClasse.getValue(MOYENNE);
-                                        if (valClasse instanceof Number) {
-                                            acquisEleve.setMoyenneStructure(new BigDecimal(valClasse.toString()));
-                                        }
-                                    }
+                                                    if (moyenneFinale.getMoyenne() != null) {
+                                                        acquisEleve.setMoyenneEleve(new BigDecimal(moyenneFinale.getMoyenne().toString()));
+                                                    }
 
-                                    if (acquisEleve.getMoyenneStructure() == null) {
-                                        userService.isUserInThirdClassLevel(idEleve)
-                                            .onSuccess(
-                                                isInThirdClassLevel -> {
-                                                    if (isInThirdClassLevel) acquisEleve.setStatutEvaluationStructure(BigInteger.valueOf(2L));
-                                                    else acquisEleve.setStatutEvaluationStructure(BigInteger.valueOf(1L));
+                                                    if (moyenneFinale.getStatut() != null) {
+                                                        String statut = moyenneFinale.getStatut();
+
+                                                        if (Objects.equals(statut, NN)) {
+                                                            acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(1L));
+                                                        } else if (Objects.equals(statut, EA)) {
+                                                            acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(2L));
+                                                        } else if (Objects.equals(statut, DI)) {
+                                                            acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(3L));
+                                                        }
+                                                    }
+
+                                                } else {
+                                                    // Si pas de moyenneFinale en base, on tente avec les moyennes JSON
+                                                    log.info("niko1: " + moyEleve);
+                                                    if (moyEleve != null && moyEleve.containsKey(MOYENNE)) {
+                                                        log.info("niko3: " + new BigDecimal(moyEleve.getValue(MOYENNE).toString()));
+                                                        acquisEleve.setMoyenneEleve(new BigDecimal(moyEleve.getValue(MOYENNE).toString()));
+                                                    }
                                                 }
-                                            );
-                                    }
+
+                                                // Traitement moyenne de classe
+                                                if (moyClasse != null && moyClasse.containsKey(MOYENNE)) {
+                                                    Object valClasse = moyClasse.getValue(MOYENNE);
+                                                    if (valClasse instanceof Number) {
+                                                        acquisEleve.setMoyenneStructure(new BigDecimal(valClasse.toString()));
+                                                    }
+                                                }
+
+                                                // Si la moyenneStructure est toujours null, on vérifie si l’élève est en 3e
+                                                if (acquisEleve.getMoyenneStructure() == null) {
+                                                    return userService.isUserInThirdClassLevel(idEleve)
+                                                            .map(isInThirdClassLevel -> {
+                                                                if (isInThirdClassLevel) {
+                                                                    acquisEleve.setStatutEvaluationStructure(BigInteger.valueOf(2L));
+                                                                } else {
+                                                                    acquisEleve.setStatutEvaluationStructure(BigInteger.valueOf(1L));
+                                                                }
+                                                                return null;
+                                                            });
+                                                } else {
+                                                    // Rien d'autre à faire, on retourne une Future vide
+                                                    return Future.succeededFuture();
+                                                }
+
+                                            }).onFailure(err -> {
+                                                log.error("Erreur lors de l'ajout des moyennes pour l'acquis", err);
+                                            });
                                 }
+
 
                                 private void addAcquis_addPositionnement(JsonObject currentAcquis,
                                                                          JsonArray tableConversion, Acquis acquisEleve){
