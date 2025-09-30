@@ -545,7 +545,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
                                     ? optMoyenneFinale.get().getMoyenne()
                                     : optMoyenneFinale.get().getStatut();
                             moyenneFinale.put(MOYENNEFINALE, value);
-                            moyenneFinale.put(Field.ID_PERIODE, idPeriod.toString()); // stocké en String pour éviter les erreurs de comparaison
+                            moyenneFinale.put(Field.ID_PERIODE, idPeriod);
 
                             JsonArray moyennesFinales = result.getJsonArray(MOYENNESFINALES, new JsonArray());
 
@@ -568,16 +568,26 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
                                 .put(ID, idPeriod);
 
                         JsonArray moyennes = result.getJsonArray(Field.MOYENNES, new JsonArray());
+                        JsonArray moyennesClasse = result.getJsonArray(Field.MOYENNESCLASSE, new JsonArray());
 
-                        boolean alreadyExists = moyennes.stream()
+                        boolean moyenneAlreadyExists = moyennes.stream()
                                 .map(obj -> (JsonObject) obj)
                                 .anyMatch(m -> idPeriod.toString().equals(m.getString(ID)));
 
-                        if (!alreadyExists) {
+                        if (!moyenneAlreadyExists) {
                             moyennes.add(newMoyenne);
                         }
 
+                        boolean moyenneClasseAlreadyExists = moyennesClasse.stream()
+                                .map(obj -> (JsonObject) obj)
+                                .anyMatch(m -> idPeriod.toString().equals(m.getString(ID)));
+
+                        if (!moyenneClasseAlreadyExists) {
+                            moyennesClasse.add(newMoyenne);
+                        }
+
                         result.put(Field.MOYENNES, moyennes);
+                        result.put(Field.MOYENNESCLASSE, moyennesClasse);
                     });
 
             futures.add(future);

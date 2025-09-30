@@ -190,6 +190,7 @@ public class Field {
     public static final String MOYGENERALEELEVE = "moyGeneraleEleve";
     public static final String MOYENNE_GENERALE = "moyenne_generale";
     public static final String MOYENNE_FINALE = "moyenne_finale";
+    public static final String MOYENNESCLASSE = "moyennesClasse";
     public static final String MOYENNESFINALES = "moyennesFinales";
     public static final String MOYENNEBYMAT = "moyenneByMat";
     public static final String MOYENNECLASSE = "moyenneClasse";
