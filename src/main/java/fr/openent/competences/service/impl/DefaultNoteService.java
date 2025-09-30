@@ -2928,6 +2928,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         } else {
                             student.put(MOYENNEFINALE, student.getValue(Field.MOYENNE));
                         }
+                    })
+                    .recover(err -> {
+                        String errorMessage = "Échec récupération moyenne_finale pour élève "
+                                + studentId + " et matière " + idMatiere + " : " + err.getMessage();
+                        log.error("[Competences@DefaultNoteService::addMoyenneFinale] " + errorMessage);
+                        return Future.succeededFuture(Optional.empty());
                     });
 
             futures.add(future);
@@ -2986,6 +2992,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         result.put(_MOYENNE_CLASSE, moyenneClasseObj);
                     }
                     promise.complete();
+                })
+                .onFailure(err -> {
+                    String errorMessage = "Erreur lors de la transformation de la moyenne de classe : " + err.getMessage();
+                    log.error("[Competences@DefaultNoteService::transformMoyenneClasse] " + errorMessage);
                 });
 
         return promise.future();

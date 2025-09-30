@@ -510,13 +510,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
         Future.all(subjectsFuture).onComplete(event -> {
             if (event.succeeded()) {
                 transformResults(results, idPeriod, idEleve).onComplete(transformEvent -> {
-                    if (transformEvent.succeeded()) {
-                        handler.handle(new Either.Right<>(Utils.sortJsonArrayIntValue("rank", results)));
-                    } else {
-                        String error = transformEvent.cause().getMessage();
-                        log.error(error);
-                        handler.handle(new Either.Left<>(error));
-                    }
+                    handler.handle(new Either.Right<>(Utils.sortJsonArrayIntValue("rank", results)));
                 });
             } else {
                 String error = event.cause().getMessage();
@@ -588,6 +582,10 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
 
                         result.put(Field.MOYENNES, moyennes);
                         result.put(Field.MOYENNESCLASSE, moyennesClasse);
+                    })
+                    .onFailure(err -> {
+                        String errorMessage = "Failed to transform results";
+                        log.error("[Competences@DefaultBilanPeriodique::transformResults] " + errorMessage + " : " + err.getMessage());
                     });
 
             futures.add(future);
