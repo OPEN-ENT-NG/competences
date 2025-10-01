@@ -163,6 +163,8 @@ public class Field {
     public static final String NN = "NN";
     public static final String EA = "EA";
     public static final String DI = "DI";
+    public static final String NULL = "null";
+    public static final String NULLFINALE = "nullFinale";
     public static final String SAVE_BFC = "saveBFC";
     public static final String SUBCOEF = "subCoef";
     public static final String SERVICE_SUBTOPIC = "services_subtopic";
@@ -181,6 +183,8 @@ public class Field {
     public static final String MODULENAME = "moduleName";
     public static final String MOYENNE = "moyenne";
     public static final String MOY = "moy";
+    public static final String MOYENNEFINALE = "moyenneFinale";
+    public static final String MOYENNESFINALE = "moyennesFinale";
     public static final String NOTEMAX = "noteMax";
     public static final String NOTEMIN = "noteMin";
     public static final String UNROUND_AVERAGE = "unround_average";
@@ -188,6 +192,7 @@ public class Field {
     public static final String MOYGENERALEELEVE = "moyGeneraleEleve";
     public static final String MOYENNE_GENERALE = "moyenne_generale";
     public static final String MOYENNE_FINALE = "moyenne_finale";
+    public static final String MOYENNESCLASSE = "moyennesClasse";
     public static final String MOYENNESFINALES = "moyennesFinales";
     public static final String MOYENNEBYMAT = "moyenneByMat";
     public static final String MOYENNECLASSE = "moyenneClasse";
