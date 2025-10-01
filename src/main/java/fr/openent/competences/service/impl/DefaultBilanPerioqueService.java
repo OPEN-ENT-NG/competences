@@ -5,10 +5,9 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.EventType;
-import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.model.Service;
-import fr.openent.competences.model.achievements.AchievementsProgress;
+import fr.openent.competences.repository.RepositoryFactory;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
@@ -17,16 +16,18 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.sql.Sql;
-import org.entcore.common.sql.SqlResult;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.constants.Field.*;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
@@ -43,6 +44,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
     private final Sql sql;
     private final MatiereService defautlMatiereService;
     private final StructureOptionsService structureOptionsService;
+    private final UserService userService;
 
 
     public DefaultBilanPerioqueService(Sql sql, EventBus eb) {
@@ -54,6 +56,9 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
         defautlMatiereService = new DefaultMatiereService(eb);
         structureOptionsService = new DefaultStructureOptions(eb);
         this.sql = sql;
+        Neo4j neo4j = Neo4j.getInstance();
+        RepositoryFactory repositoryFactory = new RepositoryFactory(neo4j);
+        this.userService = new DefaultUserService(repositoryFactory);
     }
 
     @Override
@@ -370,7 +375,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
     private void setSubjectLibelle(String idMatiere, JsonObject result, Map<String, JsonObject> idsMatLibelle) {
         if (idsMatLibelle != null && !idsMatLibelle.isEmpty() && idsMatLibelle.containsKey(idMatiere)) {
             result.put("id_matiere", idMatiere)
-                    .put("libelleMatiere", idsMatLibelle.get(idMatiere).getString(NAME))
+                    .put("libelleMatiere", idsMatLibelle.get(idMatiere).getString(Field.NAME))
                     .put(SOUS_MATIERES, idsMatLibelle.get(idMatiere).getJsonArray("sous_matieres"))
                     .put("rank", idsMatLibelle.get(idMatiere).getInteger("rank"));
         } else {
@@ -470,7 +475,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
 
             // Récupération du tableau de conversion des compétences notes
             Promise<JsonArray> tableauDeConversionPromise = Promise.promise();
-            new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE)
+            new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, Field.COMPETENCES_NOTES_TABLE)
                     .getConversionNoteCompetence(idEtablissement, idClasse,  // note : Est ce que c'est pas l'idGroupeClasse qu'on doit passé ici ?
                             tableauEvent -> formate(tableauDeConversionPromise, tableauEvent));
 
@@ -504,14 +509,91 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
 
         Future.all(subjectsFuture).onComplete(event -> {
             if (event.succeeded()) {
-                handler.handle(new Either.Right<>(Utils.sortJsonArrayIntValue("rank", results)));
+                transformResults(results, idPeriod, idEleve).onComplete(transformEvent -> {
+                    handler.handle(new Either.Right<>(Utils.sortJsonArrayIntValue("rank", results)));
+                });
             } else {
                 String error = event.cause().getMessage();
                 log.error(error);
                 handler.handle(new Either.Left<>(error));
             }
         });
+
     }
+
+    private Future<Void> transformResults(JsonArray results, Long idPeriod, String idEleve) {
+        List<Future> futures = new ArrayList<>();
+
+        for (int i = 0; i < results.size(); i++) {
+            JsonObject result = results.getJsonObject(i);
+
+            if (!result.containsKey(Field.ID_MATIERE)) continue;
+
+            String idMatiere = result.getString(Field.ID_MATIERE);
+
+            Future<Boolean> future = DefaultNoteService.getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(idEleve, idMatiere, idPeriod)
+                    .compose(optMoyenneFinale -> {
+                        if (optMoyenneFinale.isPresent()) {
+                            JsonObject moyenneFinale = new JsonObject();
+                            Object value = optMoyenneFinale.get().getMoyenne() != null
+                                    ? optMoyenneFinale.get().getMoyenne()
+                                    : optMoyenneFinale.get().getStatut();
+                            moyenneFinale.put(MOYENNEFINALE, value);
+                            moyenneFinale.put(Field.ID_PERIODE, idPeriod);
+
+                            JsonArray moyennesFinales = result.getJsonArray(MOYENNESFINALES, new JsonArray());
+
+                            // Supprimer les doublons avec le même ID_PERIODE
+                            JsonArray filtered = new JsonArray();
+                            for (int j = 0; j < moyennesFinales.size(); j++) {
+                                JsonObject obj = moyennesFinales.getJsonObject(j);
+                                if (!idPeriod.toString().equals(obj.getString(Field.ID_PERIODE))) {
+                                    filtered.add(obj);
+                                }
+                            }
+                            filtered.add(moyenneFinale);
+                            result.put(MOYENNESFINALES, filtered);
+                        }
+                        return userService.isUserInThirdClassLevel(idEleve);
+                    })
+                    .onSuccess(isThirdClassLevel -> {
+                        JsonObject newMoyenne = new JsonObject()
+                                .put(Field.MOYENNE, isThirdClassLevel ? EA : Field.NN)
+                                .put(ID, idPeriod);
+
+                        JsonArray moyennes = result.getJsonArray(Field.MOYENNES, new JsonArray());
+                        JsonArray moyennesClasse = result.getJsonArray(Field.MOYENNESCLASSE, new JsonArray());
+
+                        boolean moyenneAlreadyExists = moyennes.stream()
+                                .map(obj -> (JsonObject) obj)
+                                .anyMatch(m -> idPeriod.toString().equals(m.getString(ID)));
+
+                        if (!moyenneAlreadyExists) {
+                            moyennes.add(newMoyenne);
+                        }
+
+                        boolean moyenneClasseAlreadyExists = moyennesClasse.stream()
+                                .map(obj -> (JsonObject) obj)
+                                .anyMatch(m -> idPeriod.toString().equals(m.getString(ID)));
+
+                        if (!moyenneClasseAlreadyExists) {
+                            moyennesClasse.add(newMoyenne);
+                        }
+
+                        result.put(Field.MOYENNES, moyennes);
+                        result.put(Field.MOYENNESCLASSE, moyennesClasse);
+                    })
+                    .onFailure(err -> {
+                        String errorMessage = "Failed to transform results";
+                        log.error("[Competences@DefaultBilanPeriodique::transformResults] " + errorMessage + " : " + err.getMessage());
+                    });
+
+            futures.add(future);
+        }
+
+        return CompositeFuture.all(futures).mapEmpty();
+    }
+
 
     private void buildSubjectForSuivi(Map<String, JsonObject> idsMatieresIdsTeachers, JsonArray idsTeachers,
                                       JsonArray subjects, final Long idPeriode,
@@ -520,7 +602,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
 
         for (int i = 0; i < subjects.size(); i++) {
             JsonObject subject = subjects.getJsonObject(i);
-            final String idMatiere = subject.getString(ID_MATIERE);
+            final String idMatiere = subject.getString(Field.ID_MATIERE);
             Long id_periode = subject.getLong("id_periode");
             String id_groupe = subject.getString("id_groupe");
 
