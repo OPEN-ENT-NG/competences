@@ -21,7 +21,11 @@
         <h2 class="cell "><i18n>viescolaire.eleve.recherche</i18n></h2>
         <autocomplete class="ten cell clear-none" options="eleves.all" ng-change="updateSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
     </div>
-    <div ng-if="search.classe.id_cycle === 1">coucou</div>
+    <div ng-show="search.classe.id_cycle === 1">coucou</div>
+    <div>
+        id_cycle = [[search.classe.id_cycle]]
+    </div>
+
 </article>
 <!-- A afficher dans la vue cycle à la place de la RechercheBar -->
 <article ng-show="search.periode.libelle === 'cycle' && currentCycle !== undefined"
