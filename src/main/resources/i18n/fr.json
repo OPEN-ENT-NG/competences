@@ -808,5 +808,7 @@
   "viescolaire.utils.your.logo": "Votre logo",
   "view": "Afficher",
   "you.have": "Vous avez sélectionné ",
-  "évaluation.domaine.bfc.nonevalue": "(domaine non évalué)"
+  "évaluation.domaine.bfc.nonevalue": "(domaine non évalué)",
+  "evaluations.warning.average.first" : "Attention : pour les 3èmes, la mention \"NN\" affichée peut en réalité correspondre à EA (En attente) ou DI (Dispensé, uniquement en EPS et LV2).",
+  "evaluations.warning.average.second" : "Pour connaître la valeur exacte, référez-vous à la vue Relevé périodique ou Conseil de classe."
 }

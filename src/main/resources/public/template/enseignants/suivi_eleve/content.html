@@ -21,7 +21,13 @@
         <h2 class="cell "><i18n>viescolaire.eleve.recherche</i18n></h2>
         <autocomplete class="ten cell clear-none" options="eleves.all" ng-change="updateSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
     </div>
-    <div ng-show="search.classe.id_cycle === 1">coucou</div>
+    <div ng-show="search.classe.id_cycle === 1">
+        <i class="mdi mdi-alert"></i>
+        <div>
+            <i18n>evaluations.warning.average.first</i18n>
+            <i18n>evaluations.warning.average.second</i18n>
+        </div>
+    </div>
     <div>
         id_cycle = [[search.classe.id_cycle]]
     </div>
