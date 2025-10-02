@@ -3787,3 +3787,24 @@ lightbox#delete-periodic div.content {
     margin-right: 5%;
   }
 }
+
+
+.warning {
+  &-average {
+    border-left: none !important;
+    border: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  &-container {
+    margin-left: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #fffcf2;
+    border-radius: 2px;
+  }
+}

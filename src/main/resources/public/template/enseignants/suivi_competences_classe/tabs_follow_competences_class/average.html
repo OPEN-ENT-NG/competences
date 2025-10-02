@@ -1,9 +1,9 @@
 <section class="note-table" ng-if="isDataOnPage">
-    <div ng-show="search.classe.id_cycle === 1">
-        <i class="mdi mdi-alert"></i>
+    <div class="warning-container" ng-show="search.classe.id_cycle === 1">
+        <i class="warning warning-average"></i>
         <div>
-            <i18n>evaluations.warning.average.first</i18n>
-            <i18n>evaluations.warning.average.second</i18n>
+            <div><i18n>evaluations.warning.average.first</i18n></div>
+            <div><i18n>evaluations.warning.average.second</i18n></div>
         </div>
     </div>
     <table class="twelve">
