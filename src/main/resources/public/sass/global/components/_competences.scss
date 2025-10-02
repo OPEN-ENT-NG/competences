@@ -3799,12 +3799,15 @@ lightbox#delete-periodic div.content {
     padding: 0 !important;
   }
   &-container {
-    margin-left: 20px;
     margin-bottom: 15px;
     display: flex;
     gap: 1rem;
     padding: 1rem;
     background-color: #fffcf2;
     border-radius: 2px;
+    font-size: 1rem !important;
+    &-eleve {
+      margin-left: 20px;
+    }
   }
 }
