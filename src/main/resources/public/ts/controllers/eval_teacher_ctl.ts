@@ -43,6 +43,7 @@ import {
 } from "../utils/preferences";
 import * as utils from '../utils/teacher';
 import { getDI, getEA, getNN } from "../utils/teacher";
+import { boolean } from "yargs";
 
 declare let $: any;
 declare let document: any;
@@ -3244,20 +3245,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             });
             moyenne = moyenne / nbEleve;
             moyenneFinal = moyenneFinal / nbEleveFinal;
-            if ($scope.releveNote._tmp._moyenne_classe.null.moyenne != "NN") {
-                $scope.releveNote._tmp._moyenne_classe.null.moyenne = moyenne.toFixed(1);
-                $scope.releveNote._tmp._moyenne_classe.null.min = min;
-                $scope.releveNote._tmp._moyenne_classe.null.max = max;
-            }
+            // if ($scope.releveNote._tmp._moyenne_classe.null.moyenne != "NN") {
+            //     $scope.releveNote._tmp._moyenne_classe.null.moyenne = moyenne.toFixed(1);
+            //     $scope.releveNote._tmp._moyenne_classe.null.min = min;
+            //     $scope.releveNote._tmp._moyenne_classe.null.max = max;
+            // }
+
+            const isFirstStudentInThirdClass = $scope.releveNote.classe.eleves.all[0].isUserInThirdClassLevel;
 
             if (!isNaN(moyenneFinal)) {
                 $scope.releveNote._tmp._moyenne_classe.nullFinal.moyenne = moyenneFinal.toFixed(1);
                 $scope.releveNote._tmp._moyenne_classe.nullFinal.min = minFinal;
                 $scope.releveNote._tmp._moyenne_classe.nullFinal.max = maxFinal;
             } else {
-                $scope.releveNote._tmp._moyenne_classe.nullFinal.moyenne = "NN";
-                $scope.releveNote._tmp._moyenne_classe.nullFinal.min = "NN";
-                $scope.releveNote._tmp._moyenne_classe.nullFinal.max = "NN"
+                $scope.releveNote._tmp._moyenne_classe.nullFinal.moyenne = isFirstStudentInThirdClass ? "EA" : "NN";
+                $scope.releveNote._tmp._moyenne_classe.nullFinal.min = isFirstStudentInThirdClass ? "EA" : "NN";
+                $scope.releveNote._tmp._moyenne_classe.nullFinal.max = isFirstStudentInThirdClass ? "EA" : "NN";
             }
 
 
