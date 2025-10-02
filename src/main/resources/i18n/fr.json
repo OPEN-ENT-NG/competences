@@ -136,7 +136,7 @@
   "end.saisie": "Il n'est plus possible de créer une évaluation sur cette période",
   "end.saisie.appreciation": "Il n'est plus possible de saisir d'appréciation sur cette période",
   "enseignements.pratiques.interdisciplinaires": "Enseignements pratiques interdisciplinaires",
-  "error.average.outbound": "La moyenne doit être comprise entre 0 et 20",
+  "error.average.outbound": "Valeur invalide : saisissez une note entre 0 et 20 (max. 2 décimales) ou un code autorisé — NN (non noté), EA (en attente, uniquement en 3e), DI (dispensé, uniquement EPS et LV2 en 3e).",
   "error.char.outbound": "Le nombre maximum de caractères autorisés est ",
   "error.get.homework.on.update": "Erreur lors de la récupération des devoirs pour la mise à jour du service",
   "error.homework.not.found": "Désolé, vous n'avez pas accès à l'évaluation demandée",
