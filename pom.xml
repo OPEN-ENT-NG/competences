@@ -27,7 +27,7 @@
         <junitVersion>5.1.0</junitVersion>
         <powerMockVersion>2.0.2</powerMockVersion>
         <mockitoVersion>[2.0,3.0)</mockitoVersion>
-        <entCoreVersion>6.8-SNAPSHOT</entCoreVersion>
+        <entCoreVersion>6.9-SNAPSHOT</entCoreVersion>
         <gatlingHighchartsVersion>2.3.1</gatlingHighchartsVersion>
         <opencsvVersion>4.0</opencsvVersion>
         <pdfboxVersion>2.0.30</pdfboxVersion>
