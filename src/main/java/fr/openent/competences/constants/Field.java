@@ -18,6 +18,7 @@ public class Field {
     public static final String DOMAINHEADER = "domainHeader";
     public static final String DOMAINBODY = "domainBody";
     public static final String HASCOMPETENCESNOTES = "hasCompetencesNotes";
+    public static final String HYPHEN = "-";
 
     //id
     public static final String  GROUPIDS = "groupIds";

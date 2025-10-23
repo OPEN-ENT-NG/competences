@@ -46,6 +46,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.constants.Field.HYPHEN;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
@@ -767,6 +768,7 @@ public class Utils {
                 }
 
                 try {
+                    codeMatiere = formatCodeMatiere(codeMatiere);
                     Integer.valueOf(codeMatiere);
                     if (!mapCodeLibelleCourt.isEmpty() && mapCodeLibelleCourt.containsKey(codeMatiere)) {
                         subject.put("libelle_court", mapCodeLibelleCourt.get(codeMatiere));
@@ -787,6 +789,22 @@ public class Utils {
             }
             mapSubjects.put(subject.getString("id"), subject);
         }
+    }
+
+    private static String formatCodeMatiere(String codeMatiere) {
+        String formattedCodeMatiere = codeMatiere;
+
+        // On suppose que le format du code matière peut être de 2 formats différents :
+        // 1. 099800
+        // 2. XXXXXX-099800
+
+        if (codeMatiere != null && codeMatiere.contains(HYPHEN)) {
+            String[] parts = codeMatiere.split(HYPHEN);
+            // On prend le dernier élément pour être sûr même s'il y a plusieurs tirets
+            formattedCodeMatiere = parts[parts.length - 1];
+        }
+
+        return formattedCodeMatiere;
     }
 
     public static Future< Map<String, JsonObject>> getLastNameFirstNameUser(EventBus eb, final JsonArray usersIds) {
