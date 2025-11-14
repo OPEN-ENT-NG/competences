@@ -3021,7 +3021,7 @@ public class LSUController extends ControllerHelper {
                                                                     );
                                                                 }
 
-                                                                return null;
+                                                                return Future.succeededFuture();
                                                             });
                                                 } else {
                                                     // Aucun besoin d'appeler userService
