@@ -2902,15 +2902,22 @@ public class LSUController extends ControllerHelper {
                                 }
 
                                 private Future<Acquis> addListeAcquis_addAcquis(JsonObject currentAcquis) {
+                                    Promise<Acquis> promise = Promise.promise();
                                     Acquis acquisEleve = objectFactory.createAcquis();
                                     JsonArray tableConversion = tableConversionByClasse.get(idClasse);
 
-                                    return addAcquis_addMoyennes(currentAcquis, acquisEleve)
-                                            .compose(v -> {
+                                    addAcquis_addMoyennes(currentAcquis, acquisEleve)
+                                            .onSuccess(v -> {
                                                 addAcquis_addPositionnement(currentAcquis, tableConversion, acquisEleve);
                                                 addAcquis_addAppreciation(currentAcquis, acquisEleve, currentPeriode);
-                                                return Future.succeededFuture(acquisEleve);
+                                                promise.complete(acquisEleve);
+                                            })
+                                            .onFailure(err -> {
+                                                log.error("[Competences@LSUController::getBaliseBilansPeriodique] Erreur lors de l'ajout d'un acquis : " + err.getMessage());
+                                                promise.fail(err);
                                             });
+
+                                    return promise.future();
                                 }
 
                                 private Future<Void> addAcquis_addMoyennes(JsonObject currentAcquis, Acquis acquisEleve) {
