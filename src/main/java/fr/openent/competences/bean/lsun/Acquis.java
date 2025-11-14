@@ -326,4 +326,8 @@ public class Acquis {
 
     }
 
+    public boolean isEleveNonNote() {
+        return this.moyenneEleve == null && this.statutEvaluationEleve != null;
+    }
+
 }

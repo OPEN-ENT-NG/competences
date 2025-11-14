@@ -3044,6 +3044,7 @@ public class LSUController extends ControllerHelper {
                                                                        Periode currentPeriode) {
                                     JsonArray appreciations = currentAcquis.getJsonArray("appreciations");
                                     boolean hasAppreciation = false;
+                                    boolean studentIsNN = acquisEleve.isEleveNonNote();
                                     JsonObject app = addAppreciation_getObjectForPeriode(appreciations, idPeriode);
                                     if (app != null) {
                                         JsonArray appreciationByClasse = app.getJsonArray("appreciationByClasse");
@@ -3061,7 +3062,7 @@ public class LSUController extends ControllerHelper {
                                         }
                                     }
 
-                                    if (!hasAppreciation) {
+                                    if (!hasAppreciation && !studentIsNN) {
                                         String messageError = getLibelle("evaluation.lsu.error.no.appreciation") +
                                                 currentPeriode.getLabel() +
                                                 getLibelle("evaluation.lsu.error.on.subject");
@@ -3072,7 +3073,7 @@ public class LSUController extends ControllerHelper {
                                     }
 
                                     boolean toAdd = false;
-                                    if (hasAppreciation) {
+                                    if (hasAppreciation && !studentIsNN) {
                                         bilanPeriodique.setEleveRef(currentEleve);
                                         bilanPeriodique.setPeriodeRef(currentPeriode);
                                         addResponsable(bilanPeriodique);
