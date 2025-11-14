@@ -527,7 +527,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
         for (int i = 0; i < results.size(); i++) {
             JsonObject result = results.getJsonObject(i);
 
-            if (!result.containsKey(Field.ID_MATIERE)) continue;
+            if (!result.containsKey(Field.ID_MATIERE) || !result.containsKey(Field.MOYENNE)) continue;
 
             String idMatiere = result.getString(Field.ID_MATIERE);
 
