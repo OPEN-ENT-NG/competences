@@ -2950,7 +2950,21 @@ public class LSUController extends ControllerHelper {
                                                 } else {
                                                     // Si pas de moyenne en base, on essaie le JSON
                                                     if (moyEleve != null && moyEleve.containsKey(MOYENNE)) {
-                                                        acquisEleve.setMoyenneEleve(new BigDecimal(moyEleve.getValue(MOYENNE).toString()));
+                                                        String moyEleveStr = moyEleve.getValue(MOYENNE).toString();
+                                                        switch (moyEleveStr) {
+                                                            case NN:
+                                                                acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(1L));
+                                                                break;
+                                                            case EA:
+                                                                acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(2L));
+                                                                break;
+                                                            case DI:
+                                                                acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(3L));
+                                                                break;
+                                                            default:
+                                                                acquisEleve.setMoyenneEleve(new BigDecimal(moyEleveStr));
+                                                                break;
+                                                        }
                                                     }
                                                 }
 
