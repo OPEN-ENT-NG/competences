@@ -3084,7 +3084,7 @@ public class LSUController extends ControllerHelper {
                                     }
 
                                     boolean toAdd = false;
-                                    if (hasAppreciation && !studentIsNN) {
+                                    if (hasAppreciation || !studentIsNN) {
                                         bilanPeriodique.setEleveRef(currentEleve);
                                         bilanPeriodique.setPeriodeRef(currentPeriode);
                                         addResponsable(bilanPeriodique);
