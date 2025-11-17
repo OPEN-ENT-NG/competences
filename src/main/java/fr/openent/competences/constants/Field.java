@@ -93,6 +93,7 @@ public class Field {
     public static final String SECOND_TEACHER_ID = "second_teacher_id";
     public static final String SUBJECT_ID = "subject_id";
     public static final String CLASS_OR_GROUP_ID = "class_or_group_id";
+    public static final String NOTES_BY_PERIODE_BY_STUDENT = "notes_by_periode_by_student";
 
 
     //fonction
