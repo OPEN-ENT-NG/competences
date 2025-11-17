@@ -2861,28 +2861,32 @@ public class LSUController extends ControllerHelper {
 
                                 private Future<Void> addListeAcquis(JsonArray suiviAcquis, BilanPeriodique bilanPeriodique) {
                                     Promise<Void> promise = Promise.promise();
-                                    BilanPeriodique.ListeAcquis acquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
 
                                     List<Future> futures = new ArrayList<>();
 
                                     for (int i = 0; i < suiviAcquis.size(); i++) {
                                         final JsonObject currentAcquis = suiviAcquis.getJsonObject(i);
 
-                                        Future<Acquis> futureAcquis = addListeAcquis_addAcquis(currentAcquis)
-                                                .compose(acquisEleve -> {
-                                                    if (currentAcquis.getBoolean("toAdd")) {
-                                                        addAcquis_addDiscipline(currentAcquis, acquisEleve);
-                                                        addAcquis_addElementProgramme(currentAcquis, acquisEleve);
-                                                        addAcquis_addMissingTeacher(acquisEleveList, currentAcquis, acquisEleve);
-                                                    }
-                                                    return Future.succeededFuture(acquisEleve);
-                                                });
+                                        Future<Acquis> futureAcquis = addListeAcquis_addAcquis(currentAcquis);
 
                                         futures.add(futureAcquis);
                                     }
 
                                     CompositeFuture.all(futures)
                                             .onSuccess(cf -> {
+                                                BilanPeriodique.ListeAcquis acquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
+
+                                                for (int i=0; i < cf.list().size(); i++) {
+                                                    JsonObject currentAcquis = suiviAcquis.getJsonObject(i);
+                                                    Acquis acquisEleve = (Acquis) cf.list().get(i);
+
+                                                    if (currentAcquis.getBoolean("toAdd")) {
+                                                        addAcquis_addDiscipline(currentAcquis, acquisEleve);
+                                                        addAcquis_addElementProgramme(currentAcquis, acquisEleve);
+                                                        addAcquis_addMissingTeacher(acquisEleveList, currentAcquis, acquisEleve);
+                                                    }
+                                                }
+
                                                 if (!acquisEleveList.getAcquis().isEmpty()) {
                                                     bilanPeriodique.setListeAcquis(acquisEleveList);
                                                 } else {
