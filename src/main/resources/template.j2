@@ -1,0 +1,34 @@
+{
+  "name": "fr.openent~competences",
+  "config": {
+    "main" : "fr.openent.competences.Competences",
+    "port": 8129,
+    "app-name": "Competences",
+    "app-address": "/competences",
+    "app-icon": "https://{{ host }}/competences/public/img/uni-competences.svg",
+    "host": "https://{{ host }}",
+    "ssl": true,
+    {% if overrideTheme %} "override-theme": {{ override2d }}, {% endif %}
+    "auto-redeploy": false,
+    "userbook-host": "https://{{ host }}",
+    "integration-mode": "{{ integration_mode|default('HTTP') }}",
+    "app-registry.port": 8012,
+    "mode": "prod",
+    "entcore.port": 8009,
+    "db-schema": "notes",
+    "vsco-schema": "viesco",
+    "sql": true,
+    "lsun": {
+      "xsd_path": "./public/lsun/import-complet-strict.xsd",
+      "civilite_regex" : "^[Mm][^mM]*[Mm][^mM]*$",
+      "withDigitalSkillsError" : true
+    },
+    "exports": {
+      "template-path": "./public/template/pdf/"
+    },
+    "transition" : {
+      "timeout-transaction" : {{ competencesTransitionTimeout | default('1000') }},
+      "sql-version": "v2"
+    }
+  }
+}
