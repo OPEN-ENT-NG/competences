@@ -37,7 +37,8 @@
         </header>
 
         <div ng-show="checkHaveResult()" class="center">
-            <iframe ng-src="[[content]]"  width="900" height="1200" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+            <iframe ng-if="!isMobile" ng-src="[[content]]"  width="900" height="1200" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+            <div ng-if="isMobile"><button ng-click="downloadPdf()" type="button">Télécharger le PDF</button></div>
         </div>
         <div ng-show="!checkHaveResult()" class="center">
             <h1 class="twelve-mobile grey-color"><i18n>evaluations.no.summary.bulletin</i18n></h1>

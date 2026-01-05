@@ -22,9 +22,7 @@
 import {model, ng,idiom as lang} from 'entcore';
 import { evaluations } from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
-import {Structure, Utils} from "../models/teacher";
 import http from "axios";
-import {ExportBulletins} from "../models/common/ExportBulletins";
 
 declare let _: any;
 
@@ -32,6 +30,8 @@ declare let _: any;
 export let bulletinController = ng.controller('BulletinController', [
     '$scope', '$sce',
     async  function ($scope,$sce) {
+        $scope.isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
         /**
          * chargement d'un releve
          * @returns {Promise<void>}
@@ -107,5 +107,17 @@ export let bulletinController = ng.controller('BulletinController', [
             else
                 return false;
         };
+
+        $scope.downloadPdf = function() {
+            // OU si on est OK avec la redirection on fait juste :
+            // $window.location.href = $scope.content;
+            
+            const link = document.createElement('a');
+            link.href = $scope.content;
+            link.download = '';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
 
     }]);
