@@ -41,16 +41,16 @@
             </option>
           </select>
         </label>
+
+        <div class="cell two twelve-mobile" ng-show="checkHaveResult()">
+          <a ng-href="[[content]]" target="_blank" class="button">
+            <i18n>evaluations.bulletin.open.pdf</i18n>
+          </a>
+        </div>
       </section>
     </header>
 
     <div ng-show="checkHaveResult()" class="center">
-      <div class="bulletin-actions">
-        <a ng-href="[[content]]" target="_blank" class="button">
-          <i18n>evaluations.bulletin.open.pdf</i18n>
-        </a>
-      </div>
-
       <iframe
         ng-src="[[content]]"
         width="900"
