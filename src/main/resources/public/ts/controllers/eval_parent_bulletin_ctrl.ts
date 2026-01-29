@@ -19,105 +19,125 @@
  * Created by Samuel Jollois on 29/11/2017.
  */
 
-import {model, ng,idiom as lang} from 'entcore';
-import { evaluations } from '../models/eval_parent_mdl';
-import * as utils from '../utils/parent';
+import { model, ng, idiom as lang } from "entcore";
+import { evaluations } from "../models/eval_parent_mdl";
+import * as utils from "../utils/parent";
 import http from "axios";
 
 declare let _: any;
 
 // @ts-ignore
-export let bulletinController = ng.controller('BulletinController', [
-    '$scope', '$sce',
-    async  function ($scope,$sce) {
-        $scope.isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+export let bulletinController = ng.controller("BulletinController", [
+  "$scope",
+  "$sce",
+  async function ($scope, $sce) {
+    $scope.isMobile = window.innerWidth <= 1024;
 
-        /**
-         * chargement d'un releve
-         * @returns {Promise<void>}
-         */
-        $scope.loadBulletin = async function () {
-           if( $scope.searchBulletin.periode.publication_bulletin) {
-                try {
-                    // lancement de l'export et récupération du fichier généré
-                    let data = await http.post(`/competences/see/bulletins`, {
-                        idEleve: $scope.searchBulletin.eleve.id,
-                        idPeriode: $scope.searchBulletin.periode.id_type,
-                        idStructure: $scope.searchBulletin.eleve.idStructure,
-                        idClasse: $scope.searchBulletin.eleve.idClasse,
-                        idParent: $scope.me.type === 'PERSRELELEVE' ? $scope.me.externalId : null
-                    }, {responseType: 'arraybuffer'});
-                    if (data.status == 204) {
-                        //empty result or no rights for visibility, le bulletin n'a pas encore été généré
-                        $scope.content = undefined;
-                    } else {
-                        var file = new Blob([data.data], {type: 'application/pdf'});
-                        var fileURL = window.URL.createObjectURL(file);
-                        $scope.content = $sce.trustAsResourceUrl(fileURL);
-                    }
-                    await utils.safeApply($scope);
-                } catch (data) {
-                    if(data) console.error(data);
-                    if (data.response != undefined && (data.response.status === 500 || data.response.status === 400
-                        || data.response.status === 403 || data.response.status === 401)) {
-                        $scope.content = undefined;
-                    }
-                }
-            }
-        };
-
-        let initSearchBulletin = (periode) => {
-            $scope.searchBulletin = {
-                eleve: evaluations.eleve,
-                periode: periode,
-                enseignants: evaluations.enseignants
-            };
-        };
-        // Initialisation des variables du bulletin
-        $scope.initBulletin = async function () {
-            if ($scope.searchBulletin !== undefined
-                && $scope.searchBulletin.periode !== undefined
-                && $scope.searchBulletin.periode.id_type !== undefined) {
-                initSearchBulletin(_.findWhere(evaluations.eleve.classe.periodes.all,
-                    {id_type: $scope.searchBulletin.periode.id_type}));
-            } else {
-                initSearchBulletin(evaluations.periode);
-            }
-
-            $scope.me = {
-                type: model.me.type,
-                externalId: model.me.externalId
-            };
-            await $scope.loadBulletin();
-            await utils.safeApply($scope);
-        };
-
-        await $scope.init();
-        $scope.initBulletin();
-        $scope.translate = lang.translate;
-        // Au changement de la période par le parent
-        $scope.$on('loadPeriode', async function () {
-            $scope.initBulletin();
-            await utils.safeApply($scope);
-        });
-
-        $scope.checkHaveResult = function () {
-            if ($scope.searchBulletin.periode !== null && $scope.searchBulletin.periode.id_type !== null)
-                return $scope.searchBulletin.periode.publication_bulletin && $scope.content;
-            else
-                return false;
-        };
-
-        $scope.downloadPdf = function() {
-            // OU si on est OK avec la redirection on fait juste :
-            // $window.location.href = $scope.content;
-            
-            const link = document.createElement('a');
-            link.href = $scope.content;
-            link.download = '';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+    /**
+     * chargement d'un releve
+     * @returns {Promise<void>}
+     */
+    $scope.loadBulletin = async function () {
+      if ($scope.searchBulletin.periode.publication_bulletin) {
+        try {
+          // lancement de l'export et récupération du fichier généré
+          let data = await http.post(
+            `/competences/see/bulletins`,
+            {
+              idEleve: $scope.searchBulletin.eleve.id,
+              idPeriode: $scope.searchBulletin.periode.id_type,
+              idStructure: $scope.searchBulletin.eleve.idStructure,
+              idClasse: $scope.searchBulletin.eleve.idClasse,
+              idParent:
+                $scope.me.type === "PERSRELELEVE" ? $scope.me.externalId : null,
+            },
+            { responseType: "arraybuffer" },
+          );
+          if (data.status == 204) {
+            //empty result or no rights for visibility, le bulletin n'a pas encore été généré
+            $scope.content = undefined;
+          } else {
+            var file = new Blob([data.data], { type: "application/pdf" });
+            var fileURL = window.URL.createObjectURL(file);
+            $scope.content = $sce.trustAsResourceUrl(fileURL);
+          }
+          await utils.safeApply($scope);
+        } catch (data) {
+          if (data) console.error(data);
+          if (
+            data.response != undefined &&
+            (data.response.status === 500 ||
+              data.response.status === 400 ||
+              data.response.status === 403 ||
+              data.response.status === 401)
+          ) {
+            $scope.content = undefined;
+          }
         }
+      }
+    };
 
-    }]);
+    let initSearchBulletin = (periode) => {
+      $scope.searchBulletin = {
+        eleve: evaluations.eleve,
+        periode: periode,
+        enseignants: evaluations.enseignants,
+      };
+    };
+    // Initialisation des variables du bulletin
+    $scope.initBulletin = async function () {
+      if (
+        $scope.searchBulletin !== undefined &&
+        $scope.searchBulletin.periode !== undefined &&
+        $scope.searchBulletin.periode.id_type !== undefined
+      ) {
+        initSearchBulletin(
+          _.findWhere(evaluations.eleve.classe.periodes.all, {
+            id_type: $scope.searchBulletin.periode.id_type,
+          }),
+        );
+      } else {
+        initSearchBulletin(evaluations.periode);
+      }
+
+      $scope.me = {
+        type: model.me.type,
+        externalId: model.me.externalId,
+      };
+      await $scope.loadBulletin();
+      await utils.safeApply($scope);
+    };
+
+    await $scope.init();
+    $scope.initBulletin();
+    $scope.translate = lang.translate;
+    // Au changement de la période par le parent
+    $scope.$on("loadPeriode", async function () {
+      $scope.initBulletin();
+      await utils.safeApply($scope);
+    });
+
+    $scope.checkHaveResult = function () {
+      if (
+        $scope.searchBulletin.periode !== null &&
+        $scope.searchBulletin.periode.id_type !== null
+      )
+        return (
+          $scope.searchBulletin.periode.publication_bulletin && $scope.content
+        );
+      else return false;
+    };
+
+    $scope.downloadPdf = function () {
+      // OU si on est OK avec la redirection on fait juste :
+      // $window.location.href = $scope.content;
+
+      const link = document.createElement("a");
+      link.href = $scope.content;
+      link.download = "";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+  },
+]);
