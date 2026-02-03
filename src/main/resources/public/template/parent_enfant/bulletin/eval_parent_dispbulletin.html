@@ -54,7 +54,11 @@
         mozallowfullscreen
         allowfullscreen
       ></iframe>
-      <div class="cell two twelve-mobile" ng-if="isMobile()">
+      <div
+        class="cell two twelve-mobile"
+        style="padding-top: 8px"
+        ng-if="isMobile()"
+      >
         <a ng-href="[[content]]" target="_blank" class="button">
           <i18n>evaluations.bulletin.open.pdf</i18n>
         </a>
