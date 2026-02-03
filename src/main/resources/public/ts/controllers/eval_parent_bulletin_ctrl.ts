@@ -31,7 +31,7 @@ export let bulletinController = ng.controller("BulletinController", [
   "$scope",
   "$sce",
   async function ($scope, $sce) {
-    $scope.isMobile = window.innerWidth <= 1024;
+    $scope.isMobile = () => window.innerWidth <= 1024;
 
     /**
      * chargement d'un releve

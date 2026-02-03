@@ -46,7 +46,7 @@
 
     <div ng-show="checkHaveResult()" class="center">
       <iframe
-        ng-if="!isMobile"
+        ng-if="!isMobile()"
         ng-src="[[content]]"
         width="900"
         height="1200"
@@ -54,7 +54,7 @@
         mozallowfullscreen
         allowfullscreen
       ></iframe>
-      <div class="cell two twelve-mobile" ng-if="isMobile">
+      <div class="cell two twelve-mobile" ng-if="isMobile()">
         <a ng-href="[[content]]" target="_blank" class="button">
           <i18n>evaluations.bulletin.open.pdf</i18n>
         </a>
