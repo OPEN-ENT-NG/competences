@@ -2,6 +2,11 @@
   "name": "fr.openent~competences",
   "config": {
     "main" : "fr.openent.competences.Competences",
+    "probes": [
+      "org.entcore.common.http.health.Neo4jProbe",
+      "org.entcore.common.http.health.MongoProbe",
+      "org.entcore.common.http.health.PostgresProbe"
+    ],
     "port": 8129,
     "app-name": "Competences",
     "app-address": "/competences",
