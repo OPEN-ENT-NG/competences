@@ -862,9 +862,9 @@ public class LSUController extends ControllerHelper {
             throws ParseException {
         Map<String,String> mapIdClassCodeDivision = new HashMap<>();
         //errorsExport = new JsonObject();
-        if(allStudentsWithRelatives.isEmpty()){
+        if(allStudentsWithRelatives == null || allStudentsWithRelatives.isEmpty()){
             handler.handle("no student");
-        }else {
+        } else {
             Donnees.Eleves eleves = objectFactory.createDonneesEleves();
 
             for (int i = 0; i < allStudentsWithRelatives.size(); i++) {

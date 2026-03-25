@@ -550,7 +550,7 @@ public class DefaultLSUService implements LSUService {
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
                 if("ok".equals(body.getString("status"))){
-                    JsonArray allStudentsWithRelative = body.getJsonArray("results");
+                    JsonArray allStudentsWithRelative = body.getJsonArray("results", new JsonArray());
 
                     handler.handle(new Either.Right<>(allStudentsWithRelative));
 
