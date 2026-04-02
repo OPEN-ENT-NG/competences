@@ -858,52 +858,61 @@ public class LSUController extends ControllerHelper {
 
     private void getBaliseEleveBP(Donnees donnees, List<String> idsClass,Map<String,JsonArray> periodesByClass,
                                   JsonArray allStudentsWithRelatives, Map<String,JsonObject> deletedStudentPostgres,
-                                  Map<Long, JsonObject> periodeUnheededStudents,Handler<String> handler) throws ParseException {
+                                  Map<Long, JsonObject> periodeUnheededStudents,Handler<String> handler) throws Exception {
         Map<String,String> mapIdClassCodeDivision = new HashMap<>();
         // errorsExport = new JsonObject();
+        log.info("periodeUnheededStudents : " + periodeUnheededStudents);
         if(allStudentsWithRelatives == null || allStudentsWithRelatives.isEmpty()){
             handler.handle("no student");
         } else {
+            log.info("objectFactory : " + objectFactory);
             Donnees.Eleves eleves = objectFactory.createDonneesEleves();
 
+            log.info("allStudentsWithRelatives : " + allStudentsWithRelatives);
             for (int i = 0; i < allStudentsWithRelatives.size(); i++) {
                 JsonObject student = allStudentsWithRelatives.getJsonObject(i);
+                log.info("student : " + student);
                 if (student == null) { // sécurité ajoutée : éviter getString(...) sur student null
-                    log.info("[Competences@LSUController::getBaliseEleveBP] student is null");
+                    log.info("student is null");
                     continue;
                 }
                 String created_date = student.getString("createdDate");
                 Date createdDate = UtilsConvert.convertStringToDate(created_date, "yyyy-MM-dd");
+                log.info("createdDate : " + createdDate);
                 String idEleve = student.getString("idEleve");
                 String idClasse = student.getString("idClass");
+                log.info("idEleve / idClasse : " + idEleve + " / " + idClasse);
                 if (idEleve == null || idClasse == null) { // sécurité ajoutée : éviter appels métier avec ids null
-                    log.info("[Competences@LSUController::getBaliseEleveBP] idEleve or idClasse is null");
+                    log.info("idEleve or idClasse is null");
                     continue;
                 }
                 JsonArray periodes = periodesByClass.get(idClasse);
+                log.info("periodes : " + periodes);
                 int nbIgnoredTimes = lsuService.nbIgnoredTimes(idEleve, idClasse, periodesByClass, periodeUnheededStudents);
+                log.info("nbIgnoredTimes : " + nbIgnoredTimes);
                 // Si l'élève est ignoré sur toutes les périodes de l'export pour sa classe,
                 if (periodes != null && periodes.size() == nbIgnoredTimes) {
-                    log.info("[Competences@LSUController::getBaliseEleveBP] periodes.size equals nbIgnoredTimes");
+                    log.info("periodes.size equals nbIgnoredTimes");
                     continue;
                 }
                 // cas élève non supprimé qui est dans la classe (Neo4j) => élève qui n'a pas changé de classe
                 // or student being deleted
+                log.info("deletedStudentPostgres : " + deletedStudentPostgres);
                 if (idsClass.size() == 1 && idsClass.contains(student.getString("idClass")) || !deletedStudentPostgres.containsKey(idEleve)) {
                     String biggestPeriode = Utils.getPeriode(periodesByClass.get(idClasse), false);
                     if (biggestPeriode == null) {  // sécurité ajoutée : éviter conversion de période null
-                        log.info("[Competences@LSUController::getBaliseEleveBP] biggestPeriode is null");
+                        log.info("biggestPeriode is null");
                         continue;
                     }
                     Date biggestPeriodeDate = UtilsConvert.convertStringToDate(biggestPeriode, "yyyy-MM-dd");
                     if (biggestPeriodeDate == null) { // sécurité ajoutée : éviter createdDate.before(null)
-                        log.info("[Competences@LSUController::getBaliseEleveBP] biggestPeriodeDate is null");
+                        log.info("biggestPeriodeDate is null");
                         continue;
                     }
                     if (createdDate == null || createdDate.before(biggestPeriodeDate)) {
                         Eleve eleve = setBaliseEleve(eleves, mapIdClassCodeDivision, null, null, student, handler);
                         if (eleve == null) { // sécurité ajoutée : éviter setBaliseResponsableAndAdress(..., null)
-                            log.info("[Competences@LSUController::getBaliseEleveBP] eleve is null");
+                            log.info("eleve is null");
                             continue;
                         }
                         setBaliseResponsableAndAdress(student, eleve);
@@ -911,16 +920,16 @@ public class LSUController extends ControllerHelper {
                 } else { //cas de l'élève qui a été dans la ou les classes demandées => élève qui a changé de classe
                     JsonObject studentPostgres = deletedStudentPostgres.get(student.getString("idEleve"));
                     if (studentPostgres == null) { // sécurité ajoutée : éviter studentPostgres.getString(...) sur null
-                        log.info("[Competences@LSUController::getBaliseEleveBP] studentPostgres is null");
+                        log.info("studentPostgres is null");
                         continue;
                     }
                     String deleteDateIdClass = studentPostgres.getString("delete_date_id_class");
                     if (deleteDateIdClass == null) { // sécurité ajoutée : éviter new JsonArray(null)
-                        log.info("[Competences@LSUController::getBaliseEleveBP] deleteDateIdClass is null");
+                        log.info("deleteDateIdClass is null");
                         addErrorClass(studentPostgres, student);
                         continue;
                     }
-                    log.info("[Competences@LSUController::getBaliseEleveBP] deleteDateIdClass raw value : " + deleteDateIdClass);
+                    log.info("deleteDateIdClass raw value : " + deleteDateIdClass);
                     JsonArray oldClasses = new JsonArray(deleteDateIdClass);
                     // élève qui a changé de classe et dont la nouvelle classe n'est pas demandée pour l'export
                     // dans la rep de la requête Neo on aura id de la nouvelle classe et non de l'ancienne
@@ -929,54 +938,56 @@ public class LSUController extends ControllerHelper {
                         if (oldClasses.size() == 1) {
                             JsonObject oldClass = oldClasses.getJsonObject(0);
                             if (oldClass == null) { // sécurité ajoutée : éviter oldClass.getString(...) sur null
-                                log.info("[Competences@LSUController::getBaliseEleveBP] oldClass is null");
+                                log.info("oldClass is null");
                                 addErrorClass(studentPostgres, student);
                                 continue;
                             }
                             String deleteDateString = oldClass.getString("deleteDate");
                             if (deleteDateString == null) { // sécurité ajoutée : éviter deleteDateString.split("T") sur null
-                                log.info("[Competences@LSUController::getBaliseEleveBP] deleteDateString is null");
+                                log.info("deleteDateString is null");
                                 addErrorClass(studentPostgres, student);
                                 continue;
                             }
                             Date deleteDatePostgre = UtilsConvert.convertStringToDate(deleteDateString.split("T")[0], "yyyy-MM-dd");
                             String idClassPostgres = oldClass.getString("oldIdClass");
                             if (idClassPostgres == null) { // sécurité ajoutée : éviter periodesByClass.get(null) / Utils.getPeriode(...)
-                                log.info("[Competences@LSUController::getBaliseEleveBP] idClassPostgres is null");
+                                log.info("idClassPostgres is null");
                                 addErrorClass(studentPostgres, student);
                                 continue;
                             }
                             String biggestPeriode = Utils.getPeriode(periodesByClass.get(idClassPostgres), false);
                             if (biggestPeriode == null) { // sécurité ajoutée : éviter conversion de période null
-                                log.info("[Competences@LSUController::getBaliseEleveBP] biggestPeriode is null");
+                                log.info("biggestPeriode is null");
                                 addErrorClass(studentPostgres, student);
                                 continue;
                             }
                             Date biggestPeriodeDate = UtilsConvert.convertStringToDate(biggestPeriode, "yyyy-MM-dd");
                             if (biggestPeriodeDate == null) { // sécurité ajoutée : éviter createdDate.before(null)
-                                log.info("[Competences@LSUController::getBaliseEleveBP] biggestPeriodeDate is null");
+                                log.info("biggestPeriodeDate is null");
                                 addErrorClass(studentPostgres, student);
                                 continue;
                             }
                             if (createdDate == null || createdDate.before(biggestPeriodeDate)) {
                                 Eleve eleve = setBaliseEleve(eleves, mapIdClassCodeDivision, idClassPostgres, deleteDatePostgre, student, handler);
                                 if (eleve == null) { // sécurité ajoutée : éviter setBaliseResponsableAndAdress(..., null)
-                                    log.info("[Competences@LSUController::getBaliseEleveBP] eleve is null");
+                                    log.info("eleve is null");
                                     continue;
                                 }
                                 setBaliseResponsableAndAdress(student, eleve);
                             }
                         } else {
-                            log.info("[Competences@LSUController::getBaliseEleveBP] nb of oldClasses != 1");
+                            log.info("nb of oldClasses != 1");
                             addErrorClass(studentPostgres, student);
                         }
                     } else {//cas où l'export est demandé sur plusieurs classes et que l'élève appartient et a appartenu à celles-ci
-                        log.info("[Competences@LSUController::getBaliseEleveBP] idsClass does not contains idclass of student : " + student);
+                        log.info("idsClass does contains idclass of student : " + student);
                         addErrorClass(studentPostgres, student);
                     }
                 }
             }
 
+            log.info("eleves : " + eleves);
+            log.info("donnees : " + donnees);
             if(eleves.getEleve().isEmpty()) {
                 handler.handle("no student");
                 log.info("FIN method getBaliseEleves : aucun eleve ajoute ");
