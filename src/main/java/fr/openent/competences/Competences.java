@@ -275,7 +275,8 @@ public class Competences extends BaseServer {
       final Promise<Void> promise = Promise.promise();
       super.start(promise);
       promise.future().compose(e -> this.initCompetences())
-              .onFailure(e -> log.error("Error while starting Competences module", e)).onComplete(startPromise);
+              .onFailure(e -> log.error("Error while starting Competences module", e))
+              .onComplete(startPromise);
     }
     private Future<Void> initCompetences() {
       COMPETENCES_SCHEMA = config.getString(DB_SCHEMA);
