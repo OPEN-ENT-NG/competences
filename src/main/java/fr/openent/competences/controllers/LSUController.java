@@ -605,6 +605,7 @@ public class LSUController extends ControllerHelper {
                                     log.error("getXML : getApEpiParcoursBalises " + project);
                                 }
                             };
+                            log.info("call getApEpiParcoursBalises");
                             getApEpiParcoursBalises(donnees, idsGroupsClasses, idStructure, epiGroupAdded,
                                     enseignantFromSts, getProjectHandler);
 
@@ -620,15 +621,20 @@ public class LSUController extends ControllerHelper {
                                         log.error("getXML : log.error(\"getXML : getApEpiParcoursBalises \" + project); " + compNumCommun);
                                     }
                                 };
+                                log.info("call getBaliseCompetencesNumeriqueCommun");
                                 getBaliseCompetencesNumeriqueCommun(donnees, idsClasesCycle3, getBaliseCompNumCommuneHandler);
                             } else {
+                                log.info("pas de class with Cycle3");
                                 compNumCommunPromise.complete();
                             }
 
+                            log.info("donnees.getEleves() : " + donnees.getEleves());
+                            log.info("donnees.getEleves().getEleve() : " + donnees.getEleves().getEleve());
                             List<String> idEleves = donnees.getEleves().getEleve().stream()
                                     .map(Eleve::getIdNeo4j).collect(Collectors.toList());
 
                             Future<List<SubTopic>> subTopicCoefFuture = utilsService.getSubTopicCoeff(idStructure);
+                            log.info("subTopicCoefFuture : " + subTopicCoefFuture);
                             listGetProjectAndCompNum.add(subTopicCoefFuture);
 
                             Promise<JsonArray> getAbsencesAndRetardsPromise = Promise.promise();
@@ -647,16 +653,22 @@ public class LSUController extends ControllerHelper {
                                     multiTeachersEvent -> formate(multiTeachersPromise, multiTeachersEvent));
                             Future.all(listGetProjectAndCompNum).onComplete(eventProjectCompNum -> {
                                 if(eventProjectCompNum.succeeded()){
+                                    log.info("eventProjectCompNum.succeeded");
                                     final JsonArray absencesAndRetards = getAbsencesAndRetardsPromise.future().result();
                                     final JsonArray servicesJsonArray = servicesPromise.future().result();
                                     final JsonArray multiTeachers = multiTeachersPromise.future().result();
                                     List<SubTopic> subTopics = subTopicCoefFuture.result();
 
+                                    log.info("absencesAndRetards : " + absencesAndRetards);
+                                    log.info("servicesJsonArray : " + servicesJsonArray);
+                                    log.info("multiTeachers : " + multiTeachers);
+                                    log.info("subTopics : " + subTopics);
                                     fr.openent.competences.model.Structure structure = new fr.openent.competences.model.Structure();
                                     structure.setId(idStructure);
                                     List<Service> services = new ArrayList<>();
                                     setServices(structure, servicesJsonArray, services,subTopics);
 
+                                    log.info("call getBaliseBilansPeriodiques");
                                     this.getBaliseBilansPeriodiques(donnees, idStructure, idsGroupsClasses, periodesByClass, cyclesByClass,
                                             tableConversionByClass, enseignantFromSts, mapIdClassHeadTeachers, periodeUnheededStudents,
                                             absencesAndRetards, services, multiTeachers, mapIdsGroupsClasses, getBilansPeriodiquesHandler);
@@ -868,7 +880,6 @@ public class LSUController extends ControllerHelper {
             log.info("objectFactory : " + objectFactory);
             Donnees.Eleves eleves = objectFactory.createDonneesEleves();
 
-            log.info("allStudentsWithRelatives : " + allStudentsWithRelatives);
             for (int i = 0; i < allStudentsWithRelatives.size(); i++) {
                 JsonObject student = allStudentsWithRelatives.getJsonObject(i);
                 log.info("student : " + student);
@@ -989,10 +1000,13 @@ public class LSUController extends ControllerHelper {
             log.info("eleves : " + eleves);
             log.info("donnees : " + donnees);
             if(eleves.getEleve().isEmpty()) {
+                log.info("eleves.getEleve() is empty");
                 handler.handle("no student");
                 log.info("FIN method getBaliseEleves : aucun eleve ajoute ");
             } else {
+                log.info("donnees without eleves : " + donnees);
                 donnees.setEleves(eleves);
+                log.info("donnees with eleves : " + donnees.getEleves());
                 handler.handle("success");
                 log.info("FIN method getBaliseEleves : nombre d'eleve ajoutes :" + eleves.getEleve().size());
             }
@@ -2567,6 +2581,8 @@ public class LSUController extends ControllerHelper {
         final AtomicInteger originalSize = new AtomicInteger();
         final AtomicInteger idElementProgramme = new AtomicInteger();
         boolean withDigitalSkillsError = Boolean.TRUE.equals(Competences.LSUN_CONFIG.getBoolean("withDigitalSkillsError"));
+
+        log.info("in getBaliseBilansPeriodiques");
         Handler getOut = (Handler<Either<String, JsonObject>>) suiviAcquisResponse -> {
             originalSize.getAndDecrement();
             if (originalSize.get() == 0) {
@@ -2579,6 +2595,8 @@ public class LSUController extends ControllerHelper {
             }
         };
 
+        log.info("eleves : " + eleves);
+        log.info("periodes : " + periodes);
         if(!(eleves.size() > 0) || !(periodes.size() > 0)){
             handler.handle(new Either.Right<>(new JsonObject().put("error",
                     "getBaliseBilansPeriodiques : Eleves or Periodes are empty")));
