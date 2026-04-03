@@ -2181,6 +2181,7 @@ public class LSUController extends ControllerHelper {
     private void getApEpiParcoursBalises(final Donnees donnees, final List<String> groupsClass, final String idStructure,
                                          JsonObject epiGroupAdded, final JsonArray enseignantFromSts,
                                          final Handler<String> handler) {
+        log.info("getApEpiParcoursBalises");
         elementBilanPeriodiqueService.getElementsBilanPeriodique(null, groupsClass, idStructure,
                 new Handler<Either<String, JsonArray>>() {
                     AtomicBoolean answer = new AtomicBoolean(false);
@@ -2190,14 +2191,17 @@ public class LSUController extends ControllerHelper {
                     @Override
                     public void handle(Either<String, JsonArray> event) {
                         if (event.isRight()) {
+                            log.info("getElementsBilanPeriodique suceeded");
                             JsonArray elementBilanPeriodique = event.right().getValue();
                             if (elementBilanPeriodique == null || elementBilanPeriodique.isEmpty()) {
+                                log.info("elementBilanPeriodique is null or empty");
                                 answer.set(true);
                                 handler.handle("success");
                                 log.info(" getElementsBilanPeriodique in getApEpiParcoursBalises");
                             } else {
                                 final List<Future<JsonObject>> futuresListApEpiParcours = new ArrayList<>();
 
+                                log.info("elementBilanPeriodique : " + elementBilanPeriodique);
                                 for (int i = 0; i < elementBilanPeriodique.size(); i++) {
                                     final Promise<JsonObject> eltBilanPeriodiquePromise = Promise.promise();
                                     futuresListApEpiParcours.add(eltBilanPeriodiquePromise.future());
@@ -2205,21 +2209,27 @@ public class LSUController extends ControllerHelper {
                                     if (element != null) {
                                         Long typeElement = element.getLong("type");
                                         if (3L == typeElement) { //parcours group
+                                            log.info("call addParcoursGroup");
                                             addParcoursGroup(element, eltBilanPeriodiquePromise);
                                         } else if (2L == typeElement) { //ap class/group
+                                            log.info("call addAccGroup");
                                             addAccGroup(element, eltBilanPeriodiquePromise);
                                         } else if (1L == typeElement) { //epi group
+                                            log.info("call addEpiGroup");
                                             addEpiGroup(element, epiGroupAdded, eltBilanPeriodiquePromise);
                                         }
                                     }
                                 }
                                 Future.all(futuresListApEpiParcours).onComplete(eventFutureApEpiParcours -> {
+                                    log.info("suceeded to call right function");
                                     handler.handle("success");
                                 });
                             }
                         } else {
+                            log.info("getElementsBilanPeriodique failed");
                             String error = event.left().getValue();
                             if(error != null && error.contains(TIME)){
+                                log.info("try to recall getElementsBilanPeriodique");
                                 elementBilanPeriodiqueService.getElementsBilanPeriodique(null, groupsClass,
                                         idStructure, this);
                             } else {
@@ -2227,6 +2237,7 @@ public class LSUController extends ControllerHelper {
                                 handler.handle("getApEpiParcoursBalises no data available ");
                                 log.info("event is not Right getElementsBilanPeriodique in getApEpiParcoursBalises");
                             }
+                            log.info("set answer and log prob");
                             lsuService.serviceResponseOK(answer,count.incrementAndGet(), thread, method);
                         }
                     }
@@ -2518,11 +2529,14 @@ public class LSUController extends ControllerHelper {
     private boolean hasClassesWithCycle3 (final Donnees donnees, final List<String> idsClass,
                                           List<String> idsClassCycle3, final Map<String, Integer> cyclesByClass){
 
+        log.info("hasClassesWithCycle3");
         Periode findLastPeriod = donnees.getPeriodes().getPeriode().stream().filter(period ->
                 period.getIndice() == period.getNbPeriodes()).findFirst().orElse(null);
 
+        log.info("findLastPeriod");
         idsClass.forEach( idClass -> {
             Integer cycleClass = cyclesByClass.get(idClass);
+            log.info("cycleClass");
             if( cycleClass.equals(LevelCycle.CYCLE3.getValue())) idsClassCycle3.add(idClass);
         });
 
