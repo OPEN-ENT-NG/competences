@@ -222,7 +222,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     @Override
     public void getElementBilanPeriodique (String idEnseignant, List<String> listIdClasses, String idEtablissement, Handler<Either<String, JsonArray>> handler){
 
-        log.info("getElementBilanPeriodique query");
         StringBuilder query = new StringBuilder();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -296,8 +295,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 .append(" GROUP BY elt_bilan_periodique.id) ");
         params.add(idEtablissement);
 
-
-        log.info("getElementBilanPeriodique query : " + query);
         Sql.getInstance().prepared(query.toString(), params,DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 
@@ -305,11 +302,10 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     @Override
     public void getElementsBilanPeriodique (String idEnseignant, List<String> idClasse, String idEtablissement,
                                             Handler<Either<String, JsonArray>> handler) {
-        log.info("getElementsBilanPeriodique");
+
         getElementBilanPeriodique(idEnseignant, idClasse, idEtablissement, event -> {
             if (event.isRight()) {
                 JsonArray result = event.right().getValue();
-                log.info("getElementBilanPeriodique suceeded : " + result);
 
                 List<String> idMatieres = new ArrayList<>();
                 List<String> idClasses = new ArrayList<>();
@@ -318,7 +314,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 for(Object r : result){
                     JsonObject element = (JsonObject)r;
 
-                    log.info("element groupes : " + element.getString("groupes"));
                     String[] arrayIdClasses = element.getString("groupes").split(",");
                     JsonArray jsonArrayIntsMats = element.getJsonArray("intervenants_matieres");
 
@@ -328,11 +323,9 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                         }
                     }
 
-                    log.info("jsonArrayIntsMats : " + jsonArrayIntsMats);
                     if(jsonArrayIntsMats != null){
                         for(Object o : jsonArrayIntsMats){
                             JsonArray jsonArrayIntMat = (JsonArray) o;
-                            log.info("jsonArrayIntMat.getString(1) : " + jsonArrayIntMat.getString(1));
                             String[] arrayIntMat = jsonArrayIntMat.getString(1).split(",");
                             if(!idUsers.contains(arrayIntMat[0])){
                                 idUsers.add(arrayIntMat[0]);
@@ -348,7 +341,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 getSubjectNames(idMatieres,idClasses,idUsers, result, handler);
 
             } else{
-                log.info("getElementBilanPeriodique failed : " + event.left().getValue());
                 handler.handle(event.left());
             }
         });
@@ -359,7 +351,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                                   List<String> idUsers ,
                                   JsonArray result,
                                   Handler<Either<String, JsonArray>> handler){
-        log.info("getSubjectNames" );
         JsonObject action = new JsonObject()
                 .put("action", "matiere.getMatieres")
                 .put("idMatieres", new fr.wseduc.webutils.collections.JsonArray(idMatieres));
@@ -372,7 +363,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                         JsonArray matieres = body.getJsonArray("results");
                         Map<String, String> matieresMap = new HashMap<>();
 
-                        log.info("getMatieres succeeded : " + matieres);
                         for(Object o : matieres){
                             JsonObject matiere = (JsonObject)o;
                             matieresMap.put(matiere.getString("id"),
@@ -394,7 +384,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     private void getClassesGroupesName(List<String> idMatieres, List<String> idClasses, List<String> idUsers,
                                        JsonArray matieres, Map<String, String> matieresMap,
                                        JsonArray result,Handler<Either<String, JsonArray>> handler) {
-        log.info("getClassesGroupesName" );
         JsonObject action = new JsonObject()
                 .put("action", "classe.getClassesInfo")
                 .put("idClasses",
@@ -410,8 +399,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                                 new HashMap<>();
                         Map<String, String> classesExternalIdMap =
                                 new HashMap<>();
-
-                        log.info("getClassesInfo succeeded : " + classes);
                         for(Object o : classes){
                             JsonObject classe = (JsonObject)o;
                             classesNameMap.put(classe.getString("id"),
@@ -439,7 +426,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                                 Map<String, String> classesNameMap ,
                                 Map<String, String> classesExternalIdMap, Handler<Either<String, JsonArray>> handler) {
 
-        log.info("getTeacherName" );
         JsonObject action = new JsonObject()
                 .put("action", "user.getUsers")
                 .put("idUsers", idUsers);
@@ -452,13 +438,11 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                             .getString("status"))) {
                         JsonArray users = body.getJsonArray("results");
                         Map<String, String> usersMap = new HashMap<>();
-                        log.info("getUsers succeeded : " + users);
                         for(Object o : users){
                             JsonObject user = (JsonObject)o;
                             usersMap.put(user.getString("id"),user.getString("displayName"));
                         }
 
-                        log.info("in getUsers : result : " + result);
                         JsonArray parsedElems = new fr.wseduc.webutils.collections.JsonArray();
                         for(Object o  : result){
                             JsonObject element = (JsonObject) o;
@@ -480,7 +464,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                                 parsedElem.put("theme", theme);
                             }
 
-                            log.info("in getUsers : element groupes " + element.getString("groupes"));
                             String[] arrayIdGroupes = element.getString("groupes").split(",");
                             JsonArray groupes = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -493,14 +476,11 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                             }
                             parsedElem.put("groupes", groupes);
 
-                            log.info("element intervenants_matieres : " + element.getJsonArray("intervenants_matieres"));
                             if(element.getJsonArray("intervenants_matieres") != null){
                                 JsonArray intMat = element.getJsonArray("intervenants_matieres");
                                 JsonArray intervenantsMatieres = new fr.wseduc.webutils.collections.JsonArray();
 
-                                log.info("intMat : " + intMat);
                                 for(int i = 0; i < intMat.size(); i++){
-                                    log.info("intMatArray : " + intMat.getJsonArray(i).getString(1));
                                     String[] intMatArray = intMat.getJsonArray(i).getString(1).split(",");
                                     JsonObject intervenantMatiere = new JsonObject();
 
@@ -522,7 +502,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
                             parsedElems.add(parsedElem);
                         }
-                        log.info("handle getTeacherName : " + parsedElems);
                         handler.handle(new Either.Right<>(parsedElems));
                     } else{
                         String _message = body.getString("message");
