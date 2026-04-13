@@ -34,7 +34,7 @@ public class BulletinWorker extends BusModBase implements Handler<Message<JsonOb
     @Override
     public void start(final Promise<Void> startPromise){
         super.start();
-        SharedDataHelper.getInstance().<String, String>getMulti("server", "neo4jConfig")
+        SharedDataHelper.getInstance().<String, String>getLocalMulti("server", "neo4jConfig")
           .map(map -> map.get("neo4jConfig"))
           .compose(neo4jConfig ->  {
             Neo4j.getInstance().init(vertx, new JsonObject(neo4jConfig));
