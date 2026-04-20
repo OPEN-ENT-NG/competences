@@ -32,8 +32,8 @@
     <pdfboxVersion>2.0.30</pdfboxVersion>
     <modMongoVersion>4.1-separation-SNAPSHOT</modMongoVersion>
     <modPostgresVersion>2.1-separation-SNAPSHOT</modPostgresVersion>
-    <modJsonSchemaValidatorVersion>2.1-SNAPSHOT</modJsonSchemaValidatorVersion>
     <entCoreLibsVersion>6.14-separation-SNAPSHOT</entCoreLibsVersion>
+    <modPdfGeneratorVersion>2.1-separation-SNAPSHOT</modPdfGeneratorVersion>
   </properties>
   <dependencies>
     <dependency>
@@ -121,12 +121,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.entcore</groupId>
-      <artifactId>common</artifactId>
-      <version>${entCoreLibsVersion}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>mod-mongo-persistor</artifactId>
       <version>${modMongoVersion}</version>
@@ -141,16 +135,16 @@
       <classifier>fat</classifier>
     </dependency>
     <dependency>
-      <groupId>com.opendigitaleducation</groupId>
-      <artifactId>mod-json-schema-validator</artifactId>
-      <version>${modJsonSchemaValidatorVersion}</version>
+      <groupId>fr.wseduc</groupId>
+      <artifactId>mod-postgresql</artifactId>
+      <version>${modPostgresVersion}</version>
       <scope>runtime</scope>
       <classifier>fat</classifier>
     </dependency>
     <dependency>
       <groupId>fr.wseduc</groupId>
-      <artifactId>mod-postgresql</artifactId>
-      <version>${modPostgresVersion}</version>
+      <artifactId>mod-pdf-generator</artifactId>
+      <version>${modPdfGeneratorVersion}</version>
       <scope>runtime</scope>
       <classifier>fat</classifier>
     </dependency>
