@@ -86,7 +86,7 @@ public class BulletinUtils {
                                   String idYear, Handler<Either<String, JsonArray>> handler){
         String query = "SELECT id_file, id_parent FROM " + COMPETENCES_SCHEMA + "." + STORAGE_BULLETIN_TABLE +
                 " WHERE id_eleve = ? AND id_classe = ? AND id_periode = ? AND id_etablissement = ? AND id_annee = ?" +
-                " ORDER by created DESC;";
+                " ORDER by modified DESC;";
         JsonArray values = new JsonArray().add(idEleve).add(idClasse).add(idPeriode).add(idEtablissement).add(idYear);
         Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS,
                 SqlResult.validResultHandler(handler));
