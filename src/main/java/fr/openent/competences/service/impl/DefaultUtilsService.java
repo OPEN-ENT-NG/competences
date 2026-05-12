@@ -119,7 +119,7 @@ public class DefaultUtilsService implements UtilsService {
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
-                JsonArray result = body.getJsonArray(RESULTS);
+                JsonArray result = sanitizeEventBusResult(body.getJsonArray(RESULTS));
                 handler.handle(new Either.Right<>(result));
             } else {
                 handler.handle(new Either.Left<>(body.getString("message")));
@@ -154,7 +154,7 @@ public class DefaultUtilsService implements UtilsService {
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
-                JsonArray result = body.getJsonArray(RESULTS);
+                JsonArray result = sanitizeEventBusResult(body.getJsonArray(RESULTS));
                 handler.handle(new Either.Right<>(result));
             } else {
                 handler.handle(new Either.Left<>(body.getString(Field.MESSAGE)));
@@ -172,7 +172,7 @@ public class DefaultUtilsService implements UtilsService {
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
-                JsonArray result = body.getJsonArray(RESULTS);
+                JsonArray result = sanitizeEventBusResult(body.getJsonArray(RESULTS));
                 handler.handle(new Either.Right<>(result));
             } else {
                 handler.handle(new Either.Left<>(body.getString("message")));
@@ -231,7 +231,7 @@ public class DefaultUtilsService implements UtilsService {
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
-                JsonArray results = body.getJsonArray(RESULTS);
+                JsonArray results = sanitizeEventBusResult(body.getJsonArray(RESULTS));
                 promiseService.complete(results);//handler.handle(new Either.Right<String, JsonArray>(results));
             } else {
                 promiseService.fail(body.getString(Field.MESSAGE));//handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
@@ -275,7 +275,7 @@ public class DefaultUtilsService implements UtilsService {
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
-                JsonArray results = body.getJsonArray(RESULTS);
+                JsonArray results = sanitizeEventBusResult(body.getJsonArray(RESULTS));
                 handler.handle(new Either.Right<String, JsonArray>(results));
             } else {
                 handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
@@ -305,7 +305,7 @@ public class DefaultUtilsService implements UtilsService {
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
-                JsonArray results = body.getJsonArray(RESULTS);
+                JsonArray results = sanitizeEventBusResult(body.getJsonArray(RESULTS));
                 handler.handle(new Either.Right<String, JsonArray>(results));
             } else {
                 handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
@@ -676,6 +676,42 @@ public class DefaultUtilsService implements UtilsService {
     }
 
     /**
+     * Sanitizes a JsonArray received from the event bus to ensure all entries are proper JsonObject instances.
+     * When using a clustered event bus (e.g. with Zookeeper), deserialized messages may contain
+     * LinkedHashMap instances instead of JsonObject. This method converts them back.
+     *
+     * @param array the JsonArray to sanitize (may contain Map entries instead of JsonObject)
+     * @return a new JsonArray with all Map entries converted to JsonObject, or the original if already clean
+     */
+    @SuppressWarnings("unchecked")
+    public static JsonArray sanitizeEventBusResult(JsonArray array) {
+        if (array == null) {
+            return null;
+        }
+        boolean needsSanitization = false;
+        for (Object item : array) {
+            if (item instanceof Map && !(item instanceof JsonObject)) {
+                needsSanitization = true;
+                break;
+            }
+        }
+        if (!needsSanitization) {
+            return array;
+        }
+        JsonArray sanitized = new JsonArray();
+        for (Object item : array) {
+            if (item instanceof JsonObject) {
+                sanitized.add(item);
+            } else if (item instanceof Map) {
+                sanitized.add(new JsonObject((Map<String, Object>) item));
+            } else {
+                sanitized.add(item);
+            }
+        }
+        return sanitized;
+    }
+
+    /**
      * Récupère les cycles des classes dans la relation classe_cycle
      *
      * @param idClasse liste des identifiants des classes.
@@ -893,7 +929,7 @@ public class DefaultUtilsService implements UtilsService {
                         @Override
                         public void handle(Message<JsonObject> message) {
                             JsonObject body = message.body();
-                            JsonArray periodes = body.getJsonArray("result");
+                            JsonArray periodes = sanitizeEventBusResult(body.getJsonArray("result"));
                             JsonArray idAvailableEleve = new JsonArray();
 
                             if ("ok".equals(body.getString("status"))) {
@@ -948,7 +984,7 @@ public class DefaultUtilsService implements UtilsService {
 
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
-            JsonArray periodes = body.getJsonArray("result");
+            JsonArray periodes = sanitizeEventBusResult(body.getJsonArray("result"));
             if ("ok".equals(body.getString("status"))) {
                 handler.handle(new Either.Right<>(periodes));
             } else {
@@ -1462,7 +1498,7 @@ public class DefaultUtilsService implements UtilsService {
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        JsonArray periodes = body.getJsonArray("results");
+                        JsonArray periodes = sanitizeEventBusResult(body.getJsonArray("results"));
                         if ("ok".equals(body.getString("status"))) {
                             handler.handle(new Either.Right<String, JsonArray>(periodes));
                         } else {
