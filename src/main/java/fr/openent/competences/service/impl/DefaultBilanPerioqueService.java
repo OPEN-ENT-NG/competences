@@ -5,8 +5,10 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.EventType;
+import fr.openent.competences.helpers.FutureHelper;
 import fr.openent.competences.message.MessageResponseHandler;
 import fr.openent.competences.model.Service;
+import fr.openent.competences.model.achievements.AchievementsProgress;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
@@ -16,6 +18,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -115,23 +118,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService {
             } else {
                 JsonArray periodes = periodesPromise.future().result();
                 JsonArray reasons = reasonsPromise.future().result();
-                List<Integer> reasonIds = (List<Integer>) reasons.getList().stream()
-                        .map(reason -> {
-                            Integer id = null;
-                            try {
-                                if (reason instanceof JsonObject) {
-                                    id = ((JsonObject) reason).getLong("id").intValue();
-                                } else if (reason instanceof Map) {
-                                    id = ((Integer) ((Map) reason).get("id"));
-                                } else {
-                                    log.error("[getRetardsAndAbsencesFromPresences] : Could not get the id coming from an object of type " + reason.getClass());
-                                }
-                            } catch (Exception e) {
-                                log.error("[getRetardsAndAbsencesFromPresences] : Could not get the id coming from an object of type ", e);
-                            }
-                            return id;
-                        })
-                        .filter(Objects::nonNull)
+                List<Integer> reasonIds = ((List<JsonObject>) reasons.getList()).stream()
+                        .map(reason -> reason.getLong("id").intValue())
                         .collect(Collectors.toList());
                 String beginningDateYear = periodes.getJsonObject(0).getString("timestamp_dt").substring(0, 10);
                 String endDateYear = periodes.getJsonObject(periodes.size() - 1).getString("timestamp_fn").substring(0, 10);
