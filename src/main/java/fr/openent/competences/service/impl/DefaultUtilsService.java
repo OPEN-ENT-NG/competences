@@ -689,7 +689,7 @@ public class DefaultUtilsService implements UtilsService {
             return null;
         }
         boolean needsSanitization = false;
-        for (Object item : array) {
+        for (Object item : array.getList()) {
             if (item instanceof Map && !(item instanceof JsonObject)) {
                 needsSanitization = true;
                 break;
@@ -699,7 +699,7 @@ public class DefaultUtilsService implements UtilsService {
             return array;
         }
         JsonArray sanitized = new JsonArray();
-        for (Object item : array) {
+        for (Object item : array.getList()) {
             if (item instanceof JsonObject) {
                 sanitized.add(item);
             } else if (item instanceof Map) {
