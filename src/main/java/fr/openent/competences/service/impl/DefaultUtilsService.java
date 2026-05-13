@@ -1406,7 +1406,14 @@ public class DefaultUtilsService implements UtilsService {
         if (idPeriode != null) {
             action.put(ID_PERIODE_KEY, idPeriode);
         }
-        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(handler));
+        eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (body.containsKey("results")) {
+                JsonArray sanitized = sanitizeEventBusResult(body.getJsonArray("results"));
+                body.put("results", sanitized);
+            }
+            handler.handle(message);
+        }));
     }
 
     public void getClassInfo(final String idClass, Handler<Either<String, JsonObject>> handler) {

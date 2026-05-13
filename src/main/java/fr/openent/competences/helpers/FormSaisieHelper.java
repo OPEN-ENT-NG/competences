@@ -4,6 +4,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
+import fr.openent.competences.service.impl.DefaultUtilsService;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
@@ -51,7 +52,7 @@ public class FormSaisieHelper {
             JsonObject body = message.body();
 
             if ("ok".equals(body.getString("status"))) {
-                result.put("eleves", Utils.sortElevesByDisplayName(body.getJsonArray("results")));
+                result.put("eleves", Utils.sortElevesByDisplayName(DefaultUtilsService.sanitizeEventBusResult(body.getJsonArray("results"))));
                 studentsPromise.complete();
             }
             else {

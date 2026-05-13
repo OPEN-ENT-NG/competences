@@ -32,7 +32,6 @@ import fr.openent.competences.service.digitalSkills.DigitalSkillsService;
 import fr.openent.competences.service.digitalSkills.impl.DefaultClassAppreciationDigitalSkills;
 import fr.openent.competences.service.digitalSkills.impl.DefaultDigitalSkillsService;
 import fr.openent.competences.service.impl.*;
-import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -45,7 +44,6 @@ import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -54,7 +52,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.xml.sax.SAXException;
@@ -257,7 +254,7 @@ public class LSUController extends ControllerHelper {
                         public void handle(Message<JsonObject> message) {
                             JsonObject body = message.body();
                             if ("ok".equals(body.getString("status"))) {
-                                Renders.renderJson(request, body.getJsonArray("results"));
+                                Renders.renderJson(request, DefaultUtilsService.sanitizeEventBusResult(body.getJsonArray("results")));
                             } else {
                                 JsonObject error = new JsonObject()
                                         .put("error", body.getString(MESSAGE));
@@ -1776,7 +1773,7 @@ public class LSUController extends ControllerHelper {
                         JsonObject body = message.body();
                         if ("ok".equals(body.getString("status"))) {
                             try {
-                                JsonArray listSubject = body.getJsonArray("results");
+                                JsonArray listSubject = DefaultUtilsService.sanitizeEventBusResult(body.getJsonArray("results"));
                                 disciplinesPromise.complete(listSubject);
                                 answer.set(true);
                                 lsuService.serviceResponseOK(answer, count.get(), thread, method);
@@ -1990,7 +1987,7 @@ public class LSUController extends ControllerHelper {
                         lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
 
                     }else{
-                        JsonArray headTeachers = body.getJsonArray("results");
+                        JsonArray headTeachers = DefaultUtilsService.sanitizeEventBusResult(body.getJsonArray("results"));
                         mapIdClasseHeadTeachers.put(idClass,headTeachers);
                         // log for time-out
                         answer.set(true);

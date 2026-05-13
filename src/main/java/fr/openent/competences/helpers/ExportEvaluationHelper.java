@@ -52,7 +52,7 @@ public class ExportEvaluationHelper {
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler( message -> {
             JsonObject body = message.body();
             if (OK.equals(body.getString(STATUS))) {
-                eleves.addAll(body.getJsonArray(RESULTS));
+                eleves.addAll(DefaultUtilsService.sanitizeEventBusResult(body.getJsonArray(RESULTS)));
                 promise.complete();
             }
             else{

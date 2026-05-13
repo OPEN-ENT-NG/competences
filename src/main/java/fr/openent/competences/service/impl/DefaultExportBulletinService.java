@@ -58,6 +58,7 @@ import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.BulletinWorker.SAVE_BULLETIN;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.*;
+import static fr.openent.competences.service.impl.DefaultUtilsService.sanitizeEventBusResult;
 import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.utils.BulletinUtils.getIdParentForStudent;
@@ -247,7 +248,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return handlerToAsyncHandler(
                 message -> {
                     if ("ok".equals(message.body().getString(STATUS))) {
-                        elevesPromise.complete(message.body().getJsonArray(RESULTS));
+                        elevesPromise.complete(sanitizeEventBusResult(message.body().getJsonArray(RESULTS)));
 
                     }
                     else
@@ -864,7 +865,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 //                                buildErrorReponseForEb (idEleve, message, answer, count, action,
 //                                        this, finalHandler, eleve, GET_LIBELLE_PERIOD_METHOD);
                             } else {
-                                JsonArray results = body.getJsonArray(RESULTS);
+                                JsonArray results = sanitizeEventBusResult(body.getJsonArray(RESULTS));
                                 if(results.size() > 0) {
                                     final String libelle = results.getJsonObject(0)
                                             .getString(LIBELLE);
@@ -973,7 +974,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             @Override
                             public void handle(Message<JsonObject> message) {
                                 JsonObject body = message.body();
-                                JsonArray periodes = body.getJsonArray(RESULT);
+                                JsonArray periodes = sanitizeEventBusResult(body.getJsonArray(RESULT));
                                 String mess = body.getString(MESSAGE);
                                 if (!"ok".equals(body.getString(STATUS))) {
                                     log.error("[" + GET_ANNEE_SCOLAIRE_METHOD + "] : " + idEleve + " " + mess + " "
@@ -1023,7 +1024,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
                     JsonObject body = message.body();
-                    JsonArray periodes = body.getJsonArray(RESULT);
+                    JsonArray periodes = sanitizeEventBusResult(body.getJsonArray(RESULT));
                     if (!"ok".equals(body.getString(STATUS))) {
                         promise.fail(body.getString(STATUS));
                     }
@@ -1590,7 +1591,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                             this, finalHandler, eleveObject,
                                             GET_HEAD_TEACHERS_METHOD);
                                 } else {
-                                    JsonArray res = body.getJsonArray(RESULTS);
+                                    JsonArray res = sanitizeEventBusResult(body.getJsonArray(RESULTS));
 
                                     if (res != null) {
                                         JsonArray headTeachers = new JsonArray();
@@ -1635,7 +1636,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        JsonArray res = body.getJsonArray(RESULTS);
+                        JsonArray res = sanitizeEventBusResult(body.getJsonArray(RESULTS));
                         JsonObject result = new JsonObject();
                         if (res != null) {
                             JsonArray headTeachers = new JsonArray();
@@ -1682,7 +1683,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             promise.fail("[" + GET_RESPONSABLE_METHOD + "] : " + idEleve + " " + mess + " " + count);
                         } else {
                             JsonObject result = new JsonObject();
-                            JsonArray responsables = body.getJsonArray(RESULTS);
+                            JsonArray responsables = sanitizeEventBusResult(body.getJsonArray(RESULTS));
                             result.put("responsables", responsables);
                             promise.complete(result);
                         }

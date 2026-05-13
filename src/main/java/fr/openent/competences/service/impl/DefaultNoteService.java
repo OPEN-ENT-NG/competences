@@ -4259,7 +4259,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         eb.request(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if (Field.OK.equals(body.getString(Field.STATUS))) {
-                subjectPromise.complete(body.getJsonArray(Field.RESULTS));
+                subjectPromise.complete(DefaultUtilsService.sanitizeEventBusResult(body.getJsonArray(Field.RESULTS)));
             } else {
                 subjectPromise.fail(body.getString(Field.MESSAGE));
             }
