@@ -32,8 +32,8 @@
     <pdfboxVersion>2.0.30</pdfboxVersion>
     <modMongoVersion>4.1-SNAPSHOT</modMongoVersion>
     <modPostgresVersion>2.1-SNAPSHOT</modPostgresVersion>
-    <entCoreLibsVersion>6.14-separation-SNAPSHOT</entCoreLibsVersion>
-    <modPdfGeneratorVersion>2.1-separation-SNAPSHOT</modPdfGeneratorVersion>
+    <entCoreLibsVersion>6.14-SNAPSHOT</entCoreLibsVersion>
+    <modPdfGeneratorVersion>2.1-SNAPSHOT</modPdfGeneratorVersion>
   </properties>
   <dependencies>
     <dependency>
