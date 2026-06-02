@@ -24,10 +24,10 @@ export function getEA(){
     return 'EA';
 };
 
-export function getDI(){
-    return 'DI';
+export function getDISP(){
+    return 'DISP';
 };
 
 export function isNN(moyenne) {
-    return moyenne === getNN() || moyenne === getEA() || moyenne === getDI() || !moyenne;
+    return moyenne === getNN() || moyenne === getEA() || moyenne === getDISP() || !moyenne;
 }

@@ -42,7 +42,7 @@ import {
     PreferencesUtils
 } from "../utils/preferences";
 import * as utils from '../utils/teacher';
-import { getDI, getEA, getNN } from "../utils/teacher";
+import { getDISP, getEA, getNN } from "../utils/teacher";
 
 declare let $: any;
 declare let document: any;
@@ -4154,8 +4154,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 eleve.moyenneFinaleIsSet = false;
             }else{
                 if(utils.isNN(eleve.moyenneFinale)) {
-                    if(eleve.moyenneFinale === getDI()) {
-                        eleve.moyenneFinale = getDI();
+                    if(eleve.moyenneFinale === getDISP()) {
+                        eleve.moyenneFinale = getDISP();
                     } else {
                         !!eleve.isUserInThirdClassLevel ? eleve.moyenneFinale = getEA() : eleve.moyenneFinale = getNN();
                     }
@@ -4211,12 +4211,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
                 if(eleve.moyenneFinale.toUpperCase() === getNN()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
                 if(eleve.moyenneFinale.toUpperCase() === getEA()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
-                if(eleve.moyenneFinale.toUpperCase() === getDI()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
+                if(eleve.moyenneFinale.toUpperCase() === getDISP()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
                 if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
                     eleve.moyenneFinale === "" || 
                     (eleve.moyenneFinale === getNN() && !eleve.isUserInThirdClassLevel) ||
                     (eleve.moyenneFinale === getEA() && eleve.isUserInThirdClassLevel) ||
-                    (eleve.moyenneFinale === getDI() && eleve.isUserInThirdClassLevel && eleve.isMatiereDispensable)
+                    (eleve.moyenneFinale === getDISP() && eleve.isUserInThirdClassLevel && eleve.isMatiereDispensable)
                 ){
                     if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) ||
                         eleve.oldMoyenneFinale !== eleve.moyenneFinale || eleve.moyenneFinale !== "") {
