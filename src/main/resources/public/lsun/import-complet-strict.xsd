@@ -796,7 +796,6 @@
                 </xs:unique>
             </xs:element>
             <xs:element name="synthese" type="lsun:Chaine1500" />
-            <xs:element name="enseignement-complement" type="lsun:EnseignementComplement" minOccurs="0" />
             <xs:element name="responsables" minOccurs="0">
                 <xs:complexType>
                     <xs:sequence maxOccurs="unbounded">
