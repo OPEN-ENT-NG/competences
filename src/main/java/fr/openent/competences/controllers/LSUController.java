@@ -23,8 +23,10 @@ import fr.openent.competences.bean.lsun.ElementProgramme;
 import fr.openent.competences.bean.lsun.*;
 import fr.openent.competences.constants.Field;
 import fr.openent.competences.enums.LevelCycle;
+import fr.openent.competences.model.MoyenneFinale;
 import fr.openent.competences.model.Service;
 import fr.openent.competences.model.SubTopic;
+import fr.openent.competences.repository.RepositoryFactory;
 import fr.openent.competences.security.HasExportLSURight;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.digitalSkills.ClassAppreciationDigitalSkillsService;
@@ -32,7 +34,6 @@ import fr.openent.competences.service.digitalSkills.DigitalSkillsService;
 import fr.openent.competences.service.digitalSkills.impl.DefaultClassAppreciationDigitalSkills;
 import fr.openent.competences.service.digitalSkills.impl.DefaultDigitalSkillsService;
 import fr.openent.competences.service.impl.*;
-import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -54,7 +55,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.http.response.DefaultResponseHandler;
+import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.xml.sax.SAXException;
@@ -74,6 +75,7 @@ import javax.xml.validation.Validator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -85,6 +87,9 @@ import java.util.stream.Collectors;
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.bean.lsun.TypeEnseignant.fromValue;
+import static fr.openent.competences.constants.Field.DI;
+import static fr.openent.competences.constants.Field.EA;
+import static fr.openent.competences.constants.LSUConstants.DEFAULT_SCHEMA_VERSION_VALUE;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.service.impl.DefaultLSUService.DISCIPLINE_KEY;
 import static fr.openent.competences.service.impl.DefaultUtilsService.setServices;
@@ -114,6 +119,7 @@ public class LSUController extends ControllerHelper {
     private final DigitalSkillsService digitalSkillsService;
     private final ClassAppreciationDigitalSkillsService classAppreciationDigitalSkillsService;
     private final LSUService lsuService;
+    private final UserService userService;
     private int fakeCode = 10;
 
     private static final String TIME = "Time";
@@ -143,6 +149,9 @@ public class LSUController extends ControllerHelper {
         digitalSkillsService = new DefaultDigitalSkillsService();
         classAppreciationDigitalSkillsService = new DefaultClassAppreciationDigitalSkills(COMPETENCES_SCHEMA,
                 CLASS_APPRECIATION_DIGITAL_SKILLS);
+        Neo4j neo4j = Neo4j.getInstance();
+        RepositoryFactory repositoryFactory = new RepositoryFactory(neo4j);
+        this.userService = new DefaultUserService(repositoryFactory);
     }
 
     /**
@@ -413,7 +422,7 @@ public class LSUController extends ControllerHelper {
         };
         lsuService.getMapIdClassCodeDomaineById(idsClasse,getMapCodeDomaineByIdHandler);
 
-        lsunBilans.setSchemaVersion("7.0");
+        lsunBilans.setSchemaVersion(DEFAULT_SCHEMA_VERSION_VALUE);
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
             Future.all(listFutureGetMethodsBFC).onComplete(event -> {
@@ -586,7 +595,7 @@ public class LSUController extends ControllerHelper {
         lsuService.getUnheededStudents(new JsonArray(idsTypePeriodes), new JsonArray(idsClasse),
                 unheededStudents -> formate(ignoredStudentPromise, unheededStudents));
 
-        lsunBilans.setSchemaVersion("7.0");
+        lsunBilans.setSchemaVersion(DEFAULT_SCHEMA_VERSION_VALUE);
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
             Handler<String> getElevesHandler = event -> {
@@ -2826,98 +2835,231 @@ public class LSUController extends ControllerHelper {
 
                     bilanPeriodiqueService.getSuiviAcquis(idStructure, idPeriode, idEleve, idClasseGroups,
                             servicesClasse, multiTeachersClasse, new Handler<Either<String, JsonArray>>() {
-                                AtomicBoolean answer = new AtomicBoolean(false);
-                                AtomicInteger count = new AtomicInteger(0);
-                                final String thread = "(" + currentEleve.getNom() + " " + currentEleve.getPrenom() + ")";
-                                final String method = "getBaliseBilansPeriodiques | getSuiviAcquis";
-
                                 @Override
                                 public void handle(Either<String, JsonArray> suiviAcquisResponse) {
+                                    final AtomicBoolean answer = new AtomicBoolean(false);
+                                    final AtomicInteger count = new AtomicInteger(0);
+                                    final String thread = "(" + currentEleve.getNom() + " " + currentEleve.getPrenom() + ")";
+                                    final String method = "getBaliseBilansPeriodiques | getSuiviAcquis";
+
                                     if (suiviAcquisResponse.isLeft()) {
                                         String error = suiviAcquisResponse.left().getValue();
-                                        if (error != null && error.contains(TIME) && !getSuiviAcquisPromise.future().isComplete()) {
-                                            bilanPeriodiqueService.getSuiviAcquis(idStructure, idPeriode, idEleve,
-                                                    idClasseGroups, servicesClasse, multiTeachersClasse,this);
-                                        } else {
-                                            getSuiviAcquisPromise.complete();
-                                        }
-                                    } else {
-                                        if (!suiviAcquisResponse.right().getValue().isEmpty()) {
-                                            final JsonArray suiviAcquis = suiviAcquisResponse.right().getValue();
 
-                                            addListeAcquis(suiviAcquis, bilanPeriodique);
-                                            // add Only if suiviAcquis is not Empty
-                                            bilansPeriodiques.getBilanPeriodique().add(bilanPeriodique);
+                                        if (error != null && error.contains(TIME) && !getSuiviAcquisPromise.future().isComplete()) {
+                                            // Retry
+                                            bilanPeriodiqueService.getSuiviAcquis(
+                                                    idStructure, idPeriode, idEleve, idClasseGroups,
+                                                    servicesClasse, multiTeachersClasse, this
+                                            );
                                         } else {
-                                            if (suiviAcquisResponse.isRight()) {
-                                                String messageError = getLibelle("evaluation.lsu.error.no.suivi.acquis") +
-                                                        currentPeriode.getLabel();
-                                                setError(errorsExport, currentEleve, messageError, null);
-                                                log.info(idEleve + " NO ");
-                                            }
-                                        }
-                                        if (!getSuiviAcquisPromise.future().isComplete()) {
                                             getSuiviAcquisPromise.complete();
+                                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
+                                        }
+
+                                    } else {
+                                        JsonArray suiviAcquis = suiviAcquisResponse.right().getValue();
+
+                                        if (!suiviAcquis.isEmpty()) {
+                                            // On attend le traitement asynchrone de tous les acquis avant d'ajouter au bilan
+                                            addListeAcquis(suiviAcquis, bilanPeriodique)
+                                                    .onSuccess(v -> {
+                                                        bilansPeriodiques.getBilanPeriodique().add(bilanPeriodique);
+
+                                                        if (!getSuiviAcquisPromise.future().isComplete()) {
+                                                            getSuiviAcquisPromise.complete();
+                                                        }
+
+                                                        lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
+                                                    })
+                                                    .onFailure(err -> {
+                                                        log.error("[Competences@LSUController@getBaliseBilansPeriodique] Erreur lors du traitement des acquis pour l'élève : " + idEleve);
+
+                                                        String messageError = getLibelle("evaluation.lsu.error.acquis.async")
+                                                                + currentPeriode.getLabel();
+                                                        setError(errorsExport, currentEleve, messageError, null);
+
+                                                        if (!getSuiviAcquisPromise.future().isComplete()) {
+                                                            getSuiviAcquisPromise.complete();
+                                                        }
+
+                                                        lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
+                                                    });
+
+                                        } else {
+                                            // Pas d'acquis dans la réponse
+                                            String messageError = getLibelle("evaluation.lsu.error.no.suivi.acquis")
+                                                    + currentPeriode.getLabel();
+                                            setError(errorsExport, currentEleve, messageError, null);
+                                            log.info(idEleve + " NO ");
+
+                                            if (!getSuiviAcquisPromise.future().isComplete()) {
+                                                getSuiviAcquisPromise.complete();
+                                            }
+
+                                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                                         }
                                     }
-                                    lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                                 }
 
-                                private void addListeAcquis(JsonArray suiviAcquis, BilanPeriodique bilanPeriodique) {
-                                    BilanPeriodique.ListeAcquis acquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
+                                private Future<Void> addListeAcquis(JsonArray suiviAcquis, BilanPeriodique bilanPeriodique) {
+                                    Promise<Void> promise = Promise.promise();
+
+                                    List<Future> futures = new ArrayList<>();
+
                                     for (int i = 0; i < suiviAcquis.size(); i++) {
                                         final JsonObject currentAcquis = suiviAcquis.getJsonObject(i);
-                                        Acquis acquisEleve = addListeAcquis_addAcquis(currentAcquis);
-                                        if(currentAcquis.getBoolean("toAdd")) {
-                                            addAcquis_addDiscipline(currentAcquis, acquisEleve);
-                                            addAcquis_addElementProgramme(currentAcquis, acquisEleve);
-                                            addAcquis_addMissingTeacher(acquisEleveList, currentAcquis, acquisEleve);
-                                        }
+
+                                        Future<Acquis> futureAcquis = addListeAcquis_addAcquis(currentAcquis);
+
+                                        futures.add(futureAcquis);
                                     }
-                                    if(!acquisEleveList.getAcquis().isEmpty()) {
-                                        bilanPeriodique.setListeAcquis(acquisEleveList);
-                                    } else {
-                                        String messageError = getLibelle("evaluation.lsu.error.no.suivi.acquis") +
-                                                currentPeriode.getLabel();
-                                        setError(errorsExport, currentEleve, messageError, null);
-                                    }
+
+                                    CompositeFuture.all(futures)
+                                            .onSuccess(cf -> {
+                                                BilanPeriodique.ListeAcquis acquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
+
+                                                for (int i=0; i < cf.list().size(); i++) {
+                                                    JsonObject currentAcquis = suiviAcquis.getJsonObject(i);
+                                                    Acquis acquisEleve = (Acquis) cf.list().get(i);
+
+                                                    if (currentAcquis.getBoolean("toAdd")) {
+                                                        addAcquis_addDiscipline(currentAcquis, acquisEleve);
+                                                        addAcquis_addElementProgramme(currentAcquis, acquisEleve);
+                                                        addAcquis_addMissingTeacher(acquisEleveList, currentAcquis, acquisEleve);
+                                                    }
+                                                }
+
+                                                if (!acquisEleveList.getAcquis().isEmpty()) {
+                                                    bilanPeriodique.setListeAcquis(acquisEleveList);
+                                                } else {
+                                                    String messageError = getLibelle("evaluation.lsu.error.no.suivi.acquis") + currentPeriode.getLabel();
+                                                    setError(errorsExport, currentEleve, messageError, null);
+                                                }
+                                                promise.complete();
+                                            })
+                                            .onFailure(err -> {
+                                                log.error("[Competences@LSUController::getBaliseBilansPeriodique] Erreur lors du traitement des acquis : " + err.getMessage());
+                                                String messageError = getLibelle("evaluation.lsu.error.acquis.async") + currentPeriode.getLabel();
+                                                setError(errorsExport, currentEleve, messageError, null);
+                                                promise.fail(err);
+                                            });
+
+                                    return promise.future();
                                 }
 
-                                private Acquis addListeAcquis_addAcquis(JsonObject currentAcquis) {
+                                private Future<Acquis> addListeAcquis_addAcquis(JsonObject currentAcquis) {
+                                    Promise<Acquis> promise = Promise.promise();
                                     Acquis acquisEleve = objectFactory.createAcquis();
                                     JsonArray tableConversion = tableConversionByClasse.get(idClasse);
-                                    addAcquis_addMoyennes(currentAcquis, acquisEleve);
-                                    addAcquis_addPositionnement(currentAcquis, tableConversion, acquisEleve);
-                                    addAcquis_setEleveNonNote(acquisEleve);
-                                    addAcquis_addAppreciation(currentAcquis, acquisEleve, currentPeriode);
-                                    return acquisEleve;
+
+                                    addAcquis_addMoyennes(currentAcquis, acquisEleve)
+                                            .onSuccess(v -> {
+                                                addAcquis_addPositionnement(currentAcquis, tableConversion, acquisEleve);
+                                                addAcquis_addAppreciation(currentAcquis, acquisEleve, currentPeriode);
+                                                promise.complete(acquisEleve);
+                                            })
+                                            .onFailure(err -> {
+                                                log.error("[Competences@LSUController::getBaliseBilansPeriodique] Erreur lors de l'ajout d'un acquis : " + err.getMessage());
+                                                promise.fail(err);
+                                            });
+
+                                    return promise.future();
                                 }
 
-                                private void addAcquis_addMoyennes(JsonObject currentAcquis, Acquis acquisEleve) {
+                                private Future<Void> addAcquis_addMoyennes(JsonObject currentAcquis, Acquis acquisEleve) {
+                                    Promise<Void> promise = Promise.promise();
+
                                     JsonArray moyennesEleves = currentAcquis.getJsonArray("moyennes");
                                     JsonArray moyennesFinales = currentAcquis.getJsonArray("moyennesFinales");
                                     JsonArray moyennesClasse = currentAcquis.getJsonArray("moyennesClasse");
 
-                                    JsonObject moyEleve = utilsService.getObjectForPeriode(moyennesEleves,
-                                            idPeriode, "id");
-                                    JsonObject moyFinale = utilsService.getObjectForPeriode(moyennesFinales,
-                                            idPeriode, "id_periode");
-                                    JsonObject moyClasse = utilsService.getObjectForPeriode(moyennesClasse,
-                                            idPeriode, "id");
+                                    JsonObject moyEleve = utilsService.getObjectForPeriode(moyennesEleves, idPeriode, "id");
+                                    JsonObject moyFinale = utilsService.getObjectForPeriode(moyennesFinales, idPeriode, "id_periode");
+                                    JsonObject moyClasse = utilsService.getObjectForPeriode(moyennesClasse, idPeriode, "id");
 
-                                    String valueMoyEleve;
-                                    if (moyEleve != null) {
-                                        valueMoyEleve = (moyFinale != null) ? ((moyFinale.getValue("moyenneFinale") == "NN") ? "NN" : moyFinale.getValue("moyenneFinale") + "/20") :
-                                                moyEleve.getValue("moyenne") + "/20";
-                                    } else {
-                                        valueMoyEleve = (moyFinale != null) ? ((moyFinale.getValue("moyenneFinale") == "NN") ? "NN" : moyFinale.getValue("moyenneFinale") + "/20")  :
-                                                "NN";
-                                    }
-                                    acquisEleve.setMoyenneEleve(valueMoyEleve);
+                                    String idMatiere = currentAcquis.getString(ID_MATIERE);
 
-                                    String valueMoyClasse = (moyClasse != null) ? moyClasse.getValue("moyenne") + "/20" :
-                                            "NN";
-                                    acquisEleve.setMoyenneStructure(valueMoyClasse);
+                                    DefaultNoteService.getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(idEleve, idMatiere, idPeriode)
+                                            .compose(optMoyenneFinale -> {
+                                                if (optMoyenneFinale.isPresent()) {
+                                                    MoyenneFinale moyenneFinale = optMoyenneFinale.get();
+
+                                                    if (moyenneFinale.getMoyenne() != null) {
+                                                        acquisEleve.setMoyenneEleve(new BigDecimal(moyenneFinale.getMoyenne().toString()));
+                                                    }
+
+                                                    if (moyenneFinale.getStatut() != null) {
+                                                        String statut = moyenneFinale.getStatut();
+
+                                                        if (Objects.equals(statut, NN)) {
+                                                            acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(1L));
+                                                        } else if (Objects.equals(statut, EA)) {
+                                                            acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(2L));
+                                                        } else if (Objects.equals(statut, DI)) {
+                                                            acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(3L));
+                                                        }
+                                                    }
+
+                                                } else {
+                                                    // Si pas de moyenne en base, on essaie le JSON
+                                                    if (moyEleve != null && moyEleve.containsKey(MOYENNE)) {
+                                                        String moyEleveStr = moyEleve.getValue(MOYENNE).toString();
+                                                        switch (moyEleveStr) {
+                                                            case NN:
+                                                                acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(1L));
+                                                                break;
+                                                            case EA:
+                                                                acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(2L));
+                                                                break;
+                                                            case DI:
+                                                                acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(3L));
+                                                                break;
+                                                            default:
+                                                                acquisEleve.setMoyenneEleve(new BigDecimal(moyEleveStr));
+                                                                break;
+                                                        }
+                                                    }
+                                                }
+
+                                                // Moyenne de classe
+                                                if (moyClasse != null && moyClasse.containsKey(MOYENNE)) {
+                                                    Object valClasse = moyClasse.getValue(MOYENNE);
+                                                    if (valClasse instanceof Number) {
+                                                        acquisEleve.setMoyenneStructure(new BigDecimal(valClasse.toString()));
+                                                    }
+                                                }
+
+                                                if (acquisEleve.getMoyenneStructure() == null || acquisEleve.getMoyenneEleve() == null) {
+                                                    return userService.isUserInThirdClassLevel(idEleve)
+                                                            .map(isInThirdClassLevel -> {
+                                                                // Statut structure
+                                                                if (acquisEleve.getMoyenneStructure() == null) {
+                                                                    acquisEleve.setStatutEvaluationStructure(
+                                                                            isInThirdClassLevel ? BigInteger.valueOf(2L) : BigInteger.valueOf(1L)
+                                                                    );
+                                                                }
+
+                                                                // Statut élève
+                                                                if (acquisEleve.getMoyenneEleve() == null && acquisEleve.getStatutEvaluationEleve() == null) {
+                                                                    acquisEleve.setStatutEvaluationEleve(
+                                                                            isInThirdClassLevel ? BigInteger.valueOf(2L) : BigInteger.valueOf(1L)
+                                                                    );
+                                                                }
+
+                                                                return Future.succeededFuture();
+                                                            });
+                                                } else {
+                                                    // Aucun besoin d'appeler userService
+                                                    return Future.succeededFuture();
+                                                }
+                                            })
+                                            .onSuccess(v -> promise.complete())
+                                            .onFailure(err -> {
+                                                log.error("[Competences@LSUController::getBaliseBilansPeriodique] Erreur lors de l'ajout des moyennes pour l'acquis : " + err.getMessage());
+                                                promise.fail(err);
+                                            });
+
+                                    return promise.future();
                                 }
 
                                 private void addAcquis_addPositionnement(JsonObject currentAcquis,
@@ -2949,15 +3091,6 @@ public class LSUController extends ControllerHelper {
                                     if (positionnementToSet.intValue() != 0) {
                                         acquisEleve.setPositionnement(positionnementToSet);
                                     }
-                                }
-
-                                private void addAcquis_setEleveNonNote(Acquis acquisEleve) {
-                                    if (acquisEleve.getPositionnement() != null || !"NN".equals(acquisEleve.getMoyenneEleve())) {
-                                        acquisEleve.setEleveNonNote(false);
-                                    } else {
-                                        acquisEleve.setEleveNonNote("NN".equals(acquisEleve.getMoyenneEleve()) && acquisEleve.getPositionnement() == null);
-                                    }
-                                    acquisEleve.setStructureNonNotee(false);
                                 }
 
                                 private void addAcquis_addAppreciation(JsonObject currentAcquis, Acquis acquisEleve,

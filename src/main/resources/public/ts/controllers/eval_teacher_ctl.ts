@@ -14,34 +14,35 @@
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
-import {Mix} from "entcore-toolkit";
-import {model, notify, idiom as lang, ng, template, moment, _, angular, http, skin, Behaviours} from 'entcore';
+import httpAxios from "axios";
+import { _, angular, Behaviours, http, idiom as lang, model, moment, ng, notify, template } from 'entcore';
+import { LengthLimit } from "../constants/ConstantCommonLength";
+import { ShortTermAnnotation } from "../constants/ShortTermAnnotation";
+import { CLASS_REPORT_URI_OPTIONS, PRINT_OPTIONS } from "../core/enum/print.enum";
+import { selectCycleForView, updateNiveau } from "../models/common/Personnalisation";
+import { Defaultcolors } from "../models/eval_niveau_comp";
 import {
+    Classe,
     Devoir,
     Evaluation,
     evaluations,
+    IClassReport,
     ReleveNote,
     ReleveNoteTotale,
-    Classe, IClassReport
+    Utils
 } from '../models/teacher';
-import * as utils from '../utils/teacher';
-import {Defaultcolors} from "../models/eval_niveau_comp";
-import {Utils} from "../models/teacher";
-import {selectCycleForView, updateNiveau} from "../models/common/Personnalisation";
-import httpAxios from "axios";
-import {AppreciationCPE} from "../models/teacher/AppreciationCPE";
+import { AppreciationCPE } from "../models/teacher/AppreciationCPE";
+import { AppreciationSubjectPeriodStudent } from "../models/teacher/AppreciationSubjectPeriodStudent";
+import { isValidDevoir } from "../utils/filters/isValidDevoir";
+import { isValidClasse } from "../utils/functions/isValidClasse";
 import {
     evaluationCreationCompetences,
     evaluationCreationCompetencesDevoir,
     evaluationCreationEnseignements,
     PreferencesUtils
 } from "../utils/preferences";
-import {ShortTermAnnotation} from "../constants/ShortTermAnnotation";
-import { LengthLimit} from "../constants/ConstantCommonLength"
-import {isValidClasse} from "../utils/functions/isValidClasse";
-import {isValidDevoir} from "../utils/filters/isValidDevoir";
-import {AppreciationSubjectPeriodStudent} from "../models/teacher/AppreciationSubjectPeriodStudent";
-import {CLASS_REPORT_URI_OPTIONS, PRINT_OPTIONS} from "../core/enum/print.enum";
+import * as utils from '../utils/teacher';
+import { getDI, getEA, getNN } from "../utils/teacher";
 
 declare let $: any;
 declare let document: any;
@@ -3221,7 +3222,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             let moyenne = 0, max = 0, nbEleve = 0, moyenneFinal = 0, maxFinal = 0, nbEleveFinal = 0;
             let min = 20, minFinal = 20;
             $scope.releveNote.classe.eleves.all.forEach(eleve => {
-                if(eleve.moyenne !== utils.getNN()){
+                if(!utils.isNN(eleve.moyenne)){
                     moyenne += eleve.moyenne;
                     nbEleve++;
                     if(eleve.moyenne > max)
@@ -3229,7 +3230,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if(min > eleve.moyenne)
                         min = eleve.moyenne;
                 }
-                if(eleve.moyenneFinale !== utils.getNN()){
+                if(!utils.isNN(eleve.moyenneFinale)){
                     let moyF = eleve.moyenneFinale;
                     if(eleve.moyenneFinaleIsSet)
                         moyF = parseFloat(moyF);
@@ -4152,9 +4153,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
                 eleve.moyenneFinaleIsSet = false;
             }else{
-                if(eleve.moyenneFinale === null)
-                    eleve.moyenneFinale = "NN";
-                eleve.moyenneFinaleIsSet = (eleve.moyenneFinale === "NN" && eleve.moyenne === eleve.moyenneFinale ) ? false :true;
+                if(utils.isNN(eleve.moyenneFinale)) {
+                    if(eleve.moyenneFinale === getDI()) {
+                        eleve.moyenneFinale = getDI();
+                    } else {
+                        !!eleve.isUserInThirdClassLevel ? eleve.moyenneFinale = getEA() : eleve.moyenneFinale = getNN();
+                    }
+                }
+                eleve.moyenneFinaleIsSet = eleve.moyenne !== eleve.moyenneFinale;
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
             }
         };
@@ -4203,9 +4209,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     eleve.moyenneFinale = eleve.moyenneFinale.replace(",",".");
                 }
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
-                if(eleve.moyenneFinale.toUpperCase() === "NN") eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
+                if(eleve.moyenneFinale.toUpperCase() === getNN()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
+                if(eleve.moyenneFinale.toUpperCase() === getEA()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
+                if(eleve.moyenneFinale.toUpperCase() === getDI()) eleve.moyenneFinale = eleve.moyenneFinale.toUpperCase();
                 if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
-                    eleve.moyenneFinale === "" || eleve.moyenneFinale === "NN"){
+                    eleve.moyenneFinale === "" || 
+                    (eleve.moyenneFinale === getNN() && !eleve.isUserInThirdClassLevel) ||
+                    (eleve.moyenneFinale === getEA() && eleve.isUserInThirdClassLevel) ||
+                    (eleve.moyenneFinale === getDI() && eleve.isUserInThirdClassLevel && eleve.isMatiereDispensable)
+                ){
                     if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) ||
                         eleve.oldMoyenneFinale !== eleve.moyenneFinale || eleve.moyenneFinale !== "") {
 
@@ -4233,7 +4245,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
                 else{
-                    if ((eleve.oldMoyenneFinale !== "NN") || (eleve.moyenne !== "NN") || parseFloat(eleve.moyenneFinale) > 20) {
+                    if ((eleve.oldMoyenneFinale !== getNN()) || (eleve.moyenne !== getNN()) || parseFloat(eleve.moyenneFinale) > 20) {
                         notify.error(lang.translate("error.average.outbound"));
                         eleve.moyenneFinale = eleve.oldMoyenneFinale;
                     }

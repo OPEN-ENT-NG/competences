@@ -62,6 +62,8 @@ public class Field {
     public static final String ID_MATIERE_MOYF = "id_matiere_moyf";
     public static final String ID_ENSEIGNANT = "id_enseignant";
     public static final String IDENSEIGNANT = "idEnseignant";
+    public static final String ISUSERINTHIRDCLASSLEVEl = "isUserInThirdClassLevel";
+    public static final String ISMATIEREDISPENSABLE = "isMatiereDispensable";
     public static final String C = "c";
     public static final String CLASSID = "classId";
     public static final String DEVOIRID = "devoirId";
@@ -91,6 +93,7 @@ public class Field {
     public static final String SECOND_TEACHER_ID = "second_teacher_id";
     public static final String SUBJECT_ID = "subject_id";
     public static final String CLASS_OR_GROUP_ID = "class_or_group_id";
+    public static final String NOTES_BY_PERIODE_BY_STUDENT = "notes_by_periode_by_student";
 
 
     //fonction
@@ -117,6 +120,7 @@ public class Field {
     //Event bus
     public static final String OK = "ok";
     public static final String STATUS = "status";
+    public static final String STATUT = "statut";
     public static final String RESULT = "result";
     public static final String RESULTS = "results";
 
@@ -142,6 +146,7 @@ public class Field {
     public static final String APPRECIATION_MATIERE_PERIODE = "appreciation_matiere_periode";
     public static final String APPRECIATION = "appreciation";
     public static final String CLASSE = "classe";
+    public static final String CODE = "code";
     public static final String COLOR = "color";
     public static final String COT = "coT";
     public static final String DESCRIPTION = "description";
@@ -158,6 +163,10 @@ public class Field {
     public static final String HASMOYENNECLASSE = "hasMoyenneClasse";
     public static final String HISTORISE = " historise";
     public static final String NN = "NN";
+    public static final String EA = "EA";
+    public static final String DI = "DI";
+    public static final String NULL = "null";
+    public static final String NULLFINALE = "nullFinale";
     public static final String SAVE_BFC = "saveBFC";
     public static final String SUBCOEF = "subCoef";
     public static final String SERVICE_SUBTOPIC = "services_subtopic";
@@ -172,8 +181,12 @@ public class Field {
     public static final String MATIERE = "matiere";
     public static final String MATIERE_COEFF = "matiere_coeff";
     public static final String MATIERE_RANK = "matiere_rank";
+    public static final String MODULE = "module";
+    public static final String MODULENAME = "moduleName";
     public static final String MOYENNE = "moyenne";
     public static final String MOY = "moy";
+    public static final String MOYENNEFINALE = "moyenneFinale";
+    public static final String MOYENNESFINALE = "moyennesFinale";
     public static final String NOTEMAX = "noteMax";
     public static final String NOTEMIN = "noteMin";
     public static final String UNROUND_AVERAGE = "unround_average";
@@ -181,6 +194,7 @@ public class Field {
     public static final String MOYGENERALEELEVE = "moyGeneraleEleve";
     public static final String MOYENNE_GENERALE = "moyenne_generale";
     public static final String MOYENNE_FINALE = "moyenne_finale";
+    public static final String MOYENNESCLASSE = "moyennesClasse";
     public static final String MOYENNESFINALES = "moyennesFinales";
     public static final String MOYENNEBYMAT = "moyenneByMat";
     public static final String MOYENNECLASSE = "moyenneClasse";
@@ -217,6 +231,8 @@ public class Field {
     public static final String HASDIVISEUR = "hasDiviseur";
     public static final String DATA = "data";
     public static final String ORDREPERIODE = "ordrePeriode";
+    public static final String LABEL = "label";
+    public static final String LASTUPDATE = "lastUpdate";
     public static final String LIBELLE = "libelle";
     public static final String ANNEE = "Ann\u00E9e";
     public static final String TYPEGROUPE = "typeGroupe";
