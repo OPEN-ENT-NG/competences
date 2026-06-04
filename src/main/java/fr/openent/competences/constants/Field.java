@@ -164,7 +164,7 @@ public class Field {
     public static final String HISTORISE = " historise";
     public static final String NN = "NN";
     public static final String EA = "EA";
-    public static final String DI = "DI";
+    public static final String DISP = "DISP";
     public static final String NULL = "null";
     public static final String NULLFINALE = "nullFinale";
     public static final String SAVE_BFC = "saveBFC";

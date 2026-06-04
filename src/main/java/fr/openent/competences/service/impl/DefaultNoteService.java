@@ -2919,24 +2919,26 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         for (Map.Entry<String, JsonObject> entry : elevesMapObject.entrySet()) {
             String studentId = entry.getKey();
             JsonObject student = entry.getValue();
-            student.remove(MOYENNEFINALE);
+            if (Objects.equals(student.getString(MOYENNEFINALE), "NN")){
+                student.remove(MOYENNEFINALE);
 
-            Future<Optional<MoyenneFinale>> future = getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(studentId, idMatiere, idPeriode)
-                    .onSuccess(optMoyenneFinale -> {
-                        if (optMoyenneFinale.isPresent()) {
-                            student.put(MOYENNEFINALE, getMoyenneFinaleValue(optMoyenneFinale.get()));
-                        } else {
-                            student.put(MOYENNEFINALE, student.getValue(Field.MOYENNE));
-                        }
-                    })
-                    .recover(err -> {
-                        String errorMessage = "Échec récupération moyenne_finale pour élève "
-                                + studentId + " et matière " + idMatiere + " : " + err.getMessage();
-                        log.error("[Competences@DefaultNoteService::addMoyenneFinale] " + errorMessage);
-                        return Future.succeededFuture(Optional.empty());
-                    });
+                Future<Optional<MoyenneFinale>> future = getMoyenneFinaleByIdEleveAndIdMatiereAndIdPeriod(studentId, idMatiere, idPeriode)
+                        .onSuccess(optMoyenneFinale -> {
+                            if (optMoyenneFinale.isPresent()) {
+                                student.put(MOYENNEFINALE, getMoyenneFinaleValue(optMoyenneFinale.get()));
+                            } else {
+                                student.put(MOYENNEFINALE, student.getValue(Field.MOYENNE));
+                            }
+                        })
+                        .recover(err -> {
+                            String errorMessage = "Échec récupération moyenne_finale pour élève "
+                                    + studentId + " et matière " + idMatiere + " : " + err.getMessage();
+                            log.error("[Competences@DefaultNoteService::addMoyenneFinale] " + errorMessage);
+                            return Future.succeededFuture(Optional.empty());
+                        });
 
-            futures.add(future);
+                futures.add(future);
+            }
         }
 
         return CompositeFuture.all(futures).mapEmpty();

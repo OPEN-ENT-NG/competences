@@ -86,7 +86,7 @@ import java.util.stream.Collectors;
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.bean.lsun.TypeEnseignant.fromValue;
-import static fr.openent.competences.constants.Field.DI;
+import static fr.openent.competences.constants.Field.DISP;
 import static fr.openent.competences.constants.Field.EA;
 import static fr.openent.competences.constants.LSUConstants.DEFAULT_SCHEMA_VERSION_VALUE;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
@@ -2994,7 +2994,7 @@ public class LSUController extends ControllerHelper {
                                                             acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(1L));
                                                         } else if (Objects.equals(statut, EA)) {
                                                             acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(2L));
-                                                        } else if (Objects.equals(statut, DI)) {
+                                                        } else if (Objects.equals(statut, DISP)) {
                                                             acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(3L));
                                                         }
                                                     }
@@ -3010,7 +3010,7 @@ public class LSUController extends ControllerHelper {
                                                             case EA:
                                                                 acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(2L));
                                                                 break;
-                                                            case DI:
+                                                            case DISP:
                                                                 acquisEleve.setStatutEvaluationEleve(BigInteger.valueOf(3L));
                                                                 break;
                                                             default:
