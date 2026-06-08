@@ -1751,8 +1751,9 @@ public class LSUController extends ControllerHelper {
                 discipline.setCode(getCode(externalId, listCode));
                 discipline.setId(DISCIPLINE_KEY + currentSubject.getString("id"));
                 discipline.setLibelle(currentSubject.getString("name"));
-                if (!currentSubject.getString("modalite").isEmpty())
-                    discipline.setModaliteElection(ModaliteElection.fromValue(currentSubject.getString("modalite")));
+                String modalite = currentSubject.getString("modalite");
+                if (modalite != null && !modalite.isEmpty())
+                    discipline.setModaliteElection(ModaliteElection.fromValue(modalite));
                 else
                     discipline.setModaliteElection(ModaliteElection.fromValue("S"));
                 donnees.getDisciplines().getDiscipline().add(discipline);
@@ -1801,7 +1802,7 @@ public class LSUController extends ControllerHelper {
                             }
                             else {
                                 String failureMessage = "getBaliseDisciplines discipline :" +
-                                        " error eb matiere.getMatieresForUser ko";
+                                        " error eb matiere.getMatieresForUserWithModalite ko";
                                 disciplinesPromise.fail(failureMessage);
                             }
                         }
