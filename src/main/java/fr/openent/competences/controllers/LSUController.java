@@ -1751,7 +1751,11 @@ public class LSUController extends ControllerHelper {
                 discipline.setCode(getCode(externalId, listCode));
                 discipline.setId(DISCIPLINE_KEY + currentSubject.getString("id"));
                 discipline.setLibelle(currentSubject.getString("name"));
-                discipline.setModaliteElection(ModaliteElection.fromValue("S"));
+                String modalite = currentSubject.getString("modalite");
+                if (modalite != null && !modalite.isEmpty())
+                    discipline.setModaliteElection(ModaliteElection.fromValue(modalite));
+                else
+                    discipline.setModaliteElection(ModaliteElection.fromValue("S"));
                 donnees.getDisciplines().getDiscipline().add(discipline);
             });
             JsonObject response = new JsonObject();
@@ -1767,9 +1771,7 @@ public class LSUController extends ControllerHelper {
             formate(libelleCourtPromise, event);
         });
         JsonObject action = new JsonObject()
-                .put("action", "matiere.getMatieresForUser")
-                .put("userType", "Personnel")
-                .put("idUser", "null")
+                .put("action", "matiere.getMatieresForUserWithModalite")
                 .put("idStructure", idStructure)
                 .put("onlyId", false);
         Promise<JsonArray> disciplinesPromise = Promise.promise();
@@ -1800,7 +1802,7 @@ public class LSUController extends ControllerHelper {
                             }
                             else {
                                 String failureMessage = "getBaliseDisciplines discipline :" +
-                                        " error eb matiere.getMatieresForUser ko";
+                                        " error eb matiere.getMatieresForUserWithModalite ko";
                                 disciplinesPromise.fail(failureMessage);
                             }
                         }
