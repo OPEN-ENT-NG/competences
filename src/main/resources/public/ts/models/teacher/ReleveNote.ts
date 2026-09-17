@@ -16,7 +16,7 @@
  */
 
 import {_, Collection, http, idiom as lang, IModel, Model, model, moment, notify} from 'entcore';
-import httpAxios from 'axios';
+import { http as httpAxios } from 'entcore-toolkit';
 import {
     Annotation,
     AppreciationClasse, AppreciationMatiere, BaremeBrevetEleve,

@@ -1,4 +1,4 @@
-import http, {AxiosResponse} from "axios";
+import { http, HttpResponse } from 'entcore-toolkit';
 import {AppreciationMatiere, Classe, ElementProgramme, Enseignant, TableConversion, TypePeriode, Utils} from "./index";
 import * as utils from '../../utils/teacher';
 import {Mix} from "entcore-toolkit";
@@ -195,7 +195,7 @@ export class SuivisDesAcquis extends Model {
             http.get(`/competences/bilan/periodique/eleve/${this.idEleve}` +
                 `?idEtablissement=${this.idEtablissement}&idClasse=${this.idClasse}&idPeriode=${this.idPeriode}`),
             achievementsProgressService.getSubjectsSkillsValidatedPercentage(this.idEtablissement, this.idEleve, payload)
-        ]).then((values: [AxiosResponse, AchievementsProgress]) => {
+        ]).then((values: [HttpResponse, AchievementsProgress]) => {
             if (values[0].data.length > 0) {
                 let achievementsList: SuiviDesAcquis[] = Mix.castArrayAs(SuiviDesAcquis, values[0].data);
                 values[1].achievementsSubjects.forEach((achievementsSubject: AchievementsSubject) => {

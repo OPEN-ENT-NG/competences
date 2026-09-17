@@ -1,5 +1,5 @@
 import {notify} from 'entcore';
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {DefaultAvis} from "../common/DefaultAvis";
 
 export class AvisConseil extends DefaultAvis {

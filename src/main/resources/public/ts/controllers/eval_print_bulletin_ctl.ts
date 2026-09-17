@@ -2,7 +2,7 @@ import {_, ng, notify, idiom as lang, Me, template} from "entcore";
 import {ExportBulletins} from "../models/common/ExportBulletins";
 import * as utils from '../utils/teacher';
 import {evaluations, Utils} from "../models/teacher";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {ReportModelPrintExport} from "../models/teacher/ReportModelPrintExport";
 import {ReportModelPrintExportServiceType} from "../services/type";
 import {ReportModelPrintExportConstant} from "../constants";

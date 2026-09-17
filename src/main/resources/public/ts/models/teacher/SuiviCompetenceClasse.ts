@@ -18,7 +18,7 @@
 import {Collection, Model} from 'entcore';
 import {Classe, CompetenceNote, Domaine, Matiere, Periode, Structure, SuiviCompetence, Utils} from './index';
 import {Enseignement} from "../parent_eleve/Enseignement";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {CLASS_REPORT_URI_OPTIONS} from "../../core/enum/print.enum";
 export interface IClassReport {
 

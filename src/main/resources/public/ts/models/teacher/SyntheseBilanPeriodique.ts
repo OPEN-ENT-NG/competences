@@ -1,5 +1,5 @@
 import {_, Model, notify} from 'entcore';
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 
 export class SyntheseBilanPeriodique extends Model {
     id_eleve : string;

@@ -1,5 +1,5 @@
 import {Mix, Selectable, Selection} from "entcore-toolkit";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {Model} from "entcore";
 import {Classe} from "../teacher";
 import {SubTopicsServiceService} from "../../services/SubTopicServiceService";

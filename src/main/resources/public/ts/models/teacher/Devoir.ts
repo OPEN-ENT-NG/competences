@@ -28,7 +28,7 @@ import {
     Type,
     Periode
 } from './index';
-import axioshttp from 'axios';
+import { http as axioshttp } from 'entcore-toolkit';
 
 export interface Devoir {
     statistiques: any;

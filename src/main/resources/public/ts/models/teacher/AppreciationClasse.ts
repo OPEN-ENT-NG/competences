@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {Mix} from "entcore-toolkit";
 import {notify} from "entcore";
 

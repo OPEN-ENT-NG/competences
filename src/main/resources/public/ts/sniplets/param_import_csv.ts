@@ -20,7 +20,7 @@ import {TypePeriode} from "../models/common/TypePeriode";
 import {Attachment} from "../models/common/Attachement";
 import {structureOptionsService} from "../services";
 import * as utils from "../utils/teacher";
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 
 export const paramImportCSV = {
     title: 'Paramètres d\'importation des retards absences' ,

@@ -18,7 +18,7 @@
 import {Model, Collection, _, notify} from 'entcore';
 import {Mix} from 'entcore-toolkit';
 import { Competence, BilanFinDeCycle, Utils,DispenseDomaine } from './index';
-import http from "axios";
+import { http } from 'entcore-toolkit';
 
 
 export class Domaine extends Model {

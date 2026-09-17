@@ -16,7 +16,7 @@
  */
 
 import {_, notify, idiom as lang} from 'entcore';
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {safeApply} from "../utils/functions/safeApply";
 
 export const renameSubject = {

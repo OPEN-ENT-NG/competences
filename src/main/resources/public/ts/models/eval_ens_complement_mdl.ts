@@ -19,7 +19,7 @@
  * Created by agnes.lapeyronnie on 28/11/2017.
  */
 import {IModel, Model, notify, _} from "entcore";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {Mix} from "entcore-toolkit";
 import {evaluations, Structure} from "./teacher";
 export class EnsCpl extends Model  {

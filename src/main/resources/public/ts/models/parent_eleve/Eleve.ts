@@ -17,7 +17,7 @@
 
 import {DefaultEleve} from "../common/DefaultEleve";
 import {Classe} from "./Classe";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {notify, skin} from "entcore";
 
 export class Eleve extends DefaultEleve {

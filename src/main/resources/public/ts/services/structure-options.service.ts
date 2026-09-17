@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {http as HTTP} from "entcore";
 
 export interface StructureOptions {
@@ -10,7 +10,7 @@ export interface IStructureOptionsService {
 
     getStructureOptionsIsAverageSkills(structureId: String): Promise<StructureOptions>;
 
-    saveStrustureOptionsIsAverageSkills(options: StructureOptions): Promise<AxiosResponse>;
+    saveStrustureOptionsIsAverageSkills(options: StructureOptions): Promise<HttpResponse>;
 
     initRecuperationAbsencesRetardsFromPresences(paramImportCSV: any): Promise<any[]>;
 
@@ -23,7 +23,7 @@ export const structureOptionsService: IStructureOptionsService = {
 
     getStructureOptionsIsAverageSkills: async(structureId: string): Promise<StructureOptions> => {
         try {
-            const response : AxiosResponse = await http.get(`competences/structure/${structureId}/options/isSkillAverage`);
+            const response : HttpResponse = await http.get(`competences/structure/${structureId}/options/isSkillAverage`);
             return {structureId:  structureId, isSkillAverage: response.data.is_average_skills} ;
         } catch (err) {
             throw err;
@@ -31,7 +31,7 @@ export const structureOptionsService: IStructureOptionsService = {
 
     },
 
-    saveStrustureOptionsIsAverageSkills: async(options: StructureOptions): Promise<AxiosResponse> =>{
+    saveStrustureOptionsIsAverageSkills: async(options: StructureOptions): Promise<HttpResponse> =>{
         return http.post(`competences/structure/options/isSkillAverage?structureId=${options.structureId}`, options);
     },
 

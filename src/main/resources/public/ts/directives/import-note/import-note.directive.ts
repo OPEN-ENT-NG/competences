@@ -3,7 +3,7 @@ import {IScope, ILocationService, IWindowService} from "angular";
 import {Devoir, Periode, Utils} from "../../models/teacher";
 import {RootsConst} from "../../constants/roots.const";
 import {NoteService} from "../../services/note.service";
-import {AxiosError, AxiosResponse} from "axios";
+import { HttpError, HttpResponse } from 'entcore-toolkit';
 import * as utils from "../../utils/teacher";
 
 
@@ -94,7 +94,7 @@ class Controller implements ng.IController, IViewModel {
 
             await NoteService.importNote(this.devoir.id_groupe, this.devoir.id, this.devoir.type_groupe,
                 parseInt(<string>this.devoir.id_periode), formData)
-                .then((response: AxiosResponse) => {
+                .then((response: HttpResponse) => {
                     if (response.data.status) {
                         if (_.isEmpty(response.data.missing)){
                             this.cancelLightboxImportNote();
@@ -108,7 +108,7 @@ class Controller implements ng.IController, IViewModel {
                     }
 
                 })
-                .catch((e: AxiosError) => {
+                .catch((e: HttpError) => {
                     let error : any = e.response.data;
                     if (error.status && error.status == "formate"){
                         this.errorMessage = "competences.error.import.csv.formate";

@@ -18,7 +18,7 @@
 import {Model, Collection, _ ,angular} from 'entcore';
 import { Competence } from "../parent_eleve/Competence";
 import { Evaluations} from "../eval_parent_mdl";
-import http, {AxiosResponse} from "axios";
+import { http, HttpResponse } from 'entcore-toolkit';
 import {DefaultMatiere} from "./DefaultMatiere";
 import {ICompetenceResponse} from "./DefaultCompetence";
 
@@ -121,7 +121,7 @@ export class DefaultEnseignement extends Model {
         });
     }
 
-    public static async getAll(idClasse: string, idCycle: string, model: any): Promise<AxiosResponse<ITeachingResponse[]>> {
+    public static async getAll(idClasse: string, idCycle: string, model: any): Promise<HttpResponse<ITeachingResponse[]>> {
         let cycleFilter: string = !!idCycle ? `&idCycle=${idCycle}` : '';
         try {
             return !!model.all && !!model.all.length ?

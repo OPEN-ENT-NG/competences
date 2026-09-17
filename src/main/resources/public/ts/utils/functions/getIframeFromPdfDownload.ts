@@ -1,4 +1,4 @@
-import http, {AxiosResponse} from "axios";
+import { http, HttpResponse } from 'entcore-toolkit';
 import {notify, idiom as lang} from "entcore";
 
 interface Iframe {
@@ -15,7 +15,7 @@ export const getIframeFromPdfDownload = async function (url:string, strictContex
      */
     try{
         try{
-            const {data, status, statusText}:AxiosResponse = await http.get(url, {responseType: 'arraybuffer'});
+            const {data, status, statusText}:HttpResponse = await http.get(url, {responseType: 'arraybuffer'});
             if(status === 200) {
                 const file = new Blob([data], {type: 'application/pdf'});
                 const fileURL = window.URL.createObjectURL(file);

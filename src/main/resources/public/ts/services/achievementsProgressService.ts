@@ -1,5 +1,5 @@
 import {ng} from 'entcore';
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {AchievementsProgress, IAchievementsProgressPayload, IAchievementsProgressResponse} from "../models/achievements.model";
 
 export interface IAchievementsProgressService {
@@ -21,7 +21,7 @@ export const achievementsProgressService: IAchievementsProgressService = {
         if (!!payload.groupId) uriParams.append("groupId", payload.groupId)
 
         return http.get(`competences/structures/${structureId}/student/${studentId}/subjectsSkillsValidatedPercentage?${uriParams}`)
-            .then((res: AxiosResponse) => new AchievementsProgress(<IAchievementsProgressResponse>res.data));
+            .then((res: HttpResponse) => new AchievementsProgress(<IAchievementsProgressResponse>res.data));
     }
 
 };

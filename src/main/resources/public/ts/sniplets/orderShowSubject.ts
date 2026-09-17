@@ -1,6 +1,6 @@
 import {$, toasts} from 'entcore';
 import * as utils from '../utils/teacher';
-import http, {AxiosResponse} from "axios";
+import { http, HttpResponse } from 'entcore-toolkit';
 import {Subject} from "../models/type";
 import {Common} from '../constants'
 
@@ -111,7 +111,7 @@ export const orderShowSubject = {
         },
         getSubjects: async function (idStructure: string): Promise<Array<any>> {
             try {
-                const {data, status}: AxiosResponse = await http.get(`${URL_LIFE_SCHOOL}/matieres?idEtablissement=${idStructure}`);
+                const {data, status}: HttpResponse = await http.get(`${URL_LIFE_SCHOOL}/matieres?idEtablissement=${idStructure}`);
                 if (status === 200) return data;
                 throw new Error("getSubjects");
             } catch (error) {
@@ -130,7 +130,7 @@ export const orderShowSubject = {
                     indexEnd,
                 };
 
-                const {data, status}: AxiosResponse = await http.put(urlUpdateSubjectRank, body);
+                const {data, status}: HttpResponse = await http.put(urlUpdateSubjectRank, body);
                 if (status === 200) return "ids" in data;
                 throw new Error("updateRank");
             } catch (e) {
@@ -143,7 +143,7 @@ export const orderShowSubject = {
             try {
                 orderShowSubject.that.isLoadingOrderShowSubject = true;
                 const URL_UPDATE = `${URL_COMPETENCE}/subjects/${orderShowSubject.that.source.id}/id-structure/initialization-rank`;
-                const {status, data}: AxiosResponse = await http.delete(URL_UPDATE);
+                const {status, data}: HttpResponse = await http.delete(URL_UPDATE);
                 if (status === 200 && ("ids" in data)) await orderShowSubject.that.refreshOrder();
             } catch (error) {
                 orderShowSubject.that.failRequest('evaluations.service.error.matiere');

@@ -29,7 +29,7 @@ import {
     FilterNotEvaluatedEnseignement
 } from "../utils/filters/filterNotEvaluatedEnseignement";
 import {Utils} from "../models/teacher";
-import httpAxios from "axios";
+import { http as httpAxios } from 'entcore-toolkit';
 
 declare let _: any;
 declare let location: any;

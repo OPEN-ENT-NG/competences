@@ -36,7 +36,7 @@ import {NiveauLangueCultReg, NiveauLangueCultRegs,BaremeBrevetEleve} from "../mo
 import {Mix} from "entcore-toolkit";
 import {FilterNotEvaluatedEnseignement} from "../utils/filters/filterNotEvaluatedEnseignement";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import { evaluations as evaluationsParentFormat } from '../models/eval_parent_mdl';
 import {LengthLimit} from "../constants";
 import {getTitulairesForRemplacantsCoEnseignant} from "../utils/teacher";

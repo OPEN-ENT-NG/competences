@@ -17,7 +17,7 @@
 import { Model } from 'entcore';
 import {Mix, Selectable,Selection} from "entcore-toolkit";
 
-import http from "axios";
+import { http } from 'entcore-toolkit';
 
 export class TypeSousMatiere extends Model implements Selectable{
     id: number;
