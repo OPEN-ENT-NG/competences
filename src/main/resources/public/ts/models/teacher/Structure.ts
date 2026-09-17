@@ -39,7 +39,7 @@ import {
     Utils
 } from './index';
 import {Mix} from "entcore-toolkit";
-import httpAxios from 'axios';
+import { http as httpAxios } from 'entcore-toolkit';
 import {StructureOptions, structureOptionsService} from "../../services";
 
 function castClasses(classes: any) {

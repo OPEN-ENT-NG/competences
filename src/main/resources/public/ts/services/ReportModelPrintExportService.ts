@@ -1,4 +1,4 @@
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {ReportModelPrintExportConstant} from "../constants/";
 import {ng, notify} from "entcore";
 import {ReportModelPrintExportServiceType} from "./type";

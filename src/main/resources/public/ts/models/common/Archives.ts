@@ -18,7 +18,7 @@
 /**
  * Created by Samuel JOLLOIS on 09/06/2020
  */
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import { notify,toasts} from 'entcore';
 
 export class Archives {

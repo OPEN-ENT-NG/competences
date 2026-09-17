@@ -22,7 +22,7 @@
 import { model, ng, idiom as lang } from "entcore";
 import { evaluations } from "../models/eval_parent_mdl";
 import * as utils from "../utils/parent";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 
 declare let _: any;
 

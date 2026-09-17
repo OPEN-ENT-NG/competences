@@ -1,4 +1,4 @@
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {ng} from "entcore";
 
 export interface IClassesService {
@@ -14,7 +14,7 @@ export interface IClassesService {
 export const ClassesService: IClassesService = {
     async getClassesAndGroup(structure: string): Promise<Array<Object>> {
         return http.get(`/competences/classe/groupes?idStructure=${structure}`)
-            .then((res: AxiosResponse) => res.data as Array<Object>)
+            .then((res: HttpResponse) => res.data as Array<Object>)
     }
 }
 

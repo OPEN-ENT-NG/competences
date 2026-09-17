@@ -2,7 +2,7 @@
  * Created by anabah on 10/10/2018.
  */
 import {_, notify, idiom as lang} from 'entcore';
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {Classe, ElementBilanPeriodique, Utils} from "../teacher";
 import {Stopwatch} from "./StopWatch";
 

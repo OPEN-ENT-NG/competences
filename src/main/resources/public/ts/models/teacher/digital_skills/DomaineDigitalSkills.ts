@@ -1,5 +1,5 @@
 import {Model, notify} from "entcore";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {EvaluatedDigitalSkills} from "./EvaluatedDigitalSkills";
 
 export class DomaineDigitalSkills extends Model {

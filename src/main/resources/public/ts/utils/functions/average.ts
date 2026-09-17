@@ -16,7 +16,7 @@
  */
 
 import {_, Collection} from 'entcore';
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {SubtopicserviceService} from "../../models/sniplets";
 import {IOverrideAverageResponse, Matiere} from "../../models/parent_eleve/Matiere";
 import {Classe, Devoir} from "../../models/teacher";

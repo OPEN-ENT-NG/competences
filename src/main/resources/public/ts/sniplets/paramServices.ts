@@ -1,5 +1,5 @@
 import {notify, idiom as lang, _, toasts, $, moment} from 'entcore';
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import * as utils from '../utils/teacher';
 import {Classe, TypeSousMatieres} from "../models/teacher";
 import {Service} from "../models/common/ServiceSnipplet";

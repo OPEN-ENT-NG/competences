@@ -1,4 +1,4 @@
-import httpAxios from 'axios';
+import { http as httpAxios } from 'entcore-toolkit';
 import {Mix} from 'entcore-toolkit';
 import {_, moment, notify, http, toasts} from 'entcore';
 

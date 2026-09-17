@@ -16,7 +16,7 @@
  */
 
 import {notify, _, $,http as HTTP} from 'entcore';
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {Classe, evaluations} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {LengthLimit} from "../constants";

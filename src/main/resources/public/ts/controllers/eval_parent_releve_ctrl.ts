@@ -23,7 +23,7 @@ import {model, ng, idiom as lang, moment} from 'entcore';
 import {evaluations as evaluationsParentFormat, evaluations} from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
 import {Utils} from "../models/teacher";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {SubTopicsServiceService} from "../services/SubTopicServiceService";
 import {ClassesService} from "../services/classes.service";
 import {SubTopicsServices} from "../models/sniplets";

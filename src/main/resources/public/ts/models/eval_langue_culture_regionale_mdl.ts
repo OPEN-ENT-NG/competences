@@ -16,7 +16,7 @@
  */
 
 import {IModel, Model} from "entcore";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {Mix} from "entcore-toolkit";
 import {evaluations, Structure} from "./teacher";
 export class LangueCultReg extends Model  {

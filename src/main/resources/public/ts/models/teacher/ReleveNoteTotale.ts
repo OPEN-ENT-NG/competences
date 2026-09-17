@@ -16,7 +16,7 @@
  */
 
 import {Model, IModel, _, Collection, idiom as lang, http} from 'entcore';
-import httpAxios from 'axios';
+import { http as httpAxios } from 'entcore-toolkit';
 import {
     Periode,
     Matiere,

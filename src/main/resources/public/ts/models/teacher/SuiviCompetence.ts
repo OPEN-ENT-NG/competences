@@ -35,7 +35,7 @@ import {
     EleveEnseignementCpl, EnsCpls, EnsCpl, NiveauEnseignementCpls,
 } from './index';
 import {Enseignement} from "../parent_eleve/Enseignement";
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {getTitulairesForRemplacantsCoEnseignant} from "../../utils/functions/getTitulairesForRemplacantsCoEnseignant";
 
 export class SuiviCompetence extends Model {

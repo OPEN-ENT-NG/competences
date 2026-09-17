@@ -16,7 +16,7 @@
  */
 
 import {_, Collection, idiom as lang, Model, model, moment, notify} from 'entcore';
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {Classe, ElementBilanPeriodique, evaluations, Matiere, Periode, ReleveNoteTotale, Structure} from './index';
 import {AppreciationElement} from "./AppreciationElement";
 import {Utils} from "./Utils";
@@ -198,13 +198,13 @@ export class BilanPeriodique extends  Model {
     private async getHomework (parameter:any):Promise<any | Error>{
         let url:string = `${BilanPeriodique.api.GET_HOMEWORK}${parameter.idEtablissement}&idClasse=${parameter.idClasse}`;
         if(parameter.idPeriode) url += `&idPeriode=${parameter.idPeriode}`;
-        const { data, status }:AxiosResponse = await http.get(url);
+        const { data, status }:HttpResponse = await http.get(url);
         if(status === 200) return data;
         throw new Error("getHomework");
     }
 
     private async getSynthesis(parameter: any, isAnnual: Boolean): Promise<any | Error> {
-        const {data, status}: AxiosResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}?&idStructure=${this.structure.id}`, parameter);
+        const {data, status}: HttpResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}?&idStructure=${this.structure.id}`, parameter);
         if (status === 200) {
             if (isAnnual) return data.annual;
             return data;
@@ -215,13 +215,13 @@ export class BilanPeriodique extends  Model {
     private async getAppraisals(idClasse:string, idPeriode:string, idStructure:string):Promise<any | Error> {
         let url:string = `${BilanPeriodique.api.GET_APPRAISALS}${idClasse}/export?text=false&idStructure=${idStructure}&json=true`;
         if(idPeriode) url += `&idPeriode=${idPeriode}`;
-        const {data, status}:AxiosResponse = await http.get(url);
+        const {data, status}:HttpResponse = await http.get(url);
         if(status === 200) return data.data;
         throw new Error("getAppraisals");
     }
 
     private async getSubjects(subjectsSent:Array<Matiere>):Promise<any | Error>{
-        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent.join(",")}&idStructure=${this.structure.id}`);
+        const {data, status}:HttpResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent.join(",")}&idStructure=${this.structure.id}`);
         if(status === 200) return data;
         throw new Error("getAppraisals");
     }
@@ -232,7 +232,7 @@ export class BilanPeriodique extends  Model {
             url += `&idPeriode=${idPeriod}`;
         url += "&json=true";
 
-        const { data, status }:AxiosResponse = await http.get(url);
+        const { data, status }:HttpResponse = await http.get(url);
         if(status === 200) return data;
         notify.error(lang.translate("competance.error.results.class"));
     }

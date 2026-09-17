@@ -21,7 +21,7 @@
  */
 
 import {$, Collection, http, idiom as lang, model, ng, notify, template} from 'entcore';
-import httpAxios, {AxiosResponse} from "axios";
+import { http as httpAxios, HttpResponse } from 'entcore-toolkit';
 import {evaluations, IClassReport, Matiere, SuiviCompetenceClasse} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
@@ -397,7 +397,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                         url += "&idPeriode=" + idPeriode;
                     }
 
-                   await httpAxios.get(url, {responseType: 'arraybuffer'}).then ((data : AxiosResponse) => {
+                   await httpAxios.get(url, {responseType: 'arraybuffer'}).then ((data : HttpResponse) => {
                        delete $scope.recapEval;
                        $scope.opened.recapEval = false;
                        Utils.downloadFile(data, document);

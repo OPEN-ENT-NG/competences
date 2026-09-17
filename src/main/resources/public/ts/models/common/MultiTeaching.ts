@@ -1,5 +1,5 @@
 import {moment, notify, _} from "entcore";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 
 
 export class MultiTeaching {

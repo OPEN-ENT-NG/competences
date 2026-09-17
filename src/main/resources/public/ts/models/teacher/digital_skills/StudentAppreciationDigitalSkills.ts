@@ -1,5 +1,5 @@
 import {Model, notify} from "entcore";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 
 export class StudentAppreciation extends Model {
     id: number;

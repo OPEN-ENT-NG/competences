@@ -18,7 +18,7 @@
 /**
  * Created by agnes.lapeyronnie on 19/09/2017.
  */
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import { notify, idiom as lang} from 'entcore';
 import { Responsable, Classe } from '../teacher';
 import {ErrorsLSU} from './ErrorLSU';

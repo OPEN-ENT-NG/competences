@@ -22,7 +22,7 @@ import {AppreciationCPE} from "./AppreciationCPE";
 import {AvisConseil} from "./AvisConseil";
 import {AvisOrientation} from "./AvisOrientation";
 import {Graph} from "../common/Graph";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 
 export class ElementBilanPeriodique extends Model {
     suivisAcquis : SuivisDesAcquis;

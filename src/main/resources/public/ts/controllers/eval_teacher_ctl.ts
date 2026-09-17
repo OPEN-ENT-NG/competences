@@ -28,7 +28,7 @@ import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher";
 import {selectCycleForView, updateNiveau} from "../models/common/Personnalisation";
-import httpAxios from "axios";
+import { http as httpAxios } from 'entcore-toolkit';
 import {AppreciationCPE} from "../models/teacher/AppreciationCPE";
 import {
     evaluationCreationCompetences,
