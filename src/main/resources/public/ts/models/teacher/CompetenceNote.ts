@@ -16,7 +16,7 @@
  */
 
 import {http, IModel, Model, notify} from 'entcore';
-import httpAxios from 'axios';
+import { http as httpAxios } from 'entcore-toolkit';
 
 export interface CompetenceNote {
     id: number;

@@ -1,5 +1,5 @@
 import {Utils} from "../teacher";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {notify, idiom as lang, angular, _,toasts} from 'entcore';
 import {Mix} from "entcore-toolkit";
 import {MultiTeaching} from "./MultiTeaching";

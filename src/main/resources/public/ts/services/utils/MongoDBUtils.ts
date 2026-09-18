@@ -1,8 +1,8 @@
-import {AxiosResponse} from "axios";
+import { HttpResponse } from 'entcore-toolkit';
 
 export class MongoDBUtils {
 
-    public static controlDataAndGetId(response:AxiosResponse):String{
+    public static controlDataAndGetId(response:HttpResponse):String{
         const { status, data } = response;
         if(status === 200 || status === 201){
             return data._id;
@@ -10,7 +10,7 @@ export class MongoDBUtils {
         return undefined;
     }
 
-    public static controlDataAndGetResult(response:AxiosResponse):Array<any>{
+    public static controlDataAndGetResult(response:HttpResponse):Array<any>{
         const { status, data } = response;
         if(status === 200){
             return data.results;
@@ -18,7 +18,7 @@ export class MongoDBUtils {
         return undefined;
     }
 
-    public static isDataChangedWithoutResult(response:AxiosResponse):Boolean{
+    public static isDataChangedWithoutResult(response:HttpResponse):Boolean{
         const { status } = response;
         if(status === 200){
             return true;

@@ -1,6 +1,6 @@
 import {_, notify} from "entcore";
 import * as utils from "../utils/teacher";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {AvisConseil} from "../models/teacher/AvisConseil";
 import {AvisOrientation} from "../models/teacher/AvisOrientation";
 

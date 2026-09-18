@@ -4,7 +4,7 @@ import {StudentAppreciation} from "./StudentAppreciationDigitalSkills";
 
 import {Classe} from "../Classe";
 import {Eleve} from "../Eleve";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {Structure} from "../Structure";
 import {Mix} from "entcore-toolkit";
 import {EvaluatedDigitalSkills} from "./EvaluatedDigitalSkills";

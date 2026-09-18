@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { http } from 'entcore-toolkit';
 import {reportModelPrintExportService} from "../ReportModelPrintExportService";
 
 describe('ReportModelPrintExportService Test', () => {
@@ -11,7 +11,7 @@ describe('ReportModelPrintExportService Test', () => {
 
         let structureId = "9af51dc6-ead0-4edb-8978-da14a3e9f49a";
         it('returns data when retrieve request getAll is correctly called', done => {
-            let spy = jest.spyOn(axios, "get");
+            let spy = jest.spyOn(http, "get");
             reportModelPrintExportService.getAll(structureId).then(response => {
                 expect(spy).toHaveBeenCalledWith("/competences/reports-models-print-export/structure/" + structureId);
                 done();

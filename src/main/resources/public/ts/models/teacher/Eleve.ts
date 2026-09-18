@@ -16,7 +16,7 @@
  */
 
 import {Model, Collection, _, notify, http as httpCore, moment, skin} from 'entcore';
-import http  from 'axios';
+import { http } from 'entcore-toolkit';
 import {Devoirs, Evaluation, SuiviCompetence} from './index';
 import {ElementBilanPeriodique} from "./ElementBilanPeriodique";
 import {ExportBulletins} from "../common/ExportBulletins";

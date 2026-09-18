@@ -17,7 +17,7 @@
 
 import {Mix, Selectable,Selection} from "entcore-toolkit";
 
-import http from "axios";
+import { http } from 'entcore-toolkit';
 
 export class TypeSubTopic  implements Selectable{
     id: number;

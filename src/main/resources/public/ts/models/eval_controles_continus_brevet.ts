@@ -16,7 +16,7 @@
  */
 
 import { notify,Model }from 'entcore';
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {Mix} from 'entcore-toolkit';
 import {Utils} from "./teacher";
 

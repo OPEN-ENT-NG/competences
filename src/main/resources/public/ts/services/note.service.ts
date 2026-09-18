@@ -1,15 +1,15 @@
-import http, {AxiosResponse} from "axios";
+import { http, HttpResponse } from 'entcore-toolkit';
 import {ng} from "entcore";
 import {typeImport} from "../constants";
 
 export interface INoteService {
-    importNote(classId: string, devoirId: number, classType: number, periodeId: number, formData: FormData): Promise<AxiosResponse>;
+    importNote(classId: string, devoirId: number, classType: number, periodeId: number, formData: FormData): Promise<HttpResponse>;
 }
 
 
 export const NoteService: INoteService = {
 
-    async importNote (classId : string, devoirId: number, classType: number, periodeId: number, formData: FormData) : Promise<AxiosResponse> {
+    async importNote (classId : string, devoirId: number, classType: number, periodeId: number, formData: FormData) : Promise<HttpResponse> {
         return http.post(`competences/notes/${typeImport.CSV}/csv/exercizer/import/classes/${classId}/devoirs/${devoirId}/${classType}/periods/${periodeId}`,
             formData, {'headers' : { 'Content-Type': 'multipart/form-data' }});
     }

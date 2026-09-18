@@ -20,7 +20,7 @@ import * as utils from '../../utils/teacher';
 import {BilanFinDeCycle, Classe, CompetenceNote, Domaine, Eleve, TableConversion} from './index';
 import {evaluations} from "./model";
 import {updateFilters} from "../../utils/functions/updateFilters";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {getTitulairesForRemplacantsCoEnseignant} from "../../utils/teacher";
 import {FilterNotEvaluated} from "../../utils/filters/filterNotEvaluatedEnseignement";
 

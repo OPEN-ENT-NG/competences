@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 import {ArchiveBFC} from "../models/common/ArchiveBFC";
 import {ArchiveBulletin} from "../models/common/ArchiveBulletin";
 import {Period} from "../models/common/Periode";

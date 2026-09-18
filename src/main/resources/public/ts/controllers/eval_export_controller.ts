@@ -23,7 +23,7 @@ import * as utils from '../utils/teacher';
 import {LSU_TYPE_EXPORT} from "../models/common/LSU";
 import {STSFile, STSFiles} from "../models/common/STSFile";
 import {Archives} from "../models/common/Archives";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {archivesService} from "../services/archives.service";
 
 export let exportControleur = ng.controller('ExportController', ['$scope',

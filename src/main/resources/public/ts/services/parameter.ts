@@ -1,5 +1,5 @@
 import {ng} from 'entcore'
-import http, {AxiosResponse} from 'axios';
+import { http, HttpResponse } from 'entcore-toolkit';
 
 export interface ExportError {
     uai: string;
@@ -17,7 +17,7 @@ export interface ParameterService {
 export const parameterService: ParameterService =  {
     getExports: async (): Promise<Array<ExportError>> => {
         try {
-            const {data}: AxiosResponse = await http.get(`/competences/admin/exports/logs`);
+            const {data}: HttpResponse = await http.get(`/competences/admin/exports/logs`);
             return data;
         } catch (err) {
             throw err;

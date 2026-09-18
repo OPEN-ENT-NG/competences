@@ -16,7 +16,7 @@ import {
     ReportsModelsPrintExportPreferencesTextConst,
 } from "../../constants"
 import {_, notify} from "entcore";
-import http from "axios";
+import { http } from 'entcore-toolkit';
 import {MongoDBUtils} from "../../services/utils";
 
 const {
