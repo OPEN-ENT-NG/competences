@@ -1,6 +1,6 @@
 {
   "name": "Competences",
-  "version": "2.2.4-dev.1",
+  "version": "2.2.5",
   "description": "ENT Core application to create Competences",
   "main": "gulpfile.js",
   "scripts": {
@@ -31,8 +31,8 @@
     "chart.js": "^2.7.2",
     "color": "^3.1.2",
     "core-js": "2.4.1",
-    "entcore": "dev",
-    "entcore-toolkit": "2.0.0-dev.3",
+    "entcore": "4.8.20",
+    "entcore-toolkit": "2.0.0",
     "gulp": "3.9.1",
     "gulp-clean": "^0.3.2",
     "gulp-sourcemaps": "^2.6.0",
